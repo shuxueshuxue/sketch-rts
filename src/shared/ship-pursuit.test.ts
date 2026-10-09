@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
 import { strikeGap } from './combat-geometry';
-import { hullContact } from './ship-geometry';
+import { hullContact, shipProfile } from './ship-geometry';
+import { polygonRadius } from './navigation-math';
 import { boardUnit, deckPlacement, syncDecks } from './decks';
 import { interceptTime, shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { checksumGame } from './sim/checksum';
@@ -27,6 +28,45 @@ function scene() {
 }
 
 describe('ship tactical pursuit', () => {
+  it('keeps a useful stationary firing station while the approaching hull changes bearing', () => {
+    const { ship, target, units } = pair();
+    const first = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    ship.sailing!.route = { goalX: first.x, goalY: first.y, targetId: target.id, intent: 'pursuit',
+      points: [{ ...first, heading: 0 }], end: first };
+    ship.x -= 120; ship.y += 140;
+    const next = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(next.x).toBe(first.x); expect(next.y).toBe(first.y);
+    const blocker = createUnit('blocker', 'player', 'warship', first.x, first.y);
+    units.push(blocker);
+    const clear = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(clear.x - first.x, clear.y - first.y)).toBeGreaterThan(100);
+  });
+
+  it('reserves distinct incoming fleet firing stations and releases them when an attack ends', () => {
+    const target = createUnit('target', 'enemy', 'carrier', 2000, 1600);
+    const fleet = Array.from({ length: 3 }, (_, index) => createUnit(`ship-${index}`, 'player', 'warship', 800, 1200 + index * 400));
+    const units = [...fleet, target];
+    for (const unit of units) unit.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+    const goals = fleet.map(ship => {
+      ship.order = { type: 'attack', targetId: target.id };
+      const goal = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+      ship.sailing!.route = { goalX: goal.x, goalY: goal.y, targetId: target.id, intent: 'pursuit',
+        points: [{ ...goal, heading: 0 }], end: goal };
+      return goal;
+    });
+    const clearance = polygonRadius(shipProfile(fleet[0]!)!.hull) * 2 + 8;
+    for (let i = 0; i < goals.length; i++) for (let j = i + 1; j < goals.length; j++) {
+      expect(Math.hypot(goals[i]!.x - goals[j]!.x, goals[i]!.y - goals[j]!.y)).toBeGreaterThanOrEqual(clearance);
+    }
+    fleet[0]!.order = { type: 'move', x: 1000, y: 2500 };
+    fleet[1]!.sailing!.route = undefined;
+    fleet[2]!.order = { type: 'hold', x: fleet[2]!.x, y: fleet[2]!.y };
+    const next = shipPursuitGoal(fleet[1]!, target, units, 312, 0, false, () => false)!;
+    // The nearest station on the center pursuer's bearing becomes available.
+    expect(next.y).toBe(target.y);
+    expect(next.x).toBeLessThan(target.x);
+  });
+
   it('leads a crossing target and bounds predictions for an escaping faster ship', () => {
     expect(interceptTime(100, 0, 0, 30, 50)).toBeCloseTo(2.5);
     expect(interceptTime(100, 0, 70, 0, 50)).toBeGreaterThan(0);

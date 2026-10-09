@@ -5,7 +5,7 @@ import { menuPageMarkup } from "./menu-page";
 import { commandIconMarkup } from "./command-icons";
 import { WorldPresentation } from './world-presentation';
 import { resources,resourceText } from './resources';
-import { resourcePanel } from './resource-panel';
+import { resourcePanel,disposeResourcePanel } from './resource-panel';
 import { paintPortrait } from './portrait-cache';
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
@@ -194,6 +194,8 @@ const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
 const worldPresentation=new WorldPresentation(canvas);
+let applicationClosed=false;
+let animationFrame=0;
 let visualsReady=false;
 let matchAssets:Promise<void>|undefined;
 const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
@@ -203,7 +205,11 @@ const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
 // The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs) and those the server offers (see
 // @@@served-sound-packs); until the player chooses one, the one a build names in VITE_SOUND_PACK, else the server's, else none.
 const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
-const soundPacksLoaded=servedSoundPacks(import.meta.env.BASE_URL,async(input)=>new Response(await resources.bytes(String(input),`audio-packs/${String(input).split('audio-packs/').at(-1)}`,'home'))).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
+const soundPacksLoaded=servedSoundPacks(import.meta.env.BASE_URL,async(input)=>{
+  if(applicationClosed)throw new DOMException('Application was closed','AbortError');
+  const url=String(input),request=resources.bytes(url,`audio-packs/${url.split('audio-packs/').at(-1)}`,'home');
+  try{return new Response(await request);}finally{resources.releaseBytes(url,request);}
+}).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
@@ -452,14 +458,25 @@ canvas.addEventListener("mouseup", onMouseUp);
 
 renderMainMenu();
 resizeCanvas();
-requestAnimationFrame(frame);
+animationFrame=requestAnimationFrame(frame);
+window.addEventListener('pagehide',event=>{
+  // A cached page resumes with its existing scene and connections on Back.
+  if(event.persisted||applicationClosed)return;
+  applicationClosed=true;routeRequest++;cancelAnimationFrame(animationFrame);clearRoomWatch();disconnectActiveMatch();deploymentRuntime.close();
+  worldPresentation.dispose();soundboard.dispose();disposeResourcePanel();
+  const usedModels=[...resources.entries.keys()].some(url=>url.includes('/art/world3d/'));
+  resources.dispose();snapshot=undefined;keys.clear();
+  // These modules are already loaded when models were used. Startup teardown
+  // does not download a renderer merely to release an empty cache.
+  if(usedModels)void Promise.all([import('./world3d/model-library'),import('./world3d/model-portraits')]).then(([models,portraits])=>{portraits.clearModelPortraits();models.worldModels.dispose();});
+});
 
 async function prepareHome(){
   visualsReady=false;const scene=menuBackdrop.prepare(performance.now());
   await resourcePanel().run('home',resourceText('读取当前首页场景','Loading the current home scene'),async()=>{await soundPacksLoaded;await worldPresentation.prepare(scene,'home',menuBackdrop.architectureKinds);});
   visualsReady=true;
 }
-export async function initializeVisuals(){await prepareHome();await openRouteFromUrl();}
+export async function initializeVisuals(){if(applicationClosed)return;await prepareHome();if(!applicationClosed)await openRouteFromUrl();}
 async function ensureMatchResources(){
   if(!matchAssets){visualsReady=false;matchAssets=resourcePanel().run('match',resourceText('读取遭遇战模型与作战资源','Loading skirmish models and combat resources'),async()=>{await worldPresentation.prepare(menuBackdrop.prepare(performance.now()),'match');await soundboard.prepareMatch();}).catch(error=>{matchAssets=undefined;throw error;}).finally(()=>{visualsReady=true;});}
   await matchAssets;
@@ -1222,33 +1239,45 @@ async function createConfiguredRoom(input: Omit<CreateRoomInput, "id" | "host">)
     host: localUser,
     ...input,
   });
+  if(applicationClosed)return;
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   openRoomSetup(currentRoom);
   renderMainMenu();
 }
 
 async function startCurrentRoom() {
-  if (!currentRoom) return;
-  await ensureMatchResources();
-  clearRoomWatch();
-  if (hasSeenPointerLockGuide() && hasMouse()) {
-    const point = lastMouse ?? { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
-    await requestPointerLock(point, { fieldClickOnError: true });
+  if (applicationClosed || !currentRoom) return;
+  const roomId = currentRoom.id, request = routeRequest;
+  const isCurrent = () => !applicationClosed && request === routeRequest && currentRoom?.id === roomId;
+  try {
+    await ensureMatchResources();
+    if (!isCurrent()) return;
+    clearRoomWatch();
+    if (hasSeenPointerLockGuide() && hasMouse()) {
+      const point = lastMouse ?? { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+      await requestPointerLock(point, { fieldClickOnError: true });
+    }
+    if (!isCurrent()) return;
+    const started = await deploymentRuntime.startRoom(roomId, localUser, handleRuntimeRoomUpdate);
+    if (!isCurrent()) { started.adapter.close(); return; }
+    currentRoom = started.room;
+    currentRoomId = started.room.id;
+    localPlayerId = started.playerId;
+    activateStartedMatch(started.adapter, started.snapshot, started.chat);
+    syncDebugView();
+    selectedIds = new Set();
+    focusedSelectionId = undefined;
+    selectedCampId = undefined;
+    menuOpen = false;
+    shell.classList.remove("menu-open");
+    mainMenu.classList.add("hidden");
+    syncMatchActions();
+    syncPointerLockGate();
+  } catch (error) {
+    // A page exit or route change can cancel preparation or a pending start.
+    // Its obsolete click handler must not resume the match or reject globally.
+    if (isCurrent()) throw error;
   }
-  const started = await deploymentRuntime.startRoom(currentRoom.id, localUser, handleRuntimeRoomUpdate);
-  currentRoom = started.room;
-  currentRoomId = started.room.id;
-  localPlayerId = started.playerId;
-  activateStartedMatch(started.adapter, started.snapshot, started.chat);
-  syncDebugView();
-  selectedIds = new Set();
-  focusedSelectionId = undefined;
-  selectedCampId = undefined;
-  menuOpen = false;
-  shell.classList.remove("menu-open");
-  mainMenu.classList.add("hidden");
-  syncMatchActions();
-  syncPointerLockGate();
 }
 
 // A rematch: a private room on the same map, computers in the other seats.
@@ -1526,7 +1555,8 @@ function releasePointerLockForMenu() {
 }
 
 function frame() {
-  requestAnimationFrame(frame);
+  if(applicationClosed)return;
+  animationFrame=requestAnimationFrame(frame);
   syncActiveGameAdapterSnapshot();
   updateCamera();
   draw();

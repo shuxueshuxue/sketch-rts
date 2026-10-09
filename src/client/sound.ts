@@ -91,12 +91,30 @@ export class Soundboard {
   private groups = new Map<SoundGroup, GainNode>();
   private buffers = new Map<string, AudioBuffer>();
   private loading = new Map<string, Promise<AudioBuffer | undefined>>();
-  private failed = new Set<string>();
+  private failed = new Map<string, number>();
   private playing = new Map<SoundEvent, number>();
   private voices = 0;
   private activeEffects = new Set<() => void>();
+  private activeVoices = new Set<() => void>();
+  private nodes = new Set<AudioNode>();
+  private disposed = false;
 
   stopEffects() { for (const stop of [...this.activeEffects]) stop(); }
+
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    for (const stop of [...this.activeVoices]) stop();
+    for (const node of this.nodes) node.disconnect();
+    this.nodes.clear(); this.groups.clear(); this.master = undefined;
+    this.activeEffects.clear(); this.activeVoices.clear(); this.playing.clear(); this.voices = 0;
+    this.buffers.clear(); this.loading.clear(); this.failed.clear();
+    const ctx = this.ctx; this.ctx = undefined;
+    if (ctx) void ctx.close().catch(() => {});
+  }
+
+  /** Optional sounds never block play; an explicit preparation retries failures. */
+  retryFailed() { if (this.disposed) return; this.failed.clear(); this.loadPack(); }
 
   /** `packs` are the packs to choose from; `fallback` is the one played until the player chooses (none: silence). */
   constructor(
@@ -107,6 +125,7 @@ export class Soundboard {
   // More packs to choose from (those the server offers, see @@@served-sound-packs), and the one to play until the player
   // chooses when none was named before; a pack already here keeps its place.
   addPacks(packs: readonly SoundPack[], fallback?: string) {
+    if (this.disposed) return;
     this.packs = [...this.packs, ...packs.filter((pack) => !this.packs.some((known) => known.id === pack.id))];
     this.fallback ??= fallback;
     this.loadPack();
@@ -120,8 +139,9 @@ export class Soundboard {
 
   // A browser lets a page make sound only after a person's gesture: the first click or key opens it.
   unlock() {
+    if (this.disposed) return;
     if (this.ctx) {
-      if (this.ctx.state === "suspended") void this.ctx.resume();
+      if (this.ctx.state === "suspended") void this.ctx.resume().catch(() => {});
       return;
     }
     const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -130,13 +150,16 @@ export class Soundboard {
     this.ctx = ctx;
     // The last guard before the speakers: nothing past full scale, however many sounds meet.
     const limiter = compressor(ctx, { threshold: -3, knee: 0, ratio: 20, attack: 0.002, release: 0.1 });
+    this.nodes.add(limiter);
     limiter.connect(ctx.destination);
     this.master = ctx.createGain();
+    this.nodes.add(this.master);
     this.master.connect(limiter);
     for (const group of ["effects", "ui"] as const) {
       const node = ctx.createGain();
+      this.nodes.add(node);
       // A battle's many sounds are pressed together, so a crowd of them swells less than it adds up.
-      if (group === "effects") node.connect(compressor(ctx, { threshold: -24, knee: 12, ratio: 4, attack: 0.004, release: 0.3 })).connect(this.master);
+      if (group === "effects") {const battle = compressor(ctx, { threshold: -24, knee: 12, ratio: 4, attack: 0.004, release: 0.3 });this.nodes.add(battle);node.connect(battle).connect(this.master);}
       else node.connect(this.master);
       this.groups.set(group, node);
     }
@@ -145,6 +168,7 @@ export class Soundboard {
   }
 
   update(change: Partial<SoundSettings>) {
+    if (this.disposed) return;
     this.settings = { ...this.settings, ...change };
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
@@ -157,6 +181,7 @@ export class Soundboard {
 
   /** `kind` is the unit kind of who caused the event, for a pack that sounds it per kind. */
   play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }, kind?: UnitKind) {
+    if (this.disposed) return;
     // Older packs may advertise these voiced acknowledgements. They have no
     // place in this game's generic feedback, even when a pack is still cached.
     if (event === 'select' || event === 'order') return;
@@ -198,12 +223,15 @@ export class Soundboard {
     const cleanup = () => {
       if (ended) return; ended = true;
       this.activeEffects.delete(stop);
+      this.activeVoices.delete(stop);
       this.voices -= 1;
       this.playing.set(event, (this.playing.get(event) ?? 1) - 1);
       out.disconnect();
       panner.disconnect();
+      source.disconnect(); source.onended = null; source.buffer = null;
     };
-    const stop = () => { source.stop(); cleanup(); };
+    const stop = () => { if (ended) return;try { source.stop(); } catch {} cleanup(); };
+    this.activeVoices.add(stop);
     if (groupName === "effects") this.activeEffects.add(stop);
     source.onended = cleanup;
   }
@@ -220,18 +248,23 @@ export class Soundboard {
     for(const event of ['click','menu'] as const){const clip=this.pack?.sounds[event]?.clip;if(clip)void this.loadClip(clip.url,'home');}
   }
 
-  async prepareMatch(){if(!this.ctx)return;const clips=Object.entries(this.pack?.sounds??{}).filter(([event])=>EVENT_GROUPS[event as SoundEvent]==='effects').flatMap(([,sound])=>sound.clip?[sound.clip]:[]);await Promise.all(clips.slice(0,8).map(clip=>this.loadClip(clip.url,'match')));}
+  async prepareMatch(){if(!this.ctx||this.disposed)return;this.failed.clear();const clips=Object.entries(this.pack?.sounds??{}).filter(([event])=>EVENT_GROUPS[event as SoundEvent]==='effects').flatMap(([,sound])=>sound.clip?[sound.clip]:[]);await Promise.all(clips.slice(0,8).map(clip=>this.loadClip(clip.url,'match')));}
 
   private loadClip(url: string,phase:ResourcePhase='match'): Promise<AudioBuffer | undefined> {
     const ctx = this.ctx;
-    if (!ctx || this.failed.has(url)) return Promise.resolve(undefined);
+    if (!ctx || this.disposed) return Promise.resolve(undefined);
+    const failedAt = this.failed.get(url);
+    if (failedAt !== undefined && Date.now() - failedAt < 5000) return Promise.resolve(undefined);
+    this.failed.delete(url);
     const buffer = this.buffers.get(url);
-    if (buffer) return Promise.resolve(buffer);
+    if (buffer) {resources.recordUse(url,phase);return Promise.resolve(buffer);}
     const pending = this.loading.get(url);
-    if (pending) return pending;
-    const request = resources.bytes(url,`audio/${url.split('/').slice(-2).join('/')}`,phase).then(data => ctx.decodeAudioData(data.slice(0))).then(buffer => {
+    if (pending) {resources.recordUse(url,phase);return pending;}
+    const bytes = resources.bytes(url,`audio/${url.split('/').slice(-2).join('/')}`,phase);
+    let request!:Promise<AudioBuffer | undefined>;request = bytes.then(data => this.disposed||this.ctx!==ctx?undefined:ctx.decodeAudioData(data.slice(0))).then(buffer => {
+      if (!buffer || this.disposed || this.ctx !== ctx) return undefined;
       this.buffers.set(url, buffer); return buffer;
-    }).catch(() => { this.failed.add(url); return undefined; }).finally(() => this.loading.delete(url));
+    }).catch(() => { if (!this.disposed && this.ctx === ctx) this.failed.set(url,Date.now()); return undefined; }).finally(() => {if (this.loading.get(url) === request)this.loading.delete(url);resources.releaseBytes(url,bytes);});
     this.loading.set(url, request);
     return request;
   }

@@ -11,6 +11,23 @@ function map(seed = 'weather'): Pick<GameMap, 'id' | 'wind' | 'terrain'> {
 const angleGap = (a: number, b: number) => Math.abs(((b - a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
 
 describe('scheduled wind fields', () => {
+  it('reuses an immutable uniform sample and observes edits, replacements and separate matches', () => {
+    const world = map(), first = windAt(world, { x: 0, y: 0 });
+    expect(windAt(world, { x: 3000, y: 2000 })).toBe(first);
+    expect(Object.isFrozen(first)).toBe(true);
+    world.wind!.direction += Math.PI / 2;
+    const turned = windAt(world, { x: 0, y: 0 });
+    expect(turned).not.toBe(first);
+    expect(turned.x).toBeLessThan(0);
+    world.wind!.speed = 0;
+    expect(windAt(world, { x: 0, y: 0 }).speed).toBe(0);
+    world.wind = { direction: 0, speed: 40 };
+    expect(getWind(world)).toMatchObject({ direction: 0, speed: 40, x: 40, y: 0 });
+    expect(getWind(map())).toEqual(first);
+    delete world.wind;
+    expect(getWind(world)).toEqual(first);
+  });
+
   it('keeps an authored field until exactly eight simulation minutes and changes it again at sixteen', () => {
     expect(interval).toBe(9600);
     const world = map();

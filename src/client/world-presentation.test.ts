@@ -5,7 +5,7 @@ import type {WorldFrame} from './world-renderer';
 const mocks=vi.hoisted(()=>({
   warm:vi.fn(async(_key:string,_phase:string)=>{}),image:vi.fn(async(_key:string,_phase:string)=>{}),draw:vi.fn(),
   panel:{renderer:'',preparing:vi.fn()},
-  layer:{prepare:vi.fn(async()=>{}),reset:vi.fn(),draw:vi.fn(),pick:vi.fn(),positions:new Map()},
+  layer:{prepare:vi.fn(async()=>{}),reset:vi.fn(),dispose:vi.fn(),draw:vi.fn(),pick:vi.fn(),positions:new Map()},
   create:vi.fn(),
 }));
 vi.mock('./resources',()=>({resources:{warm:mocks.warm},resourceText:(_zh:string,en:string)=>en}));
@@ -22,6 +22,7 @@ class Element extends EventTarget {
   context:WebGL2RenderingContext|null={} as WebGL2RenderingContext;
   append(...children:Element[]){this.children.push(...children);}
   before(){}
+  remove(){}
   getContext(kind:string){return kind==='2d'?context2d:this.context;}
 }
 let elements:Element[];
@@ -109,5 +110,38 @@ describe('current scene graphics recovery (GPU mocked)',()=>{
     await presentation.prepare(snapshot('barracks'),'home');
     expect(presentation.is3D).toBe(true);expect(mocks.layer.reset).toHaveBeenCalledTimes(1);
     release();await old;expect(presentation.is3D).toBe(true);expect(mocks.layer.reset).toHaveBeenCalledTimes(1);
+  });
+  it('does not create a renderer after disposal during asynchronous initialization',async()=>{
+    let release!:()=>void;mocks.warm.mockImplementationOnce(()=>new Promise<void>(resolve=>{release=resolve;}));
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const work=presentation.prepare(snapshot(),'home');presentation.dispose();release();await work;
+    expect(mocks.create).not.toHaveBeenCalled();expect(presentation.is3D).toBe(false);
+    expect(elements.find(element=>element.className==='world-ground')!.width).toBe(0);
+    expect(actors().width).toBe(0);
+  });
+  it('releases a prepared layer and its context listeners even if model preparation is pending',async()=>{
+    let release!:()=>void;mocks.layer.prepare.mockImplementationOnce(()=>new Promise<void>(resolve=>{release=resolve;}));
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const work=presentation.prepare(snapshot(),'home');
+    await vi.waitFor(()=>expect(mocks.layer.prepare).toHaveBeenCalledOnce());
+    const remove=vi.spyOn(elements.find(element=>element.className==='world-underlay')!,'remove');
+    presentation.dispose();presentation.dispose();release();await work;
+    expect(mocks.layer.dispose).toHaveBeenCalledOnce();expect(mocks.layer.reset).not.toHaveBeenCalled();expect(remove).toHaveBeenCalledOnce();
+    const lost=new Event('webglcontextlost',{cancelable:true});actors().dispatchEvent(lost);actors().dispatchEvent(new Event('webglcontextrestored'));
+    expect(lost.defaultPrevented).toBe(false);
+    await presentation.prepare(snapshot(),'home');presentation.draw(frame(snapshot()));
+    expect(mocks.layer.draw).not.toHaveBeenCalled();expect(mocks.draw).not.toHaveBeenCalled();expect(presentation.is3D).toBe(false);
+  });
+  it('releases the old scene at reset rather than retaining it for later context recovery',async()=>{
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    await presentation.prepare(snapshot('barracks'),'home');mocks.image.mockClear();presentation.reset();lose();
+    await Promise.resolve();expect(mocks.image).not.toHaveBeenCalled();
+  });
+  it('invalidates pending scene preparation when resetting to another world',async()=>{
+    let release!:()=>void;mocks.layer.prepare.mockImplementationOnce(()=>new Promise<void>(resolve=>{release=resolve;}));
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const work=presentation.prepare(snapshot(),'home');await vi.waitFor(()=>expect(mocks.layer.prepare).toHaveBeenCalledOnce());
+    presentation.reset();release();await work;
+    expect(presentation.is3D).toBe(false);expect(mocks.layer.reset).toHaveBeenCalledOnce();
   });
 });

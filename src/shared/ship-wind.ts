@@ -26,6 +26,12 @@ const clamp = (value: number, low: number, high: number) => Math.max(low, Math.m
 const angleDifference = (from: number, to: number) => ((to - from + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 // Match the navigation planner's quantized atan2 boundary across JS platforms.
 const angleOf = (x: number, y: number) => Math.round(Math.atan2(y, x) * 1e9) / 1e9;
+const POLAR_KNOTS = {
+  lateen: [[SAIL_RULES.lateen.noGoAngle, 0], [SAIL_RULES.lateen.noGoAngle + Math.PI / 15, .84], [Math.PI / 2, .96], [Math.PI * 2 / 3, 1], [Math.PI, .66]],
+  lug: [[SAIL_RULES.lug.noGoAngle, 0], [SAIL_RULES.lug.noGoAngle + Math.PI / 15, .84], [Math.PI / 2, .96], [Math.PI * 2 / 3, 1], [Math.PI, .78]],
+  square: [[SAIL_RULES.square.noGoAngle, 0], [SAIL_RULES.square.noGoAngle + Math.PI / 15, .84], [Math.PI / 2, .96], [Math.PI * 2 / 3, 1], [Math.PI, .97]],
+} as const;
+const PERFORMANCE_OPTIONS = {} as const;
 
 export function sailRig(kind: UnitKind): SailRig {
   return kind === 'transport' ? 'lug' : kind === 'warship' || kind === 'carrier' || kind === 'shipOfTheLine' ? 'square' : 'lateen';
@@ -36,8 +42,7 @@ export function sailRig(kind: UnitKind): SailRig {
 function polar(rig: SailRig, angle: number): number {
   const noGo = SAIL_RULES[rig].noGoAngle;
   if (angle <= noGo) return 0;
-  const knots = [[noGo, 0], [noGo + Math.PI / 15, .84], [Math.PI / 2, .96],
-    [Math.PI * 2 / 3, 1], [Math.PI, rig === 'lateen' ? .66 : rig === 'lug' ? .78 : .97]];
+  const knots = POLAR_KNOTS[rig];
   for (let i = 1; i < knots.length; i++) {
     const [end, high] = knots[i]!, [start, low] = knots[i - 1]!;
     if (angle <= end!) {
@@ -79,7 +84,7 @@ function trimAngle(rig: SailRig, apparentAngle: number, unloaded: boolean): numb
 }
 
 export function coursePerformance(ship: Unit, map: Pick<GameMap, 'wind'>,
-  heading = ship.sailing?.heading ?? 0, options: { assumeTrimmed?: boolean } = {}) {
+  heading = ship.sailing?.heading ?? 0, options: { assumeTrimmed?: boolean } = PERFORMANCE_OPTIONS) {
   const rig = sailRig(ship.kind), limits = shipMotionLimits(ship);
   const { wind, trueWindAngle, apparentWindAngle, apparentSpeed } = windAngles(ship, map, heading);
   const calm = wind.speed <= 1e-7, noGoAngle = SAIL_RULES[rig].noGoAngle;

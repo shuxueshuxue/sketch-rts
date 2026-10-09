@@ -32,7 +32,7 @@ describe('actor batches',()=>{
     const actor=translate(10,20,30),originalActor=actor.clone();
     batches.begin();batches.add('ship',template,actor,'a','#123456');batches.add('ship',template,translate(30),'b','#123456');batches.finish();
     const mesh=batches.objects()[0]!;
-    expect(mesh.geometry).toBe(hull.geometry);expect(mesh.morphTexture).toBeNull();expect(mesh.count).toBe(2);
+    expect(mesh.geometry).not.toBe(hull.geometry);expect(mesh.geometry.attributes).toBe(hull.geometry.attributes);expect(mesh.geometry.index).toBe(hull.geometry.index);expect(mesh.morphTexture).toBeNull();expect(mesh.count).toBe(2);
     expect(mesh.userData.ids).toEqual(['a','b']);expect(mesh.castShadow&&mesh.receiveShadow).toBe(true);
     expectMatrix(mesh,0,actor.clone().multiply(hull.matrixWorld));expect(actor).toEqual(originalActor);
     expect(mesh.material).not.toBe(sourceMaterial);expect((mesh.material as THREE.MeshStandardMaterial).color.getHexString()).toBe('123456');
@@ -66,7 +66,7 @@ describe('actor batches',()=>{
     expect(movingHit[0]!.face!.materialIndex).toBe(1);expect(movingHit[0]!.point.toArray()).toEqual([16,2,0]);
     expect(hits(mesh,10,2)).toHaveLength(0);expect(mesh.boundingSphere!.containsPoint(new THREE.Vector3(16,2,0))).toBe(true);
     expect(weights(mesh,0)).toEqual([0]);expect(weights(mesh,1)).toEqual([1.5]);expect(mesh.morphTexture!.version).toBeGreaterThan(0);
-    expect(mesh.geometry).toBe(geometry);expect(geometry.boundingBox).toEqual(originalBox);expect(geometry.boundingSphere).toEqual(originalSphere);
+    expect(mesh.geometry.attributes).toBe(geometry.attributes);expect(mesh.geometry.morphAttributes).toBe(geometry.morphAttributes);expect(geometry.boundingBox).toEqual(originalBox);expect(geometry.boundingSphere).toEqual(originalSphere);
     expect(geometry.getAttribute('position').array).toEqual(positions);expect(source.morphTargetInfluences).toEqual([0]);
     batches.dispose();
   });
@@ -128,5 +128,28 @@ describe('actor batches',()=>{
     batches.begin();batches.finish();expect(batches.objects()).toHaveLength(0);expect(mesh.count).toBe(0);expect(hits(mesh,0)).toHaveLength(0);
     for(let i=0;i<120;i++){batches.begin();batches.finish();}
     expect(dispose).toHaveBeenCalledOnce();expect(scene.children).toHaveLength(0);
+  });
+
+  it('releases each renderer geometry and texture view while keeping decoded buffers and another layer valid',()=>{
+    const texture=new THREE.Texture({width:2,height:2});texture.userData.alpha={pixels:new Uint8Array([0,255,255,0])};
+    const source=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial({map:texture}));
+    const sourceGeometry=vi.spyOn(source.geometry,'dispose'),sourceTexture=vi.spyOn(texture,'dispose');
+    const first=new ActorBatches(new THREE.Scene()),second=new ActorBatches(new THREE.Scene());
+    first.begin();first.add('one',source,translate(),'a');first.add('two',source,translate(10),'b');first.finish();
+    second.begin();second.add('other',source,translate(20),'c');second.finish();
+    const [a,b]=first.objects(),c=second.objects()[0]!;
+    const ownedTexture=(a!.material as THREE.MeshBasicMaterial).map!;
+    expect(a!.geometry).toBe(b!.geometry);expect(a!.geometry).not.toBe(c.geometry);
+    expect(a!.geometry.attributes).toBe(source.geometry.attributes);expect(c.geometry.attributes).toBe(source.geometry.attributes);
+    expect(ownedTexture).not.toBe(texture);expect(ownedTexture.source).toBe(texture.source);expect(ownedTexture.userData).toBe(texture.userData);
+    expect((b!.material as THREE.MeshBasicMaterial).map).toBe(ownedTexture);
+    const disposeGeometry=vi.spyOn(a!.geometry,'dispose'),disposeTexture=vi.spyOn(ownedTexture,'dispose');
+    const otherGeometry=vi.spyOn(c.geometry,'dispose'),otherTexture=vi.spyOn((c.material as THREE.MeshBasicMaterial).map!,'dispose');
+    first.forget('one');expect(disposeGeometry).not.toHaveBeenCalled();expect(disposeTexture).not.toHaveBeenCalled();
+    first.dispose();first.dispose();expect(disposeGeometry).toHaveBeenCalledOnce();expect(disposeTexture).toHaveBeenCalledOnce();
+    expect(sourceGeometry).not.toHaveBeenCalled();expect(sourceTexture).not.toHaveBeenCalled();expect(otherGeometry).not.toHaveBeenCalled();expect(otherTexture).not.toHaveBeenCalled();
+    expect(hits(c,20)).not.toHaveLength(0);
+    second.dispose();expect(otherGeometry).toHaveBeenCalledOnce();expect(otherTexture).toHaveBeenCalledOnce();
+    source.geometry.dispose();(source.material as THREE.Material).dispose();texture.dispose();
   });
 });

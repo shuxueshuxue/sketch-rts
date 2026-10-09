@@ -42,6 +42,7 @@ export class WaterSurface {
   private terrain: Terrain | undefined;
   private texture: THREE.DataTexture | undefined;
   private normals: THREE.DataTexture | undefined;
+  private disposed = false;
   constructor(scene: THREE.Scene) {
     const material = new THREE.ShaderMaterial({
       vertexShader: WATER_VERTEX_SHADER, fragmentShader: WATER_FRAGMENT_SHADER, toneMapped: false, transparent: true, depthWrite: false,
@@ -53,6 +54,7 @@ export class WaterSurface {
     scene.add(this.mesh);
   }
   prepare(terrain: Terrain | undefined) {
+    if (this.disposed) return;
     if (terrain === this.terrain) return;
     this.texture?.dispose(); this.texture = undefined;
     this.mesh.material.uniforms.shore!.value = null; this.terrain = terrain;
@@ -79,6 +81,11 @@ export class WaterSurface {
     this.mesh.material.uniforms.shore!.value = this.texture;
     this.mesh.material.uniforms.worldSize!.value.set(width, height);
   }
-  update(now: number, reducedMotion = false) { this.mesh.material.uniforms.seconds!.value = reducedMotion ? 0 : now / 1000; }
-  dispose() { this.normals?.dispose(); this.texture?.dispose(); this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.mesh.removeFromParent(); }
+  update(now: number, reducedMotion = false) { if (!this.disposed) this.mesh.material.uniforms.seconds!.value = reducedMotion ? 0 : now / 1000; }
+  dispose() {
+    if (this.disposed) return; this.disposed = true;
+    this.normals?.dispose(); this.texture?.dispose(); this.normals = this.texture = undefined; this.terrain = undefined;
+    this.mesh.material.uniforms.shore!.value = this.mesh.material.uniforms.normals!.value = null;
+    this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.mesh.visible = false; this.mesh.removeFromParent();
+  }
 }
