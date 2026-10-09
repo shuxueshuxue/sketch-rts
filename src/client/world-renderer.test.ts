@@ -89,6 +89,18 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
 }
 
 describe("world renderer", () => {
+  it('anchors persistent statuses to the projected 3D actor instead of its map position',()=>{
+    const snapshot=duelSnapshot(),unit=snapshot.units.find(unit=>unit.owner==='north')!;
+    unit.effects=[{type:'stun',remaining:30}];
+    const rendered=frame(snapshot,{pass:'overlay',actorPositions:new Map([[unit.id,{x:550,y:440,bodyY:180,topY:100}]])});
+    drawWorld(rendered);
+    const stun=rendered.calls.findIndex(call=>call.name==='stroke' && call.ink==='#ffe279');
+    expect(stun).toBeGreaterThan(0);
+    let start=stun-1;while(start>=0 && rendered.calls[start]!.name!=='beginPath')start--;
+    const points=rendered.calls.slice(start,stun).filter(call=>call.name==='moveTo'||call.name==='lineTo');
+    expect(points.length).toBeGreaterThan(0);
+    expect(points.every(call=>Number(call.args[0])>525 && Number(call.args[0])<575 && Number(call.args[1])>85 && Number(call.args[1])<105)).toBe(true);
+  });
   it('paints Canvas ship flags in assigned owner colors while relation rings stay separate', () => {
     const snapshot = duelSnapshot();
     snapshot.units = [createUnit('north-ship', 'north', 'warship', 260, 400), createUnit('south-ship', 'south', 'warship', 620, 400)];

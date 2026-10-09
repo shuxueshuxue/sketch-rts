@@ -178,39 +178,72 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     const previousStation = committed?.intent === 'pursuit' && committed.targetId === target.id
       ? { x: committed.goalX, y: committed.goalY } : undefined;
     let best: { x: number; y: number } | undefined, bestCost = Infinity;
+    let retained = false, nearSpace = false;
+    const consider=(candidate:{x:number;y:number})=>{
+      const distance = Math.hypot(candidate.x - ship.x, candidate.y - ship.y);
+      // Equal-distance stations on opposite sides of the target are not
+      // equal sailing approaches. Include the turn needed to reach one so
+      // a ship already heading south does not commit to a 270-degree orbit
+      // around a northward station merely because that sector came first.
+      const turn = Math.abs(headingDifference(motion.heading, Math.atan2(candidate.y - ship.y, candidate.x - ship.x)));
+      const cost = distance + ownLength * .75 * turn + (accessible(candidate)?0:ownLength*3);
+      if (cost >= bestCost - 1e-7 || !valid(candidate) || !armedStation(candidate)) return;
+      best = candidate; bestCost = cost;
+    };
     // Prefer the same useful station through a turn. Re-centering the ring
     // on the pursuer's new bearing otherwise makes a stopped enemy appear
     // to drag the destination sideways on every tick. Near the station,
     // let gunnery refine range to crew standing on the far side of a deck.
     if (previousStation && Math.hypot(previousStation.x - ship.x, previousStation.y - ship.y) > ownLength * .5
-      && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) >= standoff-ownLength*.25
+      && (Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) >= standoff-ownLength*.25
+        || requested===target && 'order' in target && shipProfile(target) && distanceToHull(target,previousStation)>=radius+8)
       && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) <= standoff+ownLength*1.15
       && inRange(previousStation,1)
-      && valid(previousStation) && accessible(previousStation) && armedStation(previousStation)) best = previousStation;
+      && valid(previousStation) && accessible(previousStation) && armedStation(previousStation)) { best = previousStation; retained = true; }
     for (const offset of best ? [] : STATION_OFFSETS) {
       const angle=bearing+offset,c=detCos(angle),s=detSin(angle);
       const station=(separation:number)=>({x:predicted.x+separation*c,y:predicted.y+separation*s});
       // A fixed circle sends a rear battery to the enemy's opposite side
       // once nearby slots are reserved. Also consider an outer station in
       // the real firing band, retaining full hull and rotation clearance.
+      const base=station(standoff),baseClear=requested===target && valid(base);
+      const nearSide=Math.abs(offset)<=Math.PI/2+1e-7;
+      if(nearSide && baseClear)nearSpace=true;
       let outer=standoff;
-      if(requested===target && !valid(station(standoff)) && inRange(station(standoff))){
+      if(requested===target && !baseClear && inRange(base)){
         let low=standoff,high=standoff+ownLength*.9;
         if(inRange(station(high)))low=high;
         else for(let i=0;i<8;i++){const middle=(low+high)/2;if(inRange(station(middle)))low=middle;else high=middle;}
         outer=low;
       }
       for(const separation of outer>standoff+4?[standoff,outer]:[standoff]){
-        const candidate = station(separation);
-        const distance = Math.hypot(candidate.x - ship.x, candidate.y - ship.y);
-        // Equal-distance stations on opposite sides of the target are not
-        // equal sailing approaches. Include the turn needed to reach one so
-        // a ship already heading south does not commit to a 270-degree orbit
-        // around a northward station merely because that sector came first.
-        const turn = Math.abs(headingDifference(motion.heading, Math.atan2(candidate.y - ship.y, candidate.x - ship.x)));
-        const cost = distance + ownLength * .75 * turn + (accessible(candidate)?0:ownLength*3);
-        if (cost >= bestCost - 1e-7 || !valid(candidate) || !armedStation(candidate)) continue;
-        best = candidate; bestCost = cost;
+        const candidate=separation===standoff?base:station(separation);
+        if(requested===target && nearSide && !nearSpace && separation>standoff && valid(candidate))nearSpace=true;
+        consider(candidate);
+      }
+    }
+    if(!retained && !nearSpace && requested===target && 'order' in target && shipProfile(target) && (!best
+      || (best.x-predicted.x)*detCos(bearing)+(best.y-predicted.y)*detSin(bearing)<0)){
+      // The approach's head-on stand-off is too wide at the quarry's beam.
+      // When every ordinary near-side slot is physically unavailable and
+      // would send a battery to the far side, search only 25 near-side
+      // angles for a smaller clear band.
+      // Each inner radius still leaves the complete turning circle plus
+      // twelve pixels outside the target, then uses the same hull, traffic,
+      // terrain and actual weapon admission as every ordinary station.
+      // A temporary obstruction of a gun's lane alone must not replace a
+      // viable approach with a tempting inner slot behind the front fleet.
+      for(let index=-12;index<=12;index++){
+        const angle=bearing+index*Math.PI/24,c=detCos(angle),s=detSin(angle);
+        const station=(separation:number)=>({x:predicted.x+separation*c,y:predicted.y+separation*s});
+        if(distanceToHull(target,station(standoff))<radius+8)continue;
+        let low=0,high=standoff;
+        for(let i=0;i<8;i++){
+          const middle=(low+high)/2;
+          if(distanceToHull(target,station(middle))<radius+8)low=middle;else high=middle;
+        }
+        consider(station(high));
+        if(standoff-high>8)consider(station((high+standoff)/2));
       }
     }
     if (best) { goal.x = best.x; goal.y = best.y; }

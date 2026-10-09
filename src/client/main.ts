@@ -3,6 +3,8 @@ import { unitGlyphScale } from "./glyphs";
 import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
 import { menuPageMarkup } from "./menu-page";
 import { commandIconMarkup } from "./command-icons";
+import { abilityIconMarkup, abilityIconUrl, type AbilityIconId } from './ability-icons';
+import { presentUnitStatuses, type PresentedUnitStatus } from './status-presentation';
 import { WorldPresentation } from './world-presentation';
 import { resources,resourceText } from './resources';
 import { resourcePanel,disposeResourcePanel } from './resource-panel';
@@ -25,7 +27,7 @@ import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
 import "./game-chrome.css";
 import "./game-ui.css";
-import { BattleHudSelection, type HudIdentity } from "./battle-hud";
+import { BattleHudSelection, type HudIdentity, type HudStatus } from "./battle-hud";
 import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
@@ -237,6 +239,7 @@ const unitMotion = new UnitMotionSmoother();
 const unitAnimation = new UnitAnimationTracker();
 const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
+let focusedStatusProjection: { snapshot: GameSnapshot; tick: number; id: string; locale: 'zh' | 'en'; statuses: PresentedUnitStatus[] } | undefined;
 let selectedCampId: string | undefined;
 let inspectedShopItem: WorldItem["kind"] | undefined;
 const purchaseRecipients=new Map<string,string>();
@@ -329,7 +332,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    withAutocastRing(createCommandButton(
+    withAbilityArtwork(withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
       command.icon,
       command.hotkey,
@@ -338,7 +341,7 @@ const commandButtons: CommandButton[] = [
       () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
       undefined,
       () => toggleAutocast(command.ability),
-    ), command.ability),
+    ), command.ability), command.ability),
   ),
   withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, STANCE_MENU_COMMAND.hotkey, stanceMenuButtonState, openStancePalette, () => ({
     title: t("command.stance.menu.title"),
@@ -593,11 +596,19 @@ function renderVeteranCommand(button: CommandButton) {
   button.element.setAttribute("aria-label", `${label}${button.hotkey ? ` (${button.hotkey.toUpperCase()})` : ""}`);
   if (button.element.dataset.veteranSkill !== skill) {
     button.element.dataset.veteranSkill = skill;
-    const icon = button.element.querySelector(".command-icon")!;
-    const markup = commandIconMarkup(definition.icon);
-    if (markup) icon.innerHTML = markup;
-    else icon.textContent = definition.icon;
+    renderAbilityArtwork(button.element, skill);
   }
+}
+
+function withAbilityArtwork(button: CommandButton, ability: AbilityIconId): CommandButton {
+  button.element.dataset.abilityId = ability;
+  return button;
+}
+
+function renderAbilityArtwork(element: HTMLElement, ability: AbilityIconId) {
+  if (element.dataset.abilityArt === ability) return;
+  element.dataset.abilityArt = ability;
+  element.querySelector('.command-icon')!.innerHTML = abilityIconMarkup(ability);
 }
 
 function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
@@ -1474,6 +1485,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch() {
+  focusedStatusProjection = undefined;
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
   activeChatUnsubscribe?.();
   activeChatUnsubscribe = undefined;
@@ -2899,6 +2911,8 @@ function cycleFocusedSelection(direction: 1 | -1) {
 
 function updateHud() {
   if (!snapshot) return;
+  const statusTooltip = shownTooltipTarget?.dataset.unitStatus ? shownTooltipTarget : undefined;
+  const statusTooltipBefore = statusTooltip ? `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}` : '';
   for (const [id, tick] of pendingVeteranChoices) {
     const unit = snapshot.units.find(candidate => candidate.id === id);
     if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
@@ -2911,6 +2925,7 @@ function updateHud() {
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   if (!groups.length || selectedShop()) {
+    focusedStatusProjection = undefined;
     const subject = selectionLabel.querySelector<HTMLElement>(".hud-subject");
     if (subject) delete subject.dataset.tooltipTitle;
   }
@@ -2936,10 +2951,15 @@ function updateHud() {
       art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
+  if (statusTooltip && !statusTooltip.isConnected) {
+    tooltipLayer.classList.add('hidden'); shownTooltipTarget = undefined;
+    if (virtualTooltipTarget === statusTooltip) virtualTooltipTarget = undefined;
+  } else if (statusTooltip && !tooltipLayer.classList.contains('hidden') && statusTooltipBefore !== `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}`) renderTooltip(statusTooltip);
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
     if (state.visible) renderVeteranCommand(button);
+    if (state.visible && button.element.dataset.abilityId) renderAbilityArtwork(button.element, button.element.dataset.abilityId as AbilityIconId);
     if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
     if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     if (button.element.dataset.shipBoarding) {
@@ -2980,6 +3000,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   const focused = groups.find(group => group.focused) ?? groups[0]!;
   const identityId = focused.ids.includes(focusedSelectionId ?? "") ? focusedSelectionId : focused.ids[0];
   const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === identityId);
+  if (!entity || !('order' in entity)) focusedStatusProjection = undefined;
   const total = groups.reduce((sum, group) => sum + group.count, 0);
   const owner = entity?.owner ?? localPlayerId;
   const identity: HudIdentity = {
@@ -2993,6 +3014,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+    ...((entity && 'order' in entity) ? { statuses: focusedHudStatuses(entity) } : {}),
   };
   hudSelection.render(identity, groups.map(group => {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
@@ -3019,6 +3041,26 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   if (subject && entity) applyTooltip(subject, "order" in entity
     ? unitSelectionTooltip(entity.kind, [entity], snapshot!, i18n)
     : buildingTooltip(entity.kind, undefined, i18n, snapshot?.players[entity.owner]?.race));
+}
+
+function focusedHudStatuses(unit: Unit): HudStatus[] {
+  if (!snapshot) return [];
+  if (!focusedStatusProjection || focusedStatusProjection.snapshot !== snapshot || focusedStatusProjection.tick !== snapshot.tick || focusedStatusProjection.id !== unit.id || focusedStatusProjection.locale !== i18n.locale) {
+    focusedStatusProjection = { snapshot, tick: snapshot.tick, id: unit.id, locale: i18n.locale, statuses: presentUnitStatuses(snapshot, unit, i18n.locale) };
+  }
+  const zh = i18n.locale === 'zh';
+  return focusedStatusProjection.statuses.map(status => {
+    const category = zh ? status.polarity === 'buff' ? '增益' : status.polarity === 'debuff' ? '减益' : '状态' : status.polarity === 'buff' ? 'Buff' : status.polarity === 'debuff' ? 'Debuff' : 'Status';
+    const duration = status.remainingTicks !== undefined ? `${zh ? '剩余' : 'Remaining'} ${status.badge}` : status.type === 'aura' ? zh ? '光环范围内生效' : 'Active while in aura range' : '';
+    return {
+      key: status.key, name: status.name, polarity: status.polarity, iconUrl: abilityIconUrl(status.icon), badge: status.badge,
+      accessibleLabel: [status.name, category, duration].filter(Boolean).join(' · '),
+      decorate: element => applyTooltip(element, {
+        title: status.name, body: status.description, stats: [category, duration].filter(Boolean), requirements: [],
+        ...(status.type === 'aura' ? { notes: [zh ? '离开范围，或光环来源阵亡、撤入舱内后结束。' : 'Ends when you leave range, or the source dies or enters a cabin.'] } : {}),
+      }),
+    };
+  });
 }
 
 function sailingStatus(unit: Unit): string {

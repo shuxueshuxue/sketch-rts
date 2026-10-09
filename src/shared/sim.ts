@@ -471,7 +471,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: "move", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }), command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -479,7 +479,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: unit.attackDamage > 0 ? "attackMove" : "move", x: command.x, y: command.y }), command.queued);
     }
-    addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28);
+    addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28, { owner });
     return;
   }
 
@@ -513,7 +513,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
       if (unit.attackDamage > 0) assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
     const target = findStrikeTarget(game, command.targetId);
-    if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32);
+    if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32, { owner });
     return;
   }
 
@@ -525,7 +525,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (unit !== target) assignUnitOrder(unit, { type: "follow", targetId: target.id }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -535,7 +535,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: unit.carryingGold > 0 ? "return" : "toMine", timer: 0 }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30);
+    addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30, { owner });
     return;
   }
 
@@ -656,7 +656,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -1860,7 +1860,7 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
     passenger.aim=undefined;
     Object.assign(passenger,spot);
     assignUnitOrder(passenger,{type:"idle"});
-    addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,sourceKind:passenger.kind});
+    addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
     landed++;
   });
   syncDecks(game.units);
@@ -2003,7 +2003,7 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
 function addRepairHammerEffect(game: Game, building: Building, queued = false) {
   const activeType = queued ? ["repair", "queuedRepair"] : ["repair"];
   if (game.effects.some((effect) => activeType.includes(effect.type) && effect.x === building.x && effect.y === building.y)) return;
-  addEffect(game, queued ? "queuedRepair" : "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION);
+  addEffect(game, queued ? "queuedRepair" : "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION, { owner: building.owner });
 }
 
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
@@ -2029,7 +2029,7 @@ function setRally(game: Game, owner: PlayerId, buildingIds: string[], x: number,
     building.rallyY = normalized.y;
     building.rallyTarget = normalized.target;
   }
-  addEffect(game, "move", normalized.x, normalized.y, 24);
+  addEffect(game, "move", normalized.x, normalized.y, 24, { owner });
 }
 
 function normalizeRallyTarget(game: Game, owner: PlayerId, x: number, y: number, target: RallyTarget | undefined) {
@@ -2179,7 +2179,7 @@ function deliverPurchase(game:Game,item:WorldItem,placement:PurchasePlacement){
   item.x=recipient.x;item.y=recipient.y;
   invalidateItemIndex(game.items);
   applyDerivedUnitStats(game,recipient);refreshEquipmentMass(game);
-  addEffect(game,"itemReceived",recipient.x,recipient.y,seconds(.8));
+  addEffect(game,"itemReceived",recipient.x,recipient.y,seconds(.8),{owner:recipient.owner});
 }
 
 function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
@@ -2293,7 +2293,7 @@ function castAbility(
   // Out of reach, or after the orders before it (shift), the caster walks to cast (see @@@cast-order).
   const later = (order: Extract<UnitOrder, { type: "cast" }>, at: { x: number; y: number }) => {
     assignUnitOrder(caster, order, queued);
-    addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24);
+    addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24, { owner });
   };
 
   if (def.behavior === "weapon") {
@@ -4162,7 +4162,8 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   const from={x:unit.x,y:unit.y};
   if (map.terrain) {
     walkToward(unit, x, y, map, pace);
-    Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
     return;
   }
   const speed = perTick(unit.speed) * pace;
@@ -4172,12 +4173,14 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   if (length <= speed || length === 0) {
     unit.x = clamp(x, 0, map.width);
     unit.y = clamp(y, 0, map.height);
-    Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
     return;
   }
   unit.x = clamp(unit.x + (dx / length) * speed, 0, map.width);
   unit.y = clamp(unit.y + (dy / length) * speed, 0, map.height);
-  Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+  const at=constrainGroundShipStep(map,unit,from,unit,units);
+  if(at!==unit){unit.x=at.x;unit.y=at.y;}
 }
 
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else

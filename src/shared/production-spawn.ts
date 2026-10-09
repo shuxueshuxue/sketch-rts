@@ -14,6 +14,7 @@ type Exits = {
   cells: string | undefined;
   points: Point[];
   range: number;
+  ordering?: { rally: string; points: Point[] };
   reachability?: { rally: string; points: Map<Point, boolean> };
   selection?: string;
   result?: Point | undefined;
@@ -60,8 +61,16 @@ export function landSpawnPrototype(building: Building, kind: UnitKind): Unit {
 export function landSpawnPoint(world: World, building: Building, unit: Unit): Point | undefined {
   if (building.hp <= 0) return undefined;
   const radius = Math.max(unit.radius, unit.bodyRadius ?? 0), terrain = world.map.terrain;
-  const solids = [...world.buildings, ...(world.obstacles ?? [])].filter(body => body.hp > 0);
-  const geometry = `${building.x}:${building.y}:${building.radius}:${radius}:${world.map.width}:${world.map.height}:${terrain?.cell}:${terrain?.cols}:${terrain?.rows}:${groundRevision(world.map)}:${solids.map(s => `${s.id}:${s.x}:${s.y}:${s.radius}`).join('|')}`;
+  // Only nearby solid footprints can intersect an exit or its slideway.
+  // Keep an extra cell for authored bodies not snapped exactly to the grid.
+  const halo = solidHalf(world.map, building) + 2 * radius + 2 * GAP + OUTWARD[OUTWARD.length - 1]! + (terrain?.cell ?? 0);
+  const nearbySolids = [...world.buildings, ...(world.obstacles ?? [])].filter(body => Math.abs(body.x - building.x) <= halo + solidHalf(world.map, body)
+    && Math.abs(body.y - building.y) <= halo + solidHalf(world.map, body));
+  const solids = nearbySolids.filter(body => body.hp > 0);
+  const navigation = groundRevision(world.map);
+  // Keep the global routing revision here: a remote gate can change rally
+  // reachability, and the overlay may remove a dead local body a tick later.
+  const geometry = `${building.x}:${building.y}:${building.radius}:${radius}:${world.map.width}:${world.map.height}:${terrain?.cell}:${terrain?.cols}:${terrain?.rows}:${navigation}:${nearbySolids.map(s => `${s.id}:${s.x}:${s.y}:${s.radius}:${s.hp > 0}`).join('|')}`;
   let buildings = exits.get(world.map);
   if (!buildings) { buildings = new WeakMap(); exits.set(world.map, buildings); }
   let cached = buildings.get(building);
@@ -83,9 +92,14 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
     if (cached.reachability?.rally !== rally) cached.reachability = { rally, points: new Map() };
     // Charge the local exit distance too: a farther outer row must not win
     // merely because it is a few pixels nearer a very distant rally.
-    const travel = (point: Point) => Math.hypot(point.x - aim.x, point.y - aim.y) + Math.hypot(point.x - building.x, point.y - building.y);
-    const ordered = [...cached.points].sort((a, b) => travel(a) - travel(b)
-      || Math.hypot(a.x - building.x, a.y - building.y) - Math.hypot(b.x - building.x, b.y - building.y));
+    const direction = `${aim.x}:${aim.y}`;
+    if (cached.ordering?.rally !== direction) {
+      cached.ordering = { rally: direction, points: cached.points.map(point => {
+        const exit = Math.hypot(point.x - building.x, point.y - building.y);
+        return { point, exit, travel: exit + Math.hypot(point.x - aim.x, point.y - aim.y) };
+      }).sort((a, b) => a.travel - b.travel || a.exit - b.exit).map(candidate => candidate.point) };
+    }
+    const ordered = cached.ordering.points;
     let fallback: Point | undefined;
     let reachableExit = false;
     cached.result = undefined;

@@ -9,13 +9,17 @@ import { bootstrapPolicyContext, bootstrapScripts } from './policy';
 import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { readV6Intel } from '../policy/v6/intel';
 import { planAiOwnerCommandEntries } from '../planner-context';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 
 function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lancer', race: 'grove' | 'ember' = 'grove') {
   const shooter = race === 'grove' ? 'horseArcher' : 'sparkArcher';
   let scene = sketchScene('independent-mine-defense').replaceDefaults()
     .player('us', { team: 'a', race }).player('fa', { team: 'b', race: 'grove' }).player('fb', { team: 'b', race: 'grove' })
     .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })
-    .goldMine('main', 688, 1000, 4000).goldMine('natural', 1888, 1600, 4000)
+    // These are ordinary five-worker lanes, rather than an intentional long
+    // haul. Follow the standard economy while keeping both combat fronts fixed.
+    .goldMine('main', 400 + GOLD_MINE_RULES.mainDistance, 1000, 4000)
+    .goldMine('natural', 1600 + GOLD_MINE_RULES.mainDistance, 1600, 4000)
     .townHall('fa', 3500, 3000, { id: 'attack-hall' }).townHall('fb', 3500, 800)
     .farms('us', 8, 400, 2200);
   for (let i = 0; i < 5; i++) scene = scene.worker('us', 1650 + i * 35, 1700, { id: `miner-${i}` });

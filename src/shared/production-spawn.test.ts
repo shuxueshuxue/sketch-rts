@@ -137,6 +137,23 @@ describe('rally-directed production exits', () => {
     expect(landSpawnPoint(game, building, unit)!.x).toBeGreaterThan(building.x);
   });
 
+  it('invalidates rally reachability when a distant gate closes outside the local exit search', () => {
+    const context = scene(), { game, building } = context, unit = probe(context);
+    // Only the wide passage at the north map edge connects the two sides;
+    // the producer itself fills the central gap in this full-height wall.
+    setCells(context, (col, row) => col >= 19 && col <= 21 && row > 2 && (row < 19 || row > 21) ? '#' : '.');
+    building.rallyX = 1100; building.rallyY = building.y;
+    const traffic = createUnit('east-traffic', 'player', 'rockGolem', 812, 656);
+    traffic.radius = traffic.bodyRadius = 128; game.units.push(traffic);
+    const open = landSpawnPoint(game, building, unit)!;
+    expect(open.x).toBeLessThan(building.x);
+    const distant = gate('distant-gate', 656, 48, 48); game.obstacles = [distant];
+    setBuildingBodies(game.map, [...game.buildings, distant]);
+    expect(landSpawnPoint(game, building, unit)).toBeUndefined();
+    distant.hp = 0; setBuildingBodies(game.map, game.buildings);
+    expect(landSpawnPoint(game, building, unit)).toEqual(open);
+  });
+
   it('keeps a completed paid land job queued, then releases once without extra payment or lost IDs', () => {
     const context = scene(), { game, building } = context;
     issuePlayerCommand(game, 'player', { type: 'train', buildingId: building.id, unitKind: 'footman' });
