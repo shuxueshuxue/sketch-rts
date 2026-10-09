@@ -5,8 +5,38 @@ import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { distance } from '../policy/spatial';
+import { recordAiMemoryForCommands } from '../policy/claims';
 
 describe('bootstrap_1 mounted raid recruitment', () => {
+  it('keeps an injured raider in its existing squad until a recovery order takes command', () => {
+    const game = sketchScene('mounted-injury-command-continuation').map('openClaims').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .townHall('us', 400, 400).townHall('foe', 2600, 2300, { id: 'raid-hall' })
+      .unit('us', 'horseArcher', 2180, 2000, { id: 'rider' })
+      .worker('foe', 2850, 2300, { id: 'miner' })
+      .unit('foe', 'footman', 2400, 1950, { id: 'caster' })
+      .item('staff', 'stormStaff', 0, 0, { carrierId: 'caster' }).build().createGame();
+    const memory = createAiPolicyMemory();
+    const plan = () => planAiOwnerCommandEntries(snapshotGame(game),
+      { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams });
+    issueCommandFrame(game, plan());
+    expect(memory.mounted![0]!.unitIds).toEqual(['rider']);
+    issuePlayerCommand(game, 'foe', { type: 'useItem', unitId: 'caster', itemId: 'staff', x: 2180, y: 2000 });
+    const rider = game.units.find(unit => unit.id === 'rider')!;
+    expect(rider.hp).toBe(85);
+    const evasion = plan();
+    expect(memory.mounted![0]!.unitIds).toEqual(['rider']);
+    expect(evasion.some(entry => entry.scriptId === 'shellEvasion' && entry.command.type === 'move'
+      && entry.command.unitIds.includes('rider'))).toBe(true);
+    const snapshot = snapshotGame(game);
+    const recovery = { type: 'move' as const, unitIds: ['rider'], x: 700, y: 700 };
+    issuePlayerCommand(game, 'us', recovery);
+    recordAiMemoryForCommands(snapshot, 'skirmishPreservation', [recovery], memory);
+    plan();
+    expect(memory.mounted).toEqual([]);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   it('starts with one rider and admits normally purchased reinforcements into that same raid', () => {
     const game = sketchScene('mounted-raid-recruitment').map('openClaims').replaceDefaults()
       .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
