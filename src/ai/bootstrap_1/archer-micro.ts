@@ -11,7 +11,7 @@ export const archerMicro: AiScript = {
   claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
     if (options.memory.v6?.general?.mode === 'creep') return new Set();
     return new Set(planSkirmishPreservation(snapshot, owner, options)
-      .flatMap(command => command.type === 'move' ? command.unitIds : [])
+      .flatMap(command => command.type === 'move' || command.type === 'attack' ? command.unitIds : [])
       .filter(id => snapshot.units.some(unit => unit.id === id && ['archer', 'horseArcher', 'sparkArcher'].includes(unit.kind))));
   },
 };
