@@ -3,7 +3,7 @@ import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind } from '../../shared/types';
 import { navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, collectV6Goals, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -52,8 +52,14 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
   }, 0);
 }
 
+// One pending construction of each kind: a walking colony builder does not lock home tech.
+const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
+  if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
+  return issueV6Construction(economy, kind, point, used, play);
+};
+
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const goals = collectV6Goals(snapshot, owner, options);
+  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap);
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);
