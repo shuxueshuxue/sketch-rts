@@ -46,21 +46,28 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   }) : [];
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
-  const riders = eligible.filter(unit => !assigned.has(unit.id));
+  let riders = eligible.filter(unit => !assigned.has(unit.id));
+  const raid = active.find(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3);
+  if (raid) {
+    const lead = byId.get(raid.unitIds[0]!)!;
+    const recruits = riders.filter(unit => sameGround(snapshot.map, lead, unit)).slice(0, 3 - raid.unitIds.length);
+    raid.unitIds.push(...recruits.map(unit => unit.id));
+    riders = riders.filter(unit => !recruits.includes(unit));
+  }
   if (!riders.length) return active;
   const lead = riders[0]!;
   const halls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
     .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && firingPoint(snapshot, lead, worker, towers)))
     .sort((a, b) => distance(lead, a) - distance(lead, b));
-  if (riders.length >= 2 && halls.length) {
-    const hall = halls[0]!;
-    active.push({ unitIds: riders.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
-    return active;
-  }
   const camp = neutralCamps(snapshot).filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
       && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
     && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange))
     .sort((a, b) => distance(lead, a.center) - distance(lead, b.center))[0];
+  if (halls.length && (riders.length >= 2 || !camp)) {
+    const hall = halls[0]!;
+    active.push({ unitIds: riders.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
+    return active;
+  }
   if (!camp) return active;
   active.push({ unitIds: [lead.id], objective: { kind: 'camp', ids: camp.creeps.map(unit => unit.id) } });
   return active;
