@@ -103,11 +103,15 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
+  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options));
+}
+
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
+  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -417,10 +421,10 @@ function capacityGoals(economy: Economy): Goal[] {
 }
 
 // A goal that keeps waiting gains a point every few seconds, so a cheap stream of higher goals cannot starve it forever.
-function aged(economy: Economy, goals: Goal[]): Goal[] {
-  const memory = v6Memory(economy.options);
+export function ageV6Goals(snapshot: GameSnapshot, options: AiPolicyContext, goals: Goal[]): Goal[] {
+  const memory = v6Memory(options);
   const ages = (memory.goalAges ??= {});
-  const tick = economy.snapshot.tick;
+  const tick = snapshot.tick;
   for (const [id, age] of Object.entries(ages)) if (tick - age.seen > AGE_MEMORY_TICKS) delete ages[id];
   return goals
     .map((candidate) => {

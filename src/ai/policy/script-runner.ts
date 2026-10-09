@@ -105,7 +105,7 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
     } else if (command.type === "move" || command.type === "aim" || command.type === "holdPosition") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
-    } else if ((command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit")) {
+    } else if ((command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit" || command.type === "mine")) {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
     } else if (command.type === "cast") {
@@ -119,7 +119,8 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
 
 function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>, snapshot: GameSnapshot) {
   for (const command of commands) {
-    if (command.type === "move" || command.type === "holdPosition" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || (command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "move" || command.type === "holdPosition" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || (command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit" || command.type === "mine") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "build") movedUnitIds.add(command.unitId);
     if (command.type !== "cast") continue;
     const def = ABILITY_DEFS[command.ability];
     const caster = snapshot.units.find((unit) => unit.id === command.unitId);
