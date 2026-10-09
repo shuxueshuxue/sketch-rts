@@ -1,11 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS } from "../../shared/catalog";
-import { snapshotGame } from "../../shared/sim";
+import { snapshotGame, stepGame } from "../../shared/sim";
+import { issueCommandFrame } from "../../sdk/commands/frame";
 import { sketchScene } from "../../sdk/scene";
 import { planSkirmishPreservation } from "./skirmish-tactics";
 import { distance } from "./spatial";
 
 describe("AI skirmish tactics", () => {
+  it.each(['grove', 'ember'] as const)('recovers a %s reinforcement without suppressing a separate critical volley', race => {
+    const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
+    const enemy = race === 'grove' ? 'sparkArcher' : 'archer';
+    const scene = sketchScene('independent-recovery-and-volley').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { race: race === 'grove' ? 'ember' : 'grove', team: 'b' })
+      .townHall('us', 500, 500).townHall('foe', 3000, 3000)
+      .unit('us', shooter, 950, 900, { id: 'recovering', hp: 6 })
+      .unit('foe', enemy, 2070, 770, { id: 'critical', hp: 12 });
+    for (let index = 0; index < 4; index++) scene.unit('us', shooter, 1800, 700 + index * 45, { id: `shooter-${index}` });
+    for (let index = 0; index < 8; index++) scene.unit('foe', enemy, 2200 + index * 20, 720 + index * 15);
+    const game = scene.build().createGame();
+    const commands = planSkirmishPreservation(snapshotGame(game), 'us', { version: 'v2', requestedVersion: 'v9', teams: game.teams });
+    expect(commands.some(command => command.type === 'move' && command.unitIds.includes('recovering'))).toBe(true);
+    expect(commands.some(command => command.type === 'attack' && command.targetId === 'critical')).toBe(true);
+    const assigned = commands.flatMap(command => 'unitIds' in command ? command.unitIds : []);
+    expect(new Set(assigned).size).toBe(assigned.length);
+    issueCommandFrame(game, commands.map(command => ({ command, scriptId: 'skirmishPreservation', playerId: 'us',
+      source: 'external-agent', plannerOrigin: 'local-command-planner' })));
+    for (let tick = 0; tick < 100; tick++) stepGame(game);
+    expect(game.units.some(unit => unit.id === 'critical')).toBe(false);
+    expect(game.units.find(unit => unit.id === 'recovering')!.x).toBeLessThan(950);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   it("pulls a wounded ranged unit away from a melee unit that has closed the distance", () => {
     const game = sketchScene("skirmish-tactics-ranged-kite")
       .map("bareDuel")
