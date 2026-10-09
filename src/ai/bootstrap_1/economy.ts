@@ -1,7 +1,7 @@
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind } from '../../shared/types';
-import { navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
@@ -59,7 +59,7 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
 };
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap);
+  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant);
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);
