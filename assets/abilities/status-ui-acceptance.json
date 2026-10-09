@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "scope": "actual app entry, native selection/Tab/skill commands, original renderer; functional acceptance, no FPS claim",
+  "totalChecks": 16,
+  "results": [
+    {
+      "mode": "3D",
+      "is3D": true,
+      "originalModelHitCount": 9,
+      "errors": [],
+      "checks": [
+        {"case":"learned skill alone is not an active buff","passed":true,"focus":"unit-player-footman-1000","selectedCount":1,"tick":17,"stripHidden":true,"statuses":[]},
+        {"case":"real Rally cast plus neutral poison/net hits","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":35,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"2.6s","loaded":true},{"key":"poison","polarity":"debuff","badge":"4s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"6s","loaded":true}],"tooltip":"中毒\n每秒受到 3 点毒性伤害。再次中毒刷新持续时间。\n减益\n剩余 3s"},
+        {"case":"Tab changes focus and hides other unit debuffs","passed":true,"focus":"unit-player-footman-1000","selectedCount":2,"tick":59,"stripHidden":false,"statuses":[{"key":"temporaryAttackSpeed","polarity":"buff","badge":"5s","loaded":true}]},
+        {"case":"Tab returns to selected target","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":59,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"1.4s","loaded":true},{"key":"poison","polarity":"debuff","badge":"2.4s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"5s","loaded":true}]},
+        {"case":"duration decreases while the same DOM node survives","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":66,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"1.1s","loaded":true},{"key":"poison","polarity":"debuff","badge":"2.1s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"4s","loaded":true}]},
+        {"case":"short negative statuses disappear independently","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":110,"stripHidden":false,"statuses":[{"key":"temporaryAttackSpeed","polarity":"buff","badge":"1.8s","loaded":true}]},
+        {"case":"buff expiry removes strip while cooldown remains","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":146,"stripHidden":true,"statuses":[],"cooldownTicks":359},
+        {"case":"native priest selection loads ordinary spell and all three veteran choice images without emoji","passed":true,"focus":"unit-player-priest-1009","spellIcons":[{"id":"heal","url":"/art/abilities/heal.webp","loaded":true,"iconText":""}],"veteranIcons":[{"id":"veteranHealingWave","url":"/art/abilities/veteranHealingWave.webp","loaded":true,"iconText":""},{"id":"veteranInnerFire","url":"/art/abilities/veteranInnerFire.webp","loaded":true,"iconText":""},{"id":"veteranRenewal","url":"/art/abilities/veteranRenewal.webp","loaded":true,"iconText":""}]}
+      ]
+    },
+    {
+      "mode": "2D",
+      "is3D": false,
+      "originalModelHitCount": 0,
+      "errors": [],
+      "checks": [
+        {"case":"learned skill alone is not an active buff","passed":true,"focus":"unit-player-footman-1000","selectedCount":1,"tick":9,"stripHidden":true,"statuses":[]},
+        {"case":"real Rally cast plus neutral poison/net hits","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":22,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"2.6s","loaded":true},{"key":"poison","polarity":"debuff","badge":"4s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"6s","loaded":true}],"tooltip":"中毒\n每秒受到 3 点毒性伤害。再次中毒刷新持续时间。\n减益\n剩余 3s"},
+        {"case":"Tab changes focus and hides other unit debuffs","passed":true,"focus":"unit-player-footman-1000","selectedCount":2,"tick":50,"stripHidden":false,"statuses":[{"key":"temporaryAttackSpeed","polarity":"buff","badge":"5s","loaded":true}]},
+        {"case":"Tab returns to selected target","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":50,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"1.2s","loaded":true},{"key":"poison","polarity":"debuff","badge":"2.2s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"5s","loaded":true}]},
+        {"case":"duration decreases while the same DOM node survives","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":60,"stripHidden":false,"statuses":[{"key":"slow","polarity":"debuff","badge":"0.7s","loaded":true},{"key":"poison","polarity":"debuff","badge":"1.7s","loaded":true},{"key":"temporaryAttackSpeed","polarity":"buff","badge":"4s","loaded":true}]},
+        {"case":"short negative statuses disappear independently","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":95,"stripHidden":false,"statuses":[{"key":"temporaryAttackSpeed","polarity":"buff","badge":"1.9s","loaded":true}]},
+        {"case":"buff expiry removes strip while cooldown remains","passed":true,"focus":"unit-player-archer-1001","selectedCount":2,"tick":134,"stripHidden":true,"statuses":[],"cooldownTicks":359},
+        {"case":"native priest selection loads ordinary spell and all three veteran choice images without emoji","passed":true,"focus":"unit-player-priest-1009","spellIcons":[{"id":"heal","url":"/art/abilities/heal.webp","loaded":true,"iconText":""}],"veteranIcons":[{"id":"veteranHealingWave","url":"/art/abilities/veteranHealingWave.webp","loaded":true,"iconText":""},{"id":"veteranInnerFire","url":"/art/abilities/veteranInnerFire.webp","loaded":true,"iconText":""},{"id":"veteranRenewal","url":"/art/abilities/veteranRenewal.webp","loaded":true,"iconText":""}]}
+      ]
+    }
+  ]
+}

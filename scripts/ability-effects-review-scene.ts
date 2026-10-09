@@ -2,7 +2,7 @@ import { UNIT_DEFS } from '../src/shared/catalog';
 import { createGame, issuePlayerCommand, refreshUnitStats, snapshotGame, stepGame } from '../src/shared/sim';
 import { xpStarThresholds } from '../src/shared/unit-value';
 import type { UnitStatusEffect } from '../src/shared/types';
-import type { VeteranActiveSkillId } from '../src/shared/veteran-skills';
+import { isVeteranActiveSkillId, type VeteranActiveSkillId } from '../src/shared/veteran-skills';
 
 export type AbilityEffectReviewCase = 'slow' | 'poison' | 'stomp' | 'web' | 'bloodlust' | VeteranActiveSkillId;
 
@@ -12,8 +12,8 @@ export function createAbilityEffectReviewScene(kind:AbilityEffectReviewCase) {
   const game=createGame('bareDuel',{aiPlayers:[]});
   game.units=[];game.buildings=[];game.resources=[];game.items=[];game.mercenaryCamps=[];game.obstacles=[];game.shops=[];
   game.scriptedVictory=true;delete game.map.terrain;
-  if(kind.startsWith('veteran')) {
-    const skill=kind as VeteranActiveSkillId;
+  if(isVeteranActiveSkillId(kind)) {
+    const skill=kind;
     const caster=game.spawnUnit('player',skill==='veteranRally'?'footman':'priest',800,800);
     const recipient=game.spawnUnit('player','archer',890,800);recipient.hp-=50;
     caster.xp=xpStarThresholds(UNIT_DEFS[caster.kind])[2]!;caster.level=3;
