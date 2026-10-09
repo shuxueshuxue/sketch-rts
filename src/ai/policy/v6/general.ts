@@ -128,7 +128,9 @@ type Mode = NonNullable<V6PolicyMemory["general"]>["mode"];
 
 export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
-  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), "rally", "halls");
+  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), {
+    reinforcements: "rally", expansionBasis: "halls", pursue: () => true,
+  });
 }
 
 export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext, intel: V6Intel): Unit[] {
@@ -137,7 +139,14 @@ export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext
   return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
 }
 
-export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, reinforcements: "rally" | "siege", expansionBasis: "halls" | "mines"): GameCommand[] {
+type ArmyPlan = {
+  reinforcements: "rally" | "siege";
+  expansionBasis: "halls" | "mines";
+  pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
+};
+
+export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
+  const { reinforcements, expansionBasis, pursue } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -174,7 +183,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const line = front.filter((unit) => !wounded.includes(unit));
     if (isV8Policy(options) && waitsForTowers(intel, defense, strength, line)) return towerWait(snapshot, owner, memory, line, defense, options);
     // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
-    if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
+    if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE && pursue(defense)) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
     if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
