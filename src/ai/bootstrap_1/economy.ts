@@ -60,6 +60,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
   const own = snapshot.buildings.filter(building => building.owner === owner);
+  // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
+  const waveReserve = own.some(building => building.complete && building.queue.length > 0)
+    ? own.filter(building => building.complete).reduce((total, building) => total
+      + Math.max(0, ...BUILDING_DEFS[building.kind].trains.filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
   const threatenedHome = snapshot.units.some(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options)
     && halls.some(hall => Math.hypot(hall.x - unit.x, hall.y - unit.y) <= BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange
@@ -75,6 +79,9 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
         productionReserve = Math.max(0, ...BUILDING_DEFS[kind].trains.filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)) * existing.length;
         if (productionReserve === 0) return [];
       }
+    }
+    if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id.startsWith('upgrade:') || goal.id === 'engineering:workshop') {
+      productionReserve = Math.max(productionReserve, waveReserve);
     }
     return [{ ...goal, productionReserve }];
   }).filter(goal => {

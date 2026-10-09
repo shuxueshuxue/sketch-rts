@@ -15,6 +15,7 @@ import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 import { planSummonerScreen } from './summoner-screen';
+import { mountedTasks } from './mounted-tasks';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -28,10 +29,14 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
   v9_summoner: V6_STRATEGIES.map(strategy => ({ ...strategy, phases: v7Phases(strategy) })),
   v9_knight: V8_STRATEGIES.map(strategy => ({
     ...strategy,
-    phases: v7Phases(strategy).map(phase => ({
+    phases: v7Phases(strategy).map((phase, index) => ({
       ...phase,
-      wants: phase.wants.map(want => 'building' in want && want.building === 'emberForge'
-        ? { ...want, building: UNIT_DEFS.ashChieftain.trainedAt! } : want),
+      wants: [
+        // Once the natural and opening screen stand, unlock the heavy line before filling the light cavalry quota.
+        ...(index === 1 ? [{ unit: strategy.race === 'grove' ? 'knight' as const : 'ashChieftain' as const, count: 4, priority: 62 }] : []),
+        ...phase.wants.map(want => 'building' in want && want.building === 'emberForge'
+          ? { ...want, building: UNIT_DEFS.ashChieftain.trainedAt! } : want),
+      ],
     })),
   })),
 };
@@ -75,6 +80,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [{ ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
+    if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, script];
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.abilities) return [towerRushAbilities, summonerTowerRush];
     // Ferry and rescue assignments keep priority over local repair work.
     return script === AI_SCRIPT_LIBRARY.naval ? [script, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];

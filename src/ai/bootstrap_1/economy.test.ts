@@ -4,6 +4,8 @@ import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
 import type { TrainableUnitKind } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
+import { planAiOwnerCommandEntries } from '../planner-context';
+import { issueCommandFrame } from '../../sdk/commands/frame';
 import { planV6Economy } from '../policy/v6/economy';
 import { planAbilityCommands } from '../policy/spell-tactics';
 import { bootstrapPolicyContext } from './policy';
@@ -32,6 +34,57 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each(['grove', 'ember'] as const)('builds and pays for the mixed %s opening from normal starting gold and mining', race => {
+    const screen = race === 'grove' ? 'footman' : 'emberRavager';
+    const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
+    let scene = sketchScene('mixed-archer-opening').replaceDefaults().player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
+      .goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500);
+    for (let index = 0; index < 3; index++) scene = scene.worker('us', 540, 530 + index * 20,
+      { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    for (let tick = 0; tick < 6000; tick++) {
+      if (game.units.filter(unit => unit.kind === screen).length >= 2 && game.units.filter(unit => unit.kind === shooter).length >= 2) break;
+      if (tick % 15 === 0) {
+        issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_archer', memory }, { teams: game.teams }));
+      }
+      stepGame(game);
+    }
+    expect(game.units.filter(unit => unit.kind === screen).length).toBeGreaterThanOrEqual(2);
+    expect(game.units.filter(unit => unit.kind === shooter).length).toBeGreaterThanOrEqual(2);
+    expect(game.buildings.some(building => building.kind === UNIT_DEFS[screen].trainedAt && building.complete)).toBe(true);
+    expect(game.buildings.some(building => building.kind === UNIT_DEFS[shooter].trainedAt && building.complete)).toBe(true);
+    const spent = BUILDING_DEFS[UNIT_DEFS[screen].trainedAt!].cost + BUILDING_DEFS[UNIT_DEFS[shooter].trainedAt!].cost
+      + 2 * UNIT_DEFS[screen].cost + 2 * UNIT_DEFS[shooter].cost;
+    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(spent);
+  });
+  it.each(['grove', 'ember'] as const)('funds the first %s heavy squad after the opening instead of waiting for a full light line', race => {
+    const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
+    const basic = race === 'grove' ? 'lancer' : 'emberRavager';
+    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    let scene = sketchScene('heavy-after-natural').replaceDefaults().player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
+      .building('us', UNIT_DEFS[basic].trainedAt!, 700, 850)
+      .building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850).farms('us', 6, 400, 1500);
+    for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,
+      { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 6; index++) scene = scene.unit('us', basic, 1300 + index * 30, 900);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 1 };
+    for (let tick = 0; tick < 6000 && game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).length < 4; tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
+        for (const command of planBootstrapEconomy(snapshot, 'us', options)) issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy)).toHaveLength(4);
+    const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
+    const carrying = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
+    expect(game.players.us!.gold + game.match.stats.goldSpent.us!).toBeLessThanOrEqual(500 + mined - carrying);
+    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(4 * UNIT_DEFS[heavy].cost);
+  });
   it.each((['grove', 'ember'] as const).flatMap(race => [
     { race, shooters: 6, gold: 500 }, { race, shooters: 5, gold: 250 },
   ]))('recruits $race medical support for $shooters shooters and heals with ordinary commands', ({ race, shooters, gold }) => {
