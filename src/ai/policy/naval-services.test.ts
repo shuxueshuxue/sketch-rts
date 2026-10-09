@@ -101,14 +101,24 @@ describe("physical naval service tasks", () => {
       for (let tick = 0; tick < seconds(5); tick++) stepGame(game);
       expect(engineer.deck).toBeUndefined();
       expect(ship.order.type).toBe('hold');
+      expect(ship.x).toBe(1250); expect(ship.y).toBe(900);
+      expect(ship.sailing!.sail!.set).toBe(0);
     }
     const services = navalServices(snapshotGame(game), 'player', { version: 'v8', memory: createAiPolicyMemory() });
     for (const command of services.commands) issuePlayerCommand(game, 'player', command);
-    // Sailing to the shore in the current wind takes longer than the former motor approach.
-    for (let tick = 0; tick < seconds(40) && !engineer.deck; tick++) {
+    let approachSail = 0, travel = 0, totalYaw = 0;
+    // The aligned berth can use a short astern approach at auxiliary speed.
+    // Bound distance and turning as well as completion time.
+    for (let tick = 0; tick < seconds(30); tick++) {
+      const before = {x:ship.x,y:ship.y,heading:ship.sailing!.heading};
       stepGame(game);
-      expect(hullFits(game.map, ship)).toBe(true);
+      travel += Math.hypot(ship.x-before.x,ship.y-before.y);
+      const turn=ship.sailing!.heading-before.heading;totalYaw+=Math.abs(Math.atan2(Math.sin(turn),Math.cos(turn)));
+      expect(hullFits(game.map,ship)).toBe(true);
+      if (!engineer.deck) approachSail = Math.max(approachSail, ship.sailing!.sail?.set ?? 0);
     }
+    expect(travel).toBeLessThan(300); expect(totalYaw).toBeLessThan(Math.PI);
+    expect(approachSail).toBeGreaterThan(.1);
     expect(engineer.deck?.shipId).toBe(ship.id);
   });
   it("honors an explicit player attack on a hull being boarded", () => {

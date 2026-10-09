@@ -1,0 +1,126 @@
+{
+  "browser": "151.0.7922.173",
+  "offline": true,
+  "externalRequests": [],
+  "errors": [],
+  "scenes": [
+    "transport-turn-180",
+    "transport-short-oblique",
+    "warship-long-upwind",
+    "carrier-long-upwind",
+    "warship-running-turn-180",
+    "warship-ocean-upwind",
+    "transport-island",
+    "cutter-head-on",
+    "warship-crossing-traffic",
+    "carrier-parallel-friendly",
+    "attack-crossing",
+    "attack-upwind",
+    "attack-crossing-running",
+    "attack-close-parallel",
+    "board-moving-friendly",
+    "follow-moving-then-stop",
+    "follow-upwind-then-stop"
+  ],
+  "played": [
+    {
+      "id": "attack-crossing",
+      "start": 16,
+      "end": 46,
+      "rate": 4,
+      "info": "warship · 航行\n航速 6.9　转向 -2.8°/s\n航向 80.6°　航路 #2\n剩余路点 1　目标距离 289"
+    },
+    {
+      "id": "warship-ocean-upwind",
+      "start": 55,
+      "end": 95,
+      "rate": 8,
+      "info": "warship · 迎风航行\n航速 41.3　转向 0.0°/s\n航向 287.1°　航路 #1\n剩余路点 1　目的地距离 2180"
+    },
+    {
+      "id": "cutter-head-on",
+      "start": 0,
+      "end": 40,
+      "rate": 4,
+      "info": "cutter · 航行\n航速 0.0　转向 0.0°/s\n航向 346.9°　航路 #1\n剩余路点 0　目的地距离 0"
+    },
+    {
+      "id": "follow-moving-then-stop",
+      "start": 25,
+      "end": 50,
+      "rate": 4,
+      "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 2.2°　航路 #3\n剩余路点 1　目标距离 250"
+    },
+    {
+      "id": "follow-upwind-then-stop",
+      "start": 120,
+      "end": 150,
+      "rate": 4,
+      "readings": [
+        {
+          "time": 130,
+          "after": "warship · 迎风航行\n航速 15.0　转向 17.1°/s\n航向 337.8°　航路 #16\n剩余路点 1　目标距离 749"
+        },
+        {
+          "time": 140,
+          "after": "warship · 迎风航行\n航速 46.5　转向 -3.6°/s\n航向 80.2°　航路 #16\n剩余路点 1　目标距离 512"
+        },
+        {
+          "time": 145,
+          "after": "warship · 迎风航行\n航速 40.5　转向 0.0°/s\n航向 72.5°　航路 #16\n剩余路点 1　目标距离 317"
+        },
+        {
+          "time": 149.75,
+          "after": "warship · 迎风航行\n航速 0.0　转向 0.0°/s\n航向 72.5°　航路 #16\n剩余路点 1　目标距离 275"
+        }
+      ]
+    }
+  ],
+  "captures": [
+    {
+      "id": "attack-crossing",
+      "time": 24,
+      "file": "ship-navigation-pursuit.png",
+      "before": "warship · 航行\n航速 56.7　转向 0.0°/s\n航向 32.0°　航路 #78\n剩余路点 2　目标距离 1098",
+      "after": "warship · 航行\n航速 46.0　转向 17.1°/s\n航向 65.4°　航路 #2\n剩余路点 1　目标距离 322"
+    },
+    {
+      "id": "warship-ocean-upwind",
+      "time": 90,
+      "file": "ship-navigation-upwind.png",
+      "before": "warship · 迎风航行\n航速 41.5　转向 0.0°/s\n航向 73.0°　航路 #1\n剩余路点 2　目的地距离 843",
+      "after": "warship · 迎风航行\n航速 40.5　转向 0.0°/s\n航向 287.5°　航路 #1\n剩余路点 1　目的地距离 2384"
+    },
+    {
+      "id": "cutter-head-on",
+      "time": 18,
+      "file": "ship-navigation-traffic.png",
+      "before": "cutter · 航行\n航速 16.7　转向 -1.5°/s\n航向 6.1°　航路 #5\n剩余路点 1　目的地距离 721",
+      "after": "cutter · 航行\n航速 68.2　转向 0.4°/s\n航向 340.9°　航路 #1\n剩余路点 1　目的地距离 732"
+    },
+    {
+      "id": "transport-turn-180",
+      "time": 4,
+      "file": "ship-navigation-turn.png",
+      "before": "transport · 航行\n航速 0.0　转向 -22.0°/s\n航向 272.0°　航路 #1\n剩余路点 1　目的地距离 900",
+      "after": "transport · 辅助操纵\n航速 11.9　转向 -4.1°/s\n航向 344.0°　航路 #1\n剩余路点 21　目的地距离 946"
+    }
+  ],
+  "simulationBundleSha256": "963e15f7f483ee87952aee3aaabe2c3525d9c96688af89a74375a6143ee93ff7",
+  "artifactSha256": "a9d6720368797e10e60fe77d30e1e2184b71bb024224cad876be28dad11c88ee",
+  "simulationJsonSha256": "e2fd096f3e214cc84fbadd9aaf0483a487854dd7fc6d4e5d24c76c3e18f66ca5",
+  "rebaseValidation": {
+    "frameDataUnchanged": true,
+    "deterministicMetricsUnchanged": true,
+    "screenshotPolicy": "Existing screenshots retained because all 17 selected scenes have identical frame data and deterministic metrics.",
+    "smoke": {
+      "offline": true,
+      "scenes": 17,
+      "errors": [],
+      "externalRequests": [],
+      "checkedScene": "follow-upwind-then-stop",
+      "checkedTime": 145,
+      "info": "warship · 迎风航行\n航速 40.5　转向 0.0°/s\n航向 72.5°　航路 #16\n剩余路点 1　目标距离 317"
+    }
+  }
+}
