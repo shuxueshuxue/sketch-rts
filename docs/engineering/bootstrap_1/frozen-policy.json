@@ -1,6 +1,6 @@
 {
   "name": "bootstrap_1",
-  "revision": "58cac102b5bc04578e76533a89df18c27efe3082",
+  "revision": "dba796cfc152379adad9988a1314f94ffc736137",
   "versions": [
     "v5",
     "v7",
@@ -59,7 +59,8 @@
     "src/ai/policy/v9/shop.ts": "2f70ecb414e73fecba362fbd611d897174fb0c5ea32080f37f0e23d8e02a6192",
     "src/ai/policy/versions.ts": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
     "src/ai/policy/veterancy.ts": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
-    "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169"
+    "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+    "src/shared/healing.ts": "0def3d6869dbd7674e57a13e14e258582887162746493a250f9104d578217df1"
   },
   "integrationFiles": [
     "src/ai/policy/core.ts",
@@ -119,8 +120,16 @@
       "integrationFiles": [
         "src/ai/policy/core.ts"
       ]
+    },
+    {
+      "revision": "dba796cfc152379adad9988a1314f94ffc736137",
+      "path": "src/shared/healing.ts",
+      "before": "90bcce838a45ed1ec8ab8a63c7bfcf56a0cfda425153e575dff29046427c2d80",
+      "after": "0def3d6869dbd7674e57a13e14e258582887162746493a250f9104d578217df1",
+      "reason": "User approved the reviewed one-function land mechanical medical eligibility correction and refreeze. All archived AI strategy files remain byte-identical to 58cac10; no command filtering or compatibility layer."
     }
   ],
   "initialRevision": "1518a8529cd85c31e46864e18dc8f26dbd1693ed",
-  "engineRevision": "58cac102b5bc04578e76533a89df18c27efe3082"
+  "engineRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "policySourceRevision": "58cac102b5bc04578e76533a89df18c27efe3082"
 }
