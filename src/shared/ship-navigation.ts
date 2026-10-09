@@ -545,7 +545,7 @@ function voyageTime(map:SeaMap,ship:Unit,from:ShipPose,points:readonly ShipPose[
   for(const point of points){
     const yaw=Math.abs(headingDifference(previous.heading,point.heading));
     const distance=point.curvature?yaw/Math.abs(point.curvature):Math.hypot(point.x-previous.x,point.y-previous.y);
-    const performance=coursePerformance(ship,map,(previous.heading+point.heading)/2,{assumeTrimmed:true});
+    const performance=coursePerformance(ship,map,previous.heading+headingDifference(previous.heading,point.heading)/2,{assumeTrimmed:true});
     const cap=Math.min(Math.max(performance.targetSpeed,performance.auxiliarySpeed),point.speedLimit ?? Infinity);
     const changingDistance=Math.abs(cap*cap-speed*speed)/(2*acceleration);
     if(distance<=changingDistance){
@@ -639,11 +639,23 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
   return best;
 }
 function simplifyVoyageReference(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[],traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[] {
-  let previous=from;
-  for(const point of points){
-    if(point.pivot || (point.x-previous.x)*detCos(point.heading)+(point.y-previous.y)*detSin(point.heading)<-1e-5)
-      return points.map(point=>({...point,exact:true}));
+  let previous=from,maneuver=-1;
+  for(let i=0;i<points.length;i++){
+    const point=points[i]!;
+    if(point.pivot || (point.x-previous.x)*detCos(point.heading)+(point.y-previous.y)*detSin(point.heading)<-1e-5){maneuver=i;break;}
     previous=point;
+  }
+  if(maneuver>=0){
+    // A short retreat/pivot owns its exact attitude. It does not require the
+    // ensuing forward coastal corridor to remain in the berth executor.
+    while(maneuver+1<points.length){
+      const point=points[maneuver+1]!,prior=points[maneuver]!;
+      if(!point.pivot && Math.hypot(point.x-prior.x,point.y-prior.y)>1e-7
+        && (point.x-prior.x)*detCos(point.heading)+(point.y-prior.y)*detSin(point.heading)>=-1e-5)break;
+      maneuver++;
+    }
+    const prefix=points.slice(0,maneuver+1).map(point=>({...point,exact:true}));
+    return [...prefix,...simplifyVoyageReference(map,ship,points[maneuver]!,points.slice(maneuver+1),traffic)];
   }
   // Keep the endpoints of straight lattice runs and both poses of each
   // required turn. If no swept forward replacement fits, the exact maneuver
@@ -685,12 +697,12 @@ export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:numb
     && !coursePerformance(ship,map,Math.atan2(queued.y-goal.y,queued.x-goal.x),{assumeTrimmed:true}).noGo ? queued : undefined;
   const direct=forwardConnector(map,ship,from,goal,trafficClear,next);
   if(direct)return{points:direct,partial:false};
-  const reference=planShipRoute(map,ship,goal,trafficClear,budget);
+  const reference=planShipRoute(map,ship,goal,trafficClear,budget,true);
   return{points:simplifyVoyageReference(map,ship,from,reference.points,trafficClear),partial:reference.partial};
 }
 /** A deterministic expansion budget bounds temporary traffic searches. Partial
  * routes remain journeys, never arrivals at the requested destination. */
-export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity): {points:ShipPose[];partial:boolean} {
+export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity, voyage=false): {points:ShipPose[];partial:boolean} {
   const originalTraffic=trafficClear;let trafficBlocked=false;
   trafficClear=(from,to)=>{const clear=originalTraffic(from,to);trafficBlocked ||= !clear;return clear;};
   const t = map.terrain;
@@ -795,7 +807,10 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     visit(cell * DIRECTIONS + (h + DIRECTIONS - 1) % DIRECTIONS, ANGLE / turnSpeed, grid.turns, id * 2 + 1, grid.masks[h]![2]!);
     // Only ahead/astern edges. A hull cannot strafe along the route.
     for (const maneuver of [0,2]) {
+      // A voyage may back out of its departure, but cannot cruise astern
+      // through a whole coast corridor just because the wind costs tie.
       const [dx, dy] = STEPS[(h + maneuver * 2) % DIRECTIONS]!, nx = x + dx, ny = y + dy;
+      if(voyage && maneuver===2 && Math.hypot((nx+.5)*lattice.cell-start.x,(ny+.5)*lattice.cell-start.y)>length)continue;
       if (nx >= 0 && ny >= 0 && nx < lattice.cols && ny < lattice.rows)
         visit((ny * lattice.cols + nx) * DIRECTIONS + h, lattice.cell * (dx && dy ? Math.SQRT2 : 1) / Math.max(1e-6,maneuver===2?courseSpeeds[h]!.reverse:courseSpeeds[h]!.forward), grid.moves, id * 4 + maneuver, grid.masks[h]![maneuver + 3]!);
     }
@@ -815,7 +830,7 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     // Exhausting a temporarily occupied corridor is not arrival. Compare the
     // terrain-only endpoint so a genuinely unreachable island/pond still
     // retains its ordinary nearest-reachable completion semantics.
-    const unobstructed=planShipRoute(map,ship,goal),end=path.at(-1) ?? start,possible=unobstructed.points.at(-1) ?? start;
+    const unobstructed=planShipRoute(map,ship,goal,undefined,Infinity,voyage),end=path.at(-1) ?? start,possible=unobstructed.points.at(-1) ?? start;
     partial=unobstructed.partial || Math.hypot(end.x-possible.x,end.y-possible.y)>1e-7;
   }
   return {points:path,partial:partial || deferred};

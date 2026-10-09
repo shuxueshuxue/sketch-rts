@@ -62,10 +62,18 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>)=>{
     const previous=motion.route;
     const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
-    const traffic=reservationTraffic(ship,units);
     const contact=point.intent!=='pursuit' && point.heading===undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2
       ? shipContactGoal(ship,point,units) : undefined;
     const precision=point.heading!==undefined || !!contact;
+    // Moving companions are local passing traffic, not permanent islands.
+    // Freezing an entire convoy into the strategic coast search can exhaust
+    // its budget on retreat corners instead of finding the water corridor.
+    // The helmsman and physical sweep still check every live hull each step.
+    const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
+    const coastalVoyage=allowCruise && !precision && point.intent===undefined && ship.order.type==='move' && ship.order.rendezvousFor===undefined
+      && !hullPassageClear(map,ship,{...start,heading:bearing},{...point,heading:bearing});
+    const traffic=reservationTraffic(ship,coastalVoyage ? units.filter(other=>other===ship || other.owner!==ship.owner
+      || other.order.type!=='move' || other.order.heading!==undefined || other.order.rendezvousFor!==undefined) : units);
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps
@@ -132,6 +140,17 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         const next=route.points[0];
         route.cruise=!!next && !next.exact && !next.pivot
           && (next.x-ship.x)*detCos(next.heading)+(next.y-ship.y)*detSin(next.heading)>=-1e-7;
+      }
+    }
+    const intermediate=route.partial && route.intent!=='pursuit' && route.cruise && route.points.length===1 ? route.points[0] : undefined;
+    if(intermediate && point.heading===undefined && !intermediate.exact && !intermediate.pivot && !intermediate.tack) {
+      const origin={x:route.legX??route.startX??ship.x,y:route.legY??route.startY??ship.y};
+      const dx=intermediate.x-origin.x,dy=intermediate.y-origin.y,squared=dx*dx+dy*dy;
+      // Traffic may carry a hull past a temporary corridor endpoint. That
+      // endpoint is not its destination; do not sail a loop to visit it again.
+      if(squared>1e-7 && (ship.x-origin.x)*dx+(ship.y-origin.y)*dy>=squared
+        && (intermediate.x-ship.x)*detCos(motion.heading)+(intermediate.y-ship.y)*detSin(motion.heading)<0) {
+        replan();route=motion.route!;
       }
     }
     if(route.cruise===false && point.heading===undefined && route.points.length===1
