@@ -101,7 +101,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   const targetMotion = 'order' in target ? target.sailing : undefined;
   const vx = targetMotion?.velocityX ?? 0, vy = targetMotion?.velocityY ?? 0, speed = Math.hypot(vx, vy);
   const previous = motion.pursuit?.targetId === target.id ? motion.pursuit : undefined;
-  const underway = 'order' in target && (target.order.type === 'move' || target.order.type === 'unload'
+  const underway = targetMotion !== undefined && 'order' in target && (target.order.type === 'move' || target.order.type === 'unload'
     || target.order.type === 'attackMove' && !target.order.targetId);
   const moving = underway || speed > (previous?.moving ? 1 : 4);
   const dx = target.x - ship.x, dy = target.y - ship.y, distance = Math.hypot(dx, dy);

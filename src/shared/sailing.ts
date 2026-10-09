@@ -214,7 +214,9 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       }
     }
     while(route.points.length && Math.hypot(ship.x-route.points[0]!.x,ship.y-route.points[0]!.y)<1e-7
-      && Math.abs(headingDifference(motion.heading,route.points[0]!.heading))<1e-7){
+      && Math.abs(headingDifference(motion.heading,route.points[0]!.heading))<1e-7
+      && !(route.intent==='pursuit' && motion.pursuit?.moving && !route.partial && route.points.length===1
+        && !route.points[0]!.tack && !route.points[0]!.exact && !route.points[0]!.pivot)){
       const passed=route.points.shift()!;route.legX=passed.x;route.legY=passed.y;
       if(route.cruise===false){
         const next=route.points[0];

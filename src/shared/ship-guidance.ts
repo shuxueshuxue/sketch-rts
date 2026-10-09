@@ -45,7 +45,11 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   if (isManeuver(points[0]!,origin)) return 'maneuver';
   const endGap=Math.hypot(last.x-ship.x,last.y-ship.y);
   const arrival=route.arrivalRadius ?? .3;
-  if(!firing && points.length===1 && endGap<=arrival){
+  // A moving quarry's predicted station is a reference to track, rather
+  // than a destination at which to discard headway. Finite corridor and
+  // tacking legs must still finish before the navigator replaces them.
+  const movingIntercept=route.intent==='pursuit' && motion.pursuit?.moving && !route.partial && !last.tack;
+  if(!firing && !movingIntercept && points.length===1 && endGap<=arrival){
     if(route.intent!=='pursuit'){points.length=0;motion.speed=0;motion.yawRate=0;}
     else {
       motion.yawRate=0;
@@ -66,7 +70,12 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     // their tangent and feed-forward curvature below.
   }
   let cx=carrot.x-ship.x,cy=carrot.y-ship.y,distance=Math.hypot(cx,cy);
-  if(distance<1e-7 && !firing)return false;
+  if(distance<1e-7 && !firing){
+    if(!movingIntercept)return false;
+    // At the temporary mark itself the bearing is undefined. Keep the
+    // committed tangent for this swept step until its live station moves.
+    cx=lookahead*detCos(last.heading);cy=lookahead*detSin(last.heading);distance=lookahead;
+  }
   const wasAvoiding=route.avoidHeading!==undefined;
   // On a described curve the tangent and curvature are the reference.
   // Feeding pure-pursuit curvature on top would command the same turn twice.
@@ -178,7 +187,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const alongVelocity=(motion.velocityX??0)*detCos(motion.heading)+(motion.velocityY??0)*detSin(motion.heading);
   if(direction*alongVelocity < -1e-7){speed=0;direction=0;}
   let surge=perTick(speed)*direction,yaw=perTick(yawRate);
-  if(!firing && points.length===1 && endGap<=surge && Math.abs(error)<=perTick(limits.turnRate)){
+  if(!firing && !movingIntercept && points.length===1 && endGap<=surge && Math.abs(error)<=perTick(limits.turnRate)){
     surge=endGap;yaw=error;yawRate=yaw*SIM_TICKS_PER_SECOND;
   }
   const start:ShipPose={x:ship.x,y:ship.y,heading:motion.heading},traffic=shipTraffic(ship,units);

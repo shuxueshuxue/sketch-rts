@@ -51,6 +51,18 @@ function maneuverPair() {
 }
 
 describe('ship tactical pursuit', () => {
+  it('keeps a walking land target at its firing station while a walking deck target follows the carrying hull', () => {
+    const { ship, target, units } = pair();
+    const walker=createUnit('walker','enemy','footman',800,700);
+    walker.order={type:'move',x:1600,y:700};units.push(walker);
+    expect(shipPursuitGoal(ship,walker,units,312,0,false,()=>true)).toBeUndefined();
+    expect(ship.sailing!.pursuit).toMatchObject({targetId:walker.id,moving:false,phase:'engage'});
+    boardUnit(target,walker,units);target.order={type:'move',x:1800,y:700};
+    walker.order={type:'move',x:walker.x+50,y:walker.y};
+    target.sailing!.velocityX=20;
+    expect(shipPursuitGoal(ship,walker,units,312,0,false,()=>true)!.targetId).toBe(target.id);
+    expect(ship.sailing!.pursuit).toMatchObject({targetId:target.id,moving:true});
+  });
   it('validates an existing usable station without consuming or cancelling a pending navigation request', () => {
     const { ship, target, units } = pair(); target.x = 2000;
     const station = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
