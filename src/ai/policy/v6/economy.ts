@@ -42,6 +42,7 @@ type Economy = {
   phase: V6Phase;
   own: Building[];
   workers: Unit[];
+  construct: typeof issueV6Construction;
   bases: Building[];
   threatened?: { hall: Building; threat: number };
 };
@@ -103,18 +104,18 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
-  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options));
+  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
-  const economy = readEconomy(snapshot, owner, options);
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"]): Goal[] {
+  const economy = readEconomy(snapshot, owner, options, construct);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
   return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
-function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
+function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"]): Economy {
   const { strategy } = v6Doctrine(snapshot, owner, options);
   const intel = readV6Intel(snapshot, owner, options);
   const own = buildings(snapshot, owner);
@@ -128,6 +129,7 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     strategy,
     own,
     workers: units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck),
+    construct,
     bases,
     ...(threatened ? { threatened } : {}),
   };
@@ -185,7 +187,7 @@ function supplyGoals(economy: Economy): Goal[] {
   const producers = economy.own.filter((building) => building.complete && (building.kind === "townHall" || isCoreProductionBuilding(building))).length;
   if (player.supplyCap - projectedSupplyUsed(economy.snapshot, economy.owner) > producers * 2) return [];
   const point = safeMainBuildPoint(economy.snapshot, economy.owner, farms.length + 4, "farm");
-  return [goal("farm", 95, BUILDING_DEFS.farm.cost, true, (used) => build(economy, "farm", point, used))];
+  return [goal("farm", 95, BUILDING_DEFS.farm.cost, true, (used) => economy.construct(economy, "farm", point, used))];
 }
 
 // Five workers fill a mine and one more builds. The next base's five are trained ahead of it, like AMAI's pre-queued
@@ -218,7 +220,7 @@ function wellGoals(economy: Economy): Goal[] {
   const kind = v8WantsWell(economy.snapshot, economy.owner);
   if (!kind) return [];
   const point = legalBuildPointNear(economy.snapshot, kind, v8WellPoint(economy.intel));
-  return [goal("well", 67, BUILDING_DEFS[kind].cost, true, (used) => build(economy, kind, point, used, "well"))];
+  return [goal("well", 67, BUILDING_DEFS[kind].cost, true, (used) => economy.construct(economy, kind, point, used, "well"))];
 }
 
 // A base under attack gets another tower while the fight is on, ahead of everything but farms.
@@ -299,7 +301,7 @@ function techFarmGoal(economy: Economy, priority: number): Goal[] {
   const farms = economy.own.filter((building) => building.kind === "farm");
   if (farms.some((farm) => !farm.complete) || farms.length >= FARM_LIMIT) return [];
   const point = safeMainBuildPoint(economy.snapshot, economy.owner, farms.length + 4, "farm");
-  return [goal("farm:tier", priority, BUILDING_DEFS.farm.cost, true, (used) => build(economy, "farm", point, used))];
+  return [goal("farm:tier", priority, BUILDING_DEFS.farm.cost, true, (used) => economy.construct(economy, "farm", point, used))];
 }
 
 function producerFor(economy: Economy, kind: TrainableUnitKind): BuildingKind | undefined {
@@ -311,7 +313,7 @@ function buildingGoal(economy: Economy, kind: BuildingKind, priority: number): G
   if (economy.own.some((building) => building.kind === kind && !building.complete)) return [];
   const slot = economy.own.filter((building) => isCoreProductionBuilding(building)).length;
   const point = safeMainBuildPoint(economy.snapshot, economy.owner, slot, kind);
-  return [goal(`build:${kind}`, priority, BUILDING_DEFS[kind].cost, true, (used) => build(economy, kind, point, used))];
+  return [goal(`build:${kind}`, priority, BUILDING_DEFS[kind].cost, true, (used) => economy.construct(economy, kind, point, used))];
 }
 
 function towerWantGoals(economy: Economy, where: "main" | "outposts", count: number, priority: number): Goal[] {
@@ -340,7 +342,7 @@ function towerGoal(economy: Economy, hall: Building, priority: number, play: str
   const choke = isV9Policy(economy.options) ? v9ChokeTowerPoint(economy.snapshot, economy.intel, hall) : undefined;
   const point = (choke && isBuildPlacementClear(economy.snapshot, "defenseTower", choke) ? choke : undefined) ?? towerPoint(economy.snapshot, economy.owner, hall, facing);
   if (!point) return [];
-  return [goal(play, priority, BUILDING_DEFS.defenseTower.cost, true, (used) => build(economy, "defenseTower", point, used, play))];
+  return [goal(play, priority, BUILDING_DEFS.defenseTower.cost, true, (used) => economy.construct(economy, "defenseTower", point, used, play))];
 }
 
 // Towers face the enemy, and never go where they would reach a creep camp that still stands (it would wake the camp).
@@ -368,7 +370,7 @@ function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
   if (isV9Policy(economy.options) && !v9ExpansionCovered(economy.snapshot, economy.owner, economy.intel, mine)) return [];
   const offset = expansionOffset(economy.snapshot, economy.owner);
   const point = legalBuildPointNear(economy.snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
-  return [goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true, (used) => build(economy, "townHall", point, used, "expand"))];
+  return [goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true, (used) => economy.construct(economy, "townHall", point, used, "expand"))];
 }
 
 function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priority: number): Goal[] {
@@ -445,6 +447,11 @@ function goal(id: string, priority: number, cost: number, save: boolean, issue: 
 // (pool-elderwood-4, from 1791 s).
 function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
   if (used.size || economy.workers.some(worker => worker.order.type === "build")) return undefined;
+  return issueV6Construction(economy, kind, point, used, play);
+}
+
+/** Ordinary builder selection and SDK issuance, independent of the executor's construction schedule. */
+export function issueV6Construction(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
   const builder = economy.workers
     .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker) && sameGroundAs(economy.snapshot, worker, point))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
