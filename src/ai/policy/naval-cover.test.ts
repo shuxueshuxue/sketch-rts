@@ -14,8 +14,8 @@ import { planNavalTactics } from './naval';
 import { effectiveCombatRating, strengthOf } from './v6/strength';
 import { attackMargin } from './v6/general';
 
-function crossing(race: RaceId, phase: 'loading' | 'sailing') {
-  const game = createGame('bareDuel', { players: ['player', 'enemy'], races: { player: race }, scenario: {
+function crossing(race: RaceId, phase: 'loading' | 'sailing', players = ['player', 'enemy']) {
+  const game = createGame('bareDuel', { players, races: { player: race }, scenario: {
     players: { player: { gold: 500 } },
     replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultResources: true,
     replaceDefaultMercenaryCamps: true, replaceDefaultLandmarks: true,
@@ -112,6 +112,46 @@ describe('actual convoy cover', () => {
     expect(mission.phase).toBe(phase==='sailing'?'return':'loading');
     expect(sheltered).not.toContainEqual({type:'unload',unitIds:[boat.id],...mission.to});
     if(phase==='sailing')expect(sheltered).toContainEqual({type:'unload',unitIds:[boat.id],...mission.from,avoidCombat:true});
+  });
+
+  it('counts allied support but not hostile boarders on the same weak escort', () => {
+    const { game, boat, enemy, memory, mission } = crossing('grove', 'sailing', ['player', 'enemy', 'ally']);
+    const escort = game.spawnUnit('player', 'warship', 1696, 944);
+    escort.hp = escort.maxHp * .5;
+    expect(hullFits(game.map, escort)).toBe(true);
+    expect(hullContact(escort, enemy)).toBeUndefined();
+    // A living original guard keeps this an owned escort under boarding,
+    // rather than a captured hull which has already changed sides.
+    const guard = game.spawnUnit('player', 'footman', escort.x, escort.y);
+    guard.hp = guard.maxHp * .1;
+    const archers = [game.spawnUnit('enemy', 'archer', escort.x, escort.y),
+      game.spawnUnit('enemy', 'archer', escort.x, escort.y)];
+    for (const crew of [guard, ...archers]) expect(boardUnit(escort, crew, game.units)).toBe(true);
+    const snapshot = snapshotGame(game);
+    const teams = { player: 'blue', ally: 'blue', enemy: 'red' };
+    const context = bootstrapPolicyContext(snapshot, 'player', 'v9_archer', { memory, teams });
+    const weakCover = effectiveCombatRating(snapshot, escort) + strengthOf([guard]);
+    const opposition = effectiveCombatRating(snapshot, enemy) * attackMargin(context);
+    expect(opposition).toBeGreaterThan(weakCover);
+    expect(opposition).toBeLessThan(weakCover + strengthOf(archers));
+
+    for (const owner of ['enemy', 'neutral', 'ally']) {
+      for (const archer of archers) archer.owner = owner;
+      mission.phase = 'sailing';
+      const current = snapshotGame(game);
+      const commands = planNavalTactics(current, 'player', bootstrapPolicyContext(current, 'player', 'v9_archer', { memory, teams }));
+      expect(escort.owner).toBe('player');
+      expect(guard.hp).toBeGreaterThan(0);
+      expect(guard.deck?.shipId).toBe(escort.id);
+      expect(shipPassengers(game.units, escort)).toHaveLength(3);
+      if (owner === 'ally') {
+        expect(mission.phase).toBe('sailing');
+        expect(commands).toContainEqual({ type: 'unload', unitIds: [boat.id], ...mission.to });
+      } else {
+        expect(mission.phase).toBe('return');
+        expect(commands).toContainEqual({ type: 'unload', unitIds: [boat.id], ...mission.from, avoidCombat: true });
+      }
+    }
   });
 
   it('lands its living passengers back at the departure coast after losing cover', () => {
