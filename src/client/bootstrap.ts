@@ -9,4 +9,4 @@ void(async()=>{
     panel.preparing(resourceText('准备游戏界面','Preparing interface'));game=await import('./main');
   });
   await game!.initializeVisuals();
-})().catch(error=>console.error('Game startup failed',error));
+})().catch(error=>{if(!(error instanceof DOMException && error.name==='AbortError'))console.error('Game startup failed',error);});

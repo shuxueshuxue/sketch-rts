@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { convexHull, expandConvex, polygonPlanes, polygonTouchesCell, type Point } from './navigation-math';
+import { convexHull, expandConvex, polygonPlanes, polygonRadius, polygonTouchesCell, type Point } from './navigation-math';
 export type OccupancyMask = {
   bounds: [
     number,
@@ -12,8 +12,11 @@ export type OccupancyMask = {
 const angle = Math.PI / 4, steps = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]] as const;
 /** A rasterized configuration-space footprint. Generated from geometry, never from a game map. */
 export function buildNavigationMasks(hull: readonly Point[], cell: number): OccupancyMask[][] {
-  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)));
-  const outline = (x: number, y: number, heading: number) => hull.map(p => ({ x: x + p.x * detCos(heading) - p.y * detSin(heading), y: y + p.x * detSin(heading) + p.y * detCos(heading) }));
+  const radius = polygonRadius(hull);
+  const outline = (x: number, y: number, heading: number) => {
+    const c=detCos(heading),s=detSin(heading);
+    return hull.map(p => ({ x: x + p.x * c - p.y * s, y: y + p.x * s + p.y * c }));
+  };
   const sweep = (h: number, turn: number, dx: number, dy: number) => {
     const count = Math.max(1, Math.ceil(Math.abs(turn) * radius / 2)), covered = new Set<string>();
     const error = turn ? radius * (turn / count) ** 2 / 8 + 1e-7 : 0;

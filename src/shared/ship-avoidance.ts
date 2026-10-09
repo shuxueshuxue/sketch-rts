@@ -1,5 +1,5 @@
-import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonPlanes } from "./navigation-math";
-import { circleInPolygon, hullGap, localToWorld, shipProfile, worldToLocal, type Point } from "./ship-geometry";
+import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonPlanes, polygonRadius } from "./navigation-math";
+import { circleInPolygon, hullGap, localToWorld, shipProfile, shipsIn, worldToLocal, type Point } from "./ship-geometry";
 import { hullPassageClear } from "./ship-navigation";
 import type { GameMap, Unit } from "./types";
 import { detCos, detSin } from "./det-math";
@@ -83,7 +83,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
   const vx=motion.velocityX ?? ownSpeed*detCos(heading),vy=motion.velocityY ?? ownSpeed*detSin(heading);
   const ownMotion=Math.hypot(vx,vy),fx=detCos(heading),fy=detSin(heading);
   let threat:{time:number;distance:number;clearance:number;starboard:boolean;headOn:boolean;id:string}|undefined;
-  for(const other of units){
+  for(const other of shipsIn(units)){
     if(other===ship || other.hp<=0 || firingApproach(other))continue;
     const otherProfile=shipProfile(other);if(!otherProfile)continue;
     const dx=other.x-ship.x,dy=other.y-ship.y,distance=Math.hypot(dx,dy);
@@ -132,14 +132,18 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
 /** Frozen traffic geometry for one route search. The same continuous swept
  * hull used for coasts also constrains lattice positions and turns. */
 export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
-  const hull=shipProfile(ship)!.hull,radius=Math.max(...hull.map(p=>Math.hypot(p.x,p.y)));
-  const bodies=units.filter(other=>other!==ship && other.hp>0 && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<range)
-    .map(other=>({other,center:{x:other.x,y:other.y},radius:Math.max(...shipProfile(other)!.hull.map(p=>Math.hypot(p.x,p.y)))}));
+  const ownProfile=shipProfile(ship)!,hull=ownProfile.hull,radius=polygonRadius(hull);
+  const bodies=[] as {other:Unit;center:Point;radius:number;profile:NonNullable<ReturnType<typeof shipProfile>>;heading:number}[];
+  for(const other of shipsIn(units)){
+    if(other===ship || other.hp<=0 || Math.hypot(other.x-ship.x,other.y-ship.y)>=range)continue;
+    const profile=shipProfile(other)!;
+    bodies.push({other,center:{x:other.x,y:other.y},radius:polygonRadius(profile.hull),profile,heading:other.sailing?.heading ?? 0});
+  }
   const configurations=new Map<string,Point[]>(),sweeps=new Map<string,Point[]>();
   const configuration=(from:number,to:number,body:typeof bodies[number],padding:number)=>{
     const key=`${from}:${to}:${body.other.id}:${padding}`,known=configurations.get(key);if(known)return known;
-    const profile=shipProfile(body.other)!,angle=body.other.sailing?.heading ?? 0;
-    const shapeKey=`${ship.kind}:${shipProfile(ship)!.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}:${padding}`;
+    const profile=body.profile,angle=body.heading;
+    const shapeKey=`${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}:${padding}`;
     let polygon=trafficShapes.get(shapeKey);
     if(!polygon){
       const sweepKey=`${from}:${to}`;let shape=sweeps.get(sweepKey);
@@ -197,13 +201,13 @@ export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
 }
 
 export function shipTrafficKey(ship:Unit,units:readonly Unit[]) {
-  return units.filter(other=>other!==ship && other.hp>0 && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
+  return shipsIn(units).filter(other=>other!==ship && other.hp>0 && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
     .map(other=>`${other.id}:${Math.round(other.x/16)}:${Math.round(other.y/16)}:${Math.round((other.sailing?.heading ?? 0)*16/Math.PI)}`).join('|');
 }
 /** A destination on another deck means hull contact. Compute the berth in
  * configuration space, then let normal surge/yaw routing reach that pose. */
 export function shipContactGoal(ship:Unit,goal:Point,units:readonly Unit[]):ShipPose|undefined {
-  const other=units.find(other=>other!==ship && other.hp>0 && shipProfile(other) && circleInPolygon(worldToLocal(other,goal),0,shipProfile(other)!.hull));
+  const other=shipsIn(units).find(other=>other!==ship && other.hp>0 && circleInPolygon(worldToLocal(other,goal),0,shipProfile(other)!.hull));
   if(!other)return;
   const dx=goal.x-ship.x,dy=goal.y-ship.y,length=Math.hypot(dx,dy);if(length<1e-7)return;
   const direction=Math.atan2(dy,dx),preferred=ship.sailing?.heading ?? 0;
@@ -225,7 +229,7 @@ export function avoidShipHulls(map:GameMap,ship:Unit,goal:Point,units:readonly U
   if(gap<1e-7)return goal;
   const end=goal;
   const hull=p.hull.map(point=>{const at=localToWorld(ship,point);return{x:at.x-ship.x,y:at.y-ship.y};});
-  const obstacles=units.filter(other=>other!==ship && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<500
+  const obstacles=shipsIn(units).filter(other=>other!==ship && Math.hypot(other.x-ship.x,other.y-ship.y)<500
     && pointSegmentDistanceSquared(other,start,end)<((p.length+shipProfile(other)!.length)/2+20)**2).map(other=>{
       const outline=shipProfile(other)!.hull.map(point=>localToWorld(other,point));
       const polygon=expandConvex(minkowskiSum(outline,hull.map(a=>({x:-a.x,y:-a.y}))),.1);

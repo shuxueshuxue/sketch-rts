@@ -88,7 +88,9 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       aiRuntime,
       room,
       finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
+      onClose: () => { if (this.matches.get(room.id)?.adapter === adapter) this.matches.delete(room.id); },
       onRoomEnded: (ended) => {
+        adapter.close();
         onRoom(ended);
       },
     }));
@@ -99,6 +101,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
     if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
     if (!this.lifecycle.hasRoom(room.id)) throw new Error(`Unknown room ${room.id}`);
+    this.matches.get(room.id)?.adapter.close();
     const setup = liveRoomToGameSetup(room);
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
@@ -106,7 +109,9 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       aiRuntime,
       room,
       finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
+      onClose: () => { if (this.matches.get(room.id)?.adapter === adapter) this.matches.delete(room.id); },
       onRoomEnded: (ended) => {
+        adapter.close();
         onRoom(ended);
       },
     }));
@@ -130,12 +135,15 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     const winner = room.slots.find((slot) => (slot.controller === "human" || slot.controller === "ai") && slot.playerId !== loser)?.playerId ?? null;
     const snapshot = match.adapter.currentSnapshot();
     const ended = this.lifecycle.finishRoom(roomId, { ...snapshot, match: { ...snapshot.match, winner, endedAtTick: snapshot.tick } });
-    this.matches.delete(roomId);
+    match.adapter.close();
     match.onRoom(ended);
     return ended;
   }
 
-  close(): void {}
+  close(): void {
+    for (const match of this.matches.values()) match.adapter.close();
+    this.matches.clear();
+  }
 
   private localAdapterOptions(options: LocalGameAdapterOptions): LocalGameAdapterOptions {
     return {
