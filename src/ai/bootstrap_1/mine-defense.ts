@@ -21,7 +21,9 @@ function miningRaids(snapshot: GameSnapshot, intel: V6Intel) {
     || unit.order.type === 'attackMove' && distance(unit.order, hall) <= hall.radius + 80;
   return intel.ownHalls.map(hall => ({ hall,
     attackers: foes.filter(unit => sameGround(snapshot.map, unit, hall)
-      && (distance(unit, hall) < 650 || aimedAt(unit, hall) && distance(unit, hall) < 1800)),
+      && (distance(unit, hall) < 650 || aimedAt(unit, hall) && distance(unit, hall) < 1800
+        || intel.intrusion !== undefined && distance(intel.intrusion.building, hall) <= GOLD_MINE_RULES.baseRange
+          && intel.intrusion.attackers.includes(unit))),
   })).filter(raid => raid.attackers.length > 0)
     .sort((a, b) => Number(b.attackers.some(unit => aimedAt(unit, b.hall))) - Number(a.attackers.some(unit => aimedAt(unit, a.hall)))
       || strengthOf(b.attackers) - strengthOf(a.attackers));

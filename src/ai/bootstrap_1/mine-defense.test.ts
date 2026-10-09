@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
+import { issueCommandFrame } from '../../sdk/commands/frame';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
@@ -8,17 +9,18 @@ import { bootstrapPolicyContext } from './policy';
 import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { readV6Intel } from '../policy/v6/intel';
 
-function twoFronts(raiders = 4, guard: 'lancer' | 'knight' = 'lancer') {
+function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lancer', race: 'grove' | 'ember' = 'grove') {
+  const shooter = race === 'grove' ? 'horseArcher' : 'sparkArcher';
   let scene = sketchScene('independent-mine-defense').replaceDefaults()
-    .player('us', { team: 'a', race: 'grove' }).player('fa', { team: 'b', race: 'grove' }).player('fb', { team: 'b', race: 'grove' })
+    .player('us', { team: 'a', race }).player('fa', { team: 'b', race: 'grove' }).player('fb', { team: 'b', race: 'grove' })
     .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })
     .goldMine('main', 688, 1000, 4000).goldMine('natural', 1888, 1600, 4000)
     .townHall('fa', 3500, 3000, { id: 'attack-hall' }).townHall('fb', 3500, 800)
     .farms('us', 8, 400, 2200);
   for (let i = 0; i < 5; i++) scene = scene.worker('us', 1650 + i * 35, 1700, { id: `miner-${i}` });
   for (let i = 0; i < 2; i++) scene = scene.unit('us', guard, 1750 + i * 50, 1800, { id: `guard-melee-${i}` });
-  for (let i = 0; i < 3; i++) scene = scene.unit('us', 'horseArcher', 1650 + i * 50, 1850, { id: `guard-ranged-${i}` });
-  for (let i = 0; i < 10; i++) scene = scene.unit('us', 'horseArcher', 2650 + i % 3 * 40, 2800 + Math.floor(i / 3) * 40,
+  for (let i = 0; i < 3; i++) scene = scene.unit('us', shooter, 1650 + i * 50, 1850, { id: `guard-ranged-${i}` });
+  for (let i = 0; i < 10; i++) scene = scene.unit('us', shooter, 2650 + i % 3 * 40, 2800 + Math.floor(i / 3) * 40,
     { id: `striker-${i}`, order: { type: 'attackMove', x: 3500, y: 3000 } });
   for (let i = 0; i < raiders; i++) scene = scene.unit('fb', 'footman', 1560 + i % 3 * 35, 1120 - Math.floor(i / 3) * 35,
     { id: `raider-${i}`, order: { type: 'attackMove', x: 1600, y: 1600 } });
@@ -30,6 +32,31 @@ function twoFronts(raiders = 4, guard: 'lancer' | 'knight' = 'lancer') {
 }
 
 describe('bootstrap_1 independent mine defense', () => {
+  it.each(['grove', 'ember'] as const)('assigns a %s detachment to a mining perimeter tower without recalling the distant attack', race => {
+    const { game, context, memory } = twoFronts(4, race === 'grove' ? 'lancer' : 'ashWarden', race);
+    game.buildings.push(...sketchScene('mining-perimeter').replaceDefaults().player('us', { race })
+      .tower('us', 1600, 1380, { id: 'perimeter' }).build().createGame().buildings);
+    for (const unit of game.units.filter(unit => unit.id.startsWith('raider-'))) unit.y -= 300;
+    issuePlayerCommand(game, 'fb', { type: 'attackMove', unitIds: game.units.filter(unit => unit.id.startsWith('raider-')).map(unit => unit.id), x: 1600, y: 1380 });
+    expect(mineDefense.claimsUnits!(snapshotGame(game), 'us', context()).size).toBeGreaterThanOrEqual(3);
+    for (let tick = 0; tick < 1200; tick++) {
+      if (tick % 15 === 0) {
+        const commands = runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
+          [mineDefense, { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral }], context());
+        if (tick === 0) {
+          expect(memory.v6!.general!.mode).toBe('attack');
+          expect(commands.some(entry => entry.scriptId === 'mineDefense')).toBe(true);
+        }
+        issueCommandFrame(game, commands.map(entry => ({ ...entry, playerId: 'us', source: 'external-agent', plannerOrigin: 'local-command-planner' })));
+      }
+      stepGame(game);
+    }
+    expect(game.buildings.some(building => building.id === 'attack-hall')).toBe(false);
+    expect(game.units.filter(unit => unit.id.startsWith('miner-'))).toHaveLength(5);
+    expect(game.buildings.find(building => building.id === 'mine-hall')!.hp).toBe(900);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   it('protects the working mine before fighting a larger group at a forward outpost', () => {
     function fight(prioritizeMine: boolean) {
       const { game, context } = twoFronts(8, 'knight');
