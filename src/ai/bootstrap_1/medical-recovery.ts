@@ -27,7 +27,8 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId) {
 }
 
 export function medicalUnitIds(snapshot: GameSnapshot, owner: PlayerId) {
-  return new Set(assignments(snapshot, owner).flatMap(({ healer, target }) => [healer.id, target.id]));
+  return new Set(assignments(snapshot, owner).flatMap(({ healer, target, ability, gap }) =>
+    gap <= ABILITY_DEFS[ability].range ? [healer.id, target.id] : [target.id]));
 }
 
 /** A critical patient meets its healer instead of marching away faster than the healer can follow. */
@@ -37,9 +38,9 @@ export const medicalRecovery: AiScript = {
   run(snapshot, owner): GameCommand[] {
     return assignments(snapshot, owner).flatMap(({ healer, target, ability, gap }): GameCommand[] => {
       const inRange = gap <= ABILITY_DEFS[ability].range;
-      const commands: GameCommand[] = [inRange && abilityCooldown(healer, ability) <= 0
+      const commands: GameCommand[] = inRange ? [abilityCooldown(healer, ability) <= 0
         ? { type: 'cast', unitId: healer.id, ability, targetId: target.id }
-        : { type: 'holdPosition', unitIds: [healer.id] }];
+        : { type: 'holdPosition', unitIds: [healer.id] }] : [];
       if (target.id !== healer.id) {
         commands.push(!inRange
           ? { type: 'move', unitIds: [target.id], x: healer.x, y: healer.y }
