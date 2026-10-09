@@ -52,6 +52,23 @@ describe('Spark Archer ground fire', () => {
     expect(checksumGame(restored)).toBe(checksumGame(game));
   });
 
+  it('still ignites on impact when the archer dies with its arrow in flight', () => {
+    const game = scene().build().createGame();
+    issuePlayerCommand(game, 'us', { type: 'attack', unitIds: ['spark'], targetId: 'target' });
+    let before = snapshotGame(game), nextId = game.nextId;
+    for (let tick = 0; tick < 600 && !game.effects.some(effect => effect.type === 'burningGround'); tick++) {
+      before = snapshotGame(game); nextId = game.nextId; stepGame(game);
+    }
+    const original = game.effects.find(effect => effect.type === 'burningGround')!;
+    expect(original).toBeDefined();
+    const restored = createGame('bareDuel');
+    restoreSnapshotIntoGame(restored, before, nextId);
+    removeUnit(restored, 'spark');
+    stepGame(restored);
+    expect(restored.effects.find(effect => effect.type === 'burningGround')).toEqual(original);
+    expect(restored.units.find(unit => unit.id === 'target')!.hp).toBe(game.units.find(unit => unit.id === 'target')!.hp);
+  });
+
   it('trades a little single-target damage for higher damage against stationary clustered troops', () => {
     const damage = (kind: 'archer' | 'sparkArcher', clustered: boolean) => {
       let total = 0, arrows = 0, fires = 0;
