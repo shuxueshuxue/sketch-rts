@@ -48,3 +48,5 @@ node --import tsx scripts/bootstrap_1-inspect.ts --map grandEstuary --subject v9
 ## 当前状态
 
 工作进行中。`58cac10` 引擎的冻结控制组全部 1620 局完成，无缺失；记录见 `baseline-engine-58cac10.csv`。同引擎、提交 `7d31b5c` 的候选完成 1618 局，602 胜、743 负、273 超时，另有 2 局因任务超时缺失；逐格记录见 `candidate-7d31b5c-engine-58cac10.csv`。包含 PR #197、#198 的当前引擎尚未重跑完整矩阵；这些旧成绩不能作为当前候选成绩。候选仍未达标，最终 holdout 种子仍未使用。完整测量和已否决方案见 `development.zh.md`；PR #192 保持草稿。
+
+已同步 #208 入舱与重型舷炮舰，以及 #209 追击方向修正。在 #208 引擎与获批归档对手下，射手 Turtle Lake／Ember／反侧出生对双 v5 的固定逻辑正常开局于 36423 tick 获胜。另一地图的召唤／骑士混合对阵仍需迭代；这是一局完整开发胜利，尚未启动新的正式矩阵或最终未见种子。
