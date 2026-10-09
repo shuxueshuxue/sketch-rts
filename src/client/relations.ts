@@ -1,4 +1,5 @@
 import { unitNeedsRepair } from "../shared/unit-repair";
+import { isInCabin } from '../shared/ship-cabin';
 import { GOLD_MINE_RULES } from "../shared/mining";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
@@ -50,7 +51,7 @@ export function deckMovePoint(units: readonly Unit[], selected: readonly Unit[],
 }
 
 export function unitAt(units: readonly Unit[], world: Point, predicate: (unit: Unit) => boolean) {
-  return units.filter(unit => predicate(unit) && !isShipKind(unit.kind) && near(unitPointerPosition(units, unit), world, UNIT_REACH)).sort((a,b) => Math.hypot(unitPointerPosition(units,a).x-world.x,unitPointerPosition(units,a).y-world.y)-Math.hypot(unitPointerPosition(units,b).x-world.x,unitPointerPosition(units,b).y-world.y))[0] ?? units.find(unit => predicate(unit) && isShipKind(unit.kind) && distanceToHull(unit, world) < 8);
+  return units.filter(unit => !isInCabin(unit) && predicate(unit) && !isShipKind(unit.kind) && near(unitPointerPosition(units, unit), world, UNIT_REACH)).sort((a,b) => Math.hypot(unitPointerPosition(units,a).x-world.x,unitPointerPosition(units,a).y-world.y)-Math.hypot(unitPointerPosition(units,b).x-world.x,unitPointerPosition(units,b).y-world.y))[0] ?? units.find(unit => predicate(unit) && isShipKind(unit.kind) && distanceToHull(unit, world) < 8);
 }
 
 export function buildingAt(buildings: readonly Building[], world: Point, predicate: (building: Building) => boolean) {
@@ -74,7 +75,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
   };
   for (const item of snapshot.items) if (!item.carrierId && !item.shipId) {const ship=item.deck && snapshot.units.find(ship=>ship.id===item.deck!.shipId);consider({x:item.x,y:item.y-(ship?deckVisualHeight(ship):0)}, 34, { kind: "item", item });}
   for (const resource of snapshot.resources) consider(resource, GOLD_MINE_RULES.radius, { kind: "resource", resource });
-  for (const unit of snapshot.units) if (!isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit), UNIT_REACH, { kind: "unit", unit });
+  for (const unit of snapshot.units) if (!isInCabin(unit) && !isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit), UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && (distanceToHull(unit, world) < 8 || distanceToHull(unit,{x:world.x,y:world.y+deckVisualHeight(unit)}) < 8)) consider(unit, Infinity, { kind: "unit", unit });
   for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });
   for (const obstacle of snapshot.obstacles ?? []) consider(obstacle, obstacle.radius + 8, { kind: "obstacle", obstacle });

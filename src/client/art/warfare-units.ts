@@ -9,7 +9,9 @@ const ink = '#252f34', wood = '#77634c', metal = '#7d9298', ivory = '#d9d0b6';
 function plate(b: Brush, p: number[][], color: string) { polygon(b, p, color, ink, .8); line(b, p.slice(0, 2), '#e3d4ad88', .7); }
 function ship(id: string): UnitModel {
     return { shadow: 'none', paint(b, team) {
-            const heavy = id === 'bombard' || id === 'frigate', w = id === 'cutter' ? 32 : id === 'carrier' ? 54 : 45;
+            const lineShip = id === 'lineShip';
+            if(lineShip){b.save();b.scale(.84,.84);}
+            const heavy = id === 'bombard' || id === 'frigate', w = id === 'cutter' ? 32 : lineShip ? 61 : id === 'carrier' ? 54 : 45;
             ellipse(b, 0, 17, w + 3, 8, '#c9ded533');
             line(b, [[-w - 5, 18], [-w / 2, 25], [w / 2, 24], [w + 5, 14]], '#d3e1d799', 1);
             plate(b, [[-w, 0], [-w + 12, 17], [w - 12, 19], [w, -1], [12, 6]], '#4b443c');
@@ -26,6 +28,24 @@ function ship(id: string): UnitModel {
                     plate(b, [[x - 3, -1], [x - 2, -20], [x + 3, -10], [x + 5, -2]], '#c8843c');
                 }
             }
+            else if (lineShip) {
+                // The compact portrait keeps all three masts and the broadside
+                // visible before decoded model portraits become available.
+                plate(b, [[-57,-5],[-53,-21],[-34,-20],[-27,-7]], '#67513b');
+                for (const [x,height] of [[-29,48],[1,60],[30,43]] as const) {
+                    line(b, [[x,3],[x,-height]], ink, 2.5);
+                    line(b, [[x-14,-height+7],[x+15,-height+6]], '#a48c64', 2);
+                    plate(b, [[x-13,-height+8],[x+14,-height+7],[x+12,-height+29],[x-10,-height+29]], ivory);
+                    line(b, [[x,-height],[x-22,1]], '#968d7544', .7);
+                }
+                plate(b, [[1,-63],[17,-59],[1,-55]], team);
+                for (const x of [-33,-11,11,33]) {
+                    plate(b, [[x-5,7],[x+5,7],[x+5,14],[x-5,14]], '#242b2d');
+                    line(b, [[x,9],[x+6,13]], metal, 3);
+                    plate(b, [[x-5,-5],[x+4,-5],[x+4,0],[x-5,0]], '#353332');
+                }
+                line(b, [[-47,15],[47,12]], '#c3a673', 1.5);
+            }
             else {
                 line(b, [[0, 4], [0, -49]], ink, 3);
                 line(b, [[-.8, 4], [-.8, -49]], '#b4a482', 1);
@@ -41,6 +61,7 @@ function ship(id: string): UnitModel {
                     line(b, [[x + 4, -4], [x + 17, -9]], '#a8b4b1', 1);
                 }
             }
+            if(lineShip)b.restore();
         } };
 }
 function siege(id: string): UnitModel {
@@ -89,7 +110,7 @@ function siege(id: string): UnitModel {
         } };
 }
 export function warfarePainter(id: string) { return (id === 'ram' || id === 'mortar' || id === 'ballista' || id === 'organ' ? siege(id) : ship(id)).paint; }
-const MODEL_IDS: Partial<Record<UnitKind, string>> = { transport: "transport", warship: "frigate", cutter: "cutter", bombardShip: "bombard", fireShip: "fireship", carrier: "carrier", siegeRam: "ram", ballista: "ballista", catapult: "mortar", organGun: "organ" };
+const MODEL_IDS: Partial<Record<UnitKind, string>> = { transport: "transport", warship: "frigate", shipOfTheLine: "lineShip", cutter: "cutter", bombardShip: "bombard", fireShip: "fireship", carrier: "carrier", siegeRam: "ram", ballista: "ballista", catapult: "mortar", organGun: "organ" };
 export const hasWarfareUnit = (kind: UnitKind) => MODEL_IDS[kind] !== undefined;
 export function paintWarfareUnit(b: Brush, kind: UnitKind, team: string, pose: UnitAnimationFrame) {
     const id = MODEL_IDS[kind];

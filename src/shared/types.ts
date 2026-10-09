@@ -154,6 +154,7 @@ export type UnitOrder =
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number; heading?: number; shore?: {x:number;y:number} } }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
+  | { type: "enterCabin"; shipId: string }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
   // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
@@ -208,7 +209,7 @@ export type Unit = {
   hands?: { right?: string; left?: string };
   gearMass?: number;
   holdMass?: number;
-  shipParts?: { rigging:number; rudder:number };
+  shipParts?: { rigging:number; rudder:number; cabin?:number };
   fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[];
   bodyRadius?: number;
   /** Simulation-facing angle in radians while aiming or firing. */
@@ -230,6 +231,8 @@ export type Unit = {
   cargoCapacity?: number;
   /** Position on a moving ship, in its local physical coordinate system. */
   deck?: { shipId: string; x: number; y: number } | undefined;
+  /** Sheltered crew remain ordinary passengers; a breach removes protection until a clear exit opens. */
+  cabin?: { shipId:string; breached?:true } | undefined;
   /** Continuous heading and rates, shared by physical motion and real-time rendering. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
     /** Actual signed world velocity, used to calculate apparent wind on the next tick. */
@@ -570,6 +573,8 @@ export type GameCommand =
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
   | { type: "unload"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "unloadPassenger"; transportId: string; passengerId: string }
+  | { type: "enterCabin"; unitIds: string[] }
+  | { type: "leaveCabin"; unitIds: string[] }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }

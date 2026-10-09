@@ -33,9 +33,21 @@
 .equipment-character,.equipment-cargo,.equipment-vessel { min-width:0; min-height:0; padding:10px; border:1px solid var(--game-edge); box-shadow:inset 0 1px 5px #8b69432b; background:var(--game-surface); }
 .equipment-character { grid-area:person; display:grid; grid-template-rows:minmax(0,1fr)28px 32px; gap:6px; }
 .equipment-character.has-context { grid-template-rows:36px minmax(0,1fr)28px 32px; }
+.equipment-character.has-cabin-action { grid-template-rows:minmax(0,1fr)28px 32px 30px; }
+.equipment-character.has-context.has-cabin-action { grid-template-rows:36px minmax(0,1fr)28px 32px 30px; }
+.equipment-cabin-action { display:flex; gap:8px; align-items:center; min-width:0; }
+.equipment-cabin-action small { min-width:0; color:var(--game-muted); font-size:10px; }
+.equipment-cabin-action .equipment-action { flex:none; padding:5px 8px; }
 .equipment-cargo { grid-area:cargo; display:flex; flex-direction:column; gap:6px; background:var(--game-surface); }
 .equipment-cargo > :not(.equipment-hold) { flex:none; }
 .equipment-vessel { grid-area:vessel; display:grid; grid-template-rows:26px minmax(0,1fr)auto; gap:6px; }
+.equipment-vessel.has-cabin { grid-template-rows:26px minmax(0,1fr)auto auto; }
+.equipment-cabin { display:flex; align-items:center; gap:8px; min-width:0; border-top:1px solid #9b805b50; padding-top:5px; }
+.equipment-cabin > small { flex:none; color:var(--game-muted); font-size:10px; }
+.equipment-cabin-roster { display:flex; flex-wrap:wrap; gap:3px; }
+.equipment-cabin-roster button { width:28px; height:28px; padding:0; border:1px solid #9b8354; background:#272b25; }
+.equipment-cabin-roster button[aria-pressed=true] { outline:1px solid #e3c184; }
+.equipment-cabin-roster canvas { width:100%; height:100%; }
 .equipment-context { display:flex; align-items:center; gap:8px; min-width:0; border-bottom:1px solid #9b805b50; padding-bottom:6px; }
 .equipment-context canvas { width:30px; height:30px; object-fit:contain; flex:none; filter:drop-shadow(0 3px 2px #0008); }
 .equipment-context > div { min-width:0; flex:1; }
@@ -121,6 +133,8 @@
 .equipment-panel[data-short=true] h2 { font-size:16px; }
 .equipment-panel[data-short=true] .equipment-character { grid-template-rows:minmax(0,1fr)24px 28px; gap:4px; }
 .equipment-panel[data-short=true] .equipment-character.has-context { grid-template-rows:30px minmax(0,1fr)24px 28px; }
+.equipment-panel[data-short=true] .equipment-character.has-cabin-action { grid-template-rows:minmax(0,1fr)24px 28px 28px; }
+.equipment-panel[data-short=true] .equipment-character.has-context.has-cabin-action { grid-template-rows:30px minmax(0,1fr)24px 28px 28px; }
 .equipment-panel[data-short=true] .equipment-context canvas { width:28px; height:28px; }
 .equipment-panel[data-short=true] .equipment-item span { display:none; }
 .equipment-panel[data-short=true] .equipment-cell > small { padding:1px 3px; line-height:11px; }

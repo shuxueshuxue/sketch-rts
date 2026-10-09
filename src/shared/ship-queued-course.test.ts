@@ -22,7 +22,7 @@ function scene(kind: UnitKind = 'transport') {
 }
 
 describe('continuous queued ship moves', () => {
-  it.each(['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip'] as const)('%s rounds two queued corners without an intermediate idle or speed reset', kind => {
+  it.each(['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip', 'shipOfTheLine'] as const)('%s rounds two queued corners without an intermediate idle or speed reset', kind => {
     const { game, boat } = scene(kind), maximum = shipMotionLimits(boat).speed, length = shipProfile(boat)!.length;
     let handoffs = 0, priorOrder = boat.order, cruising = false;
     let totalYaw = 0, travel = 0, firstTurnX: number | undefined, secondTurnY: number | undefined;
@@ -83,7 +83,7 @@ describe('continuous queued ship moves', () => {
     expect(Math.hypot(boat.x - 4500, boat.y - 1500)).toBeLessThan(1);
   });
 
-  it.each(['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip'] as const)('%s joins its queued bends after an oblique departure', kind => {
+  it.each(['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip', 'shipOfTheLine'] as const)('%s joins its queued bends after an oblique departure', kind => {
     const { game, boat } = scene(kind);
     boat.sailing!.heading = Math.PI / 2;
     for (const [index, point] of [{ x: 2200, y: 1500 }, { x: 2200, y: 2200 }, { x: 2900, y: 2200 }].entries())

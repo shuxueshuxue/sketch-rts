@@ -214,6 +214,54 @@
       "weaponMount": null,
       "mastHeight": 128,
       "weaponPivot": null
+    },
+    "shipOfTheLine": {
+      "length": 292,
+      "beam": 144,
+      "deckHeight": 38,
+      "hullMass": 72000,
+      "loadCapacity": 3800,
+      "acceleration": 24,
+      "turnRate": 0.148352986,
+      "obstacles": [
+        {
+          "x": -53,
+          "y": 0,
+          "radius": 4,
+          "type": "mast"
+        },
+        {
+          "x": -10,
+          "y": 0,
+          "radius": 4,
+          "type": "mast"
+        },
+        {
+          "x": 76,
+          "y": 0,
+          "radius": 4,
+          "type": "mast"
+        },
+        {
+          "x": -126,
+          "y": 0,
+          "radius": 20,
+          "type": "cabin"
+        }
+      ],
+      "weaponMount": null,
+      "mastHeight": 150,
+      "mastHeights": [
+        118,
+        150,
+        136
+      ],
+      "mastBeamScales": [
+        0.79,
+        1,
+        0.88
+      ],
+      "weaponPivot": null
     }
   }
 }

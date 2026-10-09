@@ -7,6 +7,13 @@ import { createGame, snapshotGame } from "../shared/sim";
 import type { GameCommand, GameSnapshot } from "../shared/types";
 
 describe("frontend world view", () => {
+  it('retains own cabin crew selection but clears an opponent who has disappeared into a cabin',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];
+    const own=game.spawnUnit('player','priest',600,600),enemy=game.spawnUnit('enemy','priest',650,600);
+    for(const unit of [own,enemy]){unit.deck={shipId:unit.owner+'-ship',x:0,y:0};unit.cabin={shipId:unit.deck.shipId};}
+    const view=syncFrontendWorldView(new StaticSnapshotAdapter(snapshotGame(game)),{owner:'player',snapshot:undefined,selectedIds:new Set([own.id,enemy.id]),focusedSelectionId:enemy.id,selectedCampId:undefined,controlGroups:{}});
+    expect([...view.selectedIds]).toEqual([own.id]);expect(view.focusedSelectionId).toBe(own.id);
+  });
   it("materializes adapter truth every frame and prunes stale selected ids at the same tick", () => {
     const oldGame = createGame("bareDuel", { aiPlayers: [] });
     oldGame.tick = 12;

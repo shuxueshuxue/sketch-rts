@@ -176,7 +176,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
   const margin = passenger.radius * 4 + 32;
   const left = Math.min(passenger.x, destination.x) - margin, right = Math.max(passenger.x, destination.x) + margin;
   const top = Math.min(passenger.y, destination.y) - margin, bottom = Math.max(passenger.y, destination.y) + margin;
-  const bodies = units.filter(other => other.id !== passenger.id && other.hp > 0 && !shipProfile(other)
+  const bodies = units.filter(other => other.id !== passenger.id && other.hp > 0 && !other.cabin && !shipProfile(other)
     && (!other.deck || ships.some(ship => ship.id === other.deck?.shipId))
     && other.x + other.radius >= left && other.x - other.radius <= right && other.y + other.radius >= top && other.y - other.radius <= bottom);
   const fits = (point: Point, occupied = false) => {
@@ -262,7 +262,7 @@ export function settleDeckSupport(units: readonly Unit[], map: GameMap) {
   if (!shipsIn(units).length)
     return;
   for (const passenger of units) {
-    if (!passenger.deck || passenger.hp <= 0)
+    if (!passenger.deck || passenger.hp <= 0 || passenger.cabin?.shipId === passenger.deck.shipId)
       continue;
     const ship = units.find(ship => ship.id === passenger.deck!.shipId && ship.hp > 0), profile = ship && shipProfile(ship);
     if (!ship || !profile || circleInPolygon(passenger.deck, passenger.radius + 1, profile.deck))
