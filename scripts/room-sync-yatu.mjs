@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { roomUiFlowCode } from "./room-ui-flow.mjs";
 
 const port = Number(process.env.ROOM_SYNC_PORT ?? 5186);
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -83,6 +84,7 @@ async page => {
     if (!condition) throw new Error(message);
   };
   const sleep = (ms) => page.waitForTimeout(ms);
+  ${roomUiFlowCode}
   const sampleIntervalMs = 160;
   const sampleCount = 70;
   const durableMismatchThreshold = 4;
@@ -95,12 +97,10 @@ async page => {
   await page.click("[data-open-room-browser]");
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.click("[data-create-room]");
-  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  await page.selectOption("[data-create-game-form] select[name='mapId']", "bareDuel");
-  await page.click("[data-submit-create-game]");
-  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-  const roomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  await automaticSoloSetup();
+  const roomId = await serverSetupFromSolo();
   must(roomId, "room setup did not expose room id");
+  await serverFixtureMap(roomId, "bareDuel");
   await page.click("[data-start-room]");
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
   await page.waitForFunction(() => window.__sketchRtsView?.roomId && window.__sketchRtsView?.unitIds?.length > 0, null, { timeout: 5000 });
