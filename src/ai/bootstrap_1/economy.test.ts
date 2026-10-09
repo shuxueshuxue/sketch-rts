@@ -32,16 +32,18 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
-  it.each(['grove', 'ember'] as const)('recruits %s medical support and heals its damaged shooting line with ordinary commands', race => {
+  it.each((['grove', 'ember'] as const).flatMap(race => [
+    { race, shooters: 6, gold: 500 }, { race, shooters: 5, gold: 250 },
+  ]))('recruits $race medical support for $shooters shooters and heals with ordinary commands', ({ race, shooters, gold }) => {
     const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
     const screen = race === 'grove' ? 'lancer' : 'ashWarden';
     const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
     let scene = sketchScene('shooting-line-medical-support').replaceDefaults()
-      .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold: 500 })
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold })
       .townHall('us', 500, 500).townHall('foe', 3000, 3000).farms('us', 8, 400, 1500)
       .building('us', UNIT_DEFS[shooter].trainedAt!, 800, 850);
     if (UNIT_DEFS[healer].trainedAt !== UNIT_DEFS[shooter].trainedAt) scene = scene.building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850);
-    for (let index = 0; index < 6; index++) scene = scene.unit('us', shooter, 850 + index * 35, 900, { id: `shooter-${index}`, hp: 20 });
+    for (let index = 0; index < shooters; index++) scene = scene.unit('us', shooter, 850 + index * 35, 900, { id: `shooter-${index}`, hp: 20 });
     for (let index = 0; index < 4; index++) scene = scene.unit('us', screen, 850 + index * 35, 1020);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.v6 = { phase: 1 };
@@ -54,7 +56,40 @@ describe('bootstrap_1 production budget', () => {
     }
     expect(game.units.some(unit => unit.owner === 'us' && unit.kind === healer)).toBe(true);
     expect(game.units.filter(unit => unit.id.startsWith('shooter-')).some(unit => unit.hp > 20)).toBe(true);
-    expect(game.players.us!.gold).toBe(500 - game.match.stats.goldSpent.us!);
+    expect(game.players.us!.gold).toBe(gold - game.match.stats.goldSpent.us!);
+  });
+
+  it('uses the shared Grove queue to counter a summon wave before restoring its wounded shooters', () => {
+    let scene = sketchScene('shared-counter-and-recovery-queue').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .playerState('us', { gold: 2000 })
+      .townHall('us', 500, 500).townHall('foe', 3000, 3000).farms('us', 8, 400, 1500)
+      .building('us', 'archeryRange', 800, 850).building('us', 'sanctum', 1000, 850)
+      .building('us', 'moonWell', 900, 1100);
+    for (let index = 0; index < 6; index++) scene = scene.unit('us', 'archer', 850 + index * 35, 900, { id: `shooter-${index}`, hp: 20 });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', 'lancer', 850 + index * 35, 1020)
+      .unit('foe', 'summoner', 2800 + index * 35, 2800, { id: `caster-${index}` });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 1 };
+    for (const caster of game.units.filter(unit => unit.owner === 'foe')) {
+      issuePlayerCommand(game, 'foe', { type: 'cast', unitId: caster.id, ability: 'summon', x: caster.x, y: caster.y + 100 });
+    }
+    stepGame(game);
+    const support: string[] = [];
+    for (let tick = 0; tick < 1000; tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_archer', { memory, teams: game.teams });
+        for (const command of [...planBootstrapEconomy(snapshot, 'us', options), ...planAbilityCommands(snapshot, 'us', options)]) {
+          if (command.type === 'train' && ['witch', 'priest'].includes(command.unitKind)) support.push(command.unitKind);
+          issuePlayerCommand(game, 'us', command);
+        }
+      }
+      stepGame(game);
+    }
+    expect(support[0]).toBe('witch');
+    expect(game.units.some(unit => unit.owner === 'us' && unit.kind === 'priest')).toBe(true);
+    expect(game.units.filter(unit => unit.id.startsWith('shooter-')).some(unit => unit.hp > 20)).toBe(true);
+    expect(game.players.us!.gold).toBe(2000 - game.match.stats.goldSpent.us!);
   });
 
   it.each(['grove', 'ember'] as const)('keeps the explicit %s opening squad while tech is locked instead of substituting extra basic soldiers', race => {

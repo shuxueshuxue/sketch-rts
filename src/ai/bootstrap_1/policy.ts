@@ -1,4 +1,4 @@
-import { UNIT_DEFS } from '../../shared/catalog';
+import { UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
@@ -38,9 +38,14 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
 
 function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
-  if (army.length < 10) return [];
-  const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const grove = snapshot.players[owner]!.race === 'grove';
+  const healer = grove ? 'priest' : 'emberAcolyte';
+  const medical: V6Want[] = version === 'v9_archer' && (army.length >= 10
+    || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
+      && snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt))
+    ? [{ unit: healer, count: Math.min(2, Math.floor(army.length / 5)), priority: 65 }] : [];
+  if (army.length < 10) return medical;
+  const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? (grove ? 'summoner' : 'pyreCaller') : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = UNIT_DEFS[main].trainedAt!;
@@ -48,7 +53,6 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
     { building: producer, count: 2, priority: 57 },
   ];
-  if (version === 'v9_archer') wants.push({ unit: grove ? 'priest' : 'emberAcolyte', count: 2, priority: 65 });
   // The spirit host fights through summons, which these upgrades do not affect.
   if (version !== 'v9_summoner') wants.push(
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
@@ -56,6 +60,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   );
   if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) wants.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 65 });
   if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
+  // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
+  wants.push(...medical);
   return wants;
 }
 
