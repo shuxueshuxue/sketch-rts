@@ -4,7 +4,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../shared/types'
 
 type CabinSnapshot = Pick<GameSnapshot, 'units' | 'teams' | 'variants'>;
 export type CabinQuota = { used: number; capacity: number; required: number };
-export type CabinAction = { type: 'enterCabin' | 'leaveCabin'; unitIds: string[]; enabled: boolean; quota?: CabinQuota; problem?: 'full' | 'unavailable' | 'unsupported' | 'blocked' };
+export type CabinAction = { type: 'enterCabin' | 'leaveCabin'; unitIds: string[]; enabled: boolean; quota?: CabinQuota; problem?: 'full' | 'unavailable' | 'unsupported' | 'blocked' | 'crossing' };
 
 /** A mixed selection returns sheltered people first; another click can shelter
  * the people still on deck. Commands never pull nearby shore units aboard. */
@@ -28,7 +28,7 @@ export function cabinAction(snapshot: CabinSnapshot, owner: PlayerId, units: rea
   const refusals = aboard.map(unit => cabinEntryRefusal(snapshot, unit));
   const supported = refusals.filter(reason => reason !== 'unsupported');
   const problem = !supported.length ? 'unsupported' : supported.every(reason => reason === 'unavailable') ? 'unavailable'
-    : supported.includes('capacity') ? 'full' : 'blocked';
+    : supported.includes('crossing') ? 'crossing' : supported.includes('capacity') ? 'full' : 'blocked';
   return { type: 'enterCabin', unitIds: aboard.map(unit => unit.id), enabled: false, quota, problem };
 }
 
@@ -45,7 +45,8 @@ export function cabinQuotaText(quota: CabinQuota, zh: boolean, selected = false)
 }
 
 export function cabinProblemText(action: CabinAction, zh: boolean): string {
-  return action.problem === 'full' ? zh ? '舱容不足' : 'Not enough cabin capacity'
+  return action.problem === 'crossing' ? zh ? '先返回甲板' : 'Return to the deck first'
+    : action.problem === 'full' ? zh ? '舱容不足' : 'Not enough cabin capacity'
     : action.problem === 'blocked' ? zh ? '舱门被堵住' : 'Cabin door blocked'
     : action.problem === 'unsupported' ? zh ? '这种单位无法入舱' : 'This unit cannot enter the cabin'
     : zh ? '舱室已失守或损坏' : 'The cabin is breached or damaged';

@@ -17,6 +17,8 @@ import { runAiCommandEntriesFromScripts } from './script-runner';
 import { planNavalEconomy } from './naval';
 import { hullFits } from '../../shared/ship-navigation';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { LANDING_REACH, passengerLandingSpot } from '../../shared/naval';
+import { shipProfile } from '../../shared/ship-geometry';
 
 // Tests that model old cargo saves observe the same restored live crew as the runtime.
 function snapshotGame(game: ReturnType<typeof createGame>) {
@@ -83,6 +85,11 @@ describe('shared dock outfitting', () => {
     const passenger = game.spawnUnit('player', 'footman', boat.x, boat.y);
     expect(boardUnit(boat, passenger, game.units)).toBe(true);
     boat.sailing!.heading = Math.PI;
+    // A stalled helm must still have a passenger to carry. Keep the enlarged
+    // hull beyond real landing reach so unloading cannot finish at this turn.
+    boat.x = 10 * terrain.cell + shipProfile(boat)!.length / 2 + LANDING_REACH + passenger.radius + terrain.cell;
+    expect(hullFits(game.map,boat)).toBe(true);
+    expect(passengerLandingSpot(game.map,boat,passenger.id,game.units)).toBeUndefined();
     // Preserve a real precise turn planned before the rudder damage. The
     // passenger cannot repair the helm; the simulation must execute the turn.
     const berth = { x: boat.x, y: boat.y };

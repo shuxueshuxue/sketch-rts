@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, issuePlayerCommand, snapshotGame } from '../shared/sim';
-import { boardUnit } from '../shared/decks';
+import { boardUnit, deckPointFits, syncDecks } from '../shared/decks';
 import { createUnit } from '../shared/map';
 import { cabinExitPoint, cabinSpaceRequired, shipCabinCapacity, shipCabinUsage } from '../shared/ship-cabin';
 import { resolveVariant } from '../shared/catalog';
+import { beginShipBoarding, GANGWAY_SETUP_TICKS, updateShipGangways } from '../shared/ship-gangway';
+import { shipProfile } from '../shared/ship-geometry';
+import { walkConnectedSurfaces } from '../shared/connected-decks';
 import { cabinAction, cabinCommand, cabinProblemText, cabinQuotaText, cabinStatus } from './cabin-controls';
 
 function scene() {
@@ -87,5 +90,30 @@ describe('manual cabin controls',()=>{
     issuePlayerCommand(game,'player',command);
     expect(crew.order.type).toBe('enterCabin');expect(second.order.type).toBe('enterCabin');
     expect(third.order.type).toBe('idle');
+  });
+  it('asks a bridge walker to return to the deck, then enables shelter after the actual walk back',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];
+    game.map={...game.map,width:4096,height:4096,terrain:{cell:32,cols:128,rows:128,cells:'~'.repeat(128*128)}};
+    const ship=game.spawnUnit('player','transport',1500,1500),target=game.spawnUnit('player','transport',1500,1900);
+    target.y=ship.y+(shipProfile(ship)!.beam+shipProfile(target)!.beam)/2+12;
+    const crew=game.spawnUnit('player','priest',ship.x,ship.y);
+    expect(boardUnit(ship,crew,game.units)).toBe(true);syncDecks(game.units);
+    const deckStart={x:crew.x,y:crew.y};
+    expect(cabinAction(game,'player',[crew])?.enabled).toBe(true);
+    ship.order={type:'boardShip',targetId:target.id};
+    expect(beginShipBoarding(game.map,game.units,ship,target,game.tick,game)).toBe(true);
+    updateShipGangways(game.map,game.units,game.tick,game);
+    updateShipGangways(game.map,game.units,game.tick+GANGWAY_SETUP_TICKS,game);
+    for(let i=0;i<300&&!crew.gangway;i++)walkConnectedSurfaces(crew,{x:target.x+60,y:target.y},game.units,game.map);
+    expect(crew.gangway).toBeDefined();
+    const action=cabinAction(game,'player',[crew])!;
+    expect(action).toMatchObject({type:'enterCabin',enabled:false,problem:'crossing'});
+    expect(cabinCommand(action)).toBeUndefined();
+    expect(cabinProblemText(action,true)).toBe('先返回甲板');
+    expect(cabinProblemText(action,false)).toBe('Return to the deck first');
+    for(let i=0;i<300&&(crew.gangway||!deckPointFits(ship,crew,crew.deck!,game.units,false));i++)
+      walkConnectedSurfaces(crew,deckStart,game.units,game.map);
+    expect(crew.gangway).toBeUndefined();expect(crew.deck?.shipId).toBe(ship.id);
+    expect(cabinCommand(cabinAction(game,'player',[crew]))).toEqual({type:'enterCabin',unitIds:[crew.id]});
   });
 });

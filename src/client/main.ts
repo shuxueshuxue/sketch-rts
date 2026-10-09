@@ -2986,14 +2986,14 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       owner === localPlayerId && !isInCabin(entity) && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
       sailingStatus(entity), cabinStatus(entity,i18n.locale==='zh'),
     ].filter(Boolean).join(" · ") : "",
-    art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
   };
   hudSelection.render(identity, groups.map(group => {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
     return {
       key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
-      art:{ key:`${group.kind}:${owner}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      art:{ key:`${group.kind}:${ownerInk(owner??localPlayerId,snapshot??undefined)}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
       activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
       decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
     };

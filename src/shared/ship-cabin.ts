@@ -1,5 +1,7 @@
 import { unitMover } from './catalog';
-import { deckPlacement, deckStaticPathExists, moveOnDeck } from './decks';
+import { deckPlacement, deckPointFits, deckStaticPathExists, moveOnDeck } from './decks';
+import { capsuleClearsCircles, diskInConvex } from './navigation-math';
+import { GANGWAY_MAX_RADIUS } from './ship-gangway';
 import { cabinSpaceRequired, shipCabinCapacity, shipCabinUsage } from './ship-cabin-quota';
 export { cabinSpaceRequired, shipCabinCapacity, shipCabinUsage } from './ship-cabin-quota';
 import { localToWorld, shipPassengers, shipProfile, type Point } from './ship-geometry';
@@ -55,15 +57,18 @@ export function isCabinCrew(snapshot: Partial<Pick<GameSnapshot,'variants'>>, un
 /** A valid hatch endpoint alone does not connect the aft and foredeck. Fixed
  * batteries may separate them for a larger body. Crew can yield, so this test
  * ignores their temporary positions and uses only the current scaled fittings.
- * A successful route stays in the same connected floor as the body walks;
- * failed checks retry after movement, and a replaced profile always invalidates.
+ * Reuse a successful route only while the current body fits this hull's deck
+ * and a static-clear segment connects it to the previously proven start.
+ * Connected surface walking may otherwise enter a different floor component.
  */
 function cabinRouteExists(snapshot:CabinSnapshot,ship:Unit,unit:Unit):boolean {
   const profile=shipProfile(ship), start=unit.deck;
-  if(!profile || !start || start.shipId!==ship.id)return false;
+  if(!profile || !start || start.shipId!==ship.id || unit.gangway || !deckPointFits(ship,unit,start,snapshot.units,false))return false;
   const cached=cabinRoutes.get(unit);
-  if(cached?.profile===profile && cached.radius===unit.radius && cached.shipId===ship.id
-    && (cached.reachable || cached.x===start.x && cached.y===start.y))return cached.reachable;
+  if(cached?.profile===profile && cached.radius===unit.radius && cached.shipId===ship.id) {
+    if(cached.x===start.x && cached.y===start.y)return cached.reachable;
+    if(cached.reachable && capsuleClearsCircles(start,cached,unit.radius+1,profile.obstacles))return true;
+  }
   const point=cabinExitPoint({...snapshot,units:[ship,unit]},ship,unit);
   const reachable=!!point && deckStaticPathExists(ship,unit,point);
   cabinRoutes.set(unit,{profile,radius:unit.radius,shipId:ship.id,x:start.x,y:start.y,reachable});
@@ -72,8 +77,15 @@ function cabinRouteExists(snapshot:CabinSnapshot,ship:Unit,unit:Unit):boolean {
 export function canEnterCabin(snapshot: CabinSnapshot, unit: Unit, ship = snapshot.units.find(ship => ship.id === unit.deck?.shipId)): boolean {
   return cabinEntryRefusal(snapshot,unit,ship) === undefined;
 }
-export type CabinEntryRefusal = 'unavailable' | 'unsupported' | 'capacity' | 'door';
+export type CabinEntryRefusal = 'unavailable' | 'unsupported' | 'capacity' | 'door' | 'crossing';
 export function cabinEntryRefusal(snapshot: CabinSnapshot, unit: Unit, ship = snapshot.units.find(ship => ship.id === unit.deck?.shipId)): CabinEntryRefusal | undefined {
+  if(unit.gangway)return 'crossing';
+  const profile=ship && shipProfile(ship);
+  if(profile && unit.radius<=GANGWAY_MAX_RADIUS && unit.deck?.shipId===ship!.id && !isInCabin(unit)
+    && !diskInConvex(unit.deck,unit.radius+1,profile.deck)) {
+    const connectedPassage=ship?.sailing?.gangway?.phase==='ready' || snapshot.units.some(source=>source.sailing?.gangway?.phase==='ready' && source.sailing.gangway.targetId===ship!.id);
+    if(connectedPassage)return 'crossing';
+  }
   if (!ship || unit.hp <= 0 || isInCabin(unit) || unit.deck?.shipId !== ship.id || enemies(snapshot,ship.owner,unit.owner) || !isCabinCrew(snapshot,unit)) return 'unsupported';
   if (!cabinAvailable(snapshot,ship) || !cabinDoor(ship)) return 'unavailable';
   if (shipCabinUsage(snapshot,ship).used + cabinSpaceRequired(snapshot,unit) > shipCabinCapacity(ship)) return 'capacity';

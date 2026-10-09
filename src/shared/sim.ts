@@ -2,7 +2,7 @@ import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from '
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
 import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
-import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible } from './ship-gangway';
+import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
 import { assignPlayerColors } from './player-colors';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
 import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
@@ -707,6 +707,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
 export function stepGame(game: Game) {
   if (game.match.winner) return;
+  bindGangwayCrewRules(game.units,game);
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
   syncDecks(game.units);
   updateCabinPassengers(game);
@@ -825,7 +826,7 @@ function copyUnitOrder(order:UnitOrder):UnitOrder {
   return copy;
 }
 export function snapshotGame(game: Game): GameSnapshot {
-  return {
+  const snapshot:GameSnapshot = {
     equipmentVersion: 1,
     rateUnits: "perSecond",
     tick: game.tick,
@@ -896,6 +897,8 @@ export function snapshotGame(game: Game): GameSnapshot {
     ...(game.variants ? { variants: { ...game.variants } } : {}),
     ...(game.obstacles ? { obstacles: game.obstacles.map((obstacle) => ({ ...obstacle, along: { ...obstacle.along } })) } : {}),
   };
+  bindGangwayCrewRules(snapshot.units,snapshot);
+  return snapshot;
 }
 
 export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, nextId: number): void {
@@ -952,6 +955,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   syncDecks(game.units);
   invalidateGameRuntimeCaches(game);
   refreshVeteranFrame(game);
+  bindGangwayCrewRules(game.units,game);
 }
 
 /** Old saves used 20 Hz rates, including passengers and campaign rule overrides. */

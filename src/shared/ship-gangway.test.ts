@@ -1,5 +1,5 @@
 import { describe,expect,it } from 'vitest';
-import { beginShipBoarding,cancelShipBoarding,damageShipGangway,gangwaySurface,GANGWAY_COOLDOWN_TICKS,GANGWAY_SETUP_TICKS,shipBoardingRefusal,updateShipGangways } from './ship-gangway';
+import { beginShipBoarding,bindGangwayCrewRules,cancelShipBoarding,damageShipGangway,gangwaySurface,GANGWAY_COOLDOWN_TICKS,GANGWAY_SETUP_TICKS,shipBoardingRefusal,updateShipGangways } from './ship-gangway';
 import { decksAllowCrossing,decksCanTransfer,walkConnectedSurfaces } from './connected-decks';
 import { boardUnit,canBoard,deckPointFits,settleGangwayCrossings,syncDecks } from './decks';
 import { createGame,issuePlayerCommand,restoreSnapshotIntoGame,snapshotGame,stepGame } from './sim';
@@ -7,6 +7,9 @@ import { shipProfile } from './ship-geometry';
 import { seconds } from './time';
 import { checksumGame } from './sim/checksum';
 import { boardingHoldShips,prepareCrewRendezvous } from './crew-rendezvous';
+import { resolveVariant } from './catalog';
+import { canReach } from './naval';
+import { createSnapshotQuery } from '../sdk/snapshot/query';
 
 function scene() {
   const game=createGame('bareDuel',{aiPlayers:[]});
@@ -139,5 +142,30 @@ describe('short physical gangways',()=>{
     const restored=scene();restoreSnapshotIntoGame(restored,snapshotGame(game),game.nextId);
     for(let i=0;i<seconds(8);i++){stepGame(game);stepGame(restored);expect(checksumGame(restored)).toBe(checksumGame(game));}
     expect(crew.deck?.shipId).toBe(target.id);expect(crew.gangway).toBeUndefined();
+  });
+  it.each(['mechanical','nonMechanical'] as const)('keeps %s variant admission consistent across snapshots, JSON queries and restore before stepping',unitClass=>{
+    const fixture=pair(),{game,source,target,crew}=fixture;deploy(fixture);
+    const defender=game.spawnUnit('enemy','footman',target.x,target.y);
+    expect(boardUnit(target,defender,game.units)).toBe(true);syncDecks(game.units);
+    game.variants={bridgeCrew:resolveVariant({base:'footman',unitClass})};crew.variant='bridgeCrew';
+    const allowed=unitClass==='nonMechanical',checksum=checksumGame(game),bridge=JSON.stringify(source.sailing!.gangway),cooldown=source.sailing!.gangwayCooldownUntilTick;
+    bindGangwayCrewRules(game.units,game);
+    expect(canReach(game.map,crew,defender,game.units)).toBe(allowed);
+    expect(checksumGame(game)).toBe(checksum);
+    const saved=snapshotGame(game),savedCrew=saved.units.find(unit=>unit.id===crew.id)!,savedDefender=saved.units.find(unit=>unit.id===defender.id)!;
+    expect(canReach(saved.map,savedCrew,savedDefender,saved.units)).toBe(allowed);
+    const raw=JSON.parse(JSON.stringify(saved)) as typeof saved,rawSource=raw.units.find(unit=>unit.id===source.id)!,rawTarget=raw.units.find(unit=>unit.id===target.id)!,rawCrew=raw.units.find(unit=>unit.id===crew.id)!;
+    expect(decksCanTransfer(rawSource,rawTarget,rawCrew)).toBe(false);
+    const rawBefore=JSON.stringify(raw);
+    bindGangwayCrewRules(raw.units,raw);
+    expect(decksCanTransfer(rawSource,rawTarget,rawCrew)).toBe(allowed);expect(JSON.stringify(raw)).toBe(rawBefore);
+    const transported=JSON.parse(JSON.stringify(saved)) as typeof saved,transportedBefore=JSON.stringify(transported),query=createSnapshotQuery(transported);
+    expect(canReach(query.snapshot.map,query.unitById(crew.id)!,query.unitById(defender.id)!,query.snapshot.units)).toBe(allowed);
+    expect(JSON.stringify(transported)).toBe(transportedBefore);
+    const restored=scene();restoreSnapshotIntoGame(restored,saved,game.nextId);
+    expect(canReach(restored.map,restored.units.find(unit=>unit.id===crew.id)!,restored.units.find(unit=>unit.id===defender.id)!,restored.units)).toBe(allowed);
+    expect(checksumGame(restored)).toBe(checksum);
+    expect(JSON.stringify(restored.units.find(unit=>unit.id===source.id)!.sailing!.gangway)).toBe(bridge);
+    expect(restored.units.find(unit=>unit.id===source.id)!.sailing!.gangwayCooldownUntilTick).toBe(cooldown);
   });
 });

@@ -34,7 +34,13 @@ type CrewSnapshot = Partial<Pick<GameSnapshot,'variants'>>;
 const crewRules = new WeakMap<Unit,CrewSnapshot>();
 const surfaces = new WeakMap<ShipGangway,{a:ReturnType<typeof shipProfile>;b:ReturnType<typeof shipProfile>;key:string;surface:GangwaySurface|undefined}>();
 
+/** Snapshot/query units are fresh objects. Bind their own variant definitions
+ * without advancing deployment, changing cooldowns or touching saved state. */
+export function bindGangwayCrewRules(units:readonly Unit[],snapshot:CrewSnapshot) {
+  for(const source of shipsIn(units))if(source.sailing?.gangway)crewRules.set(source,snapshot);
+}
 export function gangwayCrewEligible(unit:Unit,snapshot:CrewSnapshot={}) {
+  if(unit.variant!==undefined && !snapshot.variants?.[unit.variant])return false;
   return unit.hp>0 && !isInCabin(unit) && unit.radius<=GANGWAY_MAX_RADIUS && isCabinCrew(snapshot,unit);
 }
 export function shipBoardingRefusal(source:Unit,units:readonly Unit[],tick:number,snapshot:CrewSnapshot={}):'ship'|'crew'|'cooldown'|undefined {
@@ -118,7 +124,9 @@ function computeGangwaySurface(source:Unit,target:Unit,state:ShipGangway):Gangwa
 export function gangwayBetween(a:Unit,b:Unit,passenger:Unit):{source:Unit;target:Unit;surface:GangwaySurface}|undefined {
   for(const [source,target] of [[a,b],[b,a]] as const) {
     if(source.sailing?.gangway?.phase!=='ready' || source.sailing.gangway.targetId!==target.id)continue;
-    if(!gangwayCrewEligible(passenger,crewRules.get(source)??{}))continue;
+    const context=crewRules.get(source);
+    if(passenger.variant!==undefined && !context)continue;
+    if(!gangwayCrewEligible(passenger,context??{}))continue;
     const surface=gangwaySurface(source,target);
     if(surface?.phase==='ready')return {source,target,surface};
   }
