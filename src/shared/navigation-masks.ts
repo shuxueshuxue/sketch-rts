@@ -21,10 +21,16 @@ export function buildNavigationMasks(hull: readonly Point[], cell: number): Occu
     const count = Math.max(1, Math.ceil(Math.abs(turn) * radius / 2)), covered = new Set<string>();
     const error = turn ? radius * (turn / count) ** 2 / 8 + 1e-7 : 0;
     let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    let previous = outline(cell / 2, cell / 2, h);
     for (let i = 0; i < count; i++) {
-      const envelope = convexHull([...outline(cell / 2 + dx * i / count, cell / 2 + dy * i / count, h + i * turn / count), ...outline(cell / 2 + dx * (i + 1) / count, cell / 2 + dy * (i + 1) / count, h + (i + 1) * turn / count)]);
+      // Adjacent sweep segments share this exact endpoint. Retain its local
+      // outline instead of allocating and rotating all vertices twice.
+      const next = outline(cell / 2 + dx * (i + 1) / count, cell / 2 + dy * (i + 1) / count, h + (i + 1) * turn / count);
+      const envelope = convexHull([...previous, ...next]);
+      previous = next;
       const poly = error ? expandConvex(envelope, error) : envelope;
-      const l = Math.min(...poly.map(p => p.x)), t = Math.min(...poly.map(p => p.y)), r = Math.max(...poly.map(p => p.x)), b = Math.max(...poly.map(p => p.y));
+      let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+      for (const point of poly) { l = Math.min(l, point.x); t = Math.min(t, point.y); r = Math.max(r, point.x); b = Math.max(b, point.y); }
       left = Math.min(left, l);
       top = Math.min(top, t);
       right = Math.max(right, r);

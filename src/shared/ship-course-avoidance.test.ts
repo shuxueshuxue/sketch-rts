@@ -201,6 +201,28 @@ describe('early course alterations for vessel encounters',()=>{
     const launched=boat('launched',1150,1000,0,0);units.push(launched);
     expect(shipTraffic(a,units)(from,to)).toBe(false);
   });
+  it('keeps a clear hull gap distinct from each connector’s exact safety padding',()=>{
+    const a=boat('padding-a',1000,1000,0,0),b=boat('padding-b',1000,1000,0,0),units=[a,b];
+    b.y+=(shipProfile(a)!.beam+shipProfile(b)!.beam)/2+.5;
+    const at={x:a.x,y:a.y,heading:0},traffic=shipTraffic(a,units);
+    for(const padding of [0,.1,1,.1,0])expect(traffic(at,at,padding)).toBe(padding<.5);
+    // A fresh frozen query can reuse geometry, but must use this new position.
+    b.y+=1;
+    expect(shipTraffic(a,units)(at,at,1)).toBe(true);
+    expect(traffic(at,at,1)).toBe(false);
+  });
+  it('preserves circular traffic sweeps when copied incoming curvature changes',()=>{
+    const a=boat('curve-a',1000,1000,0,0),b=boat('curve-b',1000+300/Math.SQRT2,1000+300*(1-1/Math.SQRT2),Math.PI/4,0),units=[a,b];
+    const from={x:a.x,y:a.y,heading:0},to={x:1300,y:1300,heading:Math.PI/2,curvature:1/300},traffic=shipTraffic(a,units);
+    expect(traffic(from,to)).toBe(false);
+    // The actual quarter circle hits the blocker at its midpoint. Copied
+    // curvature that does not reach these endpoints uses linear interpolation.
+    to.curvature=-1/300;expect(traffic(from,to)).toBe(true);
+    to.curvature=1/300;expect(traffic(from,to)).toBe(false);
+    b.x+=200;
+    expect(traffic(from,to)).toBe(false);
+    expect(shipTraffic(a,units)(from,to)).toBe(true);
+  });
   it('invalidates hull-radius caches for changed scale and freezes an existing route search',()=>{
     const a=boat('a',1000,1000,0,0),b=boat('b',1200,1000,0,0),units=[a,b],at={x:a.x,y:a.y,heading:0};
     const original=shipTraffic(a,units);

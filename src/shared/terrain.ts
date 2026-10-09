@@ -1067,8 +1067,9 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   }
   if (dirty.size === 0) return;
   overlay.revision=nextGroundRevision++;
-  state.clearance.fill(0);
-  fillClearance(state);
+  // A connectivity-only runtime has not needed clearance yet. Its first
+  // segment query will build it from the current, updated walkable cells.
+  if (state.clearance) { state.clearance.fill(0); fillClearance(state); }
   state.nearest.clear();
   if (state.tiles) redoTiles(state, state.tiles, dirty);
 }
@@ -1095,13 +1096,13 @@ type TerrainRuntime = {
   // ground's everywhere for a ship.
   weight: Uint8Array;
   // Chebyshev distance in cells to the nearest blocked cell (or the map's edge): 0 on a blocked cell.
-  clearance: Uint16Array;
+  clearance?: Uint16Array;
   fields: Map<number, Field>;
   spare: Field[];
   clock: number;
   nearest: Map<number, number>;
   // Dial's buckets, kept between fields: the whole map's (see grow) and the boxes' (see growBox).
-  buckets: Int32Array[];
+  buckets?: Int32Array[];
   tops: Int32Array;
   boxBuckets: number[][];
   offsets: Int32Array;
@@ -1151,17 +1152,14 @@ function createRuntime(terrain: Terrain, mover: Mover): TerrainRuntime {
     width,
     walk,
     weight,
-    clearance: new Uint16Array(count),
     fields: new Map(),
     clock: 0,
     spare: [],
     nearest: new Map(),
-    buckets: Array.from({ length: 8 }, () => new Int32Array(count)),
     tops: new Int32Array(8),
     boxBuckets: Array.from({ length: BUCKETS }, () => []),
     offsets,
   };
-  fillClearance(state);
   return state;
 }
 
@@ -1194,7 +1192,8 @@ function stepAllowed(state: TerrainRuntime, at: number, direction: number) {
 }
 
 function fillClearance(state: TerrainRuntime) {
-  const { walk, clearance, offsets } = state;
+  const { walk, offsets } = state;
+  const clearance = state.clearance ??= new Uint16Array(walk.length);
   const queue = new Int32Array(walk.length);
   let tail = 0;
   // Blocked cells (the border among them) seed their walkable neighbours at 1.
@@ -1223,12 +1222,14 @@ function fillClearance(state: TerrainRuntime) {
 // whose clearance is k has every cell within k - 1 of it walkable, so the walk jumps to the edge of that square.
 
 function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
-  const { terrain, walk, clearance, width } = state;
+  const { terrain, walk, width } = state;
   const size = terrain.cell;
   let at = padAt(state, ax, ay);
   const end = padAt(state, bx, by);
   if (at < 0 || end < 0 || walk[at] !== 1 || walk[end] !== 1) return false;
   if (at === end) return true;
+  if (!state.clearance) fillClearance(state);
+  const clearance = state.clearance!;
   const dx = bx - ax;
   const dy = by - ay;
   const length = Math.sqrt(dx * dx + dy * dy);
@@ -1320,7 +1321,8 @@ function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
 // The walking cost over the whole map from every cell to the nearest source, on the terrain alone (Dial's algorithm over
 // eight neighbours, no corner cut): the AIs' walking distances and routes (see walkingDistance, walkRoute).
 function grow(state: TerrainRuntime, sources: number[]): Field {
-  const { walk, offsets, buckets, tops } = state;
+  const { walk, offsets, tops } = state;
+  const buckets = state.buckets ??= Array.from({ length: 8 }, () => new Int32Array(walk.length));
   const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
   const dist = field.dist;
   dist.fill(UNREACHED);

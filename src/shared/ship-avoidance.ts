@@ -8,6 +8,18 @@ import { SIM_TICKS_PER_SECOND } from './time';
 import { shipMotionLimits } from './ship-handling';
 
 const trafficShapes=new Map<string,Point[]>();
+const trafficBases=new Map<string,Point[]>();
+let trafficBasePoints=0;
+const TRAFFIC_BASE_POINTS=16_384;
+
+function cacheTrafficBase(key:string,polygon:Point[]) {
+  if(polygon.length>TRAFFIC_BASE_POINTS)return;
+  while(trafficBases.size>=512 || trafficBasePoints+polygon.length>TRAFFIC_BASE_POINTS){
+    const oldest=trafficBases.keys().next().value!;
+    trafficBasePoints-=trafficBases.get(oldest)!.length;trafficBases.delete(oldest);
+  }
+  trafficBases.set(key,polygon);trafficBasePoints+=polygon.length;
+}
 
 /** A moving companion on the same ordinary voyage is a leader, rather than
  * a fixed obstacle to overtake. Berths, stationary orders and hostile ships
@@ -248,7 +260,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
  * hull used for coasts also constrains lattice positions and turns. */
 export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   const ownProfile=shipProfile(ship)!,hull=ownProfile.hull,radius=polygonRadius(hull);
-  const bodies=[] as {other:Unit;center:Point;radius:number;profile:NonNullable<ReturnType<typeof shipProfile>>;heading:number}[];
+  const bodies=[] as {other:Unit;center:Point;radius:number;profile:NonNullable<ReturnType<typeof shipProfile>>;heading:number;outline?:Point[]}[];
   for(const other of shipsIn(units)){
     if(other===ship || other.hp<=0 || Math.hypot(other.x-ship.x,other.y-ship.y)>=range)continue;
     const profile=shipProfile(other)!;
@@ -258,42 +270,72 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   const configuration=(from:number,to:number,body:typeof bodies[number],padding:number)=>{
     const key=`${from}:${to}:${body.other.id}:${padding}`,known=configurations.get(key);if(known)return known;
     const profile=body.profile,angle=body.heading;
-    const shapeKey=`${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}:${padding}`;
+    const baseKey=`${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}`;
+    const shapeKey=`${baseKey}:${padding}`;
     let polygon=trafficShapes.get(shapeKey);
     if(!polygon){
-      const sweepKey=`${from}:${to}`;let shape=sweeps.get(sweepKey);
-      if(!shape){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
-        for(let i=0;i<=steps;i++){const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);points.push(...hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c})));}
-        shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);sweeps.set(sweepKey,shape);
+      let base=trafficBases.get(baseKey);
+      if(!base){
+        const sweepKey=`${from}:${to}`;let negative=sweeps.get(sweepKey);
+        if(!negative){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
+          for(let i=0;i<=steps;i++){
+            const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);
+            for(const p of hull)points.push({x:p.x*c-p.y*s,y:p.x*s+p.y*c});
+          }
+          let shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);
+          negative=shape.map(p=>({x:-p.x,y:-p.y}));sweeps.set(sweepKey,negative);
+        }
+        // This search freezes each body's heading and local profile. Rotate
+        // its outline once and negate each completed own sweep once; neither
+        // operation depends on the body's position or configuration padding.
+        if(!body.outline){const c=detCos(angle),s=detSin(angle);body.outline=profile.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));}
+        base=minkowskiSum(body.outline,negative);cacheTrafficBase(baseKey,base);
       }
-      const c=detCos(angle),s=detSin(angle),outline=profile.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));
-      polygon=minkowskiSum(outline,shape.map(p=>({x:-p.x,y:-p.y})));
-      if(padding)polygon=expandConvex(polygon,padding);
+      // Curved connectors can have identical headings and different chord
+      // errors. Reuse only their exact unpadded geometry/planes, then apply
+      // each connector's unchanged padding. Both persistent caches are bounded.
+      polygon=padding?expandConvex(base,padding):base;
       if(trafficShapes.size>=512)trafficShapes.delete(trafficShapes.keys().next().value!);trafficShapes.set(shapeKey,polygon);
     }
     configurations.set(key,polygon);return polygon;
   };
-  const interior=(point:Point,polygon:readonly Point[])=>polygonPlanes(polygon).every(p=>point.x*p.x+point.y*p.y>p.min+1e-6);
+  const interior=(x:number,y:number,polygon:readonly Point[])=>{
+    for(const p of polygonPlanes(polygon))if(!(x*p.x+y*p.y>p.min+1e-6))return false;
+    return true;
+  };
+  // Clipping reads these points synchronously and returns only fractions.
+  // They never escape this frozen traffic query, including curved recursion.
+  const start={x:0,y:0},end={x:0,y:0};
+  let curves:Map<string,boolean>|undefined;
   const clear=(from:ShipPose,to:ShipPose,padding=0):boolean=>{
     if(!bodies.length)return true;
     if(to.pivot || Math.abs(to.curvature??0)>1e-9){
+      // Entrance and curve-simplification checks can repeat the same complete
+      // sweep. Every geometric input belongs to this exact key, and bodies
+      // remain frozen only for this query's lifetime. Leaf checks still use
+      // every original sample and chord error on a cache miss.
+      const key=`${from.x}:${from.y}:${from.heading}:${to.x}:${to.y}:${to.heading}:${to.curvature}:${to.pivot?.x}:${to.pivot?.y}:${padding}`;
+      const known=curves?.get(key);if(known!==undefined)return known;
       const turn=headingDifference(from.heading,to.heading),lever=to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):1/Math.abs(to.curvature!);
       const steps=Math.max(1,Math.ceil(Math.abs(turn)*Math.sqrt((radius+lever)/(8*.025))));
       const error=lever*(turn/steps)**2/8+1e-7;
-      for(let i=0;i<steps;i++)if(!clear(shipPoseAt(from,to,i/steps),shipPoseAt(from,to,(i+1)/steps),error))return false;
-      return true;
+      let result=true;
+      for(let i=0;i<steps;i++)if(!clear(shipPoseAt(from,to,i/steps),shipPoseAt(from,to,(i+1)/steps),error)){result=false;break;}
+      curves??=new Map();if(curves.size>=256)curves.delete(curves.keys().next().value!);curves.set(key,result);
+      return result;
     }
     const dx=to.x-from.x,dy=to.y-from.y,turn=headingDifference(from.heading,to.heading);
-    return bodies.every(body=>{
-      if(pointSegmentDistanceSquared(body.center,from,to)>(radius+body.radius+padding)**2)return true;
+    for(const body of bodies){
+      if(pointSegmentDistanceSquared(body.center,from,to)>(radius+body.radius+padding)**2)continue;
       const polygon=configuration(from.heading,to.heading,body,padding);
-      const start={x:from.x-body.center.x,y:from.y-body.center.y},end={x:to.x-body.center.x,y:to.y-body.center.y};
-      const clip=clipToConvex(start,end,polygon);if(!clip || clip[1]-clip[0]<1e-7)return true;
+      start.x=from.x-body.center.x;start.y=from.y-body.center.y;end.x=to.x-body.center.x;end.y=to.y-body.center.y;
+      const clip=clipToConvex(start,end,polygon);if(!clip || clip[1]-clip[0]<1e-7)continue;
       const middle=(clip[0]+clip[1])/2;
-      if(!interior({x:start.x+dx*middle,y:start.y+dy*middle},polygon))return true;
+      if(!interior(start.x+dx*middle,start.y+dy*middle,polygon))continue;
       // Initial contact may separate, but cannot rotate deeper into contact.
-      return Math.abs(turn)<1e-7 && clip[0]<=1e-7 && dx*(from.x-body.center.x)+dy*(from.y-body.center.y)>0;
-    });
+      if(!(Math.abs(turn)<1e-7 && clip[0]<=1e-7 && dx*(from.x-body.center.x)+dy*(from.y-body.center.y)>0))return false;
+    }
+    return true;
   };
   return Object.assign(clear,{hasTraffic:bodies.length>0});
 }
