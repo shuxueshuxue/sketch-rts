@@ -10,12 +10,12 @@ import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { readV6Intel } from '../policy/v6/intel';
 import { planAiOwnerCommandEntries } from '../planner-context';
 
-function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lancer', race: 'grove' | 'ember' = 'grove') {
+function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lancer', race: 'grove' | 'ember' = 'grove', naturalGold = 4000) {
   const shooter = race === 'grove' ? 'horseArcher' : 'sparkArcher';
   let scene = sketchScene('independent-mine-defense').replaceDefaults()
     .player('us', { team: 'a', race }).player('fa', { team: 'b', race: 'grove' }).player('fb', { team: 'b', race: 'grove' })
     .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })
-    .goldMine('main', 688, 1000, 4000).goldMine('natural', 1888, 1600, 4000)
+    .goldMine('main', 688, 1000, 4000).goldMine('natural', 1888, 1600, naturalGold)
     .townHall('fa', 3500, 3000, { id: 'attack-hall' }).townHall('fb', 3500, 800)
     .farms('us', 8, 400, 2200);
   for (let i = 0; i < 5; i++) scene = scene.worker('us', 1650 + i * 35, 1700, { id: `miner-${i}` });
@@ -33,6 +33,21 @@ function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lanc
 }
 
 describe('bootstrap_1 independent mine defense', () => {
+  it.each(['grove', 'ember'] as const)('lets the %s guard march past an exhausted mine to the next front', race => {
+    const { game, context } = twoFronts(4, race === 'grove' ? 'lancer' : 'ashWarden', race, 0);
+    const guards = game.units.filter(unit => unit.id.startsWith('guard-')).map(unit => unit.id);
+    issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.id.startsWith('striker-')).map(unit => unit.id) });
+    issuePlayerCommand(game, 'us', { type: 'move', unitIds: guards, x: 2800, y: 2300 });
+    for (let tick = 0; tick < 900; tick++) {
+      if (tick % 15 === 0) for (const { command } of runAiCommandEntriesFromScripts(snapshotGame(game), 'us', [mineDefense], context())) issuePlayerCommand(game, 'us', command);
+      stepGame(game);
+    }
+    const arrived = game.units.filter(unit => guards.includes(unit.id) && Math.hypot(unit.x - 2800, unit.y - 2300) < 150);
+    expect(arrived.length).toBeGreaterThanOrEqual(3);
+    expect(game.buildings.some(building => building.owner === 'us' && building.x === 400)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   for (const version of ['v9_archer', 'v9_summoner', 'v9_knight'] as const) {
     it.each(['grove', 'ember'] as const)(`moves new %s artillery toward an active camp through the full ${version} stack`, race => {
       const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
