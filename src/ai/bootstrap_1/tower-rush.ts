@@ -18,13 +18,16 @@ import { SUMMONING_UNIT_KINDS } from '../policy/versions';
 const JOB = 'summonerTowerRush';
 const HELPER = 'summonerTowerRushHelper';
 const SCREEN = 110;
+const POST_SLACK = 70;
 
 type Rush = {
-  hall: Building;
   fighters: Unit[];
   casters: Unit[];
   site: Point;
   advance: Point;
+  facing: Point;
+  post: Point;
+  opponents: Unit[];
   builders: Unit[];
   rising: Building | undefined;
   pending: boolean;
@@ -73,7 +76,8 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   if (!target) { endRush(options); return undefined; }
   const guards = mineGuardUnitIds(snapshot, owner, options);
   const army = own.filter(unit => !guards.has(unit.id) && distance(unit, center) <= 800);
-  const opposition = combatPower(foes.filter(unit => distance(unit, center) <= 1100 || distance(unit, target) <= 1100))
+  const opponents = foes.filter(unit => distance(unit, center) <= 1100 || distance(unit, target) <= 1100);
+  const opposition = combatPower(opponents)
     + snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
       && isOpponentOwner(snapshot, owner, building.owner, options) && distance(building, target) <= 800).length * TOWER_STRENGTH;
   const power = combatPower(army);
@@ -94,6 +98,10 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const tower = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'defenseTower'
     && building.complete && distance(building, center) <= building.attackRange)
     .sort((a, b) => distance(a, target) - distance(b, target))[0];
+  // Take command only with existing tower support or the ordinary gold to start construction.
+  if (!tower && !rising && !pending && snapshot.players[owner]!.gold < BUILDING_DEFS.defenseTower.cost) {
+    endRush(options); return undefined;
+  }
   if (!press && (!job || (!tower && !rising && !pending))) { endRush(options); return undefined; }
   const support = !press && tower ? tower : rising ?? (pending?.order.type === 'build' ? pending.order : tower);
   // The front waits for its builder. A completed tower then covers the next short advance.
@@ -118,8 +126,16 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
     if (helperJob && builders[0]) { helperJob.kind = builders[0].id; helperJob.updatedTick = snapshot.tick; }
     else if (builders[0]) options.memory.jobs.push({ id: HELPER, kind: builders[0].id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
   } else options.memory.jobs = options.memory.jobs.filter(job => job.id !== HELPER);
-  const fighters = army.filter(unit => !isBacklineKind(unit) && !UNIT_DEFS[unit.kind].weapon);
-  return { hall: target, fighters, casters, site, advance, builders, rising, pending: pending !== undefined, press };
+  // Existing cover keeps the host safe while summons continue the assault under the main commander.
+  const fighters = army.filter(unit => (rising || pending || snapshot.players[owner]!.gold >= BUILDING_DEFS.defenseTower.cost)
+    && !isBacklineKind(unit) && !UNIT_DEFS[unit.kind].weapon);
+  // A holding host faces the actual attackers, rather than putting its flank toward them to face a distant hall.
+  const facing = !press && opponents.length > 0 ? averagePoint(opponents) : target;
+  const anchor = !press && tower ? tower : advance;
+  const postGap = distance(anchor, facing);
+  const post = { x: anchor.x + (anchor.x - facing.x) * SCREEN / postGap,
+    y: anchor.y + (anchor.y - facing.y) * SCREEN / postGap };
+  return { fighters, casters, site, advance, facing, post, opponents, builders, rising, pending: pending !== undefined, press };
 }
 
 export const summonerTowerRush: AiScript = {
@@ -133,25 +149,33 @@ export const summonerTowerRush: AiScript = {
     const plan = rush(snapshot, owner, options);
     if (!plan) return [];
     const commands: GameCommand[] = [];
-    const gap = distance(plan.advance, plan.hall);
-    const post = { x: plan.advance.x + (plan.advance.x - plan.hall.x) * SCREEN / gap,
-      y: plan.advance.y + (plan.advance.y - plan.hall.y) * SCREEN / gap };
+    const { post } = plan;
     const splash = Math.max(0, ...snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
       && UNIT_DEFS[unit.kind].weapon?.delivery === 'shell' && distance(unit, post) <= unit.attackRange + BUILDING_DEFS.defenseTower.attackRange)
       .map(unit => UNIT_DEFS[unit.kind].weapon!.radius!));
     const columns = Math.ceil(Math.sqrt(plan.casters.length));
-    const forward = { x: (plan.hall.x - post.x) / (gap + SCREEN), y: (plan.hall.y - post.y) / (gap + SCREEN) };
+    const gap = distance(plan.facing, post);
+    const forward = { x: (plan.facing.x - post.x) / gap, y: (plan.facing.y - post.y) / gap };
     for (const [index, caster] of plan.casters.entries()) {
       const spacing = splash > 0 ? splash + caster.radius * 2 : 0;
       const lateral = (index % columns - (columns - 1) / 2) * spacing;
       const rear = Math.floor(index / columns) * spacing;
       const point = { x: post.x - forward.y * lateral - forward.x * rear,
         y: post.y + forward.x * lateral - forward.y * rear };
-      if (distance(caster, point) > 70) commands.push({ type: 'move', unitIds: [caster.id], ...point });
+      if (!plan.press) for (const enemy of plan.opponents) if (enemy.attackDamage > 0) {
+        const dx = point.x - enemy.x, dy = point.y - enemy.y;
+        const across = dx * forward.y - dy * forward.x;
+        const reach = enemy.attackRange + enemy.radius + caster.radius + POST_SLACK;
+        if (Math.abs(across) < reach) {
+          const retreat = Math.max(0, dx * forward.x + dy * forward.y + Math.sqrt(reach * reach - across * across));
+          point.x -= forward.x * retreat; point.y -= forward.y * retreat;
+        }
+      }
+      if (distance(caster, point) > POST_SLACK) commands.push({ type: 'move', unitIds: [caster.id], ...point });
       else if (splash > 0 && caster.order.type !== 'hold') commands.push({ type: 'holdPosition', unitIds: [caster.id] });
     }
     for (const soldier of plan.fighters) {
-      if (soldier.order.type !== 'attackMove' || distance(soldier.order, plan.advance) > 70) {
+      if (soldier.order.type !== 'attackMove' || distance(soldier.order, plan.advance) > POST_SLACK) {
         commands.push({ type: 'attackMove', unitIds: [soldier.id], ...plan.advance });
       }
     }

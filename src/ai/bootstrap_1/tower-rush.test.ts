@@ -8,7 +8,7 @@ import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { planAbilityCommands } from '../policy/spell-tactics';
 import { bootstrapEconomy } from './economy';
-import { bootstrapPolicyContext } from './policy';
+import { bootstrapPolicyContext, bootstrapScripts } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 import { mineGuardUnitIds } from './mine-defense';
 import { miningWorkforce } from './workforce';
@@ -48,6 +48,36 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(rearTower => ({ race, rearTower }))))(
+    'continues the $race assault when its mines are exhausted and rear tower=$rearTower', ({ race, rearTower }) => {
+    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    let scene = sketchScene('unfunded-forward-tower').map('openClaims').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold: 0 })
+      .townHall('us', 400, 600).townHall('us', 400, 2000).townHall('foe', 2200, 600, { id: 'target' })
+      .goldMine('main', 688, 600, 0).goldMine('natural', 688, 2000, 0)
+      .farms('us', 9, 400, 3000).worker('us', 1300, 850).worker('us', 1350, 850);
+    for (let index = 0; index < 20; index++) scene = scene.unit('us', caster,
+      1200 + index % 5 * 35, 550 + Math.floor(index / 5) * 35);
+    if (rearTower) scene = scene.tower('us', 1000, 600);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    const ability = UNIT_DEFS[caster].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'summon')!;
+    for (const unit of game.units.filter(unit => unit.kind === caster)) issuePlayerCommand(game, 'us',
+      { type: 'cast', unitId: unit.id, ability, x: unit.x + 100, y: unit.y });
+    memory.v6 = { phase: 3, general: { mode: 'attack', target: { x: 2200, y: 600 }, targetHallId: 'target',
+      stage: 'strike', stageSince: 0, group: game.units.filter(unit => unit.owner === 'us' && unit.kind !== 'worker').map(unit => unit.id), groupStart: 40 } };
+    for (let tick = 0; tick < 1200 && !game.match.winner; tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_summoner', { memory, teams: game.teams });
+        for (const { command } of runAiCommandEntriesFromScripts(snapshot, 'us', bootstrapScripts('v9_summoner'), options)) issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(game.buildings.some(building => building.id === 'target')).toBe(false);
+    expect(game.units.filter(unit => unit.kind === caster)).toHaveLength(20);
+    if (rearTower) expect(game.units.filter(unit => unit.kind === caster).every(unit => unit.x < 1600)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   it.each(['grove', 'ember'] as const)('funds a waiting %s front tower before an older unaffordable expansion', race => {
     const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
     let scene = sketchScene('aged-front-construction').map('openClaims').replaceDefaults()
