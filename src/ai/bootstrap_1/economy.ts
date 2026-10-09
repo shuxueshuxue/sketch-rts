@@ -1,14 +1,15 @@
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind } from '../../shared/types';
-import { navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, collectV6Goals, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
 import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
 import { isOpponentOwner } from '../policy/ownership';
+import { recoveryPatients } from './medical-recovery';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -52,8 +53,14 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
   }, 0);
 }
 
+// One pending construction of each kind: a walking colony builder does not lock home tech.
+const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
+  if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
+  return issueV6Construction(economy, kind, point, used, play);
+};
+
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const goals = collectV6Goals(snapshot, owner, options);
+  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant);
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);
@@ -61,6 +68,12 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
   const own = snapshot.buildings.filter(building => building.owner === owner);
+  const healer = player.race === 'grove' ? 'priest' : 'emberAcolyte';
+  const recovering = recoveryPatients(snapshot, owner).length > 0;
+  // Keep the requested first healer funded until its ordinary training has been queued.
+  const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
+    && own.some(building => BUILDING_DEFS[building.kind].trains.includes(healer) && (building.queue.length > 0 || recovering)
+      && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
   // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete).reduce((total, building) => total
@@ -84,7 +97,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id.startsWith('upgrade:') || goal.id === 'engineering:workshop') {
       productionReserve = Math.max(productionReserve, waveReserve);
     }
-    return [{ ...goal, productionReserve }];
+    return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
