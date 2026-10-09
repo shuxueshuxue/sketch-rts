@@ -10,6 +10,7 @@ import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
 import { cellIndexAt, footprintCells, footprintHalf, isFootprintBuildable, isShoreFootprint, snapToFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
 import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
+import { GridFlood } from "./grid-flood";
 import { resourceBlocksPlacement } from "./build-placement";
 import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
@@ -1344,6 +1345,7 @@ class Grid {
   readonly shut: Uint8Array;
   readonly shutCells: number[] = [];
   readonly count: number;
+  private readonly floodTraversal: GridFlood;
   private openCount = 0;
   private landCount = 0;
   private islandCount = 0;
@@ -1353,6 +1355,7 @@ class Grid {
     readonly field: Field,
   ) {
     this.count = cells * cells;
+    this.floodTraversal = new GridFlood(cells);
     this.open = new Uint8Array(this.count).fill(1);
     this.kept = new Uint8Array(this.count);
     this.way = new Uint8Array(this.count);
@@ -1551,10 +1554,9 @@ class Grid {
 
   // Whether every open cell but an island's is reached from the start, with the rocks and gates standing.
   whole(from: Point) {
-    const reached: number[] = [];
-    this.flood4(this.indexAt(from), (index) => this.open[index] === 1 && !this.shut[index], reached);
+    const reached = this.floodTraversal.walk(this.indexAt(from), (index) => this.open[index] === 1 && !this.shut[index]).count;
     const shutOpen = this.shutCells.filter((index) => this.open[index] && !this.island[index]).length;
-    return reached.length === this.openCount - this.islandCount - shutOpen;
+    return reached === this.openCount - this.islandCount - shutOpen;
   }
 
   // @@@generated-obstacles - Rocks and gates stand across shortcuts only: each on open ground, the land whole with all of
@@ -1788,25 +1790,7 @@ class Grid {
 
   // Four-way flood from a cell over the cells that pass; the cells reached (listed into `into` when given).
   flood4(start: number, passes: (index: number) => boolean, into?: number[]) {
-    const reached = new Uint8Array(this.count);
-    const queue = [start];
-    reached[start] = 1;
-    for (let head = 0; head < queue.length; head += 1) {
-      const index = queue[head]!;
-      into?.push(index);
-      const col = index % this.cells;
-      const row = (index - col) / this.cells;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-        const c = col + dx;
-        const r = row + dy;
-        if (c < 0 || r < 0 || c >= this.cells || r >= this.cells) continue;
-        const next = r * this.cells + c;
-        if (reached[next] || !passes(next)) continue;
-        reached[next] = 1;
-        queue.push(next);
-      }
-    }
-    return reached;
+    return this.floodTraversal.walk(start, passes, into).reached;
   }
 
   neighbours(index: number) {
