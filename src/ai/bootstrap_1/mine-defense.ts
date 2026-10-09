@@ -20,7 +20,8 @@ function miningRaids(snapshot: GameSnapshot, intel: V6Intel) {
   const foes = intel.enemies.flatMap(enemy => enemy.army);
   const aimedAt = (unit: Unit, hall: Building) => unit.order.type === 'attack' && unit.order.targetId === hall.id
     || unit.order.type === 'attackMove' && distance(unit.order, hall) <= hall.radius + 80;
-  return intel.ownHalls.map(hall => ({ hall,
+  return intel.ownHalls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
+    && distance(mine, hall) <= GOLD_MINE_RULES.baseRange)).map(hall => ({ hall,
     attackers: foes.filter(unit => sameGround(snapshot.map, unit, hall)
       && (distance(unit, hall) < 650 || aimedAt(unit, hall) && distance(unit, hall) < 1800
         || intel.intrusion !== undefined && distance(intel.intrusion.building, hall) <= GOLD_MINE_RULES.baseRange
@@ -38,8 +39,7 @@ export function uncoveredMiningRaid(snapshot: GameSnapshot, owner: PlayerId, opt
 
 function uncoveredRaid(snapshot: GameSnapshot, intel: V6Intel, guard: Detachment | undefined): V6Intrusion | undefined {
   for (const { hall, attackers } of miningRaids(snapshot, intel)) {
-    if (!snapshot.resources.some(mine => mine.amount > 0 && distance(mine, hall) <= GOLD_MINE_RULES.baseRange)
-      || guard && attackers.every(unit => guard.attackers.includes(unit))) continue;
+    if (guard && attackers.every(unit => guard.attackers.includes(unit))) continue;
     const cover = intel.ownTowers.filter(tower => distance(tower, hall) <= tower.attackRange)
       .reduce((power, tower) => power + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
     const threat = strengthOf(attackers);
