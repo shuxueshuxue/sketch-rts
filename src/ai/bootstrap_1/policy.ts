@@ -1,6 +1,6 @@
-import { UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
-import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
+import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiPolicyContext } from '../policy/types';
@@ -99,14 +99,24 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
   return planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options));
 }
 
+export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
+  return wants.flatMap(want => 'upgrade' in want && player.upgrades[want.upgrade] < want.level ? [{
+    building: UPGRADE_DEFS[want.upgrade].researchBuildingKinds.find(kind => RACE_DEFS[player.race].buildableBuildings.includes(kind))!,
+    count: 1, priority: want.priority,
+  }] : []);
+}
+
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   const wants = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);
+  const player = snapshot.players[owner]!;
   return {
     ...options, version: 'v2', requestedVersion: version === 'v9_summoner' ? 'v7' : 'v9',
     // Economy and the general must pursue the same mine, including its camp and escort.
-    doctrines: expansion.length === 0 ? BOOTSTRAP_DOCTRINES[version] : BOOTSTRAP_DOCTRINES[version].map(strategy => ({
-      ...strategy, phases: strategy.phases.map(phase => ({ ...phase, wants: [...phase.wants, ...expansion] })),
+    doctrines: BOOTSTRAP_DOCTRINES[version].map(strategy => ({
+      ...strategy, phases: strategy.phases.map(phase => ({ ...phase,
+        wants: [...phase.wants, ...expansion, ...researchPrerequisites([...phase.wants, ...wants], player)],
+      })),
     })),
     armyWants: wants.filter(want => !('bases' in want)),
   };
