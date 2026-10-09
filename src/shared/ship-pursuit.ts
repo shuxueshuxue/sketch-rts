@@ -1,11 +1,13 @@
 import { strikeGap } from './combat-geometry';
 import { shipMotionLimits } from './ship-handling';
-import { distanceToHull, hullContact, shipProfile } from './ship-geometry';
-import { hullPassageClear } from './ship-navigation';
+import { distanceToHull, hullContact, shipProfile, shipsIn } from './ship-geometry';
+import { headingDifference, hullPassageClear } from './ship-navigation';
+import { polygonRadius } from './navigation-math';
 import { detCos, detSin } from './det-math';
 import type { Building, GameMap, Obstacle, Unit } from './types';
 
 type Target = Unit | Building | Obstacle;
+const STATION_OFFSETS = [0, ...Array.from({ length: 11 }, (_, index) => [(index + 1) * Math.PI / 12, -(index + 1) * Math.PI / 12]).flat(), Math.PI];
 export type PursuitGoal = { x: number; y: number; intent: 'pursuit'; targetId: string; arrivalRadius: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean };
 
 /** Gunnery may select a crew member; the navigator follows the carrying hull. */
@@ -24,8 +26,9 @@ export function interceptTime(dx: number, dy: number, vx: number, vy: number, sp
   } else {
     const discriminant = b * b - 4 * a * c;
     if (discriminant >= 0) {
-      const root = Math.sqrt(discriminant), candidates = [(-b - root) / (2 * a), (-b + root) / (2 * a)].filter(value => value >= 0);
-      if (candidates.length) time = Math.min(...candidates);
+      const root = Math.sqrt(discriminant), first = (-b - root) / (2 * a), second = (-b + root) / (2 * a);
+      if (first >= 0) time = first;
+      if (second >= 0 && (first < 0 || second < first)) time = second;
     }
   }
   return Math.min(6, Math.max(0, time));
@@ -53,7 +56,8 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   const firing = !following ? stationaryFire?.() : undefined;
   const phase = firing !== undefined ? firing ? 'engage' : 'approach'
     : previous?.phase === 'engage' ? phaseGap > leave || gap < minimum ? 'approach' : 'engage' : phaseGap <= enter && gap >= minimum ? 'engage' : 'approach';
-  motion.pursuit = { targetId: target.id, phase, moving };
+  if (previous) { previous.phase = phase; previous.moving = moving; }
+  else motion.pursuit = { targetId: target.id, phase, moving };
   if (phase === 'engage' && !moving && motion.speed <= 1) return undefined;
 
   const limits = shipMotionLimits(ship);
@@ -107,16 +111,46 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   if (!moving && !following && stationaryFire !== undefined && !firing) {
     // A firing station needs room to rotate the hull. A point on the nearest
     // edge of the target's deck is a berth and can trap the broadside battery.
-    const radius = Math.max(...shipProfile(ship)!.hull.map(point => Math.hypot(point.x, point.y))) + 4;
+    const radius = polygonRadius(shipProfile(ship)!.hull) + 4;
     const bearing = Math.atan2(ship.y - predicted.y, ship.x - predicted.x);
-    let best: { x: number; y: number } | undefined, bestDistance = Infinity;
-    for (const offset of [0, Math.PI / 12, -Math.PI / 12, Math.PI / 6, -Math.PI / 6, Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2, Math.PI]) {
+    const ships = shipsIn(units);
+    const valid = (candidate: { x: number; y: number }) => {
+      for (const other of ships) {
+        if (other === ship || other.hp <= 0) continue;
+        if (distanceToHull(other, candidate) < radius) return false;
+        const reserved = other.sailing?.route;
+        // Incoming friendly batteries need different places to fight, even
+        // before either hull reaches the firing ring. A route is the saved
+        // reservation: replacing an attack order releases it immediately.
+        if (other.owner === ship.owner && (other.order.type === 'attack' || other.order.type === 'attackMove')
+          && reserved?.intent === 'pursuit' && reserved.targetId === target.id
+          && Math.hypot(candidate.x - reserved.goalX, candidate.y - reserved.goalY) < radius + polygonRadius(shipProfile(other)!.hull) + 4) return false;
+      }
+      return !map || hullPassageClear(map, ship, { ...candidate, heading: 0 }, { ...candidate, heading: Math.PI })
+        && hullPassageClear(map, ship, { ...candidate, heading: Math.PI }, { ...candidate, heading: Math.PI * 2 });
+    };
+    const committed = motion.route;
+    const previousStation = committed?.intent === 'pursuit' && committed.targetId === target.id
+      ? { x: committed.goalX, y: committed.goalY } : undefined;
+    let best: { x: number; y: number } | undefined, bestCost = Infinity;
+    // Prefer the same useful station through a turn. Re-centering the ring
+    // on the pursuer's new bearing otherwise makes a stopped enemy appear
+    // to drag the destination sideways on every tick. Near the station,
+    // let gunnery refine range to crew standing on the far side of a deck.
+    if (previousStation && Math.hypot(previousStation.x - ship.x, previousStation.y - ship.y) > ownLength * .5
+      && Math.abs(Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) - standoff) <= ownLength * .25
+      && valid(previousStation)) best = previousStation;
+    for (const offset of best ? [] : STATION_OFFSETS) {
       const candidate = { x: predicted.x + standoff * detCos(bearing + offset), y: predicted.y + standoff * detSin(bearing + offset) };
-      if (units.some(other => other !== ship && other.hp > 0 && shipProfile(other) && distanceToHull(other, candidate) < radius)) continue;
-      if (map && (!hullPassageClear(map, ship, { ...candidate, heading: 0 }, { ...candidate, heading: Math.PI })
-        || !hullPassageClear(map, ship, { ...candidate, heading: Math.PI }, { ...candidate, heading: Math.PI * 2 }))) continue;
       const distance = Math.hypot(candidate.x - ship.x, candidate.y - ship.y);
-      if (distance < bestDistance - 1e-7) { best = candidate; bestDistance = distance; }
+      // Equal-distance stations on opposite sides of the target are not
+      // equal sailing approaches. Include the turn needed to reach one so
+      // a ship already heading south does not commit to a 270-degree orbit
+      // around a northward station merely because that sector came first.
+      const turn = Math.abs(headingDifference(motion.heading, Math.atan2(candidate.y - ship.y, candidate.x - ship.x)));
+      const cost = distance + ownLength * .75 * turn;
+      if (cost >= bestCost - 1e-7 || !valid(candidate)) continue;
+      best = candidate; bestCost = cost;
     }
     if (best) { goal.x = best.x; goal.y = best.y; }
   }

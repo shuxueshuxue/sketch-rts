@@ -3,11 +3,12 @@ import { boardUnit } from "./decks";
 import { createUnit } from "./map";
 import { landingSpot } from "./naval";
 import { shove, slide } from "./push";
-import { hullFits, hullPassageClear, hullStep, nearestShipPose, shipRoute, planShipRoute } from "./ship-navigation";
+import { hullFits, hullPassageClear, hullStep, nearestShipPose, shipRoute, planShipRoute, shipPoseAt } from "./ship-navigation";
 import { distanceToHull, hullContact, shipPassengers, shipProfile } from "./ship-geometry";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { setBuildingBodies } from "./terrain";
+import { shipTraffic } from './ship-avoidance';
 import { seconds } from "./time";
 import type { GameMap, Unit } from "./types";
 
@@ -55,6 +56,27 @@ describe("full hull water navigation", () => {
     const stopped = hullStep(water, boat, goal);
     expect(stopped.x).toBeLessThan(14 * 32);
     expect(hullFits(water, boat, { ...stopped, heading: 0 })).toBe(true);
+  });
+  it('keeps the whole circular center arc clear when both endpoints fit',()=>{
+    // The arc crosses this island halfway through a turn while its two
+    // endpoint hulls remain in water.
+    const water=map((x,y)=>x===13 && y===13 ? '.' : '~');
+    const boat=createUnit('arc','player','cutter',240,240),from={x:240,y:240,heading:0};
+    const curvature=1/200,heading=Math.PI-.05;
+    const to={x:from.x+Math.sin(heading)/curvature,y:from.y-(Math.cos(heading)-1)/curvature,heading,curvature};
+    expect(hullFits(water,boat,from)).toBe(true);expect(hullFits(water,boat,to)).toBe(true);
+    expect(hullFits(water,boat,shipPoseAt(from,to,.5))).toBe(false);
+    expect(hullPassageClear(water,boat,from,to)).toBe(false);
+  });
+  it('proves short curved passages near a coast without requiring their entire turn circle to fit',()=>{
+    const water=map(x=>x<3?'.':'~'),boat=createUnit('arc','player','cutter',220,400);
+    for(const sign of [-1,1]){
+      const from={x:boat.x,y:boat.y,heading:sign*2*Math.PI},curvature=sign/1000,heading=from.heading+sign*.08;
+      const to={x:from.x+(Math.sin(heading)-Math.sin(from.heading))/curvature,
+        y:from.y-(Math.cos(heading)-Math.cos(from.heading))/curvature,heading,curvature};
+      for(let step=0;step<=20;step++)expect(hullFits(water,boat,shipPoseAt(from,to,step/20))).toBe(true);
+      expect(hullPassageClear(water,boat,from,to)).toBe(true);
+    }
   });
   it("allows an aligned narrow ship through a channel but rejects its turn and a wider carrier", () => {
     const water = channel(), boat = ship("transport", 14, 12), carrier = ship("carrier", 14, 12);
@@ -116,6 +138,18 @@ describe("full hull water navigation", () => {
     expect(shipRoute(water, boat, goal).at(-1)).toMatchObject(goal);
     water.terrain!.cells = water.terrain!.cells.split("").map((c, i) => i % 30 === 14 ? "." : c).join("");
     expect(shipRoute(water, boat, goal).at(-1)!.x).toBeLessThan(14 * 32);
+  });
+  it('does not reuse lattice traffic fits after a blocking hull moves away and returns',()=>{
+    const water=channel(),boat=ship('transport',6,12),goal=at(23,12),berth=at(14,12);
+    const blocker=createUnit('blocker','player','transport',berth.x,berth.y),units=[boat,blocker];
+    for(let repeat=0;repeat<2;repeat++){
+      blocker.x=at(14,12).x;blocker.y=at(14,12).y;
+      const obstructed=planShipRoute(water,boat,goal,shipTraffic(boat,units,Infinity),1024);
+      expect(obstructed.partial).toBe(true);expect(obstructed.points.at(-1)!.x).toBeLessThan(blocker.x);
+      blocker.x=at(25,18).x;blocker.y=at(25,18).y;
+      const open=planShipRoute(water,boat,goal,shipTraffic(boat,units,Infinity),1024);
+      expect(open.partial).toBe(false);expect(open.points.at(-1)).toMatchObject(goal);
+    }
   });
   it("keeps a finished ship queued when its pond has no space for the full hull", () => {
     const g = game(map((x, y) => x === 10 && y === 10 ? "~" : "."));

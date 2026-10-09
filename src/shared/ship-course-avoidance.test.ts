@@ -113,4 +113,30 @@ describe('early course alterations for vessel encounters',()=>{
     target.order={type:'move',x:1300,y:1100};
     expect(reservationTraffic(source,units)(goal,goal)).toBe(false);
   });
+  it('updates live traffic after movement, yaw, death and launch in the same unit list',()=>{
+    const a=boat('a',1000,1000,0,0),b=boat('b',1230,1000,Math.PI/2,0),units=[a,b];
+    const from={x:a.x,y:a.y,heading:0},to={x:1200,y:1000,heading:0};
+    expect(shipTraffic(a,units)(from,to)).toBe(false);
+    b.y=1300;expect(shipTraffic(a,units)(from,to)).toBe(true);
+    b.y=1080;expect(shipTraffic(a,units)(from,to)).toBe(false);
+    b.sailing!.heading=0;expect(shipTraffic(a,units)(from,to)).toBe(true);
+    b.y=1000;b.hp=0;expect(shipTraffic(a,units)(from,to)).toBe(true);
+    const launched=boat('launched',1150,1000,0,0);units.push(launched);
+    expect(shipTraffic(a,units)(from,to)).toBe(false);
+  });
+  it('invalidates hull-radius caches for changed scale and freezes an existing route search',()=>{
+    const a=boat('a',1000,1000,0,0),b=boat('b',1200,1000,0,0),units=[a,b],at={x:a.x,y:a.y,heading:0};
+    const original=shipTraffic(a,units);
+    expect(original(at,at)).toBe(true);
+    a.deckScale=3;
+    expect(shipTraffic(a,units)(at,at)).toBe(false);
+    expect(original(at,at)).toBe(true);
+    a.deckScale=1.1;
+    b.x=1120;b.sailing!.heading=Math.PI/2;
+    const frozen=shipTraffic(a,units);
+    expect(frozen(at,at)).toBe(true);
+    b.sailing!.heading=0;
+    expect(frozen(at,at)).toBe(true);
+    expect(shipTraffic(a,units)(at,at)).toBe(false);
+  });
 });

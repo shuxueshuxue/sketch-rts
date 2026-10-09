@@ -5,7 +5,7 @@ import { shipMotionLimits } from './ship-handling';
 import { coursePerformance, updateAutoTrim } from './ship-wind';
 import { perTick, seconds } from './time';
 
-const kinds = ['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip'] as const;
+const kinds = ['cutter', 'transport', 'warship', 'carrier', 'bombardShip', 'fireShip', 'shipOfTheLine'] as const;
 
 describe('playable windward progress', () => {
   for (const kind of kinds) {

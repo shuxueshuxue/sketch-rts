@@ -12,6 +12,13 @@ coverage/
 recordings/
 .art-build/
 
+# Local review outputs and runtime profiles (scripts default to work/).
+/work/
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+/sketch-rts-production.tar.gz
+
 # Sound packs (see @@@sound-packs): only the cc0 pack is ours to publish; any other pack stays on its machine.
 audio-packs/*
 !audio-packs/cc0/

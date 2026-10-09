@@ -26,6 +26,8 @@
     "art:ships": "python3 tools/art/build-ships.py",
     "art:navigation": "tsx scripts/build-navigation-masks.ts",
     "benchmark:naval-navigation": "tsx scripts/naval-navigation-benchmark.ts",
+    "benchmark:naval-runtime": "tsx scripts/naval-runtime-stress.ts",
+    "benchmark:browser-runtime": "node --import tsx scripts/browser-runtime-benchmark.mjs",
     "art:buildings": "python3 tools/art/build-buildings.py",
     "record": "tsx src/recorder/cli.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",

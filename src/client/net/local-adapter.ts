@@ -12,11 +12,14 @@ export type LocalGameAdapterOptions = {
   room?: RoomState;
   finishRoom?: (snapshot: GameSnapshot) => RoomState;
   onRoomEnded?: (room: RoomState) => void;
+  onClose?: () => void;
 };
 
 export class LocalGameAdapter implements GameAdapter {
   private lastUpdate: number;
   private room: RoomState | undefined;
+  private closed = false;
+  private snapshot: GameSnapshot | undefined;
   private readonly frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>;
 
   constructor(
@@ -35,14 +38,18 @@ export class LocalGameAdapter implements GameAdapter {
   }
 
   sendCommand(command: GameCommand): void {
+    if (this.closed) throw new Error('Local match is closed');
     this.applyAndStep([{ playerId: this.playerId, command }]);
   }
 
   currentSnapshot(): GameSnapshot {
-    return snapshotGame(this.game);
+    // This adapter owns simulation advances. Render frames between accepted
+    // command frames share an immutable view instead of cloning the army again.
+    return this.snapshot ??= snapshotGame(this.game);
   }
 
   updateToRenderTime(): boolean {
+    if (this.closed) return false;
     const tickMs = this.options.tickMs ?? 50;
     const current = this.now();
     // A throttled/background tab is a pause, not a debt of thousands of ticks
@@ -50,7 +57,7 @@ export class LocalGameAdapter implements GameAdapter {
     this.lastUpdate = Math.max(this.lastUpdate, current - tickMs * 4);
     const started = performance.now();
     let changed = false;
-    while (current - this.lastUpdate >= tickMs && !this.game.match.winner) {
+    while (!this.closed && current - this.lastUpdate >= tickMs && !this.game.match.winner) {
       this.applyAndStep([]);
       this.lastUpdate += tickMs;
       changed = true;
@@ -59,9 +66,14 @@ export class LocalGameAdapter implements GameAdapter {
     return changed;
   }
 
-  close(): void {}
+  close(): void {
+    if (this.closed) return;
+    this.closed = true;
+    this.options.onClose?.();
+  }
 
   private applyAndStep(commands: CommandEnvelope[]): void {
+    this.snapshot = undefined;
     this.frameRuntime.tick(commands);
     if (this.room && this.game.match.winner) {
       if (!this.options.finishRoom) throw new Error(`Local room ${this.room.id} finished without a lifecycle finisher`);
