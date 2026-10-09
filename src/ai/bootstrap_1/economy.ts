@@ -3,7 +3,7 @@ import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind } from '../../shared/types';
 import { navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, collectV6Goals, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -53,9 +53,10 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 }
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const ranked = rankV6Goals(snapshot, owner, options);
+  const goals = collectV6Goals(snapshot, owner, options);
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
-  if (siege) { ranked.push(siege); ranked.sort((a, b) => b.priority - a.priority); }
+  if (siege) goals.push(siege);
+  const ranked = ageV6Goals(snapshot, options, goals);
   const player = snapshot.players[owner]!;
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
