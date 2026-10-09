@@ -59,11 +59,31 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const start={x:ship.x,y:ship.y,heading:motion.heading};
   let aim:Point,desired:number;
   const length=shipProfile(ship)!.length;
+  const voyageCompanion=(other:Unit,bearing:number,windPlan=false)=>{
+    if(ship.order.type!=='move' || ship.order.heading!==undefined || ship.order.rendezvousFor!==undefined
+      || point.intent!==undefined || point.heading!==undefined || other===ship || other.owner!==ship.owner
+      || other.order.type!=='move' || other.order.heading!==undefined || other.order.rendezvousFor!==undefined || !other.sailing)return false;
+    if((other.shipParts?.rigging ?? shipPartMax(other).rigging)<=0 || other.sailing.route?.cruise===false)return false;
+    const onward=Math.atan2(other.order.y-other.y,other.order.x-other.x);
+    const otherLength=shipProfile(other)?.length ?? length;
+    const remaining=Math.hypot(other.order.x-other.x,other.order.y-other.y);
+    const clearFinish=Math.hypot(other.order.x-point.x,other.order.y-point.y)>(length+otherLength)*.5;
+    return remaining>1 && (remaining>otherLength || clearFinish)
+      && Math.abs(headingDifference(bearing,onward))<=Math.PI/6
+      && (windPlan || Math.abs(headingDifference(other.sailing.heading,onward))<=Math.PI/6);
+  };
+  const contactGoal=()=>{
+    const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
+    // A passing companion occupying our eventual destination is not a
+    // requested berth. Its current footprint must not become a permanent
+    // replacement for the player's destination.
+    return shipContactGoal(ship,point,units.filter(other=>!voyageCompanion(other,bearing)));
+  };
   const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>)=>{
     const previous=motion.route;
     const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
     const contact=point.intent!=='pursuit' && point.heading===undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2
-      ? shipContactGoal(ship,point,units) : undefined;
+      ? contactGoal() : undefined;
     const precision=point.heading!==undefined || !!contact;
     // Moving companions are local passing traffic, not permanent islands.
     // Freezing an entire convoy into the strategic coast search can exhaust
@@ -72,8 +92,28 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
     const coastalVoyage=allowCruise && !precision && point.intent===undefined && ship.order.type==='move' && ship.order.rendezvousFor===undefined
       && !hullPassageClear(map,ship,{...start,heading:bearing},{...point,heading:bearing});
-    const traffic=reservationTraffic(ship,coastalVoyage ? units.filter(other=>other===ship || other.owner!==ship.owner
-      || other.order.type!=='move' || other.order.heading!==undefined || other.order.rendezvousFor!==undefined) : units);
+    const companions=allowCruise && !precision && point.intent===undefined && ship.order.type==='move'
+      && ship.order.rendezvousFor===undefined;
+    const strategicUnits=companions ? units.filter(other=>{
+      if(other===ship || other.owner!==ship.owner || other.order.type!=='move'
+        || other.order.heading!==undefined || other.order.rendezvousFor!==undefined || !other.sailing)return true;
+      if((other.shipParts?.rigging ?? shipPartMax(other).rigging)<=0)return true;
+      if(coastalVoyage)return false;
+      const companion=shipProfile(other);
+      const along=(other.x-ship.x)*detCos(bearing)+(other.y-ship.y)*detSin(bearing);
+      const across=Math.abs(-(other.x-ship.x)*detSin(bearing)+(other.y-ship.y)*detCos(bearing));
+      // A close departure needs actual maneuvering room before we can treat
+      // the leader as a future empty corridor. This uses the enlarged hulls,
+      // rather than assuming an arbitrary center-to-center convoy spacing.
+      if(companion && along>0 && across<(shipProfile(ship)!.beam+companion.beam)*.5
+        && along<(length+companion.length)*.5+Math.max(shipProfile(ship)!.beam,companion.beam)*.5)return true;
+      // A companion already sailing the same course will have left its
+      // current footprint before we reach it. Keep the sea corridor instead
+      // of planning a berth maneuver around a frozen copy of its hull.
+      // The local helmsman and every physical sweep still see all ships.
+      return !voyageCompanion(other,bearing);
+    }) : units;
+    const traffic=reservationTraffic(ship,strategicUnits);
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps
@@ -114,7 +154,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     const due=dynamic ? (route!.age??0)>=(route!.points.some(point=>point.tack)?80:40)
       && moved>length*.8 && !turningTack : moved>map.terrain!.cell/2;
     const enteringBerth=route?.cruise && point.intent!=='pursuit' && point.heading===undefined
-      && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2 && !!shipContactGoal(ship,point,units);
+      && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2 && !!contactGoal();
     if(!route || windChange || enteringBerth || (route.fireHeading===undefined)!==(point.fireHeading===undefined) || !!route.retreat!==!!point.retreat || route.intent!==point.intent || route.targetId!==point.targetId || due || !route.points.length && (moved>1 || route.partial && route.intent==='pursuit')){
       replan();route=motion.route!;
     }
@@ -174,7 +214,8 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         while(index>0 && route.points[index]!.pivot)index--;
         const next=route.points[index];
         if(next && !route.points.slice(0,index+1).some(point=>point.pivot)){
-          const traffic=shipTraffic(ship,units,Infinity);
+          const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
+          const traffic=shipTraffic(ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity);
           const departure=movingPursuit ? planBeatDeparture(map,ship,next,traffic,route.tackHeading) : undefined;
           const tack=!departure ? shipTackRoute(map,ship,next,traffic,route.tackHeading) : undefined;
           if(departure){

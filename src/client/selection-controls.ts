@@ -40,6 +40,19 @@ export function applySelectionPick(previous: SelectionState, pickedIds: string[]
   };
 }
 
+/** Shift-click toggles one body; Shift-drag still adds the whole box. */
+export function applySelectionClick(previous: SelectionState, pickedId: string, additive: boolean): SelectionState {
+  if (!additive || !previous.selectedIds.has(pickedId)) return applySelectionPick(previous, [pickedId], additive);
+  const selectedIds = new Set(previous.selectedIds);
+  selectedIds.delete(pickedId);
+  return {
+    selectedIds,
+    focusedSelectionId: previous.focusedSelectionId && selectedIds.has(previous.focusedSelectionId)
+      ? previous.focusedSelectionId
+      : selectedIds.values().next().value,
+  };
+}
+
 export function selectNearbySameKindUnits(
   snapshot: GameSnapshot,
   owner: PlayerId,

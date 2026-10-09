@@ -1,6 +1,6 @@
 import { strikeGap } from './combat-geometry';
 import { shipMotionLimits } from './ship-handling';
-import { distanceToHull, hullContact, shipProfile, shipsIn } from './ship-geometry';
+import { distanceToHull, hullContact, shareShipProfile, shipProfile, shipsIn } from './ship-geometry';
 import { headingDifference, hullPassageClear } from './ship-navigation';
 import { polygonRadius } from './navigation-math';
 import { shipTraffic } from './ship-avoidance';
@@ -44,7 +44,7 @@ export function interceptTime(dx: number, dy: number, vx: number, vy: number, sp
 
 /** The tactical layer owns range bands and target identity. It never supplies
  * a docking heading, changes sail state, or resets a committed sailing leg. */
-export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0): PursuitGoal | undefined {
+export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0, stationCanFire?: (station: Unit) => boolean): PursuitGoal | undefined {
   const target = shipNavigationTarget(requested, units), motion = ship.sailing!;
   const targetMotion = 'order' in target ? target.sailing : undefined;
   const vx = targetMotion?.velocityX ?? 0, vy = targetMotion?.velocityY ?? 0, speed = Math.hypot(vx, vy);
@@ -168,6 +168,12 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
       return !map || hullPassageClear(map, ship, { ...candidate, heading: 0 }, { ...candidate, heading: Math.PI })
         && hullPassageClear(map, ship, { ...candidate, heading: Math.PI }, { ...candidate, heading: Math.PI * 2 });
     };
+    const armedStation=(candidate:{x:number;y:number})=>{
+      if(!stationCanFire)return true;
+      const station={...ship,...candidate,sailing:{...motion}};
+      shareShipProfile(ship,station);
+      return stationCanFire(station);
+    };
     const committed = motion.route;
     const previousStation = committed?.intent === 'pursuit' && committed.targetId === target.id
       ? { x: committed.goalX, y: committed.goalY } : undefined;
@@ -180,7 +186,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
       && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) >= standoff-ownLength*.25
       && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) <= standoff+ownLength*1.15
       && inRange(previousStation,1)
-      && valid(previousStation) && accessible(previousStation)) best = previousStation;
+      && valid(previousStation) && accessible(previousStation) && armedStation(previousStation)) best = previousStation;
     for (const offset of best ? [] : STATION_OFFSETS) {
       const angle=bearing+offset,c=detCos(angle),s=detSin(angle);
       const station=(separation:number)=>({x:predicted.x+separation*c,y:predicted.y+separation*s});
@@ -203,7 +209,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
         // around a northward station merely because that sector came first.
         const turn = Math.abs(headingDifference(motion.heading, Math.atan2(candidate.y - ship.y, candidate.x - ship.x)));
         const cost = distance + ownLength * .75 * turn + (accessible(candidate)?0:ownLength*3);
-        if (cost >= bestCost - 1e-7 || !valid(candidate)) continue;
+        if (cost >= bestCost - 1e-7 || !valid(candidate) || !armedStation(candidate)) continue;
         best = candidate; bestCost = cost;
       }
     }

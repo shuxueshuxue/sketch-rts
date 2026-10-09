@@ -84,7 +84,7 @@ import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { playerDisplayName } from "./player-name";
-import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
+import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
@@ -2721,13 +2721,18 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
+  const shiftClick = additive;
   if (selectedIds.size && !selectedPlayerUnits().length && !selectedPlayerBuildings().length) additive = false;
   const unit = hitUnit(world, () => true);
   if (unit) {
     if (unit.owner !== localPlayerId) additive = false;
-    const result = sameKind && unit.owner === localPlayerId
+    // Removal precedes foreign-owner and double-click rules: neither may
+    // reselect the clicked body or expand the removal to its whole kind.
+    const result = shiftClick && selectedIds.has(unit.id)
+      ? applySelectionClick({ selectedIds, focusedSelectionId }, unit.id, true)
+      : sameKind && unit.owner === localPlayerId
       ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
-      : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
+      : applySelectionClick({ selectedIds, focusedSelectionId }, unit.id, additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
@@ -2737,7 +2742,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
   const building = hitBuilding(world, () => true);
   if (building) {
     if (building.owner !== localPlayerId) additive = false;
-    const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
+    const result = applySelectionClick({ selectedIds, focusedSelectionId }, building.id, (shiftClick && selectedIds.has(building.id)) || additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;

@@ -7,6 +7,7 @@ import { checksumGame } from './sim/checksum';
 import { seconds, SIM_TICKS_PER_SECOND } from './time';
 import type { Unit } from './types';
 import { navalStressScenes } from '../../scripts/naval-runtime-stress';
+import { windAt } from './wind-field';
 
 function sea() {
   const game=createGame('bareDuel',{players:['player','enemy'],aiPlayers:[],teams:{player:'blue',enemy:'red'}});
@@ -19,6 +20,63 @@ afterEach(()=>vi.restoreAllMocks());
 const isIdle=(ship:Unit)=>ship.order.type==='idle';
 
 describe('ship traffic recovery',()=>{
+  it('lets a heavy stand-on ship hold its course while a crossing transport clears its bow from the occupied lane',()=>{
+    const game=sea(),standOn=game.spawnUnit('player','shipOfTheLine',3000,5000),giveWay=game.spawnUnit('player','transport',4000,4000);
+    giveWay.sailing!.heading=Math.PI/2;
+    const fleet=[standOn,giveWay],goals=[{x:6500,y:5000},{x:4000,y:7000}];
+    fleet.forEach((ship,index)=>issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],...goals[index]!,avoidCombat:true}));
+    let standOnYaw=0,altered=false;
+    for(let tick=0;tick<seconds(120);tick++) {
+      const before=standOn.sailing!.heading;stepGame(game);
+      standOnYaw+=Math.abs(navigation.headingDifference(before,standOn.sailing!.heading));
+      altered ||= giveWay.sailing!.route?.avoidTargetId===standOn.id;
+      expect(hullContact(standOn,giveWay)?.overlap??0).toBeLessThan(.1);
+      for(const ship of fleet) {
+        expect(navigation.hullFits(game.map,ship),ship.id).toBe(true);expect(ship.hp,ship.id).toBe(ship.maxHp);
+      }
+      if(fleet.every(isIdle))break;
+    }
+    expect(altered).toBe(true);expect(standOnYaw*180/Math.PI).toBeLessThan(10);
+    fleet.forEach((ship,index)=>{
+      expect(ship.order.type).toBe('idle');expect(Math.hypot(ship.x-goals[index]!.x,ship.y-goals[index]!.y)).toBeLessThan(1);
+    });
+  });
+
+  it('keeps a faster transport behind a slower moving heavy hull without lateral detours, collision or save divergence',()=>{
+    const game=sea();game.map.wind={direction:Math.PI/2,speed:80};
+    const leader=game.spawnUnit('player','shipOfTheLine',3200,5000),follower=game.spawnUnit('player','transport',2700,5000);
+    const fleet=[leader,follower],goals=[6000,5500];
+    fleet.forEach((ship,index)=>{
+      issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],x:goals[index]!,y:5000,avoidCombat:true});
+      // Isolate local convoy handling from strategic planning. These are the
+      // ordinary clear-water straight references; propulsion and physical
+      // contact use the real runtime throughout.
+      ship.sailing!.route={goalX:goals[index]!,goalY:5000,
+        points:[{x:goals[index]!,y:5000,heading:0,curvature:0}],end:{x:goals[index]!,y:5000},
+        startX:ship.x,startY:ship.y,cruise:true,windTried:true,windKey:windAt(game.map,ship).key};
+    });
+    let resumed:ReturnType<typeof sea>|undefined,minimumGap=Infinity;
+    for(let tick=0;tick<seconds(110);tick++) {
+      stepGame(game);if(resumed)stepGame(resumed);
+      for(const ship of fleet) {
+        expect(Math.abs(ship.y-5000),ship.id).toBeLessThan(1);
+        expect(navigation.hullFits(game.map,ship),ship.id).toBe(true);
+        expect(ship.hp,ship.id).toBe(ship.maxHp);
+      }
+      expect(hullContact(leader,follower)?.overlap??0).toBeLessThan(.1);
+      minimumGap=Math.min(minimumGap,leader.x-follower.x);
+      if(tick===seconds(20)) {
+        resumed=sea();restoreSnapshotIntoGame(resumed,JSON.parse(JSON.stringify(snapshotGame(game))),game.nextId);
+      }
+      if(resumed && tick%SIM_TICKS_PER_SECOND===0)expect(checksumGame(resumed)).toBe(checksumGame(game));
+      if(fleet.every(isIdle))break;
+    }
+    expect(minimumGap).toBeGreaterThan((shipProfile(leader)!.length+shipProfile(follower)!.length)*.5);
+    fleet.forEach((ship,index)=>{
+      expect(ship.order.type).toBe('idle');expect(Math.hypot(ship.x-goals[index]!,ship.y-5000)).toBeLessThan(1);
+    });
+  });
+
   it('finishes the original island convoy after adverse wind without long astern travel or unsafe shortcuts',()=>{
     const fixture=navalStressScenes.find(scene=>scene.id==='island-convoy-wind')!.setup();
     const {game,ships,goals}=fixture;

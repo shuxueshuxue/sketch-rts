@@ -1502,10 +1502,15 @@ class Grid {
     });
   }
 
-  // Mud over the open ground within the patch (its ways too), but plateaus, ramps, water and bridges.
+  // Mud over the open ground within the patch (its ways too), but plateaus,
+  // ramps, water, bridges and the prepared mineral courtyards. A nearby hall's
+  // short hauling lane stays dry; routes beyond that clearing still cross mud.
   mire(patch: Water) {
     this.band(patch, (index) => {
       if (!this.open[index] || this.plateau[index] || this.ramp[index] || this.shallow[index] || this.bridge[index] || this.sea[index]) return;
+      const at = this.center(index);
+      if (this.field.mines.some(mine => distance(at, mine) <= 230)
+        || this.field.mains.some(mine => distance(at, mine) <= 150)) return;
       this.mud[index] = 1;
     });
   }

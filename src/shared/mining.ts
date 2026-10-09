@@ -9,17 +9,23 @@ export const GOLD_MINE_RULES = {
   dropRange: 74,
   workstations: 5, // Standard worker budget; admission timing determines actual saturation.
   goldPerTrip: 10,
-  gatherSeconds: 0.8,
+  // Keep the 400 gold/minute admission cap after shortening the hauling lane.
+  // At a 216-unit hall distance, a 60-unit/s worker cycles in about 6.5s:
+  // 3.2s working + 2 * (216 - 44 - 74) / 60 travelling. Five workers
+  // saturate the 1.5s admission interval; a sixth can still help longer routes.
+  gatherSeconds: 3.2,
   entrySeconds: 1.5,
-  townHallDistance: 280,
-  mainDistance: 288,
+  townHallDistance: 210,
+  mainDistance: 216,
   baseRange: 320,
 } as const;
 
-/** Translate the initial mine by its hall's footprint-snapping offset, preserving the haul distance. */
+/** Preserve the authored direction from the snapped hall at the standard hauling distance. */
 export function initialMiningPoint(map: Pick<GameMap, "terrain">, base: {x: number; y: number}, mine: {x: number; y: number}) {
   const at = snapToFootprint(map, BUILDING_DEFS.townHall.radius, base);
-  return { x: mine.x + at.x - base.x, y: mine.y + at.y - base.y };
+  const dx = mine.x - base.x, dy = mine.y - base.y;
+  const scale = GOLD_MINE_RULES.mainDistance / (Math.hypot(dx, dy) || 1);
+  return { x: at.x + dx * scale, y: at.y + dy * scale };
 }
 
 export type MiningFrame = {

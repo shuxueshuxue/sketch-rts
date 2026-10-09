@@ -9,7 +9,7 @@ import { headingDifference } from "./ship-navigation";
 import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
-import { ballisticTarget, firingBoundaryHeadings, targetSailingVelocity } from './ship-fire-control';
+import { ballisticTarget, firingBoundaryHeadings, shipFireLaneClear, targetSailingVelocity } from './ship-fire-control';
 import geometry from './generated/ship-geometry.json';
 // Complete trained ships cost about 40% more, rounded to 20 gold; troop hulls
 // cost 50% more for their larger compartment. Included guns retain item prices.
@@ -68,7 +68,8 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
 }
 /** Bring a working gun into its arc with the least hull rotation. A gun
  * already able to fire never gives up its shot just to align a larger battery. */
-export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, point: StrikeTarget, arcMargin = 0) {
+export type MountedShotClear = (item: WorldItem, point: Point, heading: number) => boolean;
+export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, point: StrikeTarget, arcMargin = 0, shotClear?: MountedShotClear) {
     const weapons=installedWeapons(snapshot,ship).filter(item=>(item.durability ?? 1)>0);
     const heading=ship.sailing?.heading ?? 0;
     const mounts=new Map(shipMounts(ship).map(mount=>[mount.id,mount]));
@@ -90,18 +91,20 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
         const predicted=ballisticTarget(pivot,point,velocity,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,predicted);return predicted;
     };
-    const canFire=(candidate:number,item:WorldItem)=>{
+    const canFire=(candidate:number,item:WorldItem,checkLane=true)=>{
         const mount=mounts.get(item.mountId!)!;if(!mount)return false;
         const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
         const target=strikePoint(pivot,targetAt(candidate,item)),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
         return gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
-          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7;
+          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7
+          && (!checkLane || !shotClear || shotClear(item,target,candidate));
     };
     const currentCount=weapons.filter(item=>canFire(heading,item)).length;
     if(currentCount===weapons.length)return heading;
     const nearbyBattery=Math.PI/18;
     const candidates=currentCount?[{heading,turn:0,count:currentCount}]:[];
+    const intervals=[-Math.PI,0,Math.PI];
     for(const item of weapons){
         const mount=mounts.get(item.mountId!)!;
         if(!mount || !possible(item))continue;
@@ -125,7 +128,7 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
             let at=heading+headingDifference(heading,boundary);
             // Rotating a bow pivot changes the exact flight duration. Refine
             // its firing boundary against that mount's own predicted target.
-            if(moving && !canFire(at,item))for(let step=0;step<6;step++){
+            if(moving && !canFire(at,item,false))for(let step=0;step<6;step++){
                 let next:number|undefined,nearest=Infinity;
                 for(const boundary of boundaries(at)){
                     const turn=Math.abs(headingDifference(at,boundary));
@@ -135,6 +138,7 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
                 const difference=headingDifference(at,next);at+=difference;
                 if(Math.abs(difference)<1e-10)break;
             }
+            if(shotClear)intervals.push(headingDifference(heading,at));
             // A range boundary may round to the wrong side of the exact shot
             // check. Test its immediate interiors, never widen weapon range.
             for(const candidate of canFire(at,item)?[at]:[at-1e-8,at+1e-8]){
@@ -142,6 +146,40 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
                 const count=weapons.filter(gun=>canFire(candidate,gun)).length;
                 candidates.push({heading:candidate,turn:Math.abs(headingDifference(heading,candidate)),count});
             }
+        }
+    }
+    if(shotClear && !candidates.length){
+        // Friendly hulls can block both ends of an otherwise useful firing
+        // interval. Arc/range boundaries alone do not describe those lanes.
+        // Search a bounded set of interiors only when no existing shot works;
+        // the ordinary unblocked heading path retains its analytic solution.
+        const edges=[...new Set(intervals)].sort((a,b)=>a-b);
+        const sectors=edges.slice(1).map((end,index)=>({start:edges[index]!,end}))
+          .filter(sector=>sector.end-sector.start>1e-7)
+          .sort((a,b)=>Math.min(Math.abs(a.start),Math.abs(a.end))-Math.min(Math.abs(b.start),Math.abs(b.end)));
+        let samples=0,bestTurn=Infinity;
+        interiorSearch:for(const share of [.5,.25,.75]){
+            for(const sector of sectors){
+                const nearer=Math.abs(sector.start)<Math.abs(sector.end)?sector.start:sector.end;
+                if(Math.abs(nearer)>bestTurn+nearbyBattery)continue;
+                if(samples++>=48)break interiorSearch;
+                let clear=sector.start+(sector.end-sector.start)*share;
+                if(!weapons.some(gun=>canFire(heading+clear,gun)))continue;
+                let blocked=nearer;
+                // Every accepted refinement remains a real clear shot. An
+                // additional blocker may split this interval again; no range
+                // or traverse predicate is weakened by the bounded search.
+                for(let step=0;step<12;step++){
+                    const middle=(blocked+clear)/2;
+                    if(weapons.some(gun=>canFire(heading+middle,gun)))clear=middle;else blocked=middle;
+                }
+                const count=weapons.filter(gun=>canFire(heading+clear,gun)).length;
+                candidates.push({heading:heading+clear,turn:Math.abs(clear),count});
+                bestTurn=Math.min(bestTurn,Math.abs(clear));
+            }
+            // Inspect every nearer interval once before spending the finite
+            // budget on smaller quarters of already blocked intervals.
+            if(candidates.length)break;
         }
     }
     const nearest=Math.min(...candidates.map(candidate=>candidate.turn));
@@ -193,6 +231,16 @@ export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>
     const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind];
     const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
     return strikePoint(pose.pivot,ballisticTarget(pose.pivot,target,targetSailingVelocity(target,snapshot.units),def.weapon,reach));
+}
+/** Test the muzzle after the independent barrel has traversed toward its
+ * reticle. Alliance filtering belongs to the caller, not hull ownership. */
+export function mountedFireLaneClear(ship: Unit, item: WorldItem, point: Point, blockers: readonly Unit[]) {
+    const pose=mountedWeaponPose(ship,item);
+    if(!pose)return false;
+    const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
+    const dx=point.x-pose.pivot.x,dy=point.y-pose.pivot.y,length=Math.hypot(dx,dy) || 1;
+    const muzzle={x:pose.pivot.x+dx/length*reach,y:pose.pivot.y+dy/length*reach};
+    return shipFireLaneClear(muzzle,point,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,blockers,ship.id);
 }
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
     ship.fittings = installedWeapons(snapshot, ship).map(item => ({ ...shipMounts(ship).find(mount => mount.id === item.mountId)!, id: item.id }));

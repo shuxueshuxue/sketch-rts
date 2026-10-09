@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
-import { avoidanceCourse, reservationTraffic, shipTraffic } from './ship-avoidance';
+import { avoidanceCourse, reservationTraffic, shipFollowingSpeed, shipTraffic } from './ship-avoidance';
 import { headingDifference } from './ship-navigation';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { shipProfile } from './ship-geometry';
@@ -53,13 +53,66 @@ describe('early course alterations for vessel encounters',()=>{
     expect(avoidanceCourse(a,[a,b],0,50)).toEqual({heading:0,speedScale:1,active:false});
   });
 
-  it('slows for crossing traffic from starboard while keeping a clear passing side',()=>{
+  it('gives starboard crossing traffic room astern while its stand-on vessel maintains course and speed',()=>{
     const a=boat('a',1000,1000,0),b=boat('b',1250,1250,-Math.PI/2);
     const giveWay=avoidanceCourse(a,[a,b],0,50),standOn=avoidanceCourse(b,[a,b],-Math.PI/2,50);
-    expect(giveWay.active).toBe(true);expect(standOn.active).toBe(true);
+    expect(giveWay.active).toBe(true);
+    expect(standOn).toEqual({heading:-Math.PI/2,speedScale:1,active:false});
     expect(giveWay.speedScale).toBeLessThan(standOn.speedScale);
     expect(headingDifference(0,giveWay.heading)).toBeGreaterThan(0);
+    expect(b.sailing!.route!.avoidTargetId).toBeUndefined();
+  });
+
+  it('still alters a stand-on course when the port-side crossing vessel has failed to give way near contact',()=>{
+    const a=boat('a',1100,1000,0),b=boat('b',1250,1150,-Math.PI/2);
+    const standOn=avoidanceCourse(b,[a,b],-Math.PI/2,50);
+    expect(standOn.active).toBe(true);
     expect(headingDifference(-Math.PI/2,standOn.heading)).toBeGreaterThan(0);
+  });
+
+  it('times a through voyage but does not impose that reservation on attack approaches or finite stops',()=>{
+    const a=boat('a',1000,1000,0),b=boat('b',1250,1250,-Math.PI/2);
+    a.order={type:'move',x:4000,y:1000};b.order={type:'move',x:1250,y:0};
+    expect(Number.isFinite(avoidanceCourse(a,[a,b],0,50).speedLimit)).toBe(true);
+    a.order={type:'attack',targetId:b.id};
+    expect(avoidanceCourse(a,[a,b],0,50).speedLimit).toBeUndefined();
+    a.order={type:'move',x:4000,y:1000};b.order={type:'move',x:1250,y:1150};
+    expect(avoidanceCourse(a,[a,b],0,50).speedLimit).toBeUndefined();
+  });
+
+  it('matches a moving convoy leader instead of steering aside, without granting permission through its hull',()=>{
+    const a=boat('a',1000,1000,0,60),b=boat('b',1200,1000,0,20);
+    for(const ship of [a,b])ship.order={type:'move',x:4000,y:1000,avoidCombat:true};
+    expect(avoidanceCourse(a,[a,b],0,60)).toEqual({heading:0,speedScale:1,active:false});
+    expect(shipFollowingSpeed(a,[a,b],0)).toBeLessThan(60);
+    expect(shipFollowingSpeed(a,[a,b],0)).toBeGreaterThanOrEqual(20);
+    const from={x:a.x,y:a.y,heading:0};
+    expect(shipTraffic(a,[a,b])(from,{x:b.x,y:b.y,heading:0})).toBe(false);
+    b.order={type:'hold',x:b.x,y:b.y};
+    expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
+    expect(avoidanceCourse(a,[a,b],0,60).active).toBe(true);
+  });
+
+  it('retains overtaking rules for hostile, offset and precision-docking vessels',()=>{
+    const a=boat('a',1000,1000,0,60),b=boat('b',1200,1000,0,20);
+    a.order={type:'move',x:4000,y:1000,avoidCombat:true};b.order={type:'move',x:4000,y:1000,avoidCombat:true};
+    b.owner='enemy';expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
+    expect(avoidanceCourse(a,[a,b],0,60).active).toBe(true);
+    b.owner='player';b.y=1250;expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
+    b.y=1000;b.order={type:'move',x:4000,y:1000,heading:0};
+    expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
+    b.order={type:'move',x:4000,y:1000};b.shipParts={rigging:0,rudder:10,cabin:10};
+    expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
+  });
+
+  it('continues yielding behind a convoy leader already making a committed crossing alteration',()=>{
+    const a=boat('a',1000,1000,0,60),b=boat('b',1200,1000,Math.PI/6,20);
+    for(const ship of [a,b])ship.order={type:'move',x:4000,y:1000,avoidCombat:true};
+    Object.assign(b.sailing!.route!,{avoidHeading:Math.PI/6,avoidBaseHeading:0,avoidTargetId:'crossing',avoidTicks:100});
+    expect(avoidanceCourse(a,[a,b],0,60)).toEqual({heading:0,speedScale:1,active:false});
+    expect(shipFollowingSpeed(a,[a,b],0)).toBeLessThan(60);
+    b.y=1250;
+    expect(shipFollowingSpeed(a,[a,b],0)).toBe(Infinity);
   });
 
   it('keeps its chosen side after the first turn clears CPA and releases smoothly',()=>{

@@ -4,6 +4,28 @@ import { detCos, detSin } from './det-math';
 import { localToWorld, shipProfile, shareShipProfile, type Point } from './ship-geometry';
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from './time';
 import type { Unit } from './types';
+import { boltIntersection } from './weapons';
+
+/** Low, direct fire needs a clear lane through the actual friendly hulls.
+ * Mortar shells pass over them; a cannon barrel's protruding muzzle, rather
+ * than its deck pivot, begins the lane. The caller owns alliance selection. */
+export function shipFireLaneClear(from: Point, to: Point, weapon: WeaponDef, blockers: readonly Unit[], excludedId?: string): boolean {
+  if (weapon.delivery !== 'bolt' && weapon.delivery !== 'cone') return true;
+  const width = weapon.delivery === 'bolt' ? weapon.radius ?? 12 : 0;
+  const left = Math.min(from.x, to.x) - width, right = Math.max(from.x, to.x) + width;
+  const top = Math.min(from.y, to.y) - width, bottom = Math.max(from.y, to.y) + width;
+  for (const unit of blockers) {
+    if (unit.id === excludedId) continue;
+    const profile = unit.hp > 0 && shipProfile(unit);
+    if (!profile) continue;
+    // The circumscribed rectangle is a cheap rejection only. The final check
+    // clips the complete rotated polygon, including its tapered bow/stern.
+    const radius = Math.hypot(profile.length, profile.beam) / 2;
+    if (unit.x + radius < left || unit.x - radius > right || unit.y + radius < top || unit.y - radius > bottom) continue;
+    if (boltIntersection(from, to, unit, width) !== undefined) return false;
+  }
+  return true;
+}
 
 export function targetSailingVelocity(target: StrikeTarget, units?: readonly Unit[]): Point {
   if (!('order' in target)) return { x: 0, y: 0 };

@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { avoidanceCourse, shipTraffic } from './ship-avoidance';
+import { avoidanceCourse, shipFollowingSpeed, shipTraffic } from './ship-avoidance';
 import { shipProfile } from './ship-geometry';
 import { shipMotionLimits } from './ship-handling';
 import { advanceShip } from './ship-motion';
@@ -81,7 +81,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const reference=curved ? tangent-Math.atan2(crossTrack,lookahead) : Math.atan2(cy,cx);
   // A firing station owns its weapon attitude. Collision sweeps below still
   // stop contact; normal passing rules must not steer the battery away forever.
-  const avoidance=firing ? {heading:route.fireHeading!,speedScale:1,active:false}
+  const avoidance:ReturnType<typeof avoidanceCourse>=firing ? {heading:route.fireHeading!,speedScale:1,active:false}
     : avoidanceCourse(ship,units,reference,motion.speed);
   // Once clear of traffic, join the next mark from here. Forcing the vessel
   // back onto the old centreline can add an unnecessary upwind S-turn.
@@ -114,6 +114,9 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const terminal=points.length===1 && route.intent!=='pursuit' && endGap<profile.length;
   const curvature=2*detSin(error)/Math.max(distance,terminal?1:profile.length*.25);
   let targetSpeed=drive*pace*avoidance.speedScale;
+  const followingSpeed=Math.min(avoidance.speedLimit ?? Infinity,
+    firing || avoidance.active ? Infinity : shipFollowingSpeed(ship,units,reference));
+  targetSpeed=Math.min(targetSpeed,followingSpeed);
   if(route.targetSpeed!==undefined)targetSpeed=Math.min(targetSpeed,Math.max(0,route.targetSpeed));
   targetSpeed*=clamp(1-Math.abs(error)*.22,.4,1);
   if(firing){
@@ -146,7 +149,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     if(Math.abs(curvature)>1e-7)targetSpeed=Math.min(targetSpeed,limits.turnRate/Math.abs(curvature)*.8);
   }
   if(route.intent!=='pursuit')targetSpeed=Math.min(targetSpeed,Math.sqrt(2*limits.acceleration*endGap));
-  const braking=motion.speed>geometrySpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
+  const braking=motion.speed>geometrySpeed || motion.speed>followingSpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
   // Losing aerodynamic drive while crossing the wind releases the sails;
   // it does not command full braking and discard all entry headway.
   const slowing=braking?acceleration:acceleration*.2;

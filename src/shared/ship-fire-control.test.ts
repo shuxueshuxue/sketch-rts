@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { strikePoint, type StrikeTarget } from './combat-geometry';
 import { createUnit } from './map';
-import { SHIP_WEAPONS, bestFiringHeading, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, shipMounts } from './ship-equipment';
+import { SHIP_WEAPONS, bestFiringHeading, mountedFireLaneClear, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, shipMounts } from './ship-equipment';
 import { headingDifference } from './ship-navigation';
-import { ballisticTarget } from './ship-fire-control';
+import { ballisticTarget, shipFireLaneClear } from './ship-fire-control';
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from './time';
 import type { ShipEquipmentKind, Unit, UnitKind, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
@@ -34,6 +34,59 @@ function mortarBoundaryDistance(ship: Unit, item: WorldItem) {
 }
 
 describe('mounted firing headings', () => {
+  it('clips direct firing lanes to live rotated friendly hulls, rather than their center circles', () => {
+    const blocker=createUnit('ally','player','transport',300,100);
+    blocker.sailing={heading:0,speed:0,load:0,balance:0};
+    const from={x:0,y:0},to={x:600,y:0};
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[blocker])).toBe(true);
+    blocker.sailing.heading=Math.PI/2;
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[blocker])).toBe(false);
+    blocker.hp=0;
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[blocker])).toBe(true);
+    blocker.hp=blocker.maxHp;blocker.y=0;blocker.x=800;
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[blocker])).toBe(true);
+  });
+
+  it('keeps high mortar shells clear of friendly ships while gating low flames and cannonballs', () => {
+    const blocker=createUnit('ally','player','carrier',300,0);
+    blocker.sailing={heading:0,speed:0,load:0,balance:0};
+    const from={x:0,y:0},to={x:600,y:0};
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[blocker])).toBe(false);
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.flameProjector.weapon,[blocker])).toBe(false);
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipMortar.weapon,[blocker])).toBe(true);
+    expect(shipFireLaneClear(from,to,SHIP_WEAPONS.shipCannon.weapon,[createUnit('crew','player','footman',300,0)])).toBe(true);
+  });
+
+  it('does not let its own carrying hull obstruct a traversed mounted muzzle', () => {
+    const {ship,item}=battery('warship','shipCannon');
+    ship.sailing!.heading=0;
+    const point={x:1300,y:1000};
+    expect(mountedFireLaneClear(ship,item,point,[ship])).toBe(true);
+    const blocker=createUnit('ally','player','transport',1220,1000);
+    blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
+    expect(mountedFireLaneClear(ship,item,point,[ship,blocker])).toBe(false);
+    blocker.y+=300;
+    expect(mountedFireLaneClear(ship,item,point,[ship,blocker])).toBe(true);
+  });
+
+  it('only asks a firing-lane policy about otherwise legal mount arcs and ranges', () => {
+    const {ship,item,items}=battery('warship','shipCannon');
+    const target={x:1250,y:1000};
+    let checked=0;
+    const heading=bestFiringHeading({items},ship,target,0,(gun,point,candidate)=>{
+      checked++;
+      expect(gun).toBe(item);
+      expect(canFire(ship,item,target,candidate)).toBe(true);
+      expect(point).toEqual(target);
+      return true;
+    });
+    expect(checked).toBeGreaterThan(0);
+    expect(canFire(ship,item,target,heading)).toBe(true);
+    checked=0;
+    expect(bestFiringHeading({items},ship,{x:2000,y:1000},0,()=>{checked++;return true;})).toBe(ship.sailing!.heading);
+    expect(checked).toBe(0);
+  });
+
   it('leads a receding hull for the actual finite flight instead of ending at its old stern', () => {
     const target = createUnit('target', 'enemy', 'transport', 400, 0);
     target.sailing = { heading: 0, speed: 60, load: 0, balance: 0, velocityX: 60, velocityY: 0 };

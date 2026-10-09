@@ -2,6 +2,8 @@ import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from '
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
 import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
+import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
+import { shipFireLaneClear } from './ship-fire-control';
 import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
 import { assignPlayerColors } from './player-colors';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
@@ -14,7 +16,7 @@ import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
-import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
+import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
@@ -43,7 +45,7 @@ import { canBoard, boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreC
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksCanTransfer } from "./connected-decks";
 import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
-import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
+import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shareShipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
@@ -1029,11 +1031,12 @@ function updateTraining(game: Game) {
     if (!job) continue;
     job.remaining = Math.max(0,job.remaining-1);
     if (job.remaining > 0) continue;
-    const launch=unitMover(job.unitKind)==="sea" ? shipLaunchPose(game,building,shipLaunchPrototype(building,job.unitKind)) : undefined;
-    if(unitMover(job.unitKind)==="sea" && !launch)continue;
-    const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
-    // A ship is launched from the shipyard's own water, the nearest to it (see @@@shore-footprint).
-    const from = launch ?? { x: building.x + detCos(angle) * 80, y: building.y + detSin(angle) * 80 };
+    const sea=unitMover(job.unitKind)==="sea";
+    const launch=sea ? shipLaunchPose(game,building,shipLaunchPrototype(building,job.unitKind)) : undefined;
+    const from=sea ? launch : landSpawnPoint(game,building,landSpawnPrototype(building,job.unitKind));
+    // A paid job waits for a legal local exit. Rally direction chooses among
+    // those exits rather than placing the new unit inside a body or beyond it.
+    if(!from)continue;
     const unit = game.spawnUnit(building.owner, job.unitKind, from.x, from.y,launch);
     building.queue.shift();
     unit.order = rallyOrderForUnit(game, building, unit);
@@ -1178,29 +1181,52 @@ function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:n
   if(proxy.facing!==undefined)item.facing=proxy.facing;
   return ready?proxy:undefined;
 }
+function friendlyFireBlockers(game:Game,ship:Unit){
+  return shipsIn(game.units).filter(other=>other.id!==ship.id && other.hp>0 && !areEnemyOwners(game,ship.owner,other.owner));
+}
+function mountedShotClear(ship:Unit,blockers:readonly Unit[]):MountedShotClear|undefined{
+  if(!blockers.length)return undefined;
+  const poses=new Map<number,Unit>();
+  return(item,point,heading)=>{
+    let aimed=poses.get(heading);
+    if(!aimed){aimed={...ship,sailing:{...ship.sailing!,heading}};shareShipProfile(ship,aimed);poses.set(heading,aimed);}
+    return mountedFireLaneClear(aimed,item,point,blockers);
+  };
+}
 function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;heading:number}>,defenses:ShipDefenseFrame){
   const crossing=game.boardingHolds!;
   for(const ship of shipsIn(game.units)){
     if(ship.hp<=0 || isStaggered(ship) || isStunned(ship) || !shipProfile(ship) || "avoidCombat" in ship.order && ship.order.avoidCombat)continue;
     const order=ship.order;
+    const blockers=friendlyFireBlockers(game,ship);
+    const weapons=installedWeapons(game,ship),mounts=shipMounts(ship);
+    const acquisitionRange=weapons.reduce((reach,item)=>{
+      if((item.durability ?? 1)<=0)return reach;
+      const mount=mounts.find(mount=>mount.id===item.mountId);
+      const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
+      return mount ? Math.max(reach,veteranWeaponRange(ship,def.range)+Math.hypot(mount.x,mount.y)) : reach;
+    },ship.attackRange);
     const intrinsic=unitRules(game,ship).intrinsicAttack;
     const ordered=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
     const explicit=order.type==='attack' && order.leashX===undefined;
     const requested=defenses.get(ship.id)?.target ?? (ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined);
-    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,ship.attackRange) : undefined);
+    // Acquire far enough to include the offset battery, not just the hull
+    // center. Actual heading and firing still use each pivot's own range.
+    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,acquisitionRange) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
     const orientHull = ['idle', 'hold', 'aim'].includes(order.type)
       || (order.type === 'attack' || order.type === 'attackMove') && shipCanTurnForAttack(ship);
-    if(!crossing.has(ship.id) && facingPoint && (shipCanTurnForAttack(ship) || strikeGap(ship,facingPoint)<=ship.attackRange) && orientHull) {
-      turnShipToward(ship,bestFiringHeading(game,ship,facingPoint),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
+    if(!crossing.has(ship.id) && facingPoint && (shipCanTurnForAttack(ship) || strikeGap(ship,facingPoint)<=acquisitionRange) && orientHull) {
+      turnShipToward(ship,bestFiringHeading(game,ship,facingPoint,0,mountedShotClear(ship,blockers)),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
     }
-    for(const item of installedWeapons(game,ship)){
+    for(const item of weapons){
       if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && !intrinsic && ship.cooldown>0)continue;
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
       const range=veteranWeaponRange(ship,def.range);
       const canShoot=(candidate:Unit|Building|Obstacle)=>{
         const point=mountedTargetPoint(game,ship,item,candidate,pose),gap=distance(pose.pivot,point);
-        return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0);
+        return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0)
+          && (!blockers.length || mountedFireLaneClear(ship,item,point,blockers));
       };
       const preferred=requested && !isObstacle(requested) ? navalCombatTarget(game,ship,requested) : requested;
       // The ordered enemy remains the navigator's objective. A gun which
@@ -1212,7 +1238,9 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
       const proxy=aimMountedWeapon(game,ship,item,point,pose);
       if(!proxy || !target)continue;
-      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!,aimPoint:point});
+      const launchPose=mountedWeaponPose(ship,item)!;
+      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers))continue;
+      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:launchPose,aimPoint:point});
       markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }
   }
@@ -1599,29 +1627,34 @@ function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Ob
   const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
   const minimum = weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
     : weaponRules(game, ship).weapon?.minRange ?? 0;
+  const blockers=friendlyFireBlockers(game,ship);
   let firingHeading: number | undefined;
-  const canFire = () => {
-    if (!weapons.length) return targetGap(ship, target) <= ship.attackRange && targetGap(ship, target) >= minimum;
-    const start = { x: ship.x, y: ship.y, heading: ship.sailing!.heading };
+  const canFireFrom = (station:Unit,checkTurn:boolean) => {
+    if (!weapons.length) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
+    shareShipProfile(ship,station);
+    const start = { x: station.x, y: station.y, heading: station.sailing!.heading };
+    const shotClear=mountedShotClear(station,blockers);
     for (const margin of [Math.PI / 36, 0]) {
-      const heading = bestFiringHeading(game, ship, target, margin), aimed = { ...ship, sailing: { ...ship.sailing!, heading } }, end = { ...start, heading };
-      if (!hullPassageClear(game.map, ship, start, end) || !shipTraffic(ship, game.units)(start, end)) continue;
+      const heading = bestFiringHeading(game, station, target, margin,shotClear), aimed = { ...station, sailing: { ...station.sailing!, heading } }, end = { ...start, heading };
+      shareShipProfile(ship,aimed);
+      if (checkTurn && (!hullPassageClear(game.map, station, start, end) || !shipTraffic(station, game.units)(start, end))) continue;
       if (weapons.some(item => {
         const pose = mountedWeaponPose(aimed, item), def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
         if (!pose) return false;
         const point = mountedTargetPoint(game,aimed,item,target,pose);
         if (!shipGunCanAim(aimed, item, point)) return false;
         const gap = distance(pose.pivot, point);
-        return gap <= veteranWeaponRange(ship, def.range) && gap >= (def.weapon.minRange ?? 0);
-      })) { firingHeading = heading; return true; }
+        return gap <= veteranWeaponRange(station, def.range) && gap >= (def.weapon.minRange ?? 0)
+          && (!blockers.length || mountedFireLaneClear(aimed,item,point,blockers));
+      })) { if(checkTurn)firingHeading = heading; return true; }
     }
     return false;
   };
-  const firing = canFire();
+  const firing = canFireFrom(ship,true);
   const bow=weapons.find(item=>item.mountId==='bow' && veteranWeaponRange(ship,SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].range)>=ship.attackRange);
   const bowPose=bow && mountedWeaponPose(ship,bow);
   const stationBowReach=bowPose ? (bowPose.pivot.x-ship.x)*detCos(ship.sailing!.heading)+(bowPose.pivot.y-ship.y)*detSin(ship.sailing!.heading) : 0;
-  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach);
+  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false));
   const pace = statusPace(ship);
   if (goal && pace > 0) sailToward(ship, goal, game.map, game.units, pace);
 }
@@ -2018,7 +2051,7 @@ function rallyOrderForUnit(game: Game, building: Building, unit: Unit): Unit["or
   if (target?.type === "resource" && unit.kind === "worker" && game.resources.some((resource) => resource.id === target.resourceId && resource.amount > 0)) {
     return { type: "mine", resourceId: target.resourceId, phase: "toMine", timer: 0 };
   }
-  if (target?.type === "unit" && game.units.some((candidate) => candidate.id === target.unitId && candidate.owner === unit.owner)) {
+  if (target?.type === "unit" && game.units.some((candidate) => candidate.id === target.unitId && candidate.owner === unit.owner && candidate.hp > 0)) {
     return { type: "follow", targetId: target.unitId };
   }
   return { type: "move", x: building.rallyX, y: building.rallyY };
