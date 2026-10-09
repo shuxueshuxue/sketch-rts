@@ -5,6 +5,7 @@ import { shipMotionLimits } from './ship-handling';
 import { headingDifference, hullPassageClear, roundVoyageCorner, type ShipPose } from './ship-navigation';
 import { coursePerformance } from './ship-wind';
 import { windAt } from './wind-field';
+import { tryAdmitShipPlan } from './ship-planning-budget';
 import type { GameMap, Unit, UnitOrder } from './types';
 
 type Move = Extract<UnitOrder, { type: 'move' }>;
@@ -37,11 +38,14 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
     // inside it finish the finite turn on maneuvering assistance, then plan
     // the outgoing voyage from the real exit instead of the old intersection.
     if (needsBeat && !route.points[0]?.curvature) {
-      motion.route = undefined;
-      return false;
+      if (tryAdmitShipPlan(ship)) {
+        motion.route = undefined;
+        return false;
+      }
+    } else {
+      route.windKey = wind.key;
+      route.windTried = !needsBeat;
     }
-    route.windKey = wind.key;
-    route.windTried = !needsBeat;
   }
   if (route?.queuedX === undefined) {
     if (route?.partial || route?.points.some(point => point.exact || point.pivot || point.tack)
@@ -55,6 +59,9 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
       return !performance.calm && (performance.noGo || performance.targetSpeed < performance.auxiliarySpeed);
     })) return false;
     const traffic = shipTraffic(ship, units, Infinity);
+    const straightCourse=Math.abs(headingDifference(from.heading,headings[0]!))<.01
+      && Math.abs(headingDifference(headings[0]!,headings[1]!))<.01;
+    if(!straightCourse && !tryAdmitShipPlan(ship))return false;
     let points = roundVoyageCorner(map, ship, from, current, next, traffic);
     let handoffIndex = points ? points.length - 2 : -1;
     // A mark on the same straight course is also a passage, with no reason
@@ -71,6 +78,7 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
       }
     }
     if (!points) return false;
+    delete motion.planningRequestedAtTick;delete motion.planningLastRequestedAtTick;
     route = motion.route = {
       goalX: current.x, goalY: current.y, queuedX: next.x, queuedY: next.y,
       points: points.map((point, index) => ({ ...point, ...(index === handoffIndex ? { queuedTurn: true } : {}) })),

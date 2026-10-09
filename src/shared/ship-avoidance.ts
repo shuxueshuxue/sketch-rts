@@ -6,6 +6,7 @@ import { detCos, detSin } from "./det-math";
 import { headingDifference, shipPoseAt, type ShipPose } from "./ship-navigation";
 import { SIM_TICKS_PER_SECOND } from './time';
 import { shipMotionLimits } from './ship-handling';
+import { sweepShipCollision } from './ship-collisions';
 
 const trafficShapes=new Map<string,Point[]>();
 const trafficBases=new Map<string,Point[]>();
@@ -124,7 +125,7 @@ function encounterWindow(ship:Unit,other:Unit,heading:number,dx:number,dy:number
  * permission to move. Positive angles turn to starboard in world XY. The
  * serialized route holds an actual world course until the other hull passes,
  * so path recentering or a newly clear CPA cannot undo the alteration. */
-export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:number,speed:number):{heading:number;speedScale:number;active:boolean;speedLimit?:number} {
+export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:number,speed:number,map?:GameMap):{heading:number;speedScale:number;active:boolean;speedLimit?:number} {
   const motion=ship.sailing,route=motion?.route,profile=shipProfile(ship);
   if(!motion || !profile)return{heading:desiredHeading,speedScale:1,active:false};
   const ownSpeed=Math.max(0,speed),heading=motion.heading;
@@ -153,6 +154,20 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     const clearance=(profile.length+otherProfile.length)*.5+Math.max(profile.beam,otherProfile.beam)*.35;
     const otherSpeed=Math.hypot(other.sailing?.velocityX??0,other.sailing?.velocityY??0);
     return Math.hypot(other.x-ship.x,other.y-ship.y)>clearance+brakingDistance+ownSpeed+otherSpeed;
+  };
+  // A stopped hull is an obstacle, not a moving crossing vessel with a
+  // stand-on reservation. Keep the chosen passing course powered only when
+  // its whole turn and forward braking corridor clear terrain and every hull.
+  const staticPassingClear=(other:Unit,course:number)=>{
+    if(!map || ship.order.type!=='move' || ship.order.heading!==undefined || ship.order.rendezvousFor!==undefined
+      || route?.intent==='pursuit' || (other.order.type!=='idle' && other.order.type!=='hold')
+      || (other.sailing?.speed??0)>=1 || Math.hypot(other.sailing?.velocityX??0,other.sailing?.velocityY??0)>=1)return false;
+    const start={x:ship.x,y:ship.y,heading},turned={...start,heading:course};
+    const distance=Math.max(profile.length,ownSpeed*ownSpeed/(2*Math.max(1e-7,shipMotionLimits(ship).acceleration)));
+    const end={x:ship.x+distance*detCos(course),y:ship.y+distance*detSin(course),heading:course},traffic=shipTraffic(ship,units,Infinity);
+    return hullPassageClear(map,ship,start,turned) && traffic(start,turned)
+      && hullPassageClear(map,ship,turned,end) && traffic(turned,end)
+      && !sweepShipCollision(map,ship,units,start,turned) && !sweepShipCollision(map,ship,units,turned,end);
   };
   const avoided=route?.avoidTargetId && units.find(other=>other.id===route.avoidTargetId);
   if(avoided && (firingApproach(avoided) || voyageLeader(ship,avoided,desiredHeading))){
@@ -192,7 +207,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
       const course=route.avoidHeading+headingDifference(route.avoidHeading,desiredHeading)*(1-remaining);
       const starboard=dx*(-detSin(base))+dy*detCos(base)>0;
       const speedLimit=!passed && !headOn && starboard && other ? crossingYieldSpeed(ship,other,course) : Infinity;
-      return{heading:course,speedScale:passed ? 1 : headOn ? .85 : starboard ? .55 : .9,active:true,
+      return{heading:course,speedScale:passed || !headOn && other && staticPassingClear(other,course) ? 1 : headOn ? .85 : starboard ? .55 : .9,active:true,
         ...(Number.isFinite(speedLimit)?{speedLimit}:{})};
     }
     delete route.avoidHeading;delete route.avoidBaseHeading;delete route.avoidTargetId;
@@ -249,7 +264,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     // Crossing traffic from starboard is given room astern. Head-on vessels
     // both alter right early instead of symmetrically stopping bow to bow.
     const speedLimit=!threat.headOn && threat.starboard ? crossingYieldSpeed(ship,threat.other,course) : Infinity;
-    return{heading:course,speedScale:threat.headOn ? .85 : threat.starboard ? .55 : .9,active:true,
+    return{heading:course,speedScale:!threat.headOn && staticPassingClear(threat.other,course) ? 1 : threat.headOn ? .85 : threat.starboard ? .55 : .9,active:true,
       ...(Number.isFinite(speedLimit)?{speedLimit}:{})};
   }
   if(route){delete route.avoidSide;delete route.avoidTicks;}

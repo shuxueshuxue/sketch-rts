@@ -1,15 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
 import { avoidanceCourse, reservationTraffic, shipFollowingSpeed, shipTraffic } from './ship-avoidance';
-import { headingDifference } from './ship-navigation';
+import { headingDifference, hullPassageClear } from './ship-navigation';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { shipProfile } from './ship-geometry';
+import { beginShipMotionFrame } from './ship-motion';
+import { drainShipCollisionImpacts, sweepShipCollision } from './ship-collisions';
+import { createGame } from './sim';
+import type { GameMap, Obstacle } from './types';
 
 function boat(id:string,x:number,y:number,heading:number,speed=50){
   const ship=createUnit(id,'player','cutter',x,y);
   ship.sailing={heading,speed,load:0,balance:0,velocityX:speed*Math.cos(heading),velocityY:speed*Math.sin(heading),
     route:{goalX:x+1500*Math.cos(heading),goalY:y+1500*Math.sin(heading),points:[],end:{x:0,y:0}}};
   return ship;
+}
+
+function stoppedEncounter() {
+  const heading=-Math.PI/3,ship=createUnit('voyager','player','warship',1000,1400),parked=createUnit('parked','enemy','transport',1320,930);
+  ship.order={type:'move',x:2000,y:200};
+  ship.sailing={heading,speed:50,load:0,balance:0,velocityX:50*Math.cos(heading),velocityY:50*Math.sin(heading),
+    route:{goalX:2000,goalY:200,points:[],end:{x:2000,y:200}}};
+  parked.order={type:'idle'};parked.sailing={heading,speed:0,load:0,balance:0,velocityX:0,velocityY:0};
+  const units=[ship,parked],map:GameMap={id:'bareDuel',name:'Water',landmarks:[],width:3200,height:3200,
+    terrain:{cell:40,cols:80,rows:80,cells:'~'.repeat(6400)}};
+  const original=avoidanceCourse(ship,units,heading,50),start={x:ship.x,y:ship.y,heading},turned={...start,heading:original.heading};
+  const distance=shipProfile(ship)!.length,end={x:ship.x+distance*Math.cos(original.heading),y:ship.y+distance*Math.sin(original.heading),heading:original.heading};
+  return {ship,parked,units,map,heading,original,start,turned,end};
 }
 
 describe('early course alterations for vessel encounters',()=>{
@@ -237,5 +254,69 @@ describe('early course alterations for vessel encounters',()=>{
     b.sailing!.heading=0;
     expect(frozen(at,at)).toBe(true);
     expect(shipTraffic(a,units)(at,at)).toBe(false);
+  });
+  it('powers a proved clear stationary passing corridor without changing its chosen course',()=>{
+    const {ship,units,map,heading,original,start,turned,end}=stoppedEncounter();
+    expect(original.active).toBe(true);expect(original.speedScale).toBe(.55);
+    beginShipMotionFrame(units,map);
+    expect(hullPassageClear(map,ship,start,turned)).toBe(true);
+    expect(shipTraffic(ship,units,Infinity)(turned,end)).toBe(true);
+    const passing=avoidanceCourse(ship,units,heading,50,map);
+    expect(passing).toEqual({heading:original.heading,speedScale:1,active:true});
+    expect(ship.x).toBe(start.x);expect(ship.y).toBe(start.y);expect(ship.sailing!.speed).toBe(50);
+    expect(drainShipCollisionImpacts(units)).toEqual([]);
+  });
+  it('keeps ordinary crossing reductions when a parked hull begins moving',()=>{
+    const {ship,parked,units,map,heading}=stoppedEncounter();
+    beginShipMotionFrame(units,map);
+    expect(avoidanceCourse(ship,units,heading,50,map).speedScale).toBe(1);
+    parked.order={type:'move',x:1320,y:200};
+    Object.assign(parked.sailing!,{speed:40,velocityX:0,velocityY:-40});
+    beginShipMotionFrame(units,map);
+    const moving=avoidanceCourse(ship,units,heading,50,map);
+    expect(moving.active).toBe(true);expect(moving.speedScale).toBe(.55);
+  });
+  it('keeps braking when land blocks the otherwise clear future passing leg',()=>{
+    const {ship,units,map,heading,original,start,turned,end}=stoppedEncounter(),terrain=map.terrain!;
+    const index=Math.floor(end.y/terrain.cell)*terrain.cols+Math.floor(end.x/terrain.cell);
+    terrain.cells=terrain.cells.slice(0,index)+'.'+terrain.cells.slice(index+1);
+    beginShipMotionFrame(units,map);
+    expect(hullPassageClear(map,ship,start,turned)).toBe(true);
+    expect(hullPassageClear(map,ship,turned,end)).toBe(false);
+    expect(avoidanceCourse(ship,units,heading,50,map).speedScale).toBe(original.speedScale);
+  });
+  it('checks large hulls beyond the short local traffic radius before powering a passing leg',()=>{
+    const {ship,units,map,heading,original,turned,end}=stoppedEncounter();
+    const distant=createUnit('distant-large-hull','enemy','shipOfTheLine',ship.x+650*Math.cos(original.heading),ship.y+650*Math.sin(original.heading));
+    distant.deckScale=2.3;distant.order={type:'hold',x:distant.x,y:distant.y};
+    distant.sailing={heading:original.heading,speed:0,load:0,balance:0,velocityX:0,velocityY:0};
+    units.push(distant);beginShipMotionFrame(units,map);
+    expect(Math.hypot(distant.x-ship.x,distant.y-ship.y)).toBeGreaterThan(600);
+    expect(shipTraffic(ship,units)(turned,end)).toBe(true);
+    expect(shipTraffic(ship,units,Infinity)(turned,end)).toBe(false);
+    expect(avoidanceCourse(ship,units,heading,50,map).speedScale).toBe(original.speedScale);
+  });
+  for(const kind of ['shipyard','rocks'] as const)it(`checks registered ${kind} footprints without causing an impact while proving a passing leg`,()=>{
+    const {ship,units,map,heading,original,start,turned,end}=stoppedEncounter();
+    const body=kind==='shipyard'
+      ? createGame('bareDuel',{scenario:{addBuildings:[{id:'passing-dock',owner:'player',kind:'shipyard',x:end.x,y:end.y}]}}).buildings.find(building=>building.id==='passing-dock')!
+      : {id:'passing-rocks',kind:'rocks',owner:'neutral',x:end.x,y:end.y,radius:32,hp:400,maxHp:400,along:{x:0,y:1}} satisfies Obstacle;
+    const hp=body.hp,pose={x:ship.x,y:ship.y,heading:ship.sailing!.heading,speed:ship.sailing!.speed};
+    beginShipMotionFrame(units,map,[body]);
+    expect(sweepShipCollision(map,ship,units,start,turned)).toBeUndefined();
+    expect(sweepShipCollision(map,ship,units,turned,end)?.kind).toBe(kind==='shipyard'?'building':'obstacle');
+    expect(avoidanceCourse(ship,units,heading,50,map).speedScale).toBe(original.speedScale);
+    expect(body.hp).toBe(hp);expect({x:ship.x,y:ship.y,heading:ship.sailing!.heading,speed:ship.sailing!.speed}).toEqual(pose);
+    expect(drainShipCollisionImpacts(units)).toEqual([]);
+  });
+  it('keeps a land body in the physical passing proof when the map admits both land and ships',()=>{
+    const {ship,units,map,heading,original,turned,end}=stoppedEncounter();
+    delete map.terrain;
+    const worker=createUnit('shore-worker','player','worker',end.x,end.y);units.push(worker);
+    beginShipMotionFrame(units,map);
+    expect(shipTraffic(ship,units,Infinity)(turned,end)).toBe(true);
+    expect(sweepShipCollision(map,ship,units,turned,end)?.kind).toBe('unit');
+    expect(avoidanceCourse(ship,units,heading,50,map).speedScale).toBe(original.speedScale);
+    expect(worker.hp).toBe(worker.maxHp);expect(drainShipCollisionImpacts(units)).toEqual([]);
   });
 });

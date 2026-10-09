@@ -5,11 +5,63 @@ import { headingDifference, hullPassageClear } from './ship-navigation';
 import { polygonRadius } from './navigation-math';
 import { shipTraffic } from './ship-avoidance';
 import { detCos, detSin } from './det-math';
+import { SIM_TICKS_PER_SECOND } from './time';
+import { isStaggered } from './push';
 import type { Building, GameMap, Obstacle, Unit } from './types';
 
 type Target = Unit | Building | Obstacle;
 const STATION_OFFSETS = [0, ...Array.from({ length: 11 }, (_, index) => [(index + 1) * Math.PI / 12, -(index + 1) * Math.PI / 12]).flat(), Math.PI];
 export type PursuitGoal = { x: number; y: number; intent: 'pursuit'; targetId: string; arrivalRadius: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean };
+
+/** Leave a turning battery room before braking would put both hulls in its
+ * sweep. The station stays reserved; this limits drive, never collision tests. */
+function friendlyManeuverSpeed(ship: Unit, units: readonly Unit[], targetId: string) {
+  const own = shipProfile(ship)!, motion = ship.sailing!, limits = shipMotionLimits(ship);
+  const c = detCos(motion.heading), s = detSin(motion.heading);
+  let limit = Infinity;
+  for (const other of shipsIn(units)) {
+    const peer = other.sailing, route = peer?.route;
+    if (other === ship || other.hp <= 0 || other.owner !== ship.owner
+      || (other.order.type !== 'attack' && other.order.type !== 'attackMove')
+      || peer?.pursuit?.targetId !== targetId || peer.pursuit.phase !== 'approach'
+      || route?.intent !== 'pursuit' || route.targetId !== targetId
+      || (route.age ?? 0) >= SIM_TICKS_PER_SECOND * 8) continue;
+    // Stopped clocks must not turn an eight-second active maneuver into an
+    // indefinite reservation by a disabled or damaged friendly hull.
+    const peerLimits = shipMotionLimits(other);
+    if (peerLimits.speed <= 0 || peerLimits.turnRate <= 0 || isStaggered(other)
+      || other.effects.some(effect => effect.remaining > 0 && (effect.type === 'stun' || effect.type === 'root'))) continue;
+    const profile = shipProfile(other)!, first = route.points[0];
+    if (!first || first.pivot) continue;
+    const dx = other.x - ship.x, dy = other.y - ship.y;
+    const along = dx * c + dy * s, across = Math.abs(-dx * s + dy * c);
+    const headway = (own.length + profile.length) * .5 + Math.max(own.beam, profile.beam) * .5;
+    const braking = motion.speed ** 2 / (2 * limits.acceleration);
+    if (along <= 0 || along > headway + braking + own.length * .5
+      || across > (own.beam + profile.beam) * .6) continue;
+    const speed = Math.hypot(peer.velocityX ?? 0, peer.velocityY ?? 0);
+    const yaw = Math.abs(headingDifference(peer.heading, first.heading));
+    const turning = route.cruise === false && first.exact && speed < 1
+      && Math.hypot(first.x - other.x, first.y - other.y) < 1 && yaw > .01
+      && yaw / peerLimits.turnRate <= 8;
+    // After the exact turn is consumed, keep the same short departure room
+    // while this saved route starts moving. Its finite age bounds the yield.
+    const departing = route.cruise === true && !first.exact
+      && route.startX !== undefined && route.startY !== undefined && route.startHeading !== undefined
+      && Math.abs(headingDifference(route.startHeading, peer.heading)) > .15
+      && Math.hypot(other.x - route.startX, other.y - route.startY) < profile.beam
+      && speed < peerLimits.speed * .35;
+    if (!turning && !departing) continue;
+    // Sampled curves often start with a seven-pixel tangent. Require a real
+    // onward leg, not merely point[1], which cannot show that the ship leaves.
+    const onward = route.points.find(point => Math.hypot(point.x - other.x, point.y - other.y) >= profile.beam);
+    if (!onward) continue;
+    const exitAcross = Math.abs(-(onward.x - ship.x) * s + (onward.y - ship.y) * c);
+    if (exitAcross < across + profile.beam * .5) continue;
+    limit = Math.min(limit, Math.sqrt(2 * limits.acceleration * Math.max(0, along - headway)));
+  }
+  return limit;
+}
 
 function hullSupport(unit: Unit, heading: number, toward: number) {
   const c = detCos(toward - heading), s = detSin(toward - heading);
@@ -44,7 +96,7 @@ export function interceptTime(dx: number, dy: number, vx: number, vy: number, sp
 
 /** The tactical layer owns range bands and target identity. It never supplies
  * a docking heading, changes sail state, or resets a committed sailing leg. */
-export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0, stationCanFire?: (station: Unit) => boolean): PursuitGoal | undefined {
+export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0, stationCanFire?: (station: Unit) => boolean, stationSearchAdmitted?: () => boolean): PursuitGoal | undefined {
   const target = shipNavigationTarget(requested, units), motion = ship.sailing!;
   const targetMotion = 'order' in target ? target.sailing : undefined;
   const vx = targetMotion?.velocityX ?? 0, vy = targetMotion?.velocityY ?? 0, speed = Math.hypot(vx, vy);
@@ -200,6 +252,16 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
       && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) <= standoff+ownLength*1.15
       && inRange(previousStation,1)
       && valid(previousStation) && accessible(previousStation) && armedStation(previousStation)) { best = previousStation; retained = true; }
+    // A still useful station only needs validation, rather than another full
+    // search which would consume the hull's pending navigation request.
+    if (!retained && stationSearchAdmitted && !stationSearchAdmitted()) {
+      if (!previousStation) return undefined;
+      best = previousStation; retained = true;
+      goal.arrivalRadius = committed!.arrivalRadius ?? goal.arrivalRadius;
+      goal.targetSpeed = committed!.targetSpeed;
+      goal.fireHeading = committed!.fireHeading;
+      goal.retreat = committed!.retreat;
+    }
     for (const offset of best ? [] : STATION_OFFSETS) {
       const angle=bearing+offset,c=detCos(angle),s=detSin(angle);
       const station=(separation:number)=>({x:predicted.x+separation*c,y:predicted.y+separation*s});
@@ -259,6 +321,10 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     } else goal.targetSpeed = Math.min(limits.speed, Math.max(speed * .55, speed + closingGap * .2));
   }
   if (!moving && phase === 'engage') goal.targetSpeed = 0;
+  if (!moving && !following && phase === 'approach') {
+    const maneuverSpeed = friendlyManeuverSpeed(ship, units, target.id);
+    if (maneuverSpeed !== Infinity) goal.targetSpeed = Math.min(goal.targetSpeed ?? Infinity, maneuverSpeed);
+  }
   return goal;
 }
 

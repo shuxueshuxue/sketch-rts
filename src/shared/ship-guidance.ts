@@ -82,7 +82,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   // A firing station owns its weapon attitude. Collision sweeps below still
   // stop contact; normal passing rules must not steer the battery away forever.
   const avoidance:ReturnType<typeof avoidanceCourse>=firing ? {heading:route.fireHeading!,speedScale:1,active:false}
-    : avoidanceCourse(ship,units,reference,motion.speed);
+    : avoidanceCourse(ship,units,reference,motion.speed,map);
   // Once clear of traffic, join the next mark from here. Forcing the vessel
   // back onto the old centreline can add an unnecessary upwind S-turn.
   // A stationary fighting station keeps its planned approach through the
@@ -103,7 +103,9 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   }
   let error=headingDifference(motion.heading,avoidance.heading);
   const current=coursePerformance(ship,map,undefined,{assumeTrimmed:true});
-  const wanted=coursePerformance(ship,map,Math.atan2(cy,cx),{assumeTrimmed:true});
+  // Trim follows the course actually selected for passing traffic. The old
+  // reference can still point upwind while the hull takes a powered detour.
+  const wanted=coursePerformance(ship,map,avoidance.active ? avoidance.heading : Math.atan2(cy,cx),{assumeTrimmed:true});
   const crossing=!current.calm && current.trueWindAngle<current.beatAngle && current.targetSpeed<current.auxiliarySpeed;
   const mode=current.calm?'calm-assist':firing && (route.retreat || crossing)?'maneuver':first.tack?'tacking':crossing || wanted.targetSpeed<wanted.auxiliarySpeed?'maneuver':'sail';
   if(motion.sail)motion.sail.mode=mode;
@@ -149,7 +151,10 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     if(Math.abs(curvature)>1e-7)targetSpeed=Math.min(targetSpeed,limits.turnRate/Math.abs(curvature)*.8);
   }
   if(route.intent!=='pursuit')targetSpeed=Math.min(targetSpeed,Math.sqrt(2*limits.acceleration*endGap));
-  const braking=motion.speed>geometrySpeed || motion.speed>followingSpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
+  // A traffic speed reduction orders actual braking. Using the gentle loss
+  // of sail drive here carries the hull past its passing course and can push
+  // it far outside a planned arc before the encounter clears.
+  const braking=avoidance.active && avoidance.speedScale<1 || motion.speed>geometrySpeed || motion.speed>followingSpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
   // Losing aerodynamic drive while crossing the wind releases the sails;
   // it does not command full braking and discard all entry headway.
   const slowing=braking?acceleration:acceleration*.2;

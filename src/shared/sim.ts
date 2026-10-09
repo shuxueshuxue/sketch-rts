@@ -50,6 +50,7 @@ import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { beginShipMotionFrame } from './ship-motion';
+import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
@@ -197,11 +198,13 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   // A generated layout replaces the map id's own starts, mines, camps and scenery (see @@@generated-map); the id names it.
   // A pool map is its own layout (see @@@map-pool); the ladder map has none of its own: a game on it without a layout is
   // drawn from the seed "ladder".
-  const layout = options.layout ?? poolMap(mapId)?.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
+  const namedLayout = poolMap(mapId)?.layout;
+  const layout = options.layout ?? namedLayout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
   // Named two-shore maps retain their geometry when players change alliances.
   // Only the layout uses these physical sides; game diplomacy uses `teams`.
-  const teamSizes = [...new Set(Object.values(teams))].map(team => activePlayers.filter(id => teams[id] === team).length);
-  const layoutTeams = !options.layout && poolMap(mapId)?.layout.kind === "sides" && (teamSizes.length !== 2 || teamSizes[0] !== teamSizes[1])
+  const namedShores = namedLayout?.kind === "sides"
+    && (!options.layout || options.layout.kind === namedLayout.kind && options.layout.idea === namedLayout.idea);
+  const layoutTeams = namedShores
     ? Object.fromEntries(activePlayers.map((id, index) => [id, `shore-${index % 2}`])) : teams;
   const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
@@ -747,6 +750,7 @@ export function stepGame(game: Game) {
   updateTowerAttacks(game);
   const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
   beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings);
+  beginShipPlanningFrame(game.units,game.tick);
   updateShipGangways(game.map,game.units,game.tick,game);
   prepareCrewRendezvous(game.map,game.units);
   game.boardingHolds=boardingHoldShips(game.units);
@@ -1447,7 +1451,8 @@ function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
   unit.order = order;
   unit.orderQueue = [];
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
-  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit; }
+  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 
 function activateQueuedOrder(game:Game,unit: Unit) {
@@ -1459,7 +1464,8 @@ function activateQueuedOrder(game:Game,unit: Unit) {
   if(shipProfile(unit))cancelCrewRendezvous(game.units,new Set([unit.id]));
   unit.order = next;
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
-  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit; }
+  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 
 function updateFollowOrder(game: Game, unit: Unit) {
@@ -1654,9 +1660,19 @@ function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Ob
   const bow=weapons.find(item=>item.mountId==='bow' && veteranWeaponRange(ship,SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].range)>=ship.attackRange);
   const bowPose=bow && mountedWeaponPose(ship,bow);
   const stationBowReach=bowPose ? (bowPose.pivot.x-ship.x)*detCos(ship.sailing!.heading)+(bowPose.pivot.y-ship.y)*detSin(ship.sailing!.heading) : 0;
-  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false));
+  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false),()=>tryAdmitShipPlan(ship));
   const pace = statusPace(ship);
   if (goal && pace > 0) sailToward(ship, goal, game.map, game.units, pace);
+  else if (!goal && ship.sailing!.planningRequestedAtTick !== undefined && !ship.sailing!.route) {
+    // A new attack awaiting its first admitted station has no motion
+    // authority. It may use this frame's bounded, swept yaw to face the
+    // carrying hull, but cannot surge toward an untested firing station.
+    ship.sailing!.speed = 0;
+    if (pace > 0) {
+      const quarry = shipNavigationTarget(target, game.units);
+      turnShipToward(ship, Math.atan2(quarry.y - ship.y, quarry.x - ship.x), game.map, game.units);
+    }
+  }
 }
 
 function updateMineOrder(game: Game, unit: Unit) {
