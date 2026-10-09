@@ -1,8 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { runGame, runGameLoop, type SdkGameCommandPlanner } from "./game-runner";
 import { sketchScene } from "./scene";
+import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../shared/sim';
 
 describe("SDK game runner", () => {
+  it('gives a planner the current format, real obstacles and a corpse created through ordinary combat', () => {
+    const original = createGame('pineshade', { players: ['us', 'foe'], aiPlayers: [] });
+    const worker = original.units.find(unit => unit.owner === 'us' && unit.kind === 'worker')!;
+    let scene = sketchScene('complete-planner-world').map('pineshade').replaceDefaults()
+      .player('us', { team: 'a' }).player('foe', { team: 'b' })
+      .worker('us', worker.x, worker.y, { id: 'victim', hp: 1 })
+      .unit('foe', 'footman', worker.x + 35, worker.y, { id: 'attacker' });
+    for (const hall of original.buildings) scene = scene.townHall(hall.owner, hall.x, hall.y);
+    const game = scene.build().createGame();
+    issuePlayerCommand(game, 'foe', { type: 'attack', unitIds: ['attacker'], targetId: 'victim' });
+    for (let tick = 0; tick < 100; tick++) stepGame(game);
+    expect(game.corpses!.length).toBeGreaterThan(0);
+    expect(game.obstacles!.length).toBeGreaterThan(0);
+    const expected = snapshotGame(game);
+    let checked = false;
+    runGameLoop({ name: 'complete-planner-world', game,
+      agents: { us: { controller: 'external-agent', team: 'a' }, foe: { controller: 'external-agent', team: 'b' } },
+      maxTicks: game.tick + 1, thinkInterval: 1,
+      commandPlanner({ snapshot }) {
+        expect(Object.keys(snapshot).sort()).toEqual(Object.keys(expected).sort());
+        expect(snapshot.obstacles).toEqual(expected.obstacles);
+        expect(snapshot.corpses).toEqual(expected.corpses);
+        expect(snapshot.obstacles).not.toBe(game.obstacles);
+        expect(snapshot.corpses).not.toBe(game.corpses);
+        checked = true;
+        return [];
+      },
+    });
+    expect(checked).toBe(true);
+  });
+
   it("runs generic command planners without depending on AI policy", () => {
     const game = sketchScene("sdk-runner-command-planner")
       .map("bareDuel")
