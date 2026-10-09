@@ -57,7 +57,7 @@ for (const mode of ['crossing', 'parallel', 'upwind', 'battery-crossing', 'batte
     const focus = ship(game, mode.startsWith('mortar') ? 'bombardShip' : mode.startsWith('flame') ? 'fireShip' : 'warship', 2600, 4000);
     if (mode.startsWith('battery')) battery(game, focus);
     const crossing = mode.includes('crossing'), beam = mode === 'battery-beam', close = mode === 'mortar-close';
-    const target = ship(game, 'transport', close ? 2840 : beam ? 2600 : crossing ? 3400 : 3100, close ? 4000 : beam ? 4330 : crossing ? 3400 : 4150, 'enemy', crossing ? Math.PI / 2 : 0);
+    const target = ship(game, 'transport', close ? 2600+(shipProfile(focus)!.length+shipProfile({kind:'transport'} as Unit)!.length)*.5+8 : beam ? 2600 : crossing ? 3400 : 3100, close ? 4000 : beam ? 4330 : crossing ? 3400 : 4150, 'enemy', crossing ? Math.PI / 2 : 0);
     if (!beam && !close) move(game, target, crossing ? { x: 3400, y: 7100 } : { x: 7200, y: 4150 });
     attack(game, focus, target); return { game, focus, target, ships: [focus, target] };
   } });

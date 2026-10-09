@@ -16,6 +16,8 @@ import {worldModels} from './model-library';
 import {projectWorld} from './projection';
 import {createRoom,roomToGameSetup} from '../../shared/rooms';
 import {createGame} from '../../shared/sim';
+import {boardUnit} from '../../shared/decks';
+import {beginShipBoarding,gangwayCrossingPosition,gangwaySurface,updateShipGangways,GANGWAY_SETUP_TICKS} from '../../shared/ship-gangway';
 import {createShipWebglScene} from '../../recorder/scenes/ship-webgl';
 import {snapshotGame} from '../../shared/sim';
 import {UNIT_DEFS} from '../../shared/catalog';
@@ -25,7 +27,8 @@ import {UnitAnimationTracker} from '../unit-animation';
 import {UnitMotionSmoother} from '../unit-motion';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 import type {WorldFrame} from '../world-renderer';
-import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial} from 'three';
+import {ownerInk} from '../world-renderer';
+import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
@@ -39,6 +42,75 @@ function setup(){
   return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('colors the actual authored ensigns by owner, updates a captured flag and releases only owned batch materials',async()=>{
+    const {game,ship,frame,layer}=setup();
+    const other=game.spawnUnit('enemy','warship',1150,850);
+    game.players.player.color='#123456';game.players.enemy.color='#b95632';
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'match');layer.draw(frame);
+    const flags=()=>gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.visible && object.name==='OwnerFlag') as InstancedMesh[];
+    expect(flags()).toHaveLength(2);
+    const oak=gpu.scene!.children.find(object=>object instanceof InstancedMesh
+      && !Array.isArray(object.material) && object.material.name==='weathered oak'
+      && object.userData.ids.includes(ship.id) && object.userData.ids.includes(other.id)) as InstancedMesh;
+    expect(oak.count).toBe(2);
+    expect((oak.material as MeshBasicMaterial).color.getHexString()).not.toBe('123456');
+    for(const unit of [ship,other]){
+      const mesh=flags().find(mesh=>mesh.userData.ids.includes(unit.id))!;
+      expect((mesh.material as MeshBasicMaterial).color.getHexString()).toBe(ownerInk(unit.owner,frame.snapshot).slice(1));
+    }
+    const source=worldModels.portraitModel('ships/warship')!.getObjectByName('OwnerFlag') as Mesh;
+    const original=(source.material as MeshBasicMaterial).color.getHexString();
+    const sharedDisposal=vi.spyOn(source.material as MeshBasicMaterial,'dispose');
+    const ownedMaterial=flags()[0]!.material as MeshBasicMaterial,ownedDisposal=vi.spyOn(ownedMaterial,'dispose');
+    layer.draw({...frame,now:16});
+    expect(flags()[0]!.material).toBe(ownedMaterial);
+    ship.owner='enemy';game.tick++;frame.snapshot=snapshotGame(game);layer.draw({...frame,now:50});
+    expect(flags()).toHaveLength(1);
+    expect(flags()[0]!.userData.ids).toEqual(expect.arrayContaining([ship.id,other.id]));
+    expect((flags()[0]!.material as MeshBasicMaterial).color.getHexString()).toBe('b95632');
+    expect((source.material as MeshBasicMaterial).color.getHexString()).toBe(original);
+    layer.dispose();expect(ownedDisposal).toHaveBeenCalledTimes(1);expect(sharedDisposal).not.toHaveBeenCalled();
+    sharedDisposal.mockRestore();
+  });
+  it('renders one physical gangway from live anchors, follows crossing crew, and releases the owned mesh',async()=>{
+    const {game,frame,layer}=setup();
+    game.units=[];game.items=[];game.buildings=[];game.resources=[];game.obstacles=[];game.effects=[];
+    game.map={...game.map,width:2048,height:2048,terrain:{cell:32,cols:64,rows:64,cells:'~'.repeat(4096)}};
+    const source=game.spawnUnit('player','transport',600,600),target=game.spawnUnit('player','carrier',600,900),crew=game.spawnUnit('player','footman',600,600);
+    target.y=source.y+(shipProfile(source)!.beam+shipProfile(target)!.beam)/2+12;
+    expect(boardUnit(source,crew,game.units)).toBe(true);
+    source.order={type:'boardShip',targetId:target.id};
+    expect(beginShipBoarding(game.map,game.units,source,target,game.tick,game)).toBe(true);
+    delete frame.motion;frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(gpu.scene!.children.filter(object=>object.name==='ShipGangway' && object.visible)).toHaveLength(0);
+    updateShipGangways(game.map,game.units,game.tick,game);
+    expect(source.sailing!.gangway!.phase).toBe('deploying');
+    frame.snapshot=snapshotGame(game);const original=JSON.stringify(frame.snapshot);layer.draw(frame);
+    const active=()=>gpu.scene!.children.filter(object=>object.name==='ShipGangway' && object.visible) as InstancedMesh[];
+    expect(active()).toHaveLength(1);expect(active()[0]!.count).toBe(1);
+    const surface=gangwaySurface(source,target)!;
+    const matrix=new Matrix4();active()[0]!.getMatrixAt(0,matrix);
+    const start=new Vector3(-.5,0,0).applyMatrix4(matrix),end=new Vector3(.5,0,0).applyMatrix4(matrix);
+    expect(start.x).toBeCloseTo(surface.source.x,4);expect(start.z).toBeCloseTo(surface.source.y,4);
+    expect(end.x).toBeCloseTo(surface.target.x,4);expect(end.z).toBeCloseTo(surface.target.y,4);
+    expect(start.y).toBeCloseTo(shipProfile(source)!.deckHeight-1,4);expect(end.y).toBeCloseTo(shipProfile(target)!.deckHeight-1,4);
+    expect(JSON.stringify(frame.snapshot)).toBe(original);
+    game.tick+=GANGWAY_SETUP_TICKS;updateShipGangways(game.map,game.units,game.tick,game);
+    crew.gangway={sourceId:source.id,targetId:target.id,t:.5,lateral:0};
+    frame.snapshot=snapshotGame(game);layer.draw(frame);
+    expect(active()).toHaveLength(1);
+    const point=gangwayCrossingPosition(crew.gangway,game.units)!;
+    expect(layer.positions.get(crew.id)!.x).toBeCloseTo(point.x);expect(layer.positions.get(crew.id)!.y).toBeCloseTo(point.y);
+    source.x+=32;target.x+=32;game.tick++;frame.snapshot=snapshotGame(game);layer.draw(frame);
+    expect(layer.positions.get(crew.id)!.x).toBeCloseTo(point.x+32);
+    active()[0]!.getMatrixAt(0,matrix);expect(matrix.elements[12]).toBeCloseTo((surface.source.x+surface.target.x)/2+32,4);
+    target.y+=40;game.tick++;frame.snapshot=snapshotGame(game);layer.draw(frame);
+    expect(active()).toHaveLength(0);
+    const template=(layer as unknown as {gangway:Mesh}).gangway;
+    const geometryDispose=vi.spyOn(template.geometry,'dispose'),material=Array.isArray(template.material)?template.material[0]!:template.material;
+    const materialDispose=vi.spyOn(material,'dispose');
+    layer.dispose();layer.dispose();expect(geometryDispose).toHaveBeenCalledOnce();expect(materialDispose).toHaveBeenCalledOnce();
+  });
   it('binds water to the rendered match rather than the smaller home snapshot used for preloading', async () => {
     const {frame,layer}=setup();
     const home=frame.snapshot;
@@ -180,7 +252,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.addEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.addEventListener('dispose',sharedDispose);}});
     const scene=gpu.scene!;layer.dispose();layer.dispose();
     expect(scene.children).toHaveLength(0);expect(sharedDispose).not.toHaveBeenCalled();
-    for(const key of ['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
+    for(const key of ['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
     expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
     expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
     layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();

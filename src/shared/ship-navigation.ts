@@ -499,12 +499,18 @@ function voyageRadii(ship:Unit):number[] {
   const minimum=shipProfile(ship)!.length*.65,nominal=voyageTurnRadius(ship);
   return [...new Set([nominal,Math.max(minimum,nominal*.7),minimum])];
 }
+function queuedVoyageRadii(ship:Unit):number[] {
+  // Closely spaced marks may need a slower, tighter bend after an oblique
+  // departure. The curve speed still follows the same physical rudder limit.
+  const length=shipProfile(ship)!.length;
+  return [...new Set([...voyageRadii(ship).map(radius=>Math.max(length,radius)),length*.45])];
+}
 function departureRadii(map:SeaMap,ship:Unit):number[] {
   const limits=shipMotionLimits(ship),auxiliary=coursePerformance(ship,map).auxiliarySpeed;
   // Getting out of the wind eye is a low-speed maneuver. Its physical yaw
   // limit allows a much tighter swept turn than a cruise or mid-voyage tack;
   // retaining the cruising floor here makes heavy ships crawl for ten seconds.
-  const assisted=Math.max(shipProfile(ship)!.length*.25,auxiliary/Math.max(1e-7,limits.turnRate));
+  const assisted=Math.max(shipProfile(ship)!.length*.2,auxiliary/Math.max(1e-7,limits.turnRate));
   return [...new Set([...voyageRadii(ship),assisted])];
 }
 function curveSpeedLimit(ship:Unit,radius:number):number {
@@ -583,7 +589,8 @@ export function roundVoyageCorner(map:SeaMap,ship:Unit,from:ShipPose,corner:Poin
   const turn=headingDifference(incoming,outgoing),before=Math.hypot(corner.x-from.x,corner.y-from.y),after=Math.hypot(next.x-corner.x,next.y-corner.y);
   if(Math.abs(headingDifference(from.heading,incoming))>.01 || Math.abs(turn)<.01 || Math.abs(turn)>Math.PI-.1 || shipMotionLimits(ship).turnRate<=1e-7)return;
   let best:ShipPose[]|undefined,bestCost=Infinity;
-  for(const radius of voyageRadii(ship)){
+  for(const radius of queuedVoyageRadii(ship)){
+    if(best && radius<shipProfile(ship)!.length*.65)continue;
     const setback=radius*Math.tan(Math.abs(turn)/2),speedLimit=curveSpeedLimit(ship,radius);
     const braking=brakingEntry(ship,from,speedLimit),brakingLength=braking.length?Math.hypot(braking[0]!.x-from.x,braking[0]!.y-from.y):0;
     if(setback+brakingLength+1>=before || setback+1>=after)continue;
@@ -605,7 +612,8 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
   if(Math.abs(error)<1e-7){const direct=[{...goal,heading:from.heading}];return connectorClear(map,ship,from,direct,traffic)?direct:undefined;}
   if(shipMotionLimits(ship).turnRate<=1e-7)return;
   let best:ShipPose[]|undefined,bestCost=Infinity,bestCanRound=false;
-  for(const radius of voyageRadii(ship)){
+  for(const radius of next ? queuedVoyageRadii(ship) : voyageRadii(ship)){
+    if(bestCanRound && radius<shipProfile(ship)!.length*.65)continue;
     const speedLimit=curveSpeedLimit(ship,radius),lead=brakingEntry(ship,from,speedLimit),entry=lead.at(-1) ?? from;
     for(const side of [error<0?-1:1,error<0?1:-1]){
       const center={x:entry.x-side*radius*detSin(entry.heading),y:entry.y+side*radius*detCos(entry.heading)};

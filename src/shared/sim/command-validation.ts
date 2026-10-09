@@ -4,7 +4,9 @@ import { isMechanicalUnit, matchesUnitTarget, unitClassOf } from "../unit-target
 import { unitNeedsRepair } from "../unit-repair";
 import { veteranSkillFitsUnitClass } from "../veteran-skills";
 import { canEquip, dropRefusal, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
-import { shipPassengers } from "../ship-geometry";
+import { shipPassengers, shipProfile } from "../ship-geometry";
+import { shipBoardingRefusal, shipBoardingTargetRefusal } from "../ship-gangway";
+import { sameGround } from "../terrain";
 import { canBoard } from "../decks";
 import { abilityCooldown } from "../ability-cooldowns";
 import { aimingProfile } from "../aiming";
@@ -70,6 +72,28 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!ship) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
     return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && canBoard(ship, unit, snapshot.units))
       ? undefined : commandError("No free deck space or payload capacity for these units", true);
+  }
+  if (command.type === 'boardShip' || command.type === 'cancelBoardShip') {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    if (!command.unitIds.length) return commandError('No ships selected for boarding');
+    const target = command.type === 'boardShip'
+      ? snapshot.units.find(unit => unit.id === command.targetId && unit.hp > 0 && shipProfile(unit)) : undefined;
+    if (command.type === 'boardShip' && !target) return commandError(`Unknown boarding target ${command.targetId}`, true);
+    for (const id of command.unitIds) {
+      const source = snapshot.units.find(unit => unit.id === id && unit.owner === owner)!;
+      if (source.hp <= 0 || !shipProfile(source)) return commandError('Boarding requires a living ship', true);
+      if (command.type === 'cancelBoardShip') continue;
+      const refusal = shipBoardingRefusal(source, snapshot.units, snapshot.tick, snapshot);
+      if (refusal === 'crew') return commandError('Boarding requires exposed walking crew on the source deck', true);
+      if (refusal === 'cooldown') return commandError('Boarding is cooling down', true);
+      if (refusal) return commandError('Boarding requires a living ship', true);
+      const targetRefusal = shipBoardingTargetRefusal(source, target!);
+      if (targetRefusal === 'height') return commandError('Decks are too far apart in height for boarding');
+      if (targetRefusal) return commandError('Boarding requires another living ship');
+      if (!sameGround(snapshot.map, source, target!, 'sea')) return commandError('Ships are in separate waters', true);
+    }
+    return undefined;
   }
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
   if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, true));
@@ -212,6 +236,13 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if (command.type === "board") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 && game.units.some(unit=>unit.id===command.transportId && unit.hp>0 && carries(unit)>0) ? { ...command, unitIds } : undefined;
+  }
+  if (command.type === 'boardShip' || command.type === 'cancelBoardShip') {
+    const unitIds = currentUnitIds(game, owner, command.unitIds)
+      .filter(id => { const unit = currentUnit(game, owner, id); return unit && unit.hp > 0 && shipProfile(unit); });
+    if (!unitIds.length) return undefined;
+    if (command.type === 'boardShip' && !game.units.some(unit => unit.id === command.targetId && unit.hp > 0 && shipProfile(unit))) return undefined;
+    return { ...command, unitIds };
   }
   if (command.type === "attack") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);

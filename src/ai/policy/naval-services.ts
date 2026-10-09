@@ -2,6 +2,7 @@ import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
 import { shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import { shipNeedsRepair } from "../../shared/ship-equipment";
+import { isInCabin } from '../../shared/ship-cabin';
 import { sameGround, walkableGoal } from "../../shared/terrain";
 import type {
   GameCommand,
@@ -82,7 +83,7 @@ export function navalServices(
         blocked(ship) ||
         !shipNeedsRepair(snapshot, ship) ||
         shipPassengers(snapshot.units, ship).some(
-          (crew) => crew.owner === owner && crew.kind === "worker",
+          (crew) => crew.owner === owner && crew.kind === "worker" && !isInCabin(crew),
         )
       )
         continue;
@@ -91,6 +92,7 @@ export function navalServices(
           (crew) =>
             crew.kind === "worker" &&
             crew.deck &&
+            !isInCabin(crew) &&
             !result.reserved.has(crew.id) &&
             crew.order.type !== "board" &&
             canBoard(ship, crew, snapshot.units),
@@ -119,6 +121,7 @@ export function navalServices(
         crew.owner === owner &&
         crew.kind !== "worker" &&
         crew.attackRange <= 80 &&
+        !isInCabin(crew) &&
         !result.reserved.has(crew.id) &&
         crew.order.type !== "board",
     );

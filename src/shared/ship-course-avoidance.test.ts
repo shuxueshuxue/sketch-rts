@@ -3,6 +3,7 @@ import { createUnit } from './map';
 import { avoidanceCourse, reservationTraffic, shipTraffic } from './ship-avoidance';
 import { headingDifference } from './ship-navigation';
 import { SIM_TICKS_PER_SECOND } from './time';
+import { shipProfile } from './ship-geometry';
 
 function boat(id:string,x:number,y:number,heading:number,speed=50){
   const ship=createUnit(id,'player','cutter',x,y);
@@ -28,6 +29,28 @@ describe('early course alterations for vessel encounters',()=>{
     for(const b of [boat('parallel',1010,1080,0),boat('away',1400,1000,0,80),boat('distant',4000,1000,Math.PI),boat('clear-crossing',1200,1600,-Math.PI/2)]){
       expect(avoidanceCourse(a,[a,b],0,50)).toEqual({heading:0,speedScale:1,active:false});
     }
+  });
+
+  it('uses beam clearance for a slower parallel hull instead of projecting its whole length sideways',()=>{
+    const a=boat('a',1000,1000,0,50),b=boat('b',1150,1140,0,20);
+    expect(avoidanceCourse(a,[a,b],0,50)).toEqual({heading:0,speedScale:1,active:false});
+  });
+
+  it('alters the intended course without stacking a second offset on a displaced heading',()=>{
+    const a=boat('a',1000,1000,.6,50),b=boat('b',1200,1380,-Math.PI/2,50);
+    const course=avoidanceCourse(a,[a,b],0,50);
+    expect(course.active).toBe(true);
+    expect(course.heading).toBeGreaterThan(0);
+    expect(course.heading).toBeLessThanOrEqual(50*Math.PI/180);
+    expect(a.sailing!.route!.avoidBaseHeading).toBe(0);
+  });
+
+  it('releases a mature commitment when the intended hull corridor is clear beside an opposed ship',()=>{
+    const a=boat('a',1000,1000,0,50),b=boat('b',1500,1200,Math.PI,50),route=a.sailing!.route!;
+    Object.assign(route,{avoidHeading:.6,avoidBaseHeading:0,avoidTargetId:b.id,avoidTicks:SIM_TICKS_PER_SECOND*114,avoidSide:1});
+    for(let tick=0;tick<=SIM_TICKS_PER_SECOND;tick++)avoidanceCourse(a,[a,b],0,50);
+    expect(route.avoidTargetId).toBeUndefined();
+    expect(avoidanceCourse(a,[a,b],0,50)).toEqual({heading:0,speedScale:1,active:false});
   });
 
   it('slows for crossing traffic from starboard while keeping a clear passing side',()=>{
@@ -103,10 +126,11 @@ describe('early course alterations for vessel encounters',()=>{
   it('reserves reciprocal boarding poses only for planning while live hull sweeps remain blocked',()=>{
     const source=createUnit('source','player','warship',900,900),target=createUnit('target','player','warship',1160,900),crew=createUnit('crew','player','worker',900,900);
     source.sailing={heading:0,speed:0,load:0,balance:0};target.sailing={heading:0,speed:0,load:0,balance:0};
-    source.order={type:'move',x:1030,y:860.375,heading:0,rendezvousFor:crew.id};
-    target.order={type:'move',x:1030,y:939.625,heading:0,rendezvousFor:crew.id};
-    crew.order={type:'board',transportId:target.id,rendezvous:{sourceId:source.id,sourceX:1030,sourceY:860.375,heading:0,targetX:1030,targetY:939.625,reciprocal:true}};
-    const goal={x:1030,y:860.375,heading:0},units=[source,target,crew];
+    const separation=(shipProfile(source)!.beam+shipProfile(target)!.beam)/2+.05,sourceY=900-separation/2,targetY=900+separation/2;
+    source.order={type:'move',x:1030,y:sourceY,heading:0,rendezvousFor:crew.id};
+    target.order={type:'move',x:1030,y:targetY,heading:0,rendezvousFor:crew.id};
+    crew.order={type:'board',transportId:target.id,rendezvous:{sourceId:source.id,sourceX:1030,sourceY,heading:0,targetX:1030,targetY,reciprocal:true}};
+    const goal={x:1030,y:sourceY,heading:0},units=[source,target,crew];
     expect(shipTraffic(source,units)(goal,goal)).toBe(false);
     expect(reservationTraffic(source,units)(goal,goal)).toBe(true);
     expect(target).toMatchObject({x:1160,y:900,sailing:{heading:0}});

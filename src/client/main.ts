@@ -9,7 +9,9 @@ import { resourcePanel,disposeResourcePanel } from './resource-panel';
 import { paintPortrait } from './portrait-cache';
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
-import { cabinAction, cabinCommand, cabinStatus, type CabinAction } from './cabin-controls';
+import { cabinAction, cabinCommand, cabinProblemText, cabinQuotaText, cabinStatus, type CabinAction } from './cabin-controls';
+import { boardingTargetHull, shipBoardingAction, shipBoardingProblem, shipBoardingStatus, shipBoardingTargetCommand } from './ship-boarding-controls';
+import { GANGWAY_COOLDOWN_TICKS, GANGWAY_SETUP_TICKS } from '../shared/ship-gangway';
 import { isInCabin } from '../shared/ship-cabin';
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
@@ -106,7 +108,7 @@ type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
-type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
+type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type: 'boardShip'; sourceIds: string[] } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
 type MenuView = "maps" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
@@ -291,7 +293,8 @@ const commandButtons: CommandButton[] = [
     focusNextVeteranStudent, () => ({ title: i18n.locale === "zh" ? "下位待学习老兵" : "Next veteran awaiting a skill", body: i18n.locale === "zh" ? "在当前选中的同兵种单位中，切换到下一名尚未学习技能的三星老兵。" : "Focus the next selected soldier of this type who has reached three stars and has not learned a skill.", stats: [], requirements: [], hotkey: "N" })),
   createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(canEquip)),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
   createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit)))),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
-  ...(['enterCabin','leaveCabin'] as const).map(type=>createCommandButton(type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),type==='enterCabin'?'↘':'↗','',()=>cabinButtonState(type),issueCabinAction,()=>({title:type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),body:type==='enterCabin'?(i18n.locale==='zh'?'走到舱门后避险，舱内无法攻击或施法。':'Walk to the cabin door for shelter. Crew inside cannot attack or cast.'):(i18n.locale==='zh'?'从舱门返回有空位的甲板。':'Return through the cabin door to clear deck space.'),stats:[],requirements:[]}))),
+  ...(['enterCabin','leaveCabin'] as const).map(type=>createCommandButton(type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),type==='enterCabin'?'↘':'↗','',()=>cabinButtonState(type),issueCabinAction,()=>({title:type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),body:type==='enterCabin'?(i18n.locale==='zh'?'走到舱门后避险，舱内无法攻击或施法。':'Walk to the cabin door for shelter. Crew inside cannot attack or cast.'):(i18n.locale==='zh'?'从舱门返回有空位的甲板。':'Return through the cabin door to clear deck space.'),stats:cabinTooltipStats(type),requirements:[]}))),
+  createShipBoardingButton(),
   createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => !isInCabin(unit) && aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
     title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")], hotkey: "J",
   })),
@@ -647,7 +650,7 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
     icon.setAttribute("aria-hidden", "true");
     element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
   }
-  const color=ownerInk(localPlayerId);
+  const color=ownerInk(localPlayerId,snapshot??undefined);
   paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}`,()=>{
     const brush = requireCanvasContext(icon);
     const size=icon.clientWidth||icon.width;
@@ -1954,6 +1957,7 @@ function onMouseUp(event: MouseEvent) {
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "aim") issueAimAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
+    else if (event.button === 0 && commandMode.type === 'boardShip') issueShipBoardingAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 0 && commandMode.type === "purchaseRecipient") choosePurchaseRecipientAt(point);
@@ -2116,10 +2120,12 @@ function canAttackMove() {
 }
 
 function cabinProblem(action: CabinAction) {
-  return action.problem==='full' ? i18n.locale==='zh'?'舱内已满':'The cabin is full'
-    : action.problem==='blocked' ? i18n.locale==='zh'?'舱门被堵住':'Cabin door blocked'
-    : action.problem==='unsupported' ? i18n.locale==='zh'?'舱室仅供步行船员进入':'Only foot crew can enter the cabin'
-    : i18n.locale==='zh'?'舱室已失守或损坏':'The cabin is breached or damaged';
+  return cabinProblemText(action,i18n.locale==='zh');
+}
+
+function cabinTooltipStats(type:'enterCabin'|'leaveCabin'): string[] {
+  const action=snapshot&&cabinAction(snapshot,localPlayerId,selectedPlayerUnits());
+  return action?.type===type&&action.quota?[cabinQuotaText(action.quota,i18n.locale==='zh',true)]:[];
 }
 
 function cabinButtonState(type:'enterCabin'|'leaveCabin'): CommandButtonState {
@@ -2136,6 +2142,70 @@ function issueCabinAction() {
   const action=cabinAction(snapshot,localPlayerId,selectedPlayerUnits()),command=cabinCommand(action);
   if(!command){if(action)showInvalidCommand(cabinProblem(action));return;}
   if(sendCommand(command))statusLabel.textContent=command.type==='enterCabin'?(i18n.locale==='zh'?'船员正在前往舱门':'Crew are walking to the cabin door'):(i18n.locale==='zh'?'已请求返回甲板；舱门需留出空间':'Return requested; leave space at the cabin door');
+}
+
+function currentShipBoardingAction() {
+  return snapshot && shipBoardingAction(snapshot, localPlayerId, selectedPlayerUnits());
+}
+
+function shipBoardingLabel() {
+  return currentShipBoardingAction()?.type === 'cancelBoardShip' ? i18n.locale === 'zh' ? '收起接舷桥' : 'Recall bridge'
+    : i18n.locale === 'zh' ? '主动接舷' : 'Board ship';
+}
+
+function createShipBoardingButton(): CommandButton {
+  const button = createCommandButton(shipBoardingLabel(), '⇔', '', shipBoardingButtonState, beginShipBoarding, shipBoardingTooltip);
+  button.element.dataset.shipBoarding = 'true';
+  return button;
+}
+
+function shipBoardingButtonState(): CommandButtonState {
+  if (!snapshot || commandMode || openPalette || !isUnitCommandPage(commandCardContext()) || !focusedPlayerUnits().some(ship => shipProfile(ship))) return HIDDEN_COMMAND_STATE;
+  const action = currentShipBoardingAction();
+  if (!action) return HIDDEN_COMMAND_STATE;
+  return action.enabled ? ENABLED_COMMAND_STATE : { visible: true, enabled: false,
+    reason: action.problem === 'cooldown' ? 'cooldown' : 'missing', detail: shipBoardingProblem(action, i18n.locale === 'zh'),
+    ...(action.cooldownTicks !== undefined ? { cooldownTicks: action.cooldownTicks } : {}) };
+}
+
+function shipBoardingTooltip(): GameplayTooltip {
+  const action = currentShipBoardingAction(), zh = i18n.locale === 'zh';
+  const states = snapshot && action ? [...new Set(action.unitIds.map(id => snapshot!.units.find(ship => ship.id === id))
+    .filter((ship): ship is Unit => !!ship).map(ship => shipBoardingStatus(ship, snapshot!.tick, zh)).filter(Boolean))] : [];
+  return { title: shipBoardingLabel(),
+    body: action?.type === 'cancelBoardShip' ? zh ? '停止靠拢并收起接舷桥。船只仍可驶离。' : 'Stop the approach and recall the bridge. Ships can still sail away.'
+      : zh ? '点击目标船，靠拢后搭桥。空闲近战船员自动登上敌船；友船需手动调动船员。可收桥或驶离。'
+        : 'Click a ship to approach and bridge. Idle melee crew board enemy decks; move crew manually between friendly ships. Recall the bridge or sail away at any time.',
+    stats: [zh ? `部署 ${GANGWAY_SETUP_TICKS / SIM_TICKS_PER_SECOND} 秒 · 冷却 ${GANGWAY_COOLDOWN_TICKS / SIM_TICKS_PER_SECOND} 秒 · 每船 1 桥`
+      : `Deploy ${GANGWAY_SETUP_TICKS / SIM_TICKS_PER_SECOND}s · Cooldown ${GANGWAY_COOLDOWN_TICKS / SIM_TICKS_PER_SECOND}s · One bridge per ship`, ...states],
+    requirements: [] };
+}
+
+function beginShipBoarding() {
+  if (!syncBeforeCommandProjection() || !snapshot) return;
+  const action = currentShipBoardingAction();
+  if (!action?.enabled) { if (action) showInvalidCommand(shipBoardingProblem(action, i18n.locale === 'zh')); return; }
+  if (action.type === 'cancelBoardShip') {
+    if (sendCommand({ type: 'cancelBoardShip', unitIds: action.unitIds })) statusLabel.textContent = i18n.locale === 'zh' ? '已收起接舷桥' : 'Bridge recalled';
+  } else {
+    commandMode = { type: 'boardShip', sourceIds: [...action.unitIds] };
+    shell.classList.add('targeting-active'); shell.classList.remove('placement-active');
+    statusLabel.textContent = i18n.locale === 'zh' ? '点击要接舷的船只；右键取消' : 'Click a ship to bridge; right-click to cancel';
+  }
+  updateHud();
+}
+
+function issueShipBoardingAt(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection() || !snapshot || commandMode?.type !== 'boardShip') return;
+  const target = visualPointerTarget(screenToWorld(point));
+  const hull = boardingTargetHull(snapshot, target?.kind === 'unit' ? target.unit : undefined);
+  const command = shipBoardingTargetCommand(snapshot, localPlayerId, commandMode.sourceIds, hull, queued);
+  if (!command) { showInvalidCommand(i18n.locale === 'zh' ? '选择另一艘可接舷的船只' : 'Choose another ship that can be bridged'); return; }
+  if (sendCommand(command)) {
+    commandMode = undefined; clearCommandModeClasses();
+    statusLabel.textContent = i18n.locale === 'zh' ? '正在靠拢目标船' : 'Approaching target ship';
+    updateHud();
+  }
 }
 
 function canOpenBuildPalette() {
@@ -2741,6 +2811,11 @@ function selectionRect(start: Point, end: Point): SelectionScreenRect {
 function pruneSelection() {
   if (!snapshot) return;
   const liveIds = liveSelectionIds(snapshot, localPlayerId);
+  if (commandMode?.type === 'boardShip') {
+    const sources = commandMode.sourceIds.filter(id => snapshot!.units.some(ship => ship.id === id && ship.owner === localPlayerId && ship.hp > 0 && shipProfile(ship)));
+    if (sources.length) commandMode.sourceIds = sources;
+    else { commandMode = undefined; clearCommandModeClasses(); }
+  }
   if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
@@ -2862,6 +2937,11 @@ function updateHud() {
     if (state.visible) renderVeteranCommand(button);
     if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
     if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
+    if (button.element.dataset.shipBoarding) {
+      const label = shipBoardingLabel();
+      button.element.querySelector('.command-label')!.textContent = label;
+      button.element.dataset.commandLabel = label; button.element.setAttribute('aria-label', label);
+    }
     button.element.hidden = !state.visible;
     button.element.disabled = false;
     button.element.setAttribute("aria-disabled", String(!state.enabled));
@@ -2925,7 +3005,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind)+(isInCabin(passenger)?i18n.locale==='zh'?' · 舱内':' · Cabin':''), actionLabel: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
-      art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner)) },
+      art: { key: `${passenger.kind}:${ownerInk(passenger.owner,snapshot??undefined)}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner,snapshot??undefined)) },
       activate: () => {if(isInCabin(passenger)){selectedIds=new Set([passenger.id]);focusedSelectionId=passenger.id;openPalette=undefined;updateHud();}else unloadPassenger(transport.id, passenger.id);},
       decorate: (button: HTMLButtonElement) => {button.dataset.inCabin=String(isInCabin(passenger));applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [isInCabin(passenger)?i18n.locale==='zh'?'点击选中船员，可返回甲板。':'Select this crew member to return to deck.':t("hud.unloadPassengerHint")] });},
     })),
@@ -2986,7 +3066,7 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
-  const color = ownerInk(owner ?? localPlayerId);
+  const color = ownerInk(owner ?? localPlayerId,snapshot??undefined);
   if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color);
   else drawAtlasBuildingPortrait(mini, group.kind, canvas.clientWidth, color);
 }

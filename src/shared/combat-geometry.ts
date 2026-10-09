@@ -16,7 +16,7 @@ export function strikePoint(from: Point, target: StrikeTarget): Point {
       const dx = b.x - a.x, dy = b.y - a.y;
       const t = Math.max(0, Math.min(1, ((origin.x - a.x) * dx + (origin.y - a.y) * dy) / (dx * dx + dy * dy)));
       const point = { x: a.x + dx * t, y: a.y + dy * t };
-      const distance = Math.hypot(point.x - origin.x, point.y - origin.y);
+      const distance = (point.x - origin.x)**2 + (point.y - origin.y)**2;
       if (distance < gap) { gap = distance; nearest = point; }
     }
     return localToWorld(target, nearest);

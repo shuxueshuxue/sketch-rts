@@ -16,22 +16,26 @@ import {isWalkable,sameGround} from './terrain';
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 // 10-08: main mines preserve a 288-unit haul after hall snapping; new halls require 280 units.
 // Island and hill mine sites now leave room for that ordinary construction rule.
+// 10-09: eleven naval layouts gain larger bounds, broader channels and more ocean
+// between islands for the enlarged fleet. Their authored economics keep the same mine counts.
+// Mineral isles and expansion clearings now include complete hauling foundations
+// and worker access around all four walls; named map bounds and mine counts stay fixed.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'588e067235aba4c3',
-  grandEstuary:'b7df7106eb1ec398',
-  brokenSea: "4905eb4f1d15b68d",
-  templeSpring: "b700123d0a5893a4",
-  turtleLake: "b56718014121ee4e",
-  elderwood: "3cac543bddf4e1c9",
-  ringwater: "17705d6a48173c4e",
-  loneMarket: "470216b8afeb6d81",
-  reedwater: "b060dd837b1b70b3",
-  veiledHill: "9081c1158081f81d",
-  greystonePass: "7586e9b861260ff7",
-  pineshade: "304b90ad639a507c",
-  gullIsland: "e87c67ce4616a399",
-  stillwater: "7c4aa16203706976",
-  twoShores: "a8c696fbba006d1c",
+  sapphireArchipelago:'1f88b4628a1e6194',
+  grandEstuary:'b23091c91cc54303',
+  brokenSea: "6d17c654720eaab0",
+  templeSpring: "bba3883f63310405",
+  turtleLake: "deeb7d44c6dfbca4",
+  elderwood: "3bbb3c6104fb3b2c",
+  ringwater: "1b76b0ecbedd3215",
+  loneMarket: "5b0f13f16fb87754",
+  reedwater: "0a6bb483892ddecf",
+  veiledHill: "0dba4e351e6a1cdd",
+  greystonePass: "cc4f2a5ece207fa8",
+  pineshade: "b81f94437dfc3587",
+  gullIsland: "835a23cc28a4cf66",
+  stillwater: "b2b243d7e1fba8fc",
+  twoShores: "06d963cc8e737de3",
 };
 
 const host = { id: "host", name: "Host" };

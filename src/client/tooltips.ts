@@ -1,6 +1,10 @@
 import { SHIP_WEAPONS,isShipEquipment,shipMounts } from "../shared/ship-equipment";
 import { ITEM_DEFS } from "../shared/equipment";
 import { shipProfile, shipPassengers, isShipKind } from "../shared/ship-geometry";
+import { shipCabinUsage } from '../shared/ship-cabin';
+import { cabinQuotaText } from './cabin-controls';
+import { shipBoardingStatus } from './ship-boarding-controls';
+import { isTransportKind, TRANSPORT_COMBAT } from '../shared/transport-role';
 import { bodyMass } from "../shared/physical-body";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "../shared/unit-value";
 import { VETERAN_SKILLS, type VeteranSkillId } from "../shared/veteran-skills";
@@ -71,7 +75,11 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
   const regenValues = units.map((unit) => unitRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
   const maxRegen = Math.max(0, ...regenValues);
-  const rules = unitRules(snapshot, representative);
+  const authoredRules = unitRules(snapshot, representative);
+  const rules = isTransportKind(kind) ? { ...authoredRules,
+    rangedDamageTaken: authoredRules.rangedDamageTaken ?? TRANSPORT_COMBAT.rangedDamageTaken,
+    passengerDamageMultiplier: authoredRules.passengerDamageMultiplier ?? TRANSPORT_COMBAT.passengerDamageMultiplier } : authoredRules;
+  const bridgeStatus = units.length === 1 && isShipKind(kind) ? shipBoardingStatus(representative, snapshot.tick, i18n.locale === 'zh') : '';
   const earnsStars = representative.owner !== "neutral" && !(representative.variant && snapshot.variants?.[representative.variant]?.heroic);
   return {
     title,
@@ -84,6 +92,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
       ...cargoLines(kind, units, snapshot, i18n.locale),
+      ...(bridgeStatus ? [bridgeStatus] : []),
       ...unitRuleLines(rules, i18n.locale, representative.level, false, unitClassOf(representative, snapshot)),
       ...(units.length === 1 && earnsStars ? [
         i18n.locale === "zh" ? `星级 ${representative.level}；经验 ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}` : `Stars ${representative.level}; XP ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}`,
@@ -243,13 +252,18 @@ export function withTooltipRequirement(tooltip: GameplayTooltip, reason: string 
   return { ...tooltip, requirements: [...new Set([reason, ...tooltip.requirements].map(line => line.trim()).filter(Boolean))] };
 }
 
-// Transports: the supply of passengers aboard against what they carry (see @@@transport).
+// Ships show physical payload and the separate sheltered crew capacity.
 function cargoLines(kind: UnitKind, units: Unit[], snapshot:GameSnapshot, locale: Locale) {
   if(!isShipKind(kind))return [];
   const load=units.reduce((sum,ship)=>sum+shipPassengers(snapshot.units,ship).reduce((n,u)=>n+bodyMass(u),0)+(ship.holdMass ?? 0),0);
   const limit=units.reduce((sum,ship)=>sum+shipProfile(ship)!.loadCapacity,0);
   const profile=shipProfile(units[0]!)!,mounts=shipMounts(units[0]!);
-  return [locale==="zh" ? `总载重：${Math.round(load)}/${Math.round(limit)} kg` : `Payload: ${Math.round(load)}/${Math.round(limit)} kg`,localized(locale,`空载转向 ${Math.round(profile.turnRate*180/Math.PI)}°/秒；载重和船舵损伤会降低转向`,`${Math.round(profile.turnRate*180/Math.PI)}°/s unloaded; cargo and rudder damage slow turning`),localized(locale,`船首 1 个炮位，舷侧 ${mounts.length-1} 个；船首射界 ±30°，舷侧 ±35°`,`1 bow fitting, ${mounts.length-1} broadside fittings; bow ±30°, broadside ±35°`)];
+  const cabin=units.reduce((sum,ship)=>{const usage=shipCabinUsage(snapshot,ship);return {used:sum.used+usage.used,capacity:sum.capacity+usage.capacity,required:0};},{used:0,capacity:0,required:0});
+  const bows=mounts.filter(mount=>mount.id==='bow').length,sides=mounts.length-bows;
+  return [locale==="zh" ? `总载重：${Math.round(load)}/${Math.round(limit)} kg` : `Payload: ${Math.round(load)}/${Math.round(limit)} kg`,
+    ...(cabin.capacity?[cabinQuotaText(cabin,locale==='zh')]:[]),
+    localized(locale,`空载转向 ${Math.round(profile.turnRate*180/Math.PI)}°/秒；载重和船舵损伤会降低转向`,`${Math.round(profile.turnRate*180/Math.PI)}°/s unloaded; cargo and rudder damage slow turning`),
+    localized(locale,`船首 ${bows} 个炮位，舷侧 ${sides} 个${bows?'；船首射界 ±30°，舷侧 ±35°':'；舷侧射界 ±35°'}`,`${bows} bow fittings, ${sides} broadside fittings${bows?'; bow ±30°, broadside ±35°':'; broadside ±35°'}`)];
 }
 
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {
@@ -615,8 +629,14 @@ function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 
     ? localized(locale, "机械 · 工人维修；治疗和生命回复无效", "Mechanical · worker repairs; no healing or regeneration")
     : unitClassLabel(classification, locale)];
   if(def.naval)lines.push(localized(locale,"攻击舰船优先打可攻击的乘员；命中乘员也会按武器破坏船体。空闲农民会花费金币自动修船。","Ship attacks prioritize reachable crew; hits also damage the hull according to the weapon. Idle workers automatically repair their ship using gold."));
-  if(def.passengerDamageMultiplier)lines.push(localized(locale,`乘员攻击伤害 ${def.passengerDamageMultiplier*100}%`,`Passenger attack damage ${def.passengerDamageMultiplier*100}%`));
-  if (def.armor === "heavy") lines.push(localized(locale, `重甲 · 远程／攻城普攻 ×${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%（含魔法），塔 ×${HEAVY_ARMOR_DAMAGE.tower * 100}%；主动法术／道具不减伤`, `Heavy armor · ranged/siege attacks ×${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% (including magic), towers ×${HEAVY_ARMOR_DAMAGE.tower * 100}%; no reduction to active spells/items`));
+  if (def.rangedDamageTaken !== undefined && def.armor !== 'heavy') lines.push(localized(locale,
+    `船体远程／攻城普攻及塔伤害 ${def.rangedDamageTaken * 100}%（含魔法）${def.passengerDamageMultiplier !== undefined ? `；乘员输出 ${def.passengerDamageMultiplier * 100}%` : ''}`,
+    `Hull ranged/siege/tower attack damage ${def.rangedDamageTaken * 100}% (including magic)${def.passengerDamageMultiplier !== undefined ? `; passenger damage ${def.passengerDamageMultiplier * 100}%` : ''}`));
+  else if (def.passengerDamageMultiplier !== undefined) lines.push(localized(locale, `乘员攻击伤害 ${def.passengerDamageMultiplier * 100}%`, `Passenger attack damage ${def.passengerDamageMultiplier * 100}%`));
+  if (def.armor === "heavy") {
+    const ranged = Math.min(HEAVY_ARMOR_DAMAGE.rangedUnit, def.rangedDamageTaken ?? 1), tower = Math.min(HEAVY_ARMOR_DAMAGE.tower, def.rangedDamageTaken ?? 1);
+    lines.push(localized(locale, `重甲 · 远程／攻城普攻 ×${ranged * 100}%（含魔法），塔 ×${tower * 100}%；主动法术／道具不减伤`, `Heavy armor · ranged/siege attacks ×${ranged * 100}% (including magic), towers ×${tower * 100}%; no reduction to active spells/items`));
+  }
   if (def.casterSlayer) lines.push(localized(locale, `对法师／召唤物伤害 ×${def.casterSlayer}`, `Caster/summon damage ×${def.casterSlayer}`));
   if (def.regenPerSecond && classification !== "mechanical") lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
   if (def.slowOnHit) lines.push(localized(locale, `命中减速至 ${SLOW_PACE * 100}%，持续 ${formatSeconds(SLOW_TICKS)}`, `Hit slows to ${SLOW_PACE * 100}% for ${formatSeconds(SLOW_TICKS)}`));

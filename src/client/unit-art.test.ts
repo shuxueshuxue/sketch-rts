@@ -12,9 +12,10 @@ describe("unit art tiers", () => {
     expect(Object.keys(UNIT_ART).sort()).toEqual([...kinds].sort());
   });
 
-  it("orders purchasable units by price: a higher tier always costs more", () => {
+  it("orders land troops and vessels by price within their own construction economy", () => {
     for (const a of purchasable) {
       for (const b of purchasable) {
+        if ((UNIT_ART[a].bearing === 'vessel') !== (UNIT_ART[b].bearing === 'vessel')) continue;
         if (rank(UNIT_ART[a].tier) > rank(UNIT_ART[b].tier)) {
           expect(UNIT_DEFS[a].cost, `${a} vs ${b}`).toBeGreaterThan(UNIT_DEFS[b].cost);
         }

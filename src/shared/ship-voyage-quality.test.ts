@@ -235,7 +235,13 @@ describe('observable ship voyage quality', () => {
       legX: 1800, legY: 1800, startX: 1800, startY: 1800, cruise: true,
       avoidHeading: .3, avoidBaseHeading: 0, avoidTargetId: 'already-passed', avoidTicks: 1,
     };
-    stepGame(game);
+    // Runtime planners can share the terminal waypoint with route.end. JSON
+    // saves cannot retain that alias, and yielding must not depend on it.
+    ship.sailing!.route.end=ship.sailing!.route.points[0]!;
+    const resumed=sea(Math.PI/2);
+    restoreSnapshotIntoGame(resumed,JSON.parse(JSON.stringify(snapshotGame(game))),game.nextId);
+    stepGame(game);stepGame(resumed);
+    expect(checksumGame(resumed)).toBe(checksumGame(game));
     expect(ship.sailing!.route!.legY).toBe(2050);
     expect(ship.sailing!.route!.points[0]!.heading).toBeCloseTo(Math.atan2(-250, 1700), 8);
     const metrics = observe(game, ship, 70, goal);

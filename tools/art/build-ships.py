@@ -69,6 +69,7 @@ def build_in_blender():
         rope = material("hemp rigging", (.26, .205, .13))
         glass = material("cabin glazing", (.075, .135, .14), .32)
         ochre = material("weathered ochre gun deck band", (.40, .27, .12))
+        owner_cloth = material("TeamColor", (.36, .39, .37))
 
         def mesh(name, vertices, faces, mat, layer):
             data = bpy.data.meshes.new(name)
@@ -261,6 +262,12 @@ def build_in_blender():
                     for dy in (-r*.4, 0, r*.4):
                         box("stern gallery window", (x-r*.86, dy, z+height*.62), (.8, r*.20, height*.28), dark, upper)
                 spar("stern ensign staff", (x-8, 0, z+height), (x-12, 0, z+height+20), .85, edge, upper)
+                # The ensign alone takes the owning seat's color at runtime.
+                # Its bent cloth remains visible from both sides, with no
+                # colored wood or change to the physical hull/deck contract.
+                mesh("OwnerFlag", [(x-11, 0, z+height+18), (x+7, 1.5, z+height+16),
+                                   (x+5, 1.5, z+height+6), (x-9, 0, z+height+8)],
+                     [(0, 1, 2, 3), (3, 2, 1, 0)], owner_cloth, upper)
                 if kind == "shipOfTheLine":
                     # Entry is on the forward face of the authored cabin. Its
                     # raised roof is visual; crew path on the single main deck.

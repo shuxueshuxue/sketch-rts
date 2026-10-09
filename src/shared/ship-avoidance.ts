@@ -9,6 +9,24 @@ import { shipMotionLimits } from './ship-handling';
 
 const trafficShapes=new Map<string,Point[]>();
 
+/** Relative linear motion enters the configuration space of the two real
+ * hulls. Beam clearance remains useful when vessels pass side by side;
+ * a circumscribed length-radius cannot represent that encounter. */
+function encounterWindow(ship:Unit,other:Unit,heading:number,dx:number,dy:number,rx:number,ry:number,horizon:number) {
+  const own=shipProfile(ship)!,target=shipProfile(other)!,otherHeading=other.sailing?.heading ?? 0;
+  const squared=rx*rx+ry*ry,closest=squared?Math.max(0,Math.min(horizon,-(dx*rx+dy*ry)/squared)):0;
+  const radius=polygonRadius(own.hull)+polygonRadius(target.hull)+Math.max(own.beam,target.beam)*.2;
+  if(Math.hypot(dx+rx*closest,dy+ry*closest)>radius)return;
+  const rotate=(hull:readonly Point[],angle:number)=>{const c=detCos(angle),s=detSin(angle);return hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));};
+  const shape=minkowskiSum(rotate(target.hull,otherHeading),rotate(own.hull,heading).map(p=>({x:-p.x,y:-p.y})));
+  const polygon=expandConvex(shape,Math.max(own.beam,target.beam)*.2);
+  const from={x:-dx,y:-dy},to={x:-dx-rx*horizon,y:-dy-ry*horizon},clip=clipToConvex(from,to,polygon);
+  if(!clip || clip[1]-clip[0]<1e-7)return;
+  const middle=(clip[0]+clip[1])/2,at={x:from.x+(to.x-from.x)*middle,y:from.y+(to.y-from.y)*middle};
+  if(polygonPlanes(polygon).some(p=>at.x*p.x+at.y*p.y<=p.min+1e-6))return;
+  return{enters:clip[0]*horizon,leaves:clip[1]*horizon};
+}
+
 /** Early passing decisions use relative motion; geometric sweeps still own
  * permission to move. Positive angles turn to starboard in world XY. The
  * serialized route holds an actual world course until the other hull passes,
@@ -37,7 +55,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
   // for every other vessel; only suppress this premature passing commitment.
   const firingApproach=(other:Unit)=>{
     if(!route || route.intent!=='pursuit' || route.targetId!==other.id
-      || ship.order.type!=='attack' && ship.order.type!=='attackMove')return false;
+      || ship.order.type!=='attack' && ship.order.type!=='attackMove' && motion.pursuit?.targetId!==other.id)return false;
     const otherProfile=shipProfile(other);if(!otherProfile)return false;
     const clearance=(profile.length+otherProfile.length)*.5+Math.max(profile.beam,otherProfile.beam)*.35;
     const otherSpeed=Math.hypot(other.sailing?.velocityX??0,other.sailing?.velocityY??0);
@@ -62,18 +80,23 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     // intended course is safe. Check that course as well before releasing it.
     const restoreSpeed=Math.min(ownSpeed,route.targetSpeed ?? ownSpeed),qx=ox-restoreSpeed*detCos(desiredHeading),qy=oy-restoreSpeed*detSin(desiredHeading);
     const restoringSquared=qx*qx+qy*qy,restoringClosing=dx*qx+dy*qy;
-    const closestTime=restoringSquared>1?Math.max(0,Math.min(8,-restoringClosing/restoringSquared)):0;
-    const clearance=otherProfile?(profile.length+otherProfile.length)*.5+Math.max(profile.beam,otherProfile.beam)*.35:0;
-    const safeReturn=restoringSquared<1 || restoringClosing>=0 || Math.hypot(dx+qx*closestTime,dy+qy*closestTime)>=clearance;
+    const safeReturn=!other || restoringSquared<1 || restoringClosing>=0 || !encounterWindow(ship,other,desiredHeading,dx,dy,qx,qy,8);
     const separated=other && otherProfile && dx*rx+dy*ry>=0 && hullGap(ship,other)>Math.max(profile.beam,otherProfile.beam)*.75;
     const stoppedFinal=final && other && Math.hypot(ox,oy)<1 && shipTraffic(ship,[ship,other])({x:ship.x,y:ship.y,heading},final);
-    const passed=!otherProfile || !!stoppedFinal || safeReturn && (along<-(profile.length+otherProfile.length)*.45 || !!beside || !!separated);
+    const headOn=other && Math.abs(headingDifference(base,other.sailing?.heading ?? 0))>Math.PI*2/3;
+    // Crossing and overtaking hulls may clear the intended course before
+    // their centers exchange positions. Retaining the world heading for two
+    // minutes after that clearance drags a convoy away from its next beat.
+    const returnTime=Math.max(6,Math.abs(headingDifference(heading,desiredHeading))/Math.max(.001,shipMotionLimits(ship).turnRate));
+    const clearCourse=safeReturn && other && otherProfile
+      && hullGap(ship,other)>Math.max(profile.beam,otherProfile.beam)*.75
+      && (route.avoidTicks ?? 0)<releaseTicks+SIM_TICKS_PER_SECOND*(120-returnTime);
+    const passed=!otherProfile || !!stoppedFinal || !!clearCourse || safeReturn && (along<-(profile.length+otherProfile.length)*.45 || !!beside || !!separated);
     route.avoidTicks=Math.max(0,(route.avoidTicks??releaseTicks)-1);
     if(passed)route.avoidTicks=Math.min(route.avoidTicks,releaseTicks);
     if(route.avoidTicks>0){
       const remaining=Math.min(1,route.avoidTicks/releaseTicks);
       const course=route.avoidHeading+headingDifference(route.avoidHeading,desiredHeading)*(1-remaining);
-      const headOn=other && Math.abs(headingDifference(base,other.sailing?.heading ?? 0))>Math.PI*2/3;
       const starboard=dx*(-detSin(base))+dy*detCos(base)>0;
       return{heading:course,speedScale:passed ? 1 : headOn ? .85 : starboard ? .55 : .9,active:true};
     }
@@ -100,12 +123,10 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     if(relativeSquared<1 || closing>=-1e-7)continue;
     const clearance=(profile.length+otherProfile.length)*.5+Math.max(profile.beam,otherProfile.beam)*.35;
     const horizon=Math.max(6,Math.min(10,clearance/Math.max(10,ownSpeed)*2.5));
-    const time=-closing/relativeSquared;
     if(distance>clearance+(ownSpeed+Math.hypot(ox,oy))*horizon)continue;
-    const closest=Math.hypot(dx+rx*time,dy+ry*time);
-    if(closest>=clearance)continue;
-    const enters=time-Math.sqrt((clearance*clearance-closest*closest)/relativeSquared);
-    if(enters>horizon)continue;
+    const encounter=encounterWindow(ship,other,heading,dx,dy,rx,ry,horizon);
+    if(!encounter)continue;
+    const enters=encounter.enters;
     // An overtaken vessel behind our beam owns its maneuver; being approached
     // from astern is not a reason to zigzag out of an otherwise steady course.
     if(dx*fx+dy*fy<-profile.length*.35 && Math.abs(headingDifference(heading,otherHeading))<Math.PI/3)continue;
@@ -116,10 +137,13 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
   if(threat){
     const urgency=Math.max(0,Math.min(1,(threat.clearance*2-threat.distance)/threat.clearance));
     const offset=(30+urgency*20)*Math.PI/180;
-    const course=heading+offset;
+    // Alter the voyage course, rather than adding another turn to a hull
+    // already displaced by an earlier encounter or a rounded waypoint.
+    const approach=Math.abs(headingDifference(heading,desiredHeading))<Math.PI/2?desiredHeading:heading;
+    const course=approach+offset;
     if(route){
       route.avoidSide=1;route.avoidTicks=releaseTicks+SIM_TICKS_PER_SECOND*120;
-      route.avoidHeading=course;route.avoidBaseHeading=heading;route.avoidTargetId=threat.id;
+      route.avoidHeading=course;route.avoidBaseHeading=approach;route.avoidTargetId=threat.id;
     }
     // Crossing traffic from starboard is given room astern. Head-on vessels
     // both alter right early instead of symmetrically stopping bow to bow.

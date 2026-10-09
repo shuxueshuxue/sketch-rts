@@ -16,19 +16,19 @@ export type PoolMap = {
 };
 
 export const MAP_POOL = [
-  { id: "sapphireArchipelago", name: { en: "Sapphire Archipelago", zh: "蓝宝群岛" }, players: 6, layout: { seed: "pool-sapphire-1", kind: "ring", idea: "islandStarts", size:8192 } },
-  { id: "grandEstuary", name: { en: "Grand Estuary", zh: "八方河湾" }, players: 8, layout: { seed: "pool-grandEstuary-1", kind: "sides", idea: "riverValley", size:8192 } },
+  { id: "sapphireArchipelago", name: { en: "Sapphire Archipelago", zh: "蓝宝群岛" }, players: 6, layout: { seed: "pool-sapphire-1", kind: "ring", idea: "islandStarts", size:10240 } },
+  { id: "grandEstuary", name: { en: "Grand Estuary", zh: "八方河湾" }, players: 8, layout: { seed: "pool-grandEstuary-1", kind: "sides", idea: "riverValley", size:10240 } },
   { id: "brokenSea", name: { en: "Broken Sea", zh: "碎海" }, players: 4, layout: { seed: "pool-brokenSea-1", kind: "ring", idea: "islandStarts" } },
-  { id: "templeSpring", name: { en: "Temple Spring", zh: "神泉殿" }, players: 4, layout: { seed: "pool-templeSpring-1", kind: "ring", idea: "fountainRing" } },
+  { id: "templeSpring", name: { en: "Temple Spring", zh: "神泉殿" }, players: 4, layout: { seed: "pool-templeSpring-1", kind: "ring", idea: "fountainRing", size:6656 } },
   { id: "turtleLake", name: { en: "Turtle Lake", zh: "龟湖" }, players: 4, layout: { seed: "pool-turtleLake-1", kind: "ring", idea: "turtleIsle" } },
   { id: "elderwood", name: { en: "Elderwood", zh: "古木林" }, players: 4, layout: { seed: "pool-elderwood-1", kind: "ring", idea: "twistedPaths" } },
   { id: "ringwater", name: { en: "Ringwater", zh: "环海" }, players: 4, layout: { seed: "pool-ringwater-1", kind: "ring", idea: "outerSea" } },
   { id: "loneMarket", name: { en: "Lone Market", zh: "孤市" }, players: 2, layout: { seed: "pool-loneMarket-1", kind: "ring", idea: "oneMarket" } },
   { id: "reedwater", name: { en: "Reedwater", zh: "芦苇泽" }, players: 2, layout: { seed: "pool-reedwater-1", kind: "ring", idea: "floodedValley" } },
   { id: "veiledHill", name: { en: "Veiled Hill", zh: "雾丘" }, players: 2, layout: { seed: "pool-veiledHill-1", kind: "ring", idea: "hiddenHill" } },
-  { id: "greystonePass", name: { en: "Greystone Pass", zh: "灰岩隘口" }, players: 2, layout: { seed: "pool-greystonePass-1", kind: "ring", idea: "bridgeStand" } },
+  { id: "greystonePass", name: { en: "Greystone Pass", zh: "灰岩隘口" }, players: 2, layout: { seed: "pool-greystonePass-1", kind: "ring", idea: "bridgeStand", size:4608 } },
   { id: "pineshade", name: { en: "Pineshade", zh: "松影林" }, players: 2, layout: { seed: "pool-pineshade-1", kind: "ring", idea: "deepJungle" } },
-  { id: "gullIsland", name: { en: "Gull Island", zh: "鸥岛" }, players: 2, layout: { seed: "pool-gullIsland-1", kind: "ring", idea: "northIsles" } },
+  { id: "gullIsland", name: { en: "Gull Island", zh: "鸥岛" }, players: 2, layout: { seed: "pool-gullIsland-1", kind: "ring", idea: "northIsles", size:6656 } },
   { id: "stillwater", name: { en: "Stillwater", zh: "静水原" }, players: 4, layout: { seed: "pool-stillwater-1", kind: "sides", idea: "riverValley" } },
   { id: "twoShores", name: { en: "Two Shores", zh: "双岸" }, players: 4, layout: { seed: "pool-twoShores-1", kind: "sides", idea: "twoShores" } },
 ] as const satisfies readonly PoolMap[];

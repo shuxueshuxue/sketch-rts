@@ -1,7 +1,10 @@
 import { itemEquipped } from "../shared/equipment";
+import { playerColor } from '../shared/player-colors';
 import { drawCanvasShip,deckVisualHeight,drawShipFlag } from "./art/canvas-ships";
 import { isInCabin } from '../shared/ship-cabin';
-import { localToWorld,shipProfile,shipPassengers } from "../shared/ship-geometry";
+import { localToWorld,shipProfile,shareShipProfile,shipPassengers,SHIP_CAMERA } from "../shared/ship-geometry";
+import { gangwaySurface, type GangwaySurface } from '../shared/ship-gangway';
+import { gangwayCrewVisualPose } from './ship-gangway-visual';
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
@@ -95,6 +98,8 @@ export type WorldFrame = {
 };
 
 type Painter = {
+  ships: ReadonlyMap<string, Unit>;
+  gangways: ReadonlyMap<string, GangwaySurface>;
   actorPositions: WorldFrame['actorPositions'];
   animation: UnitAnimationTracker | undefined;
   reducedMotion: boolean;
@@ -121,7 +126,10 @@ const NO_SELECTION: ReadonlySet<string> = new Set();
 
 export function drawWorld(frame: WorldFrame) {
   const zoom = frame.view.zoom ?? 1;
+  const ships = new Map<string, Unit>(), gangways = new Map<string, GangwaySurface>();
   const painter: Painter = {
+    ships,
+    gangways,
     actorPositions: frame.actorPositions,
     animation: frame.animation,
     reducedMotion: frame.reducedMotion ?? false,
@@ -145,6 +153,19 @@ export function drawWorld(frame: WorldFrame) {
   };
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
+  // The GPU pass already supplies crew positions. The Canvas fallback owns
+  // its bridge proof once per bridge and shares it with every crossing person.
+  if (!frame.actorPositions) {
+    for (const ship of snapshot.units) if (shipProfile(ship)) {
+      const displayed = { ...ship, ...painter.motion?.position(ship, painter.now), sailing: { ...ship.sailing!, heading: painter.motion?.heading(ship, painter.now) ?? ship.sailing?.heading ?? 0 } };
+      shareShipProfile(ship, displayed); ships.set(ship.id, displayed);
+    }
+    for (const source of ships.values()) {
+      const target = source.sailing?.gangway && ships.get(source.sailing.gangway.targetId);
+      const surface = target && gangwaySurface(source, target);
+      if (surface) gangways.set(source.id, surface);
+    }
+  }
   painter.animation?.update(snapshot, painter.now);
   if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
   ctx.save();
@@ -195,6 +216,7 @@ export function drawWorld(frame: WorldFrame) {
   trackUnitFacing(painter.facing,painter.snapshot);
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
   const actors=[...snapshot.buildings,...snapshot.units.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
+  if (frame.pass !== 'overlay') drawGangways(painter);
   if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,snapshot.units,true);}
   else for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   if (!painter.still && painter.viewer) drawAimLines(painter);
@@ -247,18 +269,7 @@ export function drawPaperMap(ctx: Brush, mapId: MapId, camera: Point, width: num
   }
 }
 
-export function ownerInk(owner: Owner | undefined) {
-  if (owner === "player") return "#477b91";
-  if (owner === "fleet") return "#799199";
-  if (owner === "crown") return "#a45c4b";
-  if (owner === "enemy") return "#a85644";
-  if (owner === "enemy2") return "#7f3a70";
-  if (!owner || owner === "neutral") return "#704a33";
-  const palette = ["#315f87", "#963c36", "#7f3a70", "#5d8b4c", "#b97927", "#596a8c", "#8d5a46", "#2f766f"];
-  let hash = 0;
-  for (const char of owner) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length]!;
-}
+export function ownerInk(owner: Owner | undefined, snapshot?: Pick<GameSnapshot, 'players'>) { return playerColor(owner, snapshot); }
 
 export function buildingGlyphSize(kind: BuildingKind) {
   return Math.round(BUILDING_DEFS[kind].radius * 2.12);
@@ -345,19 +356,19 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
     const rallyPoint = worldToScreen(painter, { x: building.rallyX, y: building.rallyY });
     const showRally = shouldRenderBuildingRally({ selected, trainable });
     if (!nearScreen(painter, point, 120)) {
-      if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
+      if (showRally) drawBuildingRally(ctx, building, point, rallyPoint, ownerInk(building.owner, painter.snapshot));
       continue;
     }
-    ctx.strokeStyle = ownerInk(building.owner);
+    ctx.strokeStyle = ownerInk(building.owner, painter.snapshot);
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
     ctx.lineWidth = selected ? 4 : 2;
     const size = buildingGlyphSize(building.kind);
     if (selected || painter.hoveredId === building.id) drawFoundationBoundary(painter,building,ringInk(painter,building.owner),selected);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
-    if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
+    if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner, painter.snapshot));
     ctx.restore();
-    if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
+    if (showRally) drawBuildingRally(ctx, building, point, rallyPoint, ownerInk(building.owner, painter.snapshot));
     if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
     if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
@@ -388,7 +399,7 @@ function drawAimLines(painter: Painter) {
   }
 }
 
-function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Point) {
+function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Point, color: string) {
   ctx.save();
   const x = to.x, y = to.y;
   ctx.fillStyle = "#29272440";
@@ -397,7 +408,7 @@ function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Poin
   ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 27); ctx.stroke();
   ctx.strokeStyle = "#d4c1a0"; ctx.lineWidth = .65;
   ctx.beginPath(); ctx.moveTo(x - .6, y); ctx.lineTo(x - .6, y - 27); ctx.stroke();
-  ctx.fillStyle = ownerInk(building.owner);
+  ctx.fillStyle = color;
   ctx.beginPath(); ctx.moveTo(x + 1, y - 26); ctx.lineTo(x + 17, y - 23);
   ctx.lineTo(x + 12, y - 18); ctx.lineTo(x + 17, y - 14); ctx.lineTo(x + 1, y - 17); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
@@ -407,10 +418,29 @@ function drawShipGroup(painter:Painter,ship:Unit) {
   const point=worldToScreen(painter,drawnPosition(painter,ship));
   if(painter.motion && ship.sailing)ship={...ship,sailing:{...ship.sailing,heading:painter.motion.heading(ship,painter.now)}};
   drawCanvasShip(painter.ctx,ship,point,painter.snapshot.items);
-  drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner));
+  drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner, painter.snapshot));
   drawItems(painter,painter.snapshot.items,ship);
   for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y))drawUnits(painter,[crew]);
   drawUnits(painter,[ship],true);
+}
+
+function drawGangways(painter: Painter) {
+  const { ctx } = painter;
+  for (const [id, surface] of painter.gangways) {
+    const source = painter.ships.get(id)!, target = painter.ships.get(source.sailing!.gangway!.targetId)!;
+    const dx = surface.target.x - surface.source.x, dy = surface.target.y - surface.source.y, span2 = dx * dx + dy * dy;
+    const project = (point: Point) => {
+      const t = Math.max(0, Math.min(1, ((point.x - surface.source.x) * dx + (point.y - surface.source.y) * dy) / span2));
+      const height = deckVisualHeight(source) + (deckVisualHeight(target) - deckVisualHeight(source)) * t;
+      return worldToScreen(painter, { x: point.x, y: point.y - height });
+    };
+    const center = project({ x: (surface.source.x + surface.target.x) / 2, y: (surface.source.y + surface.target.y) / 2 });
+    if (!nearScreen(painter, center, 100)) continue;
+    ctx.save(); ctx.globalAlpha = surface.phase === 'deploying' ? .48 : 1;
+    ctx.fillStyle = '#9b7550'; ctx.strokeStyle = '#4d3927'; ctx.lineWidth = 2;
+    ctx.beginPath(); surface.polygon.forEach((point, index) => { const at = project(point); if (index) ctx.lineTo(at.x, at.y); else ctx.moveTo(at.x, at.y); });
+    ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
 }
 
 function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
@@ -422,12 +452,14 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     const anchor=painter.actorPositions?.get(unit.id);
     const at = anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter, unit);
     const ship=unit.deck ? painter.snapshot.units.find(ship=>ship.id===unit.deck!.shipId) : undefined;
-    const height=anchor?0:ship ? deckVisualHeight(ship)+18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1) : 0;
+    const bridge = !anchor && gangwayCrewVisualPose(unit, painter.ships, painter.gangways);
+    const bodyHeight = 18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1);
+    const height=anchor?0:bridge ? bridge.height * Math.tan(SHIP_CAMERA.tilt) + bodyHeight : ship ? deckVisualHeight(ship)+bodyHeight : 0;
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y-height });
     const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
     const selected = painter.selectedIds.has(unit.id);
-    ctx.strokeStyle = ownerInk(unit.owner);
+    ctx.strokeStyle = ownerInk(unit.owner, painter.snapshot);
     ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
@@ -475,6 +507,10 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
 
 // Where a unit is drawn this frame: its snapshot spot, or on its glide when it charges (see unit-motion).
 function drawnPosition(painter: Painter, unit: Unit): Point {
+  const anchor = unit.gangway && painter.actorPositions?.get(unit.id);
+  if (anchor) return anchor;
+  const bridge = gangwayCrewVisualPose(unit, painter.ships, painter.gangways);
+  if (bridge) return bridge;
   if (unit.deck) {
     const ship = painter.snapshot.units.find(ship => ship.id === unit.deck!.shipId);
     if (ship) {
@@ -528,7 +564,7 @@ function drawItems(painter: Painter, items: WorldItem[], ship?: Unit) {
 
 // A ring's colour: friend or foe to the player looking on (see @@@relation-ink), or with no one looking, the owner's.
 function ringInk(painter: Painter, owner: Owner) {
-  return painter.viewer ? RELATION_INK[relationTo(painter.snapshot, painter.viewer, owner)] : ownerInk(owner);
+  return painter.viewer ? RELATION_INK[relationTo(painter.snapshot, painter.viewer, owner)] : ownerInk(owner, painter.snapshot);
 }
 
 function drawFoundationBoundary(painter:Painter,body:{x:number;y:number;radius:number},color:string,selected:boolean){
