@@ -124,21 +124,22 @@ export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEf
     }
     else {
         ctx.translate(at.x, at.y);
-        const r = effect.radius ?? 85;
+        const r = effect.radius!;
+        const scale = r / 85;
         ctx.fillStyle = "#3f343527";
         ctx.beginPath();
         ctx.ellipse(0, 4, r, r * .45, 0, 0, Math.PI * 2);
         ctx.fill();
-        for (let i = 0; i < 11; i++) {
-            const x = Math.sin(i * 13.2) * r * .7, y = Math.cos(i * 7.1) * r * .3, height = 7 + Math.sin(effect.remaining * .33 + i) * 4;
+        for (let i = 0; i < Math.ceil(r / 8); i++) {
+            const x = Math.sin(i * 13.2) * r * .7, y = Math.cos(i * 7.1) * r * .3, height = (7 + Math.sin(effect.remaining * .33 + i) * 4) * scale;
             ctx.fillStyle = "#c7814380";
             ctx.beginPath();
-            ctx.moveTo(x - 4, y);
-            ctx.quadraticCurveTo(x - 1, y - height, x + 3, y - height - 5);
-            ctx.quadraticCurveTo(x + 7, y - 2, x + 3, y);
+            ctx.moveTo(x - 4 * scale, y);
+            ctx.quadraticCurveTo(x - scale, y - height, x + 3 * scale, y - height - 5 * scale);
+            ctx.quadraticCurveTo(x + 7 * scale, y - 2 * scale, x + 3 * scale, y);
             ctx.fill();
             ctx.fillStyle = "#e7c98570";
-            ctx.fillRect(x, y - 3, 2, 4);
+            ctx.fillRect(x, y - 3 * scale, 2 * scale, 4 * scale);
         }
     }
     ctx.restore();
