@@ -54,30 +54,34 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
       recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
     }
   }
-  if (commands.length > 0) return commands;
-
-  const recoveryCommands = woundedRecoveryCommands(snapshot, owner, ownCombat, enemies, retreatPoint, options);
+  // Recovery elsewhere must not suppress the front's volley or pullback; each unit gets one tactical assignment.
+  const recoveryCommands = woundedRecoveryCommands(snapshot, owner, unassignedCombat(ownCombat, commands), enemies, retreatPoint, options);
   if (recoveryCommands.length > 0) {
     for (const command of recoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
-    return recoveryCommands;
+    commands.push(...recoveryCommands);
   }
-  const veteranRecoveryCommands = veteranCoreRecoveryCommands(snapshot, owner, ownCombat, enemies, retreatPoint, options);
+  const veteranRecoveryCommands = veteranCoreRecoveryCommands(snapshot, owner, unassignedCombat(ownCombat, commands), enemies, retreatPoint, options);
   if (veteranRecoveryCommands.length > 0) {
     for (const command of veteranRecoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
-    return veteranRecoveryCommands;
+    commands.push(...veteranRecoveryCommands);
   }
-  if (shouldLetDeadEconomyCloseoutContinue(snapshot, owner, ownCombat, options)) return [];
+  if (shouldLetDeadEconomyCloseoutContinue(snapshot, owner, ownCombat, options)) return commands;
 
-  const skirmish = localSkirmish(snapshot, owner, ownCombat, enemies, ownBase, options);
-  if (!skirmish) return [];
+  const skirmish = localSkirmish(snapshot, owner, unassignedCombat(ownCombat, commands), enemies, ownBase, options);
+  if (!skirmish) return commands;
   const criticalPickoff = localSkirmishCriticalPickoff(snapshot, owner, skirmish, options);
-  if (criticalPickoff) return [criticalPickoff];
+  if (criticalPickoff) return [...commands, criticalPickoff];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   const intent = deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot, owner, skirmish, options)
     ? { type: "move" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }
     : { type: "attackMove" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y };
-  return [resolveAiCommandIntent(snapshot, owner, intent, options)];
+  return [...commands, resolveAiCommandIntent(snapshot, owner, intent, options)];
+}
+
+function unassignedCombat(army: Unit[], commands: GameCommand[]): Unit[] {
+  const assigned = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+  return army.filter(unit => !assigned.has(unit.id));
 }
 
 function localSkirmishCriticalPickoff(snapshot: GameSnapshot, owner: PlayerId, skirmish: { allies: Unit[]; enemies: Unit[] }, options: PresetAiPolicyOptions): GameCommand | undefined {
