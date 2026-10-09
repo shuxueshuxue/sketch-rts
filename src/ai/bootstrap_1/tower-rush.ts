@@ -94,6 +94,10 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const tower = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'defenseTower'
     && building.complete && distance(building, center) <= building.attackRange)
     .sort((a, b) => distance(a, target) - distance(b, target))[0];
+  // Take command only with existing tower support or the ordinary gold to start construction.
+  if (!tower && !rising && !pending && snapshot.players[owner]!.gold < BUILDING_DEFS.defenseTower.cost) {
+    endRush(options); return undefined;
+  }
   if (!press && (!job || (!tower && !rising && !pending))) { endRush(options); return undefined; }
   const support = !press && tower ? tower : rising ?? (pending?.order.type === 'build' ? pending.order : tower);
   // The front waits for its builder. A completed tower then covers the next short advance.
@@ -118,7 +122,9 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
     if (helperJob && builders[0]) { helperJob.kind = builders[0].id; helperJob.updatedTick = snapshot.tick; }
     else if (builders[0]) options.memory.jobs.push({ id: HELPER, kind: builders[0].id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
   } else options.memory.jobs = options.memory.jobs.filter(job => job.id !== HELPER);
-  const fighters = army.filter(unit => !isBacklineKind(unit) && !UNIT_DEFS[unit.kind].weapon);
+  // Existing cover keeps the host safe while summons continue the assault under the main commander.
+  const fighters = army.filter(unit => (rising || pending || snapshot.players[owner]!.gold >= BUILDING_DEFS.defenseTower.cost)
+    && !isBacklineKind(unit) && !UNIT_DEFS[unit.kind].weapon);
   return { hall: target, fighters, casters, site, advance, builders, rising, pending: pending !== undefined, press };
 }
 
