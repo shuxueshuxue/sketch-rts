@@ -258,9 +258,9 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
       if (!previousStation) return undefined;
       best = previousStation; retained = true;
       goal.arrivalRadius = committed!.arrivalRadius ?? goal.arrivalRadius;
-      goal.targetSpeed = committed!.targetSpeed;
-      goal.fireHeading = committed!.fireHeading;
-      goal.retreat = committed!.retreat;
+      if (committed!.targetSpeed !== undefined) goal.targetSpeed = committed!.targetSpeed;
+      if (committed!.fireHeading !== undefined) goal.fireHeading = committed!.fireHeading;
+      if (committed!.retreat !== undefined) goal.retreat = committed!.retreat;
     }
     for (const offset of best ? [] : STATION_OFFSETS) {
       const angle=bearing+offset,c=detCos(angle),s=detSin(angle);

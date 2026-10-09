@@ -123,7 +123,7 @@ describe('mounted firing headings', () => {
       ship.sailing!.heading = 0;
       const items: WorldItem[] = shipMounts(ship).map((mount, index) => ({
         id: `gun-${index}`, kind: 'shipCannon', x: ship.x, y: ship.y,
-        shipId: ship.id, mountId: mount.id, durability: SHIP_WEAPONS.shipCannon.hp,
+        shipId: ship.id, mountId: mount.id, durability: SHIP_WEAPONS.shipCannon.hp, cooldownRemaining: 0,
       }));
       const target = createUnit('target', 'enemy', 'transport', 1280, 1170);
       target.sailing = { heading: .4, speed: velocity, load: 0, balance: 0, velocityX: velocity, velocityY: 0 };

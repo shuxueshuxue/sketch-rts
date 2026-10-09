@@ -55,7 +55,7 @@ describe('ship tactical pursuit', () => {
     const { ship, target, units } = pair(); target.x = 2000;
     const station = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
     ship.sailing!.route = { goalX: station.x, goalY: station.y, intent: 'pursuit', targetId: target.id,
-      points: [{ ...station, heading: 0 }], end: { ...station, heading: 0 }, cruise: true };
+      points: [{ ...station, heading: 0 }], end: { ...station }, cruise: true };
     ship.sailing!.planningRequestedAtTick = 17;
     ship.sailing!.planningLastRequestedAtTick = 99;
     let requests = 0, stationChecks = 0, armed = true;
