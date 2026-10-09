@@ -88,6 +88,7 @@ export const UNIT_DAMAGE_PROFILES: Record<UnitKind, DamageProfile> = {
   // Bare transport/carrier hulls cannot attack; a mounted gun supplies its own profile.
   transport: P.MELEE_BLUNT,
   warship: P.RANGED_BLUNT,
+  shipOfTheLine: P.RANGED_BLUNT,
   cutter: P.RANGED_PIERCE,
   bombardShip: P.RANGED_BLUNT,
   fireShip: P.FIRE_RANGED,

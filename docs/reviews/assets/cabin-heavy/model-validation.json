@@ -1,0 +1,427 @@
+{
+  "modelPath": "public/art/world3d/ships/shipOfTheLine.glb",
+  "modelBytes": 1259464,
+  "sha256": "ff79a493ba08d754fe7f8e01fd0209fee9afa7ad9e547dadc055a027d2bfd601",
+  "sourceSha256": "22acecf80139ea9f084dbc3411a61d94128d400092ef1428e3a45ee86f5ea01e",
+  "sourceHashMatchesGeometry": true,
+  "dimensions": {
+    "length": 292,
+    "beam": 144,
+    "deckHeight": 38
+  },
+  "cabin": {
+    "x": -126,
+    "y": 0,
+    "radius": 20,
+    "type": "cabin"
+  },
+  "cabinSolidHalfExtents": [
+    14.8,
+    13.4
+  ],
+  "mastObstacles": [
+    {
+      "x": -53,
+      "y": 0,
+      "radius": 4,
+      "type": "mast"
+    },
+    {
+      "x": -10,
+      "y": 0,
+      "radius": 4,
+      "type": "mast"
+    },
+    {
+      "x": 76,
+      "y": 0,
+      "radius": 4,
+      "type": "mast"
+    }
+  ],
+  "nodes": [
+    "Hull",
+    "Rig_mast0",
+    "Sail_mast0_main",
+    "Sail_mast0_topsail",
+    "Rig_mast1",
+    "Sail_mast1_main",
+    "Sail_mast1_topsail",
+    "Rig_mast2",
+    "Sail_mast2_main",
+    "Sail_mast2_topsail"
+  ],
+  "frames": [
+    "mast0",
+    "mast1",
+    "mast2"
+  ],
+  "sails": [
+    "Sail_mast0_main",
+    "Sail_mast0_topsail",
+    "Sail_mast1_main",
+    "Sail_mast1_topsail",
+    "Sail_mast2_main",
+    "Sail_mast2_topsail"
+  ],
+  "ropes": 360,
+  "gunBakedInHull": false,
+  "externalImages": [],
+  "externalBuffers": false,
+  "foredeckProductionPassage": [
+    {
+      "radius": 16,
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 75,
+      "invalid": 0,
+      "maxStep": 3.100000000000006,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-16",
+        "x": -95.60000000000002,
+        "y": -2.220446049250313e-16
+      },
+      "exit": {
+        "shipId": "heavy-16",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 17,
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 75,
+      "invalid": 0,
+      "maxStep": 3.100000000000005,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-17",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "exit": {
+        "shipId": "heavy-17",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 18,
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 76,
+      "invalid": 0,
+      "maxStep": 3.1000000000000054,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-18",
+        "x": -95.60000000000002,
+        "y": 1.1102230246251565e-16
+      },
+      "exit": {
+        "shipId": "heavy-18",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 20,
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 77,
+      "invalid": 0,
+      "maxStep": 3.1000000000000068,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-20",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "exit": {
+        "shipId": "heavy-20",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    }
+  ],
+  "defaultBoardingProductionPassage": [
+    {
+      "radius": 16,
+      "boarded": true,
+      "start": {
+        "shipId": "heavy-16",
+        "x": -126.60000000000002,
+        "y": -45.2
+      },
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 18,
+      "invalid": 0,
+      "maxStep": 3.1000000000000014,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-16",
+        "x": -95.64779617020403,
+        "y": -0.11250016014076447
+      },
+      "exit": {
+        "shipId": "heavy-16",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 17,
+      "boarded": true,
+      "start": {
+        "shipId": "heavy-17",
+        "x": -126.60000000000002,
+        "y": -43.2
+      },
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 18,
+      "invalid": 0,
+      "maxStep": 3.100000000000003,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-17",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "exit": {
+        "shipId": "heavy-17",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 18,
+      "boarded": true,
+      "start": {
+        "shipId": "heavy-18",
+        "x": -126.60000000000002,
+        "y": -43.2
+      },
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 18,
+      "invalid": 0,
+      "maxStep": 3.1000000000000014,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-18",
+        "x": -95.62929573089774,
+        "y": -0.10559566374569362
+      },
+      "exit": {
+        "shipId": "heavy-18",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    },
+    {
+      "radius": 20,
+      "boarded": true,
+      "start": {
+        "shipId": "heavy-20",
+        "x": -124.60000000000002,
+        "y": -41.2
+      },
+      "slots": 8,
+      "weaponObstacles": 8,
+      "profileReplaced": true,
+      "mountsOnDeck": true,
+      "ticks": 18,
+      "invalid": 0,
+      "maxStep": 3.1000000000000045,
+      "entered": true,
+      "exited": true,
+      "exitFits": true,
+      "entry": {
+        "shipId": "heavy-20",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "exit": {
+        "shipId": "heavy-20",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      "driver": "enterCabinStep-only",
+      "fullStepGame": false,
+      "unitKind": "footman",
+      "radiusOverridden": true
+    }
+  ],
+  "defaultSixCrewBoardingProductionPassage": {
+    "boarded": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "starts": [
+      {
+        "shipId": "group-heavy",
+        "x": -126.60000000000002,
+        "y": -43.2
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -94.60000000000002,
+        "y": -27.200000000000003
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -96.60000000000002,
+        "y": 8.799999999999997
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -60.60000000000002,
+        "y": -35.2
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -124.60000000000002,
+        "y": 38.8
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -38.60000000000002,
+        "y": -9.200000000000003
+      }
+    ],
+    "ticks": 32,
+    "invalid": 0,
+    "maxStep": 3.100000000000004,
+    "entered": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "ends": [
+      {
+        "shipId": "group-heavy",
+        "x": -110.60000000000002,
+        "y": -31.200000000000003
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -94.60000000000002,
+        "y": -27.200000000000003
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -95.60000000000002,
+        "y": 0
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -97.3509865176941,
+        "y": 19.07729872162178
+      },
+      {
+        "shipId": "group-heavy",
+        "x": -94.9168868162088,
+        "y": -0.4813389671512853
+      }
+    ],
+    "driver": "enterCabinStep-only",
+    "fullStepGame": false,
+    "crewKinds": [
+      "footman",
+      "priest",
+      "footman",
+      "priest",
+      "footman",
+      "priest"
+    ]
+  },
+  "reviewImages": {
+    "heavy-model.png": {
+      "bytes": 3123753,
+      "sha256": "192de54b8d28faf8f87d8a8786a9d7f8458984b6a1ff49a3a1f41d040793e190"
+    },
+    "ship-size-comparison.png": {
+      "bytes": 2818364,
+      "sha256": "9d729bc63cc14a973cb0bd0f0dddc85d8d96c3afe59b6e798b21ee92ad4d84ee"
+    }
+  },
+  "passageDriver": {
+    "driver": "enterCabinStep-only",
+    "fullStepGame": false,
+    "module": "src/shared/ship-cabin.ts",
+    "fixture": "initializeShipEquipment, install eight independent items, rebuildShipFittings, structuredClone",
+    "checks": "geometry and movement only"
+  }
+}

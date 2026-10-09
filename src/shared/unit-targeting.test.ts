@@ -4,7 +4,7 @@ import { isMechanicalUnit, matchesUnitTarget, MECHANICAL_TARGETS, NON_MECHANICAL
 import { canReceiveHealing } from "./healing";
 import type { UnitKind } from "./types";
 
-const mechanical: UnitKind[] = ["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun", "transport", "warship", "cutter", "bombardShip", "fireShip", "carrier"];
+const mechanical: UnitKind[] = ["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun", "transport", "warship", "shipOfTheLine", "cutter", "bombardShip", "fireShip", "carrier"];
 
 describe("unit classes and effect targets", () => {
   it("explicitly classifies every catalog unit, including magic constructs and land siege engines", () => {

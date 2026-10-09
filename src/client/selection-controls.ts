@@ -1,5 +1,6 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../shared/types";
 import { unitPointerPosition } from './relations';
+import { isInCabin } from '../shared/ship-cabin';
 
 export type SelectionState = {
   selectedIds: Set<string>;
@@ -24,7 +25,7 @@ export function selectInScreenBox(
   additive: boolean,
   unitPosition:(unit:Unit)=>Point=unit=>unitPointerPosition(snapshot.units,unit),
 ): SelectionState {
-  const units = snapshot.units.filter((unit) => unit.owner === owner && isProjectedInside(unitPosition(unit), rect, project)).map((unit) => unit.id);
+  const units = snapshot.units.filter((unit) => unit.owner === owner && !isInCabin(unit) && isProjectedInside(unitPosition(unit), rect, project)).map((unit) => unit.id);
   if (units.length > 0) return applySelectionPick(previous, units, additive);
   const building = snapshot.buildings.find((candidate) => candidate.owner === owner && isProjectedInside(candidate, rect, project));
   return applySelectionPick(previous, building ? [building.id] : [], additive);
@@ -48,9 +49,9 @@ export function selectNearbySameKindUnits(
   additive: boolean,
 ): SelectionState {
   const anchor = snapshot.units.find((unit) => unit.id === anchorUnitId && unit.owner === owner);
-  if (!anchor) return previous;
+  if (!anchor || isInCabin(anchor)) return previous;
   const pickedIds = snapshot.units
-    .filter((unit) => unit.owner === owner && unit.kind === anchor.kind && distance(unit, anchor) <= radius)
+    .filter((unit) => unit.owner === owner && !isInCabin(unit) && unit.kind === anchor.kind && distance(unit, anchor) <= radius)
     .sort((a, b) => {
       if (a.id === anchor.id) return -1;
       if (b.id === anchor.id) return 1;

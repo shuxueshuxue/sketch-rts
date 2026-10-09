@@ -5,7 +5,7 @@ import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./comman
 import { isGameCommand } from "../command-schema";
 import type { GameCommand, UnitKind } from "../types";
 
-const mechanicalKinds: UnitKind[] = ["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun", "transport", "warship", "cutter", "bombardShip", "fireShip", "carrier"];
+const mechanicalKinds: UnitKind[] = ["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun", "transport", "warship", "shipOfTheLine", "cutter", "bombardShip", "fireShip", "carrier"];
 
 describe("mechanical command legality", () => {
   it.each(mechanicalKinds)("rejects medical healing and accepts worker repairs for %s", kind => {

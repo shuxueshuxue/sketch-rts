@@ -13,6 +13,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "aim") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attack" || command.type === "follow") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "stop" || command.type === "holdPosition") return isStringArray(command.unitIds);
+  if (command.type === "enterCabin" || command.type === "leaveCabin") return isStringArray(command.unitIds) && command.queued === undefined;
   if (command.type === "mine") return isStringArray(command.unitIds) && typeof command.resourceId === "string";
   if (command.type === "repair") return isStringArray(command.unitIds) && typeof command.buildingId === "string";
   if (command.type === "repairShip" || command.type === "repairUnit") return isStringArray(command.unitIds) && typeof command.targetId === "string";

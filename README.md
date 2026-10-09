@@ -4,12 +4,12 @@ A browser real-time strategy game built around physical land and sea combat. Gro
 
 [Play online](https://lexicalmathical.com/sketch-rts/) · [中文](docs/README.zh.md) · [Developer guide](docs/development.md)
 
-![Six current ship models with distinct rigs and deck layouts](docs/art/readme-ship-lineup.gif)
+![Ship models with distinct rigs and deck layouts](docs/art/readme-ship-lineup.gif)
 
 ## What makes it different
 
 - **Movement matters.** Ranged units aim before firing; moving beyond their aiming tolerance loses that preparation. Cavalry, melee troops and ranged units have different ways to approach a fight. Pre-aim a position to prepare an ambush.
-- **Ships have working decks.** Crew occupy space and can cross touching decks or walk between a ship and the shore. Fit cannons to compatible mounts, bring a broadside to bear, repair damaged parts with workers, or board and capture an unguarded ship. Cutters retain their own bow attack independently of mounted guns.
+- **Ships have working decks.** Crew occupy space and can cross touching decks or walk between a ship and the shore. Fit cannons to compatible mounts, bring a broadside to bear, repair damaged parts with workers, or board and capture an unguarded ship. Foot crew can take shelter in a cabin, giving up attacks and casting until they return to deck. The three-masted heavy broadside ship supports eight cannons; cutters retain their own bow attack independently of mounted guns.
 - **Equipment has a physical place.** Characters wear head, body and foot equipment and share four carrying slots between hands and back. Ship holds carry goods and heavy weapons. Shops can deliver purchases directly to a chosen nearby character or ship.
 - **Economy and terrain shape the match.** Grove and Ember have different rosters and technologies. Expand to gold mines, contest neutral camps and mercenary posts, and fight across islands, rivers and woodland. The named 2-, 4-, 6- and 8-player maps use reproducible generated layouts and ecological terrain fields.
 - **Humans and programs share the game.** Play solo or multiplayer, choose V5/V7/V8 opponents, or write a controller with the TypeScript SDK. Commands, replays and AI benchmarks use the same simulation.
