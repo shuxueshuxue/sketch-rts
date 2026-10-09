@@ -134,7 +134,7 @@ function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCom
   return ownCombat
     .filter((unit) => canReceiveHealing(unit, snapshot))
     .filter((unit) => unit.hp < unit.maxHp * 0.36)
-    .filter((unit) => unit.order.type === "idle" || unit.order.type === "attackMove")
+    .filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove")
     .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 420))
     .flatMap((unit) => {
       const recoveryPoint = woundedRecoveryPoint(snapshot, owner, unit, retreatPoint);
