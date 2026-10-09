@@ -141,7 +141,7 @@ type SpatialEntity = {
 };
 
 type SpatialIndex<T extends SpatialEntity> = {
-  team?: string;
+  team: string | undefined;
   cellSize: number;
   buckets: Map<number, T[]>;
   left: number;
