@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
+import { BUILDING_DEFS } from '../../shared/catalog';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
@@ -25,6 +26,25 @@ function miningRaid() {
 }
 
 describe('bootstrap_1 mining assignments', () => {
+  it('lets a settler construct the missing mining hall before redirecting its old hauling route', () => {
+    const game = sketchScene('colony-builder-before-migration').map('openClaims').replaceDefaults()
+      .player('us').player('foe').townHall('us', 500, 500).townHall('foe', 3500, 3500)
+      .playerState('us', { gold: BUILDING_DEFS.townHall.cost })
+      .goldMine('home', 788, 500, 4000).goldMine('colony', 1800, 500, 4000)
+      .worker('us', 1850, 500, { id: 'settler', order: { type: 'mine', resourceId: 'colony', phase: 'toMine', timer: 0 } })
+      .build().createGame();
+    const entries = runAiCommandEntriesFromScripts(snapshotGame(game), 'us', [
+      { id: 'colony', phase: 'economy', run: () => ({ type: 'build', unitId: 'settler', buildingKind: 'townHall', x: 1512, y: 500 }) },
+      miningAssignments,
+    ], { memory: createAiPolicyMemory(), teams: game.teams });
+    for (const entry of entries) issuePlayerCommand(game, 'us', entry.command);
+    for (let tick = 0; tick < 1800; tick++) stepGame(game);
+    expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'townHall'
+      && building.complete && building.x === 1512 && building.y === 500)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBe(BUILDING_DEFS.townHall.cost);
+    expect(game.units.find(unit => unit.id === 'settler')!.hp).toBeGreaterThan(0);
+  });
+
   it('recalls surviving miners and restores hauling after artillery destroys their hall', () => {
     const control = miningRaid(), candidate = miningRaid();
     const contexts = [control, candidate].map(game => ({ version: 'v2' as const, requestedVersion: 'v9' as const, memory: createAiPolicyMemory(), teams: game.teams }));

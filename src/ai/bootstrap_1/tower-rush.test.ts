@@ -12,7 +12,7 @@ import { bootstrapPolicyContext } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 import { mineGuardUnitIds } from './mine-defense';
 import { miningWorkforce } from './workforce';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 
 function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
@@ -48,6 +48,36 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it.each(['grove', 'ember'] as const)('funds a waiting %s front tower before an older unaffordable expansion', race => {
+    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    let scene = sketchScene('aged-front-construction').map('openClaims').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .playerState('us', { gold: BUILDING_DEFS.defenseTower.cost })
+      .townHall('us', 400, 600).goldMine('main', 688, 600, 10000)
+      .townHall('us', 900, 2000).goldMine('natural', 1188, 2000, 10000)
+      .goldMine('third', 1400, 2000, 10000).townHall('foe', 2200, 600, { id: 'target' })
+      .building('us', UNIT_DEFS[caster].trainedAt!, 400, 1000).farms('us', 9, 400, 3000)
+      .worker('us', 1300, 1000, { id: 'builder' }).worker('us', 1320, 1040, { id: 'helper' });
+    for (let index = 0; index < 5; index++) scene = scene
+      .worker('us', 440, 550 + index * 20, { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } })
+      .worker('us', 940, 1950 + index * 20, { order: { type: 'mine', resourceId: 'natural', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 20; index++) scene = scene.unit('us', caster,
+      1200 + index % 5 * 35, 550 + Math.floor(index / 5) * 35);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 2, general: { mode: 'attack', target: { x: 2200, y: 600 }, targetHallId: 'target' },
+      goalAges: { 'bases:5': { since: -6000, seen: 0 }, summonerTowerRush: { since: -2400, seen: 0 } } };
+    const ability = UNIT_DEFS[caster].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'summon')!;
+    for (const unit of game.units.filter(unit => unit.kind === caster)) issuePlayerCommand(game, 'us',
+      { type: 'cast', unitId: unit.id, ability, x: unit.x + 100, y: unit.y });
+    const context = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+    for (const command of bootstrapEconomy.run(snapshotGame(game), 'us', context) as GameCommand[]) issuePlayerCommand(game, 'us', command);
+    for (let tick = 0; tick < 1800; tick++) stepGame(game);
+    expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower'
+      && building.complete && building.x > 1000)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBe(BUILDING_DEFS.defenseTower.cost);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine')).toHaveLength(10);
+  });
+
   it('recruits the convoy worker while the ordinary builder is busy, before a forward tower job can start', () => {
     let scene = sketchScene('summoner-convoy-recruitment').replaceDefaults()
       .player('us', { race: 'ember', team: 'a' }).player('foe', { team: 'b' })
