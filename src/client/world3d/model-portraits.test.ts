@@ -3,13 +3,13 @@ import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
 import {worldModels,matchModelKeys} from './model-library';
-import {currentModelPortrait} from './model-portraits';
+import {currentModelPortrait,clearModelPortraits} from './model-portraits';
 import * as sailRig from './sail-rig';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 const fetcher=vi.fn(async(url:string)=>new Response(readFileSync(`public/art/world3d/${url.split('/art/world3d/')[1]!.split('?')[0]}`)));
 beforeAll(async()=>{vi.stubGlobal('fetch',fetcher);setScratchCanvasFactory((w,h)=>createCanvas(w,h) as unknown as HTMLCanvasElement);await worldModels.prepare(matchModelKeys,'match');});
 afterEach(()=>vi.restoreAllMocks());
-afterAll(()=>{worldModels.dispose();setScratchCanvasFactory(undefined);vi.unstubAllGlobals();});
+afterAll(()=>{clearModelPortraits();worldModels.dispose();setScratchCanvasFactory(undefined);vi.unstubAllGlobals();});
 it('fits every current ship and building in UI without a second resource request or a stale sprite',()=>{
   expect(fetcher).toHaveBeenCalledTimes(matchModelKeys.length);
   for(const key of matchModelKeys){const image=currentModelPortrait(key,'#65908c')!;expect(image,key).toBeTruthy();const data=image.getContext('2d')!.getImageData(0,0,256,256).data;
@@ -42,6 +42,7 @@ function sourceState(model:THREE.Object3D){
 }
 
 it('renders real GLB cloth morphs and default running ropes without changing or disposing the shared asset',()=>{
+  clearModelPortraits();
   const source=worldModels.portraitModel('ships/warship')!,before=sourceState(source),requestsBefore=fetcher.mock.calls.length;
   const sharedGeometry=new Set<THREE.BufferGeometry>(),sharedMaterials=new Set<THREE.Material>();
   source.traverse(object=>{if(object instanceof THREE.Mesh){sharedGeometry.add(object.geometry);for(const material of Array.isArray(object.material)?object.material:[object.material])sharedMaterials.add(material);}});
@@ -97,4 +98,17 @@ it('renders real GLB cloth morphs and default running ropes without changing or 
     reference?.dispose();
     for(const resource of [...sharedGeometry,...sharedMaterials])resource.removeEventListener('dispose',sharedDisposed);
   }
+});
+
+it('invalidates projections when a decoded model is replaced under the same asset key',()=>{
+  clearModelPortraits();
+  const source=worldModels.portraitModel('ships/warship')!,replacement=source.clone(true);
+  replacement.scale.x=1.8;
+  const getModel=vi.spyOn(worldModels,'portraitModel').mockReturnValue(source);
+  const original=currentModelPortrait('ships/warship','#65908c')!;
+  expect(currentModelPortrait('ships/warship','#65908c')).toBe(original);
+  getModel.mockReturnValue(replacement);
+  const refreshed=currentModelPortrait('ships/warship','#65908c')!;
+  expect(refreshed).not.toBe(original);expect(changedPixels(original,refreshed)).toBeGreaterThan(100);
+  getModel.mockReturnValue(undefined);expect(currentModelPortrait('ships/warship','#65908c')).toBeUndefined();
 });

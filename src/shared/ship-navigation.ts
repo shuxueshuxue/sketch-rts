@@ -5,7 +5,7 @@ import { detCos, detSin } from "./det-math";
 import { shipProfile, type Point } from "./ship-geometry";
 import { CELL_GROUND, isWalkable, sameGround, walkableGoal } from "./terrain";
 import type { GameMap, Unit } from "./types";
-import { convexHull, expandConvex, polygonPlanes, polygonTouchesCell } from './navigation-math';
+import { convexHull, expandConvex, polygonPlanes, polygonRadius, polygonTouchesCell } from './navigation-math';
 import preparedMasks from './generated/ship-navigation-masks.json';
 import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
 import { shipScale, DEFAULT_SHIP_SCALE } from './ship-geometry';
@@ -80,8 +80,11 @@ function outline(hull: readonly Point[], pose: ShipPose) {
 }
 /** Exact convex polygon / cell intersection, including edges crossing a cell without a vertex inside it. */
 function clearOutline(map: SeaMap, polygon: readonly Point[]) {
-  const xs = polygon.map(p => p.x), ys = polygon.map(p => p.y);
-  const left = Math.min(...xs), right = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
+  let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+  for (const point of polygon) {
+    left = Math.min(left, point.x); right = Math.max(right, point.x);
+    top = Math.min(top, point.y); bottom = Math.max(bottom, point.y);
+  }
   if (left < -1e-7 || top < -1e-7 || right > map.width + 1e-7 || bottom > map.height + 1e-7)
     return false;
   const terrain = map.terrain;
@@ -108,8 +111,18 @@ export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: Sh
   const hull = shipProfile(ship)!.hull;
   const turn = headingDifference(from.heading, to.heading);
   const curvature=curvedSegment(from,to);
-  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)))+(to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):curvature?1/Math.abs(curvature):0);
-  if (openWaterBox(map, Math.min(from.x, to.x) - radius, Math.min(from.y, to.y) - radius, Math.max(from.x, to.x) + radius, Math.max(from.y, to.y) + radius))
+  const hullRadius = polygonRadius(hull);
+  const lever = to.pivot ? Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y) : curvature ? 1/Math.abs(curvature) : 0;
+  const radius = hullRadius + lever;
+  // The center's circular arc lies within R Δθ² / 8 of its endpoint chord.
+  // A cruise turn needs this short corridor, rather than a whole turn circle.
+  // Inconsistent copied pivot metadata retains the conservative fallback.
+  const pivotArc = !to.pivot || [0,1].every(fraction => {
+    const at = shipPoseAt(from,to,fraction), endpoint = fraction ? to : from;
+    return Math.hypot(at.x-endpoint.x,at.y-endpoint.y)<1e-5;
+  });
+  const corridorRadius = pivotArc ? hullRadius + lever*turn*turn/8 + (lever ? 1e-5 : 0) : radius;
+  if (openWaterBox(map, Math.min(from.x, to.x) - corridorRadius, Math.min(from.y, to.y) - corridorRadius, Math.max(from.x, to.x) + corridorRadius, Math.max(from.y, to.y) + corridorRadius))
     return true;
   if(turn && (!hullFits(map,ship,from) || !hullFits(map,ship,to)))return false;
   // Subdivide by a geometric error bound, rather than vertex travel. Every
@@ -199,12 +212,13 @@ type NavGrid = {
 const grids = new WeakMap<object, Map<string, NavGrid>>();
 // Searches are synchronous. A generation stamp gives untouched states an
 // infinite cost without allocating and clearing a map-sized array per order.
-let search = { costs: new Float64Array(0), parents: new Int32Array(0), stamps: new Uint32Array(0), generation: 0 };
+let search = { costs: new Float64Array(0), parents: new Int32Array(0), stamps: new Uint32Array(0), trafficFits: new Int32Array(0), generation: 0 };
 function searchWorkspace(size: number) {
   if (search.costs.length < size)
-    search = { costs: new Float64Array(size), parents: new Int32Array(size), stamps: new Uint32Array(size), generation: 0 };
-  if (++search.generation === 0xffffffff) {
+    search = { costs: new Float64Array(size), parents: new Int32Array(size), stamps: new Uint32Array(size), trafficFits: new Int32Array(size), generation: 0 };
+  if (++search.generation === 0x7fffffff) {
     search.stamps.fill(0);
+    search.trafficFits.fill(0);
     search.generation = 1;
   }
   return search;
@@ -681,14 +695,16 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     return {forward:Math.max(performance.targetSpeed,performance.auxiliarySpeed),reverse:Math.min(limits.reverseSpeed,performance.auxiliarySpeed)};
   });
   const lattice = grid;
-  const trafficFits=new Int8Array(size);
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
   const fits = (id: number) => {
     if (!grid.fits[id])
       grid.fits[id] = maskFits(map, grid, id, grid.masks[id % DIRECTIONS]![0]!) ? 1 : -1;
     if(grid.fits[id]!==1)return false;
-    if(!trafficFits[id]){const at=pose(id);trafficFits[id]=trafficClear(at,at)?1:-1;}
-    return trafficFits[id]===1;
+    // Traffic changes between searches even on unchanged terrain. Signed
+    // generations retain no stale result, and avoid a map-sized allocation
+    // for every replan (or any traffic array on the direct-connector path).
+    if(trafficFits[id]!==generation && trafficFits[id]!==-generation){const at=pose(id);trafficFits[id]=trafficClear(at,at)?generation:-generation;}
+    return trafficFits[id]===generation;
   };
   const requested=goal.heading===undefined?undefined:{x:goal.x,y:goal.y,heading:goal.heading};
   const terrainTarget=requested && hullFits(map,ship,requested) ? requested : nearestShipPose(map,ship,goal);
@@ -712,7 +728,7 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     const departure=departureRoute(map,ship,target,trafficClear);
     if(departure)return {points:departure,partial:true};
   }
-  const workspace = searchWorkspace(size), { costs, parents: previous, stamps, generation } = workspace, frontier = new Frontier();
+  const workspace = searchWorkspace(size), { costs, parents: previous, stamps, trafficFits, generation } = workspace, frontier = new Frontier();
   const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
   const setCost = (id: number, value: number, parent: number) => { stamps[id] = generation; costs[id] = value; previous[id] = parent; };
   const prefixes=new Map<number,ShipPose[]>(),entrances=new Map<number,ShipPose[][]>();

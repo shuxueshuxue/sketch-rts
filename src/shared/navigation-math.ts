@@ -10,6 +10,17 @@ export type Plane = {
   max: number;
 };
 const planes = new WeakMap<readonly Point[], Plane[]>();
+const radii = new WeakMap<readonly Point[], number>();
+/** Local hull polygons are immutable. A new scale/profile receives a new
+ * polygon, so its conservative circumscribed radius cannot reuse old data. */
+export function polygonRadius(polygon: readonly Point[]) {
+  const cached = radii.get(polygon);
+  if (cached !== undefined) return cached;
+  let radius = 0;
+  for (const point of polygon) radius = Math.max(radius, Math.hypot(point.x, point.y));
+  radii.set(polygon, radius);
+  return radius;
+}
 export function polygonPlanes(polygon: readonly Point[]) {
   let result = planes.get(polygon);
   if (!result) {

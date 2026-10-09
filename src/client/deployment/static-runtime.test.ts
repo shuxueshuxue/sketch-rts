@@ -5,6 +5,32 @@ import { StaticSoloDeploymentRuntime } from "./static-runtime";
 const host: LocalUserProfile = { id: "host", name: "Host" };
 
 describe("static solo deployment runtime", () => {
+  it('releases abandoned matches and does not let an old adapter close a replacement', async () => {
+    const runtime = new StaticSoloDeploymentRuntime();
+    await runtime.createRoom({id: 'replace', host, mapId: 'bareDuel', humanCount: 1, aiCount: 1});
+    const previous = await runtime.startRoom('replace', host);
+    const replacement = runtime.connectRoom(previous.room, 'player', false, () => {});
+    expect(previous.adapter.updateToRenderTime()).toBe(false);
+    previous.adapter.close();
+    expect((await runtime.forfeitMatch('replace', host)).status).toBe('ended');
+    expect(replacement.adapter.updateToRenderTime()).toBe(false);
+    await runtime.createRoom({id: 'abandoned', host, mapId: 'bareDuel', humanCount: 1, aiCount: 1});
+    const abandoned = await runtime.startRoom('abandoned', host);
+    abandoned.adapter.close();
+    await expect(runtime.forfeitMatch('abandoned', host)).rejects.toThrow('not in a local match');
+  });
+
+  it('closes and releases every live local match during runtime teardown', async () => {
+    let now = 0;
+    const runtime = new StaticSoloDeploymentRuntime({now: () => now}), adapters = [];
+    for (const id of ['first', 'second']) {
+      await runtime.createRoom({id, host, mapId: 'bareDuel', humanCount: 1, aiCount: 1});
+      adapters.push((await runtime.startRoom(id, host)).adapter);
+    }
+    runtime.close();runtime.close();now = 1000;
+    expect(adapters.map(adapter => adapter.updateToRenderTime())).toEqual([false, false]);
+    for (const id of ['first', 'second']) await expect(runtime.forfeitMatch(id, host)).rejects.toThrow('not in a local match');
+  });
   it("keeps room browser data in a local registry", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
 

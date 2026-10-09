@@ -73,7 +73,10 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const curved=first.curvature!==undefined && !(points.length===1 && endGap<profile.length);
   const pathCurvature=first.curvature ?? 0;
   const arcAngle=2*Math.asin(clamp(Math.sqrt(squared)*pathCurvature/2,-1,1));
-  const tangent=first.heading-arcAngle*(1-projection);
+  // A straight segment's tangent belongs to its current endpoints. A yielded
+  // leg or a moving pursuit goal can replace the origin without replacing
+  // this waypoint's originally authored heading.
+  const tangent=curved && !pathCurvature ? Math.atan2(dy,dx) : first.heading-arcAngle*(1-projection);
   const crossTrack=-(ship.x-(origin.x+dx*projection))*detSin(tangent)+(ship.y-(origin.y+dy*projection))*detCos(tangent);
   const reference=curved ? tangent-Math.atan2(crossTrack,lookahead) : Math.atan2(cy,cx);
   // A firing station owns its weapon attitude. Collision sweeps below still
@@ -82,11 +85,15 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     : avoidanceCourse(ship,units,reference,motion.speed);
   // Once clear of traffic, join the next mark from here. Forcing the vessel
   // back onto the old centreline can add an unnecessary upwind S-turn.
-  if(wasAvoiding && !avoidance.active && !first.tack && !curved && !firing){
+  // A stationary fighting station keeps its planned approach through the
+  // occupied battery ring; an ordinary voyage or moving chase can rejoin.
+  const rejoinable=!curved || points.length===1 && (route.intent!=='pursuit' || motion.pursuit?.moving);
+  if(wasAvoiding && !avoidance.active && !first.tack && !pathCurvature && !firing && rejoinable){
     const direct=Math.atan2(first.y-ship.y,first.x-ship.x);
     const start={x:ship.x,y:ship.y,heading:motion.heading},turned={...start,heading:direct};
     if(hullPassageClear(map,ship,start,turned) && hullPassageClear(map,ship,turned,{...first,heading:direct})){
       route.legX=ship.x;route.legY=ship.y;
+      if(first.curvature===0)first.heading=direct;
       distance=Math.min(lookahead,Math.hypot(first.x-ship.x,first.y-ship.y));
       cx=distance*detCos(direct);cy=distance*detSin(direct);avoidance.heading=direct;
     }
@@ -115,7 +122,12 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   // A speed cap belongs to the entering segment. Brake before an arc entry,
   // with enough headroom for tracking correction as well as planned yaw.
   let alongDistance=0,geometrySpeed=Infinity,previousLimitPoint={x:ship.x,y:ship.y};
+  const speedHorizon=Math.max(motion.speed,targetSpeed)**2/(2*Math.max(1e-9,limits.acceleration));
   for(const point of points){
+    // Beyond this distance even a zero-speed segment cannot constrain the
+    // current drive or braking. Long sampled turn/tack routes need only scan
+    // their braking horizon, while retaining every cap that can matter now.
+    if(alongDistance>speedHorizon)break;
     const segmentLength=Math.hypot(point.x-previousLimitPoint.x,point.y-previousLimitPoint.y);
     const limitDistance=alongDistance+(point.curvature ? 0 : segmentLength);
     if(point.speedLimit!==undefined)geometrySpeed=Math.min(geometrySpeed,Math.sqrt(point.speedLimit**2+2*limits.acceleration*limitDistance));

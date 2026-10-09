@@ -28,6 +28,7 @@ describe('deterministic wind and sail performance', () => {
     expect(sailRig('transport')).toBe('lug');
     expect(sailRig('warship')).toBe('square');
     expect(sailRig('carrier')).toBe('square');
+    expect(sailRig('shipOfTheLine')).toBe('square');
     expect(getWind({ wind: { direction: 0, speed: -10 } }).speed).toBe(0);
   });
 
@@ -53,7 +54,7 @@ describe('deterministic wind and sail performance', () => {
     const lateen = ship('cutter'), square = ship('warship');
     expect(planned(lateen, Math.PI / 2).targetSpeed).toBeGreaterThan(planned(lateen, Math.PI).targetSpeed);
     expect(planned(square, Math.PI).targetSpeed).toBeGreaterThan(planned(square, Math.PI / 2).targetSpeed);
-    for (const kind of ['transport', 'cutter', 'warship', 'carrier', 'bombardShip', 'fireShip'] as const) {
+    for (const kind of ['transport', 'cutter', 'warship', 'carrier', 'bombardShip', 'fireShip', 'shipOfTheLine'] as const) {
       const unit = ship(kind);
       for (let degree = 0; degree <= 180; degree += 5) {
         const performance = planned(unit, degree * Math.PI / 180, 800);

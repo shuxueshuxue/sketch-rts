@@ -16,6 +16,10 @@ export class ResourcePanel {
   private selected:ResourcePhase='startup';
   private pending=false;
   private queued=false;
+  private frame:number|undefined;
+  private unsubscribe:()=>void;
+  private disposed=false;
+  private runs=new Set<()=>void>();
   private again:(()=>void)|undefined;
   renderer='';
   constructor(){
@@ -28,24 +32,28 @@ export class ResourcePanel {
     const label=document.createElement('summary');label.textContent=resourceText('查看资源大小与耗时','Resource sizes and timings');this.details.append(label,this.rows);this.rows.className='resource-rows';this.details.ontoggle=()=>this.update();
     this.retry.textContent=resourceText('重试','Retry');this.retry.hidden=true;this.retry.onclick=()=>this.again?.();
     card.append(this.close,this.title,this.tabs,this.progress,this.summary,this.stage,this.details,this.retry);document.body.append(this.root);
-    resources.subscribe(()=>{if(this.queued)return;this.queued=true;requestAnimationFrame(()=>{this.queued=false;this.update();});});
+    this.unsubscribe=resources.subscribe(()=>{if(this.queued||this.disposed)return;this.queued=true;this.frame=requestAnimationFrame(()=>{this.frame=undefined;this.queued=false;this.update();});});
   }
+  dispose(){if(this.disposed)return;this.disposed=true;this.unsubscribe();if(this.frame!==undefined)cancelAnimationFrame(this.frame);this.frame=undefined;this.again=undefined;this.pending=false;for(const finish of this.runs)finish();this.root.remove();}
   open(){if(this.pending)return;this.root.hidden=false;this.close.hidden=false;this.tabs.hidden=false;this.details.open=true;this.update();}
   async run(phase:ResourcePhase,title:string,task:()=>Promise<void>){
     // Keep the original caller suspended across retries, so startup and match
     // creation resume only after the same preparation has actually succeeded.
-    await new Promise<void>(resolve=>{
+    await new Promise<void>((resolve,reject)=>{
+      const cancel=()=>{this.runs.delete(cancel);reject(new DOMException('Resource panel was disposed','AbortError'));};
+      const finish=()=>{this.runs.delete(cancel);resolve();};this.runs.add(cancel);
       const attempt=async()=>{
+        if(this.disposed){cancel();return;}
         resources.phase=phase;this.selected=phase;this.pending=true;this.root.hidden=false;this.close.hidden=true;this.tabs.hidden=true;this.retry.hidden=true;this.details.open=false;this.stage.textContent=title;this.update();this.again=undefined;
-        try{await task();this.pending=false;this.root.hidden=true;resolve();}
-        catch(error){this.stage.textContent=`${resourceText('载入失败：','Loading failed: ')}${error instanceof Error?error.message:String(error)}`;this.retry.hidden=false;this.again=()=>void attempt();}
+        try{await task();this.pending=false;this.root.hidden=true;finish();}
+        catch(error){if(this.disposed){cancel();return;}this.stage.textContent=`${resourceText('载入失败：','Loading failed: ')}${error instanceof Error?error.message:String(error)}`;this.retry.hidden=false;this.again=()=>void attempt();}
       };
       void attempt();
     });
   }
   preparing(text:string){this.stage.textContent=text;}
   private update(){
-    if(this.root.hidden)return;
+    if(this.disposed||this.root.hidden)return;
     const state=resources.summary(this.selected);this.title.textContent=this.pending?`${resourceText('载入','Loading ')}${names[this.selected]}`:resourceText('资源记录','Resource report');
     if(state.unknown || state.total===0&&state.entries.length>0)this.progress.removeAttribute('value');else this.progress.value=state.total?Math.min(1,state.loaded/state.total):0;
     this.summary.textContent=state.entries.length?`${resourceSize(state.loaded)} / ${state.unknown?resourceText('总大小待确认','total pending'):resourceSize(state.total)} · ${state.ready}/${state.entries.length} ${resourceText('项','files')}${state.reused?` · ${resourceText('复用','reused')} ${resourceSize(state.reused)}`:''}${state.failed?` · ${state.failed} ${resourceText('项失败','failed')}`:''}`:resourceText('尚未进入此载入阶段','This phase has not started');
@@ -65,3 +73,4 @@ export class ResourcePanel {
 }
 let panel:ResourcePanel|undefined;
 export function resourcePanel(){return panel??=new ResourcePanel();}
+export function disposeResourcePanel(){panel?.dispose();panel=undefined;}

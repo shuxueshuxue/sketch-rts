@@ -7,11 +7,12 @@ vi.mock('three',async importOriginal=>{
   const actual=await importOriginal<typeof import('three')>();
   return{...actual,WebGLRenderer:class{
     shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};toneMapping=0;toneMappingExposure=1;
-    setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}
+    setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
   }};
 });
 import {World3DLayer} from './world-layer';
+import {worldModels} from './model-library';
 import {projectWorld} from './projection';
 import {createRoom,roomToGameSetup} from '../../shared/rooms';
 import {createGame} from '../../shared/sim';
@@ -163,5 +164,28 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(actors.filter(actor=>actor.count===2000)).toHaveLength(1);expect(layer.positions.size).toBe(2000);
     console.info(`2,000 troops: ${duration.toFixed(1)} ms CPU scene preparation, ${actors.length} actor mesh; GPU timing not measured`);
     layer.dispose();
+  });
+  it('updates mutable recorder snapshots on tick changes and same-tick array replacements',async()=>{
+    const {ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const replacement={...ship,id:'replacement-ship'};
+    frame.snapshot.units=[replacement];frame.snapshot.tick++;
+    layer.draw(frame);expect(layer.positions.has(ship.id)).toBe(false);expect(layer.positions.has(replacement.id)).toBe(true);
+    frame.snapshot.units=[{...replacement,id:'same-tick-ship'}];layer.draw(frame);
+    expect(layer.positions.has(replacement.id)).toBe(false);expect(layer.positions.has('same-tick-ship')).toBe(true);
+    layer.dispose();
+  });
+  it('releases owned scene references and never destroys models shared by a second layer',async()=>{
+    const {frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const source=worldModels.portraitModel('ships/warship')!,sharedDispose=vi.fn();
+    source.traverse(object=>{if(object instanceof Mesh){object.geometry.addEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.addEventListener('dispose',sharedDispose);}});
+    const scene=gpu.scene!;layer.dispose();layer.dispose();
+    expect(scene.children).toHaveLength(0);expect(sharedDispose).not.toHaveBeenCalled();
+    for(const key of ['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
+    expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
+    expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
+    layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();
+    const second=World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext);
+    await second.prepare(frame.snapshot,'home');second.draw(frame);expect(second.positions.size).toBeGreaterThan(0);second.dispose();
+    source.traverse(object=>{if(object instanceof Mesh){object.geometry.removeEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.removeEventListener('dispose',sharedDispose);}});
   });
 });

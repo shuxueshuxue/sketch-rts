@@ -26,7 +26,7 @@ function move(game: Game, unit: Unit, goal: Point) {
 
 /** Measure visible movement after admission through the actual command path. */
 function observe(game: Game, ship: Unit, duration: number, goal?: Point, beforeStep?: (tick: number) => void) {
-  const metrics = { travel: 0, totalYaw: 0, yawChanges: 0, rapidTurnReversals: 0, stops: 0, stationaryTurns: 0, replans: 0, reverseTicks: 0, activeTackChanges: 0, firstSecondTravel: 0 };
+  const metrics = { travel: 0, totalYaw: 0, yawChanges: 0, turnReversals: 0, rapidTurnReversals: 0, stops: 0, stationaryTurns: 0, replans: 0, reverseTicks: 0, activeTackChanges: 0, firstSecondTravel: 0 };
   let lastYawSign = 0, lastTackSide = 0, moving = false, previousRoute = ship.sailing!.route;
   let turnStarted = 0, turnAngle = 0;
   for (let tick = 0; tick < seconds(duration); tick++) {
@@ -39,6 +39,7 @@ function observe(game: Game, ship: Unit, duration: number, goal?: Point, beforeS
     const sign = Math.abs(yaw) * SIM_TICKS_PER_SECOND > .01 ? Math.sign(yaw) : 0;
     if (sign && lastYawSign && sign !== lastYawSign) {
       metrics.yawChanges++;
+      if (Math.abs(turnAngle) > Math.PI / 120) metrics.turnReversals++;
       if (tick - turnStarted < seconds(2) && Math.abs(turnAngle) > Math.PI / 120) metrics.rapidTurnReversals++;
       turnStarted = tick; turnAngle = 0;
     }
@@ -63,6 +64,74 @@ function observe(game: Game, ship: Unit, duration: number, goal?: Point, beforeS
 }
 
 describe('observable ship voyage quality', () => {
+  it('preserves mixed-convoy progress and turn quality through the real weather boundary', () => {
+    const game = sea(Math.PI / 2);
+    game.map = { ...game.map, width: 16384, height: 16384,
+      terrain: { cols: 256, rows: 256, cell: 64, cells: '~'.repeat(256 * 256) } };
+    const fleet = Array.from({ length: 6 }, (_, index) => game.spawnUnit('player',
+      index % 3 === 0 ? 'shipOfTheLine' : index % 3 === 1 ? 'warship' : 'transport',
+      2200 - (index % 2) * 380, 5000 + Math.floor(index / 2) * 400));
+    const goals = fleet.map(ship => ({ x: ship.x + 5000, y: ship.y }));
+    // The production weather update, not an injected wind direction, changes
+    // this convoy from reaching to beating ten seconds into the voyage.
+    game.tick = WIND_CHANGE_INTERVAL_TICKS - seconds(10);
+    fleet.forEach((ship, index) => move(game, ship, goals[index]!));
+    const turns = fleet.map(ship => ({ heading: ship.sailing!.heading, yaw: 0 }));
+    const recordTurns = () => fleet.forEach((ship, index) => {
+      const state = turns[index]!;
+      state.yaw += Math.abs(headingDifference(state.heading, ship.sailing!.heading));
+      state.heading = ship.sailing!.heading;
+    });
+    const metrics = observe(game, fleet[1]!, 180, undefined, tick => {
+      recordTurns();
+      if (tick % 5) return;
+      for (const ship of fleet) expect(hullFits(game.map, ship)).toBe(true);
+      for (let a = 0; a < fleet.length; a++) for (let b = a + 1; b < fleet.length; b++) {
+        expect(hullContact(fleet[a]!, fleet[b]!)?.overlap ?? 0).toBeLessThan(.1);
+      }
+    });
+    recordTurns();
+    expect(game.map.wind!.changedAtTick).toBe(WIND_CHANGE_INTERVAL_TICKS);
+    // Measured before this change with the same six hulls and real weather.
+    // The rear heavy ship's low windward progress remains a known problem;
+    // these floors guard baseline behavior without claiming it was repaired.
+    const baselineProgress = [.4532, .4298, 1, .0652, .8704, 1];
+    const baselineYawDegrees = [116.23, 378.34, 146.51, 250.55, 219.03, 369.66];
+    fleet.forEach((ship, index) => {
+      const goal = goals[index]!;
+      expect(1 - Math.hypot(ship.x - goal.x, ship.y - goal.y) / 5000, ship.id)
+        .toBeGreaterThanOrEqual(baselineProgress[index]! - .015);
+      const baselineYaw = baselineYawDegrees[index]!;
+      expect(turns[index]!.yaw * 180 / Math.PI, ship.id).toBeLessThan(baselineYaw + Math.max(30, baselineYaw * .2));
+    });
+    // A slower rig can lead a faster follower along the same beat. Count
+    // visible turn reversals of any duration, including ten-second S-turns.
+    expect(metrics.turnReversals).toBeLessThanOrEqual(8);
+  });
+
+  it('brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull', () => {
+    const game = sea(Math.PI / 2), target = game.spawnUnit('enemy', 'shipOfTheLine', 6000, 6200);
+    game.map = { ...game.map, width: 16384, height: 16384,
+      terrain: { cols: 256, rows: 256, cell: 64, cells: '~'.repeat(256 * 256) } };
+    target.sailing!.heading = Math.PI; target.invulnerable = true;
+    target.order = { type: 'hold', x: target.x, y: target.y };
+    const fleet = Array.from({ length: 6 }, (_, index) => game.spawnUnit('player', 'warship',
+      3700 - (index % 2) * 330, 5300 + Math.floor(index / 2) * 450));
+    for (const ship of fleet) {
+      ship.invulnerable = true;
+      issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: target.id });
+    }
+    const fired = new Set<string>();
+    for (let tick = 0; tick < seconds(75) && fired.size < fleet.length; tick++) {
+      stepGame(game);
+      for (const projectile of game.projectiles) if (fleet.some(ship => ship.id === projectile.attackerId)) fired.add(projectile.attackerId!);
+      if (tick % 5 === 0) for (let a = 0; a < game.units.length; a++) for (let b = a + 1; b < game.units.length; b++) {
+        expect(hullContact(game.units[a]!, game.units[b]!)?.overlap ?? 0).toBeLessThan(.1);
+      }
+    }
+    expect(fleet.filter(ship => !fired.has(ship.id)).map(ship => ship.id)).toEqual([]);
+  });
+
   for (const kind of kinds) it(`${kind} finishes a short oblique command instead of orbiting the point`, () => {
     const game = sea(Math.PI / 3), ship = game.spawnUnit('player', kind, 2400, 4000);
     const goal = { x: 2450, y: 4000 + Math.sqrt(3) * 50 };
@@ -154,6 +223,47 @@ describe('observable ship voyage quality', () => {
     const metrics = observe(game, ship, 100, goal);
     expect(ship.order.type).toBe('idle'); expect(Math.hypot(ship.x - goal.x, ship.y - goal.y)).toBeLessThan(1);
     expect(metrics.totalYaw).toBeLessThan(.01); expect(metrics.stops).toBe(0);
+  });
+
+  it('rejoins a clear straight cruise leg from the yielded position instead of steering back to the old lane', () => {
+    const game = sea(Math.PI / 2), ship = game.spawnUnit('player', 'warship', 1800, 2050), goal = { x: 3500, y: 1800 };
+    move(game, ship, goal);
+    ship.sailing!.speed = 30;
+    ship.sailing!.sail = { angle: 0, billow: 0, set: 1, mode: 'sail' };
+    ship.sailing!.route = {
+      goalX: goal.x, goalY: goal.y, points: [{ ...goal, heading: 0, curvature: 0 }], end: goal,
+      legX: 1800, legY: 1800, startX: 1800, startY: 1800, cruise: true,
+      avoidHeading: .3, avoidBaseHeading: 0, avoidTargetId: 'already-passed', avoidTicks: 1,
+    };
+    stepGame(game);
+    expect(ship.sailing!.route!.legY).toBe(2050);
+    expect(ship.sailing!.route!.points[0]!.heading).toBeCloseTo(Math.atan2(-250, 1700), 8);
+    const metrics = observe(game, ship, 70, goal);
+    expect(ship.order.type).toBe('idle');
+    expect(metrics.travel).toBeLessThan(1800);
+    expect(metrics.totalYaw).toBeLessThan(.4);
+    expect(metrics.rapidTurnReversals).toBe(0);
+  });
+
+  it('retains the entering tangent when a straight cruise segment leads into a described turn', () => {
+    const game = sea(Math.PI / 2), ship = game.spawnUnit('player', 'warship', 1800, 2050), goal = { x: 3400, y: 2800 };
+    move(game, ship, goal);
+    const arc = Array.from({ length: 18 }, (_, index) => {
+      const heading = (index+1)*Math.PI/36;
+      return { x: 3200+200*Math.sin(heading), y: 1800+200*(1-Math.cos(heading)), heading, curvature: 1/200, speedLimit: 40 };
+    });
+    ship.sailing!.route = {
+      goalX: goal.x, goalY: goal.y, points: [{ x: 3200, y: 1800, heading: 0, curvature: 0, speedLimit: 40 }, ...arc,
+        { ...goal, heading: Math.PI/2, curvature: 0 }], end: goal,
+      legX: 1800, legY: 1800, startX: 1800, startY: 1800, cruise: true,
+      avoidHeading: .3, avoidBaseHeading: 0, avoidTargetId: 'already-passed', avoidTicks: 1,
+    };
+    stepGame(game);
+    expect(ship.sailing!.route!.legY).toBe(1800);
+    expect(ship.sailing!.route!.points[0]!.heading).toBe(0);
+    const metrics = observe(game, ship, 100, goal);
+    expect(ship.order.type).toBe('idle'); expect(metrics.totalYaw).toBeLessThan(Math.PI*1.5);
+    expect(metrics.travel).toBeLessThan(2800);
   });
 
   it('follows a moving leader and settles without circling when the leader stops', () => {

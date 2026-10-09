@@ -2672,11 +2672,14 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
 }
 
 function updateWorldEffects(game: Game) {
+  if (game.effects.length === 0) return;
+  let expired = false;
   for (const effect of game.effects) {
     applyWorldEffectTick(game, effect);
     effect.remaining -= 1;
+    expired ||= !(effect.remaining > 0);
   }
-  game.effects = game.effects.filter((effect) => effect.remaining > 0);
+  if (expired) game.effects = game.effects.filter((effect) => effect.remaining > 0);
 }
 
 function applyWorldEffectTick(game: Game, effect: WorldEffect) {
@@ -2698,6 +2701,7 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
 }
 
 function updateProjectiles(game: Game) {
+  if (game.projectiles.length === 0) return;
   const pending: Projectile[] = [];
   for (const projectile of game.projectiles) {
     projectile.remaining -= 1;
@@ -2754,7 +2758,11 @@ function updateUnitStatusEffects(game: Game) {
     if (unit.effects.length === 0) continue;
     // Every status observes the same instant. A poison tick must not see a
     // one-tick ward differently just because that ward was inserted later.
-    for (const effect of unit.effects) effect.remaining -= 1;
+    let expired = false;
+    for (const effect of unit.effects) {
+      effect.remaining -= 1;
+      expired ||= !(effect.remaining > 0);
+    }
     for (const effect of unit.effects) {
       // Poison bites once a second (see @@@creep-trait-numbers), for its biter while it lives.
       if (effect.type === "poison" && effect.remaining % 20 === 0 && unit.hp > 0) {
@@ -2763,7 +2771,7 @@ function updateUnitStatusEffects(game: Game) {
         applyDamage(game, attacker, unit, POISON_DAMAGE, undefined, undefined, 0, DAMAGE_PROFILES.POISON, false, true);
       }
     }
-    unit.effects = unit.effects.filter((effect) => effect.remaining > 0);
+    if (expired) unit.effects = unit.effects.filter((effect) => effect.remaining > 0);
   }
 }
 
