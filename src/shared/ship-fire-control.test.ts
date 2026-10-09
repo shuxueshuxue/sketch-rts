@@ -87,6 +87,72 @@ describe('mounted firing headings', () => {
     expect(checked).toBe(0);
   });
 
+  it('reuses identical lane queries only within one selection, then observes a moved friendly hull', () => {
+    const {ship,item,items}=battery('warship','shipCannon'),target={x:1300,y:1000};
+    const blocker=createUnit('ally','player','transport',1220,1000);
+    blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
+    const select=()=>{
+      const queried=new Set<number>();
+      const heading=bestFiringHeading({items},ship,target,0,(gun,point,candidate)=>{
+        expect(gun).toBe(item);
+        expect(queried.has(candidate)).toBe(false);queried.add(candidate);
+        const posed={...ship,sailing:{...ship.sailing!,heading:candidate}};
+        return mountedFireLaneClear(posed,gun,point,[blocker]);
+      });
+      expect(queried.size).toBeGreaterThan(0);
+      return heading;
+    };
+    expect(select()).toBe(ship.sailing!.heading);
+    blocker.y+=300;
+    const heading=select(),posed={...ship,sailing:{...ship.sailing!,heading}};
+    expect(canFire(ship,item,target,heading)).toBe(true);
+    expect(mountedFireLaneClear(posed,item,target,[blocker])).toBe(true);
+    expect(heading).not.toBe(ship.sailing!.heading);
+  });
+
+  it('selects legal shots from frozen moving batteries without mutating the policy inputs', () => {
+    const freeze = <T>(value: T): T => {
+      if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+        for (const nested of Object.values(value)) freeze(nested);
+        Object.freeze(value);
+      }
+      return value;
+    };
+    for (const velocity of [0, 1e-8, 1e-7, 1.00000001e-7, 45]) {
+      const { ship } = battery('shipOfTheLine', 'shipCannon');
+      ship.sailing!.heading = 0;
+      const items: WorldItem[] = shipMounts(ship).map((mount, index) => ({
+        id: `gun-${index}`, kind: 'shipCannon', x: ship.x, y: ship.y,
+        shipId: ship.id, mountId: mount.id, durability: SHIP_WEAPONS.shipCannon.hp,
+      }));
+      const target = createUnit('target', 'enemy', 'transport', 1280, 1170);
+      target.sailing = { heading: .4, speed: velocity, load: 0, balance: 0, velocityX: velocity, velocityY: 0 };
+      const snapshot = { items, units: [ship, target] }, original = JSON.stringify(snapshot);
+      freeze(snapshot);
+      const queries = new Set<string>();
+      const policy = (gun: WorldItem, point: { x: number; y: number }, candidate: number) => {
+        expect(Object.isFrozen(gun)).toBe(true);
+        const key = JSON.stringify([gun.id, point.x, point.y, candidate]);
+        expect(queries.has(key)).toBe(false); queries.add(key);
+        const posed = { ...ship, sailing: { ...ship.sailing!, heading: candidate } };
+        const pose = mountedWeaponPose(posed, gun)!;
+        expect(shipGunCanAim(posed, gun, point)).toBe(true);
+        expect(Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y)).toBeLessThanOrEqual(SHIP_WEAPONS.shipCannon.range);
+        freeze(point);
+        return mountedFireLaneClear(posed, gun, point, []);
+      };
+      const heading = bestFiringHeading(snapshot, ship, target, Math.PI / 36, policy);
+      expect(queries.size).toBeGreaterThan(0);
+      const posed = { ...ship, sailing: { ...ship.sailing!, heading } };
+      expect(items.some(gun => {
+        const point = mountedTargetPoint(snapshot, posed, gun, target), pose = mountedWeaponPose(posed, gun)!;
+        return shipGunCanAim(posed, gun, point)
+          && Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y) <= SHIP_WEAPONS.shipCannon.range;
+      })).toBe(true);
+      expect(JSON.stringify(snapshot)).toBe(original);
+    }
+  });
+
   it('leads a receding hull for the actual finite flight instead of ending at its old stern', () => {
     const target = createUnit('target', 'enemy', 'transport', 400, 0);
     target.sailing = { heading: 0, speed: 60, load: 0, balance: 0, velocityX: 60, velocityY: 0 };

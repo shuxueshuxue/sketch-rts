@@ -33,6 +33,20 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
 };
 /** Bow guns traverse ±30°; broadside guns traverse ±35° around their own side. */
 export function shipMounts(ship: Unit) {
+    const profile=shipProfile(ship);
+    if(!profile)return [];
+    let mounts=mountProfiles.get(profile);
+    if(!mounts){
+        const computed=computeShipMounts(ship);
+        for(const mount of computed){Object.freeze(mount.accepts);Object.freeze(mount);}
+        mounts=Object.freeze(computed);mountProfiles.set(profile,mounts);
+    }
+    return mounts;
+}
+// Local profiles are immutable and replaced when kind, scale or fittings
+// change. Posed hulls share them, so traversing guns reuse the same catalogue.
+const mountProfiles=new WeakMap<NonNullable<ReturnType<typeof shipProfile>>,Readonly<ReturnType<typeof computeShipMounts>>>();
+function computeShipMounts(ship: Unit) {
     const p = shipProfile(ship);
     if (!p)
         return [];
@@ -68,6 +82,8 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
 }
 /** Bring a working gun into its arc with the least hull rotation. A gun
  * already able to fire never gives up its shot just to align a larger battery. */
+/** A synchronous, deterministic read-only lane query. Selection may reuse,
+ * omit or reorder identical queries when a candidate cannot win. */
 export type MountedShotClear = (item: WorldItem, point: Point, heading: number) => boolean;
 export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, point: StrikeTarget, arcMargin = 0, shotClear?: MountedShotClear) {
     const weapons=installedWeapons(snapshot,ship).filter(item=>(item.durability ?? 1)>0);
@@ -83,27 +99,38 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
     };
     if(!weapons.some(possible))return heading;
     const reaches=new Map(weapons.map(item=>{const pose=mountedWeaponPose(ship,item)!;return[item.id,Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y)];}));
-    const predictions=new Map<string,Map<number,StrikeTarget>>();
+    const predictions=new Map<string,Map<number,{target:StrikeTarget;point?:Point;eligible?:boolean;clear?:boolean}>>();
     const targetAt=(candidate:number,item:WorldItem)=>{
         let cache=predictions.get(item.id);if(!cache){cache=new Map();predictions.set(item.id,cache);}
-        const cached=cache.get(candidate);if(cached)return cached;
+        const cached=cache.get(candidate);if(cached)return cached.target;
         const mount=mounts.get(item.mountId!)!,c=detCos(candidate),s=detSin(candidate);
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-        const predicted=ballisticTarget(pivot,point,velocity,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,predicted);return predicted;
+        const predicted=ballisticTarget(pivot,point,velocity,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,{target:predicted});return predicted;
     };
     const canFire=(candidate:number,item:WorldItem,checkLane=true)=>{
         const mount=mounts.get(item.mountId!)!;if(!mount)return false;
-        const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
-        const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-        const target=strikePoint(pivot,targetAt(candidate,item)),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
-        return gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
-          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7
-          && (!checkLane || !shotClear || shotClear(item,target,candidate));
+        const predicted=targetAt(candidate,item),check=predictions.get(item.id)!.get(candidate)!;
+        // Boundaries, admission and battery counts ask the same question.
+        // Cache only within this fixed pose/target/blocker selection; no
+        // verdict survives a movement step or a later heading selection.
+        if(check.eligible===undefined){
+            const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
+            const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
+            const target=strikePoint(pivot,predicted),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
+            check.point=target;
+            check.eligible=gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
+              && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7;
+        }
+        if(!check.eligible)return false;
+        if(!checkLane || !shotClear)return true;
+        return check.clear ??= shotClear(item,check.point!,candidate);
     };
-    const currentCount=weapons.filter(item=>canFire(heading,item)).length;
+    const batteryCount=(candidate:number)=>{let count=0;for(const gun of weapons)if(canFire(candidate,gun))count++;return count;};
+    const currentCount=batteryCount(heading);
     if(currentCount===weapons.length)return heading;
     const nearbyBattery=Math.PI/18;
-    const candidates=currentCount?[{heading,turn:0,count:currentCount}]:[];
+    const candidates:{heading:number;turn:number;count?:number}[]=currentCount?[{heading,turn:0,count:currentCount}]:[];
+    let nearestTurn=currentCount?0:Infinity;
     const intervals=[-Math.PI,0,Math.PI];
     for(const item of weapons){
         const mount=mounts.get(item.mountId!)!;
@@ -123,7 +150,18 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
             // accounting for pivot travel and a one-tick change in its lead.
             if(bearing>Math.max(0,mount.halfArc-arcMargin)+nearbyBattery+angleChange+1e-7)continue;
         }
-        const boundaries=(at:number)=>firingBoundaryHeadings(ship,mount,targetAt(at,item),mount.bearing,Math.max(0,mount.halfArc-arcMargin),def.weapon.minRange ?? 0,veteranWeaponRange(ship,def.range));
+        // This selection fixes the target shape/heading and mount. Ballistic
+        // prediction only translates x/y, often to the same discrete flight
+        // time. Keep signed zero distinct; future turning predictions would
+        // also need their heading in this bounded, call-local cache key.
+        const boundaryCache:{x:number;y:number;values:number[]}[]=[];
+        const boundaries=(at:number)=>{
+            const predicted=targetAt(at,item);
+            for(const cached of boundaryCache)if(Object.is(cached.x,predicted.x) && Object.is(cached.y,predicted.y))return cached.values;
+            const values=firingBoundaryHeadings(ship,mount,predicted,mount.bearing,Math.max(0,mount.halfArc-arcMargin),def.weapon.minRange ?? 0,veteranWeaponRange(ship,def.range));
+            if(boundaryCache.length===32)boundaryCache.shift();
+            boundaryCache.push({x:predicted.x,y:predicted.y,values});return values;
+        };
         for(const boundary of boundaries(heading)){
             let at=heading+headingDifference(heading,boundary);
             // Rotating a bow pivot changes the exact flight duration. Refine
@@ -139,12 +177,21 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
                 if(Math.abs(difference)<1e-10)break;
             }
             if(shotClear)intervals.push(headingDifference(heading,at));
+            // A farther accepted shot cannot enter the final battery window,
+            // whose nearest turn only decreases. Preserve boundary refinement
+            // and interval collection; reject only when all three possible
+            // exact heading inputs are already dominated.
+            const window=nearestTurn+nearbyBattery;
+            if(Math.abs(headingDifference(heading,at))>window
+              && Math.abs(headingDifference(heading,at-1e-8))>window
+              && Math.abs(headingDifference(heading,at+1e-8))>window)continue;
             // A range boundary may round to the wrong side of the exact shot
             // check. Test its immediate interiors, never widen weapon range.
             for(const candidate of canFire(at,item)?[at]:[at-1e-8,at+1e-8]){
-                if(!canFire(candidate,item))continue;
-                const count=weapons.filter(gun=>canFire(candidate,gun)).length;
-                candidates.push({heading:candidate,turn:Math.abs(headingDifference(heading,candidate)),count});
+                const turn=Math.abs(headingDifference(heading,candidate));
+                if(turn>nearestTurn+nearbyBattery || !canFire(candidate,item))continue;
+                candidates.push({heading:candidate,turn});
+                nearestTurn=Math.min(nearestTurn,turn);
             }
         }
     }
@@ -173,8 +220,7 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
                     const middle=(blocked+clear)/2;
                     if(weapons.some(gun=>canFire(heading+middle,gun)))clear=middle;else blocked=middle;
                 }
-                const count=weapons.filter(gun=>canFire(heading+clear,gun)).length;
-                candidates.push({heading:heading+clear,turn:Math.abs(clear),count});
+                candidates.push({heading:heading+clear,turn:Math.abs(clear)});
                 bestTurn=Math.min(bestTurn,Math.abs(clear));
             }
             // Inspect every nearer interval once before spending the finite
@@ -182,8 +228,19 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
             if(candidates.length)break;
         }
     }
-    const nearest=Math.min(...candidates.map(candidate=>candidate.turn));
-    return candidates.filter(candidate=>candidate.turn<=nearest+nearbyBattery).sort((a,b)=>b.count-a.count||a.turn-b.turn)[0]?.heading ?? heading;
+    let nearest=Infinity;
+    for(const candidate of candidates)nearest=Math.min(nearest,candidate.turn);
+    // Score batteries only after the nearest valid shot fixes the final
+    // window. An earlier, farther shot cannot become the selected battery.
+    // Stable iteration retains the first candidate on equal count and turn.
+    let winner:{heading:number;turn:number;count:number}|undefined;
+    for(const candidate of candidates){
+        if(candidate.turn>nearest+nearbyBattery)continue;
+        if(winner?.count===weapons.length && candidate.turn>=winner.turn)continue;
+        const count=candidate.count ?? batteryCount(candidate.heading);
+        if(!winner || count>winner.count || count===winner.count && candidate.turn<winner.turn)winner={...candidate,count};
+    }
+    return winner?.heading ?? heading;
 }
 export function isShipEquipment(kind: WorldItem['kind']): kind is ShipEquipmentKind { return kind in SHIP_WEAPONS; }
 export function installedWeapons(snapshot: {
@@ -210,7 +267,7 @@ export function initializeShipEquipment(snapshot: GameSnapshot) {
             snapshot.items.push(item);
             // Profiles cache by fittings identity; each new weapon must also
             // become an actual deck obstacle immediately after construction.
-            ship.fittings = [...ship.fittings, { ...mount, id: item.id }];
+            ship.fittings = [...ship.fittings, { ...mount, accepts:[...mount.accepts], id: item.id }];
         }
     }
 }
@@ -243,7 +300,7 @@ export function mountedFireLaneClear(ship: Unit, item: WorldItem, point: Point, 
     return shipFireLaneClear(muzzle,point,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,blockers,ship.id);
 }
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
-    ship.fittings = installedWeapons(snapshot, ship).map(item => ({ ...shipMounts(ship).find(mount => mount.id === item.mountId)!, id: item.id }));
+    ship.fittings = installedWeapons(snapshot, ship).map(item => {const mount=shipMounts(ship).find(mount => mount.id === item.mountId)!;return { ...mount,accepts:[...mount.accepts],id:item.id };});
 }
 export function shipNeedsRepair(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { const max = shipPartMax(ship); return ship.hp < ship.maxHp || (ship.shipParts?.rigging ?? max.rigging) < max.rigging || (ship.shipParts?.rudder ?? max.rudder) < max.rudder || (ship.shipParts?.cabin ?? max.cabin) < max.cabin || installedWeapons(snapshot, ship).some(item => (item.durability ?? SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp) < SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp); }
 export function repairShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, amount: number) {

@@ -79,11 +79,14 @@ export function firingBoundaryHeadings(origin: Point, mount: Point, target: Stri
     const offset = Math.acos(Math.max(-1, Math.min(1, cosine)));
     headings.push(center - offset, center + offset);
   };
+  const arcs = [bearing - halfArc, bearing + halfArc].map(angle => {
+    const c = detCos(angle), s = detSin(angle);
+    return { c, s, projection: mount.x * c + mount.y * s };
+  });
   const pointBoundaries = (point: Point, radius = 0) => {
     const dx = point.x - origin.x, dy = point.y - origin.y;
     const distance = Math.hypot(dx, dy), direction = Math.atan2(dy, dx);
-    for (const angle of [bearing - halfArc, bearing + halfArc]) {
-      const c = detCos(angle), s = detSin(angle), projection = mount.x * c + mount.y * s;
+    for (const {c,s,projection} of arcs) {
       const discriminant = projection * projection + distance * distance - arm * arm;
       if (discriminant < -1e-7) continue;
       const root = Math.sqrt(Math.max(0, discriminant));
