@@ -5,11 +5,34 @@ import { snapshotGame, stepGame } from '../src/shared/sim';
 import { UNIT_DEFS } from '../src/shared/catalog';
 import { xpStarThresholds } from '../src/shared/unit-value';
 import { createAiMemoryProvider } from '../src/ai/planner-context';
-import { createBootstrapCommandPlanner } from './bootstrap_1-planner';
+import { createBootstrapCommandPlanner, frozenPolicyModules } from './bootstrap_1-planner';
+import { createGame } from '../src/shared/sim';
+import { legalBuildPointNear } from '../src/ai/policy/build-layout';
 import { bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runBenchmarkParallelMatch } from '../src/ai/bootstrap_1/worker';
 
 describe('bootstrap_1 historical opponents on the current engine', () => {
+  it('gives the archived planner the same building obstruction field and updates it after native construction', async () => {
+    const game = createGame('pineshade', { players: ['us', 'foe'], aiPlayers: [] });
+    const historical = await frozenPolicyModules();
+    const hall = game.buildings.find(building => building.owner === 'us')!;
+    expect(historical.isOpenGround(game.map, hall.x, hall.y)).toBe(true);
+    const planner = await createBootstrapCommandPlanner(createAiMemoryProvider());
+    const plan = () => planner({ game, snapshot: { ...snapshotGame(game), map: game.map }, owner: 'us',
+      agent: { version: 'v5', controller: 'external-agent', team: 'us' }, source: 'external-agent',
+      plannerOrigin: 'local-command-planner', teams: game.teams });
+    plan();
+    expect(historical.isOpenGround(game.map, hall.x, hall.y)).toBe(false);
+    const worker = game.units.find(unit => unit.owner === 'us' && unit.kind === 'worker')!;
+    const point = legalBuildPointNear(snapshotGame(game), 'farm', { x: hall.x + 200, y: hall.y + 100 });
+    issueCommandFrame(game, [{ playerId: 'us', command: { type: 'build', unitId: worker.id, buildingKind: 'farm', ...point } }]);
+    for (let tick = 0; tick < 1200; tick++) stepGame(game);
+    const farm = game.buildings.find(building => building.kind === 'farm')!;
+    expect(farm.complete).toBe(true);
+    plan();
+    expect(historical.isOpenGround(game.map, farm.x, farm.y)).toBe(false);
+  }, 15000);
+
   it.each(['v5', 'v7', 'v8'] as const)('%s heals biological fighters through the real SDK in both races', async version => {
     for (const race of ['grove', 'ember'] as const) {
       const game = sketchScene('frozen-medical-targets').replaceDefaults()
