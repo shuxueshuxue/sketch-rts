@@ -84,8 +84,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
     ];
-    if (script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery,
-      version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : script];
+    if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery, { ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, script];
