@@ -175,7 +175,8 @@ function footholdWant(snapshot: GameSnapshot, owner: PlayerId): NavalWant | unde
 // The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
 function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
     if (plan && !islandHallOf(snapshot, owner, plan) && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300)) {
-        const builder = units(snapshot, owner).find(unit => unit.kind === "worker" && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine));
+        const builder = units(snapshot, owner).filter(unit => unit.kind === "worker" && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine))
+            .sort((a, b) => distance(a, plan.mine) - distance(b, plan.mine))[0];
         const site = builder && hallSite(snapshot, plan.mine);
         if (builder && site)
             return { id: "naval:islandHall", cost: BUILDING_DEFS.townHall.cost, issue: used => {
@@ -274,25 +275,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
                 return { type: "build", unitId: builder.id, buildingKind: "farm", ...site };
             } };
     }
-    if (!plan || islandHallOf(snapshot, owner, plan))
-        return undefined;
-    const islanders = units(snapshot, owner).filter((unit) => unit.kind === "worker" && sameGround(snapshot.map, unit, plan.mine));
-    if (islanders.length === 0 || snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300))
-        return undefined;
-    return {
-        id: "naval:islandHall",
-        cost: BUILDING_DEFS.townHall.cost,
-        issue: (builders) => {
-            if (builders.size || units(snapshot, owner).some(unit => unit.order.type === "build"))
-                return undefined;
-            const builder = islanders.find((worker) => !builders.has(worker.id));
-            const site = builder && hallSite(snapshot, plan.mine);
-            if (!builder || !site)
-                return undefined;
-            builders.add(builder.id);
-            return { type: "build", unitId: builder.id, buildingKind: "townHall", x: site.x, y: site.y };
-        },
-    };
+    return undefined;
 }
 // Read the current working battery, including extra and damaged guns.
 // Expected purchases never count as an escort already on the water.
