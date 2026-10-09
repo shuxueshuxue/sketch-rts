@@ -67,6 +67,11 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
   const own = snapshot.buildings.filter(building => building.owner === owner);
+  const healer = player.race === 'grove' ? 'priest' : 'emberAcolyte';
+  // A busy support queue still needs gold for the requested first healer when its counter spell finishes training.
+  const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
+    && own.some(building => BUILDING_DEFS[building.kind].trains.includes(healer) && building.queue.length > 0
+      && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
   // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete).reduce((total, building) => total
@@ -90,7 +95,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id.startsWith('upgrade:') || goal.id === 'engineering:workshop') {
       productionReserve = Math.max(productionReserve, waveReserve);
     }
-    return [{ ...goal, productionReserve }];
+    return [{ ...goal, productionReserve: Math.max(productionReserve, recoveryReserve) }];
   }).filter(goal => {
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
