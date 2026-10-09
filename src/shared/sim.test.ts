@@ -1370,20 +1370,20 @@ describe("sketch RTS simulation", () => {
       .townHall("ember", 500, 500)
       .townHall("grove", 3500, 3500)
       .unit("ember", "sparkArcher", 1000, 1000, { id: "spark" })
-      .unit("ember", "emberRavager", 1030, 1000, { id: "ravager" })
-      .unit("grove", "footman", 1050, 1000, { id: "target" })
+      .unit("ember", "emberRavager", 1000, 1100, { id: "ravager", order: { type: "hold", x: 1000, y: 1100 } })
+      .unit("grove", "footman", 1250, 1000, { id: "target", order: { type: "hold", x: 1250, y: 1000 } })
       .build()
       .createGame();
     const target = game.units.find((unit) => unit.id === "target")!;
 
     issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["spark"], targetId: "target" });
-    stepUntil(game, 40, () => target.effects.some((effect) => effect.type === "scorch"));
+    expect(stepUntil(game, 300, () => target.effects.some((effect) => effect.type === "scorch"))).toBe(true);
     const hpAfterSpark = target.hp;
     issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["ravager"], targetId: "target" });
-    stepUntil(game, 40, () => target.hp < hpAfterSpark);
+    stepUntil(game, 100, () => target.hp < hpAfterSpark - UNIT_DEFS.emberRavager.attackDamage);
 
     expect(target.effects.some((effect) => effect.type === "scorch")).toBe(true);
-    expect(game.effects.some((effect) => effect.type === "scorch")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "burningGround")).toBe(true);
     expect(hpAfterSpark - target.hp).toBeGreaterThan(UNIT_DEFS.emberRavager.attackDamage);
   });
 
