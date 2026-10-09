@@ -28,7 +28,7 @@ describe('V9 pursuit direction', () => {
         if (tick % 15 === 0) {
           const snapshot = snapshotGame(game);
           const commands = planV6General(snapshot, 'us', { version: 'v2', requestedVersion: 'v9', memory, teams: game.teams });
-          issueCommandFrame(game, commands.map(command => ({ command, playerId: 'us', source: 'external-agent', plannerOrigin: 'local-command-planner' })));
+          issueCommandFrame(game, commands.map(command => ({ command, playerId: 'us', scriptId: 'v6General', source: 'external-agent' })));
         }
         stepGame(game);
       }
