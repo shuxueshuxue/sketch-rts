@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
+import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
 import { configureWorldCamera,screenOnPlane } from './projection';
@@ -13,6 +14,7 @@ import { paintFigure } from '../art/painted-units';
 import { UNIT_CARDS } from '../content/units';
 import { unitGlyphScale } from '../glyphs';
 import { footprintSquare } from '../footprint-view';
+import { relationTo,RELATION_INK } from '../relations';
 import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
 import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
@@ -22,7 +24,7 @@ import { gangwaySurface, type GangwaySurface } from '../../shared/ship-gangway';
 import { gangwayCrewVisualPose } from '../ship-gangway-visual';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
-import type { GameSnapshot,Unit } from '../../shared/types';
+import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
@@ -35,6 +37,7 @@ export class World3DLayer {
   private water=new WaterSurface(this.scene);
   private library=worldModels;
   private batches=new ActorBatches(this.scene);
+  private selection=new SelectionMarkers(this.scene);
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
   private cards=new Map<string,{mesh:THREE.Mesh;texture:THREE.CanvasTexture;used:number}>();
@@ -93,7 +96,7 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.selection.clear();this.water.prepare(undefined);}
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
@@ -145,11 +148,14 @@ export class World3DLayer {
     const {entities,ships}=this;
     const right=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),rotation=uprightCrewRotation(this.camera);
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
-    this.positions.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();
+    this.positions.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*site.scale});
-      if(visible(site.x,site.y))this.batches.add(`site:${site.model}`,model,this.pose(site.x,site.y,0,0,site.scale),site.id,'#a79b7f');
+      if(visible(site.x,site.y)){
+        if(frame.selectedCampId===site.id || frame.hoveredId===site.id)this.foundationMarker(frame,{...site,radius:'radius' in site?site.radius:32*site.scale},'#96774a',frame.selectedCampId===site.id);
+        this.batches.add(`site:${site.model}`,model,this.pose(site.x,site.y,0,0,site.scale),site.id,'#a79b7f');
+      }
     }
     for(const building of snapshot.buildings){
       const modelKey=`buildings/${frame.buildingModels?.[building.id]??building.kind}`,model=this.template(modelKey,'Building');if(!model)continue;
@@ -159,6 +165,8 @@ export class World3DLayer {
       const scale=extent/Math.max(size.x,size.z),height=size.y*scale;
       this.positions.set(building.id,{x:building.x,y:building.y,bodyY:building.y,topY:building.y-height*TILT});
       if(!visible(building.x,building.y,height*TILT+180))continue;
+      const selected=frame.selectedIds?.has(building.id)??false;
+      if(building.hp>0 && (selected || frame.hoveredId===building.id))this.foundationMarker(frame,building,this.markerInk(frame,building.owner),selected);
       this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner, snapshot),!building.complete);
     }
     const revealedShips=new Set<string>();
@@ -170,6 +178,8 @@ export class World3DLayer {
       this.shipPoses.set(ship.id,displayed);
       this.positions.set(ship.id,{x:at.x,y:at.y,bodyY:at.y,topY:at.y-(profile.deckHeight+profile.mastHeight)*TILT});
       if(!visible(at.x,at.y,profile.length*scale+profile.mastHeight))continue;
+      const selected=frame.selectedIds?.has(ship.id)??false;
+      if(ship.hp>0 && (selected || frame.hoveredId===ship.id))this.selection.hull(ship.kind,profile.hull,scale,this.pose(at.x,at.y,.15,heading,scale),this.markerInk(frame,ship.owner),selected);
       const reveal=revealedShips.has(ship.id);
       const hull=this.template(`ships/${ship.kind}`,'Hull');
       if(hull){
@@ -217,10 +227,11 @@ export class World3DLayer {
     for(const unit of snapshot.units){
       if(ships.has(unit.id)||isInCabin(unit))continue;
       let at=frame.motion?.position(unit,now)??unit,height=0,facing=frame.facing.facing(unit.id);
+      let bridge:ReturnType<typeof gangwayCrewVisualPose>;
       const ship=unit.deck&&ships.get(unit.deck.shipId);
       if(ship){
         liveCrew.add(unit.id);const parent=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0;
-        const bridge=gangwayCrewVisualPose(unit,this.shipPoses,this.gangwaySurfaces);
+        bridge=gangwayCrewVisualPose(unit,this.shipPoses,this.gangwaySurfaces);
         if(bridge){at=bridge;height=bridge.height;}
         else{const deck=this.deckPosition(unit,now),c=Math.cos(heading),s=Math.sin(heading);at={x:parent.x+deck.x*c-deck.y*s,y:parent.y+deck.x*s+deck.y*c};height=shipProfile(ship)!.deckHeight;}
         const id=interactionTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
@@ -229,6 +240,21 @@ export class World3DLayer {
       const scale=unitGlyphScale(unit.radius),foot=creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale});
       if(!visible(at.x,bodyY))continue;
+      const selected=frame.selectedIds?.has(unit.id)??false;
+      if(unit.hp>0 && (selected || frame.hoveredId===unit.id)){
+        let marker=this.pose(at.x,at.y,height+.15);
+        const crossing=unit.gangway,surface=bridge && crossing && this.gangwaySurfaces.get(crossing.sourceId);
+        if(surface && crossing){
+          const source=this.shipPoses.get(crossing.sourceId)!,target=this.shipPoses.get(crossing.targetId)!;
+          const dx=surface.target.x-surface.source.x,dy=surface.target.y-surface.source.y;
+          this.bridgeAlong.set(dx,shipProfile(target)!.deckHeight-shipProfile(source)!.deckHeight,dy).normalize();
+          this.bridgeAcross.set(-dy,0,dx).normalize();this.bridgeUp.crossVectors(this.bridgeAcross,this.bridgeAlong).normalize();
+          marker=marker.makeBasis(this.bridgeAlong,this.bridgeUp,this.bridgeAcross)
+            .setPosition(at.x+this.bridgeUp.x*.15,height+this.bridgeUp.y*.15,at.y+this.bridgeUp.z*.15);
+        }
+        const radius=(unit.bodyRadius??unit.radius)+3;
+        this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
+      }
       const animation=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
       const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animation.mode}:${animation.frame}:${facing}:${density}`;
       let card=this.cards.get(key);
@@ -252,7 +278,7 @@ export class World3DLayer {
       const model=shot.look==='flash'?this.flash:shot.look==='orb'?this.magic:shot.look==='fire'?this.fire:['arrow','spear','streak'].includes(shot.look)?this.bolt:this.ball;
       if(visible(shot.x,shot.y))this.batches.add(`effect:${shot.look}`,model,this.pose(shot.x,shot.y,shot.height,shot.heading,shot.scale),effect.id);
     }
-    this.batches.finish();
+    this.batches.finish();this.selection.finish();
     this.transforms.length=this.transformCount;
     if(this.cardPixels>12*1024*1024)for(const [key,card] of [...this.cards].sort((a,b)=>a[1].used-b[1].used)){
       if(this.cardPixels<=12*1024*1024)break;
@@ -272,8 +298,17 @@ export class World3DLayer {
     }return undefined;
   }
   plane(point:{x:number;y:number},height:number){return this.view?screenOnPlane(this.camera,this.view,point,height):undefined;}
+  private markerInk(frame:WorldFrame,owner:Owner){return frame.viewer?RELATION_INK[relationTo(frame.snapshot,frame.viewer,owner)]:ownerInk(owner,frame.snapshot);}
+  private foundationMarker(frame:WorldFrame,body:{x:number;y:number;radius:number},color:string,selected:boolean){
+    const square=footprintSquare(frame.snapshot,body,body.radius);
+    if(square){
+      const width=(square.right-square.left+1)*square.cell,depth=(square.bottom-square.top+1)*square.cell;
+      this.selection.rectangle(this.pose(square.left*square.cell+width/2,square.top*square.cell+depth/2,.15),width/2-1,depth/2-1,color,selected);
+    }else this.selection.ellipse(this.pose(body.x,body.y,.15),body.radius+3,(body.radius+3)*.55,color,selected);
+  }
   dispose(){
     if(this.disposed)return;this.disposed=true;this.reset();
+    this.selection.dispose();
     this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
     // portraits. This layer owns only instances, rigs, cards and render targets.

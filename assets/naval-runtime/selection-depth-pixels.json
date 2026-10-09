@@ -1,0 +1,48 @@
+[
+  {
+    "mode": "3D",
+    "name": "land",
+    "is3D": true,
+    "units": 3,
+    "selected": 4,
+    "visibleMarkerPixels": 1976,
+    "occludedMarkerPixels": 1193,
+    "memory": {
+      "geometries": 13,
+      "textures": 5
+    },
+    "errors": []
+  },
+  {
+    "mode": "3D",
+    "name": "naval",
+    "is3D": true,
+    "units": 5,
+    "selected": 5,
+    "visibleMarkerPixels": 2493,
+    "occludedMarkerPixels": 5131,
+    "memory": {
+      "geometries": 57,
+      "textures": 38
+    },
+    "crewVisiblePixels": 149,
+    "crewOccludedPixels": 1248,
+    "errors": []
+  },
+  {
+    "mode": "2D",
+    "name": "land",
+    "is3D": false,
+    "units": 3,
+    "selected": 4,
+    "errors": []
+  },
+  {
+    "mode": "2D",
+    "name": "naval",
+    "is3D": false,
+    "units": 5,
+    "selected": 5,
+    "errors": []
+  }
+]

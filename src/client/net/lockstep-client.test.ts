@@ -95,6 +95,23 @@ describe("lockstep client", () => {
     expect(transport.closed).toBe(true);
   });
 
+  it("waits for its own server handshake before requesting the current replacement epoch", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    client.join();
+    transport.emit({ type: "hello", roomId: "other-room", playerId: "player", tick: 9, epoch: 2 });
+    transport.emit({ type: "hello", roomId: "room-1", playerId: "spectator-other", tick: 9, epoch: 2 });
+    expect(transport.sent).toEqual([{ type: "join", roomId: "room-1", playerId: "player" }]);
+
+    transport.emit({ type: "hello", roomId: "room-1", playerId: "player", tick: 28, epoch: 3 });
+
+    expect(transport.sent).toEqual([
+      { type: "join", roomId: "room-1", playerId: "player" },
+      { type: "requestCheckpoint", roomId: "room-1", playerId: "player", reason: "initial-sync", clientTick: 0, clientChecksum: client.currentChecksum(), epoch: 3 },
+    ]);
+  });
+
   it("reports whether frame updates changed the engine snapshot", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();

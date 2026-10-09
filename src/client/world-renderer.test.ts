@@ -89,6 +89,28 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
 }
 
 describe("world renderer", () => {
+  it('draws all overlapping ground selection marks before any unit or building body',()=>{
+    const snapshot=duelSnapshot({northX:300,southX:315});
+    snapshot.units[1]!.y=315;
+    const game=createGame('bareDuel',{aiPlayers:[]}),building=game.buildings[0]!;
+    snapshot.buildings=[{...building,x:320,y:320}];
+    snapshot.map.terrain={cell:32,cols:32,rows:32,cells:'.'.repeat(1024)};
+    const rendered=frame(snapshot,{viewer:'north',selectedIds:new Set([snapshot.units[0]!.id,snapshot.units[1]!.id,building.id])});
+    drawWorld(rendered);
+    const marks=rendered.calls.map((call,index)=>({call,index})).filter(({call})=>call.name==='strokeRect' || call.name==='stroke' && [RELATION_INK.own,RELATION_INK.enemy].includes(String(call.ink)));
+    const bodies=rendered.calls.map((call,index)=>({call,index})).filter(({call})=>call.name==='drawImage' && call.args.length===5 && Number(call.args[3])<500);
+    expect(marks.length).toBeGreaterThanOrEqual(3);expect(bodies.length).toBeGreaterThanOrEqual(3);
+    expect(Math.max(...marks.map(mark=>mark.index))).toBeLessThan(Math.min(...bodies.map(body=>body.index)));
+  });
+  it('keeps selection surfaces off the HUD overlay while health and persistent buffs remain',()=>{
+    const snapshot=duelSnapshot(),unit=snapshot.units.find(unit=>unit.owner==='north')!;
+    unit.effects=[{type:'bloodlust',remaining:40}];
+    const rendered=frame(snapshot,{pass:'overlay',depthSelection:true,viewer:'north',selectedIds:new Set([unit.id]),hoveredId:unit.id});
+    drawWorld(rendered);
+    expect(rendered.calls.some(call=>call.name==='stroke' && call.ink===RELATION_INK.own)).toBe(false);
+    expect(rendered.calls.some(call=>call.name==='stroke' && call.ink==='#d96e50')).toBe(true);
+    expect(rendered.calls.some(call=>call.name==='fillRect')).toBe(true);
+  });
   it('anchors persistent statuses to the projected 3D actor instead of its map position',()=>{
     const snapshot=duelSnapshot(),unit=snapshot.units.find(unit=>unit.owner==='north')!;
     unit.effects=[{type:'stun',remaining:30}];

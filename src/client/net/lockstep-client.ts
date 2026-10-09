@@ -106,7 +106,13 @@ export class LockstepClient {
   }
 
   private receiveMessage(message: ServerNetMessage): void {
-    if (message.type === "hello") this.epoch = message.epoch;
+    if (message.type === "hello") {
+      if (message.roomId !== this.options.roomId || message.playerId !== this.options.playerId) return;
+      this.epoch = message.epoch;
+      // A resumed or replaced match may already have a newer epoch; request truth only after the server handshake.
+      this.requestCheckpoint("initial-sync");
+      return;
+    }
     if (message.type === "frame") {
       if (!this.acceptsServerEpoch(message)) return;
       this.receiveFrame(message.frame);
