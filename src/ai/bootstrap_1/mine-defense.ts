@@ -5,11 +5,12 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
+import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
-import { readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
+import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { availableV6Army, planV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
-import { planV6CloseoutArmy } from '../policy/v6/closeout';
+import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
@@ -124,7 +125,10 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
 }
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  return planV6CloseoutArmy(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
+  const intel = mainArmyIntel(snapshot, owner, options), job = options.memory.v6?.closeout;
+  // A cleanup crew that loses its minimum force recruits again through the same ordinary selector.
+  if (job && intel.army.filter(unit => job.unitIds.includes(unit.id)).length < DETACHMENT_MIN) delete options.memory.v6!.closeout;
+  return planV6CloseoutArmy(snapshot, owner, options, intel);
 }
 
 function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Intel {
@@ -133,7 +137,7 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   const army = intel.army.filter(unit => !crew.has(unit.id) && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
-  const { armyCenter, intrusion, ...world } = intel;
+  const { armyCenter, intrusion, ...world } = { ...intel, intrusion: readIntrusion(buildings(snapshot, owner), intel.enemies, true) };
   const main: V6Intel = { ...world, army, power: strengthOf(army) };
   if (army.length) main.armyCenter = averagePoint(army);
   const raid = uncoveredRaid(snapshot, intel, guard);
