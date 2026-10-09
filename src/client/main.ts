@@ -77,6 +77,7 @@ import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCo
 import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
 import { RoomSetupSession } from './room-setup-session';
 import { unitHoverCursor } from './unit-hover-cursor';
+import { unitHoverTarget } from './unit-hover-target';
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
@@ -3543,12 +3544,9 @@ function matchViewer() {
 
 // The unit or building under the pointer on the battlefield, not over the interface or the minimap.
 function hoveredTarget() {
-  if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
-  const target = snapshot ? visualPointerTarget(screenToWorld(lastMouse)) : undefined;
-  if(target?.kind === "unit")return target.unit;
-  if(target?.kind === "building")return target.building;
-  const world=screenToWorld(lastMouse),site=hitMercenaryCamp(world)??hitShop(world);
-  return site ? {...site,owner:"neutral" as const} : undefined;
+  if (!snapshot || !lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
+  const world = screenToWorld(lastMouse);
+  return unitHoverTarget(snapshot, world, () => visualHit(world));
 }
 
 function minimapRelationsOn() {
