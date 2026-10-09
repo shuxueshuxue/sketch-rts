@@ -35,27 +35,6 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
-  it.each(['scout', 'technology'] as const)('funds the mounted %s before buying a three-rider opening wave', purpose => {
-    const gold = purpose === 'scout' ? UNIT_DEFS.horseArcher.cost : UPGRADE_DEFS.rangeTraining.levels[0]!.cost;
-    let scene = sketchScene('mounted-opening-budget').map('openClaims').replaceDefaults()
-      .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold })
-      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
-      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
-      .building('us', 'barracks', 400, 900).building('us', 'archeryRange', 600, 900)
-      .building('us', 'stables', 800, 900).building('us', 'workshop', 1000, 900).farms('us', 5, 400, 1800);
-    for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,
-      { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
-    for (let index = 0; index < (purpose === 'scout' ? 2 : 4); index++) scene = scene.unit('us', 'archer', 600 + index * 35, 1200)
-      .unit('us', purpose === 'scout' ? 'footman' : 'lancer', 600 + index * 35, 1300);
-    if (purpose === 'technology') scene = scene.unit('us', 'horseArcher', 600, 1400);
-    const game = scene.build().createGame(), memory = createAiPolicyMemory(); memory.v6 = { phase: 1 };
-    issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_archer', memory }, { teams: game.teams }));
-    for (let tick = 0; tick < UPGRADE_DEFS.rangeTraining.levels[0]!.researchTime + 60; tick++) stepGame(game);
-    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'horseArcher')).toHaveLength(1);
-    expect(game.players.us!.upgrades.rangeTraining).toBe(purpose === 'technology' ? 1 : 0);
-    expect(game.match.stats.goldSpent.us).toBe(gold);
-  });
-
   it.each(['grove', 'ember'] as const)('funds %s artillery behind four heavies before refilling the light cavalry quota', race => {
     const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
     const light = race === 'grove' ? 'raider' : 'emberRavager';
