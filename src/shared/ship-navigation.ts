@@ -584,13 +584,13 @@ export function roundVoyageCorner(map:SeaMap,ship:Unit,from:ShipPose,corner:Poin
 /** Forward circle followed by its tangent to a free-heading destination.
  * Each small reference segment is swept with its changing hull orientation;
  * no zero-distance rotation is hidden in an open-water voyage. */
-function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean,next?:Point):ShipPose[]|undefined {
   const dx=goal.x-from.x,dy=goal.y-from.y,gap=Math.hypot(dx,dy);
   if(gap<1e-7)return [];
   const direction=Math.atan2(dy,dx),error=headingDifference(from.heading,direction);
   if(Math.abs(error)<1e-7){const direct=[{...goal,heading:from.heading}];return connectorClear(map,ship,from,direct,traffic)?direct:undefined;}
   if(shipMotionLimits(ship).turnRate<=1e-7)return;
-  let best:ShipPose[]|undefined,bestCost=Infinity;
+  let best:ShipPose[]|undefined,bestCost=Infinity,bestCanRound=false;
   for(const radius of voyageRadii(ship)){
     const speedLimit=curveSpeedLimit(ship,radius),lead=brakingEntry(ship,from,speedLimit),entry=lead.at(-1) ?? from;
     for(const side of [error<0?-1:1,error<0?1:-1]){
@@ -604,10 +604,14 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
       if(turn>Math.PI*1.5)continue;
       const points:ShipPose[]=[...lead,...signedCircleArc(entry,side*turn,radius,speedLimit)];
       const tangent=points.at(-1)!;
+      // A large hull's fastest departure arc can leave a very short tangent
+      // and a steep arrival heading. Prefer an approach with enough sea room
+      // for the already queued bend, rather than stopping at that first mark.
+      const canRound=!next || !!roundVoyageCorner(map,{...ship,sailing:{...ship.sailing!,speed:speedLimit}},tangent,goal,next,traffic);
       if(Math.hypot(goal.x-tangent.x,goal.y-tangent.y)>1e-7)points.push({...goal,heading:tangent.heading,curvature:0});
       const cost=voyageTime(map,ship,from,points);
-      if(cost>=bestCost-1e-7 || !voyageCorridorClear(map,ship,from,points,traffic))continue;
-      best=points;bestCost=cost;
+      if(bestCanRound && !canRound || bestCanRound===canRound && cost>=bestCost-1e-7 || !voyageCorridorClear(map,ship,from,points,traffic))continue;
+      best=points;bestCost=cost;bestCanRound=canRound;
     }
   }
   return best;
@@ -650,7 +654,14 @@ export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:numb
   const from={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
   if(goal.heading!==undefined || Math.hypot(goal.x-from.x,goal.y-from.y)<=shipProfile(ship)!.length*.5)
     return planShipRoute(map,ship,goal,trafficClear,budget);
-  const direct=forwardConnector(map,ship,from,goal,trafficClear);
+  const queued=ship.orderQueue?.[0],current=ship.order;
+  const next=current.type==='move' && current.heading===undefined && current.rendezvousFor===undefined
+    && current.deckPoint===undefined && current.deckShipId===undefined
+    && current.x===goal.x && current.y===goal.y && queued?.type==='move'
+    && queued.heading===undefined && queued.rendezvousFor===undefined && queued.deckPoint===undefined && queued.deckShipId===undefined
+    && !!queued.avoidCombat===!!current.avoidCombat
+    && !coursePerformance(ship,map,Math.atan2(queued.y-goal.y,queued.x-goal.x),{assumeTrimmed:true}).noGo ? queued : undefined;
+  const direct=forwardConnector(map,ship,from,goal,trafficClear,next);
   if(direct)return{points:direct,partial:false};
   const reference=planShipRoute(map,ship,goal,trafficClear,budget);
   return{points:simplifyVoyageReference(map,ship,from,reference.points,trafficClear),partial:reference.partial};

@@ -1,0 +1,703 @@
+{
+  "createdAt": "2026-10-09T02:52:12.839Z",
+  "mountBaseValidation": {
+    "checkedAllConfigurableMounts": true,
+    "requiredOnlyHeavy": true,
+    "note": "Older hull optional uninstalled outboard mount circles are recorded as diagnostic only; all eight real installed heavy-ship fitting bases must fit."
+  },
+  "geometry": {
+    "beam": 158.4,
+    "cabin": {
+      "x": -138.60000000000002,
+      "y": 0,
+      "radius": 22,
+      "type": "cabin"
+    }
+  },
+  "cases": [
+    {
+      "shipKind": "transport",
+      "mode": "default",
+      "armament": 0,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-transport-1000",
+            "x": -31.200000000000003,
+            "y": -20
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 7,
+      "elapsedSeconds": 0.35,
+      "entryTicks": {
+        "unit-player-priest-1001": 7
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.0000000000000004,
+      "maxEntryDistance": 0.6157350094786225,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-transport-1000",
+            "x": -23.000000000000014,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "warship",
+      "mode": "default",
+      "armament": 1,
+      "allMountBasesLegal": false,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-warship-1000",
+            "x": -23.500000000000014,
+            "y": -15.600000000000001
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 6,
+      "elapsedSeconds": 0.3,
+      "entryTicks": {
+        "unit-player-priest-1001": 6
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.0000000000000004,
+      "maxEntryDistance": 0,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-warship-1000",
+            "x": -17.5,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "bombardShip",
+      "mode": "default",
+      "armament": 1,
+      "allMountBasesLegal": false,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-bombardShip-1000",
+            "x": -29.200000000000003,
+            "y": -14.5
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 5,
+      "elapsedSeconds": 0.25,
+      "entryTicks": {
+        "unit-player-priest-1001": 5
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.0000000000000013,
+      "maxEntryDistance": 0.7699080529976429,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-bombardShip-1000",
+            "x": -23.000000000000014,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "fireShip",
+      "mode": "default",
+      "armament": 1,
+      "allMountBasesLegal": false,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-fireShip-1000",
+            "x": -16.900000000000006,
+            "y": -9
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 3,
+      "elapsedSeconds": 0.15,
+      "entryTicks": {
+        "unit-player-priest-1001": 3
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3,
+      "maxEntryDistance": 0.7693397934558502,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-fireShip-1000",
+            "x": -13.100000000000009,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "carrier",
+      "mode": "default",
+      "armament": 0,
+      "allMountBasesLegal": false,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-carrier-1000",
+            "x": -53.20000000000002,
+            "y": -34.300000000000004
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 14,
+      "elapsedSeconds": 0.7,
+      "entryTicks": {
+        "unit-player-priest-1001": 14
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.000000000000002,
+      "maxEntryDistance": 7.105427357601002e-15,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-carrier-1000",
+            "x": -34.00000000000001,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "default",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -45.2
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 19,
+      "elapsedSeconds": 0.95,
+      "entryTicks": {
+        "unit-player-priest-1001": 19
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.0000000000000027,
+      "maxEntryDistance": 1.1368683772161603e-13,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "default",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -43.2
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 19,
+      "elapsedSeconds": 0.95,
+      "entryTicks": {
+        "unit-player-priest-1001": 19
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.000000000000005,
+      "maxEntryDistance": 1.1368683772161603e-13,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "default",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 20,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -124.60000000000002,
+            "y": -41.2
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 19,
+      "elapsedSeconds": 0.95,
+      "entryTicks": {
+        "unit-player-priest-1001": 19
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.0000000000000067,
+      "maxEntryDistance": 1.1368683772161603e-13,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "group-default",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-footman-1001",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -43.2
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1002",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -94.60000000000002,
+            "y": -27.200000000000003
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-footman-1003",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -96.60000000000002,
+            "y": 8.799999999999997
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1004",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -60.60000000000002,
+            "y": -35.2
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-footman-1005",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -124.60000000000002,
+            "y": 38.8
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1006",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -38.60000000000002,
+            "y": -9.200000000000003
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 83,
+      "elapsedSeconds": 4.15,
+      "entryTicks": {
+        "unit-player-footman-1003": 1,
+        "unit-player-priest-1002": 10,
+        "unit-player-footman-1005": 26,
+        "unit-player-priest-1004": 43,
+        "unit-player-footman-1001": 61,
+        "unit-player-priest-1006": 83
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.1000000000000063,
+      "maxEntryDistance": 8.856635930193754,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-footman-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1002",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-footman-1003",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1004",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-footman-1005",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1006",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "group-forward",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-footman-1001",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 107.39999999999998,
+            "y": 0.7999999999999972
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1002",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 79.39999999999998,
+            "y": -21.200000000000003
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-footman-1003",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 77.39999999999998,
+            "y": 22.799999999999997
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1004",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 51.39999999999998,
+            "y": -1.2000000000000028
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-footman-1005",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 31.399999999999977,
+            "y": 28.799999999999997
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-priest-1006",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": 33.39999999999998,
+            "y": -29.200000000000003
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 335,
+      "elapsedSeconds": 16.75,
+      "entryTicks": {
+        "unit-player-footman-1005": 44,
+        "unit-player-priest-1006": 89,
+        "unit-player-priest-1004": 142,
+        "unit-player-footman-1003": 201,
+        "unit-player-priest-1002": 262,
+        "unit-player-footman-1001": 335
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.100000000000005,
+      "maxEntryDistance": 1.1368683772161603e-13,
+      "shipAdvanced": 0,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-footman-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1002",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-footman-1003",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1004",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-footman-1005",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        },
+        {
+          "id": "unit-player-priest-1006",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    },
+    {
+      "shipKind": "shipOfTheLine",
+      "mode": "moving-two",
+      "armament": 8,
+      "allMountBasesLegal": true,
+      "initial": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "radius": 16,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -45.2
+          },
+          "canEnter": true
+        },
+        {
+          "id": "unit-player-footman-1002",
+          "kind": "footman",
+          "radius": 18,
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -100.60000000000002,
+            "y": -21.200000000000003
+          },
+          "canEnter": true
+        }
+      ],
+      "elapsedTicks": 29,
+      "elapsedSeconds": 1.45,
+      "entryTicks": {
+        "unit-player-priest-1001": 29
+      },
+      "allEntered": true,
+      "illegalSteps": 0,
+      "overSpeedSteps": 0,
+      "maxStep": 3.1000000000000023,
+      "maxEntryDistance": 1.1368683772161603e-13,
+      "shipAdvanced": 66.28355045654871,
+      "unselectedKeptIdle": true,
+      "exitChecks": [
+        {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "legal": true
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

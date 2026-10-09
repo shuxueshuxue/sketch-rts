@@ -10,7 +10,7 @@ import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
 import { ballisticTarget, firingBoundaryHeadings, targetSailingVelocity } from './ship-fire-control';
-export const SHIP_HULL_COST = { cutter: 120, transport: 160, warship: 170, bombardShip: 240, fireShip: 190, carrier: 280 } as const;
+export const SHIP_HULL_COST = { cutter: 120, transport: 160, warship: 170, bombardShip: 240, fireShip: 190, carrier: 280, shipOfTheLine: 520 } as const;
 export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     cost: number;
     mass: number;
@@ -40,6 +40,13 @@ export function shipMounts(ship: Unit) {
     if (ship.kind === 'transport')
         return [bow(32, ['shipCannon', 'flameProjector'])];
     const side: ShipEquipmentKind[] = ['shipCannon', 'flameProjector'];
+    if (ship.kind === 'shipOfTheLine') {
+        const positions = [[-74, 53], [-32, 54], [10, 53], [50, 48.9]];
+        return positions.flatMap(([x, breadth], i) => [
+            mount(`port${i}`, x!, -breadth!, -Math.PI / 2, 35 * Math.PI / 180, ['shipCannon']),
+            mount(`starboard${i}`, x!, breadth!, Math.PI / 2, 35 * Math.PI / 180, ['shipCannon']),
+        ]);
+    }
     const positions = ship.kind === 'carrier' ? [35, 0, -35] : ship.kind === 'warship' ? [15, -15] : [-10];
     const breadth = ship.kind === 'carrier' ? 38 : 23;
     return [bow(ship.kind === 'carrier' ? 80 : p.weaponPivot![0]! / scale), ...positions.flatMap((x, i) => [
@@ -140,15 +147,23 @@ export function initializeShipEquipment(snapshot: GameSnapshot) {
         if (!SHIP_KINDS.includes(ship.kind as never))
             continue;
         ship.shipParts ??= { ...shipPartMax(ship) };
+        ship.shipParts.cabin ??= shipPartMax(ship).cabin;
         if (ship.fittings)
             continue;
         ship.fittings = [];
-        const kind: ShipEquipmentKind | undefined = ship.kind === 'warship' ? 'shipCannon' : ship.kind === 'bombardShip' ? 'shipMortar' : ship.kind === 'fireShip' ? 'flameProjector' : undefined;
-        if (kind) {
+        const kind: ShipEquipmentKind | undefined = ship.kind === 'warship' || ship.kind === 'shipOfTheLine' ? 'shipCannon' : ship.kind === 'bombardShip' ? 'shipMortar' : ship.kind === 'fireShip' ? 'flameProjector' : undefined;
+        const mounts = ship.kind === 'shipOfTheLine'
+            ? shipMounts(ship).filter(mount => ['port0', 'port2', 'starboard0', 'starboard2'].includes(mount.id))
+            : shipMounts(ship).filter(mount => mount.id === 'bow');
+        if (!kind) continue;
+        for (const mount of mounts) {
             const def = SHIP_WEAPONS[kind];
-            const item: WorldItem = { id: `mounted-${ship.id}`, kind, x: ship.x, y: ship.y, shipId: ship.id, mountId: 'bow', durability: def.hp, cooldownRemaining: ship.cooldown };
+            const id = ship.kind === 'shipOfTheLine' ? `mounted-${ship.id}-${mount.id}` : `mounted-${ship.id}`;
+            const item: WorldItem = { id, kind, x: ship.x, y: ship.y, shipId: ship.id, mountId: mount.id, durability: def.hp, cooldownRemaining: ship.cooldown };
             snapshot.items.push(item);
-            ship.fittings.push({ ...shipMounts(ship)[0]!, id: item.id });
+            // Profiles cache by fittings identity; each new weapon must also
+            // become an actual deck obstacle immediately after construction.
+            ship.fittings = [...ship.fittings, { ...mount, id: item.id }];
         }
     }
 }
@@ -172,11 +187,12 @@ export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
     ship.fittings = installedWeapons(snapshot, ship).map(item => ({ ...shipMounts(ship).find(mount => mount.id === item.mountId)!, id: item.id }));
 }
-export function shipNeedsRepair(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { const max = shipPartMax(ship); return ship.hp < ship.maxHp || (ship.shipParts?.rigging ?? max.rigging) < max.rigging || (ship.shipParts?.rudder ?? max.rudder) < max.rudder || installedWeapons(snapshot, ship).some(item => (item.durability ?? SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp) < SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp); }
+export function shipNeedsRepair(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { const max = shipPartMax(ship); return ship.hp < ship.maxHp || (ship.shipParts?.rigging ?? max.rigging) < max.rigging || (ship.shipParts?.rudder ?? max.rudder) < max.rudder || (ship.shipParts?.cabin ?? max.cabin) < max.cabin || installedWeapons(snapshot, ship).some(item => (item.durability ?? SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp) < SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp); }
 export function repairShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, amount: number) {
     const max = shipPartMax(ship);
     ship.shipParts ??= { ...max };
-    const repair = (key: 'rigging' | 'rudder') => { const healed = Math.min(amount, max[key] - ship.shipParts![key]); ship.shipParts![key] += healed; amount -= healed; };
+    ship.shipParts.cabin ??= max.cabin;
+    const repair = (key: 'rigging' | 'rudder' | 'cabin') => { const healed = Math.min(amount, max[key] - ship.shipParts![key]!); ship.shipParts![key] = ship.shipParts![key]! + healed; amount -= healed; };
     // Restore propulsion and steering before an otherwise sound hull.
     for (const key of ['rigging', 'rudder'] as const)
         if (ship.shipParts[key] <= 0)
@@ -184,7 +200,7 @@ export function repairShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Uni
     const hull = Math.min(amount, ship.maxHp - ship.hp);
     ship.hp += hull;
     amount -= hull;
-    for (const key of ['rigging', 'rudder'] as const)
+    for (const key of ['rigging', 'rudder', 'cabin'] as const)
         repair(key);
     for (const item of installedWeapons(snapshot, ship)) {
         const hp = SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp;
@@ -197,11 +213,14 @@ export function repairShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Uni
 export function damageShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, impact: Point, damage: number, radius = 0) {
     const profile = shipProfile(ship)!, local = worldToLocal(ship, impact), max = shipPartMax(ship);
     ship.shipParts ??= { ...max };
-    const mast = profile.obstacles.find(o => o.type === 'mast');
-    if (mast && Math.hypot(local.x - mast.x, local.y - mast.y) <= mast.radius + radius + 8)
+    ship.shipParts.cabin ??= max.cabin;
+    if (profile.obstacles.some(o => o.type === 'mast' && Math.hypot(local.x - o.x, local.y - o.y) <= o.radius + radius + 8))
         ship.shipParts.rigging = Math.max(0, ship.shipParts.rigging - damage * .65);
     if (Math.hypot(local.x + profile.length / 2 - 5, local.y) <= profile.beam * .22 + radius)
         ship.shipParts.rudder = Math.max(0, ship.shipParts.rudder - damage * .8);
+    const cabin = profile.obstacles.find(o => o.type === 'cabin');
+    if (cabin && max.cabin > 0 && Math.hypot(local.x - cabin.x, local.y - cabin.y) <= cabin.radius + radius + 8)
+        ship.shipParts.cabin = Math.max(0, ship.shipParts.cabin - damage * .65);
     for (const item of installedWeapons(snapshot, ship)) {
         const mount = shipMounts(ship).find(mount => mount.id === item.mountId)!;
         if (Math.hypot(local.x - mount.x, local.y - mount.y) <= mount.radius + radius)

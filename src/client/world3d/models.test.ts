@@ -28,8 +28,8 @@ describe('production authored models',()=>{
       }
     }
   });
-  it('loads all 31 self-contained models and preserves hull dimensions and independently mounted weapons',async()=>{
-    expect(matchModelKeys).toHaveLength(31);
+  it('loads all 32 self-contained models and preserves hull dimensions and independently mounted weapons',async()=>{
+    expect(matchModelKeys).toHaveLength(32);
     for(const key of matchModelKeys){
       const bytes=readFileSync(`public/art/world3d/${key}.glb`),model=(await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'/')).scene;
       model.updateMatrixWorld(true);const name=key.startsWith('ships/')?'Hull':'Building',part=model.getObjectByName(name)!;expect(part,key).toBeTruthy();

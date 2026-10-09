@@ -19,6 +19,7 @@ import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, Uni
 import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
+import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
 
 export type CommandLegalityError = {
   message: string;
@@ -31,6 +32,21 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
   const ids="unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+  if (command.type !== 'enterCabin' && command.type !== 'leaveCabin' && command.type !== 'stop' && snapshot.units.some(unit => ids.includes(unit.id) && isInCabin(unit))) return commandError('Leave the cabin before acting',true);
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    const selected = snapshot.units.filter(unit => command.unitIds.includes(unit.id) && unit.owner === owner && unit.hp > 0);
+    if (command.type === 'enterCabin') return selected.some(unit => canEnterCabin(snapshot,unit)) ? undefined : commandError('No available cabin for these crew members',true);
+    return selected.some(unit => { const ship = snapshot.units.find(ship => ship.id === unit.cabin?.shipId); return isInCabin(unit) && ship && cabinExitPoint(snapshot,ship,unit); }) ? undefined : commandError('No clear deck space by the cabin door',true);
+  }
+  if (command.type === 'transferItem') {
+    const item = snapshot.items.find(item => item.id === command.itemId);
+    const affected = [item?.carrierId, 'unitId' in command.destination ? command.destination.unitId : 'installerId' in command.destination ? command.destination.installerId : undefined];
+    if (snapshot.units.some(unit => affected.includes(unit.id) && isInCabin(unit))) return commandError('Leave the cabin before exchanging equipment',true);
+  }
+  if (command.type === 'unloadPassenger' && snapshot.units.some(unit => unit.id === command.passengerId && isInCabin(unit))) return commandError('Leave the cabin before disembarking',true);
+  if ('targetId' in command && snapshot.units.some(unit => unit.id === command.targetId && isInCabin(unit))) return commandError('Crew inside a cabin cannot be targeted',true);
   if(["build","mine","repair","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
@@ -181,6 +197,10 @@ function commandError(message: string, transient = false): CommandLegalityError 
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
+    const unitIds = currentUnitIds(game,owner,command.unitIds);
+    return unitIds.length ? {...command,unitIds} : undefined;
+  }
   if (command.type === "unloadPassenger") {
     const ship=currentUnit(game,owner,command.transportId);
     return ship && (shipPassengers(game.units,ship).some(passenger=>passenger.id===command.passengerId) || ship.cargo?.some(passenger=>passenger.id===command.passengerId)) ? command : undefined;

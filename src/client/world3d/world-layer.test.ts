@@ -128,6 +128,23 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(layer.pick({x:600,y:450})).toBeUndefined();expect(layer.plane({x:600,y:450},0)).toBeUndefined();
     layer.dispose();
   });
+  it('hides cabin occupants and restores their painted picking on a return command in the same tick',async()=>{
+    const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const crew=game.units.find(unit=>unit.deck?.shipId===ship.id)!;
+    const before=layer.positions.get(crew.id)!;
+    crew.cabin={shipId:ship.id,breached:true};game.tick++;
+    frame.snapshot=snapshotGame(game);frame.now=50;layer.draw(frame);
+    expect(layer.positions.has(crew.id)).toBe(false);expect(layer.positions.has(ship.id)).toBe(true);
+    const body=projectWorld(frame.view,{x:before.x,y:before.bodyY});
+    for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)expect(layer.pick({x:body.x+x,y:body.y+y})?.id).not.toBe(crew.id);
+    delete crew.cabin;frame.snapshot=snapshotGame(game);frame.now=75;layer.draw(frame);
+    expect(layer.positions.has(crew.id)).toBe(true);
+    const restored=layer.positions.get(crew.id)!;
+    expect(restored.x).toBeCloseTo(before.x);expect(restored.y).toBeCloseTo(before.y);
+    let picked=false;
+    for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)if(layer.pick({x:body.x+x,y:body.y+y})?.id===crew.id)picked=true;
+    expect(picked).toBe(true);layer.dispose();
+  });
   it('prepares every land unit painting as a selectable colored cutout, including large beasts and siege weapons',async()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(const kind of Object.keys(UNIT_DEFS) as (keyof typeof UNIT_DEFS)[])if(!isShipKind(kind))game.spawnUnit('player',kind,600,600);

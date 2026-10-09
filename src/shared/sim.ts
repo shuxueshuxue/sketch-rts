@@ -43,6 +43,7 @@ import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { beginShipMotionFrame } from './ship-motion';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
+import { canEnterCabin, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, hullPassageClear, nearestShipPose } from "./ship-navigation";
@@ -396,6 +397,27 @@ export function issueCommand(game: Game, command: GameCommand) {
 
 export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   if (!game.players[owner]) throw new Error(`Unknown player ${owner}`);
+  const cabinOperands = 'unitIds' in command ? [...command.unitIds] : 'unitId' in command ? [command.unitId] : [];
+  if ('targetId' in command && command.targetId) cabinOperands.push(command.targetId);
+  if ('recipientId' in command && command.recipientId) cabinOperands.push(command.recipientId);
+  if (command.type === 'unloadPassenger') cabinOperands.push(command.passengerId);
+  if (command.type === 'transferItem') {
+    const item = game.items.find(item => item.id === command.itemId);
+    if (item?.carrierId) cabinOperands.push(item.carrierId);
+    if ('unitId' in command.destination) cabinOperands.push(command.destination.unitId);
+    else if ('installerId' in command.destination && command.destination.installerId) cabinOperands.push(command.destination.installerId);
+  }
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin' || game.units.some(unit => cabinOperands.includes(unit.id) && isInCabin(unit))) {
+    const error = checkCommandLegality(game, owner, command);
+    if (error) throw new Error(error.message);
+  }
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
+    for (const unit of unitsByIds(game,command.unitIds,owner)) {
+      if (command.type === 'leaveCabin') leaveCabin(game,unit);
+      else if (canEnterCabin(game,unit)) assignUnitOrder(unit,{type:'enterCabin',shipId:unit.deck!.shipId});
+    }
+    return;
+  }
   if (command.type === "learnVeteranSkill") {
     const error = checkCommandLegality(game, owner, command);
     if (error) throw new Error(error.message);
@@ -654,6 +676,7 @@ export function stepGame(game: Game) {
   if (game.match.winner) return;
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
   syncDecks(game.units);
+  updateCabinPassengers(game);
   game.tick += 1;
   updateWindField(game.map, game.tick);
   // Auras and their spatial query start from this tick's actual positions, including after restore.
@@ -705,6 +728,7 @@ export function stepGame(game: Game) {
   for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
   syncDecks(game.units);
   settleDeckSupport(game.units,game.map);
+  updateCabinPassengers(game);
   slideUnits(game);
   separateUnits(game);
   syncDecks(game.units);
@@ -777,6 +801,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       const copy = { ...unit, order: copyUnitOrder(unit.order), orderQueue: unit.orderQueue?.map(copyUnitOrder) ?? [] };
       if (unit.aim) copy.aim = { ...unit.aim };
       if (unit.deck) copy.deck = { ...unit.deck };
+      if (unit.cabin) copy.cabin = { ...unit.cabin };
       if (unit.hands) copy.hands = { ...unit.hands };
       if (unit.shipParts) copy.shipParts = { ...unit.shipParts };
       if (unit.fittings) copy.fittings = unit.fittings.map(fitting => ({ ...fitting, accepts: [...fitting.accepts] }));
@@ -845,6 +870,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   else delete game.obstacles;
   if (!snapshot.rateUnits) migrateSnapshotRates(game);
   restoreCargoDecks(game.units);
+  for (const ship of shipsIn(game.units)) if (ship.shipParts) ship.shipParts.cabin ??= shipPartMax(ship).cabin;
   // Early naval previews had a separate leg piece. Fold those saved items into
   // body armor and reassign their positions without discarding equipment.
   const removedArmor = game.items.some(item => (item.kind as string) === 'legGuards' || (item.slot as string) === 'legs');
@@ -1143,12 +1169,12 @@ function updateItems(game: Game) {
     if (!carrier) continue;
     item.x = carrier.x;
     item.y = carrier.y;
-    if (item.kind === "flameCloak" && itemEquipped(game,carrier,item)) applyFlameCloak(game, carrier, item);
+    if (!isInCabin(carrier) && item.kind === "flameCloak" && itemEquipped(game,carrier,item)) applyFlameCloak(game, carrier, item);
     if (canReceiveHealing(carrier, game) && item.kind === "regenRing" && itemEquipped(game,carrier,item) && carrier.hp < carrier.maxHp && !ringed?.has(carrier.id)) {
       carrier.hp = Math.min(carrier.maxHp, carrier.hp + perTick(RING_REGEN_PER_SECOND));
       (ringed ??= new Set()).add(carrier.id);
     }
-    if (carrier.owner === "neutral" && itemEquipped(game,carrier,item)) activateNeutralItem(game, carrier, item);
+    if (!isInCabin(carrier) && carrier.owner === "neutral" && itemEquipped(game,carrier,item)) activateNeutralItem(game, carrier, item);
   }
 }
 
@@ -1175,6 +1201,11 @@ function updateUnits(game: Game): Ferry | undefined {
       const left = tickedAbilityCooldowns(unit.abilityCooldowns);
       if (left) unit.abilityCooldowns = left;
       else unit.abilityCooldowns = undefined;
+    }
+    if (isInCabin(unit) || cabinCrewMovedThisTick(game,unit)) continue;
+    if (unit.order.type === 'enterCabin') {
+      if (!isStaggered(unit) && !isStunned(unit)) enterCabinStep(game,unit,statusPace(unit),other=>isStaggered(other)||isStunned(other)?0:statusPace(other));
+      continue;
     }
     // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
     // strikes nor casts, and its order waits for it.
@@ -1648,10 +1679,11 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
   const crew=shipPassengers(game.units,ship);
   let landed=0;
   crew.forEach((passenger,index)=>{
-    if(passenger.owner!==ship.owner || passengerId!==undefined && passenger.id!==passengerId)return;
+    if(isInCabin(passenger) || passenger.owner!==ship.owner || passengerId!==undefined && passenger.id!==passengerId)return;
     const spot=landingSpot(game.map,ship,index,crew.length,game.units,passenger);
     if(!spot)return;
     passenger.deck=undefined;
+    passenger.cabin=undefined;
     passenger.aim=undefined;
     Object.assign(passenger,spot);
     assignUnitOrder(passenger,{type:"idle"});
@@ -2728,7 +2760,7 @@ function updateUnitStatusEffects(game: Game) {
       if (effect.type === "poison" && effect.remaining % 20 === 0 && unit.hp > 0) {
         const source = effect.sourceId ? findTarget(game, effect.sourceId) : undefined;
         const attacker = source && source.hp > 0 ? source : scriptSource({ id: effect.sourceId ?? "poison", owner: effect.sourceOwner ?? "neutral", x: unit.x, y: unit.y });
-        applyDamage(game, attacker, unit, POISON_DAMAGE, undefined, undefined, 0, DAMAGE_PROFILES.POISON);
+        applyDamage(game, attacker, unit, POISON_DAMAGE, undefined, undefined, 0, DAMAGE_PROFILES.POISON, false, true);
       }
     }
     unit.effects = unit.effects.filter((effect) => effect.remaining > 0);
@@ -2777,7 +2809,7 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
     addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,owner:attacker.owner,sourceKind:attacker.kind});return;
   }
   if(weapon.delivery==="cone"){
-    const hits=[...game.units,...game.buildings].filter(target=>target.hp>0&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(origin,point,target,range,weapon.coneAngle??.6));
+    const hits=[...game.units,...game.buildings].filter(target=>target.hp>0&&(!isUnit(target)||!isInCabin(target))&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(origin,point,target,range,weapon.coneAngle??.6));
     withDeckDamageBatch(game,()=>{for(const target of crewBeforeHulls(hits))hitWeapon(game,attacker,target,damage*(weapon.burst??1),weapon);});
     addEffect(game,"grapeshot",point.x,point.y,seconds(.7),{...visuals,radius:range});return;
   }
@@ -2801,7 +2833,7 @@ function impactWeapon(game:Game,projectile:Projectile){
   const attacker=source??(projectile.sourceKind?{...fallback,kind:projectile.sourceKind,order:{type:"idle"},effects:[],xp:0,level:0,kills:0,abilityCooldown:0,speed:0} as unknown as Unit:fallback);
   const from={x:projectile.fromX,y:projectile.fromY},to={x:projectile.toX,y:projectile.toY};
   const flightLength=distance(from,to),impactAt=(along:number)=>{const share=flightLength?Math.max(0,Math.min(1,along/flightLength)):0;return{x:from.x+(to.x-from.x)*share,y:from.y+(to.y-from.y)*share};};
-  const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&areEnemyOwners(game,projectile.owner,t.owner));
+  const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&(!isUnit(t)||!isInCabin(t))&&areEnemyOwners(game,projectile.owner,t.owner));
   if(weapon.delivery==="bolt"){
     const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
     const eligible=new Set(crewBeforeHulls(intersections.map(hit=>hit.target)));
@@ -2953,7 +2985,10 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 }
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
-function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hullShare?: number,impact?:{x:number;y:number},blastRadius=0, profile: DamageProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind), armorAlreadyApplied = false): number | undefined {
+function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hullShare?: number,impact?:{x:number;y:number},blastRadius=0, profile: DamageProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind), armorAlreadyApplied = false, existingStatus = false): number | undefined {
+  if (isUnit(attacker) && isInCabin(attacker)) return undefined;
+  // Existing poison persists indoors; shelter blocks incoming attacks rather than cleansing statuses.
+  if (isUnit(target) && isCabinProtected(game,target) && !existingStatus) return undefined;
   if ('invulnerable' in target && target.invulnerable) return undefined;
   if (isObstacle(target)) {
     // A rock pile or gate wakes nobody and pays nothing when it falls (see @@@obstacle).
@@ -2968,7 +3003,16 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   const taken = resolved?.damage ?? damage;
   const hpBefore = target.hp;
   target.hp -= taken;
-  if(isUnit(target) && shipProfile(target)){damageShipParts(game,target,impact ?? strikePoint(attacker,target),taken,blastRadius);if(target.hp>0)applyDerivedUnitStats(game,target);}
+  if(isUnit(target) && shipProfile(target)){
+    damageShipParts(game,target,impact ?? strikePoint(attacker,target),taken,blastRadius);
+    if(target.hp>0) {
+      applyDerivedUnitStats(game,target);
+      updateCabinPassengers(game);
+      // Trapped occupants of a broken compartment remain selectable in the crew list, not as invisible targets.
+      // Incoming hull hits reach them until a real, clear deck exit opens.
+      for (const passenger of shipPassengers(game.units,target)) if (passenger.hp>0 && isInCabin(passenger) && !isCabinProtected(game,passenger)) applyDamage(game,attacker,passenger,taken*.35,0,impact,0,profile);
+    }
+  }
   if (hpBefore > 0 && isUnit(target)) {
     if (shipProfile(target) && game.deckDamageBatch) {
       const entry = game.deckDamageBatch.get(target.id) ?? { ship: target, direct: 0, collateral: 0 };
@@ -2982,7 +3026,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
         const entry = game.deckDamageBatch.get(hull.id) ?? { ship: hull, direct: 0, collateral: 0, source: attacker };
         if (collateral > entry.collateral) { entry.collateral = collateral; entry.source = attacker; entry.profile = profile; }
         game.deckDamageBatch.set(hull.id,{...entry,impact:{x:target.x,y:target.y},blastRadius});
-      } else applyDamage(game, attacker, hull, collateral, 0,target,0,profile);
+      } else if (collateral > 0) applyDamage(game, attacker, hull, collateral, 0,target,0,profile);
     }
   }
   game.observer?.hit(attacker, target, taken, hpBefore);
@@ -3011,7 +3055,7 @@ function withDeckDamageBatch(game: Game, body: () => void) {
 /** Ship orders address the fighting deck and remain on the hull after its last passenger dies. */
 function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit | Building): Unit | Building {
   if (!isUnit(target) || !shipProfile(target)) return target;
-  const crew = shipPassengers(game.units, target).filter(unit => unit.hp > 0 && areEnemyOwners(game, attacker.owner, unit.owner)
+  const crew = shipPassengers(game.units, target).filter(unit => unit.hp > 0 && !isInCabin(unit) && areEnemyOwners(game, attacker.owner, unit.owner)
     && (isUnit(attacker) ? canReach(game.map, attacker, unit, game.units) : distance(attacker,unit)<=attacker.attackRange));
   let best: Unit | undefined, bestScore = -Infinity;
   for (const unit of crew) {
@@ -3308,6 +3352,7 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
   let best: Unit | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyEnemyUnit(game, owner, point, range, (unit) => {
+    if (isInCabin(unit)) return;
     const candidateDistance = distanceSquared(unit, point);
     if (candidateDistance > limit) return;
     const score = targetPriorityScore(game, owner, unit, candidateDistance);
@@ -3336,8 +3381,9 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyEnemyUnit(game, owner, point, range + (game.shipReachPadding ?? shipReachPadding(game.units)), (candidate) => {
+    if (isInCabin(candidate)) return;
     if(!automaticTargetAllowed(game.units,owner,candidate))return;
-    if (shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
+    if (shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
     if(accepts && !accepts(candidate))return;
     const candidateDistance = isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
     if (candidateDistance > limit) return;
@@ -3415,7 +3461,8 @@ function projectilesAt(game: Game, targetId: string): Projectile[] {
 
 
 function findTarget(game: Game, targetId: string): Unit | Building | undefined {
-  return game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
+  const target = game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
+  return target && isUnit(target) && isInCabin(target) ? undefined : target;
 }
 
 // What an attack order or a shot may strike: a unit, a building, or rocks or a gate (see @@@obstacle), which nothing else
@@ -3678,7 +3725,7 @@ function keepUnitsOutOfBuildings(game: Game) {
 }
 
 function slideUnits(game: Game) {
-  for (const unit of game.units) if (unit.pushX !== undefined) {
+  for (const unit of game.units) if (!isInCabin(unit) && unit.pushX !== undefined) {
     if(!unit.deck){slide(unit,game.map,game.units);continue;}
     const point={x:unit.x+perTick(unit.pushX),y:unit.y+perTick(unit.pushY??0)};
     const at=deckSeparationPoint(game,unit,point);
@@ -3695,7 +3742,7 @@ function separateUnits(game: Game) {
   // Land separation must never relocate a ship sideways after navigation.
   for (const unit of game.units) {
     // Mining workers already pass through every body; exclude them once rather than testing every nearby pair.
-    if (isShipKind(unit.kind) || minerGhost(unit)) continue;
+    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
     const x = Math.floor(unit.x / cellSize);
     const y = Math.floor(unit.y / cellSize);
     const key = numericBucketKey(x, y);
@@ -3826,13 +3873,13 @@ function createEntityIndex(game: Game) {
 }
 
 function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
-  forEachNearbyEntity(game.unitSpatial, game.units, point, range, visit);
+  forEachNearbyEntity(game.unitSpatial, game.units, point, range, unit => { if (!isInCabin(unit)) visit(unit); });
 }
 
 // The first unit near the point that passes the test, visiting in forEachNearbyUnit's order and stopping there.
 function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: number, test: (unit: Unit) => boolean): Unit | undefined {
   const index = game.unitSpatial;
-  if (!index) return game.units.find(test);
+  if (!index) return game.units.find(unit => !isInCabin(unit) && test(unit));
   const radius = Math.ceil(range / index.cellSize);
   const bx = Math.floor(point.x / index.cellSize);
   const by = Math.floor(point.y / index.cellSize);
@@ -3840,7 +3887,7 @@ function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: num
     for (let oy = -radius; oy <= radius; oy += 1) {
       const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
       if (!bucket) continue;
-      for (const unit of bucket) if (test(unit)) return unit;
+      for (const unit of bucket) if (!isInCabin(unit) && test(unit)) return unit;
     }
   }
   return undefined;

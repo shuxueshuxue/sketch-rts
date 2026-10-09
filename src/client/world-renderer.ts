@@ -1,5 +1,6 @@
 import { itemEquipped } from "../shared/equipment";
 import { drawCanvasShip,deckVisualHeight,drawShipFlag } from "./art/canvas-ships";
+import { isInCabin } from '../shared/ship-cabin';
 import { localToWorld,shipProfile,shipPassengers } from "../shared/ship-geometry";
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
@@ -180,7 +181,7 @@ export function drawWorld(frame: WorldFrame) {
   if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
   if (!painter.still && frame.viewer) for (const worker of snapshot.units) {
-    if (worker.owner !== frame.viewer || worker.order.type !== "build") continue;
+    if (isInCabin(worker) || worker.owner !== frame.viewer || worker.order.type !== "build") continue;
     const order = worker.order, point = worldToScreen(painter, order);
     if (!nearScreen(painter, point, 120)) continue;
     ctx.save(); ctx.globalAlpha = .24;
@@ -201,12 +202,12 @@ export function drawWorld(frame: WorldFrame) {
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
   renderWorldEffects({
     ctx,
-    effects: snapshot.effects.filter(effect=>!frame.physicalEffects?.has(effect.type)),
+    effects: snapshot.effects.filter(effect=>!frame.physicalEffects?.has(effect.type) && !(effect.unitId && unitsById.has(effect.unitId) && isInCabin(unitsById.get(effect.unitId)!))),
     worldToScreen: (point) => worldToScreen(painter, point),
     nearScreen: (point, pad) => nearScreen(painter, point, pad),
     unitPosition: (id) => {
       const unit = unitsById.get(id);
-      return unit ? drawnPosition(painter, unit) : undefined;
+      return unit && !isInCabin(unit) ? drawnPosition(painter, unit) : undefined;
     },
   });
   ctx.restore();
@@ -224,7 +225,7 @@ export function drawWorld(frame: WorldFrame) {
       },
       unitAt: (unitId: string) => {
         const unit = unitsById.get(unitId);
-        return unit ? { ...drawnPosition(painter, unit), radius: unit.radius } : undefined;
+        return unit && !isInCabin(unit) ? { ...drawnPosition(painter, unit), radius: unit.radius } : undefined;
       },
     };
     drawStoryAir(storyPainter);
@@ -370,7 +371,7 @@ function drawAimLines(painter: Painter) {
   const { ctx } = painter;
   for (const unit of painter.snapshot.units) {
     const aim = unit.aim;
-    if (unit.owner !== painter.viewer || !aim || !["attack", "attackMove", "hold", "aim", "cast"].includes(unit.order.type)) continue;
+    if (isInCabin(unit) || unit.owner !== painter.viewer || !aim || !["attack", "attackMove", "hold", "aim", "cast"].includes(unit.order.type)) continue;
     const from = worldToScreen(painter, drawnPosition(painter, unit)), to = worldToScreen(painter, aim);
     if (!nearScreen(painter, from, 80) && !nearScreen(painter, to, 80)) continue;
     ctx.save();
@@ -416,6 +417,7 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
   const { ctx, now } = painter;
   const engaged = engagedEntityIds(painter.snapshot);
   for (const unit of units) {
+    if (isInCabin(unit)) continue;
     const shake = hitFeedbackOffset(painter.snapshot, unit);
     const anchor=painter.actorPositions?.get(unit.id);
     const at = anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter, unit);

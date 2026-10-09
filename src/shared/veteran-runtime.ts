@@ -5,6 +5,7 @@ import type { DamageReductionSource } from "./damage-reduction";
 import { canReceiveHealing } from "./healing";
 import { isStunned } from "./unit-abilities";
 import { matchesUnitTarget } from "./unit-targeting";
+import { isInCabin } from './ship-cabin';
 import type { GameSnapshot, Owner, Unit, UnitStatusEffect, WorldEffect } from "./types";
 import { isVeteranActiveSkillId, isVeteranSkillId, VETERAN_SKILLS, type VeteranActiveSkillId, type VeteranModifiers } from "./veteran-skills";
 
@@ -41,7 +42,7 @@ function nearbyAllies(snapshot: VeteranSnapshot, source: Unit, radius: number, n
   // A spatial callback may enumerate overlapping buckets. Each unit is affected once.
   const targets = new Map<string, Unit>();
   for (const unit of candidates) {
-    if (unit.hp > 0 && allied(snapshot, source.owner, unit.owner) && distanceSquared(source, unit) <= radius ** 2) targets.set(unit.id, unit);
+    if (unit.hp > 0 && !isInCabin(unit) && allied(snapshot, source.owner, unit.owner) && distanceSquared(source, unit) <= radius ** 2) targets.set(unit.id, unit);
   }
   return [...targets.values()];
 }
@@ -67,7 +68,7 @@ export function buildVeteranFrame(snapshot: VeteranSnapshot, nearby?: VeteranNea
     if (source.hp <= 0 || !isVeteranSkillId(source.veteranSkill)) continue;
     const effect = VETERAN_SKILLS[source.veteranSkill].effect;
     if (effect.type === "passive" && matchesUnitTarget(source, effect.targets, snapshot)) highestModifiers(entry(source).passive, effect.modifiers);
-    if (effect.type === "aura") {
+    if (effect.type === "aura" && !isInCabin(source)) {
       for (const target of nearbyAllies(snapshot, source, effect.radius, nearby)) {
         if (matchesUnitTarget(target, effect.targets, snapshot)) highestModifiers(entry(target).aura, effect.modifiers);
       }
@@ -198,7 +199,7 @@ export function castVeteranAbility(
   frame?: VeteranAutocastFrame,
 ): boolean {
   if (!isVeteranActiveSkillId(skill) || caster.veteranSkill !== skill || caster.hp <= 0
-    || isStunned(caster) || abilityCooldown(caster, skill) > 0) return false;
+    || isInCabin(caster) || isStunned(caster) || abilityCooldown(caster, skill) > 0) return false;
   const effect = VETERAN_SKILLS[skill].effect;
   if (effect.type !== "active") return false;
   let candidates = nearbyAllies(snapshot, caster, effect.radius, nearby).filter(unit => matchesUnitTarget(unit, effect.targets, snapshot));

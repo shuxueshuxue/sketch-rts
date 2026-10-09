@@ -3,7 +3,8 @@ import type { Unit } from './types';
 
 export function shipPartMax(ship: Unit) {
   const profile = shipProfile(ship)!;
-  return { rigging: Math.round(profile.length * .55), rudder: Math.round(profile.beam * .8) };
+  return { rigging: Math.round(profile.length * .55), rudder: Math.round(profile.beam * .8),
+    cabin: ship.kind === 'cutter' ? 0 : Math.round(ship.maxHp * .4) };
 }
 
 /** Routing costs and engine limits use the same rates, in units/s and radians/s. */

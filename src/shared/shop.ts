@@ -3,6 +3,7 @@ import { unitMover } from "./catalog";
 import { seconds } from "./time";
 import { PURCHASE_REACH, purchasePlacement } from "./purchase";
 import { distanceToHull, shipProfile } from "./ship-geometry";
+import { isInCabin } from "./ship-cabin";
 import type { GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "./types";
 
 // @@@shop-goods - What a shop sells, at the owner's prices (10-01): each a little worse for its gold than what it stands in
@@ -55,7 +56,7 @@ export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner
   let best: Unit | undefined;
   let bestGap = Infinity;
   for (const unit of snapshot.units) {
-    if (unit.owner !== owner || !standsAtShop(unit, shop) || !canEquip(unit) || !freeItemSlot(snapshot,unit,kind)) continue;
+    if (unit.owner !== owner || isInCabin(unit) || !standsAtShop(unit, shop) || !canEquip(unit) || !freeItemSlot(snapshot,unit,kind)) continue;
     const gap = Math.hypot(unit.x - shop.x, unit.y - shop.y);
     if (gap < bestGap) {
       best = unit;

@@ -28,7 +28,7 @@ const angleDifference = (from: number, to: number) => ((to - from + Math.PI) % (
 const angleOf = (x: number, y: number) => Math.round(Math.atan2(y, x) * 1e9) / 1e9;
 
 export function sailRig(kind: UnitKind): SailRig {
-  return kind === 'transport' ? 'lug' : kind === 'warship' || kind === 'carrier' ? 'square' : 'lateen';
+  return kind === 'transport' ? 'lug' : kind === 'warship' || kind === 'carrier' || kind === 'shipOfTheLine' ? 'square' : 'lateen';
 }
 
 /** Game polar, not a second force calculation: all speeds are fractions of the

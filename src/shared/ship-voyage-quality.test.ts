@@ -9,7 +9,7 @@ import { seconds, SIM_TICKS_PER_SECOND } from './time';
 import { WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
 import type { Unit } from './types';
 
-const kinds = ['cutter', 'transport', 'warship', 'bombardShip', 'fireShip', 'carrier'] as const;
+const kinds = ['cutter', 'transport', 'warship', 'bombardShip', 'fireShip', 'carrier', 'shipOfTheLine'] as const;
 type Game = ReturnType<typeof createGame>;
 type Point = { x: number; y: number };
 

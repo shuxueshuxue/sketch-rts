@@ -27,7 +27,7 @@ describe("unit tiers", () => {
     const tiers = (cap: number) => (Object.keys(UNIT_DEFS) as TrainableUnitKind[]).filter((kind) => requiredSupplyCap(kind) === cap).sort();
     expect(TIER_SUPPLY_CAP[3]).toBeGreaterThan(TIER_SUPPLY_CAP[2]);
     expect(tiers(TIER_SUPPLY_CAP[2])).toEqual(["ashHexer", "ballista", "bombardShip", "carrier", "catapult", "emberAcolyte", "horseArcher", "organGun", "priest", "pyreCaller", "raider", "siegeRam", "summoner", "witch"]);
-    expect(tiers(TIER_SUPPLY_CAP[3])).toEqual(["ashChieftain", "cinderRevenant", "golem", "knight"]);
+    expect(tiers(TIER_SUPPLY_CAP[3])).toEqual(["ashChieftain", "cinderRevenant", "golem", "knight", "shipOfTheLine"]);
     for (const kind of ["worker", "footman", "lancer", "ashWarden", "archer", "emberRavager", "cinderRunner", "sparkArcher", "contractArcher"] as const) expect(requiredSupplyCap(kind)).toBe(0);
   });
 
@@ -45,5 +45,24 @@ describe("unit tiers", () => {
     issueCommand(teched.game, { type: "train", buildingId: teched.sanctum.id, unitKind: "summoner" });
     expect(teched.sanctum.queue.map((job) => job.unitKind)).toEqual(["summoner"]);
     expect(() => issueCommand(teched.game, { type: "train", buildingId: teched.stables.id, unitKind: "knight" })).toThrow(`Need a supply cap of ${elite} to train knight`);
+  });
+
+  it.each(["grove", "ember"] as const)("%s can order a heavy broadside ship only after unlocking elite supply", race => {
+    const { game } = groveGame(farmsFor(TIER_SUPPLY_CAP[3]) - 1);
+    game.players.player!.race = race;
+    const yard = createBuilding("heavy-shipyard", "player", "shipyard", 1000, 1000, true);
+    game.buildings.push(yard);
+    const command = { type: "train", buildingId: yard.id, unitKind: "shipOfTheLine" } as const;
+    expect(checkCommandLegality(snapshotGame(game), "player", command)).toEqual({
+      message: `Need a supply cap of ${TIER_SUPPLY_CAP[3]} to train shipOfTheLine`, transient: true,
+    });
+    game.buildings.push(createBuilding("heavy-unlock-farm", "player", "farm", 400, 1100, true));
+    game.players.player!.supplyCap += BUILDING_DEFS.farm.supplyProvided;
+    expect(checkCommandLegality(snapshotGame(game), "player", command)).toBeUndefined();
+    const gold = game.players.player!.gold;
+    issueCommand(game, command);
+    expect(yard.queue).toHaveLength(1);
+    expect(yard.queue[0]!.unitKind).toBe("shipOfTheLine");
+    expect(game.players.player!.gold).toBe(gold - UNIT_DEFS.shipOfTheLine.cost);
   });
 });

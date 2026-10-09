@@ -4,6 +4,13 @@ import { TIER_SUPPLY_CAP } from "../shared/catalog";
 import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
 
 describe("command button state", () => {
+  it('hides spells and autocast for sheltered crew without blocking ready deck casters',()=>{
+    const inside={...unit('priest',undefined),deck:{shipId:'ship',x:0,y:0},cabin:{shipId:'ship'}};
+    const outside={...unit('priest',undefined),id:'outside'};
+    expect(abilityCommandState([inside],'heal',[inside,outside]).visible).toBe(false);
+    expect(abilityCommandState([outside],'heal',[inside,outside]).enabled).toBe(true);
+    expect(autocastToggle([inside,outside],'heal')?.unitIds).toEqual(['outside']);
+  });
   it("shows learned veteran abilities only on their owner's card and toggles only trained selected casters", () => {
     const student = { ...unit("priest", undefined), id: "student" };
     const learned = { ...unit("priest", { veteranHealingWave: 24 }), id: "learned", veteranSkill: "veteranHealingWave" as const };

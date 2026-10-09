@@ -68,6 +68,7 @@ def build_in_blender():
         brass = material("aged brass", (.32, .23, .105), .6, .45)
         rope = material("hemp rigging", (.26, .205, .13))
         glass = material("cabin glazing", (.075, .135, .14), .32)
+        ochre = material("weathered ochre gun deck band", (.40, .27, .12))
 
         def mesh(name, vertices, faces, mat, layer):
             data = bpy.data.meshes.new(name)
@@ -192,17 +193,20 @@ def build_in_blender():
         for obstacle in spec["obstacles"]:
             x, y, r = obstacle["x"], obstacle["y"], obstacle["radius"]
             if obstacle["type"] == "mast":
-                h = spec["mastHeight"]
+                mast_index = sum(1 for frame in ship_rig["frames"] if frame["id"].startswith("mast") and "jib" not in frame["id"])
+                h = spec.get("mastHeights", [spec["mastHeight"]] * 3)[mast_index]
+                rig_beam = beam * spec.get("mastBeamScales", [1] * 3)[mast_index]
                 cylinder("mast footing", (x, y, z+1.4), r, 2.8, iron, upper)
                 cylinder("mast", (x, y, z+h/2), 2.2, h, edge, upper)
                 for height in (5, 9, h*.66):
                     cylinder("mast binding", (x, y, z+height), 2.35, .7, rope, upper)
                 next_mast = min((part for part in spec["obstacles"] if part["type"] == "mast" and part["x"] > x),
                                 key=lambda part: part["x"], default=None)
-                rig_id = "mast" + str(sum(1 for frame in ship_rig["frames"] if frame["id"].startswith("mast") and "jib" not in frame["id"]))
-                authored_rig = build_running_rig(kind, (x, y, z), length, beam, h,
+                rig_id = "mast" + str(mast_index)
+                next_height = spec.get("mastHeights", [spec["mastHeight"]] * 3)[mast_index + 1] if next_mast else 0
+                authored_rig = build_running_rig(kind, (x, y, z), length, rig_beam, h,
                                                 cloth, rope, edge, mesh, spar, upper,
-                                                stay_to=(next_mast["x"], next_mast["y"], z+h) if next_mast else None,
+                                                stay_to=(next_mast["x"], next_mast["y"], z+next_height) if next_mast else None,
                                                 dynamic=True, rig_id=rig_id)
                 for key in ("frames", "sails", "rigidParts"):
                     ship_rig[key].extend(authored_rig[key])
@@ -213,7 +217,7 @@ def build_in_blender():
                     # sails have forward chainplates; square rigs stay aft of
                     # every plane in the permitted 50-degree brace range.
                     feet = [Vector((x+dx, y+side*beam*.40, z+8)) for dx in (48, 60)] if fore_aft else [
-                        Vector((x-beam*dx, y+side*beam*.25, z+8)) for dx in (.32, .40)]
+                        Vector((x-rig_beam*dx, y+side*rig_beam*.25, z+8)) for dx in (.32, .40)]
                     for foot in feet:
                         spar("mast shroud", peak, foot, .38, dark, upper)
                         cylinder("shroud deadeye", foot, 1, 1.2, wood, upper, (math.pi/2, 0, 0))
@@ -221,7 +225,7 @@ def build_in_blender():
                     for rung in range(1, 7):
                         t = rung/10
                         spar("shroud ratline", feet[0].lerp(peak, t), feet[1].lerp(peak, t), .18, rope, upper)
-                if kind == "carrier":
+                if kind in ("carrier", "shipOfTheLine"):
                     # Offset rope hole keeps the vertical halyard falls clear
                     # of the solid platform, rather than drawing through it.
                     platform_z=z+h*.72
@@ -233,8 +237,12 @@ def build_in_blender():
                     for side in (-1,1):
                         spar("lookout rail",(x-7,side*6,z+h*.72+6),(x+7,side*6,z+h*.72+6),.7,edge,upper)
             elif obstacle["type"] == "cabin":
-                height = {"cutter": 9, "fireShip": 12, "transport": 17, "bombardShip": 15, "warship": 22, "carrier": 30}[kind]
-                box("sterncastle", (x, y, z+height/2), (r*1.5, r*1.35, height), wood, upper)
+                height = {"cutter": 9, "fireShip": 12, "transport": 17, "bombardShip": 15, "warship": 22, "carrier": 30, "shipOfTheLine": 36}[kind]
+                # The heavy ship's tighter aft cabin leaves a real walkway
+                # beside a fully fitted battery. Its solid corners stay inside
+                # the shared circular cabin obstacle; roof overhang is above it.
+                cabin_size = (r*1.48, r*1.34, height) if kind == "shipOfTheLine" else (r*1.5, r*1.35, height)
+                box("sterncastle", (x, y, z+height/2), cabin_size, wood, upper)
                 box("raised quarterdeck", (x, y, z+height+1.4), (r*1.65, r*1.48, 2.8), plank, upper)
                 for side in (-1, 1):
                     for dx in (-r*.38, r*.12):
@@ -253,6 +261,21 @@ def build_in_blender():
                     for dy in (-r*.4, 0, r*.4):
                         box("stern gallery window", (x-r*.86, dy, z+height*.62), (.8, r*.20, height*.28), dark, upper)
                 spar("stern ensign staff", (x-8, 0, z+height), (x-12, 0, z+height+20), .85, edge, upper)
+                if kind == "shipOfTheLine":
+                    # Entry is on the forward face of the authored cabin. Its
+                    # raised roof is visual; crew path on the single main deck.
+                    front = x+r*.75+.35
+                    box("cabin entry surround", (front, y, z+10), (1.4, 18, 20), edge, upper)
+                    box("cabin double doors", (front+.8, y, z+9.4), (.8, 14.8, 18.8), dark, upper)
+                    for dy in (-3.8, 3.8):
+                        box("cabin door planking", (front+1.3, y+dy, z+9.3), (.3, 6.9, 18), wood, upper)
+                        cylinder("cabin door handle", (front+1.7, y+dy*.3, z+9), .65, .9, brass, upper, (0, math.pi/2, 0))
+                    box("cabin threshold", (front+1.6, y, z+.6), (5, 18, 1.2), edge, upper)
+                    for dy in (-r*.43, r*.43):
+                        box("forward cabin window frame", (front, y+dy, z+height*.68), (1.2, 9, 11), edge, upper)
+                        box("forward cabin glass", (front+.7, y+dy, z+height*.68), (.2, 7, 8.8), glass, upper)
+                    for dy in (-r*.38, 0, r*.38):
+                        spar("stern gallery mullion", (x-r*.87, dy, z+height*.49), (x-r*.87, dy, z+height*.75), .5, brass, upper)
             elif obstacle["type"] == "gun":
                 cylinder("gun carriage", (x, y, z+2), r, 4, edge, weapon)
                 cylinder("cannon", (x+8, y, z+7), 4.2, 35, iron, weapon, (0, math.pi/2, 0))
@@ -288,6 +311,43 @@ def build_in_blender():
             for side in (-1, 1):
                 for x in (-length*.23, 0, length*.22):
                     box("iron gunport shutter", (x, side*beam*.44, z*.68), (10, 1.8, 6), iron, base)
+        if kind == "shipOfTheLine":
+            # The lower gun deck and its closed shutters establish the heavy
+            # hull silhouette without baking any installable weapon into it.
+            def hull_side(x):
+                for a, b in zip(hull, hull[1:] + hull[:1]):
+                    if a[1] >= 0 and b[1] >= 0 and min(a[0], b[0]) <= x <= max(a[0], b[0]) and a[0] != b[0]:
+                        t = (x-a[0])/(b[0]-a[0])
+                        return a[1]+t*(b[1]-a[1]), math.atan2(b[1]-a[1], b[0]-a[0])
+                raise ValueError("Heavy ship gunport must lie on a side panel")
+            for side in (-1, 1):
+                for a, b in zip(hull, hull[1:] + hull[:1]):
+                    if a[1]*side > 0 and b[1]*side > 0:
+                        mid = ((a[0]+b[0])/2, (a[1]+b[1])/2)
+                        band = box("lower gun deck ochre band", (*mid, z*.75+sheer(mid[0])*.75),
+                                   (math.dist(a,b), 1.9, 12), ochre, base)
+                        band.rotation_euler.z = math.atan2(b[1]-a[1], b[0]-a[0])
+                for px in (-74, -32, 10, 50):
+                    py, slope = hull_side(px)
+                    port_z = z*.75+sheer(px)*.75
+                    frame = box("lower gunport surround", (px, side*(py+1.2), port_z), (17, 2.1, 11), dark, base)
+                    frame.rotation_euler.z = side*slope
+                    shutter = box("closed gunport shutter", (px, side*(py+2.4), port_z), (12.5, 1, 7.7), wood, base)
+                    shutter.rotation_euler.z = side*slope
+                    for dx in (-4.7, 4.7):
+                        strap = box("gunport shutter iron strap", (px+dx, side*(py+3), port_z), (.8, .5, 7.7), iron, base)
+                        strap.rotation_euler.z = side*slope
+                    cylinder("gunport shutter ring", (px, side*(py+3.4), port_z-1), .8, .6, iron, base, (math.pi/2, 0, 0))
+                for px in (-74, -32, 10, 50):
+                    py, slope = hull_side(px)
+                    frame = box("upper deck cannon port", (px, side*(py+1.7), z+4.5+sheer(px)/2), (18, 1.2, 6.2), dark, upper)
+                    frame.rotation_euler.z = side*slope
+            box("flush companion hatch", (3, 0, z+.4), (24, 22, .8), dark, base)
+            for dy in (-7, 0, 7):
+                box("companion hatch grating", (3, dy, z+1), (23, .7, .6), edge, base)
+            for side in (-1, 1):
+                for px in (-83, 4, 62):
+                    cylinder("deck mooring bollard", (px, side*beam*.27, z+3), 1.7, 6, iron, upper)
         if kind == "bombardShip":
             for side in (-1,1):
                 box("reinforced mortar coaming", (length*.16, side*beam*.31,z+3), (length*.3,3,6), iron, upper)

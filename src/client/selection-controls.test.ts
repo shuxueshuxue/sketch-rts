@@ -29,6 +29,13 @@ describe("selection controls", () => {
     expect([...result.selectedIds]).toEqual(["crew"]);
   });
 
+  it('keeps sheltered crew out of battlefield box and same-kind selection, including a breached cabin',()=>{
+    const hidden={...unit('hidden',100,100,'player','priest'),deck:{shipId:'ship',x:0,y:0},cabin:{shipId:'ship',breached:true as const}};
+    const snapshot=snapshotWith({units:[hidden,unit('visible',110,100,'player','priest')]});
+    expect([...selectInScreenBox(snapshot,'player',rect(60,60,180,180),point=>point,emptySelection(),false).selectedIds]).toEqual(['visible']);
+    expect([...selectNearbySameKindUnits(snapshot,'player','visible',900,emptySelection(),false).selectedIds]).toEqual(['visible']);
+  });
+
   it("box-selects only one building when no units are inside the rectangle", () => {
     const snapshot = snapshotWith({
       buildings: [building("townhall-1", 100, 100, "townHall"), building("barracks-1", 140, 100)],
