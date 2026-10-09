@@ -84,7 +84,7 @@ export const EMBER_UNITS = {
   },
   sparkArcher: {
     name: { en: "Spark Archer", zh: "火花弓手" },
-    description: { en: "A quick-firing Ember archer with shorter reach. Scorches targets to support allied melee attacks.", zh: "射击较快、射程较短的灰烬射手；灼烧目标，为友军近战攻击提供支援。" },
+    description: { en: "Arrows have a 15% chance to ignite a small patch of ground for 6 seconds. Burns clustered enemies and scorches them for allied melee attacks.", zh: "箭矢有 15% 概率点燃一小块地面，持续 6 秒。克制密集站位，灼烧状态可配合友军近战攻击。" },
     command: { icon: "⋊", hotkey: "a" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "spark"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
