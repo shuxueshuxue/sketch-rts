@@ -8,10 +8,15 @@ import { distance } from '../policy/spatial';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import type { AiScript } from '../policy/types';
 
+export function recoveryPatients(snapshot: GameSnapshot, owner: PlayerId) {
+  return snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.kind !== 'worker'
+    && unit.expiresTick === undefined && unit.hp < unit.maxHp * V7_WOUNDED_SHARE
+    && canReceiveHealing(unit, snapshot));
+}
+
 function assignments(snapshot: GameSnapshot, owner: PlayerId) {
   const own = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.kind !== 'worker');
-  const patients = own.filter(unit => unit.expiresTick === undefined && unit.hp < unit.maxHp * V7_WOUNDED_SHARE
-    && canReceiveHealing(unit, snapshot));
+  const patients = recoveryPatients(snapshot, owner);
   return own.flatMap(healer => {
     const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal');
     if (!ability) return [];
