@@ -153,6 +153,7 @@ export type UnitOrder =
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number; heading?: number; shore?: {x:number;y:number} } }
+  | { type: "boardShip"; targetId: string }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
   | { type: "enterCabin"; shipId: string }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
@@ -242,6 +243,10 @@ export type Unit = {
     /** The helm retains its turn rate across ticks and target updates. */
     yawRate?: number;
     pursuit?: { targetId: string; phase: 'approach' | 'engage'; moving: boolean };
+    /** An idle fleet's saved guard station and current defensive engagement. */
+    defense?: { originX:number; originY:number; targetId?:string; returning?:boolean };
+    gangway?: import('./ship-gangway').ShipGangway;
+    gangwayCooldownUntilTick?: number;
     route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean; curvature?: number; speedLimit?: number; queuedTurn?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
       intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean;
       avoidSide?: number; avoidTicks?: number; avoidHeading?: number; avoidBaseHeading?: number; avoidTargetId?: string; tackHeading?: number;
@@ -249,8 +254,12 @@ export type Unit = {
       queuedX?: number; queuedY?: number; queuedPassed?: boolean;
     } | undefined;
   } | undefined;
-  /** Physical scaling for unusually large campaign hulls. */
+  /** Authored physical scale for campaign hulls, before the fleet-wide ship size multiplier. */
   deckScale?: number;
+  /** Saved radius, fittings and deck coordinates have received the fleet-wide size migration. */
+  shipSizeVersion?: 1 | undefined;
+  /** A crew member supported between the two live gangway anchors. */
+  gangway?: import('./ship-gangway').GangwayCrossing;
   radius: number;
   carryingGold: number;
   /** Active gold-mine assignment, released when its order ends. */
@@ -293,6 +302,8 @@ export type Building = {
 };
 
 export type TrainingJob = {
+  /** The price actually paid, so later balance changes cannot increase refunds. */
+  paidGold?: number;
   id?: string;
   unitKind: TrainableUnitKind;
   remaining: number;
@@ -361,6 +372,8 @@ export type WorldItem = {
 };
 
 export type PlayerState = {
+  /** Assigned once per match; saved independently of alliance display mode. */
+  color?: string;
   race: RaceId;
   gold: number;
   supplyUsed: number;
@@ -571,6 +584,8 @@ export type GameCommand =
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
+  | { type: "boardShip"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "cancelBoardShip"; unitIds: string[] }
   | { type: "unload"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "unloadPassenger"; transportId: string; passengerId: string }
   | { type: "enterCabin"; unitIds: string[] }

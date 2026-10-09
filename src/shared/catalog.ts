@@ -7,6 +7,7 @@ import { seconds } from "./time";
 import { VETERAN_ACTIVE_SKILL_IDS, VETERAN_SKILLS, type VeteranActiveSkillId } from "./veteran-skills";
 import type { DamageProfile } from "./damage-types";
 import type { UnitClass, UnitTargetFilter } from "./unit-targeting";
+import { TRANSPORT_COMBAT } from './transport-role';
 
 export const MERCENARY_HIRE_RANGE = 220;
 export const SUPPORT_BUILDING_HEAL = 5;
@@ -53,6 +54,8 @@ export type UnitDef = {
   goldBounty?: number;
   abilities: AbilityKind[];
   armor?: "heavy";
+  /** Incoming ordinary ranged attacks, including siege and towers. Active spells bypass it. */
+  rangedDamageTaken?: number;
   // Damage multiplier against summoned units and casters (units with an ability).
   casterSlayer?: number;
   // Innate health regeneration, on top of leadership's.
@@ -219,16 +222,16 @@ export const UNIT_RULES = {
   barkMender: { hp: 68, speed: 64, radius: 18, attackDamage: 7, attackRange: 88, aimSpeed: 400, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: ["heal"] },
   stonebackBrute: { hp: 210, speed: 72, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
   gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
-  // @@@ships - Both races can board every ship. Transport passengers deal half damage;
+  // @@@ships - Both races can board every ship. Troop ferry passengers deal half damage;
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
-  transport: { unitClass: "mechanical", trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
+  transport: { unitClass: "mechanical", trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
   warship: { unitClass: "mechanical", trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
   // Four removable cannons are included in the purchase; the hull has no extra intrinsic shot.
   shipOfTheLine: { unitClass: "mechanical", trainedAt: "shipyard", hp: 740, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { unitClass: "mechanical", trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
+  cutter: { unitClass: "mechanical", trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
   bombardShip: { unitClass: "mechanical", trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
   fireShip: { unitClass: "mechanical", trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { unitClass: "mechanical", trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
+  carrier: { unitClass: "mechanical", trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
   siegeRam: { unitClass: "mechanical", trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
   ballista: { unitClass: "mechanical", trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
   catapult: { unitClass: "mechanical", trainedAt: "workshop", race: "ember", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
@@ -274,7 +277,7 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
 // the tooltips) takes it for its base, as any subtype passes for its supertype; the sim, which knows variants, plays it
 // by its own numbers. Its abilities are its base's: a campaign's own powers are scripts (see story/). Variants live in
 // the game that uses them (Game.variants), never in these tables, so no campaign can move the balance of any other game.
-export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "casterSlayer" | "regenPerSecond" | "unitClass">>;
+export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "rangedDamageTaken" | "casterSlayer" | "regenPerSecond" | "unitClass">>;
 
 export type UnitVariantDef = UnitVariantStats & {
   base: UnitKind;

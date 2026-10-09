@@ -14,7 +14,7 @@ type Point = { x: number; y: number };
 // @@@minimap-relations - Given the player looking on, the players' buildings and units are in friend-or-foe colours (see
 // @@@relation-ink): own green, allies yellow, enemies red; the creeps keep theirs.
 export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot), viewer?: PlayerId, terrainOverlay?: () => void) {
-  const ink = (owner: Owner | undefined) => (viewer && owner && owner !== "neutral" ? RELATION_INK[relationTo(snapshot, viewer, owner)] : ownerInk(owner));
+  const ink = (owner: Owner | undefined) => (viewer && owner && owner !== "neutral" ? RELATION_INK[relationTo(snapshot, viewer, owner)] : ownerInk(owner, snapshot));
   ctx.fillStyle = "#dedcc0";
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
   if (snapshot.map.terrain) {
@@ -102,7 +102,7 @@ export function drawStartMarks(ctx: Brush, snapshot: GameSnapshot, rect: Rect, s
     const point = projectWorldToRect(hall, snapshot.map, rect);
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = ownerInk(playerId);
+    ctx.fillStyle = ownerInk(playerId, snapshot);
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#f3e3b5";

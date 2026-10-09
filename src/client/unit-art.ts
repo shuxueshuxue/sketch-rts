@@ -4,7 +4,9 @@ import { mapUnitCards } from "./content/units";
 /**
  * How much gear a unit's model carries. Rank follows the catalog: basic line
  * troops cost at most 120 gold, advanced specialists and hired swords 130–160,
- * elites 190 or more (and 3+ supply). Neutral creeps rank by camp food power.
+ * elites 190 or more (and 3+ supply). Vessels have their own construction
+ * prices and ranks; their larger hulls cost more than equivalent land tiers.
+ * Neutral creeps rank by camp food power.
  */
 export type UnitArtTier = "civilian" | "basic" | "advanced" | "elite";
 

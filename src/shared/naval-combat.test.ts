@@ -6,7 +6,7 @@ import { localToWorld, shipProfile, shipWeaponPose } from './ship-geometry';
 import { UNIT_DEFS } from './catalog';
 import { nearestShipPose } from './ship-navigation';
 import { DECK_HULL_DAMAGE } from './deck-combat';
-import { HEAVY_ARMOR_DAMAGE } from './damage-reduction';
+import { TRANSPORT_COMBAT } from './transport-role';
 import { checksumGame } from './sim/checksum';
 import type { Unit } from './types';
 function match(terrain?: 'water' | 'coast') {
@@ -36,8 +36,8 @@ function run(game: ReturnType<typeof match>, steps: number) { for (let i = 0; i 
 function firstShot(game: ReturnType<typeof match>) { for (let i = 0; i < 400 && !game.projectiles.length; i++)
     stepGame(game); expect(game.projectiles).toHaveLength(1); return game.projectiles[0]!; }
 describe('live naval combat', () => {
-    it('treats a hull order as a crew fight, with ordinary crew damage and incidental hull damage', () => {
-        const game = match(), ship = game.spawnUnit('enemy', 'warship', 900, 800), crew = game.spawnUnit('enemy', 'archer', 900, 800), archer = game.spawnUnit('player', 'archer', 1100, 800);
+    it.each(['warship', 'transport', 'carrier'] as const)('treats a %s hull order as a crew fight, with ordinary crew damage and incidental hull damage', kind => {
+        const game = match(), ship = game.spawnUnit('enemy', kind, 900, 800), crew = game.spawnUnit('enemy', 'archer', 900, 800), archer = game.spawnUnit('player', 'archer', 1100, 800);
         ship.cooldown = 9999;
         place(game, ship, crew, 0, 20);
         issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [archer.id], targetId: ship.id });
@@ -46,7 +46,8 @@ describe('live naval combat', () => {
         archer.cooldown = 9999;
         run(game, shot.remaining);
         expect(crew.hp).toBeCloseTo(hp - shot.damage); // No ship-provided ranged mitigation.
-        expect(ship.hp).toBeCloseTo(hull - shot.damage * DECK_HULL_DAMAGE.arrow);
+        const collateral = shot.damage * DECK_HULL_DAMAGE.arrow;
+        expect(ship.hp).toBeCloseTo(hull - (kind === 'warship' ? collateral : Math.round(collateral * TRANSPORT_COMBAT.rangedDamageTaken)));
         removeUnit(game, crew.id);
         archer.cooldown = 0;
         const next = firstShot(game);
@@ -66,7 +67,7 @@ describe('live naval combat', () => {
         gun.cooldown = 9999;
         run(game, shot.remaining);
         expect(crew.hp).toBeLessThan(hp);
-        expect(ship.hp).toBeCloseTo(hull - shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare!);
+        expect(ship.hp).toBeCloseTo(hull - Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
     });
     it('aggregates one shell blast across several passengers without stacking hull damage', () => {
         const game = match(), gun = game.spawnUnit('player', 'catapult', 1320, 900), ship = game.spawnUnit('enemy', 'carrier', 900, 900), a = game.spawnUnit('enemy', 'archer', 900, 900), b = game.spawnUnit('enemy', 'archer', 900, 900);
@@ -78,14 +79,14 @@ describe('live naval combat', () => {
         run(game, shot.remaining);
         expect(a.hp).toBeLessThan(a.maxHp);
         expect(b.hp).toBeLessThan(b.maxHp);
-        // One shared blast reaches the hull, where the carrier's own heavy armor
-        // reduces the physical ranged hit once, independently of its passengers.
-        const hullDamage = Math.max(1, Math.round(shot.damage * DECK_HULL_DAMAGE.shell * HEAVY_ARMOR_DAMAGE.rangedUnit));
+        // One shared blast receives troop-ferry protection once on the hull,
+        // independently of the exposed passengers' damage.
+        const hullDamage = Math.max(1, Math.round(shot.damage * DECK_HULL_DAMAGE.shell * TRANSPORT_COMBAT.rangedDamageTaken));
         expect(ship.hp).toBeCloseTo(hull - hullDamage);
         expect(game.deckDamageBatch).toBeUndefined();
     });
-    it('halves transport passenger attacks and removes the modifier after leaving', () => {
-        const game = match(), ship = game.spawnUnit('player', 'transport', 900, 800), archer = game.spawnUnit('player', 'archer', 900, 800), enemy = game.spawnUnit('enemy', 'footman', 1150, 800);
+    it.each(['transport', 'carrier'] as const)('halves %s passenger attacks and removes the modifier after leaving', kind => {
+        const game = match(), ship = game.spawnUnit('player', kind, 900, 800), archer = game.spawnUnit('player', 'archer', 900, 800), enemy = game.spawnUnit('enemy', 'footman', 1150, 800);
         place(game, ship, archer);
         archer.attackDamage = UNIT_DEFS.archer.attackDamage;
         archer.cooldown = 0;
@@ -93,7 +94,7 @@ describe('live naval combat', () => {
         enemy.order = { type: 'hold', x: enemy.x, y: enemy.y };
         issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [archer.id], targetId: enemy.id });
         const shot = firstShot(game);
-        expect(shot.damage).toBe(Math.round(archer.attackDamage * .5));
+        expect(shot.damage).toBe(Math.round(archer.attackDamage * TRANSPORT_COMBAT.passengerDamageMultiplier));
         game.projectiles = [];
         delete archer.deck;
         archer.cooldown = 0;

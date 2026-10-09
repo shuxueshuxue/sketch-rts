@@ -26,6 +26,13 @@ function canFire(ship: Unit, item: WorldItem, target: StrikeTarget, heading: num
     && Math.abs(headingDifference(heading + mount.bearing, Math.atan2(point.y - pose.pivot.y, point.x - pose.pivot.x))) <= mount.halfArc - margin + 1e-7;
 }
 
+/** At this distance the mortar's minimum-range circle meets its bow traverse boundary. */
+function mortarBoundaryDistance(ship: Unit, item: WorldItem) {
+  const mount = shipMounts(ship).find(mount => mount.id === item.mountId)!;
+  const minimum = SHIP_WEAPONS.shipMortar.weapon.minRange!;
+  return Math.hypot(mount.x + minimum * Math.cos(mount.halfArc), mount.y - minimum * Math.sin(mount.halfArc));
+}
+
 describe('mounted firing headings', () => {
   it('leads a receding hull for the actual finite flight instead of ending at its old stern', () => {
     const target = createUnit('target', 'enemy', 'transport', 400, 0);
@@ -55,7 +62,7 @@ describe('mounted firing headings', () => {
   });
 
   it('finds the narrow mortar angle between minimum range and the bow traverse limit', () => {
-    const { ship, item, items } = battery(), target = { x: 1209.5, y: 1000 };
+    const { ship, item, items } = battery(), target = { x: ship.x + mortarBoundaryDistance(ship, item) + .25, y: ship.y };
     const heading = bestFiringHeading({ items }, ship, target);
     expect(canFire(ship, item, target, heading)).toBe(true);
     expect(heading).toBeGreaterThan(24 * Math.PI / 180);
@@ -65,7 +72,7 @@ describe('mounted firing headings', () => {
 
   it('aims at a crew member’s center without treating its body radius as a hull surface', () => {
     const { ship, item, items } = battery();
-    const crew = createUnit('crew', 'enemy', 'footman', 1209.5, 1000);
+    const crew = createUnit('crew', 'enemy', 'footman', ship.x + mortarBoundaryDistance(ship, item) + .25, ship.y);
     crew.deck = { shipId: 'carrier', x: 24, y: 12 };
     const heading = bestFiringHeading({ items }, ship, crew);
     expect(canFire(ship, item, crew, heading)).toBe(true);
@@ -95,8 +102,8 @@ describe('mounted firing headings', () => {
   });
 
   it('chooses a side of range boundaries accepted by the actual strict shot checks', () => {
-    for (const initial of [-.2, 0, .2]) for (const distance of [209.5, 210, 210.75, 212]) {
-      const { ship, item, items } = battery(), target = { x: ship.x + distance, y: ship.y };
+    for (const initial of [-.2, 0, .2]) for (const offset of [.25, .75, 1.5, 2.75]) {
+      const { ship, item, items } = battery(), target = { x: ship.x + mortarBoundaryDistance(ship, item) + offset, y: ship.y };
       ship.sailing!.heading = initial;
       expect(canFire(ship, item, target, bestFiringHeading({ items }, ship, target))).toBe(true);
     }

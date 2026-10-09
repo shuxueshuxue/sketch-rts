@@ -80,14 +80,14 @@ export function convexHull(points: readonly Point[]) {
   const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
   const cross = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
   const half = (list: readonly Point[]) => { const out: Point[] = []; for (const p of list) {
-    const last=out.at(-1);
-    if(last && Math.hypot(p.x-last.x,p.y-last.y)<1e-8)continue;
+    const last=out[out.length-1];
+    if(last && (p.x-last.x)**2+(p.y-last.y)**2<1e-16)continue;
     while (out.length > 1) {
       const a=out[out.length-2]!,b=out[out.length-1]!;
       // Nearly identical rotated endpoints can leave a zero-length edge or
       // parallel offset planes. Remove numerical corners before offsetting.
-      const tolerance=1e-10*Math.hypot(b.x-a.x,b.y-a.y)*Math.hypot(p.x-b.x,p.y-b.y);
-      if(cross(a,b,p)>tolerance)break;
+      const turn=cross(a,b,p),abX=b.x-a.x,abY=b.y-a.y,bpX=p.x-b.x,bpY=p.y-b.y;
+      if(turn>0 && turn*turn>1e-20*(abX*abX+abY*abY)*(bpX*bpX+bpY*bpY))break;
       out.pop();
     }
     out.push(p);
@@ -96,7 +96,7 @@ export function convexHull(points: readonly Point[]) {
   lower.pop();
   upper.pop();
   const result=[...lower,...upper];
-  if(result.length>1 && Math.hypot(result[0]!.x-result.at(-1)!.x,result[0]!.y-result.at(-1)!.y)<1e-8)result.pop();
+  if(result.length>1 && (result[0]!.x-result[result.length-1]!.x)**2+(result[0]!.y-result[result.length-1]!.y)**2<1e-16)result.pop();
   return result;
 }
 /** Merge CCW edge directions, then remove numerical corners. This avoids

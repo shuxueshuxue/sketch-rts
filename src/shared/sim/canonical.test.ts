@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, type Game } from "../sim";
-import { canonicalGameState, checksumGame } from "./checksum";
+import { canonicalGameState, checksumGame, CHECKSUM_VERSION } from "./checksum";
 
 type Canonical = { match: Record<string, number>; units: { id: string }[]; runtime: { activePlayers: string[] } };
 
@@ -42,13 +42,14 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Fresh maps include their deterministic initial wind (checksum version 10).
+    // Version 15 includes persistent player colors and the enlarged ship rules.
+    expect(CHECKSUM_VERSION).toBe(15);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
-      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("b65f7d38");
+      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("5e9d99c6");
       const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
       // The seeded map carries an environment recipe and habitat-scored scenery.
-      expect(checksumGame(ladder)).toBe("36186363");
+      expect(checksumGame(ladder)).toBe("000b1ef6");
     }
   });
 });

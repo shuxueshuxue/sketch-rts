@@ -1,0 +1,1150 @@
+{
+  "schema": 1,
+  "baselineCommit": "7bd93bb5cd97a60bf9be19d3bde9df77fab0888d",
+  "candidateCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e",
+  "provenance": {
+    "authoredStressScript": "scripts/naval-runtime-stress.ts",
+    "authoredStressScriptSha256": "77face8bb6d2d158687d98ac2c74715cbf1f7f2d29c0e0c40a0cf589680f7fc3",
+    "externalTrafalgarFixtureSha256": "ce75278643a452da7af3b62ddaf04108de709fd4d1a2403ff38b8fa764e3828f",
+    "historicalScript": "scripts/historical-naval-review.ts",
+    "historicalScriptSha256": "ed7636d996ad960dcf455069309e9b479976efca3d23339c1e909f95d9345205",
+    "environment": {
+      "node": "v24.19.0",
+      "arch": "x64",
+      "platform": "linux",
+      "cpu": "AMD EPYC 9V74 80-Core Processor"
+    },
+    "baselineReusedFromEarlierQuietWindow": true,
+    "finalExecutionOrder": [
+      "candidateFull",
+      "candidateConvoyRepeat",
+      "baselineTrafalgar",
+      "candidateTrafalgar"
+    ],
+    "execution": [
+      {
+        "run": "baselineFull",
+        "sourceCommit": "7bd93bb5cd97a60bf9be19d3bde9df77fab0888d",
+        "startedUtc": "2026-10-09T10:04:12.305150+00:00",
+        "endedUtc": "2026-10-09T10:05:24.756248+00:00",
+        "wallSeconds": 72.451056,
+        "childUserCpuSeconds": 86.979378,
+        "childSystemCpuSeconds": 0.843493,
+        "sourceChangedDuringRun": false
+      },
+      {
+        "run": "candidateFull",
+        "sourceCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e",
+        "startedUtc": "2026-10-09T12:09:46.325058+00:00",
+        "endedUtc": "2026-10-09T12:10:36.546349+00:00",
+        "wallSeconds": 50.221272,
+        "childUserCpuSeconds": 60.854568,
+        "childSystemCpuSeconds": 0.559323,
+        "sourceChangedDuringRun": false
+      },
+      {
+        "run": "baselineConvoyRepeat",
+        "sourceCommit": "7bd93bb5cd97a60bf9be19d3bde9df77fab0888d",
+        "startedUtc": "2026-10-09T10:07:56.247395+00:00",
+        "endedUtc": "2026-10-09T10:08:01.974670+00:00",
+        "wallSeconds": 5.727257,
+        "childUserCpuSeconds": 7.669597,
+        "childSystemCpuSeconds": 0.241714,
+        "sourceChangedDuringRun": false
+      },
+      {
+        "run": "candidateConvoyRepeat",
+        "sourceCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e",
+        "startedUtc": "2026-10-09T12:10:36.590236+00:00",
+        "endedUtc": "2026-10-09T12:10:44.514456+00:00",
+        "wallSeconds": 7.924204,
+        "childUserCpuSeconds": 10.402572,
+        "childSystemCpuSeconds": 0.28493,
+        "sourceChangedDuringRun": false
+      },
+      {
+        "run": "baselineTrafalgar",
+        "sourceCommit": "7bd93bb5cd97a60bf9be19d3bde9df77fab0888d",
+        "startedUtc": "2026-10-09T11:28:40.312949+00:00",
+        "endedUtc": "2026-10-09T11:29:17.962573+00:00",
+        "wallSeconds": 37.649607,
+        "childUserCpuSeconds": 46.776094,
+        "childSystemCpuSeconds": 0.419979,
+        "sourceChangedDuringRun": false
+      },
+      {
+        "run": "candidateTrafalgar",
+        "sourceCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e",
+        "startedUtc": "2026-10-09T12:10:44.556263+00:00",
+        "endedUtc": "2026-10-09T12:10:58.533124+00:00",
+        "wallSeconds": 13.976843,
+        "childUserCpuSeconds": 15.026225,
+        "childSystemCpuSeconds": 0.225446,
+        "sourceChangedDuringRun": false
+      }
+    ],
+    "historicalMeasuredCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e"
+  },
+  "measurement": {
+    "ticksPerSecond": 20,
+    "qualitySampleHz": 10,
+    "timed": "stepGame only; setup, quality probes and recording occur outside the timed section",
+    "scope": "end-to-end product revisions; enlarged hulls and physical collision behavior differ",
+    "percentiles": "Per scene only; overall mean is weighted by step count.",
+    "full9SimulatedSeconds": 2010,
+    "full9StepsPerRevision": 40200,
+    "quietSequentialRuns": true
+  },
+  "full9": {
+    "totals": {
+      "baseline": {
+        "sceneCount": 9,
+        "steps": 40200,
+        "stepMeanMs": 1.756124,
+        "timedSimulationStepSeconds": 70.596167,
+        "over50Ms": 215,
+        "coastViolations": 0,
+        "maxHullOverlap": 0,
+        "overlapSamples": 0
+      },
+      "candidate": {
+        "sceneCount": 9,
+        "steps": 40200,
+        "stepMeanMs": 1.207674,
+        "timedSimulationStepSeconds": 48.548506,
+        "over50Ms": 36,
+        "coastViolations": 0,
+        "maxHullOverlap": 0,
+        "overlapSamples": 0
+      }
+    },
+    "stepMeanChangePercent": -31.230677,
+    "scenes": [
+      {
+        "id": "fleet-moving-6v6",
+        "labelZh": "6 对 6 移动舰队",
+        "durationSeconds": 150,
+        "steps": 3000,
+        "baseline": {
+          "step": {
+            "meanMs": 14.396954,
+            "p95Ms": 52.042724,
+            "p99Ms": 91.244269,
+            "maxMs": 201.248436,
+            "over50Ms": 166
+          },
+          "checksum": "001b91cb",
+          "quality": {
+            "alliedYawDegrees": 2738.353194,
+            "alliedMovingRapidReversals": 21,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 18.6,
+            "alliedLowSpeedSeconds": 59.2,
+            "alliedRouteRevisions": 90,
+            "alliedShots": 94,
+            "liveShips": 3,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 8.940406,
+            "p95Ms": 26.598964,
+            "p99Ms": 38.192919,
+            "maxMs": 307.070329,
+            "over50Ms": 25
+          },
+          "checksum": "de9030d2",
+          "quality": {
+            "alliedYawDegrees": 1976.456453,
+            "alliedMovingRapidReversals": 9,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 10.25,
+            "alliedLowSpeedSeconds": 72.4,
+            "alliedRouteRevisions": 73,
+            "alliedShots": 98,
+            "liveShips": 5,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": -37.900713
+      },
+      {
+        "id": "fleet-station-6v1",
+        "labelZh": "6 舰围攻停船目标",
+        "durationSeconds": 180,
+        "steps": 3600,
+        "baseline": {
+          "step": {
+            "meanMs": 1.864755,
+            "p95Ms": 2.432911,
+            "p99Ms": 22.864952,
+            "maxMs": 47.550523,
+            "over50Ms": 0
+          },
+          "checksum": "de7531b6",
+          "quality": {
+            "finalQuarryGap": 259.592674,
+            "alliedYawDegrees": 1086.495166,
+            "alliedMovingRapidReversals": 21,
+            "alliedStationaryRapidReversals": 1,
+            "longestAlliedPendingStopSeconds": 1.95,
+            "alliedLowSpeedSeconds": 8.7,
+            "alliedRouteRevisions": 14,
+            "alliedShots": 393,
+            "liveShips": 7,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 2.108206,
+            "p95Ms": 3.706303,
+            "p99Ms": 14.720491,
+            "maxMs": 73.016037,
+            "over50Ms": 2
+          },
+          "checksum": "8ca4bc02",
+          "quality": {
+            "finalQuarryGap": 315.707497,
+            "alliedYawDegrees": 1451.80171,
+            "alliedMovingRapidReversals": 12,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 3.75,
+            "alliedLowSpeedSeconds": 13.95,
+            "alliedRouteRevisions": 21,
+            "alliedShots": 380,
+            "liveShips": 7,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 13.055405
+      },
+      {
+        "id": "long-chase-turns",
+        "labelZh": "长距离追逐与转向",
+        "durationSeconds": 240,
+        "steps": 4800,
+        "baseline": {
+          "step": {
+            "meanMs": 0.187441,
+            "p95Ms": 0.292932,
+            "p99Ms": 0.454896,
+            "maxMs": 3.980476,
+            "over50Ms": 0
+          },
+          "checksum": "0e67a793",
+          "quality": {
+            "finalQuarryGap": 696.425613,
+            "alliedYawDegrees": 195.15574,
+            "alliedMovingRapidReversals": 1,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0,
+            "alliedLowSpeedSeconds": 0.15,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 2,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.20242,
+            "p95Ms": 0.273132,
+            "p99Ms": 0.784935,
+            "maxMs": 4.578439,
+            "over50Ms": 0
+          },
+          "checksum": "c9093cc7",
+          "quality": {
+            "finalQuarryGap": 546.314437,
+            "alliedYawDegrees": 199.283663,
+            "alliedMovingRapidReversals": 2,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0,
+            "alliedLowSpeedSeconds": 0.15,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 2,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 7.991532
+      },
+      {
+        "id": "convoy-crossing-12",
+        "labelZh": "12 舰交叉船队",
+        "durationSeconds": 240,
+        "steps": 4800,
+        "baseline": {
+          "step": {
+            "meanMs": 1.044867,
+            "p95Ms": 1.481325,
+            "p99Ms": 26.245417,
+            "maxMs": 116.160619,
+            "over50Ms": 2
+          },
+          "checksum": "b92a2c09",
+          "quality": {
+            "meanGoalProgress": 0.981778,
+            "minGoalProgress": 0.803007,
+            "alliedYawDegrees": 7078.618381,
+            "alliedMovingRapidReversals": 87,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 5.65,
+            "alliedLowSpeedSeconds": 32.75,
+            "alliedRouteRevisions": 31,
+            "alliedShots": 0,
+            "liveShips": 12,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 1.484311,
+            "p95Ms": 2.852083,
+            "p99Ms": 13.769877,
+            "maxMs": 215.361642,
+            "over50Ms": 5
+          },
+          "checksum": "e99c2082",
+          "quality": {
+            "meanGoalProgress": 0.980532,
+            "minGoalProgress": 0.857095,
+            "alliedYawDegrees": 4464.34694,
+            "alliedMovingRapidReversals": 44,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 6.35,
+            "alliedLowSpeedSeconds": 129.7,
+            "alliedRouteRevisions": 61,
+            "alliedShots": 0,
+            "liveShips": 12,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 42.057387
+      },
+      {
+        "id": "island-convoy-wind",
+        "labelZh": "岛屿船队与风向变化",
+        "durationSeconds": 300,
+        "steps": 6000,
+        "baseline": {
+          "step": {
+            "meanMs": 2.15301,
+            "p95Ms": 10.966478,
+            "p99Ms": 46.138908,
+            "maxMs": 1129.321851,
+            "over50Ms": 46
+          },
+          "checksum": "8177cd90",
+          "quality": {
+            "meanGoalProgress": 0.852543,
+            "minGoalProgress": 0.674567,
+            "alliedYawDegrees": 4388.809878,
+            "alliedMovingRapidReversals": 23,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 7.6,
+            "alliedLowSpeedSeconds": 52.05,
+            "alliedRouteRevisions": 35,
+            "alliedShots": 0,
+            "liveShips": 6,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.69086,
+            "p95Ms": 0.555669,
+            "p99Ms": 1.010034,
+            "maxMs": 1478.004442,
+            "over50Ms": 2
+          },
+          "checksum": "58b4d883",
+          "quality": {
+            "meanGoalProgress": 0.85678,
+            "minGoalProgress": 0.570174,
+            "alliedYawDegrees": 2265.82125,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0.05,
+            "alliedLowSpeedSeconds": 1.05,
+            "alliedRouteRevisions": 12,
+            "alliedShots": 0,
+            "liveShips": 6,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": -67.911895
+      },
+      {
+        "id": "weather-boundary-convoy",
+        "labelZh": "天气边界船队",
+        "durationSeconds": 180,
+        "steps": 3600,
+        "baseline": {
+          "step": {
+            "meanMs": 0.414492,
+            "p95Ms": 0.783783,
+            "p99Ms": 6.277703,
+            "maxMs": 70.431042,
+            "over50Ms": 1
+          },
+          "checksum": "6ad97b6b",
+          "quality": {
+            "meanGoalProgress": 0.636448,
+            "minGoalProgress": 0.065202,
+            "alliedYawDegrees": 1480.289328,
+            "alliedMovingRapidReversals": 2,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 5.9,
+            "alliedLowSpeedSeconds": 14.0,
+            "alliedRouteRevisions": 16,
+            "alliedShots": 0,
+            "liveShips": 6,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.392285,
+            "p95Ms": 0.824384,
+            "p99Ms": 1.734467,
+            "maxMs": 138.775053,
+            "over50Ms": 2
+          },
+          "checksum": "397f6504",
+          "quality": {
+            "meanGoalProgress": 0.647753,
+            "minGoalProgress": 0.109061,
+            "alliedYawDegrees": 1387.890626,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 5.7,
+            "alliedLowSpeedSeconds": 14.15,
+            "alliedRouteRevisions": 19,
+            "alliedShots": 0,
+            "liveShips": 6,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": -5.357537
+      },
+      {
+        "id": "wind-shifts-cutter",
+        "labelZh": "轻型炮艇风向变化",
+        "durationSeconds": 240,
+        "steps": 4800,
+        "baseline": {
+          "step": {
+            "meanMs": 0.024408,
+            "p95Ms": 0.030466,
+            "p99Ms": 0.05275,
+            "maxMs": 2.753484,
+            "over50Ms": 0
+          },
+          "checksum": "61ba7c25",
+          "quality": {
+            "meanGoalProgress": 0.999991,
+            "minGoalProgress": 0.999991,
+            "alliedYawDegrees": 267.797694,
+            "alliedMovingRapidReversals": 1,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0.05,
+            "alliedLowSpeedSeconds": 0.2,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.029577,
+            "p95Ms": 0.043165,
+            "p99Ms": 0.066951,
+            "maxMs": 1.73616,
+            "over50Ms": 0
+          },
+          "checksum": "c9a2b3a3",
+          "quality": {
+            "meanGoalProgress": 1.0,
+            "minGoalProgress": 1,
+            "alliedYawDegrees": 259.261794,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0.05,
+            "alliedLowSpeedSeconds": 0.2,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 21.177923
+      },
+      {
+        "id": "wind-shifts-warship",
+        "labelZh": "战船风向变化",
+        "durationSeconds": 240,
+        "steps": 4800,
+        "baseline": {
+          "step": {
+            "meanMs": 0.026096,
+            "p95Ms": 0.029715,
+            "p99Ms": 0.049495,
+            "maxMs": 0.732285,
+            "over50Ms": 0
+          },
+          "checksum": "94c58af7",
+          "quality": {
+            "meanGoalProgress": 0.71308,
+            "minGoalProgress": 0.71308,
+            "alliedYawDegrees": 183.374853,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0,
+            "alliedLowSpeedSeconds": 0.15,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.035506,
+            "p95Ms": 0.060101,
+            "p99Ms": 0.100722,
+            "maxMs": 0.86825,
+            "over50Ms": 0
+          },
+          "checksum": "554738a7",
+          "quality": {
+            "meanGoalProgress": 0.716908,
+            "minGoalProgress": 0.716908,
+            "alliedYawDegrees": 183.19295,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0,
+            "alliedLowSpeedSeconds": 0.15,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 36.055787
+      },
+      {
+        "id": "wind-shifts-shipOfTheLine",
+        "labelZh": "重型舷炮舰风向变化",
+        "durationSeconds": 240,
+        "steps": 4800,
+        "baseline": {
+          "step": {
+            "meanMs": 0.025929,
+            "p95Ms": 0.029104,
+            "p99Ms": 0.049985,
+            "maxMs": 2.508826,
+            "over50Ms": 0
+          },
+          "checksum": "b1f22465",
+          "quality": {
+            "meanGoalProgress": 0.572168,
+            "minGoalProgress": 0.572168,
+            "alliedYawDegrees": 179.37084,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0.05,
+            "alliedLowSpeedSeconds": 0.2,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "candidate": {
+          "step": {
+            "meanMs": 0.035761,
+            "p95Ms": 0.05275,
+            "p99Ms": 0.082054,
+            "maxMs": 0.99388,
+            "over50Ms": 0
+          },
+          "checksum": "dd483ab6",
+          "quality": {
+            "meanGoalProgress": 0.577155,
+            "minGoalProgress": 0.577155,
+            "alliedYawDegrees": 178.806325,
+            "alliedMovingRapidReversals": 0,
+            "alliedStationaryRapidReversals": 0,
+            "longestAlliedPendingStopSeconds": 0.05,
+            "alliedLowSpeedSeconds": 0.2,
+            "alliedRouteRevisions": 5,
+            "alliedShots": 0,
+            "liveShips": 1,
+            "coastViolations": 0,
+            "maxHullOverlap": 0,
+            "overlapSamples": 0
+          }
+        },
+        "stepMeanChangePercent": 37.920371
+      }
+    ]
+  },
+  "convoyRepeat": [
+    {
+      "revision": "baseline",
+      "checksum": "b92a2c09",
+      "sameChecksum": true,
+      "sameEntireQualityObject": true,
+      "meanVariationPercent": 1.264943,
+      "steps": 4800,
+      "firstStep": {
+        "meanMs": 1.044867,
+        "p95Ms": 1.481325,
+        "p99Ms": 26.245417,
+        "maxMs": 116.160619,
+        "over50Ms": 2
+      },
+      "repeatStep": {
+        "meanMs": 1.058084,
+        "p95Ms": 1.529558,
+        "p99Ms": 26.331411,
+        "maxMs": 216.06152,
+        "over50Ms": 2
+      }
+    },
+    {
+      "revision": "candidate",
+      "checksum": "e99c2082",
+      "sameChecksum": true,
+      "sameEntireQualityObject": true,
+      "meanVariationPercent": 1.544868,
+      "steps": 4800,
+      "firstStep": {
+        "meanMs": 1.484311,
+        "p95Ms": 2.852083,
+        "p99Ms": 13.769877,
+        "maxMs": 215.361642,
+        "over50Ms": 5
+      },
+      "repeatStep": {
+        "meanMs": 1.507242,
+        "p95Ms": 2.799664,
+        "p99Ms": 14.778158,
+        "maxMs": 297.906332,
+        "over50Ms": 7
+      }
+    }
+  ],
+  "islandCompletionObservation": {
+    "includedInFull9Timings": false,
+    "requirementBoundSeconds": 480,
+    "arrivalSeconds": {
+      "unit-player-transport-1005": 244.5,
+      "unit-player-warship-1004": 250.8,
+      "unit-player-transport-1003": 300,
+      "unit-player-transport-1001": 301.05,
+      "unit-player-warship-1002": 378.2,
+      "unit-player-warship-1000": 418.35
+    },
+    "coastViolations": 0,
+    "maxHullOverlap": 0,
+    "maxBackwardTravel": 0,
+    "maxContinuousBackwardTravel": 0,
+    "provenance": "Final coast-only navigation implementation, observed immediately before commit 97d95fd; ba673ca later merged unrelated AI/deployment changes.",
+    "rerunAtMeasuredCandidateCommit": false,
+    "sameSixAt300ProgressValuesAsFinalCandidate": true,
+    "observationEndedSeconds": 418.35
+  },
+  "trafalgar": {
+    "id": "trafalgar-two-columns-7",
+    "durationSeconds": 110,
+    "stepsPerRevision": 2200,
+    "fixtureIntegrity": {
+      "sameInitialIdKindOwnerPositionHeadingGoal": true,
+      "sameMapTerrain": true,
+      "ordinaryInitialHpEachShip": 740,
+      "sameFirstSampleHp": true,
+      "sameDurationSeconds": true,
+      "sameStepCount": true
+    },
+    "baseline": {
+      "step": {
+        "meanMs": 16.954393,
+        "p95Ms": 82.61553,
+        "p99Ms": 99.473067,
+        "maxMs": 130.637782,
+        "over50Ms": 445
+      },
+      "checksum": "9ecaf8bf",
+      "quality": {
+        "meanGoalProgress": 0.717395,
+        "minGoalProgress": 0.63997,
+        "alliedYawDegrees": 284.962426,
+        "alliedMovingRapidReversals": 0,
+        "alliedStationaryRapidReversals": 0,
+        "longestAlliedPendingStopSeconds": 3.7,
+        "alliedLowSpeedSeconds": 5.25,
+        "alliedRouteRevisions": 6,
+        "alliedShots": 109,
+        "liveShips": 6,
+        "coastViolations": 0,
+        "maxHullOverlap": 0,
+        "overlapSamples": 0
+      }
+    },
+    "candidate": {
+      "step": {
+        "meanMs": 6.201756,
+        "p95Ms": 29.341322,
+        "p99Ms": 34.607116,
+        "maxMs": 61.255476,
+        "over50Ms": 1
+      },
+      "checksum": "5754bea0",
+      "quality": {
+        "meanGoalProgress": 0.688515,
+        "minGoalProgress": 0.548216,
+        "alliedYawDegrees": 309.515748,
+        "alliedMovingRapidReversals": 0,
+        "alliedStationaryRapidReversals": 0,
+        "longestAlliedPendingStopSeconds": 8.65,
+        "alliedLowSpeedSeconds": 25.15,
+        "alliedRouteRevisions": 6,
+        "alliedShots": 91,
+        "liveShips": 6,
+        "coastViolations": 0,
+        "maxHullOverlap": 0,
+        "overlapSamples": 0
+      }
+    },
+    "candidateAttackingShipsFired": 3,
+    "attackingShips": 4,
+    "attackers": [
+      {
+        "id": "unit-player-shipOfTheLine-1000",
+        "baseline": {
+          "shots": 38,
+          "firstShot": 75,
+          "finalGoalGap": 618.753448,
+          "hp": 506
+        },
+        "candidate": {
+          "shots": 43,
+          "firstShot": 73,
+          "finalGoalGap": 600.835816,
+          "hp": 200
+        }
+      },
+      {
+        "id": "unit-player-shipOfTheLine-1001",
+        "baseline": {
+          "shots": 16,
+          "firstShot": 92.85,
+          "finalGoalGap": 1083.794673,
+          "hp": 596
+        },
+        "candidate": {
+          "shots": 0,
+          "firstShot": null,
+          "finalGoalGap": 1490.887612,
+          "hp": 740
+        }
+      },
+      {
+        "id": "unit-player-shipOfTheLine-1002",
+        "baseline": {
+          "shots": 35,
+          "firstShot": 72.35,
+          "finalGoalGap": 618.753448,
+          "hp": 326
+        },
+        "candidate": {
+          "shots": 39,
+          "firstShot": 71.15,
+          "finalGoalGap": 600.835816,
+          "hp": 92
+        }
+      },
+      {
+        "id": "unit-player-shipOfTheLine-1003",
+        "baseline": {
+          "shots": 20,
+          "firstShot": 86.6,
+          "finalGoalGap": 1188.097638,
+          "hp": 614
+        },
+        "candidate": {
+          "shots": 9,
+          "firstShot": 99.5,
+          "finalGoalGap": 1204.454348,
+          "hp": 542
+        }
+      }
+    ]
+  },
+  "historical": {
+    "sceneCount": 7,
+    "checksPassed": 43,
+    "originalCheckCount": 43,
+    "criteriaChanged": false,
+    "normalHpScenes": 7,
+    "exactSnapshotReplayScenes": 7,
+    "exactExternalReplayScenes": 7,
+    "checksumVersion": 15,
+    "trajectoryHz": 1,
+    "scenes": [
+      {
+        "id": "chesapeake-diverging-line",
+        "seconds": 32,
+        "checks": 6,
+        "checksum": "cc811342",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 32,
+        "hullDamage": 576,
+        "captures": 0,
+        "sunk": 0,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 6,
+        "externalReplayExact": true
+      },
+      {
+        "id": "trafalgar-two-columns",
+        "seconds": 110,
+        "checks": 6,
+        "checksum": "5754bea0",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 168,
+        "hullDamage": 2988,
+        "captures": 0,
+        "sunk": 1,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 6,
+        "externalReplayExact": true
+      },
+      {
+        "id": "howe-cross-change-tack",
+        "seconds": 140,
+        "checks": 5,
+        "checksum": "a741b80c",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 11,
+        "hullDamage": 275,
+        "captures": 0,
+        "sunk": 1,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 5,
+        "externalReplayExact": true
+      },
+      {
+        "id": "dana-upwind-headway",
+        "seconds": 110,
+        "checks": 6,
+        "checksum": "dec22044",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 0,
+        "hullDamage": 0,
+        "captures": 0,
+        "sunk": 0,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 6,
+        "externalReplayExact": true
+      },
+      {
+        "id": "constitution-calm-chase",
+        "seconds": 80,
+        "checks": 6,
+        "checksum": "159088c5",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 1,
+        "hullDamage": 0,
+        "captures": 0,
+        "sunk": 0,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 6,
+        "externalReplayExact": true
+      },
+      {
+        "id": "shannon-boarding-control",
+        "seconds": 45,
+        "checks": 6,
+        "checksum": "d2d1df24",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 0,
+        "hullDamage": 16,
+        "captures": 1,
+        "sunk": 0,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 6,
+        "externalReplayExact": true
+      },
+      {
+        "id": "hermione-gangway-hatch",
+        "seconds": 75,
+        "checks": 8,
+        "checksum": "f25c29b9",
+        "normalHp": true,
+        "normalCrewHp": true,
+        "snapshotReplay": true,
+        "shots": 0,
+        "hullDamage": 166.4,
+        "captures": 1,
+        "sunk": 0,
+        "impact": 0,
+        "land": 0,
+        "body": 0,
+        "discontinuous": 0,
+        "maxOverlap": 0,
+        "checksPassed": 8,
+        "externalReplayExact": true
+      }
+    ],
+    "measuredCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e"
+  },
+  "links": {
+    "review": "../../docs/reviews/larger-ships-and-naval-control.zh.md",
+    "historicalEvidence": "../../docs/reviews/historical-naval-evidence.zh.md",
+    "historicalFigure": "historical-naval-final.png",
+    "mapFigure": "larger-seas-before-after.png",
+    "uiAcceptance": "../../docs/reviews/naval-ui-acceptance.zh.md"
+  },
+  "limits": [
+    "One quiet full run per revision and one repeated convoy case; repeat estimates variability for that case only.",
+    "Valid 7bd baseline full/repeat measurements are reused; final candidate and external pair were sequential in the final quiet window.",
+    "End-to-end revisions differ in ship hull dimensions, physical collision, navigation, and combat outcomes; these are not isolated same-geometry microbenchmarks.",
+    "Timing covers stepGame only. Setup, quality probes and frame recording are outside timed sections. Wall/user/system CPU include process overhead.",
+    "Percentiles are per scenario. The overall mean is weighted by step count; no aggregate percentile is inferred from per-case percentiles.",
+    "Zero observed shore/overlap violations at 10 Hz is a sampled result, not a mathematical proof.",
+    "Island duration is fixed at 300 s: mean progress improves slightly, but its slowest ship remains farther from goal than baseline at that time.",
+    "Trafalgar uses seven ordinary-HP vessels; its combat outcomes and goal progress differ between revisions.",
+    "The rear Trafalgar attacker 1001 fired zero shots versus 16 in baseline; only three of four candidate attackers fired.",
+    "Extended island completion observation is separate from the fixed 300 second benchmark; all six arrive before 480 seconds.",
+    "Full raw trajectories, checkpoints and CPU profiles remain in scratch storage; this asset contains only review metrics.",
+    "The maximum full9 step increases from 1129.322 ms to 1478.004 ms in the island case; mean and percentile improvements do not eliminate rare long frames."
+  ],
+  "qualityAndChecksumsUnchangedFromPreviousCandidate": {
+    "commit": "ba673ca0b88d5ffe346acfe6e869320da1ff58f6",
+    "allChecksumsIdentical": true,
+    "allRawQualityObjectsIdentical": true,
+    "scenes": [
+      {
+        "run": "candidateFull",
+        "scene": "fleet-moving-6v6",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "fleet-station-6v1",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "long-chase-turns",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "convoy-crossing-12",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "island-convoy-wind",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "weather-boundary-convoy",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "wind-shifts-cutter",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "wind-shifts-warship",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateFull",
+        "scene": "wind-shifts-shipOfTheLine",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateConvoyRepeat",
+        "scene": "convoy-crossing-12",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      },
+      {
+        "run": "candidateTrafalgar",
+        "scene": "trafalgar-two-columns-7",
+        "sameChecksum": true,
+        "sameEntireQualityObject": true
+      }
+    ]
+  },
+  "releaseValidation": {
+    "sourceCommit": "5adbdd46c2b20137d0f599ca351c0529a82f4f9e",
+    "fullSuite": {
+      "files": 354,
+      "tests": 3222,
+      "passed": true,
+      "command": "env -u SKETCH_RTS_BASE_PATH -u VITE_SKETCH_RTS_BASE_PATH npx vitest run --fileParallelism false --maxWorkers 1",
+      "seconds": 422.98
+    },
+    "deploymentWorkflowSuites": {
+      "basePath": "/sketch-rts/",
+      "commandsFrom": ".github/workflows/production-deploy.yml",
+      "commandsUnchanged": true,
+      "suites": [
+        {
+          "files": 15,
+          "tests": 158,
+          "passed": true,
+          "seconds": 14.99
+        },
+        {
+          "files": 29,
+          "tests": 137,
+          "passed": true,
+          "seconds": 8.06
+        }
+      ]
+    },
+    "productionBuild": {
+      "basePath": "/sketch-rts/",
+      "command": "npm run build:production",
+      "passed": true,
+      "includes": [
+        "TypeScript",
+        "Vite frontend",
+        "server bundle"
+      ]
+    }
+  },
+  "browserResourceValidation": {
+    "renderer": "Chromium SwiftShader",
+    "units": 280,
+    "ships": 24,
+    "cycles": 6,
+    "rendererAssetsAndFixtureUnchangedSince": "2483d0a",
+    "uniqueGlbRequests": 32,
+    "allRequestsStatus": 200,
+    "eachModelInstalledOnce": true,
+    "runtimeErrors": 0,
+    "failedRequests": 0,
+    "allExits": {
+      "ownedMapsEmpty": true,
+      "transforms": 0,
+      "sceneChildren": 0,
+      "rendererGeometries": 0,
+      "rendererTextures": 1,
+      "glError": 0,
+      "contextDestroyed": true,
+      "rawByteRequests": 0,
+      "decodedImages": 0,
+      "retainedRawBytes": 0
+    },
+    "sharedModelsBetweenCycles": 32,
+    "sharedModelsAfterLibraryTeardown": 0,
+    "heapAfterGcMiB": [
+      19.407,
+      19.654,
+      19.938,
+      20.118,
+      20.304,
+      20.438
+    ],
+    "limits": [
+      "Six cycles do not establish long-term memory behavior.",
+      "SwiftShader does not establish hardware GPU frame rate.",
+      "CPU draw timing from this run was excluded from performance comparisons.",
+      "Simulation was not advanced in this renderer/resource fixture."
+    ]
+  }
+}

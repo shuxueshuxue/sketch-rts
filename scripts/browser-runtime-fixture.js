@@ -15,7 +15,7 @@ const snapshot=sim.snapshotGame(game),discarded=[],installedModels=new Map();
 const originalModelSet=models.worldModels.models.set.bind(models.worldModels.models);
 models.worldModels.models.set=(key,value)=>{installedModels.set(key,(installedModels.get(key)||0)+1);return originalModelSet(key,value);};
 function stats(layer,renderer=layer.renderer){
-  const maps=['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','recoil'];
+  const maps=['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'];
   return{owned:Object.fromEntries(maps.map(key=>[key,layer[key]?.size??null])),transforms:layer.transforms?.length,sceneChildren:layer.scene?.children?.length,renderer:renderer?{memory:{...renderer.info.memory},render:{...renderer.info.render}}:undefined,sharedModels:models.worldModels.models.size,installedModels:Object.fromEntries(installedModels)};
 }
 async function resourceStats(){

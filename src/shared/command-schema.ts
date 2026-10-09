@@ -38,6 +38,9 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "setAutocast") return isStringArray(command.unitIds) && isAbilityKind(command.ability) && typeof command.enabled === "boolean";
   if (command.type === "setStance") return isStringArray(command.unitIds) && isMeleeStance(command.stance);
   if (command.type === "board") return isStringArray(command.unitIds) && typeof command.transportId === "string";
+  if (command.type === "boardShip") return isStringArray(command.unitIds) && typeof command.targetId === "string"
+    && (command.queued === undefined || typeof command.queued === "boolean");
+  if (command.type === "cancelBoardShip") return isStringArray(command.unitIds) && command.queued === undefined;
   if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y) && (command.avoidCombat===undefined || typeof command.avoidCombat==='boolean');
   if (command.type === "unloadPassenger") return typeof command.transportId === "string" && typeof command.passengerId === "string";
   if(command.type==="wieldItem")return typeof command.unitId==="string" && (command.itemId===undefined || typeof command.itemId==="string") && (command.hand==="right" || command.hand==="left");

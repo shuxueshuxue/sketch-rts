@@ -7,6 +7,7 @@ import { LIGHTNING_ROD } from "./item-rules";
 import { boardUnit, syncDecks } from "./decks";
 import { upgradeSavedCombat } from "./combat-save-upgrade";
 import { checksumGame } from "./sim/checksum";
+import { TRANSPORT_COMBAT } from "./transport-role";
 import type { Unit, UnitKind, UnitStatusEffect } from "./types";
 import type { DamageDelivery, DamageProfile } from "./damage-types";
 
@@ -275,7 +276,7 @@ describe("damage pipeline integration", () => {
     expect(before - target.hp).toBe(20);
   });
 
-  it("passes a physical deck hit to a heavy hull without inheriting its crew's ward", () => {
+  it("passes a physical deck hit to a protected ferry hull without inheriting its crew's ward", () => {
     const game = damageBattle();
     const ship = game.spawnUnit("enemy", "carrier", 900, 800);
     const crew = game.spawnUnit("enemy", "footman", 900, 800);
@@ -288,7 +289,7 @@ describe("damage pipeline integration", () => {
     strikeUnit(game, attacker, crew, 100, "ranged");
     expect(crewHp - crew.hp).toBe(80);
     // Ordinary arrows transfer one tenth of their original impact to the hull.
-    expect(hullHp - ship.hp).toBeCloseTo(Math.round(100 * 0.1 * 0.5));
+    expect(hullHp - ship.hp).toBeCloseTo(Math.round(100 * 0.1 * TRANSPORT_COMBAT.rangedDamageTaken));
     expect(ship.hp).toBeLessThan(UNIT_DEFS.carrier.hp);
   });
 });

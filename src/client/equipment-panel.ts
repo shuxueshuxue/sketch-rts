@@ -8,8 +8,8 @@ import { dropItemCommand } from './item-controls';
 import { projectDeckPoint } from '../shared/decks';
 import { deckPlanProjection } from './deck-plan-projection';
 import { weaponCondition } from './weapon-condition';
-import { cabinAction, cabinCommand, cabinStatus } from './cabin-controls';
-import { isInCabin, shipCabinCapacity } from '../shared/ship-cabin';
+import { cabinAction, cabinCommand, cabinProblemText, cabinQuotaText, cabinStatus } from './cabin-controls';
+import { cabinSpaceRequired, isInCabin, shipCabinCapacity, shipCabinUsage } from '../shared/ship-cabin';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
@@ -542,7 +542,7 @@ export class EquipmentPanel {
                 for(const crew of shipPassengers(snapshot.units,ship).filter(crew=>crew.owner===this.owner && isInCabin(crew))) {
                     const button=document.createElement('button'); button.type='button'; button.dataset.cabinCrewId=crew.id;
                     button.setAttribute('aria-pressed',String(crew.id===this.unitId));
-                    button.title=`${labelKind(crew.kind,this.i18n())} · ${cabinStatus(crew,this.i18n().locale==='zh')}`;
+                    button.title=`${labelKind(crew.kind,this.i18n())} · ${cabinStatus(crew,this.i18n().locale==='zh')} · ${this.text('舱容占用','Cabin space')} ${cabinSpaceRequired(snapshot,crew)}`;
                     button.setAttribute('aria-label',button.title);
                     const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
                     drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');button.append(portrait);
@@ -606,11 +606,14 @@ export class EquipmentPanel {
             const action=cabinAction(this.snapshot!,this.owner,[unit]);
             cabinButton.textContent=action?.type==='leaveCabin'?this.text('返回甲板','Return to deck'):this.text('撤入舱内','Take shelter');
             cabinButton.disabled=!action?.enabled;
-            cabinButton.title=action?.problem==='full'?this.text('舱内已满','The cabin is full'):action?.problem==='blocked'?this.text('舱门被堵住','Cabin door blocked'):action?.problem==='unavailable'?this.text('舱室已失守或损坏','The cabin is breached or damaged'):action?.problem==='unsupported'?this.text('舱室仅供步行船员进入','Only foot crew can enter this cabin'):this.text('舱内无法攻击或施法','Sheltered crew cannot attack or cast');
+            cabinButton.title=action?.problem?cabinProblemText(action,this.i18n().locale==='zh'):this.text('舱内无法攻击或施法','Sheltered crew cannot attack or cast');
             this.root.querySelector<HTMLElement>('[data-cabin-status]')!.textContent=unit.cabin?.breached?cabinStatus(unit,this.i18n().locale==='zh'):action&&!action.enabled?cabinButton.title:cabinStatus(unit,this.i18n().locale==='zh')||(unit.order.type==='enterCabin'?this.text('前往舱门','Walking to door'):'');
         }
         const cabinCapacity=this.root.querySelector<HTMLElement>('[data-cabin-capacity]');
-        if(cabinCapacity&&ship)cabinCapacity.textContent=`${this.text('避险舱','Shelter')} ${shipPassengers(this.snapshot!.units,ship).filter(isInCabin).length} / ${shipCabinCapacity(ship)}`;
+        if(cabinCapacity&&ship){
+            const usage=shipCabinUsage(this.snapshot!,ship),selected=!!unit&&unit.deck?.shipId===ship.id&&!isInCabin(unit);
+            cabinCapacity.textContent=cabinQuotaText({...usage,required:selected?cabinSpaceRequired(this.snapshot!,unit!):0},this.i18n().locale==='zh',selected);
+        }
         const access = this.root.querySelector<HTMLElement>('[data-equipment-access]');
         if (access) {
             const ready = ship && (!unit || canExchange(this.snapshot!, unit, ship));

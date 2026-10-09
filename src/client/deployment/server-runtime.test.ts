@@ -19,6 +19,7 @@ describe("server deployment runtime", () => {
   it("uses existing room API paths for room setup", async () => {
     const calls: { path: string; body?: unknown }[] = [];
     const runtime = new ServerDeploymentRuntime({
+      publicBasePath: "/",
       fetchJson: async <T>(path: string, body?: unknown) => {
         calls.push({ path, body });
         return { id: "room-1", slots: [] } as T;

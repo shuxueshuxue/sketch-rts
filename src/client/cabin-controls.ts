@@ -1,9 +1,10 @@
-import { cabinAvailable, cabinExitPoint, canEnterCabin, isCabinCrew, isInCabin, shipCabinCapacity } from '../shared/ship-cabin';
+import { cabinEntryRefusal, cabinExitPoint, cabinGroupSelection, cabinSpaceRequired, isInCabin, shipCabinCapacity, shipCabinUsage } from '../shared/ship-cabin';
 import { canEquip } from '../shared/equipment';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../shared/types';
 
 type CabinSnapshot = Pick<GameSnapshot, 'units' | 'teams' | 'variants'>;
-export type CabinAction = { type: 'enterCabin' | 'leaveCabin'; unitIds: string[]; enabled: boolean; problem?: 'full' | 'unavailable' | 'unsupported' | 'blocked' };
+export type CabinQuota = { used: number; capacity: number; required: number };
+export type CabinAction = { type: 'enterCabin' | 'leaveCabin'; unitIds: string[]; enabled: boolean; quota?: CabinQuota; problem?: 'full' | 'unavailable' | 'unsupported' | 'blocked' | 'crossing' };
 
 /** A mixed selection returns sheltered people first; another click can shelter
  * the people still on deck. Commands never pull nearby shore units aboard. */
@@ -17,18 +18,18 @@ export function cabinAction(snapshot: CabinSnapshot, owner: PlayerId, units: rea
   }
   const aboard = own.filter(unit => canEquip(unit) && unit.deck && snapshot.units.some(ship => ship.id === unit.deck!.shipId && shipCabinCapacity(ship) > 0));
   if (!aboard.length) return undefined;
-  const allowed = aboard.filter(unit => canEnterCabin(snapshot, unit));
-  if (allowed.length) return { type: 'enterCabin', unitIds: allowed.map(unit => unit.id), enabled: true };
-  const available = aboard.some(unit => {
-    const ship = snapshot.units.find(ship => ship.id === unit.deck!.shipId)!;
-    return cabinAvailable(snapshot, ship);
-  });
-  const full = aboard.some(unit => {
-    const ship = snapshot.units.find(ship => ship.id === unit.deck!.shipId)!;
-    return snapshot.units.filter(crew => crew.hp > 0 && crew.deck?.shipId === ship.id && isInCabin(crew)).length >= shipCabinCapacity(ship);
-  });
-  const canFit=aboard.some(unit=>isCabinCrew(snapshot,unit));
-  return { type: 'enterCabin', unitIds: aboard.map(unit => unit.id), enabled: false, problem: !available ? 'unavailable' : full ? 'full' : canFit ? 'blocked' : 'unsupported' };
+  const ships = [...new Set(aboard.map(unit => unit.deck!.shipId))].map(id => snapshot.units.find(ship => ship.id === id)!);
+  const quota = ships.reduce((sum, ship) => {
+    const usage = shipCabinUsage(snapshot, ship);
+    return { ...sum, used: sum.used + usage.used, capacity: sum.capacity + usage.capacity };
+  }, { used: 0, capacity: 0, required: aboard.reduce((sum, unit) => sum + cabinSpaceRequired(snapshot, unit), 0) });
+  const allowed = cabinGroupSelection(snapshot, aboard);
+  if (allowed.length) return { type: 'enterCabin', unitIds: allowed, enabled: true, quota };
+  const refusals = aboard.map(unit => cabinEntryRefusal(snapshot, unit));
+  const supported = refusals.filter(reason => reason !== 'unsupported');
+  const problem = !supported.length ? 'unsupported' : supported.every(reason => reason === 'unavailable') ? 'unavailable'
+    : supported.includes('crossing') ? 'crossing' : supported.includes('capacity') ? 'full' : 'blocked';
+  return { type: 'enterCabin', unitIds: aboard.map(unit => unit.id), enabled: false, quota, problem };
 }
 
 export function cabinCommand(action: CabinAction | undefined): GameCommand | undefined {
@@ -37,4 +38,16 @@ export function cabinCommand(action: CabinAction | undefined): GameCommand | und
 
 export function cabinStatus(unit: Unit, zh: boolean) {
   return isInCabin(unit) ? unit.cabin?.breached ? zh ? '舱室失守 · 等待出舱' : 'Cabin breached · Waiting to exit' : zh ? '舱内' : 'In cabin' : '';
+}
+
+export function cabinQuotaText(quota: CabinQuota, zh: boolean, selected = false): string {
+  return `${zh ? '舱容' : 'Cabin capacity'} ${quota.used} / ${quota.capacity}${selected ? ` · ${zh ? '选中需' : 'Selected need'} ${quota.required}` : ''}`;
+}
+
+export function cabinProblemText(action: CabinAction, zh: boolean): string {
+  return action.problem === 'crossing' ? zh ? '先返回甲板' : 'Return to the deck first'
+    : action.problem === 'full' ? zh ? '舱容不足' : 'Not enough cabin capacity'
+    : action.problem === 'blocked' ? zh ? '舱门被堵住' : 'Cabin door blocked'
+    : action.problem === 'unsupported' ? zh ? '这种单位无法入舱' : 'This unit cannot enter the cabin'
+    : zh ? '舱室已失守或损坏' : 'The cabin is breached or damaged';
 }
