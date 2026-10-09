@@ -9,6 +9,8 @@ import { resourcePanel } from './resource-panel';
 import { paintPortrait } from './portrait-cache';
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
+import { cabinAction, cabinCommand, cabinStatus, type CabinAction } from './cabin-controls';
+import { isInCabin } from '../shared/ship-cabin';
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
@@ -174,7 +176,7 @@ const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const hudActions = requireElement<HTMLDivElement>(".hud-actions");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
-const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
+const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(isInCabin(carrier)){showInvalidCommand(i18n.locale==='zh'?'返回甲板后再使用物品':'Return to deck before using items');return;}if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
@@ -279,11 +281,12 @@ const commandButtons: CommandButton[] = [
   ...[0, 1, 2].map(createVeteranChoiceButton),
   createVeteranPassiveButton(),
   createCommandButton(i18n.locale === "zh" ? "下位老兵" : "Next veteran", "⇄", "n",
-    () => booleanCommandState(!commandMode && (openPalette === "veteran" || !openPalette && !selectedCampId) && Boolean(nextVeteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
+    () => booleanCommandState(!commandMode && (openPalette === "veteran" || !openPalette && !selectedCampId) && Boolean(nextVeteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds()))),
     focusNextVeteranStudent, () => ({ title: i18n.locale === "zh" ? "下位待学习老兵" : "Next veteran awaiting a skill", body: i18n.locale === "zh" ? "在当前选中的同兵种单位中，切换到下一名尚未学习技能的三星老兵。" : "Focus the next selected soldier of this type who has reached three stars and has not learned a skill.", stats: [], requirements: [], hotkey: "N" })),
   createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(canEquip)),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
   createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit)))),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
-  createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
+  ...(['enterCabin','leaveCabin'] as const).map(type=>createCommandButton(type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),type==='enterCabin'?'↘':'↗','',()=>cabinButtonState(type),issueCabinAction,()=>({title:type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),body:type==='enterCabin'?(i18n.locale==='zh'?'走到舱门后避险，舱内无法攻击或施法。':'Walk to the cabin door for shelter. Crew inside cannot attack or cast.'):(i18n.locale==='zh'?'从舱门返回有空位的甲板。':'Return through the cabin door to clear deck space.'),stats:[],requirements:[]}))),
+  createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => !isInCabin(unit) && aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
     title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")], hotkey: "J",
   })),
   createCommandButton(t("command.attackMove.title"), "⌁", "a", () => booleanCommandState(canAttackMove()), beginAttackMoveMode, () => ({
@@ -468,7 +471,7 @@ function pendingVeteranIds() {
 
 function focusedVeteranStudent() {
   const unit = focusedPlayerUnits()[0];
-  return unit && canLearnVeteranSkill(unit) && !pendingVeteranChoices.has(unit.id) ? unit : undefined;
+  return unit && !isInCabin(unit) && canLearnVeteranSkill(unit) && !pendingVeteranChoices.has(unit.id) ? unit : undefined;
 }
 
 function veteranUnitCaption(unit: Unit) {
@@ -479,9 +482,9 @@ function veteranUnitCaption(unit: Unit) {
 
 function createVeteranLearnButton() {
   const button = createCommandButton(i18n.locale === "zh" ? "学习技能" : "Learn skill", "+", "p",
-    () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
+    () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds()))),
     openVeteranPalette, () => {
-      const student = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+      const student = veteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds());
       return { title: i18n.locale === "zh" ? "学习技能" : "Learn a skill",
         body: i18n.locale === "zh" ? "为这名老兵选择一个技能，学习后不能更换。" : "Choose one permanent skill for this soldier.",
         stats: student ? [veteranUnitCaption(student)] : [], requirements: [], hotkey: "P" };
@@ -525,7 +528,7 @@ function createVeteranPassiveButton() {
 
 function openVeteranPalette() {
   if (!syncBeforeCommandProjection()) return;
-  const unit = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+  const unit = veteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds());
   if (!unit) return;
   focusedSelectionId = unit.id;
   openPalette = "veteran";
@@ -535,7 +538,7 @@ function openVeteranPalette() {
 
 function focusNextVeteranStudent() {
   if (!syncBeforeCommandProjection()) return;
-  const next = nextVeteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+  const next = nextVeteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds());
   if (!next) return;
   focusedSelectionId = next.id;
   statusLabel.textContent = veteranUnitCaption(next);
@@ -551,7 +554,7 @@ function learnVeteranChoice(index: number) {
   const command = learnVeteranSkillCommand(unit, skill);
   if (!command || !sendCommand(command)) return;
   pendingVeteranChoices.set(before.id, snapshot!.tick);
-  const next = nextVeteranStudent(selectedPlayerUnits(), before.id, pendingVeteranIds());
+  const next = nextVeteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), before.id, pendingVeteranIds());
   focusedSelectionId = next?.id ?? before.id;
   openPalette = next ? "veteran" : undefined;
   statusLabel.textContent = `${veteranUnitCaption(before)} · ${VETERAN_SKILLS[skill].name[i18n.locale]}${next ? ` · ${i18n.locale === "zh" ? "下一位：" : "Next: "}${veteranUnitCaption(next)}` : ""}`;
@@ -1962,7 +1965,7 @@ function issueContextCommand(point: Point, queued = false) {
 
 function issueContextCommandAtWorld(world: Point, queued = false) {
   if (!snapshot) return;
-  const selectedUnits = selectedPlayerUnits();
+  const selectedUnits = selectedPlayerUnits().filter(unit=>!isInCabin(unit));
   const rallyBuildings = selectedPlayerRallyBuildings();
   if (selectedUnits.length === 0 && rallyBuildings.length > 0) {
     issueRallyCommandAtWorld(world, rallyBuildings);
@@ -1978,7 +1981,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
   // @@@context-target says, and nothing (or nothing the selection can act on) is a move there.
   const target = visualPointerTarget(world);
   if (target?.kind === "item") {
-    const command = pickupItemCommand(focusedPlayerUnits(), target.item);
+    const command = pickupItemCommand(focusedPlayerUnits().filter(unit=>!isInCabin(unit)), target.item);
     if (!command) {
       showInvalidCommand(t("status.pickupNeedsFocus"));
       return;
@@ -2079,16 +2082,39 @@ function unloadPassenger(transportId: string, passengerId: string) {
 }
 
 function canAttackMove() {
-  return !commandMode && !openPalette && selectedPlayerUnits().length > 0;
+  return !commandMode && !openPalette && selectedPlayerUnits().some(unit=>!isInCabin(unit));
+}
+
+function cabinProblem(action: CabinAction) {
+  return action.problem==='full' ? i18n.locale==='zh'?'舱内已满':'The cabin is full'
+    : action.problem==='blocked' ? i18n.locale==='zh'?'舱门被堵住':'Cabin door blocked'
+    : action.problem==='unsupported' ? i18n.locale==='zh'?'舱室仅供步行船员进入':'Only foot crew can enter the cabin'
+    : i18n.locale==='zh'?'舱室已失守或损坏':'The cabin is breached or damaged';
+}
+
+function cabinButtonState(type:'enterCabin'|'leaveCabin'): CommandButtonState {
+  if(!snapshot||commandMode||openPalette||!isUnitCommandPage(commandCardContext()))return HIDDEN_COMMAND_STATE;
+  const focused=cabinAction(snapshot,localPlayerId,focusedPlayerUnits());
+  if(!focused)return HIDDEN_COMMAND_STATE;
+  const action=cabinAction(snapshot,localPlayerId,selectedPlayerUnits())!;
+  if(action.type!==type)return HIDDEN_COMMAND_STATE;
+  return action.enabled?ENABLED_COMMAND_STATE:{visible:true,enabled:false,reason:'position',detail:cabinProblem(action)};
+}
+
+function issueCabinAction() {
+  if(!syncBeforeCommandProjection()||!snapshot)return;
+  const action=cabinAction(snapshot,localPlayerId,selectedPlayerUnits()),command=cabinCommand(action);
+  if(!command){if(action)showInvalidCommand(cabinProblem(action));return;}
+  if(sendCommand(command))statusLabel.textContent=command.type==='enterCabin'?(i18n.locale==='zh'?'船员正在前往舱门':'Crew are walking to the cabin door'):(i18n.locale==='zh'?'已请求返回甲板；舱门需留出空间':'Return requested; leave space at the cabin door');
 }
 
 function canOpenBuildPalette() {
-  return !commandMode && !openPalette && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && !openPalette && focusedPlayerUnits().some((unit) => !isInCabin(unit) && unit.kind === "worker");
 }
 
 function canBuild(kind: BuildingKind) {
   const player = currentPlayerState();
-  return !commandMode && openPalette === "build" && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && openPalette === "build" && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => !isInCabin(unit) && unit.kind === "worker");
 }
 
 function canTrain(unitKind: TrainableUnitKind) {
@@ -2184,7 +2210,7 @@ function beginAimMode() {
 
 function issueAimAt(point: Point, queued = false) {
   if (!syncBeforeCommandProjection() || commandMode?.type !== "aim") return;
-  const unitIds = selectedPlayerUnits().filter(unit => aimingProfile(UNIT_DEFS[unit.kind])).map(unit => unit.id);
+  const unitIds = selectedPlayerUnits().filter(unit => !isInCabin(unit) && aimingProfile(UNIT_DEFS[unit.kind])).map(unit => unit.id);
   if (!unitIds.length) { showInvalidCommand(t("command.aim.requirements")); return; }
   sendCommand({ type: "aim", unitIds, ...screenToWorld(point), queued });
   commandMode = undefined;
@@ -2281,7 +2307,7 @@ function confirmBuildPlacement(point: Point) {
 function issueAttackMoveAt(point: Point, queued = false) {
   if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "attackMove") return;
-  const unitIds = selectedPlayerUnits().map((unit) => unit.id);
+  const unitIds = selectedPlayerUnits().filter(unit=>!isInCabin(unit)).map((unit) => unit.id);
   if (unitIds.length === 0) {
     showInvalidCommand(t("status.attackMoveNeedsUnits"));
     clearCommandModeClasses();
@@ -2684,7 +2710,7 @@ function selectionRect(start: Point, end: Point): SelectionScreenRect {
 
 function pruneSelection() {
   if (!snapshot) return;
-  const liveIds = liveSelectionIds(snapshot);
+  const liveIds = liveSelectionIds(snapshot, localPlayerId);
   if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
@@ -2847,8 +2873,8 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? "" : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
     detail:entity && "order" in entity ? [entity.attackDamage > 0 ? t("hud.attackValue", { damage:entity.attackDamage }) : "",
       entity.level > 0 ? "★".repeat(Math.min(3, entity.level)) : "",
-      owner === localPlayerId && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
-      sailingStatus(entity),
+      owner === localPlayerId && !isInCabin(entity) && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
+      sailingStatus(entity), cabinStatus(entity,i18n.locale==='zh'),
     ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
@@ -2865,13 +2891,13 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     key: transport.id,
     ...(transport.id === entity?.id ? {} : { health: { current: transport.hp, max: transport.maxHp } }),
     label: t("hud.transportCargo", { name: labelKind(transport.kind), used: formatMass(deckLoad(snapshot!.units,transport)), capacity: formatMass(carries(transport)) }),
-    passengers: shipPassengers(snapshot!.units,transport).map(passenger => ({
+    passengers: shipPassengers(snapshot!.units,transport).filter(passenger=>!isInCabin(passenger)||passenger.owner===localPlayerId).map(passenger => ({
       canUnload: passenger.owner===localPlayerId,
-      key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
+      key: passenger.id, name: labelKind(passenger.kind)+(isInCabin(passenger)?i18n.locale==='zh'?' · 舱内':' · Cabin':''), actionLabel: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
       art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner)) },
-      activate: () => unloadPassenger(transport.id, passenger.id),
-      decorate: (button: HTMLButtonElement) => applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [t("hud.unloadPassengerHint")] }),
+      activate: () => {if(isInCabin(passenger)){selectedIds=new Set([passenger.id]);focusedSelectionId=passenger.id;openPalette=undefined;updateHud();}else unloadPassenger(transport.id, passenger.id);},
+      decorate: (button: HTMLButtonElement) => {button.dataset.inCabin=String(isInCabin(passenger));applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [isInCabin(passenger)?i18n.locale==='zh'?'点击选中船员，可返回甲板。':'Select this crew member to return to deck.':t("hud.unloadPassengerHint")] });},
     })),
   })));
   const subject = selectionLabel.querySelector<HTMLElement>(".hud-subject");
@@ -3005,7 +3031,7 @@ function renderItemDock() {
     itemDock.replaceChildren();
     return;
   }
-  const inventory = carriedItemsForSelection(snapshot, focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).units).slice(0, 6);
+  const inventory = carriedItemsForSelection(snapshot, focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).units.filter(unit=>!isInCabin(unit))).slice(0, 6);
   hudActions.toggleAttribute("data-has-items", inventory.length > 0 && !selectedCampId);
   const entries = isUnitCommandPage(commandCardContext()) ? inventory : [];
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
@@ -3051,6 +3077,7 @@ function useCarriedItem(itemId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
+  if(isInCabin(entry.carrier)){showInvalidCommand(i18n.locale==='zh'?'返回甲板后再使用物品':'Return to deck before using items');return;}
   if (ITEM_DEFS[entry.item.kind].passive) {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
     return;
@@ -3549,7 +3576,7 @@ function hitMercenaryCamp(world: Point) {
 }
 
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
-  const hit=visualHit(world);if(hit)return snapshot?.units.find(unit=>unit.id===hit.id && predicate(unit));
+  const hit=visualHit(world);if(hit)return snapshot?.units.find(unit=>unit.id===hit.id && !isInCabin(unit) && predicate(unit));
   return unitAt(snapshot?.units ?? [], world, predicate);
 }
 
@@ -3561,7 +3588,7 @@ function hitBuilding(world: Point, predicate: (building: Building) => boolean) {
 function visualHit(world:Point){const point=worldToScreen(world);return point.x<0||point.y<0||point.x>canvas.clientWidth||point.y>canvas.clientHeight?undefined:worldPresentation.pick(point);}
 function visualPointerTarget(world:Point):PointerTarget|undefined{
   if(!snapshot)return undefined;const hit=visualHit(world);
-  if(hit){const unit=snapshot.units.find(unit=>unit.id===hit.id);if(unit)return{kind:'unit',unit};const building=snapshot.buildings.find(building=>building.id===hit.id);if(building)return{kind:'building',building};}
+  if(hit){const unit=snapshot.units.find(unit=>unit.id===hit.id && !isInCabin(unit));if(unit)return{kind:'unit',unit};const building=snapshot.buildings.find(building=>building.id===hit.id);if(building)return{kind:'building',building};}
   return pointerTarget(snapshot,world);
 }
 

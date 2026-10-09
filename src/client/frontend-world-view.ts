@@ -3,6 +3,7 @@ import { pruneControlGroups } from "./control-groups";
 import type { GameAdapter } from "./game-adapter";
 import { resolveFocusedSelectionId } from "./hud-model";
 import type { GameSnapshot, PlayerId } from "../shared/types";
+import { isInCabin } from '../shared/ship-cabin';
 
 export type FrontendWorldViewState = {
   owner: PlayerId;
@@ -18,7 +19,7 @@ export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorld
   const snapshot = adapter.currentSnapshot();
   if (!snapshot) return { ...state, snapshot: undefined, selectedIds: new Set(), focusedSelectionId: undefined, selectedCampId: undefined };
 
-  const liveIds = liveSelectionIds(snapshot);
+  const liveIds = liveSelectionIds(snapshot, state.owner);
   const selectedIds = new Set([...state.selectedIds].filter((id) => liveIds.has(id)));
   pruneControlGroups(state.controlGroups, liveIds);
 
@@ -34,6 +35,6 @@ export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorld
   };
 }
 
-export function liveSelectionIds(snapshot: GameSnapshot) {
-  return new Set([...snapshot.units.map((unit) => unit.id), ...snapshot.buildings.map((building) => building.id)]);
+export function liveSelectionIds(snapshot: GameSnapshot, viewer?: PlayerId) {
+  return new Set([...snapshot.units.filter(unit=>!viewer||unit.owner===viewer||!isInCabin(unit)).map((unit) => unit.id), ...snapshot.buildings.map((building) => building.id)]);
 }

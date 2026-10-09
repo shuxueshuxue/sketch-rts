@@ -26,6 +26,15 @@ it('selects raised crew before the hull and moves them across their own damaged 
   expect(deckMovePoint(game.units,[worker],floor)).toEqual({x:ship.x-15,y:ship.y});
 });
 
+it('never exposes a sheltered or trapped person as a battlefield pointer target',()=>{
+  const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];delete game.map.terrain;
+  const ship=game.spawnUnit('player','warship',800,800),crew=game.spawnUnit('player','priest',800,800);
+  expect(boardUnit(ship,crew,game.units)).toBe(true);
+  const point=unitPointerPosition(game.units,crew);crew.cabin={shipId:ship.id,breached:true};
+  expect(unitAt(game.units,point,()=>true)?.id).not.toBe(crew.id);
+  expect(pointerTarget(snapshotGame(game),point)).not.toMatchObject({kind:'unit',unit:{id:crew.id}});
+});
+
 // What a right-click there orders the player's selection (see @@@pointer-target and @@@context-target); none is a move.
 function rightClick(snapshot: GameSnapshot, selected: Unit[], at: { x: number; y: number }, queued = false) {
   const target = pointerTarget(snapshot, at);

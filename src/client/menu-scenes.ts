@@ -231,7 +231,9 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
         if(!boardUnit(ship,crew,game.units)){game.units=game.units.filter(unit=>unit.id!==crew.id);continue;}
         const point=deckPlacement(ship,crew,game.units,{x:x*profile.length,y:y*profile.beam});
         if(point)crew.deck={shipId:ship.id,...point};
-        if(unitKind==='worker' && index%2===0)deckPatrols.push({shipId:ship.id,crewId:crew.id,phase:index});
+        // Armed decks may have room only for their two guards. Patrol with
+        // workers who actually boarded, including the roomy transports.
+        if(unitKind==='worker')deckPatrols.push({shipId:ship.id,crewId:crew.id,phase:index});
       }
     }
     syncDecks(game.units);

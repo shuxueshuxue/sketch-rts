@@ -8,6 +8,8 @@ import { dropItemCommand } from './item-controls';
 import { projectDeckPoint } from '../shared/decks';
 import { deckPlanProjection } from './deck-plan-projection';
 import { weaponCondition } from './weapon-condition';
+import { cabinAction, cabinCommand, cabinStatus } from './cabin-controls';
+import { isInCabin, shipCabinCapacity } from '../shared/ship-cabin';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
@@ -139,7 +141,7 @@ export class EquipmentPanel {
     }
     private command(command: GameCommand) {
         this.send(command);
-        this.notice = { text: command.type==='move' ? this.text('已更新船员布阵', 'Crew position ordered') : this.text('已发出物品操作', 'Item action sent'), invalid: false, until: performance.now() + 2000 };
+        this.notice = { text: command.type==='move' ? this.text('已更新船员布阵', 'Crew position ordered') : command.type==='enterCabin' ? this.text('正在前往舱门', 'Walking to the cabin door') : command.type==='leaveCabin' ? this.text('已请求返回甲板', 'Return to deck requested') : this.text('已发出物品操作', 'Item action sent'), invalid: false, until: performance.now() + 2000 };
         this.updateFeedback();
     }
     private updateFeedback() {
@@ -151,6 +153,8 @@ export class EquipmentPanel {
         node.classList.toggle('invalid', this.notice?.invalid ?? false);
     }
     private transfer(item: WorldItem, destination: ItemDestination) {
+        const people=[item.carrierId,'unitId' in destination?destination.unitId:undefined];
+        if(this.snapshot!.units.some(unit=>people.includes(unit.id)&&isInCabin(unit))){this.feedback(this.text('返回甲板后再整理人物装备','Return to deck before changing crew equipment'));return;}
         const refusal = transferRefusal(this.snapshot!, this.owner, item.id, destination);
         if (refusal) {
             this.feedback(refusal);
@@ -161,6 +165,7 @@ export class EquipmentPanel {
     private wield(itemId: string | undefined, hand: 'right' | 'left') {
         if (!this.unitId)
             return;
+        if(this.snapshot!.units.some(unit=>unit.id===this.unitId&&isInCabin(unit))){this.feedback(this.text('返回甲板后再切换武器','Return to deck before changing weapons'));return;}
         const refusal = wieldRefusal(this.snapshot!, this.owner, this.unitId, itemId, hand);
         if (refusal) {
             this.feedback(refusal);
@@ -305,6 +310,7 @@ export class EquipmentPanel {
         const carrier = this.snapshot!.units.find(unit => unit.id === (item.carrierId ?? item.shipId));
         if (carrier && (item.carrierId === carrier.id || item.shipId === this.shipId))
             this.action(actions, this.text('丢弃', 'Drop'), () => {
+                if(isInCabin(carrier)){this.feedback(this.text('返回甲板后再丢弃物品','Return to deck before dropping items'));return;}
                 this.command(dropItemCommand(item,carrier,this.snapshot!.units));
                 this.selectedItem = undefined;
             });
@@ -365,7 +371,7 @@ export class EquipmentPanel {
         if (!snapshot || !this.open) return;
         const own = snapshot.units.filter(unit => unit.owner === this.owner && unit.hp > 0);
         const contextShip = own.find(unit => unit.id === this.shipId);
-        const characters = own.filter(unit => canEquip(unit) && (this.shipContext ? contextShip && canExchange(snapshot, unit, contextShip) : this.contextIds.includes(unit.id)));
+        const characters = own.filter(unit => canEquip(unit) && (this.shipContext ? contextShip && (unit.deck?.shipId === contextShip.id || canExchange(snapshot, unit, contextShip)) : this.contextIds.includes(unit.id)));
         if (this.shipContext && !characters.some(unit => unit.id === this.unitId)) this.unitId = characters[0]?.id;
         const unit = own.find(unit => unit.id === this.unitId), ship = own.find(unit => unit.id === this.shipId && shipProfile(unit));
         if (!unit && !ship) { this.close(); return; }
@@ -380,7 +386,7 @@ export class EquipmentPanel {
         const pageCount = Math.max(1, Math.ceil(total / capacity));
         this.holdPage = Math.min(this.holdPage, pageCount - 1);
         const key = JSON.stringify([narrow, short, holdRows, this.holdPage, this.activePane, modelArtRevision(), this.i18n().locale, this.unitId, this.shipId,
-            characters.map(unit => unit.id), ship && shipPassengers(snapshot.units,ship).map(crew=>[crew.id,crew.owner]), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
+            characters.map(unit => [unit.id,unit.cabin]), ship && shipPassengers(snapshot.units,ship).map(crew=>[crew.id,crew.owner,crew.cabin]), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
         if (key === this.fingerprint || this.dragging || this.crewDrag) { this.updateValues(unit, ship); return; }
         this.fingerprint = key;
         this.root.dataset.pane = this.activePane;
@@ -441,6 +447,13 @@ export class EquipmentPanel {
                 const value = document.createElement('strong'); value.dataset.stat = key; stat.append(caption, value); stats.append(stat);
             }
             character.append(stats);
+            if (cabinAction(snapshot, this.owner, [unit])) {
+                character.classList.add('has-cabin-action');
+                const row=document.createElement('div'); row.className='equipment-cabin-action';
+                const button=document.createElement('button'); button.type='button'; button.className='equipment-action'; button.dataset.cabinAction='';
+                button.addEventListener('click',()=>{const latest=this.snapshot!.units.find(crew=>crew.id===this.unitId);const command=latest&&cabinCommand(cabinAction(this.snapshot!,this.owner,[latest]));if(command)this.command(command);});
+                const status=document.createElement('small'); status.dataset.cabinStatus=''; row.append(button,status); character.append(row);
+            }
         } else this.emptyNote(character, this.text('附近没有己方人物。船舱整理与炮位配置可以直接操作。', 'No friendly character nearby. Hold and fitting actions remain available.'));
         const cargo = document.createElement('section'); cargo.className = 'equipment-cargo'; if (ship) columns.append(cargo);
         const cargoTitle = document.createElement('h3'); cargoTitle.className = 'equipment-section-title'; cargoTitle.textContent = `${this.text('船舱', 'CARGO HOLD')} · ${total} ${this.text('格', 'positions')}`; cargo.append(cargoTitle);
@@ -492,7 +505,7 @@ export class EquipmentPanel {
                 cell.title = `${mount.accepts.map(kind => labelKind(kind, this.i18n())).join(' / ')} · ${this.text('射界', 'Firing arc')} ±${Math.round(mount.halfArc * 180 / Math.PI)}°`;
                 scene.append(cell);
             }
-            for (const crew of shipPassengers(snapshot.units,ship)) {
+            for (const crew of shipPassengers(snapshot.units,ship).filter(crew=>!isInCabin(crew))) {
                 const token = document.createElement('button'); token.type='button'; token.className='equipment-crew'; token.dataset.crewId=crew.id;
                 token.title=labelKind(crew.kind,this.i18n()); token.setAttribute('aria-label',this.text('调整船员位置：','Move crew: ')+token.title);
                 token.setAttribute('aria-pressed',String(crew.id===this.unitId));
@@ -521,6 +534,22 @@ export class EquipmentPanel {
                 token.addEventListener('lostpointercapture',()=>{if(this.crewDrag===crew.id){this.clearCrewDrag();this.updateValues(unit,ship);}});scene.append(token);
             }
             const parts = document.createElement('p'); parts.dataset.equipmentParts = ''; vessel.append(parts);
+            if (shipCabinCapacity(ship)>0) {
+                vessel.classList.add('has-cabin');
+                const cabin=document.createElement('div'); cabin.className='equipment-cabin';
+                const label=document.createElement('small'); label.dataset.cabinCapacity=''; cabin.append(label);
+                const roster=document.createElement('div'); roster.className='equipment-cabin-roster'; cabin.append(roster);
+                for(const crew of shipPassengers(snapshot.units,ship).filter(crew=>crew.owner===this.owner && isInCabin(crew))) {
+                    const button=document.createElement('button'); button.type='button'; button.dataset.cabinCrewId=crew.id;
+                    button.setAttribute('aria-pressed',String(crew.id===this.unitId));
+                    button.title=`${labelKind(crew.kind,this.i18n())} · ${cabinStatus(crew,this.i18n().locale==='zh')}`;
+                    button.setAttribute('aria-label',button.title);
+                    const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
+                    drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');button.append(portrait);
+                    button.addEventListener('click',()=>{this.unitId=crew.id;this.activePane='character';this.render();});roster.append(button);
+                }
+                vessel.append(cabin);
+            }
         } else this.emptyNote(vessel, this.text('选择船只后查看炮位、船帆与船舵。', 'Select a ship to view fittings, rigging and rudder.'));
         const actions = document.createElement('footer'); actions.dataset.equipmentActions = ''; actions.hidden = true; this.root.append(actions);
         const feedback = document.createElement('p'); feedback.dataset.equipmentFeedback = ''; feedback.setAttribute('role', 'status');
@@ -572,6 +601,16 @@ export class EquipmentPanel {
             stats.querySelector('[data-stat=attack]')!.textContent = String(unit.attackDamage);
             stats.querySelector('[data-stat=protection]')!.textContent = `${Math.round(equipmentProtection(this.snapshot!, unit) * 100)}%`;
         }
+        const cabinButton=this.root.querySelector<HTMLButtonElement>('[data-cabin-action]');
+        if(cabinButton&&unit){
+            const action=cabinAction(this.snapshot!,this.owner,[unit]);
+            cabinButton.textContent=action?.type==='leaveCabin'?this.text('返回甲板','Return to deck'):this.text('撤入舱内','Take shelter');
+            cabinButton.disabled=!action?.enabled;
+            cabinButton.title=action?.problem==='full'?this.text('舱内已满','The cabin is full'):action?.problem==='blocked'?this.text('舱门被堵住','Cabin door blocked'):action?.problem==='unavailable'?this.text('舱室已失守或损坏','The cabin is breached or damaged'):action?.problem==='unsupported'?this.text('舱室仅供步行船员进入','Only foot crew can enter this cabin'):this.text('舱内无法攻击或施法','Sheltered crew cannot attack or cast');
+            this.root.querySelector<HTMLElement>('[data-cabin-status]')!.textContent=unit.cabin?.breached?cabinStatus(unit,this.i18n().locale==='zh'):action&&!action.enabled?cabinButton.title:cabinStatus(unit,this.i18n().locale==='zh')||(unit.order.type==='enterCabin'?this.text('前往舱门','Walking to door'):'');
+        }
+        const cabinCapacity=this.root.querySelector<HTMLElement>('[data-cabin-capacity]');
+        if(cabinCapacity&&ship)cabinCapacity.textContent=`${this.text('避险舱','Shelter')} ${shipPassengers(this.snapshot!.units,ship).filter(isInCabin).length} / ${shipCabinCapacity(ship)}`;
         const access = this.root.querySelector<HTMLElement>('[data-equipment-access]');
         if (access) {
             const ready = ship && (!unit || canExchange(this.snapshot!, unit, ship));
@@ -582,7 +621,7 @@ export class EquipmentPanel {
         const parts = this.root.querySelector<HTMLElement>('[data-equipment-parts]');
         if (parts && ship) {
             const max = shipPartMax(ship);
-            parts.textContent = `${this.text('船帆', 'Rigging')} ${Math.ceil(ship.shipParts?.rigging ?? max.rigging)} / ${max.rigging} · ${this.text('船舵', 'Rudder')} ${Math.ceil(ship.shipParts?.rudder ?? max.rudder)} / ${max.rudder}`;
+            parts.textContent = `${this.text('船帆', 'Rigging')} ${Math.ceil(ship.shipParts?.rigging ?? max.rigging)} / ${max.rigging} · ${this.text('船舵', 'Rudder')} ${Math.ceil(ship.shipParts?.rudder ?? max.rudder)} / ${max.rudder}${shipCabinCapacity(ship)>0 ? ` · ${this.text('舱室', 'Cabin')} ${Math.ceil(ship.shipParts?.cabin ?? max.cabin)} / ${max.cabin}` : ''}`;
         }
         this.updateWeaponConditions();
         this.updateFeedback();

@@ -136,6 +136,7 @@ export const VETERAN_SPECIALIST_SKILLS: Partial<Record<UnitKind, readonly Vetera
   organGun: ["veteranSiegeDrill"],
   siegeRam: ["veteranPhalanx", "veteranMarch"],
   warship: ["veteranSiegeDrill"],
+  shipOfTheLine: ["veteranSiegeDrill"],
   bombardShip: ["veteranSiegeDrill"],
   fireShip: ["veteranSiegeDrill"],
   cutter: ["veteranSteadyAim", "veteranMarch"],

@@ -19,7 +19,7 @@ def _lerp(a, b, t):
 def build_running_rig(kind, mast, length, beam, height, cloth, rope, wood,
                       mesh, spar, layer, *, stay_to=None, dynamic=False, rig_id="mast0"):
     x, y, z = mast
-    square = kind in ("warship", "carrier")
+    square = kind in ("warship", "carrier", "shipOfTheLine")
     pressure = (1, 0, 0) if square else (0, 1, 0)
     limit = math.radians(50 if square else 65)
     manifest = {"frames": [{"id": rig_id, "pivot": mast, "axis": (0, 0, 1),
@@ -72,16 +72,16 @@ def build_running_rig(kind, mast, length, beam, height, cloth, rope, wood,
         sling = _lerp(a, b, t)
         offset = math.hypot(sling[0] - x, sling[1] - y)
         nx, ny = (sling[0] - x) / offset, (sling[1] - y) / offset
-        square = kind in ("warship", "carrier")
+        square = kind in ("warship", "carrier", "shipOfTheLine")
         top = (x + fall_offset[0], y + fall_offset[1], mast_top) if square else (x, y + 6, mast_top)
         line(name + " halyard", sling, top, .34, frame=rig_id)
         line(name + " halyard block", (top[0], top[1], top[2] - .7),
              (top[0], top[1], top[2] + .7), .65, wood, frame=rig_id)
         line(name + " block arm", (x, y, mast_top), top, .45, wood, frame=rig_id)
         if square:
-            cabin_height = ({"warship": 22, "carrier": 30}[kind] if x < 0 else 0)
+            cabin_height = ({"warship": 22, "carrier": 30, "shipOfTheLine": 0}[kind] if x < 0 else 0)
             guide = (x + (-.35 if name == "lower yard" else .35), y + 2.7,
-                     z + height * (.76 if kind == "carrier" else .63))
+                     z + height * (.76 if kind in ("carrier", "shipOfTheLine") else .63))
             line(name + " moving halyard fall", top, guide, a=point(top, rig_id))
             belay(name + " halyard fall", guide, (guide[0], guide[1], z + cabin_height + 7),
                   base_z=z + cabin_height + (2.8 if cabin_height else 1), pin=True)
@@ -179,10 +179,10 @@ def build_running_rig(kind, mast, length, beam, height, cloth, rope, wood,
         yard("topsail yard", *upper, z + height, radius=.9, fall_offset=(.6, 4.4))
         lower_head = laced_head("course sail", *lower)
         upper_head = laced_head("topsail", *upper, radius=.9)
-        cabin_height = {"warship": 22, "carrier": 30}[kind]
+        cabin_height = {"warship": 22, "carrier": 30, "shipOfTheLine": 36}[kind]
         foot_height = max(height * .23, cabin_height + 9)
         course_clews = [(yard_x, y + side * beam * .46, z + foot_height) for side in (-1, 1)]
-        topsail_foot = .79 if kind == "carrier" else .74
+        topsail_foot = .79 if kind in ("carrier", "shipOfTheLine") else .74
         topsail_clews = [(yard_x, y + side * beam * .32, z + height * topsail_foot) for side in (-1, 1)]
         main_id = quad("course sail", (*course_clews, lower_head[1], lower_head[0]), beam * .16)
         top_id = quad("square topsail", (*topsail_clews, upper_head[1], upper_head[0]), beam * .075, panels=6, rows=4)
@@ -195,7 +195,7 @@ def build_running_rig(kind, mast, length, beam, height, cloth, rope, wood,
                 line(name + " lift", ends[index], (x, y, z + height * lift_height), .25, frame=rig_id)
                 belay(name + " brace", ends[index], (aft_x, y + side * beam * .30, z + 10), anchor=point(ends[index], rig_id))
 
-    if kind in ("cutter", "warship", "carrier"):
+    if kind in ("cutter", "warship", "carrier", "shipOfTheLine"):
         stay_top = (x, y, z + height * (.96 if kind == "cutter" else 1))
         # The aft mast is stayed to the forward masthead, above its sails.
         stay_foot = (length * .61, 0, z + 21)

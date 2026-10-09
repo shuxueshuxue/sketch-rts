@@ -1,0 +1,412 @@
+{
+  "results": [
+    {
+      "name": "moving-two-only-priest-four-guns",
+      "passed": true,
+      "ticks": 9,
+      "inside": 1,
+      "entered": [
+        [
+          "unit-player-priest-1003",
+          9
+        ]
+      ],
+      "diagnostic": [
+        {
+          "id": "unit-player-footman-1002",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -43.2
+          }
+        },
+        {
+          "id": "unit-player-priest-1003",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59197688560229,
+            "y": -0.21822871162030344
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        }
+      ],
+      "shipTravel": 18.057179858586473
+    },
+    {
+      "name": "moving-six-one-command-four-guns",
+      "passed": true,
+      "ticks": 88,
+      "inside": 6,
+      "entered": [
+        [
+          "unit-player-footman-1004",
+          1
+        ],
+        [
+          "unit-player-priest-1003",
+          10
+        ],
+        [
+          "unit-player-footman-1006",
+          26
+        ],
+        [
+          "unit-player-priest-1005",
+          43
+        ],
+        [
+          "unit-player-footman-1002",
+          61
+        ],
+        [
+          "unit-player-priest-1007",
+          88
+        ]
+      ],
+      "diagnostic": [
+        {
+          "id": "unit-player-footman-1002",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.62929573089767,
+            "y": -0.10559566374570473
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1003",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59197688560221,
+            "y": -0.21822871162029944
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-footman-1004",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -96.60000000000016,
+            "y": 8.800000000000084
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1005",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59999999999995,
+            "y": -3.552713678800501e-14
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-footman-1006",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000008,
+            "y": 1.1723955140041653e-13
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1007",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.53921281665241,
+            "y": -0.04955497975303036
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "moving-two-only-priest-eight-guns",
+      "passed": true,
+      "ticks": 9,
+      "inside": 1,
+      "entered": [
+        [
+          "unit-player-priest-1003",
+          9
+        ]
+      ],
+      "diagnostic": [
+        {
+          "id": "unit-player-footman-1002",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -43.2
+          }
+        },
+        {
+          "id": "unit-player-priest-1003",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59197688560229,
+            "y": -0.21822871162030344
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        }
+      ],
+      "shipTravel": 18.057179858586473
+    },
+    {
+      "name": "moving-six-one-command-eight-guns",
+      "passed": true,
+      "ticks": 83,
+      "inside": 6,
+      "entered": [
+        [
+          "unit-player-footman-1004",
+          1
+        ],
+        [
+          "unit-player-priest-1003",
+          10
+        ],
+        [
+          "unit-player-footman-1006",
+          26
+        ],
+        [
+          "unit-player-priest-1005",
+          43
+        ],
+        [
+          "unit-player-footman-1002",
+          61
+        ],
+        [
+          "unit-player-priest-1007",
+          83
+        ]
+      ],
+      "diagnostic": [
+        {
+          "id": "unit-player-footman-1002",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.62929573089762,
+            "y": -0.10559566374572826
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1003",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59197688560216,
+            "y": -0.2182287116202981
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-footman-1004",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -96.60000000000016,
+            "y": 8.800000000000084
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1005",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000007,
+            "y": 7.815970093361102e-14
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-footman-1006",
+          "kind": "footman",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.6000000000001,
+            "y": -3.552713678800501e-14
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        },
+        {
+          "id": "unit-player-priest-1007",
+          "kind": "priest",
+          "owner": "player",
+          "order": {
+            "type": "idle"
+          },
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.13100961739433,
+            "y": -0.3350032157752574
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "do-not-clear-hold",
+      "passed": true,
+      "admissionRefused": false,
+      "priestEntered": true,
+      "blockerOrder": {
+        "type": "hold",
+        "x": 1473.4,
+        "y": 1556.8
+      }
+    },
+    {
+      "name": "do-not-clear-attack",
+      "passed": true,
+      "admissionRefused": false,
+      "priestEntered": true,
+      "blockerOrder": {
+        "type": "attack",
+        "targetId": "unit-enemy-transport-1003"
+      }
+    },
+    {
+      "name": "do-not-clear-ally-idle",
+      "passed": true,
+      "admissionRefused": false,
+      "priestEntered": true,
+      "blockerOrder": {
+        "type": "idle"
+      }
+    },
+    {
+      "name": "hard-blocked-hatch-hold",
+      "passed": true,
+      "blockers": 5,
+      "rejected": true
+    },
+    {
+      "name": "hard-blocked-hatch-attack",
+      "passed": true,
+      "blockers": 5,
+      "rejected": true
+    },
+    {
+      "name": "hard-blocked-hatch-ally-idle",
+      "passed": true,
+      "blockers": 5,
+      "rejected": true
+    },
+    {
+      "name": "enemy-boarding-does-not-clear-orders-or-admit-shelter",
+      "passed": true,
+      "rejected": true
+    },
+    {
+      "name": "six-active-entry-orders-save-restore-every-tick",
+      "passed": true,
+      "continuedTicks": 71,
+      "checkpoints": 72
+    }
+  ],
+  "passed": true
+}

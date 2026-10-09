@@ -806,8 +806,8 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         if (own.filter(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land').length < 6) return;
         const candidates = own.filter(ship => shipProfile(ship) && distance(ship,dock) < 900 && ship.hp >= ship.maxHp*.65 && !dangerous(ship)
             && !memory.ferries?.[ship.id]
-            && installedWeapons(snapshot,ship).length < (ship.kind === 'carrier' ? 5 : ship.kind === 'warship' ? 3 : ship.kind === 'transport' || ship.kind === 'cutter' ? 1 : 2))
-            .sort((a,b)=>Number(['warship','carrier'].includes(b.kind))-Number(['warship','carrier'].includes(a.kind)) || installedWeapons(snapshot,a).length-installedWeapons(snapshot,b).length || b.maxHp-a.maxHp);
+            && installedWeapons(snapshot,ship).length < (ship.kind === 'shipOfTheLine' ? 8 : ship.kind === 'carrier' ? 5 : ship.kind === 'warship' ? 3 : ship.kind === 'transport' || ship.kind === 'cutter' ? 1 : 2))
+            .sort((a,b)=>Number(['warship','carrier','shipOfTheLine'].includes(b.kind))-Number(['warship','carrier','shipOfTheLine'].includes(a.kind)) || installedWeapons(snapshot,a).length-installedWeapons(snapshot,b).length || b.maxHp-a.maxHp);
         for (const ship of candidates) {
             const mount = shipMounts(ship).find(mount => !snapshot.items.some(item => item.shipId === ship.id && item.mountId === mount.id) && (mount.accepts.includes('shipCannon') || mount.accepts.includes('shipMortar')));
             if (!mount) continue;

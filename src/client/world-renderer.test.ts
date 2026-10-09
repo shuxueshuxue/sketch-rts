@@ -88,6 +88,19 @@ describe("world renderer", () => {
   beforeEach(() => setScratchCanvasFactory(fakeCanvas));
   afterEach(() => setScratchCanvasFactory(undefined));
 
+  it('draws no body, health, selection ring or reticle for a sheltered person in either canvas pass',()=>{
+    const original=duelSnapshot(),unit=original.units.find(unit=>unit.owner==='north')!;
+    const snapshot={...original,units:[unit],buildings:[],resources:[],items:[],mercenaryCamps:[],effects:[],projectiles:[]};
+    unit.deck={shipId:'shelter',x:0,y:0};unit.cabin={shipId:'shelter',breached:true};unit.hp=1;
+    unit.aim={x:450,y:300,anchorX:unit.x,anchorY:unit.y,tracking:true,updatedTick:1};unit.order={type:'aim',x:450,y:300};
+    for(const pass of [undefined,'overlay'] as const){
+      const rendered=frame(snapshot,{...(pass?{pass}:{}),viewer:'north',selectedIds:new Set([unit.id]),hoveredId:unit.id});
+      drawWorld(rendered);
+      expect(spriteDraws(rendered.calls)).toHaveLength(0);
+      expect(rendered.calls.filter(call=>call.name==='stroke' && ['#c59b56',RELATION_INK.own].includes(String(call.ink)))).toHaveLength(0);
+    }
+  });
+
   it("draws prepared reticles only for the owning viewer, excluding allies and spectators", () => {
     const snapshot = duelSnapshot();
     const unit = snapshot.units.find(unit => unit.owner === "north")!;

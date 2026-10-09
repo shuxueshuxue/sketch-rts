@@ -1,0 +1,183 @@
+{
+  "errors": [],
+  "asset": {
+    "path": "public/art/world3d/ships/shipOfTheLine.glb",
+    "sha256": "ff79a493ba08d754fe7f8e01fd0209fee9afa7ad9e547dadc055a027d2bfd601",
+    "lastModified": "2026-10-09T02:35:25.577Z"
+  },
+  "models": [
+    {
+      "url": "http://127.0.0.1:5226/art/world3d/ships/shipOfTheLine.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5226/art/world3d/ships/warship.glb",
+      "status": 200
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-player-shipOfTheLine-1000"
+        ],
+        "x": 3200,
+        "y": 1500
+      }
+    },
+    {
+      "tick": 60,
+      "command": {
+        "type": "enterCabin",
+        "unitIds": [
+          "unit-player-priest-1001"
+        ]
+      }
+    },
+    {
+      "tick": 260,
+      "command": {
+        "type": "leaveCabin",
+        "unitIds": [
+          "unit-player-priest-1001"
+        ]
+      }
+    }
+  ],
+  "notes": [
+    {
+      "before": {
+        "tick": 0,
+        "ship": {
+          "x": 1500,
+          "y": 1500,
+          "speed": 0
+        },
+        "crew": {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -126.60000000000002,
+            "y": -45.2
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        "actors": [
+          "unit-player-shipOfTheLine-1000",
+          "unit-player-priest-1001",
+          "unit-player-footman-1002"
+        ],
+        "glError": 0,
+        "commandCount": 0
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "setup": "真实 boardUnit 默认登船位置；工厂四炮补装四件真实火炮，共八炮；未人工移动船员甲板坐标"
+    },
+    {
+      "movingShelter": {
+        "tick": 260,
+        "entryTick": 89,
+        "ship": {
+          "x": 2031.6582746152574,
+          "y": 1500,
+          "speed": 44.18903363769941
+        },
+        "crew": {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.59999999999991,
+            "y": 0
+          },
+          "cabin": {
+            "shipId": "unit-player-shipOfTheLine-1000"
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        "actors": [
+          "unit-player-shipOfTheLine-1000",
+          "unit-player-footman-1002"
+        ],
+        "glError": 0,
+        "commandCount": 2
+      },
+      "worldHidden": true,
+      "button": "返回甲板",
+      "hud": "牧师\n90 / 90\n舱内\n重型舷炮舰 · 船员\n牧师 · 舱内\n步兵"
+    },
+    {
+      "rosterSelectsCrew": true
+    },
+    {
+      "wide": "重型舷炮舰 · 船舱与炮位\n×\n船员\n牧师 · 01\n‹\n›\n穿戴\n头部\n身体\n脚部\n携行\n1 · 空位\n2 · 空位\n3 · 空位\n4 · 空位\n主手\n空手\n副手\n空手\n生命\n90 / 90\n攻击\n7\n减伤\n0%\n返回甲板\n舱内\n船舱 · 45 格\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n‹\n1–40 / 45 格\n›\n\n船上装备 1280 kg · 总载重 830 / 4598 kg\n\n船体装备\n\n船帆 177 / 177 · 船舵 127 / 127 · 舱室 296 / 296\n\n避险舱 1 / 6",
+      "fit": {
+        "width": 1160,
+        "height": 560,
+        "inside": true
+      }
+    },
+    {
+      "narrow": "重型舷炮舰 · 船舱与炮位\n×\n人物\n船舱\n船体\n船员\n牧师 · 01\n‹\n›\n穿戴\n头部\n身体\n脚部\n携行\n1 · 空位\n2 · 空位\n3 · 空位\n4 · 空位\n主手\n空手\n副手\n空手\n生命\n90 / 90\n攻击\n7\n减伤\n0%\n返回甲板\n舱内",
+      "fit": {
+        "width": 608,
+        "height": 560,
+        "inside": true
+      }
+    },
+    {
+      "returned": {
+        "tick": 260,
+        "entryTick": 89,
+        "ship": {
+          "x": 2031.6582746152574,
+          "y": 1500,
+          "speed": 44.18903363769941
+        },
+        "crew": {
+          "id": "unit-player-priest-1001",
+          "deck": {
+            "shipId": "unit-player-shipOfTheLine-1000",
+            "x": -95.60000000000002,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        "actors": [
+          "unit-player-shipOfTheLine-1000",
+          "unit-player-priest-1001",
+          "unit-player-footman-1002"
+        ],
+        "glError": 0,
+        "commandCount": 3
+      },
+      "screenshot": "cabin-return.png",
+      "sameTickReturn": true
+    },
+    {
+      "full": {
+        "setup": "仅用于容量反馈的六人舱内状态夹具",
+        "disabled": true,
+        "title": "舱内已满"
+      }
+    },
+    {
+      "blocked": {
+        "setup": "真实合法甲板站位堵门，并击破舱室后 stepGame 自动出舱重试",
+        "disabled": true,
+        "title": "舱门被堵住",
+        "status": "舱室失守 · 等待出舱"
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { footprintCells } from '../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { MENU_SCENES } from './menu-scenes';
 import { hullContact, shipProfile } from '../shared/ship-geometry';
+import { deckPointFits } from '../shared/decks';
 
 describe('menu demonstration worlds', () => {
   it('turns the whole convoy on both return legs without hull pileups',()=>{
@@ -66,9 +67,16 @@ describe('menu demonstration worlds', () => {
     const moving=new Set<string>();
     for(let tick=0;tick<20*SIM_TICKS_PER_SECOND;tick++) {
       run.script(run.game,tick/SIM_TICKS_PER_SECOND);stepGame(run.game);
-      for(const unit of crew){expect(unit.hp).toBeGreaterThan(0);expect(unit.deck?.shipId).toBe(start.get(unit.id)!.shipId);if(Math.hypot(unit.deck!.x-start.get(unit.id)!.x,unit.deck!.y-start.get(unit.id)!.y)>2)moving.add(unit.id);}
+      for(const unit of crew){
+        expect(unit.hp).toBeGreaterThan(0);
+        expect(unit.deck?.shipId).toBe(start.get(unit.id)!.shipId);
+        const ship=run.game.units.find(ship=>ship.id===unit.deck!.shipId)!;
+        expect(deckPointFits(ship,unit,unit.deck!,run.game.units)).toBe(true);
+        if(Math.hypot(unit.deck!.x-start.get(unit.id)!.x,unit.deck!.y-start.get(unit.id)!.y)>2)moving.add(unit.id);
+      }
     }
     expect(moving.size).toBeGreaterThan(0);
+    expect(crew.filter(unit=>unit.kind==='worker').every(unit=>moving.has(unit.id))).toBe(true);
     expect(crew.filter(unit=>unit.kind!=='worker').every(unit=>!moving.has(unit.id))).toBe(true);
   },15000);
 });

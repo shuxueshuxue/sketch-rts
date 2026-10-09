@@ -3,6 +3,7 @@ import type { GameSnapshot, Owner, PlayerId } from "../shared/types";
 import { RELATION_INK, relationTo } from "./relations";
 import { terrainMinimap } from "./terrain-art";
 import { ownerInk } from "./world-renderer";
+import { isInCabin } from '../shared/ship-cabin';
 
 type Brush = CanvasRenderingContext2D;
 type Rect = { x: number; y: number; width: number; height: number };
@@ -24,7 +25,9 @@ export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, m
   // Marks grow with the picture: the minimap's are a few pixels, a preview twice its size draws them a little larger.
   terrainOverlay?.();
   const scale = Math.max(1, Math.min(2, rect.width / 220));
+  const sheltered = new Set(snapshot.units.filter(isInCabin).map(unit => unit.id));
   for (const mark of marks) {
+    if (mark.category === 'unit' && mark.sourceIds.some(id => sheltered.has(id))) continue;
     const point = projectWorldToRect(mark, snapshot.map, rect);
     if (mark.category === "terrain") {
       drawMiniTerrainMark(ctx, mark, point);

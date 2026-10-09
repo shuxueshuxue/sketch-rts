@@ -17,6 +17,7 @@ import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
 import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import { shipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
+import { isInCabin } from '../../shared/ship-cabin';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Unit } from '../../shared/types';
@@ -72,7 +73,11 @@ export class World3DLayer {
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
   reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();}
   private deckPosition(unit:Unit,now:number){
-    const track=this.deckMotion.get(unit.id)!;const t=Math.max(0,Math.min(1,(now-track.at)*SIM_TICKS_PER_SECOND/1000));
+    const track=this.deckMotion.get(unit.id);
+    // Returning from shelter can change a command snapshot before its next
+    // tick. Hidden crew have no interpolation track; use their actual exit.
+    if(!track || track.shipId!==unit.deck!.shipId)return unit.deck!;
+    const t=Math.max(0,Math.min(1,(now-track.at)*SIM_TICKS_PER_SECOND/1000));
     return{x:track.fromX+(track.x-track.fromX)*t,y:track.fromY+(track.y-track.fromY)*t};
   }
   draw(frame:WorldFrame){
@@ -138,7 +143,7 @@ export class World3DLayer {
           this.batches.add(`rig-rope:${ship.kind}:${rope.material}:${Boolean(reveal)}`,rope.template,matrix,ship.id,undefined,false,reveal);
         }
       }
-      const mast=profile.obstacles.find(obstacle=>obstacle.type==='mast');
+      const masts=profile.obstacles.filter(obstacle=>obstacle.type==='mast'),mast=masts[ship.kind==='shipOfTheLine'?1:0];
       if(mast){const mastAt=localToWorld({...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}},mast);this.batches.add(`flag:${ship.owner}`,this.flag,new THREE.Matrix4().compose(new THREE.Vector3(mastAt.x,profile.deckHeight+profile.mastHeight,mastAt.y),rotation,new THREE.Vector3(scale,scale,scale)),ship.id,ownerInk(ship.owner));}
       const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
       for(const item of installedWeapons(snapshot,ship)){
@@ -152,7 +157,7 @@ export class World3DLayer {
     for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
     for(const unit of snapshot.units){
-      if(ships.has(unit.id))continue;
+      if(ships.has(unit.id)||isInCabin(unit))continue;
       let at=frame.motion?.position(unit,now)??unit,height=0,facing=frame.facing.facing(unit.id);
       const ship=unit.deck&&ships.get(unit.deck.shipId);
       if(ship){
