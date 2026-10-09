@@ -64,6 +64,10 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  mounted?: {
+    unitIds: string[];
+    objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };
+  }[];
   support?: { baseId: string; unitIds: string[]; sinceTick: number };
   jobs: AiJobState[];
   unitClaims: Record<string, AiPolicyUnitClaim>;
