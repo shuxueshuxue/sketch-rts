@@ -1,0 +1,3452 @@
+{
+  "schemaVersion": 1,
+  "sourceTreeVerifiedAtCommit": "e0e650cd63ab46cd7cf7efebb60cddaac8e6ff60",
+  "sourceSha256": {
+    "scripts/browser-runtime-fixture.js": "826d58d2975324394824de1b1d46a69718584e2676ae9c8c1eef5ebc10e76bd8",
+    "scripts/browser-runtime-benchmark.mjs": "8be5794eccac97ad15d7a262e7386975f43d5d85e8440036bb365d13660b70d4",
+    "src/client/world3d/world-layer.ts": "94a0f7ceab09b9cedf498c06288e8a427a79c5345e2f22e2f2934ac89f2447fd",
+    "src/client/world3d/selection-markers.ts": "5fee0c25157f1ab13f3d6bc534eaaeb1da8ee9b9df39db96811fd1de8d32fd49",
+    "src/client/world3d/model-library.ts": "572bedeeb489af6ad8080f47a1e580cbb1398451f62d01b8ca91dc3557505b0a",
+    "src/client/world3d/model-portraits.ts": "0ecf433c697cca7402d1e352596e40513e73d7fcb876587ab266ae439622f445",
+    "src/client/resources.ts": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97",
+    "src/client/main.ts": "9b9b0528c9e0bd600135c48296358b41fefc2a850706f7e81c51354dea3b68d2",
+    "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6"
+  },
+  "rawEvidence": {
+    "name": "browser-runtime-post-hover.json",
+    "bytes": 176268,
+    "sha256": "0cf01a3ded43575780cc18ffc61b00722fc908ff2ed1adb2ffec38eb296056cb"
+  },
+  "renderer": "Chromium SwiftShader",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "node": "v20.20.2",
+  "load": {
+    "units": 280,
+    "ships": 24,
+    "cycles": 6,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "method": "Six cycles; ten real-WebGL hover-only cases per cycle for own/ally/enemy ground troops, deck crew and hulls plus sloped bridge crew, with per-instance position/color/height/stroke checks; real full-selection draws before/after CPU samples. 120 fixed-snapshot full-selection and 120 fresh-tick alternating-selection CPU draws per cycle; renderer.render disabled only during CPU timing, excluding GPU work. All disposed layer references retained intentionally to verify explicit release; GC requested through CDP. Teardown follows main.ts layer, request/decode, portrait and shared-model ordering. CPU samples are not device FPS.",
+  "scope": {
+    "realRenderInteractionProofs": 72,
+    "hoverOnlyProofs": 60,
+    "fullSelectionProofs": 12,
+    "perCycleCpuDraws": {
+      "fixedSnapshotFullSelection": 120,
+      "freshTickAlternatingSelection": 120
+    },
+    "gpuExecutionIncludedInCpuTiming": false,
+    "reportsDeviceFps": false,
+    "checkedPerInstance": [
+      "entity position",
+      "relation color",
+      "floor height",
+      "sloped bridge orientation",
+      "selected or hovered stroke width",
+      "normal depth testing"
+    ],
+    "bounds": {
+      "positionWorldUnits": 0.02,
+      "heightWorldUnits": 0.02,
+      "linearRgbChannel": 0.000001,
+      "bridgeSlope": 0.00001,
+      "strokeWidth": 0.00001
+    },
+    "retainedDisposedLayerReferences": 6
+  },
+  "errors": [],
+  "failedRequests": [],
+  "models": {
+    "httpRequestCount": 32,
+    "responseStatusCounts": {
+      "200": 32
+    },
+    "expected": [
+      "buildings/archeryRange",
+      "buildings/ashenHall",
+      "buildings/barracks",
+      "buildings/beacon",
+      "buildings/camp",
+      "buildings/cinderSpire",
+      "buildings/citadel",
+      "buildings/defenseTower",
+      "buildings/emberForge",
+      "buildings/emberShrine",
+      "buildings/farm",
+      "buildings/fort-flame",
+      "buildings/fort-lance",
+      "buildings/fort-mortar",
+      "buildings/fort-wall",
+      "buildings/fort-ward",
+      "buildings/moonWell",
+      "buildings/sanctum",
+      "buildings/shipyard",
+      "buildings/shop",
+      "buildings/stables",
+      "buildings/statue",
+      "buildings/townHall",
+      "buildings/well",
+      "buildings/workshop",
+      "ships/bombardShip",
+      "ships/carrier",
+      "ships/cutter",
+      "ships/fireShip",
+      "ships/shipOfTheLine",
+      "ships/transport",
+      "ships/warship"
+    ],
+    "installed": {
+      "ships/transport": 1,
+      "ships/cutter": 1,
+      "ships/warship": 1,
+      "ships/shipOfTheLine": 1,
+      "ships/carrier": 1,
+      "ships/bombardShip": 1,
+      "buildings/townHall": 1,
+      "buildings/barracks": 1,
+      "buildings/archeryRange": 1,
+      "ships/fireShip": 1,
+      "buildings/stables": 1,
+      "buildings/sanctum": 1,
+      "buildings/workshop": 1,
+      "buildings/defenseTower": 1,
+      "buildings/moonWell": 1,
+      "buildings/emberForge": 1,
+      "buildings/cinderSpire": 1,
+      "buildings/emberShrine": 1,
+      "buildings/ashenHall": 1,
+      "buildings/farm": 1,
+      "buildings/shipyard": 1,
+      "buildings/citadel": 1,
+      "buildings/shop": 1,
+      "buildings/statue": 1,
+      "buildings/well": 1,
+      "buildings/camp": 1,
+      "buildings/beacon": 1,
+      "buildings/fort-lance": 1,
+      "buildings/fort-flame": 1,
+      "buildings/fort-mortar": 1,
+      "buildings/fort-ward": 1,
+      "buildings/fort-wall": 1
+    },
+    "httpCounts": {
+      "ships/shipOfTheLine": 1,
+      "ships/warship": 1,
+      "ships/transport": 1,
+      "ships/cutter": 1,
+      "ships/carrier": 1,
+      "ships/bombardShip": 1,
+      "ships/fireShip": 1,
+      "buildings/townHall": 1,
+      "buildings/barracks": 1,
+      "buildings/archeryRange": 1,
+      "buildings/stables": 1,
+      "buildings/sanctum": 1,
+      "buildings/workshop": 1,
+      "buildings/defenseTower": 1,
+      "buildings/moonWell": 1,
+      "buildings/emberForge": 1,
+      "buildings/cinderSpire": 1,
+      "buildings/emberShrine": 1,
+      "buildings/ashenHall": 1,
+      "buildings/farm": 1,
+      "buildings/shipyard": 1,
+      "buildings/citadel": 1,
+      "buildings/shop": 1,
+      "buildings/camp": 1,
+      "buildings/well": 1,
+      "buildings/statue": 1,
+      "buildings/beacon": 1,
+      "buildings/fort-lance": 1,
+      "buildings/fort-flame": 1,
+      "buildings/fort-mortar": 1,
+      "buildings/fort-ward": 1,
+      "buildings/fort-wall": 1
+    }
+  },
+  "cycles": [
+    {
+      "index": 0,
+      "homePrepareMs": 63.900000005960464,
+      "matchPrepareMs": 83.70000000298023,
+      "staticCpu": {
+        "meanMs": 2.6450000000496705,
+        "p50Ms": 2.300000011920929,
+        "p95Ms": 4.9000000059604645,
+        "maxMs": 7.299999997019768
+      },
+      "updatedCpu": {
+        "meanMs": 3.6600000000248354,
+        "p50Ms": 2.9000000059604645,
+        "p95Ms": 8.199999988079071,
+        "maxMs": 11.599999994039536
+      },
+      "heapAfterGc": {
+        "usedSize": 15315100,
+        "totalSize": 16486400,
+        "embedderHeapUsedSize": 608080,
+        "backingStorageSize": 13328469
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "index": 1,
+      "homePrepareMs": 0.20000000298023224,
+      "matchPrepareMs": 0.09999999403953552,
+      "staticCpu": {
+        "meanMs": 2.5141666665673257,
+        "p50Ms": 2.300000011920929,
+        "p95Ms": 3.7999999970197678,
+        "maxMs": 6.200000002980232
+      },
+      "updatedCpu": {
+        "meanMs": 3.3433333348482845,
+        "p50Ms": 2.9000000059604645,
+        "p95Ms": 5.5,
+        "maxMs": 12
+      },
+      "heapAfterGc": {
+        "usedSize": 15567408,
+        "totalSize": 16748544,
+        "embedderHeapUsedSize": 752352,
+        "backingStorageSize": 13340321
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "index": 2,
+      "homePrepareMs": 0.09999999403953552,
+      "matchPrepareMs": 0.10000000894069672,
+      "staticCpu": {
+        "meanMs": 2.4808333332339925,
+        "p50Ms": 2.2999999970197678,
+        "p95Ms": 3.3999999910593033,
+        "maxMs": 5.800000011920929
+      },
+      "updatedCpu": {
+        "meanMs": 3.1758333325386046,
+        "p50Ms": 2.7999999970197678,
+        "p95Ms": 5.399999991059303,
+        "maxMs": 13.5
+      },
+      "heapAfterGc": {
+        "usedSize": 15801812,
+        "totalSize": 17010688,
+        "embedderHeapUsedSize": 691240,
+        "backingStorageSize": 13352173
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "index": 3,
+      "homePrepareMs": 0.20000000298023224,
+      "matchPrepareMs": 0.09999999403953552,
+      "staticCpu": {
+        "meanMs": 2.66583333350718,
+        "p50Ms": 2.5,
+        "p95Ms": 4.0999999940395355,
+        "maxMs": 5.200000002980232
+      },
+      "updatedCpu": {
+        "meanMs": 3.4733333338052033,
+        "p50Ms": 3,
+        "p95Ms": 6.200000002980232,
+        "maxMs": 12.5
+      },
+      "heapAfterGc": {
+        "usedSize": 15942860,
+        "totalSize": 18059264,
+        "embedderHeapUsedSize": 717512,
+        "backingStorageSize": 13364025
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "index": 4,
+      "homePrepareMs": 0.10000000894069672,
+      "matchPrepareMs": 0.09999999403953552,
+      "staticCpu": {
+        "meanMs": 2.595833333209157,
+        "p50Ms": 2.5,
+        "p95Ms": 3.6000000089406967,
+        "maxMs": 4.899999991059303
+      },
+      "updatedCpu": {
+        "meanMs": 3.3225000008940695,
+        "p50Ms": 3,
+        "p95Ms": 5.600000008940697,
+        "maxMs": 6.799999997019768
+      },
+      "heapAfterGc": {
+        "usedSize": 16091080,
+        "totalSize": 17797120,
+        "embedderHeapUsedSize": 706976,
+        "backingStorageSize": 13375877
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "index": 5,
+      "homePrepareMs": 0.20000000298023224,
+      "matchPrepareMs": 0.09999999403953552,
+      "staticCpu": {
+        "meanMs": 2.550833333407839,
+        "p50Ms": 2.4000000059604645,
+        "p95Ms": 3.5,
+        "maxMs": 6.699999988079071
+      },
+      "updatedCpu": {
+        "meanMs": 3.2774999996026355,
+        "p50Ms": 2.800000011920929,
+        "p95Ms": 6.200000002980232,
+        "maxMs": 10
+      },
+      "heapAfterGc": {
+        "usedSize": 16242788,
+        "totalSize": 17010688,
+        "embedderHeapUsedSize": 746488,
+        "backingStorageSize": 13688444
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "rendererMemory": {
+          "geometries": 18,
+          "textures": 29
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "rendererMemory": {
+          "geometries": 0,
+          "textures": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "index": 0,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 1,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 2,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 3,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 4,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 5,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 6,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "index": 7,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "index": 8,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 9,
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "index": 10,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "index": 11,
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 66,
+          "sizesByUrl": 66,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "phases": {
+          "home": {
+            "entryCount": 6,
+            "loadedBytes": 3964344,
+            "totalBytes": 3964344,
+            "unknownSizes": false,
+            "reusedBytes": 0,
+            "ready": 6,
+            "failed": 0
+          },
+          "match": {
+            "entryCount": 32,
+            "loadedBytes": 4887908,
+            "totalBytes": 4887908,
+            "unknownSizes": false,
+            "reusedBytes": 3964344,
+            "ready": 32,
+            "failed": 0
+          }
+        }
+      }
+    }
+  ],
+  "teardown": {
+    "sharedBefore": {
+      "models": 32,
+      "pending": 0,
+      "parts": 32
+    },
+    "sharedAfter": {
+      "models": 0,
+      "pending": 0,
+      "parts": 0
+    },
+    "portraitProviderCleared": true,
+    "resources": {
+      "entries": 0,
+      "requests": 0,
+      "decodedImages": 0,
+      "retainedRawBytes": 0,
+      "owned": {
+        "entries": 0,
+        "requests": 0,
+        "images": 0,
+        "decodedImages": 0,
+        "retainedBytes": 0,
+        "assetsByPath": 0,
+        "sizesByUrl": 0,
+        "assetsByStage": 0,
+        "controllers": 0,
+        "listeners": 0
+      },
+      "cacheStats": {
+        "requests": 0,
+        "images": 0,
+        "retainedBytes": 0,
+        "active": 0,
+        "queued": 0
+      },
+      "phases": {
+        "home": {
+          "entryCount": 0,
+          "loadedBytes": 0,
+          "totalBytes": 0,
+          "unknownSizes": false,
+          "reusedBytes": 0,
+          "ready": 0,
+          "failed": 0
+        },
+        "match": {
+          "entryCount": 0,
+          "loadedBytes": 0,
+          "totalBytes": 0,
+          "unknownSizes": false,
+          "reusedBytes": 0,
+          "ready": 0,
+          "failed": 0
+        }
+      }
+    },
+    "retainedDisposedLayers": 6,
+    "ownedLayers": [
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        }
+      }
+    ],
+    "heapAfterGc": {
+      "usedSize": 13181848,
+      "totalSize": 14389248,
+      "embedderHeapUsedSize": 631568,
+      "backingStorageSize": 9628197
+    }
+  },
+  "validation": {
+    "passed": true,
+    "violations": [],
+    "expectedModelCount": 32,
+    "modelHttpCounts": {
+      "ships/shipOfTheLine": 1,
+      "ships/warship": 1,
+      "ships/transport": 1,
+      "ships/cutter": 1,
+      "ships/carrier": 1,
+      "ships/bombardShip": 1,
+      "ships/fireShip": 1,
+      "buildings/townHall": 1,
+      "buildings/barracks": 1,
+      "buildings/archeryRange": 1,
+      "buildings/stables": 1,
+      "buildings/sanctum": 1,
+      "buildings/workshop": 1,
+      "buildings/defenseTower": 1,
+      "buildings/moonWell": 1,
+      "buildings/emberForge": 1,
+      "buildings/cinderSpire": 1,
+      "buildings/emberShrine": 1,
+      "buildings/ashenHall": 1,
+      "buildings/farm": 1,
+      "buildings/shipyard": 1,
+      "buildings/citadel": 1,
+      "buildings/shop": 1,
+      "buildings/camp": 1,
+      "buildings/well": 1,
+      "buildings/statue": 1,
+      "buildings/beacon": 1,
+      "buildings/fort-lance": 1,
+      "buildings/fort-flame": 1,
+      "buildings/fort-mortar": 1,
+      "buildings/fort-ward": 1,
+      "buildings/fort-wall": 1
+    }
+  }
+}
