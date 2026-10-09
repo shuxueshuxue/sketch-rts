@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../../../shared/map";
-import { snapshotGame } from "../../../shared/sim";
+import { issuePlayerCommand, snapshotGame, stepGame } from "../../../shared/sim";
 import { sketchScene } from "../../../sdk/scene";
 import type { GameCommand } from "../../../shared/types";
 import { createAiPolicyMemory, type AiPolicyMemory } from "../../memory";
@@ -464,6 +464,28 @@ function v8Board(name: string, options: { outlier: { x: number; y: number }; lon
 const moved = (commands: GameCommand[], id: string) => commands.some((command) => command.type === "move" && command.unitIds.includes(id));
 
 describe("v8 general", () => {
+  it.each(["grove", "ember"] as const)("lets a %s shooting line return fire beside its tower", race => {
+    const kind = race === "grove" ? "archer" : "sparkArcher";
+    let scene = sketchScene("ranged-line-at-tower").replaceDefaults()
+      .player("us", { race, team: "a" }).player("foe", { race, team: "b" })
+      .townHall("us", 1000, 1000).townHall("foe", 3200, 3200)
+      .building("us", "defenseTower", 1250, 1100).farms("us", 5, 400, 2000);
+    for (let index = 0; index < 8; index++) scene = scene
+      .unit("us", kind, 1400 + index % 2 * 35, 1070 + Math.floor(index / 2) * 35, { id: `shooter-${index}` })
+      .unit("foe", kind, 1680 + index % 2 * 35, 1070 + Math.floor(index / 2) * 35);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { doctrine: { profileId: "steady", strategyId: `${race}-cavalry-line`, decidedTick: 0 } };
+    const shots = new Set<string>();
+    for (let tick = 0; tick < 200; tick++) {
+      if (tick % 15 === 0) for (const command of planV6General(snapshotGame(game), "us",
+        { version: "v2", requestedVersion: "v9", memory, teams: game.teams })) issuePlayerCommand(game, "us", command);
+      stepGame(game);
+      for (const projectile of game.projectiles) if (projectile.attackerId.startsWith("shooter-")) shots.add(projectile.id);
+    }
+    expect(shots.size).toBeGreaterThan(0);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
   // @@@v8-no-back-to-shooters
   it("does not walk a fighter back past its defense leash while a shooter has it in reach", () => {
     const shot = v8Board("v8-no-back-shot", { outlier: { x: 1_300, y: 900 }, lone: "archer", attackers: "archer" });

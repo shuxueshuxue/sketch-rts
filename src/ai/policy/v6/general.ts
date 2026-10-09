@@ -164,7 +164,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     // V7's badly wounded step back to the hall behind the line (see v7-one-voice); the rest hold it.
     const wounded = isV7Policy(options) ? front.filter((unit) => unit.hp < unit.maxHp * V7_WOUNDED_SHARE && unit.expiresTick === undefined) : [];
     const line = front.filter((unit) => !wounded.includes(unit));
-    if (isV8Policy(options) && waitsForTowers(intel, defense, strength)) return towerWait(snapshot, owner, memory, line, defense, options);
+    if (isV8Policy(options) && waitsForTowers(intel, defense, strength, line)) return towerWait(snapshot, owner, memory, line, defense, options);
     // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
     if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
     if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
@@ -392,7 +392,9 @@ const V8_TOWER_WAIT_STEP = 400;
 const V8_TOWER_WAIT_SHARE = 0.5;
 const V8_SHOOTER_SHARE = 0.6;
 
-function waitsForTowers(intel: V6Intel, defense: { cover: number; threat: number }, strength: number): boolean {
+function waitsForTowers(intel: V6Intel, defense: { cover: number; threat: number }, strength: number, line: Unit[]): boolean {
+  // Shooters can answer the raid from tower coverage; the rear waiting post is for a melee line.
+  if (strengthOf(line.filter(unit => unit.attackRange > SHOOTER_REACH)) >= strengthOf(line) * V8_SHOOTER_SHARE) return false;
   const attackers = intel.intrusion?.attackers ?? [];
   const total = strengthOf(attackers);
   const shooters = strengthOf(attackers.filter((unit) => unit.attackRange > SHOOTER_REACH));
