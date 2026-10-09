@@ -1,0 +1,877 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-09",
+  "baseline": "e721bd4",
+  "source": {
+    "beforeSha256": "850021583a8a18873e60be1dc1db81ba9274e667b6623d94c328ef42fc9bea53",
+    "afterSha256": "2f391544af2539abfb5647437f4d9967ab8708456b137a66a0d8aac1dc5f56ed",
+    "artifactSha256": "0b08c8b1a64bab072f5f35fc8b9441e770fa348737e7a6e8f27643915ab4fcd4"
+  },
+  "flat": {
+    "playbackRate": 8,
+    "sceneCount": 16,
+    "pageErrors": [],
+    "pausedSamples": [
+      {
+        "id": "bow-mutual-far",
+        "time": 8,
+        "info": "warship · 航行\n航速 55.9　转向 0.0°/s\n航向 0.0°　路点更新 #159\n剩余路点 1　目标距离 592",
+        "guns": "HP 320 · approach · 目标航向 180.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "bow-mutual-far",
+        "time": 14,
+        "info": "warship · 航行\n航速 3.9　转向 0.0°/s\n航向 0.0°　路点更新 #279\n剩余路点 1　目标距离 349",
+        "guns": "HP 248 · engage · 目标航向 180.0°\nbow · 装填\n余装填 0.10s\n相对炮轴 0.0° / ±30°\n瞄准误差 5"
+      },
+      {
+        "id": "bow-mutual-far",
+        "time": 20,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #312\n剩余路点 1　目标距离 337",
+        "guns": "HP 140 · engage · 目标航向 180.0°\nbow · 装填\n余装填 0.10s\n相对炮轴 0.0° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "bow-mutual-far",
+        "time": 30,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #312\n剩余路点 1　目标距离 337",
+        "guns": "HP 32 · engage · 目标航向 180.0°\nbow · 装填\n余装填 1.70s\n相对炮轴 0.0° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "bow-mutual-close",
+        "time": 0.75,
+        "info": "warship · 航行\n航速 13.7　转向 0.0°/s\n航向 0.0°　路点更新 #15\n剩余路点 1　目标距离 435",
+        "guns": "HP 320 · engage · 目标航向 180.0°\nbow · 瞄准中\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 178"
+      },
+      {
+        "id": "bow-mutual-close",
+        "time": 2,
+        "info": "warship · 航行\n航速 12.5　转向 0.0°/s\n航向 0.0°　路点更新 #39\n剩余路点 1　目标距离 408",
+        "guns": "HP 284 · engage · 目标航向 180.0°\nbow · 装填\n余装填 1.40s\n相对炮轴 0.0° / ±30°\n瞄准误差 1"
+      },
+      {
+        "id": "bow-mutual-close",
+        "time": 5,
+        "info": "warship · 航行\n航速 4.4　转向 0.0°/s\n航向 0.0°　路点更新 #99\n剩余路点 1　目标距离 362",
+        "guns": "HP 248 · engage · 目标航向 180.0°\nbow · 装填\n余装填 0.40s\n相对炮轴 0.0° / ±30°\n瞄准误差 4"
+      },
+      {
+        "id": "bow-mutual-close",
+        "time": 10,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #168\n剩余路点 1　目标距离 334",
+        "guns": "HP 140 · engage · 目标航向 180.0°\nbow · 装填\n余装填 1.40s\n相对炮轴 0.0° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "crossing",
+        "time": 10,
+        "info": "warship · 航行\n航速 16.4　转向 0.0°/s\n航向 0.1°　路点更新 #96\n剩余路点 1　目标距离 374",
+        "guns": "HP 320 · engage · 目标航向 116.9°\nbow · 发炮\n余装填 2.00s\n相对炮轴 -15.3° / ±30°\n瞄准误差 10"
+      },
+      {
+        "id": "crossing",
+        "time": 15,
+        "info": "warship · 航行\n航速 8.6　转向 0.0°/s\n航向 0.1°　路点更新 #196\n剩余路点 1　目标距离 300",
+        "guns": "HP 320 · engage · 目标航向 86.1°\nbow · 装填\n余装填 1.20s\n相对炮轴 7.1° / ±30°\n瞄准误差 17"
+      },
+      {
+        "id": "crossing",
+        "time": 20,
+        "info": "warship · 航行\n航速 24.2　转向 5.9°/s\n航向 14.1°　路点更新 #296\n剩余路点 1　目标距离 357",
+        "guns": "HP 320 · engage · 目标航向 88.2°\nbow · 射界外\n余装填 0.00s\n相对炮轴 30.3° / ±30°\n瞄准误差 117"
+      },
+      {
+        "id": "crossing",
+        "time": 30,
+        "info": "warship · 航行\n航速 5.8　转向 0.3°/s\n航向 63.6°　路点更新 #496\n剩余路点 1　目标距离 342",
+        "guns": "HP 320 · engage · 目标航向 88.8°\nbow · 装填\n余装填 1.85s\n相对炮轴 25.3° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "battery-crossing",
+        "time": 10,
+        "info": "warship · 航行\n航速 16.4　转向 0.0°/s\n航向 0.1°　路点更新 #96\n剩余路点 1　目标距离 374",
+        "guns": "HP 320 · engage · 目标航向 116.9°\nbow · 发炮\n余装填 2.00s\n相对炮轴 -15.3° / ±30°\n瞄准误差 10\nport0 · 射界外\n余装填 0.00s\n相对炮轴 80.0° / ±35°\n瞄准误差 —\nstarboard0 · 射界外\n余装填 0.00s\n相对炮轴 -105.3° / ±35°\n瞄准误差 —\nport1 · 射程外\n余装填 0.00s\n相对炮轴 81.1° / ±35°\n瞄准误差 —\nstarboard1 · 射程外\n余装填 0.00s\n相对炮轴 -105.3° / ±35°\n瞄准误差 —"
+      },
+      {
+        "id": "battery-crossing",
+        "time": 15,
+        "info": "warship · 航行\n航速 8.6　转向 0.0°/s\n航向 0.1°　路点更新 #196\n剩余路点 1　目标距离 300",
+        "guns": "HP 320 · engage · 目标航向 86.1°\nbow · 装填\n余装填 1.20s\n相对炮轴 7.1° / ±30°\n瞄准误差 17\nport0 · 射界外\n余装填 0.00s\n相对炮轴 99.3° / ±35°\n瞄准误差 —\nstarboard0 · 射界外\n余装填 0.00s\n相对炮轴 -90.0° / ±35°\n瞄准误差 —\nport1 · 射界外\n余装填 0.00s\n相对炮轴 99.3° / ±35°\n瞄准误差 —\nstarboard1 · 射界外\n余装填 0.00s\n相对炮轴 -90.0° / ±35°\n瞄准误差 —"
+      },
+      {
+        "id": "battery-crossing",
+        "time": 25,
+        "info": "warship · 航行\n航速 42.7　转向 6.2°/s\n航向 48.4°　路点更新 #396\n剩余路点 1　目标距离 380",
+        "guns": "HP 320 · engage · 目标航向 88.8°\nbow · 射界外\n余装填 0.00s\n相对炮轴 32.2° / ±30°\n瞄准误差 305\nport0 · 射界外\n余装填 0.00s\n相对炮轴 124.4° / ±35°\n瞄准误差 —\nstarboard0 · 射界外\n余装填 0.00s\n相对炮轴 -65.3° / ±35°\n瞄准误差 —\nport1 · 射界外\n余装填 0.00s\n相对炮轴 120.8° / ±35°\n瞄准误差 —\nstarboard1 · 射界外\n余装填 0.00s\n相对炮轴 -68.1° / ±35°\n瞄准误差 —"
+      },
+      {
+        "id": "battery-beam",
+        "time": 0.9,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #1\n剩余路点 0　目标距离 330",
+        "guns": "HP 320 · engage · 目标航向 0.0°\nbow · 射界外\n余装填 0.00s\n相对炮轴 96.2° / ±30°\n瞄准误差 —\nport0 · 射界外\n余装填 0.00s\n相对炮轴 -177.0° / ±35°\n瞄准误差 —\nstarboard0 · 瞄准中\n余装填 0.00s\n相对炮轴 3.6° / ±35°\n瞄准误差 12\nport1 · 射界外\n余装填 0.00s\n相对炮轴 180.0° / ±35°\n瞄准误差 —\nstarboard1 · 瞄准中\n余装填 0.00s\n相对炮轴 0.0° / ±35°\n瞄准误差 11"
+      },
+      {
+        "id": "battery-beam",
+        "time": 3,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #1\n剩余路点 0　目标距离 330",
+        "guns": "HP 320 · engage · 目标航向 0.0°\nbow · 射界外\n余装填 0.00s\n相对炮轴 96.2° / ±30°\n瞄准误差 —\nport0 · 射界外\n余装填 0.00s\n相对炮轴 -177.0° / ±35°\n瞄准误差 —\nstarboard0 · 装填\n余装填 1.95s\n相对炮轴 3.6° / ±35°\n瞄准误差 0\nport1 · 射界外\n余装填 0.00s\n相对炮轴 180.0° / ±35°\n瞄准误差 —\nstarboard1 · 装填\n余装填 1.95s\n相对炮轴 0.0° / ±35°\n瞄准误差 0"
+      },
+      {
+        "id": "battery-beam",
+        "time": 6,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #1\n剩余路点 0　目标距离 330",
+        "guns": "HP 320 · engage · 目标航向 0.0°\nbow · 射界外\n余装填 0.00s\n相对炮轴 96.2° / ±30°\n瞄准误差 —\nport0 · 射界外\n余装填 0.00s\n相对炮轴 -177.0° / ±35°\n瞄准误差 —\nstarboard0 · 装填\n余装填 0.95s\n相对炮轴 3.6° / ±35°\n瞄准误差 0\nport1 · 射界外\n余装填 0.00s\n相对炮轴 180.0° / ±35°\n瞄准误差 —\nstarboard1 · 装填\n余装填 0.95s\n相对炮轴 0.0° / ±35°\n瞄准误差 0"
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 10,
+        "info": "bombardShip · 航行\n航速 13.3　转向 0.0°/s\n航向 356.0°　路点更新 #161\n剩余路点 1　目标距离 520",
+        "guns": "HP 260 · engage · 目标航向 90.0°\nbow · 装填\n余装填 1.45s\n相对炮轴 -3.0° / ±30°\n瞄准误差 10"
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 20,
+        "info": "bombardShip · 航行\n航速 15.5　转向 3.3°/s\n航向 9.1°　路点更新 #361\n剩余路点 1　目标距离 521",
+        "guns": "HP 260 · engage · 目标航向 90.0°\nbow · 装填\n余装填 3.45s\n相对炮轴 23.8° / ±30°\n瞄准误差 43"
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 35,
+        "info": "bombardShip · 航行\n航速 0.0　转向 0.0°/s\n航向 15.0°　路点更新 #462\n剩余路点 1　目标距离 503",
+        "guns": "HP 260 · engage · 目标航向 90.0°\nbow · 射程外\n余装填 1.95s\n相对炮轴 25.3° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "mortar-close",
+        "time": 3,
+        "info": "bombardShip · 辅助操纵\n航速 -8.5　转向 0.0°/s\n航向 0.0°　路点更新 #2\n剩余路点 1　目标距离 264",
+        "guns": "HP 260 · approach · 目标航向 0.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "mortar-close",
+        "time": 8,
+        "info": "bombardShip · 辅助操纵\n航速 -8.5　转向 0.0°/s\n航向 0.0°　路点更新 #2\n剩余路点 1　目标距离 307",
+        "guns": "HP 260 · approach · 目标航向 0.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "mortar-close",
+        "time": 15,
+        "info": "bombardShip · 辅助操纵\n航速 0.0　转向 0.0°/s\n航向 330.1°　路点更新 #3\n剩余路点 50　目标距离 310",
+        "guns": "HP 260 · engage · 目标航向 0.0°\nbow · 待发\n余装填 0.05s\n相对炮轴 29.9° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "mortar-close",
+        "time": 30,
+        "info": "bombardShip · 辅助操纵\n航速 0.0　转向 0.0°/s\n航向 330.1°　路点更新 #3\n剩余路点 50　目标距离 310",
+        "guns": "HP 260 · engage · 目标航向 0.0°\nbow · 射程外\n余装填 2.85s\n相对炮轴 29.9° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "flame-crossing",
+        "time": 10,
+        "info": "fireShip · 航行\n航速 41.5　转向 5.2°/s\n航向 333.1°　路点更新 #162\n剩余路点 1　目标距离 256",
+        "guns": "HP 340 · approach · 目标航向 107.5°\nbow · 射程外\n余装填 0.00s\n相对炮轴 11.1° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "flame-crossing",
+        "time": 15,
+        "info": "fireShip · 航行\n航速 0.0　转向 7.0°/s\n航向 345.6°　路点更新 #262\n剩余路点 1　目标距离 172",
+        "guns": "HP 340 · engage · 目标航向 82.2°\nbow · 射界外\n余装填 0.60s\n相对炮轴 36.4° / ±30°\n瞄准误差 18"
+      },
+      {
+        "id": "flame-crossing",
+        "time": 20,
+        "info": "fireShip · 航行\n航速 55.6　转向 7.5°/s\n航向 53.2°　路点更新 #362\n剩余路点 1　目标距离 264",
+        "guns": "HP 340 · engage · 目标航向 86.3°\nbow · 射界外\n余装填 0.00s\n相对炮轴 33.0° / ±30°\n瞄准误差 251"
+      },
+      {
+        "id": "flame-crossing",
+        "time": 30,
+        "info": "fireShip · 航行\n航速 45.4　转向 -1.3°/s\n航向 96.2°　路点更新 #562\n剩余路点 1　目标距离 328",
+        "guns": "HP 340 · approach · 目标航向 87.2°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -5.0° / ±30°\n瞄准误差 442"
+      },
+      {
+        "id": "flame-crossing",
+        "time": 50,
+        "info": "fireShip · 航行\n航速 45.0　转向 0.0°/s\n航向 87.4°　路点更新 #962\n剩余路点 1　目标距离 444",
+        "guns": "HP 340 · approach · 目标航向 87.2°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -0.2° / ±30°\n瞄准误差 1442"
+      },
+      {
+        "id": "moving-crew",
+        "time": 10,
+        "info": "warship · 航行\n航速 55.9　转向 -0.3°/s\n航向 2.8°　路点更新 #177\n剩余路点 1　目标距离 783",
+        "guns": "HP 320 · approach · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 2.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "moving-crew",
+        "time": 20,
+        "info": "warship · 航行\n航速 55.8　转向 -0.2°/s\n航向 1.1°　路点更新 #377\n剩余路点 1　目标距离 833",
+        "guns": "HP 320 · approach · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 2.2° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "moving-crew",
+        "time": 40,
+        "info": "warship · 航行\n航速 55.8　转向 0.0°/s\n航向 0.3°　路点更新 #777\n剩余路点 1　目标距离 876",
+        "guns": "HP 320 · approach · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 2.3° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "channel-three-v-three",
+        "time": 15,
+        "info": "warship · 航行\n航速 9.1　转向 0.0°/s\n航向 0.0°　路点更新 #299\n剩余路点 1　目标距离 367",
+        "guns": "HP 284 · engage · 目标航向 180.0°\nbow · 装填\n余装填 1.80s\n相对炮轴 0.0° / ±30°\n瞄准误差 1"
+      },
+      {
+        "id": "channel-three-v-three",
+        "time": 25,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #388\n剩余路点 1　目标距离 331",
+        "guns": "HP 104 · engage · 目标航向 180.0°\nbow · 装填\n余装填 1.80s\n相对炮轴 0.0° / ±30°\n瞄准误差 0"
+      },
+      {
+        "id": "channel-three-v-three",
+        "time": 40,
+        "info": "warship · 停止\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #388\n剩余路点 1　目标距离 331",
+        "guns": "HP -4 · idle · 目标航向 180.0°\n无舰载炮"
+      },
+      {
+        "id": "channel-three-v-three",
+        "time": 60,
+        "info": "warship · 停止\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #388\n剩余路点 1　目标距离 331",
+        "guns": "HP -4 · idle · 目标航向 180.0°\n无舰载炮"
+      },
+      {
+        "id": "upwind",
+        "time": 5,
+        "info": "warship · 迎风航行\n航速 48.1　转向 0.0°/s\n航向 59.1°　路点更新 #14\n剩余路点 1　目标距离 548",
+        "guns": "HP 320 · approach · 目标航向 54.1°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -49.3° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind",
+        "time": 10,
+        "info": "warship · 迎风航行\n航速 48.0　转向 0.0°/s\n航向 59.0°　路点更新 #15\n剩余路点 1　目标距离 578",
+        "guns": "HP 320 · approach · 目标航向 53.9°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -49.4° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind",
+        "time": 20,
+        "info": "warship · 迎风航行\n航速 48.0　转向 0.0°/s\n航向 59.0°　路点更新 #17\n剩余路点 1　目标距离 642",
+        "guns": "HP 320 · approach · 目标航向 54.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -49.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind",
+        "time": 40,
+        "info": "warship · 迎风航行\n航速 48.0　转向 0.0°/s\n航向 59.0°　路点更新 #22\n剩余路点 1　目标距离 771",
+        "guns": "HP 320 · approach · 目标航向 54.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -48.4° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind",
+        "time": 60,
+        "info": "warship · 迎风航行\n航速 48.0　转向 0.0°/s\n航向 59.0°　路点更新 #27\n剩余路点 1　目标距离 900",
+        "guns": "HP 320 · approach · 目标航向 54.0°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -47.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind",
+        "time": 80,
+        "info": "warship · 迎风航行\n航速 48.2　转向 0.4°/s\n航向 59.2°　路点更新 #31\n剩余路点 1　目标距离 841",
+        "guns": "HP 320 · approach · 目标航向 -40.8°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -82.8° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 5,
+        "info": "warship · 迎风航行\n航速 47.9　转向 -0.3°/s\n航向 59.0°　路点更新 #13\n剩余路点 26　目的地距离 649",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -59.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 10,
+        "info": "warship · 迎风航行\n航速 47.8　转向 0.0°/s\n航向 58.9°　路点更新 #13\n剩余路点 26　目的地距离 580",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -58.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 20,
+        "info": "warship · 迎风航行\n航速 11.6　转向 -4.8°/s\n航向 7.1°　路点更新 #24\n剩余路点 15　目的地距离 558",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -7.1° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 30,
+        "info": "warship · 迎风航行\n航速 11.6　转向 -4.8°/s\n航向 318.7°　路点更新 #34\n剩余路点 5　目的地距离 468",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 41.3° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 40,
+        "info": "warship · 迎风航行\n航速 47.7　转向 -0.2°/s\n航向 301.1°　路点更新 #38\n剩余路点 1　目的地距离 89",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 58.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-700",
+        "time": 60,
+        "info": "warship · 迎风航行\n航速 11.8　转向 -3.4°/s\n航向 300.2°　路点更新 #38\n剩余路点 1　目的地距离 0",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 59.8° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 10,
+        "info": "warship · 迎风航行\n航速 47.8　转向 0.0°/s\n航向 58.9°　路点更新 #13\n剩余路点 26　目的地距离 1347",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -58.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 30,
+        "info": "warship · 迎风航行\n航速 23.7　转向 -7.0°/s\n航向 27.5°　路点更新 #20\n剩余路点 19　目的地距离 1314",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -27.5° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 60,
+        "info": "warship · 迎风航行\n航速 47.6　转向 -0.2°/s\n航向 301.1°　路点更新 #38\n剩余路点 1　目的地距离 799",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 58.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 90,
+        "info": "warship · 迎风航行\n航速 0.0　转向 0.0°/s\n航向 299.9°　路点更新 #39\n剩余路点 0　目的地距离 0",
+        "guns": "HP 320 · idle · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 60.1° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 35,
+        "info": "warship · 航行\n航速 57.9　转向 0.0°/s\n航向 0.0°　路点更新 #1\n剩余路点 20　目的地距离 2856",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 40,
+        "info": "warship · 航行\n航速 49.5　转向 15.7°/s\n航向 16.2°　路点更新 #5\n剩余路点 16　目的地距离 2641",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -16.2° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 43,
+        "info": "warship · 航行\n航速 49.5　转向 15.0°/s\n航向 60.1°　路点更新 #14\n剩余路点 7　目的地距离 2496",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -60.1° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 47,
+        "info": "warship · 航行\n航速 57.8　转向 -0.6°/s\n航向 89.7°　路点更新 #21\n剩余路点 20　目的地距离 2341",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -89.7° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 70,
+        "info": "warship · 航行\n航速 49.5　转向 -17.1°/s\n航向 83.6°　路点更新 #23\n剩余路点 18　目的地距离 1806",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -83.6° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 75,
+        "info": "warship · 航行\n航速 49.5　转向 -14.3°/s\n航向 9.5°　路点更新 #38\n剩余路点 3　目的地距离 1636",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -9.5° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 80,
+        "info": "warship · 航行\n航速 57.9　转向 -0.2°/s\n航向 0.4°　路点更新 #40\n剩余路点 1　目的地距离 1353",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -0.4° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-queued-corners",
+        "time": 90,
+        "info": "warship · 航行\n航速 57.9　转向 0.0°/s\n航向 0.0°　路点更新 #40\n剩余路点 1　目的地距离 774",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-island-corner",
+        "time": 20,
+        "info": "warship · 航行\n航速 49.5　转向 15.2°/s\n航向 336.4°　路点更新 #16\n剩余路点 18　目的地距离 3525",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 23.6° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-island-corner",
+        "time": 30,
+        "info": "warship · 航行\n航速 57.8　转向 0.0°/s\n航向 1.3°　路点更新 #22\n剩余路点 12　目的地距离 2979",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -1.3° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-island-corner",
+        "time": 40,
+        "info": "warship · 航行\n航速 57.8　转向 0.0°/s\n航向 1.4°　路点更新 #22\n剩余路点 12　目的地距离 2417",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -1.4° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-island-corner",
+        "time": 60,
+        "info": "warship · 航行\n航速 57.8　转向 0.0°/s\n航向 1.4°　路点更新 #22\n剩余路点 12　目的地距离 1337",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -1.4° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "long-island-corner",
+        "time": 80,
+        "info": "warship · 航行\n航速 56.4　转向 0.0°/s\n航向 48.0°　路点更新 #33\n剩余路点 1　目的地距离 325",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -48.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 0,
+        "info": "warship · 航行\n航速 54.4　转向 0.0°/s\n航向 0.0°　路点更新 #1\n剩余路点 40　目的地距离 2203",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 0.0° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 5,
+        "info": "warship · 航行\n航速 30.8　转向 14.3°/s\n航向 63.1°　路点更新 #14\n剩余路点 27　目的地距离 2336",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -63.1° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 10,
+        "info": "warship · 航行\n航速 30.8　转向 14.5°/s\n航向 135.5°　路点更新 #29\n剩余路点 12　目的地距离 2321",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 -135.5° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 20,
+        "info": "warship · 航行\n航速 55.1　转向 0.0°/s\n航向 186.1°　路点更新 #40\n剩余路点 1　目的地距离 1872",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 173.9° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 40,
+        "info": "warship · 航行\n航速 55.0　转向 0.0°/s\n航向 186.3°　路点更新 #40\n剩余路点 1　目的地距离 771",
+        "guns": "HP 320 · move · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 173.7° / ±30°\n瞄准误差 —"
+      },
+      {
+        "id": "cruise-180-2200",
+        "time": 60,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 187.4°　路点更新 #41\n剩余路点 0　目的地距离 0",
+        "guns": "HP 320 · idle · 目标航向 —°\nbow · 射程外\n余装填 0.00s\n相对炮轴 172.6° / ±30°\n瞄准误差 —"
+      }
+    ]
+  },
+  "models": {
+    "renderer": "production World3DLayer in Chromium WebGL2 / SwiftShader",
+    "playbackRate": 2,
+    "pageErrors": [],
+    "assets": [
+      {
+        "url": "/art/world3d/ships/warship.glb",
+        "status": 200
+      },
+      {
+        "url": "/art/world3d/ships/bombardShip.glb",
+        "status": 200
+      },
+      {
+        "url": "/art/world3d/ships/transport.glb",
+        "status": 200
+      },
+      {
+        "url": "/art/world3d/ships/fireShip.glb",
+        "status": 200
+      }
+    ],
+    "pausedSamples": [
+      {
+        "id": "bow-mutual-far",
+        "time": 13,
+        "info": "warship · 航行\n航速 8.3　转向 0.0°/s\n航向 0.0°　路点更新 #259\n剩余路点 1　目标距离 359",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 23,
+              "calls": 57,
+              "triangles": 33198,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 23,
+              "calls": 58,
+              "triangles": 33200,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "bow-mutual-far",
+        "time": 17,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #312\n剩余路点 1　目标距离 337",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 30,
+              "calls": 57,
+              "triangles": 33198,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 30,
+              "calls": 58,
+              "triangles": 33200,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "bow-mutual-far",
+        "time": 21,
+        "info": "warship · 航行\n航速 0.0　转向 0.0°/s\n航向 0.0°　路点更新 #312\n剩余路点 1　目标距离 337",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 38,
+              "calls": 57,
+              "triangles": 33198,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 38,
+              "calls": 58,
+              "triangles": 33200,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 8,
+        "info": "bombardShip · 航行\n航速 25.0　转向 0.0°/s\n航向 356.0°　路点更新 #121\n剩余路点 1　目标距离 582",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 72,
+              "calls": 83,
+              "triangles": 26134,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 72,
+              "calls": 85,
+              "triangles": 26294,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 12,
+        "info": "bombardShip · 航行\n航速 7.6　转向 0.0°/s\n航向 356.0°　路点更新 #201\n剩余路点 1　目标距离 491",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 80,
+              "calls": 88,
+              "triangles": 26532,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 80,
+              "calls": 90,
+              "triangles": 26692,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "mortar-crossing",
+        "time": 18,
+        "info": "bombardShip · 航行\n航速 13.6　转向 3.5°/s\n航向 2.7°　路点更新 #321\n剩余路点 1　目标距离 515",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 88,
+              "calls": 88,
+              "triangles": 26532,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 88,
+              "calls": 88,
+              "triangles": 26532,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "flame-crossing",
+        "time": 11,
+        "info": "fireShip · 航行\n航速 5.7　转向 0.0°/s\n航向 340.8°　路点更新 #182\n剩余路点 1　目标距离 197",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 122,
+              "calls": 75,
+              "triangles": 24818,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 122,
+              "calls": 86,
+              "triangles": 26700,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "flame-crossing",
+        "time": 20,
+        "info": "fireShip · 航行\n航速 55.6　转向 7.5°/s\n航向 53.2°　路点更新 #362\n剩余路点 1　目标距离 264",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 130,
+              "calls": 86,
+              "triangles": 26700,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 130,
+              "calls": 86,
+              "triangles": 26700,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "flame-crossing",
+        "time": 28,
+        "info": "fireShip · 航行\n航速 46.1　转向 -0.4°/s\n航向 98.3°　路点更新 #522\n剩余路点 1　目标距离 321",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 138,
+              "calls": 86,
+              "triangles": 26700,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 138,
+              "calls": 86,
+              "triangles": 26700,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 2
+          }
+        }
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 5,
+        "info": "warship · 迎风航行\n航速 47.9　转向 -0.3°/s\n航向 59.0°　路点更新 #13\n剩余路点 26　目的地距离 1448",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 208,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 208,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          }
+        }
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 15,
+        "info": "warship · 迎风航行\n航速 47.8　转向 0.0°/s\n航向 58.9°　路点更新 #13\n剩余路点 26　目的地距离 1284",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 218,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 218,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          }
+        }
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 35,
+        "info": "warship · 迎风航行\n航速 11.6　转向 -3.4°/s\n航向 8.0°　路点更新 #24\n剩余路点 15　目的地距离 1291",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 227,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 227,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          }
+        }
+      },
+      {
+        "id": "upwind-warship-1500",
+        "time": 50,
+        "info": "warship · 迎风航行\n航速 11.6　转向 -3.4°/s\n航向 317.0°　路点更新 #34\n剩余路点 5　目的地距离 1159",
+        "models": {
+          "before": {
+            "glError": 0,
+            "render": {
+              "frame": 236,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          },
+          "after": {
+            "glError": 0,
+            "render": {
+              "frame": 236,
+              "calls": 56,
+              "triangles": 16602,
+              "points": 0,
+              "lines": 0
+            },
+            "actors": 1
+          }
+        }
+      }
+    ]
+  },
+  "offline": {
+    "file": "comparison.html",
+    "offline": true,
+    "scenes": [
+      "bow-mutual-far",
+      "bow-mutual-close",
+      "crossing",
+      "upwind",
+      "battery-crossing",
+      "battery-beam",
+      "mortar-crossing",
+      "mortar-close",
+      "flame-crossing",
+      "moving-crew",
+      "channel-three-v-three",
+      "cruise-180-2200",
+      "upwind-warship-700",
+      "upwind-warship-1500",
+      "long-queued-corners",
+      "long-island-corner"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "panels": 2,
+    "canvasCount": 5
+  }
+}
