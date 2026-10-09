@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
 import { shipProfile } from './ship-geometry';
-import { shipPartMax } from './ship-handling';
+import { shipMotionLimits, shipPartMax } from './ship-handling';
 import { shipTraffic } from './ship-avoidance';
-import { headingDifference, hullFits, hullPassageClear, planShipRoute, planVoyageRoute, shipTackRoute, voyageTurnRadius, type ShipPose } from './ship-navigation';
+import { headingDifference, hullFits, hullPassageClear, planBeatDeparture, planShipRoute, planVoyageRoute, roundVoyageCorner, shipPoseAt, shipTackRoute, voyageTurnRadius, type ShipPose } from './ship-navigation';
 import { coursePerformance } from './ship-wind';
 import { createGame } from './sim';
 import type { GameMap, Unit, UnitKind } from './types';
@@ -24,6 +24,27 @@ function expectSwept(map:GameMap,ship:Unit,points:readonly ShipPose[]) {
   for(const point of points){
     expect(hullFits(map,ship,point)).toBe(true);
     expect(hullPassageClear(map,ship,previous,point)).toBe(true);
+    previous=point;
+  }
+}
+function expectContinuous(ship:Unit,points:readonly ShipPose[]) {
+  let previous=pose(ship);
+  const limits=shipMotionLimits(ship);
+  for(const point of points){
+    const gap=Math.hypot(point.x-previous.x,point.y-previous.y),yaw=headingDifference(previous.heading,point.heading);
+    expect(gap).toBeGreaterThan(1e-6);
+    expect(Math.abs(yaw)).toBeLessThanOrEqual(Math.PI/36+1e-7);
+    expect(point.pivot).toBeUndefined();expect(point.exact).toBeUndefined();
+    if(point.curvature){
+      expect(gap).toBeCloseTo(2*Math.sin(Math.abs(yaw)/2)/Math.abs(point.curvature),4);
+      expect(Math.sign(yaw)).toBe(Math.sign(point.curvature));
+      expect(point.speedLimit!*Math.abs(point.curvature)).toBeLessThan(limits.turnRate);
+      const mid=shipPoseAt(previous,point,.5);
+      expect(Math.hypot(mid.x-previous.x,mid.y-previous.y)).toBeCloseTo(2*Math.sin(Math.abs(yaw)/4)/Math.abs(point.curvature),4);
+    }else{
+      expect(Math.abs(yaw)).toBeLessThan(1e-7);
+      expect(Math.abs(headingDifference(point.heading,Math.atan2(point.y-previous.y,point.x-previous.x)))).toBeLessThan(1e-7);
+    }
     previous=point;
   }
 }
@@ -141,18 +162,52 @@ describe('forward voyage planning',()=>{
 });
 
 describe('layline passage planning',()=>{
+  it('establishes a useful moving interception leg even when a complete tack cannot fit before the near intercept',()=>{
+    const map=water(),ship=vessel('warship'),bearing=52*Math.PI/180;
+    const goal={x:ship.x+150*Math.cos(bearing),y:ship.y+150*Math.sin(bearing),heading:bearing};
+    expect(shipTackRoute(map,ship,goal,()=>true)).toBeUndefined();
+    const route=planBeatDeparture(map,ship,goal,()=>true)!;
+    expect(route.at(-1)).not.toMatchObject({x:goal.x,y:goal.y});
+    const leg=route.at(-1)!,previous=route.at(-2) ?? pose(ship);
+    expect(Math.hypot(leg.x-previous.x,leg.y-previous.y)).toBeGreaterThanOrEqual(shipProfile(ship)!.length*2-1e-6);
+    const drive=coursePerformance(ship,map,leg.heading,{assumeTrimmed:true}).targetSpeed;
+    expect(drive*Math.cos(headingDifference(leg.heading,bearing))).toBeGreaterThan(coursePerformance(ship,map,bearing,{assumeTrimmed:true}).targetSpeed*1.5);
+    expectContinuous(ship,route);expectSwept(map,ship,route);
+    expect(planBeatDeparture(map,ship,goal,()=>false)).toBeUndefined();
+  });
+  it.each(['cutter','transport','warship','carrier'] as const)('%s describes the initial turn and the wind crossing as moving arcs',kind=>{
+    const map=water(),ship=vessel(kind),goal={x:5700,y:5000,heading:0};
+    const route=shipTackRoute(map,ship,goal,()=>true)!;
+    expect(route[0]!.curvature).not.toBe(0);
+    expect(route.at(-1)).toMatchObject({x:5700,y:5000,curvature:0});
+    expect(route.filter(point=>point.curvature===0)).toHaveLength(2);
+    expectContinuous(ship,route);expectSwept(map,ship,route);
+  });
+
+  it('plans the speed and tangent entry before a queued right-angle corner',()=>{
+    const map=water(),ship=vessel('warship'),corner={x:5700,y:5000},next={x:5700,y:6800};
+    ship.sailing!.speed=ship.speed;
+    const route=roundVoyageCorner(map,ship,pose(ship),corner,next)!;
+    expect(route[0]!.x).toBeLessThan(corner.x-shipProfile(ship)!.length*.6);
+    expect(route[0]!.speedLimit).toBeLessThan(ship.speed);
+    expect(route.at(-1)).toMatchObject(next);
+    expectContinuous(ship,route);expectSwept(map,ship,route);
+    // A reference with no turn corridor cannot silently cut the corner.
+    expect(roundVoyageCorner(map,ship,pose(ship),corner,next,(a,b)=>a.y<=5001 && b.y<=5001)).toBeUndefined();
+  });
   it.each(['cutter','transport','warship'] as const)('%s uses two long legs to the whole destination and holds its initial tack',kind=>{
     const map=water(),ship=vessel(kind),goal={x:5700,y:5000,heading:0};
     const beat=coursePerformance(ship,map,0,{assumeTrimmed:true}).beatAngle;
     for(const side of [-1,1]){
       ship.sailing!.heading=side*beat;
       const route=shipTackRoute(map,ship,goal,()=>true)!;
-      expect(route).toHaveLength(2);
+      expect(route.filter(point=>point.curvature===0)).toHaveLength(2);
+      expectContinuous(ship,route);
       expect(route[0]!.y*side).toBeGreaterThan(ship.y*side);
       expect(Math.hypot(route[0]!.x-ship.x,route[0]!.y-ship.y)).toBeGreaterThan(shipProfile(ship)!.length*3);
-      expect(route[1]).toMatchObject({...goal,heading:expect.any(Number),tack:true});
-      expect(Math.abs(headingDifference(route[1]!.heading,0))).toBeCloseTo(beat);
-      for(const point of route)expect(coursePerformance(ship,map,point.heading,{assumeTrimmed:true}).noGo).toBe(false);
+      expect(route.at(-1)).toMatchObject({...goal,heading:expect.any(Number),tack:true});
+      expect(Math.abs(headingDifference(route.at(-1)!.heading,0))).toBeCloseTo(beat);
+      for(const point of route.filter(point=>!point.curvature))expect(coursePerformance(ship,map,point.heading,{assumeTrimmed:true}).noGo).toBe(false);
       expectSwept(map,ship,route);
     }
   });
@@ -161,33 +216,33 @@ describe('layline passage planning',()=>{
     const map=water((x,y)=>x>=43 && x<=49 && y>=56 && y<=72),ship=vessel('warship');
     ship.sailing!.heading=coursePerformance(ship,map,0,{assumeTrimmed:true}).beatAngle;
     const route=shipTackRoute(map,ship,{x:5700,y:5000,heading:0},()=>true)!;
-    expect(route).toHaveLength(2);
-    expect(route[0]!.y).toBeLessThan(ship.y);
-    expect(route[1]).toMatchObject({x:5700,y:5000});
+    expect(route.find(point=>point.curvature===0)!.heading).toBeLessThan(0);
+    expect(route.at(-1)).toMatchObject({x:5700,y:5000});
+    expectContinuous(ship,route);
     expectSwept(map,ship,route);
   });
 
   it('shortens the passage only when the full pair has no sea room',()=>{
-    const map=water((_,y)=>y<38 || y>62),ship=vessel('warship');
+    const map=water((_,y)=>y<40 || y>60),ship=vessel('warship');
     ship.sailing!.heading=coursePerformance(ship,map,0,{assumeTrimmed:true}).beatAngle;
     const route=shipTackRoute(map,ship,{x:5700,y:5000,heading:0},()=>true)!;
-    expect(route).toHaveLength(2);
-    expect(route[1]!.x).toBeGreaterThan(ship.x);
-    expect(route[1]!.x).toBeLessThan(5700);
+    expect(route.at(-1)!.x).toBeGreaterThan(ship.x);
+    expect(route.at(-1)!.x).toBeLessThan(5700);
+    expectContinuous(ship,route);
     expectSwept(map,ship,route);
   });
 
   it('shortens a committed tack before reversing it on a moving-target update',()=>{
-    const map=water((_,y)=>y>65),ship=vessel('warship');
+    const map=water((_,y)=>y>60),ship=vessel('warship');
     const beat=coursePerformance(ship,map,0,{assumeTrimmed:true}).beatAngle;
     ship.sailing!.heading=beat;
     const goal={x:5700,y:5000,heading:0};
     const initial=shipTackRoute(map,ship,goal,()=>true)!;
-    expect(initial[0]!.y).toBeLessThan(ship.y);
-    expect(initial[1]).toMatchObject({x:5700,y:5000});
+    expect(initial.find(point=>point.curvature===0)!.heading).toBeLessThan(0);
+    expect(initial.at(-1)).toMatchObject({x:5700,y:5000});
     const committed=shipTackRoute(map,ship,goal,()=>true,beat)!;
     expect(committed[0]!.y).toBeGreaterThan(ship.y);
-    expect(committed[1]!.x).toBeLessThan(goal.x);
+    expect(committed.at(-1)!.x).toBeLessThan(goal.x);
     expectSwept(map,ship,committed);
   });
 });

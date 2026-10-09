@@ -15,7 +15,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 10: true wind, sail trim, signed hull velocity and wind-aware routes.
 // 11: deterministic eight-minute wind changes and serialized weather events.
 // 12: persistent voyage helm, passing decisions and moving-target pursuit.
-export const CHECKSUM_VERSION = 12;
+// 13: curved laylines, moving gun aim and stable firing stations.
+export const CHECKSUM_VERSION = 13;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));

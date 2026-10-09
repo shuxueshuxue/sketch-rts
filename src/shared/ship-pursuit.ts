@@ -1,12 +1,12 @@
 import { strikeGap } from './combat-geometry';
 import { shipMotionLimits } from './ship-handling';
-import { distanceToHull, shipProfile } from './ship-geometry';
+import { distanceToHull, hullContact, shipProfile } from './ship-geometry';
 import { hullPassageClear } from './ship-navigation';
 import { detCos, detSin } from './det-math';
 import type { Building, GameMap, Obstacle, Unit } from './types';
 
 type Target = Unit | Building | Obstacle;
-export type PursuitGoal = { x: number; y: number; intent: 'pursuit'; targetId: string; arrivalRadius: number; targetSpeed?: number };
+export type PursuitGoal = { x: number; y: number; intent: 'pursuit'; targetId: string; arrivalRadius: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean };
 
 /** Gunnery may select a crew member; the navigator follows the carrying hull. */
 export function shipNavigationTarget(target: Target, units: readonly Unit[]): Target {
@@ -33,13 +33,13 @@ export function interceptTime(dx: number, dy: number, vx: number, vy: number, sp
 
 /** The tactical layer owns range bands and target identity. It never supplies
  * a docking heading, changes sail state, or resets a committed sailing leg. */
-export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap): PursuitGoal | undefined {
+export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number): PursuitGoal | undefined {
   const target = shipNavigationTarget(requested, units), motion = ship.sailing!;
   const targetMotion = 'order' in target ? target.sailing : undefined;
   const vx = targetMotion?.velocityX ?? 0, vy = targetMotion?.velocityY ?? 0, speed = Math.hypot(vx, vy);
   const previous = motion.pursuit?.targetId === target.id ? motion.pursuit : undefined;
   const underway = 'order' in target && (target.order.type === 'move' || target.order.type === 'unload'
-    || target.order.type === 'attackMove' && !target.order.targetId || targetMotion?.pursuit?.moving === true);
+    || target.order.type === 'attackMove' && !target.order.targetId);
   const moving = underway || speed > (previous?.moving ? 1 : 4);
   const dx = target.x - ship.x, dy = target.y - ship.y, distance = Math.hypot(dx, dy);
   const ownLength = shipProfile(ship)!.length, targetLength = 'order' in target ? shipProfile(target)?.length ?? 0 : 0;
@@ -50,18 +50,32 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   const gap = strikeGap(ship, target), phaseGap = following ? distance : gap;
   const enter = following ? safeGap + ownLength * .35 : range * .82;
   const leave = following ? safeGap + ownLength * .6 : range * 1.05;
-  const firing = !moving && !following ? stationaryFire?.() : undefined;
+  const firing = !following ? stationaryFire?.() : undefined;
   const phase = firing !== undefined ? firing ? 'engage' : 'approach'
     : previous?.phase === 'engage' ? phaseGap > leave || gap < minimum ? 'approach' : 'engage' : phaseGap <= enter && gap >= minimum ? 'engage' : 'approach';
   motion.pursuit = { targetId: target.id, phase, moving };
   if (phase === 'engage' && !moving && motion.speed <= 1) return undefined;
 
-  const limits = shipMotionLimits(ship), lead = moving ? interceptTime(dx, dy, vx, vy, Math.max(limits.speed * .8, motion.speed)) : 0;
+  const limits = shipMotionLimits(ship);
+  // An opponent closing to fight is not an escaping constant-velocity quarry.
+  // Leading each other's pursuit by several seconds makes equal ships run
+  // side by side forever without closing to a useful firing position.
+  const mutual = 'order' in target && (target.order.type === 'attack' || target.order.type === 'attackMove')
+    && (target.order.targetId === ship.id || targetMotion?.pursuit?.targetId === ship.id);
+  const lead = moving && !mutual ? interceptTime(dx, dy, vx, vy, Math.max(limits.speed * .8, motion.speed)) : 0;
   const at = !moving && !following ? requested : target;
   const predicted = { x: at.x + vx * lead, y: at.y + vy * lead };
   // The nearest hull edge defines weapon reach, while the navigation goal is
   // a center position. Keep enough center separation for both complete hulls.
   const edgeOffset = Math.max(0, distance - gap);
+  if (!following && minimum > 0 && !firing && gap < minimum + ownLength * .45) {
+    // Keep a bow mortar facing the opponent while backing out of its dead
+    // zone. A full sailing turn only brings its stern closer to the danger.
+    const separation = Math.max(safeGap, edgeOffset + minimum + ownLength * .45);
+    return { x: target.x - dx / (distance || 1) * separation, y: target.y - dy / (distance || 1) * separation,
+      intent: 'pursuit', targetId: target.id, arrivalRadius: Math.max(4, ownLength * .04),
+      fireHeading: Math.atan2(dy, dx), retreat: true, targetSpeed: limits.reverseSpeed };
+  }
   // A stationary occupied deck can put the actual fighting crew farther than
   // its nearest hull edge. Its firing approach aims at that fighting position;
   // ordinary hull sweep validation still prevents penetration.
@@ -78,6 +92,18 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     y: predicted.y - bearingY / bearingLength * standoff,
     intent: 'pursuit', targetId: target.id, arrivalRadius: Math.max(4, ownLength * .04),
   };
+  if(moving && !following && 'order' in target && shipProfile(target)){
+    const heading=fireHeading ?? Math.atan2(goal.y-ship.y,goal.x-ship.x);
+    const station={...ship,x:goal.x,y:goal.y,sailing:{...motion,heading}};
+    if(hullContact(station,target)){
+      // A long intercept can put its trailing firing station inside the
+      // quarry's present hull. Static route admission then replaces a useful
+      // chase with repeated precision pivots. Keep a clear station on our
+      // side of the real hull until a farther predicted station is available.
+      goal.x=target.x-dx/(distance || 1)*standoff;
+      goal.y=target.y-dy/(distance || 1)*standoff;
+    }
+  }
   if (!moving && !following && stationaryFire !== undefined && !firing) {
     // A firing station needs room to rotate the hull. A point on the nearest
     // edge of the target's deck is a berth and can trap the broadside battery.
@@ -98,7 +124,11 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     // Closing error changes speed continuously. A target moving away remains
     // a voyage even while the guns already have range.
     const closingGap = following ? distance - safeGap : gap - range * .68;
-    goal.targetSpeed = Math.min(limits.speed, Math.max(speed * .55, speed + closingGap * .2));
+    if (fireHeading !== undefined && !following) {
+      goal.fireHeading = fireHeading;
+      const along = vx * detCos(fireHeading) + vy * detSin(fireHeading);
+      goal.targetSpeed = Math.min(limits.speed, Math.max(0, along + closingGap * .2));
+    } else goal.targetSpeed = Math.min(limits.speed, Math.max(speed * .55, speed + closingGap * .2));
   }
   if (!moving && phase === 'engage') goal.targetSpeed = 0;
   return goal;

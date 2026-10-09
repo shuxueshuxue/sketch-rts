@@ -9,6 +9,7 @@ import { headingDifference } from "./ship-navigation";
 import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
+import { ballisticTarget, firingBoundaryHeadings, targetSailingVelocity } from './ship-fire-control';
 export const SHIP_HULL_COST = { cutter: 120, transport: 160, warship: 170, bombardShip: 240, fireShip: 190, carrier: 280 } as const;
 export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     cost: number;
@@ -55,31 +56,76 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
 }
 /** Bring a working gun into its arc with the least hull rotation. A gun
  * already able to fire never gives up its shot just to align a larger battery. */
-export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, point: StrikeTarget) {
+export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, point: StrikeTarget, arcMargin = 0) {
     const weapons=installedWeapons(snapshot,ship).filter(item=>(item.durability ?? 1)>0);
     const heading=ship.sailing?.heading ?? 0;
     const mounts=new Map(shipMounts(ship).map(mount=>[mount.id,mount]));
+    const velocity=targetSailingVelocity(point,snapshot.units),moving=Math.hypot(velocity.x,velocity.y)>1e-7;
+    const speed=Math.hypot(velocity.x,velocity.y),surface=strikePoint(ship,point),gap=Math.hypot(surface.x-ship.x,surface.y-ship.y);
+    const possible=(item:WorldItem)=>{
+        const mount=mounts.get(item.mountId!)!;if(!mount)return false;
+        const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],range=veteranWeaponRange(ship,def.range);
+        const flight=def.weapon.delivery==='cone'?0:Math.max(.2,range/(def.weapon.delivery==='shell'?240:560)+.05);
+        return gap<=range+Math.hypot(mount.x,mount.y)+speed*flight;
+    };
+    if(!weapons.some(possible))return heading;
+    const reaches=new Map(weapons.map(item=>{const pose=mountedWeaponPose(ship,item)!;return[item.id,Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y)];}));
+    const predictions=new Map<string,Map<number,StrikeTarget>>();
+    const targetAt=(candidate:number,item:WorldItem)=>{
+        let cache=predictions.get(item.id);if(!cache){cache=new Map();predictions.set(item.id,cache);}
+        const cached=cache.get(candidate);if(cached)return cached;
+        const mount=mounts.get(item.mountId!)!,c=detCos(candidate),s=detSin(candidate);
+        const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
+        const predicted=ballisticTarget(pivot,point,velocity,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,predicted);return predicted;
+    };
     const canFire=(candidate:number,item:WorldItem)=>{
         const mount=mounts.get(item.mountId!)!;if(!mount)return false;
         const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-        const target=strikePoint(pivot,point),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
-        return gap<=veteranWeaponRange(ship,def.range)+1e-7 && gap>=(def.weapon.minRange ?? 0)
-          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=mount.halfArc+1e-7;
+        const target=strikePoint(pivot,targetAt(candidate,item)),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
+        return gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
+          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7;
     };
     const currentCount=weapons.filter(item=>canFire(heading,item)).length;
+    if(currentCount===weapons.length)return heading;
     const nearbyBattery=Math.PI/18;
     const candidates=currentCount?[{heading,turn:0,count:currentCount}]:[];
     for(const item of weapons){
         const mount=mounts.get(item.mountId!)!;
-        const center=Math.atan2(point.y-ship.y,point.x-ship.x)-mount.bearing;
-        for(const offset of [0,-mount.halfArc/2,mount.halfArc/2]){
-            const turn=headingDifference(heading,center+offset);
-            if(!canFire(heading+turn,item))continue;
-            let outside=0,inside=1;
-            for(let i=0;i<24;i++){const mid=(outside+inside)/2;if(canFire(heading+turn*mid,item))inside=mid;else outside=mid;}
-            const candidate=heading+turn*inside,amount=Math.abs(turn*inside),count=weapons.filter(gun=>canFire(candidate,gun)).length;
-            candidates.push({heading:candidate,turn:amount,count});
+        if(!mount || !possible(item))continue;
+        const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind];
+        if(currentCount){
+            const pose=mountedWeaponPose(ship,item)!,target=strikePoint(pose.pivot,targetAt(heading,item));
+            const gap=Math.hypot(target.x-pose.pivot.x,target.y-pose.pivot.y);
+            const pivotTravel=2*Math.hypot(mount.x,mount.y)*Math.sin(nearbyBattery/2);
+            const projectileSpeed=def.weapon.delivery==='shell'?240:def.weapon.delivery==='bolt'?560:Infinity;
+            const leadTravel=projectileSpeed===Infinity?0:speed*pivotTravel/Math.max(1,projectileSpeed-speed)+speed/20;
+            const change=pivotTravel+leadTravel;
+            const angleChange=gap>change?Math.asin(change/gap):Math.PI;
+            const bearing=Math.abs(headingDifference(heading+mount.bearing,Math.atan2(target.y-pose.pivot.y,target.x-pose.pivot.x)));
+            // Once a gun can fire, battery coordination only permits a small
+            // turn. Skip a fitting which cannot enter that window even after
+            // accounting for pivot travel and a one-tick change in its lead.
+            if(bearing>Math.max(0,mount.halfArc-arcMargin)+nearbyBattery+angleChange+1e-7)continue;
+        }
+        const boundaries=(at:number)=>firingBoundaryHeadings(ship,mount,targetAt(at,item),mount.bearing,Math.max(0,mount.halfArc-arcMargin),def.weapon.minRange ?? 0,veteranWeaponRange(ship,def.range));
+        for(const boundary of boundaries(heading)){
+            let at=heading+headingDifference(heading,boundary);
+            // Rotating a bow pivot changes the exact flight duration. Refine
+            // its firing boundary against that mount's own predicted target.
+            if(moving && !canFire(at,item))for(let step=0;step<6;step++){
+                const next=boundaries(at).sort((a,b)=>Math.abs(headingDifference(at,a))-Math.abs(headingDifference(at,b)))[0];
+                if(next===undefined)break;
+                const difference=headingDifference(at,next);at+=difference;
+                if(Math.abs(difference)<1e-10)break;
+            }
+            // A range boundary may round to the wrong side of the exact shot
+            // check. Test its immediate interiors, never widen weapon range.
+            for(const candidate of canFire(at,item)?[at]:[at-1e-8,at+1e-8]){
+                if(!canFire(candidate,item))continue;
+                const count=weapons.filter(gun=>canFire(candidate,gun)).length;
+                candidates.push({heading:candidate,turn:Math.abs(headingDifference(heading,candidate)),count});
+            }
         }
     }
     const nearest=Math.min(...candidates.map(candidate=>candidate.turn));
@@ -116,6 +162,12 @@ export function mountedWeaponPose(ship: Unit, item: WorldItem) {
     const height = native ? p.weaponMount![2]! : p.deckHeight + 9;
     const reach = native ? p.weaponMount![0]! - p.weaponPivot![0]! : item.kind === 'shipMortar' ? 8 : 26;
     return { pivot, pivotHeight: native ? p.weaponPivot![2]! : p.deckHeight + 2, heading, muzzle: { x: pivot.x + detCos(heading) * reach, y: pivot.y + detSin(heading) * reach }, height, art: def.art };
+}
+/** Heading selection, aiming and launch share one predicted physical body. */
+export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, item: WorldItem, target: StrikeTarget, pose=mountedWeaponPose(ship,item)!) {
+    const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind];
+    const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
+    return strikePoint(pose.pivot,ballisticTarget(pose.pivot,target,targetSailingVelocity(target,snapshot.units),def.weapon,reach));
 }
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
     ship.fittings = installedWeapons(snapshot, ship).map(item => ({ ...shipMounts(ship).find(mount => mount.id === item.mountId)!, id: item.id }));

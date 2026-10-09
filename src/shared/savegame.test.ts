@@ -6,7 +6,7 @@ import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { createGame, issuePlayerCommand, refreshUnitStats, stepGame } from "./sim";
 
 describe("savegame runtime sync metadata", () => {
-  it("replans an older coastal voyage without changing its order or physical pose", () => {
+  it.each([11, 12])("replans a version-%s coastal voyage without changing its order or physical pose", version => {
     const game=createGame("bareDuel",{aiPlayers:[]});
     game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;
     game.map={...game.map,width:960,height:768,terrain:{cols:30,rows:24,cell:32,cells:Array.from({length:720},(_,i)=>{
@@ -17,7 +17,7 @@ describe("savegame runtime sync metadata", () => {
     const planned=planShipRoute(game.map,ship,goal);
     ship.sailing!.route={goalX:goal.x,goalY:goal.y,...planned,end:goal,cruise:true,startX:ship.x,startY:ship.y,startHeading:0};
     const room={...createRoom({id:'old-voyage',host:{id:'host',name:'Host'},mapId:'bareDuel'}),status:'inMatch' as const};
-    const save=createSaveGameRecord(game,room,{id:'old-voyage'});save.runtime.checksumVersion=11;
+    const save=createSaveGameRecord(game,room,{id:'old-voyage'});save.runtime.checksumVersion=version;
     const original=JSON.stringify(save),restored=restoreGameFromSave(save),boat=restored.units.find(unit=>unit.id===ship.id)!;
     expect(boat).toMatchObject({x:ship.x,y:ship.y,order:ship.order,sailing:{heading:ship.sailing!.heading,speed:ship.sailing!.speed}});
     expect(boat.sailing!.route).toBeUndefined();expect(JSON.stringify(save)).toBe(original);

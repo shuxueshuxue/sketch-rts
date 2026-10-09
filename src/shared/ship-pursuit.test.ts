@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
 import { strikeGap } from './combat-geometry';
+import { hullContact } from './ship-geometry';
 import { boardUnit, deckPlacement, syncDecks } from './decks';
 import { interceptTime, shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { checksumGame } from './sim/checksum';
@@ -37,6 +38,17 @@ describe('ship tactical pursuit', () => {
     expect(goal.y).toBeGreaterThan(target.y);
     expect(goal.intent).toBe('pursuit');
     expect(goal).not.toHaveProperty('heading');
+  });
+
+  it('keeps a fast quarry’s predicted firing station out of its present hull', () => {
+    const { ship, target, units } = pair();
+    target.sailing!.velocityX = 60;
+    const goal = shipPursuitGoal(ship, target, units, 312)!;
+    const station = { ...ship, ...goal, sailing: { ...ship.sailing!, heading: Math.atan2(goal.y - ship.y, goal.x - ship.x) } };
+    expect(hullContact(station, target)).toBeUndefined();
+    expect(goal.x).toBeGreaterThan(ship.x);
+    expect(goal.x).toBeLessThan(target.x);
+    expect(goal.targetId).toBe(target.id);
   });
 
   it('keeps the carrying hull as the navigation target when gunnery changes crew', () => {

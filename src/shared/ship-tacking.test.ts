@@ -16,6 +16,23 @@ function scene(direction=Math.PI,speed=80){
 }
 
 describe('wind-aware ship voyages',()=>{
+  for(const kind of ['cutter','transport','warship','bombardShip','fireShip','carrier'] as const)
+    it(`${kind} leaves the wind eye promptly while advancing under its real rudder limit`,()=>{
+      const game=scene(),ship=game.spawnUnit('player',kind,1400,1500),start={x:ship.x,y:ship.y};
+      const performance=coursePerformance(ship,game.map),limits=shipMotionLimits(ship);
+      const deadline=seconds(performance.noGoAngle/limits.turnRate*1.5+.5);
+      issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],x:3100,y:1500,avoidCombat:true});
+      let escaped=false;
+      for(let tick=0;tick<deadline;tick++){
+        const before={x:ship.x,y:ship.y,heading:ship.sailing!.heading};stepGame(game);
+        expect(Math.abs(headingDifference(before.heading,ship.sailing!.heading))).toBeLessThanOrEqual(perTick(shipMotionLimits(ship).turnRate)+1e-7);
+        expect(hullFits(game.map,ship)).toBe(true);
+        expect(hullPassageClear(game.map,ship,before,{x:ship.x,y:ship.y,heading:ship.sailing!.heading})).toBe(true);
+        if(!coursePerformance(ship,game.map).noGo){escaped=true;break;}
+      }
+      expect(escaped).toBe(true);
+      expect(Math.hypot(ship.x-start.x,ship.y-start.y)).toBeGreaterThan(10);
+    });
   for(const offset of [-.3,0,.3])it(`beats upwind through sustained close-hauled legs (offset=${offset})`,()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',1400,1500);
     const goal={x:ship.x+650*Math.cos(offset),y:ship.y+650*Math.sin(offset)};
@@ -61,12 +78,20 @@ describe('wind-aware ship voyages',()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',1000,800),goal={x:1600,y:800,heading:0};
     game.map.terrain!.cells=Array.from({length:7500},(_,i)=>Math.floor(i/100)>=23?'.':'~').join('');
     const coast=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
-    expect(coast).toHaveLength(2);expect(coast[0]!.y).toBeLessThan(ship.y);
+    expect(coast.filter(point=>point.curvature===0)).toHaveLength(2);
+    expect(coast.find(point=>point.curvature===0)!.y).toBeLessThan(ship.y);
     game.map.terrain!.cells='~'.repeat(7500);
     const preferred=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
-    game.spawnUnit('enemy','cutter',preferred[0]!.x,preferred[0]!.y);
-    const clear=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
-    expect((clear[0]!.y-ship.y)*(preferred[0]!.y-ship.y)).toBeLessThan(0);
+    const turningEntry=preferred.find(point=>point.curvature===0)!;
+    game.spawnUnit('enemy','cutter',turningEntry.x,turningEntry.y);
+    const traffic=shipTraffic(ship,game.units,Infinity),clear=shipTackRoute(game.map,ship,goal,traffic)!;
+    expect(clear).toBeDefined();expect(clear).not.toEqual(preferred);
+    let previous={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
+    for(const point of clear){
+      expect(traffic(previous,point)).toBe(true);
+      expect(hullPassageClear(game.map,ship,previous,point)).toBe(true);
+      previous=point;
+    }
   });
   it('uses bounded assistance in a calm and for an explicit upwind berth',()=>{
     for(const calm of [false,true]){
@@ -162,10 +187,17 @@ describe('wind-aware ship voyages',()=>{
       const game=scene(),ship=game.spawnUnit('player','transport',1400,1500);
       ship.shipParts={...shipPartMax(ship),[part]:0};
       issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],x:2050,y:1500});
-      for(let tick=0;tick<seconds(4);tick++)stepGame(game);
+      for(let tick=0;tick<seconds(4);tick++){
+        const from={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
+        stepGame(game);
+        expect(hullPassageClear(game.map,ship,from,{x:ship.x,y:ship.y,heading:ship.sailing!.heading})).toBe(true);
+        expect(Math.hypot(ship.x-from.x,ship.y-from.y)).toBeLessThanOrEqual(perTick(coursePerformance(ship,game.map).auxiliarySpeed)+1e-6);
+      }
       expect(ship.sailing!.heading).toBe(0);
-      expect(ship.x).toBe(1400);expect(ship.y).toBe(1500);
-      if(part==='rigging')expect(shipMotionLimits(ship).speed).toBe(0);
+      expect(ship.y).toBe(1500);
+      expect(ship.sailing!.route?.points.some(point=>point.tack)).not.toBe(true);
+      if(part==='rigging'){expect(shipMotionLimits(ship).speed).toBe(0);expect(ship.x).toBe(1400);}
+      else expect(ship.x).toBeGreaterThan(1400);
     }
   });
 });

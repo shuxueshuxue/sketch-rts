@@ -14,12 +14,27 @@ export type ShipPose = Point & {
   pivot?: Point;
   tack?: boolean;
   exact?: boolean;
+  /** Signed curvature of the incoming segment; heading is its end tangent. */
+  curvature?: number;
+  /** A physical speed ceiling, also placed at the entry to an upcoming bend. */
+  speedLimit?: number;
 };
+function curvedSegment(from:ShipPose,to:ShipPose):number {
+  const curvature=to.curvature ?? 0;
+  if(Math.abs(curvature)<1e-9)return 0;
+  const x=from.x+(detSin(to.heading)-detSin(from.heading))/curvature;
+  const y=from.y-(detCos(to.heading)-detCos(from.heading))/curvature;
+  // Runtime hull sweeps and exact maneuvers may copy waypoint metadata. Only
+  // the actual reference circle receives curved interpolation.
+  return Math.hypot(x-to.x,y-to.y)<1e-5?curvature:0;
+}
 /** Rotation around a fixed bow/stern contact point, used for a real departure
  * maneuver rather than translating a hull sideways without turning it. */
 export function shipPoseAt(from: ShipPose, to: ShipPose, fraction: number): ShipPose {
   const heading=from.heading+headingDifference(from.heading,to.heading)*fraction;
   if(to.pivot){const lever=(from.x-to.pivot.x)*detCos(from.heading)+(from.y-to.pivot.y)*detSin(from.heading);return{x:to.pivot.x+lever*detCos(heading),y:to.pivot.y+lever*detSin(heading),heading};}
+  const curvature=curvedSegment(from,to);
+  if(curvature)return{x:from.x+(detSin(heading)-detSin(from.heading))/curvature,y:from.y-(detCos(heading)-detCos(from.heading))/curvature,heading};
   return{x:from.x+(to.x-from.x)*fraction,y:from.y+(to.y-from.y)*fraction,heading};
 }
 type SeaMap = Pick<GameMap, "terrain" | "width" | "height" | "wind">;
@@ -92,7 +107,8 @@ export function hullFits(map: SeaMap, ship: Unit, pose: ShipPose = { x: ship.x, 
 export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: ShipPose) {
   const hull = shipProfile(ship)!.hull;
   const turn = headingDifference(from.heading, to.heading);
-  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)))+(to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):0);
+  const curvature=curvedSegment(from,to);
+  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)))+(to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):curvature?1/Math.abs(curvature):0);
   if (openWaterBox(map, Math.min(from.x, to.x) - radius, Math.min(from.y, to.y) - radius, Math.max(from.x, to.x) + radius, Math.max(from.y, to.y) + radius))
     return true;
   if(turn && (!hullFits(map,ship,from) || !hullFits(map,ship,to)))return false;
@@ -295,9 +311,10 @@ function keelCandidates(ship:Unit,from:ShipPose,goal:Point & {heading?:number}):
   const direction=Math.atan2(goal.y-from.y,goal.x-from.x);
   // Astern is a short maneuver, not an alternative cruise direction.
   const length=shipProfile(ship)!.length;
-  const alignedBerth=goal.heading!==undefined && Math.abs(headingDifference(from.heading,goal.heading))<Math.PI/8
-    && (goal.x-from.x)*detCos(from.heading)+(goal.y-from.y)*detSin(from.heading)<0;
-  const headings=gap<=(alignedBerth?length:length/2)?[direction,direction+Math.PI]:[direction];
+  // A precise berth or its approach pose may need a short astern leg before
+  // swinging the hull alongside. Requiring that pose to share the current
+  // heading ruled out the useful retreat and forced a near-half-circle turn.
+  const headings=gap<=(goal.heading!==undefined?length:length/2)?[direction,direction+Math.PI]:[direction];
   return headings.map(heading=>{
     const turned={x:from.x,y:from.y,heading},end={x:goal.x,y:goal.y,heading};
     const points=Math.abs(headingDifference(from.heading,heading))<1e-7?[end]:[turned,end];
@@ -338,18 +355,61 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
   const choices=preferredHeading===undefined
     ? distances.flatMap(distance=>sides.map(side=>({distance,side})))
     : sides.flatMap(side=>distances.map(distance=>({distance,side})));
+  if(shipMotionLimits(ship).turnRate<=1e-7)return;
   for(const {distance,side} of choices){
-    const delta={x:dx*distance/gap,y:dy*distance/gap},end={x:start.x+delta.x,y:start.y+delta.y};
+    const end={x:start.x+dx*distance/gap,y:start.y+dy*distance/gap};
     const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
-    const first=cross(delta,b)/det,second=cross(a,delta)/det;
-    if(first<=1e-7 || second<=1e-7)continue;
-    const apex={x:start.x+a.x*first,y:start.y+a.y*first,heading:angles[side]!,tack:true};
-    const finish={...end,heading:angles[other]!,tack:true};
-    // The last leg continues through its end: no artificial rotation back
-    // onto the direct upwind bearing, especially at the destination itself.
-    const proof=[{...start,heading:apex.heading},apex,{...apex,heading:finish.heading},finish];
-    if(!connectorClear(map,ship,start,proof,traffic))continue;
-    return [apex,finish];
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    const startingTurn=Math.abs(headingDifference(start.heading,angles[side]!))>1e-7;
+    for(const startupRadius of startingTurn?departureRadii(map,ship):[voyageTurnRadius(ship)])for(const radius of voyageRadii(ship)){
+      const speedLimit=curveSpeedLimit(ship,radius),startupSpeed=curveSpeedLimit(ship,startupRadius);
+      const lead=startingTurn?brakingEntry(ship,start,startupSpeed):[];
+      const startup=circleArc(lead.at(-1) ?? start,angles[side]!,startupRadius,startupSpeed);
+      const sailed=startup.at(-1) ?? lead.at(-1) ?? start;
+      const delta={x:end.x-sailed.x,y:end.y-sailed.y};
+      const first=cross(delta,b)/det,second=cross(a,delta)/det;
+      const turn=headingDifference(angles[side]!,angles[other]!);
+      // A circular tack starts before the layline intersection. Passing the
+      // sharp intersection first would require an impossible instant helm.
+      const setback=radius*Math.tan(Math.abs(turn)/2);
+      if(first<=setback+1 || second<=setback+1)continue;
+      const entry:ShipPose={x:sailed.x+a.x*(first-setback),y:sailed.y+a.y*(first-setback),heading:angles[side]!,curvature:0,speedLimit};
+      const tack=circleArc(entry,angles[other]!,radius,speedLimit);
+      const finish:ShipPose={...end,heading:angles[other]!,curvature:0};
+      const points=[...lead,...startup,entry,...tack,finish].map(point=>({...point,tack:true}));
+      const cost=voyageTime(map,ship,start,points);
+      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
+      best=points;bestCost=cost;
+    }
+    if(best)return best;
+  }
+}
+/** A moving interception point is not a berth. When a complete rounded tack
+ * cannot fit before that near point, establish useful close-hauled headway on
+ * one committed leg; the pursuit navigator will update its interception. */
+export function planBeatDeparture(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,preferredHeading?:number):ShipPose[]|undefined {
+  const start:ShipPose={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
+  const bearing=Math.atan2(goal.y-start.y,goal.x-start.x),performance=coursePerformance(ship,map,bearing,{assumeTrimmed:true});
+  if(performance.calm || performance.trueWindAngle>=performance.beatAngle || shipMotionLimits(ship).turnRate<=1e-7 || performance.maxForwardSpeed<=0)return;
+  const wind=windAt(map,ship),angles=[wind.from+performance.beatAngle,wind.from-performance.beatAngle];
+  const useful=angles.filter(heading=>{
+    const drive=coursePerformance(ship,map,heading,{assumeTrimmed:true}).targetSpeed;
+    return drive*detCos(headingDifference(heading,bearing))>Math.max(performance.targetSpeed,performance.auxiliarySpeed)*1.1;
+  });
+  const preferred=preferredHeading ?? start.heading;
+  useful.sort((a,b)=>Math.abs(headingDifference(preferred,a))-Math.abs(headingDifference(preferred,b)));
+  const length=shipProfile(ship)!.length*2;
+  for(const heading of useful){
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const radius of departureRadii(map,ship)){
+      const speedLimit=curveSpeedLimit(ship,radius),lead=Math.abs(headingDifference(start.heading,heading))>1e-7?brakingEntry(ship,start,speedLimit):[];
+      const arc=circleArc(lead.at(-1) ?? start,heading,radius,speedLimit),entry=arc.at(-1) ?? lead.at(-1) ?? start;
+      const finish:ShipPose={x:entry.x+length*detCos(heading),y:entry.y+length*detSin(heading),heading,curvature:0};
+      const points=[...lead,...arc,finish].map(point=>({...point,tack:true})),cost=voyageTime(map,ship,start,points);
+      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
+      best=points;bestCost=cost;
+    }
+    if(best)return best;
   }
 }
 function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean,latticeEscape=false):ShipPose[]|undefined {
@@ -421,6 +481,67 @@ export function voyageTurnRadius(ship:Unit):number {
   const limits=shipMotionLimits(ship),length=shipProfile(ship)!.length;
   return Math.max(length*.65,limits.turnRate>1e-7?limits.speed/limits.turnRate:0);
 }
+function voyageRadii(ship:Unit):number[] {
+  const minimum=shipProfile(ship)!.length*.65,nominal=voyageTurnRadius(ship);
+  return [...new Set([nominal,Math.max(minimum,nominal*.7),minimum])];
+}
+function departureRadii(map:SeaMap,ship:Unit):number[] {
+  const limits=shipMotionLimits(ship),auxiliary=coursePerformance(ship,map).auxiliarySpeed;
+  // Getting out of the wind eye is a low-speed maneuver. Its physical yaw
+  // limit allows a much tighter swept turn than a cruise or mid-voyage tack;
+  // retaining the cruising floor here makes heavy ships crawl for ten seconds.
+  const assisted=Math.max(shipProfile(ship)!.length*.25,auxiliary/Math.max(1e-7,limits.turnRate));
+  return [...new Set([...voyageRadii(ship),assisted])];
+}
+function curveSpeedLimit(ship:Unit,radius:number):number {
+  // Leave steering authority for tracking errors as well as the planned yaw.
+  return Math.min(shipMotionLimits(ship).speed,radius*shipMotionLimits(ship).turnRate*.85);
+}
+function circleArc(from:ShipPose,heading:number,radius:number,speedLimit:number):ShipPose[] {
+  const turn=headingDifference(from.heading,heading);
+  return signedCircleArc(from,turn,radius,speedLimit);
+}
+function signedCircleArc(from:ShipPose,turn:number,radius:number,speedLimit:number):ShipPose[] {
+  if(Math.abs(turn)<1e-7)return [];
+  const curvature=Math.sign(turn)/radius,count=Math.max(1,Math.ceil(Math.abs(turn)/(Math.PI/36)));
+  const points:ShipPose[]=[];
+  for(let i=1;i<=count;i++){
+    const heading=from.heading+turn*i/count;
+    points.push({x:from.x+(detSin(heading)-detSin(from.heading))/curvature,
+      y:from.y-(detCos(heading)-detCos(from.heading))/curvature,heading,curvature,speedLimit});
+  }
+  return points;
+}
+function brakingEntry(ship:Unit,from:ShipPose,speedLimit:number):ShipPose[] {
+  const speed=Math.max(0,ship.sailing?.speed ?? 0),acceleration=shipMotionLimits(ship).acceleration;
+  const distance=Math.max(0,(speed*speed-speedLimit*speedLimit)/(2*Math.max(1e-6,acceleration)));
+  return distance<1e-7?[]:[{x:from.x+distance*detCos(from.heading),y:from.y+distance*detSin(from.heading),heading:from.heading,curvature:0,speedLimit}];
+}
+/** Forward travel turns while advancing. Compare feasible bend speeds and
+ * acceleration from the actual headway rather than always choosing full R. */
+function voyageTime(map:SeaMap,ship:Unit,from:ShipPose,points:readonly ShipPose[]):number {
+  const acceleration=Math.max(1e-6,shipMotionLimits(ship).acceleration);
+  let time=0,speed=Math.max(0,ship.sailing?.speed ?? 0),previous=from;
+  for(const point of points){
+    const yaw=Math.abs(headingDifference(previous.heading,point.heading));
+    const distance=point.curvature?yaw/Math.abs(point.curvature):Math.hypot(point.x-previous.x,point.y-previous.y);
+    const performance=coursePerformance(ship,map,(previous.heading+point.heading)/2,{assumeTrimmed:true});
+    const cap=Math.min(Math.max(performance.targetSpeed,performance.auxiliarySpeed),point.speedLimit ?? Infinity);
+    const changingDistance=Math.abs(cap*cap-speed*speed)/(2*acceleration);
+    if(distance<=changingDistance){
+      const endSpeed=Math.sqrt(Math.max(0,speed*speed+Math.sign(cap-speed)*2*acceleration*distance));
+      time+=Math.abs(endSpeed-speed)/acceleration;speed=endSpeed;
+    }else {
+      // Once acceleration has reached the cap, the remaining leg cruises at
+      // that speed. Using one mean speed for a long leg unfairly rewards a
+      // huge departure arc simply because it starts that leg a little faster.
+      time+=Math.abs(cap-speed)/acceleration+(distance-changingDistance)/Math.max(1e-6,cap);
+      speed=cap;
+    }
+    previous=point;
+  }
+  return time;
+}
 const positiveAngle=(angle:number)=>((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
 function voyageLength(from:Point,points:readonly Point[]):number {
   let distance=0,previous=from;
@@ -434,10 +555,31 @@ function voyageCorridorClear(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[
   // exact maneuver executor even when its centerline sweep alone would fit.
   const margin=shipProfile(ship)!.length*.1;
   for(const side of [-1,1]){
-    const offset=(point:ShipPose):ShipPose=>({...point,x:point.x-side*margin*detSin(point.heading),y:point.y+side*margin*detCos(point.heading)});
+    const offset=(point:ShipPose):ShipPose=>({...point,x:point.x-side*margin*detSin(point.heading),y:point.y+side*margin*detCos(point.heading),
+      ...(point.curvature?{curvature:point.curvature/(1-side*margin*point.curvature)}:{})});
     if(!connectorClear(map,ship,offset(from),points.map(offset),traffic))return false;
   }
   return true;
+}
+/** Round a queued course change before its intersection. The current leg
+ * must already be aligned; otherwise the ordinary voyage connector owns the
+ * approach. All remaining legs and the complete turn have tracking room. */
+export function roundVoyageCorner(map:SeaMap,ship:Unit,from:ShipPose,corner:Point,next:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean=()=>true):ShipPose[]|undefined {
+  const incoming=Math.atan2(corner.y-from.y,corner.x-from.x),outgoing=Math.atan2(next.y-corner.y,next.x-corner.x);
+  const turn=headingDifference(incoming,outgoing),before=Math.hypot(corner.x-from.x,corner.y-from.y),after=Math.hypot(next.x-corner.x,next.y-corner.y);
+  if(Math.abs(headingDifference(from.heading,incoming))>.01 || Math.abs(turn)<.01 || Math.abs(turn)>Math.PI-.1 || shipMotionLimits(ship).turnRate<=1e-7)return;
+  let best:ShipPose[]|undefined,bestCost=Infinity;
+  for(const radius of voyageRadii(ship)){
+    const setback=radius*Math.tan(Math.abs(turn)/2),speedLimit=curveSpeedLimit(ship,radius);
+    const braking=brakingEntry(ship,from,speedLimit),brakingLength=braking.length?Math.hypot(braking[0]!.x-from.x,braking[0]!.y-from.y):0;
+    if(setback+brakingLength+1>=before || setback+1>=after)continue;
+    const entry:ShipPose={x:corner.x-setback*detCos(incoming),y:corner.y-setback*detSin(incoming),heading:incoming,curvature:0,speedLimit};
+    const points=[entry,...circleArc(entry,outgoing,radius,speedLimit),{...next,heading:outgoing,curvature:0}];
+    const cost=voyageTime(map,ship,from,points);
+    if(cost>=bestCost || !voyageCorridorClear(map,ship,from,points,traffic))continue;
+    best=points;bestCost=cost;
+  }
+  return best;
 }
 /** Forward circle followed by its tangent to a free-heading destination.
  * Each small reference segment is swept with its changing hull orientation;
@@ -448,12 +590,11 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
   const direction=Math.atan2(dy,dx),error=headingDifference(from.heading,direction);
   if(Math.abs(error)<1e-7){const direct=[{...goal,heading:from.heading}];return connectorClear(map,ship,from,direct,traffic)?direct:undefined;}
   if(shipMotionLimits(ship).turnRate<=1e-7)return;
-  const minimum=shipProfile(ship)!.length*.65,nominal=voyageTurnRadius(ship);
-  const radii=[...new Set([nominal,Math.max(minimum,nominal*.7),minimum])];
-  for(const radius of radii){
-    let best:ShipPose[]|undefined,bestCost=Infinity;
+  let best:ShipPose[]|undefined,bestCost=Infinity;
+  for(const radius of voyageRadii(ship)){
+    const speedLimit=curveSpeedLimit(ship,radius),lead=brakingEntry(ship,from,speedLimit),entry=lead.at(-1) ?? from;
     for(const side of [error<0?-1:1,error<0?1:-1]){
-      const center={x:from.x-side*radius*detSin(from.heading),y:from.y+side*radius*detCos(from.heading)};
+      const center={x:entry.x-side*radius*detSin(entry.heading),y:entry.y+side*radius*detCos(entry.heading)};
       const gx=goal.x-center.x,gy=goal.y-center.y,distance=Math.hypot(gx,gy);
       if(distance<radius+1e-7)continue;
       const radial=Math.atan2(gy,gx)-side*Math.acos(Math.min(1,radius/distance));
@@ -461,22 +602,15 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
       // A near-full circle is a berthing maneuver; it is not a useful route to
       // a nearby point and would look like orbiting a moving target.
       if(turn>Math.PI*1.5)continue;
-      const count=Math.max(1,Math.ceil(turn/(Math.PI/18))),points:ShipPose[]=[];
-      for(let i=1;i<=count;i++){
-        const angle=from.heading+side*turn*i/count;
-        points.push({x:center.x+side*radius*detSin(angle),y:center.y-side*radius*detCos(angle),heading:angle});
-      }
+      const points:ShipPose[]=[...lead,...signedCircleArc(entry,side*turn,radius,speedLimit)];
       const tangent=points.at(-1)!;
-      if(Math.hypot(goal.x-tangent.x,goal.y-tangent.y)>1e-7)points.push({...goal,heading:tangent.heading});
-      else points[points.length-1]={...goal,heading:tangent.heading};
-      const cost=voyageLength(from,points);
+      if(Math.hypot(goal.x-tangent.x,goal.y-tangent.y)>1e-7)points.push({...goal,heading:tangent.heading,curvature:0});
+      const cost=voyageTime(map,ship,from,points);
       if(cost>=bestCost-1e-7 || !voyageCorridorClear(map,ship,from,points,traffic))continue;
       best=points;bestCost=cost;
     }
-    // Keep normal cruising room where possible. Only tighten the turn when
-    // both sides of that circle are obstructed, and let guidance slow down.
-    if(best)return best;
   }
+  return best;
 }
 function simplifyVoyageReference(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[],traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[] {
   let previous=from;

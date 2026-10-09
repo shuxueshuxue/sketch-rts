@@ -1,0 +1,25 @@
+{
+  "baseline": "e721bd4",
+  "beforeSha256": "850021583a8a18873e60be1dc1db81ba9274e667b6623d94c328ef42fc9bea53",
+  "afterSha256": "2f391544af2539abfb5647437f4d9967ab8708456b137a66a0d8aac1dc5f56ed",
+  "artifactSha256": "0b08c8b1a64bab072f5f35fc8b9441e770fa348737e7a6e8f27643915ab4fcd4",
+  "bytes": 4017427,
+  "scenes": [
+    "bow-mutual-far",
+    "bow-mutual-close",
+    "crossing",
+    "upwind",
+    "battery-crossing",
+    "battery-beam",
+    "mortar-crossing",
+    "mortar-close",
+    "flame-crossing",
+    "moving-crew",
+    "channel-three-v-three",
+    "cruise-180-2200",
+    "upwind-warship-700",
+    "upwind-warship-1500",
+    "long-queued-corners",
+    "long-island-corner"
+  ]
+}
