@@ -128,7 +128,7 @@ type Mode = NonNullable<V6PolicyMemory["general"]>["mode"];
 
 export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
-  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options));
+  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), "rally");
 }
 
 export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext, intel: V6Intel): Unit[] {
@@ -137,7 +137,7 @@ export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext
   return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
 }
 
-export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
+export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, reinforcements: "rally" | "siege"): GameCommand[] {
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -161,7 +161,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const group = attackGroup(available, front, current.group ?? []);
     if (target && canTradeBases(intel, group, target)) {
       if (!current.baseTrade) recordPlay(memory, "general:baseTrade");
-      const commands = attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? marchStrength(group), options, {}, isMain(intel, target));
+      const commands = attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? marchStrength(group), options, reinforcements, {}, isMain(intel, target));
       memory.general!.baseTrade = true;
       return commands;
     }
@@ -202,7 +202,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
     const holds = strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + profile.aggression) < (facing + incoming) * RETREAT_LINE;
-    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps, isMain(intel, target)));
+    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, isMain(intel, target)));
     recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
     memory.retreatedAt = snapshot.tick;
   }
@@ -265,7 +265,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
   if (target && regrouped && ready && (maxed || (committed && (marching >= target.need || (idle && marching >= target.defended))))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : maxed && marching < target.defended ? "maxed" : "idleArmy"}`);
-    return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base)));
+    return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, reinforcements, {}, isMain(intel, target.base)));
   }
 
   if (isV7Policy(options)) {
@@ -567,9 +567,17 @@ function attackGroup(available: Unit[], front: Unit[], ids: string[]): Unit[] {
   return available.filter((unit) => ids.includes(unit.id) || distance(unit, center) <= JOIN_RANGE);
 }
 
-function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext, gaps: Record<string, number> = {}, main = false): GameCommand[] {
+function isArtillery(unit: Unit) {
+  return unit.kind === "ballista" || unit.kind === "catapult";
+}
+
+function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext, reinforcements: "rally" | "siege", gaps: Record<string, number> = {}, main = false): GameCommand[] {
   const marching = front.filter((unit) => group.includes(unit));
   const waiting = front.filter((unit) => !group.includes(unit));
+  const waitingOrders = reinforcements === "siege"
+    ? [...orderUnits(snapshot, owner, "hold", waiting.filter(isArtillery), averagePoint(group), options),
+      ...orderUnits(snapshot, owner, "hold", waiting.filter(unit => !isArtillery(unit)), rally, options)]
+    : orderUnits(snapshot, owner, "hold", waiting, rally, options);
   const pulse = main ? pulseStage(snapshot, memory, group, marching, target) : undefined;
   memory.general = {
     mode: "attack",
@@ -581,7 +589,17 @@ function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
     ...(pulse ? { stage: pulse.stage, stageSince: pulse.since } : {}),
   };
   const goal = pulse?.stage === "gather" ? pulse.point : isV8Policy(options) ? (guardingTower(target) ?? target.hall) : target.hall;
-  return [...orderUnits(snapshot, owner, "attack", marching, goal, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
+  const siege = marching.filter(isArtillery);
+  if (isV9Policy(options) && siege.length) {
+    // The faster screen advances with the guns instead of fighting an entire
+    // base while its artillery is still crossing the map.
+    const screen = marching.filter(unit => !siege.includes(unit));
+    const screenGoal = toward(averagePoint(siege), goal, GATHERED_RANGE);
+    return [...orderUnits(snapshot, owner, "attack", siege, goal, options),
+      ...orderUnits(snapshot, owner, "hold", screen, screenGoal, options, GATHERED_RANGE),
+      ...waitingOrders];
+  }
+  return [...orderUnits(snapshot, owner, "attack", marching, goal, options), ...waitingOrders];
 }
 
 // Gather out of reach until most casters can summon (or the wait runs out), then strike; a new attack gathers again.
