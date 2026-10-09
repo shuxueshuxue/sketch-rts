@@ -15,7 +15,7 @@ import { strengthOf, TOWER_STRENGTH } from "./strength";
 
 const BEATEN_POWER = 2;
 const BEATEN_WORKERS = 2;
-const DETACHMENT_MIN = 3;
+export const DETACHMENT_MIN = 3;
 const DETACHMENT_MAX = 8;
 const GUARD_RANGE = 900;
 

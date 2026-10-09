@@ -6,12 +6,12 @@ import type { Building } from "../../../shared/types";
 import { legalBuildPointNear } from "../build-layout";
 import { buildings } from "../snapshot";
 import { distance, type Point } from "../spatial";
-import { v9ExpansionMine, type V6Intel } from "../v6/intel";
+import { mineGuards, v9ExpansionMine, type V6Intel } from "../v6/intel";
 import { strengthOf } from "../v6/strength";
 import { ARRIVED } from "./march";
 
 // @@@v9-front - V9 holds its army at its front: a little way out from the hall nearest the enemy on the walk toward it, or,
-// with the main alone, out from the natural it is about to take. On a ladder map the main's one ramp comes down into the
+// with the main alone, out from the cleared natural it is about to take. On a ladder map the main's one ramp comes down into the
 // natural's clearing, so an army there stands in the way of anything walking at either hall. The old rally, a step from
 // the main straight toward the enemies' halls, left the army on the plateau while V8's ravagers razed V9's rising natural
 // 880 away and its army never came (russetBrook, v5-extra-2, 4:54).
@@ -35,7 +35,7 @@ export function v9FrontPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6I
   let anchor: Point = halls.reduce<Point>((best, hall) => (walk(hall) < walk(best) ? hall : best), intel.home);
   if (halls.length <= 1) {
     const natural = v9ExpansionMine(snapshot, intel);
-    if (natural && distance(natural, intel.home) <= NATURAL_REACH) anchor = natural;
+    if (natural && mineGuards(snapshot, natural).length === 0 && distance(natural, intel.home) <= NATURAL_REACH) anchor = natural;
   }
   // The front stands on the walk from the main toward the enemy, FRONT_STEP past the point of it nearest the anchor, or
   // the nearest point to that of the walk that no creep stands near (CREEP_CLEARANCE): a front beside the natural's guard
