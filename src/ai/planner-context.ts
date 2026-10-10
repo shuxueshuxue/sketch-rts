@@ -4,6 +4,7 @@ import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
+import { setBuildingBodies } from "../shared/terrain";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -39,6 +40,7 @@ export function createAiMemoryProvider(memories: Record<PlayerId, AiPolicyMemory
 export function planAiOwnerCommandEntries<Source extends string = string>(snapshot: GameSnapshot, request: AiOwnerPlannerRequest<Source>, options: AiOwnerPlannerOptions = {}): CommandFrameEntry<Source>[] {
   const owner = request.playerId;
   if (!snapshot.players[owner]) return [];
+  setBuildingBodies(snapshot.map, [...snapshot.buildings, ...(snapshot.obstacles ?? [])]);
   const { memoryProvider, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);

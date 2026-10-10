@@ -1028,11 +1028,20 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // round bodies (see @@@building-body). Ships keep the sea's own routing: no building stands in deep water.
 type Body = { x: number; y: number; radius: number };
 // `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
-type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; revision:number };
+type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; revision:number; bodies: Body[]; shared: boolean };
 const overlays = new WeakMap<object, Overlay>();
 let nextGroundRevision=1;
 /** Identity of the current building obstruction field, for geometry-only caches. */
 export function groundRevision(map:object){return overlays.get(map)?.revision ?? 0;}
+
+/** A snapshot reads this geometry; later construction must leave that snapshot's field intact. */
+export function shareBuildingBodies(source: object, target: object) {
+  const overlay = overlays.get(source);
+  if (overlay) {
+    overlay.shared = true;
+    overlays.set(target, overlay);
+  }
+}
 
 export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
   const terrain = map.terrain;
@@ -1041,13 +1050,18 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
     overlays.delete(map);
     return;
   }
+  const current = overlays.get(map);
+  if (current?.terrain === terrain && current.bodies.length === bodies.length
+    && bodies.every((body, index) => body.x === current.bodies[index]!.x
+      && body.y === current.bodies[index]!.y && body.radius === current.bodies[index]!.radius)) return;
   const ground = runtime(terrain, "land");
-  let overlay = overlays.get(map);
-  if (!overlay || overlay.terrain !== terrain) {
+  let overlay = current;
+  if (!overlay || overlay.terrain !== terrain || overlay.shared) {
     const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++ };
+    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
     overlays.set(map, overlay);
   }
+  overlay.bodies = bodies.map(({ x, y, radius }) => ({ x, y, radius }));
   const state = overlay.state;
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);

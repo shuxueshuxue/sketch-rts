@@ -106,7 +106,9 @@ export const mountedTasks: AiScript = {
           && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options))
           && (distance(unit, rider) < THREAT_RANGE || objective.kind === 'camp' && objective.ids.includes(unit.id)));
         const pursuers = local.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
-          && distance(rider, unit) <= rider.attackRange).map(target => ({ target, point: target }));
+          && (distance(rider, unit) <= rider.attackRange
+            || (unit.order.type === 'attack' || unit.order.type === 'attackMove') && unit.order.targetId === rider.id))
+          .map(target => ({ target, point: target }));
         const inRange = workers.filter(choice => distance(rider, choice.target) <= rider.attackRange);
         const choices = objective.kind === 'camp' ? workers : inRange.length ? inRange : pursuers.length ? pursuers : workers;
         choices.sort((a, b) => (objective.kind === 'raid'
