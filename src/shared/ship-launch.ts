@@ -1,21 +1,25 @@
 import { detCos, detSin } from './det-math';
 import { UNIT_DEFS } from './catalog';
 import { createUnit } from './map';
-import { polygonRadius } from './navigation-math';
+import { convexHull, polygonPlanes, polygonRadius, polygonTouchesCell } from './navigation-math';
+import { productionRallyPoint } from './production-spawn';
 import { shipBodyClearAtPose } from './ship-collisions';
 import { shipProfile, shipScale } from './ship-geometry';
-import { hullFits, type ShipPose } from './ship-navigation';
-import { CELL_GROUND, footprintHalf } from './terrain';
+import { hullFits, hullPassageClear, type ShipPose } from './ship-navigation';
+import { CELL_GROUND, footprintHalf, sameGround, steerPoint, walkableGoal } from './terrain';
 import type { Building, GameMap, GameSnapshot, Obstacle, Unit, UnitKind } from './types';
 
-type Harbor = Pick<GameSnapshot, 'map' | 'units' | 'buildings' | 'obstacles'>;
+type Harbor = Pick<GameSnapshot, 'map' | 'units' | 'buildings' | 'obstacles'> & Partial<Pick<GameSnapshot, 'resources'>>;
 type Body = Unit | Building | Obstacle;
 type Berths = {
   geometry: string;
   terrain: Harbor['map']['terrain'];
   cells: string | undefined;
   poses: ShipPose[];
+  entries: Map<ShipPose, ShipPose>;
   range: number;
+  rally?: string;
+  ranked?: ShipPose[];
   bodies?: string;
   result?: ShipPose | undefined;
 };
@@ -56,10 +60,10 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
   const geometry = `${dock.x}:${dock.y}:${dock.radius}:${ship.kind}:${shipScale(ship)}:${snapshot.map.width}:${snapshot.map.height}:${terrain?.cell}:${terrain?.cols}:${terrain?.rows}`;
   let cached = yards.get(dock);
   if (!cached || cached.geometry !== geometry || cached.terrain !== terrain || cached.cells !== terrain?.cells) {
-    const poses = harborPoses(snapshot, dock, ship);
+    const {poses,entries} = harborPoses(snapshot, dock, ship);
     const radius = polygonRadius(profile.hull);
     const range = poses.reduce((maximum, pose) => Math.max(maximum, Math.hypot(pose.x - dock.x, pose.y - dock.y) + radius), 0);
-    cached = { geometry, terrain, cells: terrain?.cells, poses, range };
+    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, range };
     yards.set(dock, cached);
   }
   if (!cached.poses.length) return undefined;
@@ -71,10 +75,31 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
     if (Math.hypot(body.x - dock.x, body.y - dock.y) > cached.range + radius) continue;
     bodies.push(body);
   }
-  const signature = bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${'order' in body ? `${body.bodyRadius}:${shipProfile(body) ? shipScale(body) : ''}:${body.sailing?.heading ?? 0}` : ''}`).join('|');
+  const aim=productionRallyPoint(snapshot,dock);
+  const signature = `${aim.x}:${aim.y}:${bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${'order' in body ? `${body.bodyRadius}:${shipProfile(body) ? shipScale(body) : ''}:${body.sailing?.heading ?? 0}` : ''}`).join('|')}`;
   if (cached.bodies !== signature) {
     cached.bodies = signature;
-    cached.result = cached.poses.find(pose => shipBodyClearAtPose(snapshot.map, ship, pose, bodies));
+    const goal=walkableGoal(snapshot.map,aim.x,aim.y,'sea');
+    // Prefer this pier's water that reaches the rally, then its nearest local
+    // exit and a bow facing the route's first water leg. The angular cost
+    // matters even when Euclidean distances differ slightly: a broadside
+    // berth hugging shore must not win over an aligned departure and force a
+    // slow turn away from land. This changes neither the harbor halo
+    // nor the connected-shore checks: a rally can never launch across land.
+    const rally=`${aim.x}:${aim.y}`;
+    if(cached.rally!==rally || !cached.ranked) {
+      cached.rally=rally;
+      const ordered=cached.poses.map(pose=>{
+        const exit=Math.hypot(pose.x-dock.x,pose.y-dock.y), leg=steerPoint(snapshot.map,pose,goal,'sea');
+        const angle=Math.atan2(leg.y-pose.y,leg.x-pose.x)-pose.heading;
+        const difference=Math.abs(Math.atan2(detSin(angle),detCos(angle)));
+        return {pose,reachable:sameGround(snapshot.map,pose,goal,'sea'),travel:exit+Math.hypot(pose.x-aim.x,pose.y-aim.y)+profile.length*difference,difference,exit};
+      }).sort((a,b)=>Number(b.reachable)-Number(a.reachable) || a.travel-b.travel || a.difference-b.difference || a.exit-b.exit);
+      const reachable=ordered.some(candidate=>candidate.reachable);
+      cached.ranked=ordered.filter(candidate=>!reachable || candidate.reachable).map(candidate=>candidate.pose);
+    }
+    cached.result = cached.ranked.find(pose=>shipBodyClearAtPose(snapshot.map,ship,pose,bodies)
+      && launchPathClear(snapshot,ship,cached!.entries.get(pose)!,pose,bodies));
   }
   return cached.result ? { ...cached.result } : undefined;
 }
@@ -83,13 +108,31 @@ function solidHalf(snapshot: Harbor, body: Building | Obstacle) {
   return snapshot.map.terrain ? footprintHalf(body.radius, snapshot.map.terrain.cell) : body.radius;
 }
 
+/** The outer rows remain connected to the physical pier: a free hull beyond
+ * a neighboring fixed gate/building is not a valid slideway. Dynamic traffic
+ * is checked at the actual berth; it does not add static shoreline probes. */
+function launchPathClear(snapshot:Harbor, ship:Unit, entry:ShipPose, pose:ShipPose, bodies:readonly Body[]) {
+  if(entry.x===pose.x && entry.y===pose.y)return true;
+  const c=detCos(pose.heading),s=detSin(pose.heading),local=shipProfile(ship)!.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));
+  const envelope=convexHull([...local.map(p=>({x:p.x+entry.x,y:p.y+entry.y})),...local.map(p=>({x:p.x+pose.x,y:p.y+pose.y}))]);
+  const planes=polygonPlanes(envelope);
+  const left=Math.min(...envelope.map(p=>p.x)),right=Math.max(...envelope.map(p=>p.x)),top=Math.min(...envelope.map(p=>p.y)),bottom=Math.max(...envelope.map(p=>p.y));
+  return bodies.every(body=>{
+    if('order' in body)return true;
+    const half=solidHalf(snapshot,body);
+    if(right<=body.x-half || left>=body.x+half || bottom<=body.y-half || top>=body.y+half)return true;
+    return !polygonTouchesCell(planes,body.x-half,body.y-half,2*half);
+  });
+}
+
 /** The hull support on each face determines its center, so even a broadside
  * carrier clears the square pier without replacing its hull with a circle. */
-function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): ShipPose[] {
+function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose>} {
   const map = snapshot.map, profile = shipProfile(ship)!, half = solidHalf(snapshot, dock);
   const connected = harborWater(map, dock, half + polygonRadius(profile.hull) + 64 + (map.terrain?.cell ?? 0));
   const offsets = [0, -half / 2, half / 2, -half, half];
   const candidates: ShipPose[] = [];
+  const entries=new Map<ShipPose,ShipPose>();
   for (let direction = 0; direction < 16; direction++) {
     const heading = direction * Math.PI / 8, c = detCos(heading), s = detSin(heading);
     const hull = profile.hull.map(point => ({ x: point.x * c - point.y * s, y: point.x * s + point.y * c }));
@@ -109,12 +152,15 @@ function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): ShipPose[] {
           : face === 2 ? { x: dock.x + offset, y: dock.y + half - top + gap }
           : { x: dock.x + offset, y: dock.y - half - bottom - gap };
         const pose = { ...point, heading };
-        if (hullFits(map, ship, pose) && connected(anchor, point)) candidates.push(pose);
+        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading};
+        if (hullFits(map, ship, pose) && connected(anchor, point) && (!outward || hullPassageClear(map,ship,entry,pose))) {
+          candidates.push(pose); entries.set(pose,entry);
+        }
       }
     }
   }
   // Equal choices retain authored direction/face/offset order on every run.
-  return candidates.sort((a, b) => Math.hypot(a.x - dock.x, a.y - dock.y) - Math.hypot(b.x - dock.x, b.y - dock.y));
+  return {poses:candidates.sort((a, b) => Math.hypot(a.x - dock.x, a.y - dock.y) - Math.hypot(b.x - dock.x, b.y - dock.y)),entries};
 }
 
 /** Only the small harbor halo is labeled. Read the current cells directly so

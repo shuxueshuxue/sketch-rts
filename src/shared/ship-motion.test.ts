@@ -22,6 +22,16 @@ describe('engine-owned ship motion',()=>{
     for(let i=0;i<8;i++)advanceShip(ship,game.map,game.units,{surge:-999});
     expect(800-ship.x).toBeCloseTo(perTick(limits.reverseSpeed),6);expect(ship.y).toBe(800);
   });
+  it('replenishes the retained yaw, travel and astern budgets only at the next frame',()=>{
+    const game=scene(),ship=game.spawnUnit('player','transport',800,800),limits=shipMotionLimits(ship);
+    for(let tick=0;tick<3;tick++){
+      beginShipMotionFrame(game.units,game.map);
+      const start={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
+      for(let i=0;i<8;i++)advanceShip(ship,game.map,game.units,{surge:-999,yaw:999});
+      expect(Math.abs(headingDifference(start.heading,ship.sailing!.heading))).toBeCloseTo(perTick(limits.turnRate),6);
+      expect(Math.hypot(ship.x-start.x,ship.y-start.y)).toBeCloseTo(perTick(limits.reverseSpeed),6);
+    }
+  });
   for(const terrain of [false,true])it(`cannot strafe under changing movement commands, terrain=${terrain}`,()=>{
     const game=scene(terrain),ship=game.spawnUnit('player','transport',800,800);
     for(let tick=0;tick<seconds(12);tick++){

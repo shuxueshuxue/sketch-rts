@@ -38,6 +38,8 @@
 .game-mode-switch span { display:grid; place-items:center; min-height:34px; padding:0 8px; border:1px solid var(--game-edge); background:var(--game-field); color:var(--game-muted); white-space:nowrap; }
 .game-mode-switch input:checked + span { background:var(--game-button); color:var(--game-button-ink); border-color:var(--game-brass); box-shadow:var(--game-inset); }
 .game-mode-switch input:focus-visible + span { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
+.game-mode-switch input:disabled + span { opacity:.45; cursor:default; }
+.room-mode-note { margin:0; color:var(--game-muted); font-size:12px; line-height:1.4; }
 .match-dossier .map-detail { display:grid; grid-template-rows:minmax(0,1fr) auto; min-height:0; gap:16px; }
 .match-dossier .map-info { padding:0; border:0; background:none; box-shadow:none; gap:16px; }
 .match-dossier .map-info-name { font-size:22px; }

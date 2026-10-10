@@ -7,6 +7,11 @@ export type HudIdentity = {
   key: string; name: string; caption: string; detail: string; art: HudArt;
   health?: { current: number; max: number };
   inspection?: { name: string; detail: string; art: HudArt };
+  statuses?: HudStatus[];
+};
+export type HudStatus = {
+  key: string; name: string; polarity: 'buff' | 'debuff' | 'neutral'; iconUrl: string; badge: string;
+  accessibleLabel: string; decorate: (element: HTMLElement) => void;
 };
 export type HudGroup = {
   key: string; name: string; count: number; focused: boolean; art: HudArt;
@@ -44,6 +49,8 @@ export class BattleHudSelection {
   private readonly healthFill = document.createElement("span");
   private readonly healthText = text("hud-health-text");
   private readonly grid = document.createElement("div");
+  private readonly statusBar = document.createElement("div");
+  private statuses = new Map<string, { element: HTMLDivElement; image: HTMLImageElement; badge: HTMLSpanElement }>();
   private readonly inspection = document.createElement("div");
   private readonly inspectionArt = canvas("hud-inspection-art");
   private readonly inspectionName = text("hud-inspection-name");
@@ -63,13 +70,14 @@ export class BattleHudSelection {
     copy.append(this.caption, this.name, this.health, this.detail);
     this.identity.append(this.portrait, copy);
     this.grid.className = "hud-roster"; this.grid.tabIndex = 0;
+    this.statusBar.className = 'hud-statuses';
     this.grid.setAttribute("aria-label", groupLabel);
     this.inspection.className = "hud-inspection";
     const itemCopy = document.createElement("div");
     itemCopy.append(this.inspectionName, this.inspectionDetail);
     this.inspection.append(this.inspectionArt, itemCopy);
     this.cargo.className = "hud-cargo";
-    root.replaceChildren(this.identity, this.grid, this.cargo, this.inspection, this.empty);
+    root.replaceChildren(this.identity, this.statusBar, this.grid, this.cargo, this.inspection, this.empty);
   }
 
   render(identity: HudIdentity | undefined, groups: HudGroup[], emptyLabel: string, cargo: HudCargo[] = []) {
@@ -79,6 +87,7 @@ export class BattleHudSelection {
     this.grid.hidden = groups.length < 2;
     this.inspection.hidden = !identity?.inspection;
     this.root.dataset.mode = groups.length > 1 ? "roster" : "subject";
+    this.renderStatuses(identity?.statuses ?? []);
     this.renderCargo(cargo);
     if (identity) {
       this.root.dataset.subject = identity.key;
@@ -131,6 +140,29 @@ export class BattleHudSelection {
       else if (card && card.offsetTop + card.offsetHeight > this.grid.scrollTop + this.grid.clientHeight)
         this.grid.scrollTop = card.offsetTop + card.offsetHeight - this.grid.clientHeight;
     }
+  }
+
+  private renderStatuses(statuses: HudStatus[]) {
+    this.statusBar.hidden = statuses.length === 0;
+    const live = new Set(statuses.map(status => status.key));
+    for (const [key, entry] of this.statuses) if (!live.has(key)) { entry.element.remove(); this.statuses.delete(key); }
+    statuses.forEach((status, index) => {
+      let entry = this.statuses.get(status.key);
+      if (!entry) {
+        const element = document.createElement('div'); element.className = 'hud-status'; element.tabIndex = 0;
+        element.setAttribute('role', 'img'); element.dataset.unitStatus = status.key;
+        const image = document.createElement('img'); image.className = 'hud-status-art'; image.alt = ''; image.setAttribute('aria-hidden', 'true'); image.decoding = 'async';
+        const badge = text('hud-status-time'); element.append(image, badge);
+        entry = { element, image, badge }; this.statuses.set(status.key, entry);
+      }
+      const { element, image, badge } = entry;
+      if (image.getAttribute('src') !== status.iconUrl) image.src = status.iconUrl;
+      if (badge.textContent !== status.badge) badge.textContent = status.badge;
+      element.dataset.polarity = status.polarity;
+      element.setAttribute('aria-label', status.accessibleLabel);
+      status.decorate(element);
+      if (this.statusBar.children[index] !== element) this.statusBar.insertBefore(element, this.statusBar.children[index] ?? null);
+    });
   }
 
   private renderCargo(ships: HudCargo[]) {

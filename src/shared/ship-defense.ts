@@ -23,8 +23,9 @@ export function combatHull(ship: Unit): boolean {
  * the player's order. Hold and every explicit task remain movement authorities. */
 export function prepareShipDefenseFrame(snapshot: DefenseSnapshot, nearby: NearbyEnemyShips, held: ReadonlySet<string> = new Set()): ShipDefenseFrame {
   const result: ShipDefenseFrame = new Map();
-  const ships = shipsIn(snapshot.units), byId = new Map(ships.map(ship => [ship.id, ship]));
+  const ships = shipsIn(snapshot.units);
   if (!ships.length) return result;
+  const byId = new Map(ships.map(ship => [ship.id, ship]));
   const reserved = new Set(held);
   const claims = new Map<string, Unit['owner'][]>();
   for (const crew of snapshot.units) {

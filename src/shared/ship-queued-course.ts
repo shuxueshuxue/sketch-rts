@@ -5,6 +5,7 @@ import { shipMotionLimits } from './ship-handling';
 import { headingDifference, hullPassageClear, roundVoyageCorner, type ShipPose } from './ship-navigation';
 import { coursePerformance } from './ship-wind';
 import { windAt } from './wind-field';
+import { tryAdmitShipPlan, tryConsumeShipPlan } from './ship-planning-budget';
 import type { GameMap, Unit, UnitOrder } from './types';
 
 type Move = Extract<UnitOrder, { type: 'move' }>;
@@ -21,9 +22,30 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
   const compatible = plainMove(current) && plainMove(next) && !!current.avoidCombat === !!next.avoidCombat;
   const wind = windAt(map, ship);
   if (!compatible || shipMotionLimits(ship).speed <= 0 || route?.queuedX !== undefined
-    && (route.goalX !== current.x || route.goalY !== current.y || route.queuedX !== next.x || route.queuedY !== next.y || route.windKey !== wind.key)) {
+    && (route.goalX !== current.x || route.goalY !== current.y || route.queuedX !== next.x || route.queuedY !== next.y)) {
     if (route?.queuedX !== undefined) motion.route = undefined;
     return false;
+  }
+  if (route?.queuedX !== undefined && route.windKey !== wind.key) {
+    const needsBeat = route.points.some(point => {
+      const performance = coursePerformance(ship, map, point.heading, { assumeTrimmed: true });
+      return !performance.calm && (performance.noGo || performance.targetSpeed < performance.auxiliarySpeed);
+    });
+    // Weather changes propulsion immediately, but a clear sailing course
+    // still owns its already swept corner. Returning to the skipped vertex
+    // would undo the turn and send the hull astern for no navigation reason.
+    // Before entering the bend an adverse shift can use normal tack planning;
+    // inside it finish the finite turn on maneuvering assistance, then plan
+    // the outgoing voyage from the real exit instead of the old intersection.
+    if (needsBeat && !route.points[0]?.curvature) {
+      if (tryAdmitShipPlan(ship)) {
+        motion.route = undefined;
+        return false;
+      }
+    } else {
+      route.windKey = wind.key;
+      route.windTried = !needsBeat;
+    }
   }
   if (route?.queuedX === undefined) {
     if (route?.partial || route?.points.some(point => point.exact || point.pivot || point.tack)
@@ -37,6 +59,12 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
       return !performance.calm && (performance.noGo || performance.targetSpeed < performance.auxiliarySpeed);
     })) return false;
     const traffic = shipTraffic(ship, units, Infinity);
+    const straightCourse=Math.abs(headingDifference(from.heading,headings[0]!))<.01
+      && Math.abs(headingDifference(headings[0]!,headings[1]!))<.01;
+    // Without a committed route a failed corner preview must still allow the
+    // coast planner to find the first usable corridor. Once underway, the
+    // existing route carries the hull while this preview spends its stage.
+    if(!straightCourse && !(route ? tryConsumeShipPlan(ship) : tryAdmitShipPlan(ship)))return false;
     let points = roundVoyageCorner(map, ship, from, current, next, traffic);
     let handoffIndex = points ? points.length - 2 : -1;
     // A mark on the same straight course is also a passage, with no reason
@@ -53,6 +81,7 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
       }
     }
     if (!points) return false;
+    delete motion.planningRequestedAtTick;delete motion.planningLastRequestedAtTick;
     route = motion.route = {
       goalX: current.x, goalY: current.y, queuedX: next.x, queuedY: next.y,
       points: points.map((point, index) => ({ ...point, ...(index === handoffIndex ? { queuedTurn: true } : {}) })),
@@ -79,6 +108,7 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
     route.goalX = next.x; route.goalY = next.y;
     delete route.queuedX; delete route.queuedY; delete route.queuedPassed;
     delete ship.arrivedAt;
+    if (!route.windTried) motion.route = undefined;
   }
   return true;
 }

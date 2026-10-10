@@ -1,0 +1,107 @@
+{
+  "kind": "Cold-start causal diagnostic, not the final nine-scene performance benchmark",
+  "sourceCommitAtCapture": "87a792b0e858a6eae3054eb0bca10fd0cbe1e717",
+  "sourceHasUncommittedChanges": true,
+  "nodeVersion": "20.20.2",
+  "fixture": "navalStressScenes[0]: moving-broadside-fleets-six-v-six",
+  "fixtureFile": "scripts/naval-runtime-stress.ts",
+  "fixtureSha256": "77face8bb6d2d158687d98ac2c74715cbf1f7f2d29c0e0c40a0cf589680f7fc3",
+  "driverSha256": "2757fd0d4ef2a81b6c02205eb52c898f4e4c2a22a729e685c78c955c0eb57af8",
+  "bundleBuilderSha256": "3b34776f4bf9c52ad1ca9e60d436b2289338a5e443e93065b5f2066b2d3102ad",
+  "commonSourceManifestSha256": "dbbdd0f18f5b45341903d1dccc72d8421e5d315d597e90602311d04018640075",
+  "selectedCommonSourceSha256": {
+    "scripts/naval-runtime-stress.ts": "77face8bb6d2d158687d98ac2c74715cbf1f7f2d29c0e0c40a0cf589680f7fc3",
+    "src/shared/ship-pursuit.ts": "6cf113b58066946077f36166a852dd4109caed8b59aebcc880ebfd9fcc0d11b6",
+    "src/shared/ship-planning-budget.ts": "9d25baf916cbf43c08aea0ee06ea9c1dfd051a0dd5b4768789d58b7bfb87a213",
+    "src/shared/sailing.ts": "779eaf714094fc0fc6113ab01a5dbc0b8258ea7fd3ed413b7e3ab40d89ca650a",
+    "src/shared/ship-guidance.ts": "b654fe02a2e006f9f20b5287d9955c3d78690b3e7b66fc2f35d42228af35dd21",
+    "src/shared/ship-navigation.ts": "b24fb48678f76ffc6e6c8b9a730b89a5ad51f0b275fe2d604e362d367f15210c",
+    "src/shared/ship-avoidance.ts": "5f81678644e7e34944679c308e324883ecb9f9a3392c0d7c2d379692c3cbe889",
+    "src/shared/ship-equipment.ts": "ccf57fbcf24cc812774b7227c6f502afbd050364e6e8ca0b75bb4cfa9ad48c76",
+    "src/shared/ship-fire-control.ts": "c9832b3b0159685608583938330c62251d0bbf806793e44ba3cdaba09094c10d"
+  },
+  "comparison": "Frozen common source; before removes only the final ,()=>tryAdmitShipPlan(ship) argument from the shipPursuitGoal call in sim.ts. After retains it.",
+  "simSourceSha256": {
+    "before": "125d0637f68c1b47b0dc479fe80f5332300f643a871adc5e6581efc477e23e74",
+    "after": "3b101a1a479902bd3b2254ad1f81e0dbcf2ebf1552251bb5efd1e16dade93dd3"
+  },
+  "sampling": {
+    "ticksPerColdProcess": 2,
+    "processesPerVariant": 4,
+    "order": [
+      "before",
+      "after",
+      "after",
+      "before",
+      "before",
+      "after",
+      "after",
+      "before"
+    ],
+    "timedOperation": "stepGame only; setup and checksums outside the timer"
+  },
+  "summary": {
+    "before": {
+      "firstMsMedian": 127.7129385,
+      "secondMsMedian": 37.7890965,
+      "maximumMs": 142.12856399999998,
+      "allFirstMs": [
+        142.12856399999998,
+        112.062435,
+        122.35806799999999,
+        133.067809
+      ],
+      "allSecondMs": [
+        40.486237999999986,
+        37.744922,
+        37.833270999999996,
+        36.55078500000002
+      ]
+    },
+    "after": {
+      "firstMsMedian": 31.336653499999997,
+      "secondMsMedian": 15.31580850000001,
+      "maximumMs": 34.147243,
+      "allFirstMs": [
+        34.147243,
+        31.433515999999997,
+        31.239790999999997,
+        30.495368
+      ],
+      "allSecondMs": [
+        18.265274000000005,
+        12.366343000000015,
+        18.426896,
+        11.879135000000005
+      ]
+    }
+  },
+  "checksums": {
+    "before": "dada9650",
+    "after": "5d4224bd",
+    "stableWithinEachVariant": true,
+    "variantsExpectedToDiffer": true,
+    "reason": "Admission changes deterministic planning order and pending saved state."
+  },
+  "profilerDiagnostic": {
+    "samplingIntervalMicroseconds": 100,
+    "ticks": 2,
+    "inclusiveMs": {
+      "before": {
+        "stepGame": 160.97399999999925,
+        "armedStation": 47.02000000000019,
+        "bestFiringHeading": 46.46900000000019,
+        "planShipRoute": 37.66100000000001,
+        "canFireFrom": 51.10000000000021
+      },
+      "after": {
+        "stepGame": 45.94099999999995,
+        "armedStation": 7.919000000000001,
+        "bestFiringHeading": 8.242,
+        "planShipRoute": 0,
+        "canFireFrom": 11.125000000000004
+      }
+    }
+  },
+  "scope": "All eight measured steps with admission were below 50ms. This is a cold-start sample only; no claim is made that every frame or scenario is below 50ms. Final gameplay and nine-scene timings require the final combined source."
+}

@@ -1,0 +1,205 @@
+{
+  "method": "Real main.ts static match entered through menu; original map terrain and buildings retained; fixture spawns legal land units and a hullFits transport; original renderer and selection handlers unchanged; passive draw/pick inspection chooses a visible pixel; Playwright native mouse and Shift keyboard events drive selection; 2D disables WebGL2 context to exercise real Canvas fallback; 3D uses actual WebGL/SwiftShader; 100ms render throttle is for UI validation only, not a performance measurement.",
+  "modes": [
+    {
+      "mode": "3D",
+      "actual3D": true,
+      "checksPassed": 12,
+      "errors": [],
+      "checks": [
+        {
+          "case": "plain click",
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "Shift adds unselected",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "Shift removes only clicked",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "native Shift double-click toggles the same unit twice",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "plain click still replaces",
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "foreign inspection",
+          "selectedIds": [
+            "unit-enemy-footman-1002"
+          ],
+          "focusedId": "unit-enemy-footman-1002"
+        },
+        {
+          "case": "Shift deselects inspected enemy",
+          "selectedIds": [],
+          "focusedId": null
+        },
+        {
+          "case": "Shift box still adds existing and new units",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "single deselection after box",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "plain box still selects both",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "select visible crew on selected hull",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-transport-1003",
+            "unit-player-worker-1004"
+          ],
+          "focusedId": "unit-player-worker-1004"
+        },
+        {
+          "case": "Shift removes visible crew and retains other selections",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-transport-1003"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        }
+      ],
+      "screenshot": "shift-selection-3d.png"
+    },
+    {
+      "mode": "2D",
+      "actual3D": false,
+      "checksPassed": 12,
+      "errors": [],
+      "checks": [
+        {
+          "case": "plain click",
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "Shift adds unselected",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "Shift removes only clicked",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "native Shift double-click toggles the same unit twice",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "plain click still replaces",
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "foreign inspection",
+          "selectedIds": [
+            "unit-enemy-footman-1002"
+          ],
+          "focusedId": "unit-enemy-footman-1002"
+        },
+        {
+          "case": "Shift deselects inspected enemy",
+          "selectedIds": [],
+          "focusedId": null
+        },
+        {
+          "case": "Shift box still adds existing and new units",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "single deselection after box",
+          "selectedIds": [
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-footman-1001"
+        },
+        {
+          "case": "plain box still selects both",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1001"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        },
+        {
+          "case": "select visible crew on selected hull",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-transport-1003",
+            "unit-player-worker-1004"
+          ],
+          "focusedId": "unit-player-worker-1004"
+        },
+        {
+          "case": "Shift removes visible crew and retains other selections",
+          "selectedIds": [
+            "unit-player-worker-1000",
+            "unit-player-transport-1003"
+          ],
+          "focusedId": "unit-player-worker-1000"
+        }
+      ],
+      "screenshot": "shift-selection-2d.png"
+    }
+  ],
+  "selectionSourceCommit": "5a496d5ea54d12325c8a087825149df039d5477f",
+  "selectionSourceSha256": {
+    "src/client/main.ts": "b25d3700900717f051127a1539c08fb2ed80feaf5d7fea5d038f36ddf44c6729",
+    "src/client/selection-controls.ts": "26fb4fdffee9153d41a4bc53aa4e189cbb58af1fb2bb266266154a93bbd1625a",
+    "src/client/selection-controls.test.ts": "1d0b77a0d337f969c5ead179060f580cbddb7cba714272fbce23af55c4ee7eeb"
+  }
+}

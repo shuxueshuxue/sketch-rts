@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { TrainableUnitKind } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
@@ -132,8 +133,10 @@ describe('bootstrap_1 production budget', () => {
     const basic = race === 'grove' ? 'lancer' : 'emberRavager';
     const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
     let scene = sketchScene('heavy-after-natural').replaceDefaults().player('us', { race, team: 'a' }).player('foe', { team: 'b' })
-      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
-      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
+      // This budget exercise uses two ordinary five-worker mining lanes. Keep
+      // them at the standard layout distance as that economy changes.
+      .townHall('us', 500, 500).goldMine('main', 500 + GOLD_MINE_RULES.mainDistance, 500, 10000)
+      .townHall('us', 1400, 500).goldMine('natural', 1400 + GOLD_MINE_RULES.mainDistance, 500, 10000).townHall('foe', 3500, 3500)
       .building('us', UNIT_DEFS[basic].trainedAt!, 700, 850)
       .building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850).farms('us', 6, 400, 1500);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,

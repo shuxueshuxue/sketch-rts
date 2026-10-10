@@ -168,7 +168,10 @@ export const historicalNavalScenarios: HistoricalScenario[] = [
         && event.pose && event.pose.x > result.lineX! && (event.mountId?.startsWith('port') || event.mountId?.startsWith('starboard')));
       return [criterion('broadside-not-forward-battery', 'A line ship’s side battery cannot fire as a full bow battery during the initial approach.', result.initialForwardArc === false, result.initialForwardArc, ['mahan-1890']),
         criterion('two-column-passage', 'At least one ordinary-HP attacker passes the line through continuous water motion.', crossed.length > 0, { distinctCrossers: [...new Set(crossed.map(ship => ship.id))], sunk: result.quality.sunk }, ['collingwood-1805']),
-        criterion('close-action', 'Passing the line brings actual side guns into close action, with damage and ordinary casualties allowed.', postCrossShots.length > 0 && result.quality.ships.some(ship => ship.damageTaken > 0), { postCrossSideShots: postCrossShots.length, shots: attackers.reduce((sum, ship) => sum + ship.shots, 0), damage: result.quality.ships.reduce((sum, ship) => sum + ship.damageTaken, 0) }, ['collingwood-1805'])];
+        criterion('close-action', 'Passing the line brings actual side guns into close action, with damage and ordinary casualties allowed.', postCrossShots.length > 0 && result.quality.ships.some(ship => ship.damageTaken > 0), { postCrossSideShots: postCrossShots.length, shots: attackers.reduce((sum, ship) => sum + ship.shots, 0), damage: result.quality.ships.reduce((sum, ship) => sum + ship.damageTaken, 0) }, ['collingwood-1805']),
+        { id: 'each-column-support', basis: 'engine invariant', statement: 'Every attacking ship participates before the final fifteen seconds; one lead ship cannot conceal an inactive rear.', sources: [],
+          passed: attackers.every(ship => ship.shots > 0 && ship.firstShot !== null && ship.firstShot <= result.duration - 15),
+          actual: attackers.map(ship => ({ id: ship.id, shots: ship.shots, firstShot: ship.firstShot })) }];
     } },
   { id: 'howe-cross-change-tack', title: 'First of June: cross the line, change tack, bring starboard guns to bear', duration: 140,
     sources: ['rmg-howe-1794', 'dana-1847'], scope: 'A normal-HP attacker crosses between two unarmed target hulls, changes tack, then receives an explicit firing order.',

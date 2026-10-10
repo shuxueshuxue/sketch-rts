@@ -403,9 +403,11 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const home = buildings(snapshot, owner).find(building => building.kind === "townHall");
     const expedition = own.filter(unit => !unit.deck && unitMover(unit.kind) === "land" && unit.kind !== "worker" && home && !sameGround(snapshot.map, unit, home) && unit.order.type !== "board");
     const handled = new Set<string>();
-    const interventions = engagementTargets(snapshot, owner, options);
+    // This query examines the whole army's current engagements. Mainland
+    // armies have no landed expedition for the naval script to direct.
+    const interventions = expedition.length ? engagementTargets(snapshot, owner, options) : undefined;
     for (const troop of expedition) {
-        const target = interventions.get(troop.id);
+        const target = interventions!.get(troop.id);
         if (target && (troop.order.type !== "attackMove" || distance(troop.order,target)>80)) commands.push({ type:"attackMove",unitIds:[troop.id],x:target.x,y:target.y });
     }
     for (const anchor of expedition) {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
+import { decodeServerNetMessage, encodeNetMessage } from "../../shared/net/codec";
+import { createRoomHost } from "../../server/room-host";
+import { RoomNetHub, type RoomNetSocket } from "../../server/room-net";
 import { createRoom, updateRoomSlot } from "../../shared/rooms";
 import type { NetTransport } from "../net/transport";
 import { ServerDeploymentRuntime, createRoomWebSocketUrl } from "./server-runtime";
@@ -120,11 +123,38 @@ describe("server deployment runtime", () => {
 
     const started = runtime.connectRoom(startedRoom, "spectator-viewer", true, () => {});
 
-    expect(transport.sent).toEqual([
-      { type: "join", roomId: startedRoom.id, playerId: "spectator-viewer" },
-      expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0, epoch: 0 }),
-    ]);
+    expect(transport.sent).toEqual([{ type: "join", roomId: startedRoom.id, playerId: "spectator-viewer" }]);
+    transport.emit({ type: "hello", roomId: startedRoom.id, playerId: "spectator-viewer", tick: 28, epoch: 3 });
+    expect(transport.sent).toContainEqual(expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0, epoch: 3 }));
     expect(() => started.adapter.sendCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toThrow("Spectators cannot issue commands");
+  });
+
+  it("reconnects to an advanced replacement match after learning the real server epoch", () => {
+    const host = { id: "host", name: "Host" };
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-reconnect-replacement", host, mapId: "pineshade", humanCount: 1, aiCount: 1 });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    // Subscribe before replacement so the real hub advances its epoch, as an existing match socket does.
+    hub.connect(room.id, { send() {}, on() {} });
+    roomHost.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: { addBuildings: [{ id: "reconnect-research-barracks", owner: "player", kind: "barracks", x: 1200, y: 976, complete: true }] },
+    });
+    roomHost.tickRoom(room.id, 13);
+    const transport = new HubTransport(hub, room.id);
+    const runtime = new ServerDeploymentRuntime({ createRoomTransport: () => transport });
+    const started = runtime.connectRoom(roomHost.getRoom(room.id), "player", false, () => {});
+
+    expect(started.snapshot.tick).toBe(0);
+    expect(started.snapshot.buildings.some(building => building.id === "reconnect-research-barracks")).toBe(false);
+    transport.deliverServerMessages();
+
+    expect(started.adapter.currentSnapshot()).toEqual(roomHost.snapshot(room.id));
+    expect(started.adapter.currentSnapshot()?.buildings.some(building => building.id === "reconnect-research-barracks")).toBe(true);
+    expect(transport.sent).toContainEqual(expect.objectContaining({ type: "requestCheckpoint", reason: "initial-sync", epoch: 1 }));
+    expect(hub.syncSummaryForRoom(room.id).checkpointRequests.initial).toBe(1);
+    expect(hub.syncSummaryForRoom(room.id).byKind["checkpoint-restore"]).toBe(1);
   });
 
   it("surfaces lockstep room command errors through the runtime error callback", () => {
@@ -219,5 +249,29 @@ class FakeRoomEventSource {
 
   emit(room: unknown): void {
     for (const handler of this.handlers) handler({ data: JSON.stringify(room) });
+  }
+}
+
+/** Queue actual hub packets until the next event turn, preserving the browser socket's handshake ordering. */
+class HubTransport implements NetTransport {
+  readonly sent: ClientNetMessage[] = [];
+  private readonly messages: ServerNetMessage[] = [];
+  private readonly handlers: ((message: ServerNetMessage) => void)[] = [];
+  private receive: ((raw: string) => void) | undefined;
+
+  constructor(hub: RoomNetHub, roomId: string) {
+    const socket: RoomNetSocket = {
+      send: raw => { this.messages.push(decodeServerNetMessage(raw)); },
+      on: (event, handler) => { if (event === "message") this.receive = handler as (raw: string) => void; },
+    };
+    hub.connect(roomId, socket);
+  }
+
+  send(message: ClientNetMessage) { this.sent.push(message); this.receive?.(encodeNetMessage(message)); }
+  onMessage(handler: (message: ServerNetMessage) => void) { this.handlers.push(handler); }
+  close() {}
+  deliverServerMessages() {
+    let message: ServerNetMessage | undefined;
+    while ((message = this.messages.shift())) for (const handler of this.handlers) handler(message);
   }
 }

@@ -49,6 +49,7 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
         playerId: 'us', version, memory,
         scripts: [AI_SCRIPT_LIBRARY.economy, miningWorkforce, bootstrapEconomy, miningAssignments],
       }, { teams: game.teams }));
+      // A reassigned miner may still carry a load from the working mine.
       const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
       const carrying = game.units.filter(unit => unit.owner === 'us' && replacementLoads.has(unit.id) && unit.order.type === 'mine'

@@ -123,7 +123,7 @@ export class WorldPresentation {
       void this.fallbackCurrent();drawWorld(frame);return;
     }
     const ground=this.ground.getContext('2d')!;ground.setTransform(1,0,0,1,0,0);ground.clearRect(0,0,this.ground.width,this.ground.height);ground.setTransform(dpr,0,0,dpr,0,0);
-    const common={actorPositions:this.layer.positions,physicalEffects:this.effectTypes!};
+    const common={actorPositions:this.layer.positions,physicalEffects:this.effectTypes!,depthSelection:true};
     drawWorld({...frame,...common,ctx:ground,pass:'ground'});
     frame.ctx.save();frame.ctx.setTransform(1,0,0,1,0,0);frame.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);frame.ctx.restore();
     drawWorld({...frame,...common,pass:'overlay'});

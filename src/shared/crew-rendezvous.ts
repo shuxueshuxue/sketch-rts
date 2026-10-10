@@ -52,15 +52,18 @@ function rendezvous(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,cr
  * melee while an idle/fighting hull holds its berth. A new helm order always
  * takes precedence, and no contact can command another owner's voyage. */
 export function boardingHoldShips(units:readonly Unit[]) {
-  const holds=new Set<string>(),byId=new Map(units.map(unit=>[unit.id,unit]));
-  const vessels=new Set(shipsIn(units).filter(ship=>ship.hp>0).map(ship=>ship.id));
+  const holds=new Set<string>(),ships=shipsIn(units);
+  if(!ships.length)return holds;
+  const byId=new Map<string,Unit>(),vessels=new Set<string>();
+  for(const unit of units)byId.set(unit.id,unit);
+  for(const ship of ships)if(ship.hp>0)vessels.add(ship.id);
   const hold=(ship:Unit)=>{
     const order=ship.order;
     if(['idle','hold','aim','attack','attackMove'].includes(order.type) || order.type==='move' && order.rendezvousFor)holds.add(ship.id);
   };
   // A deployed passage belongs to its source helm. The target may escape on
   // its own voyage; the bridge contributes floor without commanding that helm.
-  for(const source of shipsIn(units)) {
+  for(const source of ships) {
     const target=byId.get(source.sailing?.gangway?.targetId??'');
     if(target && gangwaySurface(source,target) && !['move','follow','unload'].includes(source.order.type))holds.add(source.id);
   }
@@ -80,7 +83,7 @@ export function boardingHoldShips(units:readonly Unit[]) {
       // hull. Their owner's touching vessel can still provide the way back.
       if(source && target?.id===source.id && opponent && crew.owner!==opponent.owner) {
         const invaderOwner=crew.owner!==source.owner?crew.owner:opponent.owner!==source.owner?opponent.owner:undefined;
-        if(invaderOwner)for(const ship of shipsIn(units))if(ship.owner===invaderOwner && ship.id!==source.id && decksAllowCrossing(source,ship,crew)){hold(source);hold(ship);}
+        if(invaderOwner)for(const ship of ships)if(ship.owner===invaderOwner && ship.id!==source.id && decksAllowCrossing(source,ship,crew)){hold(source);hold(ship);}
       }
     } else if((order.type==='move' || order.type==='attackMove') && order.deckShipId)target=byId.get(order.deckShipId);
     if(!source || !target || source.id===target.id || !vessels.has(source.id) || !vessels.has(target.id) || !decksAllowCrossing(source,target,crew))continue;
@@ -103,16 +106,25 @@ export function cancelCrewRendezvous(units:readonly Unit[],shipIds:ReadonlySet<s
  * Other owners' ships are never commanded. A fresh ship command cancels its
  * implicit participation; nearby crew cross on foot only after contact. */
 export function prepareCrewRendezvous(map:GameMap,units:readonly Unit[]) {
-  const active=new Set(units.filter(crew=>crew.hp>0 && crew.deck && crew.order.type==='board').map(crew=>crew.id));
-  for(const ship of units)if(ship.order.type==='move' && ship.order.rendezvousFor && !active.has(ship.order.rendezvousFor)){
+  let active:Set<string>|undefined;
+  let boarders:Unit[]|undefined,pending:Unit[]|undefined;
+  for(const unit of units){
+    if(unit.deck && unit.order.type==='board'){
+      (boarders??=[]).push(unit);
+      if(unit.hp>0)(active??=new Set()).add(unit.id);
+    }
+    if(unit.order.type==='move' && unit.order.rendezvousFor)(pending??=[]).push(unit);
+  }
+  if(pending)for(const ship of pending)if(ship.order.type==='move' && ship.order.rendezvousFor && !active?.has(ship.order.rendezvousFor)){
     ship.order={type:'idle'};ship.sailing!.route=undefined;
   }
-  const claimed=new Set<string>();
-  for(const crew of units){
+  if(!boarders)return;
+  let claimed:Set<string>|undefined;
+  for(const crew of boarders){
     if(crew.order.type!=='board'||!crew.deck||crew.deck.shipId===crew.order.transportId)continue;
     const order=crew.order,source=units.find(unit=>unit.id===crew.deck!.shipId),target=units.find(unit=>unit.id===order.transportId);
-    if(!source||!target||source.hp<=0||target.hp<=0||source.owner!==crew.owner||claimed.has(source.id))continue;
-    claimed.add(source.id);
+    if(!source||!target||source.hp<=0||target.hp<=0||source.owner!==crew.owner||claimed?.has(source.id))continue;
+    (claimed??=new Set()).add(source.id);
     if(decksCanTransfer(source,target,crew)) {
       order.rendezvous??={sourceId:source.id,sourceX:source.x,sourceY:source.y,heading:target.sailing!.heading,targetX:target.x,targetY:target.y,reciprocal:false};
       for(const ship of [source,target])if(ship.order.type==='move' && ship.order.rendezvousFor===crew.id){

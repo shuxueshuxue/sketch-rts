@@ -29,7 +29,13 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
   const shopReserve = shopErrandCost(economySnapshot, owner, policyOptions) ?? 0;
   let spent = 0;
-  const budgetAfter = (reserve: number) => ({ ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...economySnapshot.players[owner]!, gold: Math.max(0, economySnapshot.players[owner]!.gold - spent) - reserve } } });
+  const budgetAfter = (reserve: number) => {
+    const player = economySnapshot.players[owner]!;
+    const gold = Math.max(0, player.gold - spent) - reserve;
+    // An unchanged budget is the same shared world frame. Keeping its identity
+    // lets later scripts reuse the spatial queries already built for it.
+    return Object.is(gold, player.gold) ? economySnapshot : { ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...player, gold } } };
+  };
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);

@@ -89,7 +89,7 @@ describe('every pool gold mine supports an accessible hauling base', () => {
         expect(buildingPlacementBlocker({...game,buildings:game.buildings.filter(hall => hall !== existing)},'townHall',existing), `${id}: ${mine.id} main clearance`).toBeUndefined();
         expect(mineEntrance(game,mine,existing), `${id}: ${mine.id} main hauling entrance`).toBeDefined();
       } else {
-        expect(hallSite(game,mine), `${id}: ${mine.id} needs a full flat base pad at 280–320, a walkable perimeter and a worker-sized mining lane`).toBeDefined();
+        expect(hallSite(game,mine), `${id}: ${mine.id} needs a full flat base pad at 210–320, a walkable perimeter and a worker-sized mining lane`).toBeDefined();
       }
     }
   });

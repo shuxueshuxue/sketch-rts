@@ -1,0 +1,279 @@
+{
+  "passed": true,
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "savedTick": 5,
+  "priorLogicalSlices": 19,
+  "reconstructedVisitedNodes": 53248,
+  "jobBytes": 738,
+  "waitingRenders": 18,
+  "paintedWhileWaiting": 18,
+  "synchronousColdFirstFrameMs": 162.69999998807907,
+  "blockedRenderStateAndChecksumAssertions": 18,
+  "incomingAndDuplicateFrameDuringPreparation": true,
+  "completeFinalStateAndChecksumEqual": true,
+  "closedPartialRestoreCancelled": true,
+  "closeCalls": 1,
+  "closeRenders": [
+    {
+      "index": 0,
+      "closed": false,
+      "elapsedMs": 4.700000017881393,
+      "changed": false
+    },
+    {
+      "index": 1,
+      "closed": false,
+      "elapsedMs": 6.700000017881393,
+      "changed": false
+    },
+    {
+      "index": 2,
+      "closed": false,
+      "elapsedMs": 0.4000000059604645,
+      "changed": false
+    },
+    {
+      "index": 3,
+      "closed": true,
+      "elapsedMs": 0,
+      "changed": false
+    },
+    {
+      "index": 4,
+      "closed": true,
+      "elapsedMs": 0,
+      "changed": false
+    }
+  ],
+  "maximumClientRenderUpdateMs": 21.30000001192093,
+  "maximumMeasuredRenderTotalMs": 21.799999982118607,
+  "clientRenderUpdatesOver50Ms": 0,
+  "finalChecksum": "ae580f0d",
+  "renders": [
+    {
+      "index": 0,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 4.299999982118607,
+      "rafTime": 862,
+      "rafGapMs": null,
+      "renderTotalMs": 11.699999988079071
+    },
+    {
+      "index": 1,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5.600000023841858,
+      "rafTime": 878.7,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 7
+    },
+    {
+      "index": 2,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 0.4000000059604645,
+      "rafTime": 895.4,
+      "rafGapMs": 16.699999999999932,
+      "renderTotalMs": 1.4000000059604645
+    },
+    {
+      "index": 3,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 0.7000000178813934,
+      "rafTime": 912.1,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 3.2000000178813934
+    },
+    {
+      "index": 4,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 0.30000001192092896,
+      "rafTime": 928.7,
+      "rafGapMs": 16.600000000000023,
+      "renderTotalMs": 1.300000011920929
+    },
+    {
+      "index": 5,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 0.30000001192092896,
+      "rafTime": 945.3,
+      "rafGapMs": 16.59999999999991,
+      "renderTotalMs": 1.0999999940395355
+    },
+    {
+      "index": 6,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 7.0999999940395355,
+      "rafTime": 962,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 8
+    },
+    {
+      "index": 7,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 3.5,
+      "rafTime": 978.7,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 4.300000011920929
+    },
+    {
+      "index": 8,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 4.4000000059604645,
+      "rafTime": 995.4,
+      "rafGapMs": 16.699999999999932,
+      "renderTotalMs": 5.5
+    },
+    {
+      "index": 9,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5.4000000059604645,
+      "rafTime": 1012,
+      "rafGapMs": 16.600000000000023,
+      "renderTotalMs": 6.300000011920929
+    },
+    {
+      "index": 10,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5.0999999940395355,
+      "rafTime": 1028.7,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 5.9000000059604645
+    },
+    {
+      "index": 11,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 6.300000011920929,
+      "rafTime": 1045.3,
+      "rafGapMs": 16.59999999999991,
+      "renderTotalMs": 7.199999988079071
+    },
+    {
+      "index": 12,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 4.700000017881393,
+      "rafTime": 1062.1,
+      "rafGapMs": 16.799999999999955,
+      "renderTotalMs": 5.199999988079071
+    },
+    {
+      "index": 13,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5,
+      "rafTime": 1078.7,
+      "rafGapMs": 16.600000000000136,
+      "renderTotalMs": 5.5999999940395355
+    },
+    {
+      "index": 14,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 4.800000011920929,
+      "rafTime": 1095.3,
+      "rafGapMs": 16.59999999999991,
+      "renderTotalMs": 5.4000000059604645
+    },
+    {
+      "index": 15,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5.699999988079071,
+      "rafTime": 1112.1,
+      "rafGapMs": 16.799999999999955,
+      "renderTotalMs": 6.300000011920929
+    },
+    {
+      "index": 16,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 6.199999988079071,
+      "rafTime": 1128.7,
+      "rafGapMs": 16.600000000000136,
+      "renderTotalMs": 7
+    },
+    {
+      "index": 17,
+      "beforeTick": 5,
+      "tick": 5,
+      "changed": false,
+      "elapsedMs": 5.800000011920929,
+      "rafTime": 1145.4,
+      "rafGapMs": 16.700000000000045,
+      "renderTotalMs": 6.600000023841858
+    },
+    {
+      "index": 18,
+      "beforeTick": 5,
+      "tick": 6,
+      "changed": true,
+      "elapsedMs": 21.30000001192093,
+      "rafTime": 1162,
+      "rafGapMs": 16.59999999999991,
+      "renderTotalMs": 21.799999982118607
+    },
+    {
+      "index": 19,
+      "beforeTick": 6,
+      "tick": 7,
+      "changed": true,
+      "elapsedMs": 0.699999988079071,
+      "rafTime": 1178.8,
+      "rafGapMs": 16.799999999999955,
+      "renderTotalMs": 1.0999999940395355
+    }
+  ],
+  "scope": "Real Chromium cold checkpoint scheduling fixture. Client-update time excludes setup, assertions and Canvas drawing, separately reported; input hashes describe the directly verified runtime files and fixture scripts, not a whole-application FPS benchmark.",
+  "done": true,
+  "sourceSha256": {
+    "src/client/net/lockstep-client.ts": "b09d2712b4a17ce50072816f841c280c9992bd3b09329d36927c51a3880a5124",
+    "src/shared/ship-planning-job.ts": "34f9ea62da5182351c7fdef4cd581f1631404999e689ca25c8801ea63edd3b6f",
+    "src/shared/ship-navigation.ts": "c1255fb83dafabf4cd031c7885866ac3944417c18df1b7b4369e9a3cc2cb772f",
+    "src/shared/sailing.ts": "c34ba22e59728cbacfe49e425d9aa3fd707d3518117acaaf7054d0e17ce2270d",
+    "src/shared/ship-planning-budget.ts": "d37f2eddfaed543417d5d2a452b4419ffe3b0fe9ff02704c5862c059daf2df3a",
+    "src/shared/ship-queued-course.ts": "46faaccc797472158f92a9d5e4f7916b65b8157511e0077e8605ac9ea5c11737",
+    "src/shared/sim.ts": "86021d9e6b4b31914e8eb013cc1174c8be158140987ff42e5ffc60cc337f410a",
+    "src/shared/sim/checksum.ts": "d8733737efa18ab7d914c3c36b987807cd889342b4bd33a4f7aa1f2839c336ed",
+    "src/shared/types.ts": "7cc4957767d4f5448e74d5aac56e8235ea6c79bee511bfcd1ef3e2e3535623fc"
+  },
+  "scriptSha256": {
+    "scripts/cold-planning-restore-fixture.js": "293e2552c73922e51a1ff2e85fde513e8a8369fb1d31e077d1fe8c1ea91a75bf",
+    "scripts/cold-planning-restore-browser.mjs": "33e32377b00eb6b28c1b88bf478d17d8d1b5c17e74883be627c1f0513f501cb6"
+  },
+  "sourceChangedDuringRun": [],
+  "scriptsChangedDuringRun": [],
+  "reproduce": "CHROMIUM_PATH=/usr/bin/chromium node scripts/cold-planning-restore-browser.mjs",
+  "recordedAt": "2026-10-10T01:01:44.227Z",
+  "node": "v20.20.2",
+  "errors": [],
+  "sourceCommit": "869245c873036fdd5e00dff1fc3c5ab45f5d8f47",
+  "sourceInputsVerifiedAtCommit": "bcd03c1fa220084fb313298445bb1758c7f1b1e7"
+}
