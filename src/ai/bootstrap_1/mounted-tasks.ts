@@ -86,7 +86,9 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
       && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
     && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange))
     .sort((a, b) => distance(lead, a.center) - distance(lead, b.center))[0];
-  if (halls.length && (riders.length >= 2 || !camp)) {
+  // A lone scout raids an exposed line when it is closer than the next camp.
+  if (halls.length && (riders.length >= 2 || !camp
+    || distance(lead, halls[0]!) < distance(lead, camp.center))) {
     const hall = halls[0]!;
     active.push({ unitIds: riders.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
     return active;
