@@ -76,7 +76,7 @@ function segmentDistance(point: Point, a: Point, b: Point) {
   return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
 }
 
-export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Building, threat: Point | undefined): Point {
+export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Point, threat: Point | undefined): Point {
   let preferred: Point;
   if (threat) {
     const dx = threat.x - base.x;
