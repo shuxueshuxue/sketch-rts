@@ -1,9 +1,28 @@
 import type { GameSnapshot, PlayerId } from '../../shared/types';
+import { strikeGap } from '../../shared/combat-geometry';
+import { unitMover } from '../../shared/catalog';
+import { walkingDistance } from '../../shared/terrain';
+import type { Point } from '../../shared/ship-geometry';
+import { strengthOf } from '../policy/v6/strength';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import type { AiPolicyContext } from '../policy/types';
 import { chooseV9ExpansionMine, type V6Intel } from '../policy/v6/intel';
 
 /** Share land and naval ownership facts before applying the common expansion geometry. */
 export function bootstrapExpansionMine(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext) {
-  return chooseV9ExpansionMine(snapshot, intel, snapshot.resources.filter(mine => !mineClaimedByAlly(snapshot, owner, mine, options)));
+  return chooseV9ExpansionMine(snapshot, intel, snapshot.resources.filter(mine => !mineClaimedByAlly(snapshot, owner, mine, options)),
+    (intel, point, range) => enemyExpansionPower(snapshot, intel, point, range));
+}
+
+/** Direct fire is physical; a land army outside firing range must actually walk to this expansion. */
+export function enemyExpansionPower(snapshot: GameSnapshot, intel: V6Intel, point: Point, range: number) {
+  return intel.enemies.reduce((power, enemy) => power + strengthOf(enemy.army.filter(unit => {
+    const gap = strikeGap(unit, point);
+    if (gap <= unit.attackRange) return true;
+    if (gap > range) return false;
+    // Fleet and deck threat retains its existing sea perimeter; land roads cannot model sailing or unloading.
+    if (unitMover(unit.kind) === 'sea' || unit.deck) return true;
+    const road = walkingDistance(snapshot.map, unit, point, 'land');
+    return road !== undefined && road <= range;
+  })), 0);
 }
