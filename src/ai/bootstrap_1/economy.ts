@@ -80,12 +80,12 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   return issue(ready.filter(worker => priority(worker) === preferred));
 };
 
-// A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
+// Working mines can fund cover at a safe, cleared expansion while the army fights elsewhere.
 const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority, target) => {
   const { snapshot, owner, intel, own } = economy;
   const incomes = activeMiningBaseCount(snapshot, owner);
   const cover = own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange);
-  if (incomes > 1 || incomes === 0 && !cover) return [];
+  if (incomes === 0 && !cover) return [];
   // The hall is the same purchase before and after cover arrives; keep its existing aging and ordinary price.
   const capital = { id: `bases:${target}`, priority, cost: BUILDING_DEFS.townHall.cost, save: true, hold: true as const,
     issue: () => undefined };
