@@ -1,3 +1,4 @@
+import { recoverBootstrapFront } from './front-recovery';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
@@ -116,6 +117,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   const commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
+    recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
     pursue: defense => walkingDistance(snapshot.map, defense.hall, defense.field)! <= distance(defense.hall, defense.field) + defense.leash!,
   });
