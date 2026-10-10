@@ -1,4 +1,5 @@
-import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
+import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
@@ -110,6 +111,8 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const step = Math.max(rider.speed * THINK_TICKS,
     ...threats.map(threat => threat.speed * (THINK_TICKS + 2))) / SIM_TICKS_PER_SECOND;
   const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
+  const bodies = snapshot.units.filter(unit => unit.id !== rider.id && !unit.deck
+    && unitMover(unit.kind) === 'land' && !(unit.kind === 'worker' && unit.order.type === 'mine'));
   const choices = [rider, ...(destination && distance(rider, destination) <= step ? [destination] : []), ...Array.from({ length: 16 }, (_, index) => ({
     x: rider.x + detCos(angle + index * Math.PI / 8) * step,
     y: rider.y + detSin(angle + index * Math.PI / 8) * step,
@@ -123,10 +126,11 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const scored = choices.map(point => {
     const margins = threats.map(threat => margin(point, threat));
     const room = Math.min(...margins.map((gap, index) => gap - threats[index]!.speed * THINK_TICKS / SIM_TICKS_PER_SECOND));
-    return { point, room, margin: Math.min(...margins), exit: room > 0 && !destination && exit(point),
+    return { point, room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins), exit: room > 0 && !destination && exit(point),
       distance: destination ? distance(point, destination) : 0 };
   });
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
+    || Number(b.bodyClear) - Number(a.bodyClear)
     || (a.room > 0 ? destination ? a.distance - b.distance
       : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
   return innerWindow.length > 0 && chosen.point === rider ? { type: 'holdPosition', unitIds: [rider.id] }

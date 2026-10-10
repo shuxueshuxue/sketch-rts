@@ -123,6 +123,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     reinforcements: 'siege', expansionBasis: 'mines',
     chooseCamp: chooseBootstrapCamp,
     startCamp: startBootstrapCamp,
+    campTerritory: 'ground',
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
