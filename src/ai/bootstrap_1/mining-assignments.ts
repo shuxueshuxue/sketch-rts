@@ -1,5 +1,6 @@
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { sameGround } from '../../shared/terrain';
+import { nearestByRoute } from '../../shared/route-selection';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import type { AiScript } from '../policy/types';
@@ -17,8 +18,9 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId) {
   const result: { unitId: string; resourceId: string }[] = [];
   for (const worker of workers) {
     if (counts.has(worker.order.resourceId)) continue;
-    const mine = mines.filter(mine => sameGround(snapshot.map, worker, mine))
-      .sort((a, b) => counts.get(a.id)! - counts.get(b.id)! || distance(worker, a) - distance(worker, b))[0];
+    const reachable = mines.filter(mine => sameGround(snapshot.map, worker, mine));
+    const load = Math.min(...reachable.map(mine => counts.get(mine.id)!));
+    const mine = nearestByRoute(snapshot.map, reachable.filter(mine => counts.get(mine.id) === load), worker, 'land');
     if (mine) {
       result.push({ unitId: worker.id, resourceId: mine.id });
       counts.set(mine.id, counts.get(mine.id)! + 1);
