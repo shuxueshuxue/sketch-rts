@@ -88,7 +88,7 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror =
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ race, mirror }))))(
   'releases the $race colony budget when the only live overseas mine belongs to an ally (mirror=$mirror)', ({ race, mirror }) => {
     const game = colonyScene(race, mirror, 'hall', false);
-    game.teams.foe = game.teams.us;
+    game.teams.foe = 'a';
     game.resources.find(mine => mine.id === 'free-island')!.amount = 0;
     game.resources.find(mine => mine.id === 'main')!.amount = 300;
     game.resources.find(mine => mine.id === 'natural')!.amount = 300;
