@@ -799,9 +799,10 @@ const PLAN_RETRY = seconds(20);
 type Outfit = NonNullable<NavalPlanMemory['outfit']>;
 /** Purchased guns enter the hold and install directly; a worker is only needed to collect loose equipment. */
 function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Outfit | undefined {
-    const memory = navalMemory(options), own = units(snapshot,owner);
+    const memory = navalMemory(options);
     const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
     if (!dock) { delete memory.outfit; return; }
+    const own = units(snapshot,owner);
     const dangerous = (ship: Unit) => snapshot.units.some(unit => isEnemyOwner(snapshot,owner,unit.owner,options) && combatCapability(snapshot,unit).armed && distance(unit,ship) < 650);
     let job = memory.outfit;
     if (job) {

@@ -26,6 +26,8 @@ export type SnapshotPlayerEntityView = {
   completeBuildings: Building[];
 };
 
+export type SnapshotPlayerRelation = "own" | "allied" | "enemy";
+
 export type SnapshotPlayerView = {
   owner: PlayerId;
   team: string;
@@ -70,6 +72,10 @@ export type SnapshotQuery = {
   opponentBuildingsNear(owner: PlayerId, point: EntityPoint, range: number): Building[];
   hostileUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   hostileCombatUnitsFor(owner: PlayerId): Unit[];
+  /** Selected lists share forPlayer's first-read classification, with a fresh array per call. */
+  playerUnits(owner: PlayerId, relation: SnapshotPlayerRelation, kind?: "worker" | "combat"): Unit[];
+  playerBuildings(owner: PlayerId, relation: SnapshotPlayerRelation, completeOnly?: boolean): Building[];
+  neutralUnitsFor(owner: PlayerId): Unit[];
   forPlayer(owner: PlayerId): SnapshotPlayerView;
 };
 
@@ -105,6 +111,23 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     let near = nearIndexes.get(key);
     if (!near) nearIndexes.set(key, (near = createRangeIndex(snapshot.units.filter(matches))));
     return near;
+  };
+  const cachedPlayerView = (owner: PlayerId, query: SnapshotQuery): SnapshotPlayerView => {
+    let view = viewByOwner.get(owner);
+    if (!view) {
+      const ownTeam = teamFor(owner);
+      const entities = playerEntityViews(snapshot, owner, ownTeam, teamFor);
+      view = {
+        owner,
+        team: ownTeam,
+        ...entities,
+        resources: entitySet(snapshot.resources),
+        mercenaryCamps: entitySet(snapshot.mercenaryCamps),
+        items: { ground: query.groundItems(), carried: query.carriedItemsFor(owner) },
+      };
+      viewByOwner.set(owner, view);
+    }
+    return view;
   };
   return {
     snapshot,
@@ -203,26 +226,19 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       if (!units) hostileCombatUnitsByOwner.set(owner, (units = snapshot.units.filter((unit) => (isOpponent(owner, unit.owner) || unit.owner === "neutral") && unit.kind !== "worker")));
       return units.slice();
     },
+    playerUnits(owner, relation, kind) {
+      const view = cachedPlayerView(owner, this)[relation];
+      return (kind === "worker" ? view.workers : kind === "combat" ? view.combatUnits : view.units).slice();
+    },
+    playerBuildings(owner, relation, completeOnly) {
+      const view = cachedPlayerView(owner, this)[relation];
+      return (completeOnly ? view.completeBuildings : view.buildings).slice();
+    },
+    neutralUnitsFor(owner) {
+      return cachedPlayerView(owner, this).neutral.units.slice();
+    },
     forPlayer(owner) {
-      let view = viewByOwner.get(owner);
-      if (!view) {
-        const ownTeam = teamFor(owner);
-        view = {
-          owner,
-          team: ownTeam,
-          own: entityView(snapshot, (candidate) => candidate === owner),
-          allied: entityView(snapshot, (candidate) => candidate !== owner && candidate !== "neutral" && teamFor(candidate) === ownTeam),
-          enemy: entityView(snapshot, (candidate) => candidate !== "neutral" && teamFor(candidate) !== ownTeam),
-          neutral: { units: snapshot.units.filter((unit) => unit.owner === "neutral") },
-          resources: entitySet(snapshot.resources),
-          mercenaryCamps: entitySet(snapshot.mercenaryCamps),
-          items: {
-            ground: this.groundItems(),
-            carried: this.carriedItemsFor(owner),
-          },
-        };
-        viewByOwner.set(owner, view);
-      }
+      const view = cachedPlayerView(owner, this);
       // resources and mercenaryCamps stay the snapshot's own arrays, as before (see claims.ts, which sorts them in place).
       return {
         owner: view.owner,
@@ -245,16 +261,40 @@ function firstById<T extends { id: string }>(entities: T[]) {
   return byId;
 }
 
-function entityView(snapshot: GameSnapshot, ownerMatches: (owner: Owner) => boolean): SnapshotPlayerEntityView {
-  const units = snapshot.units.filter((unit) => ownerMatches(unit.owner));
-  const buildings = snapshot.buildings.filter((building) => ownerMatches(building.owner));
-  return {
-    units,
-    workers: units.filter((unit) => unit.kind === "worker"),
-    combatUnits: units.filter((unit) => unit.kind !== "worker"),
-    buildings,
-    completeBuildings: buildings.filter((building) => building.complete),
+function playerEntityViews(snapshot: GameSnapshot, owner: PlayerId, ownTeam: string, teamFor: (candidate: Owner) => string) {
+  const emptyView = (): SnapshotPlayerEntityView => ({ units: [], workers: [], combatUnits: [], buildings: [], completeBuildings: [] });
+  const own = emptyView(), allied = emptyView(), enemy = emptyView();
+  const neutral: Unit[] = [];
+  const addUnit = (view: SnapshotPlayerEntityView, unit: Unit) => {
+    view.units.push(unit);
+    (unit.kind === "worker" ? view.workers : view.combatUnits).push(unit);
   };
+  const addBuilding = (view: SnapshotPlayerEntityView, building: Building) => {
+    view.buildings.push(building);
+    if (building.complete) view.completeBuildings.push(building);
+  };
+  // forEach skips sparse slots like filter. Relations remain independent: a
+  // neutral viewer also owns neutrals, and NaN team values never compare equal.
+  snapshot.units.forEach(unit => {
+    const candidate = unit.owner;
+    if (candidate === "neutral") neutral.push(unit);
+    if (candidate === owner) addUnit(own, unit);
+    if (candidate !== "neutral") {
+      const team = teamFor(candidate);
+      if (candidate !== owner && team === ownTeam) addUnit(allied, unit);
+      if (team !== ownTeam) addUnit(enemy, unit);
+    }
+  });
+  snapshot.buildings.forEach(building => {
+    const candidate = building.owner;
+    if (candidate === owner) addBuilding(own, building);
+    if (candidate !== "neutral") {
+      const team = teamFor(candidate);
+      if (candidate !== owner && team === ownTeam) addBuilding(allied, building);
+      if (team !== ownTeam) addBuilding(enemy, building);
+    }
+  });
+  return { own, allied, enemy, neutral: { units: neutral } };
 }
 
 function copyEntityView(view: SnapshotPlayerEntityView): SnapshotPlayerEntityView {

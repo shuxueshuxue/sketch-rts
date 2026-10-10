@@ -82,6 +82,27 @@ describe('collision bucket lookup equivalence', () => {
     expect([a.x, b.x]).toEqual([782, 818]);
   });
 
+  it('reuses a verified prefix while later bodies move, skipped miners enter and trailing members disappear', () => {
+    const game = scene();
+    const first = body(game, 800, 800), second = body(game, 1200, 800), last = body(game, 1600, 800);
+    const miner = game.spawnUnit('player', 'worker', 8000, 8000);
+    miner.effects = [{ type: 'stun', remaining: 10_000 }];
+    miner.order = { type: 'mine', resourceId: 'missing', phase: 'toMine', timer: 0 };
+    // The skipped miner can occur anywhere in source order without changing
+    // the ordered prefix of collision members.
+    game.units = [first, miner, second, last];
+    checkTick(game);
+    last.x = 1200;
+    checkTick(game);
+    miner.order = { type: 'idle' };
+    checkTick(game);
+    game.units.pop();
+    checkTick(game);
+    body(game, second.x, second.y);
+    checkTick(game);
+    expect(first.x).toBe(800);
+  });
+
   it.each([
     [[-0, -0], [0, 0], [-80, 80], [-79, 80]],
     [[80, 0], [0, 80_000], [80, 1], [0, 80_001]],

@@ -82,6 +82,31 @@ describe("mechanical bodies and medical effects in the shared simulation", () =>
     expect(unitRegenPerSecond(mechanicalSnapshot, mechanicalSnapshot.units[0]!)).toBe(0);
   });
 
+  it("inherits saved variant classification and reads in-place overrides and missing variants live", () => {
+    const game = scene();
+    const savedRules = resolveVariant({ base: "footman", regenPerSecond: 7 });
+    // Older authored rules omitted classification and inherit the base row.
+    Reflect.deleteProperty(savedRules, "unitClass");
+    game.variants = { savedRecovery: savedRules };
+    const fighter = game.spawnUnit("player", "footman", 1000, 1000);
+    fighter.variant = "savedRecovery";
+    fighter.order = { type: "hold", x: fighter.x, y: fighter.y };
+    fighter.hp -= 40;
+    const hp = fighter.hp;
+    expect(unitRegenPerSecond(game, fighter)).toBe(7);
+    stepGame(game);
+    expect(fighter.hp).toBe(hp + 7 / 20);
+
+    savedRules.unitClass = "mechanical";
+    expect(unitRegenPerSecond(game, fighter)).toBe(0);
+    const damaged = fighter.hp;
+    stepGame(game);
+    expect(fighter.hp).toBe(damaged);
+    delete game.variants.savedRecovery;
+    expect(() => unitRegenPerSecond(game, fighter)).toThrow("Unknown unit variant savedRecovery");
+    expect(() => leadershipRegenPerSecond(game, fighter)).toThrow("Unknown unit variant savedRecovery");
+  });
+
   it("caps innate regeneration at full health and resumes on the next wounded tick", () => {
     const game = scene();
     const revenant = game.spawnUnit("player", "cinderRevenant", 900, 900);

@@ -1,6 +1,6 @@
 import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
-import { shipPassengers, shipProfile } from "../../shared/ship-geometry";
+import { isShipKind, shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import { shipNeedsRepair } from "../../shared/ship-equipment";
 import { isInCabin } from '../../shared/ship-cabin';
 import { sameGround, walkableGoal } from "../../shared/terrain";
@@ -34,7 +34,7 @@ export function navalServices(
   const own = snapshot.units.filter(
       (unit) => unit.owner === owner && unit.hp > 0,
     ),
-    ships = own.filter(shipProfile);
+    ships = own.filter(unit => isShipKind(unit.kind));
   const working = (ship: Unit) => combatCapability(snapshot, ship).armed;
   const blocked = (ship: Unit) =>
     result.reserved.has(ship.id) ||
