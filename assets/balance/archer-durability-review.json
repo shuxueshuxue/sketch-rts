@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "sourceSHA": "ec2087feca365897dabefcd3f1d0f1847e255148",
+  "scope": "Deterministic stationary-duel fixtures; not a full faction balance benchmark",
+  "ticksPerSecond": 20,
+  "method": "No terrain, AI, buildings, equipment, research, stars or learned skills. Ordinary-HP archers start on a straight line and receive explicit reciprocal attack orders; normal combat movement and seeded fire remain active. Proposed Spark HP is supplied by a stat variant; all other catalog rules remain unchanged.",
+  "initialGrove": {
+    "x": 1000,
+    "y": 1000,
+    "hp": 83
+  },
+  "initialSpark": {
+    "x": "1000 + distance",
+    "y": 1000,
+    "hp": "sparkHp"
+  },
+  "stop": "First death or 600 ticks",
+  "duels": [
+    {
+      "sparkHp": 75,
+      "distance": 240,
+      "groveId": "grove-0",
+      "sparkId": "spark-0",
+      "ticks": 179,
+      "winner": "archer",
+      "survivorHp": 29,
+      "groveHp": 29,
+      "sparkFinalHp": -3,
+      "fires": 0
+    },
+    {
+      "sparkHp": 75,
+      "distance": 240,
+      "groveId": "grove-1",
+      "sparkId": "spark-1",
+      "ticks": 179,
+      "winner": "archer",
+      "survivorHp": 24,
+      "groveHp": 24,
+      "sparkFinalHp": -3,
+      "fires": 1
+    },
+    {
+      "sparkHp": 75,
+      "distance": 240,
+      "groveId": "grove-2",
+      "sparkId": "spark-2",
+      "ticks": 179,
+      "winner": "archer",
+      "survivorHp": 29,
+      "groveHp": 29,
+      "sparkFinalHp": -3,
+      "fires": 0
+    },
+    {
+      "sparkHp": 75,
+      "distance": 240,
+      "groveId": "grove-3",
+      "sparkId": "spark-3",
+      "ticks": 179,
+      "winner": "archer",
+      "survivorHp": 15,
+      "groveHp": 15,
+      "sparkFinalHp": -3,
+      "fires": 2
+    },
+    {
+      "sparkHp": 75,
+      "distance": 310,
+      "groveId": "grove-0",
+      "sparkId": "spark-0",
+      "ticks": 184,
+      "winner": "archer",
+      "survivorHp": 28,
+      "groveHp": 28,
+      "sparkFinalHp": -3,
+      "fires": 1
+    },
+    {
+      "sparkHp": 75,
+      "distance": 310,
+      "groveId": "grove-1",
+      "sparkId": "spark-1",
+      "ticks": 184,
+      "winner": "archer",
+      "survivorHp": 28,
+      "groveHp": 28,
+      "sparkFinalHp": -3,
+      "fires": 1
+    },
+    {
+      "sparkHp": 75,
+      "distance": 310,
+      "groveId": "grove-2",
+      "sparkId": "spark-2",
+      "ticks": 184,
+      "winner": "archer",
+      "survivorHp": 29,
+      "groveHp": 29,
+      "sparkFinalHp": -3,
+      "fires": 0
+    },
+    {
+      "sparkHp": 75,
+      "distance": 310,
+      "groveId": "grove-3",
+      "sparkId": "spark-3",
+      "ticks": 184,
+      "winner": "archer",
+      "survivorHp": 28,
+      "groveHp": 28,
+      "sparkFinalHp": -3,
+      "fires": 1
+    },
+    {
+      "sparkHp": 85,
+      "distance": 240,
+      "groveId": "grove-0",
+      "sparkId": "spark-0",
+      "ticks": 209,
+      "winner": "archer",
+      "survivorHp": 20,
+      "groveHp": 20,
+      "sparkFinalHp": -6,
+      "fires": 0
+    },
+    {
+      "sparkHp": 85,
+      "distance": 240,
+      "groveId": "grove-1",
+      "sparkId": "spark-1",
+      "ticks": 209,
+      "winner": "archer",
+      "survivorHp": 12,
+      "groveHp": 12,
+      "sparkFinalHp": -6,
+      "fires": 1
+    },
+    {
+      "sparkHp": 85,
+      "distance": 240,
+      "groveId": "grove-2",
+      "sparkId": "spark-2",
+      "ticks": 209,
+      "winner": "archer",
+      "survivorHp": 20,
+      "groveHp": 20,
+      "sparkFinalHp": -6,
+      "fires": 0
+    },
+    {
+      "sparkHp": 85,
+      "distance": 240,
+      "groveId": "grove-3",
+      "sparkId": "spark-3",
+      "ticks": 209,
+      "winner": "archer",
+      "survivorHp": 3,
+      "groveHp": 3,
+      "sparkFinalHp": -6,
+      "fires": 2
+    },
+    {
+      "sparkHp": 85,
+      "distance": 310,
+      "groveId": "grove-0",
+      "sparkId": "spark-0",
+      "ticks": 214,
+      "winner": "archer",
+      "survivorHp": 16,
+      "groveHp": 16,
+      "sparkFinalHp": -6,
+      "fires": 1
+    },
+    {
+      "sparkHp": 85,
+      "distance": 310,
+      "groveId": "grove-1",
+      "sparkId": "spark-1",
+      "ticks": 214,
+      "winner": "archer",
+      "survivorHp": 16,
+      "groveHp": 16,
+      "sparkFinalHp": -6,
+      "fires": 1
+    },
+    {
+      "sparkHp": 85,
+      "distance": 310,
+      "groveId": "grove-2",
+      "sparkId": "spark-2",
+      "ticks": 214,
+      "winner": "archer",
+      "survivorHp": 20,
+      "groveHp": 20,
+      "sparkFinalHp": -6,
+      "fires": 0
+    },
+    {
+      "sparkHp": 85,
+      "distance": 310,
+      "groveId": "grove-3",
+      "sparkId": "spark-3",
+      "ticks": 214,
+      "winner": "archer",
+      "survivorHp": 16,
+      "groveHp": 16,
+      "sparkFinalHp": -6,
+      "fires": 1
+    }
+  ]
+}

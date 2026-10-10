@@ -105,7 +105,7 @@ describe('persistent battlefield ability effects',()=>{
     const snapshot=snapshotGame(game),hidden=snapshot.units.find(unit=>unit.id===sheltered.id)!;
     hidden.deck={shipId:'shelter',x:0,y:0};hidden.cabin={shipId:'shelter'};
     const original=JSON.stringify(snapshot),frame=battlefieldEffectFrame(snapshot);
-    expect(frame.veterans.get(ally.id)?.attackSpeedMultiplier).toBe(1.08);
+    expect(frame.veterans.get(ally.id)?.attackSpeedMultiplier).toBe(1.35);
     expect([enemy.id,remote.id,sheltered.id].every(id=>!frame.veterans.has(id))).toBe(true);
     expect(battlefieldEffectFrame(snapshot)).toBe(frame);
     expect(JSON.stringify(snapshot)).toBe(original);
@@ -119,7 +119,7 @@ describe('persistent battlefield ability effects',()=>{
     learn(game,leader,'veteranRenewal');
     ally.effects=[{type:'bloodlust',remaining:20},{type:'veteranBuff',remaining:80,attackSpeedMultiplier:1.2}];
     const snapshot=snapshotGame(game),frame=battlefieldEffectFrame(snapshot);
-    expect(frame.veterans.get(ally.id)?.regenPerSecond).toBe(1.2);
+    expect(frame.veterans.get(ally.id)?.regenPerSecond).toBe(3);
     expect(frame.veterans.get(machine.id)?.regenPerSecond ?? 0).toBe(0);
     expect(frame.statuses.get(ally.id)).toHaveLength(1);
     expect(frame.statuses.get(ally.id)?.[0]?.type).toBe('bloodlust');
