@@ -53,8 +53,13 @@ for(const repeat of [false,true]) {
   const mine=game.resources.find(mine=>mine.id==='gold-player-main')!;mine.amount=100000;game.players.player!.gold=0;game.scriptedVictory=true;
   const command={type:'mine' as const,resourceId:mine.id,unitIds:workers.map(worker=>worker.id)};
   issuePlayerCommand(game,'player',command);
-  for(let tick=0;tick<seconds(60);tick++){if(repeat&&tick%seconds(1)===0)issuePlayerCommand(game,'player',command);stepGame(game);}
-  rows.push({scenario:repeat?'repeat-command':'no-repeat',count:3,goldPerMinute:game.players.player!.gold,conserved:mine.amount+workers.reduce((sum,worker)=>sum+worker.carryingGold,0)+game.players.player!.gold===100000});
+  let conserved = true;
+  for(let tick=0;tick<seconds(60);tick++){
+    if(repeat&&tick%seconds(1)===0)issuePlayerCommand(game,'player',command);
+    stepGame(game);
+    conserved &&= mine.amount+workers.reduce((sum,worker)=>sum+worker.carryingGold,0)+game.players.player!.gold===100000;
+  }
+  rows.push({scenario:repeat?'repeat-command':'no-repeat',count:3,goldPerMinute:game.players.player!.gold,conserved});
 }
 if (rows.some(row => !row.conserved)) throw new Error('Mining gold was not conserved');
 writeFileSync(process.argv[2] ?? 'work/mining-waiting-review.json',JSON.stringify({rules:GOLD_MINE_RULES,warmupSeconds:30,measuredSeconds:60,rows},null,2));
