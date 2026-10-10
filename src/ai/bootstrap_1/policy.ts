@@ -70,7 +70,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   );
   if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) wants.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 65 });
   if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
-    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell')) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
+    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
+      || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
   wants.push(...medical);
   return wants;

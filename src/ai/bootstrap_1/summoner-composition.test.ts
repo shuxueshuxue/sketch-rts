@@ -7,19 +7,23 @@ import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 
 describe('summon host support against artillery', () => {
-  it.each(['grove', 'ember'] as const)('pays for a lasting %s front while continuing to summon', race => {
+  it.each((['grove', 'ember'] as const).flatMap(race => (['catapult', 'ballista'] as const)
+    .flatMap(artillery => [false, true].map(mirrored => ({ race, artillery, mirrored }))))) (
+    'pays for a lasting $race front against $artillery while continuing to summon (mirror=$mirrored)', ({ race, artillery, mirrored }) => {
+    const x = (value: number) => mirrored ? 4096 - value : value;
     const caller = race === 'grove' ? 'summoner' : 'pyreCaller';
     const screen = race === 'grove' ? 'lancer' : 'ashWarden';
     let scene = sketchScene('summon-artillery-counter').map('openClaims').replaceDefaults()
-      .player('us', { race, team: 'a' }).player('foe', { race: 'ember', team: 'b' })
-      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
-      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000)
-      .townHall('foe', 3500, 3500).unit('foe', 'catapult', 3200, 3500, { order: { type: 'hold', x: 3200, y: 3500 } })
-      .building('us', UNIT_DEFS[screen].trainedAt!, 700, 850)
-      .building('us', UNIT_DEFS[caller].trainedAt!, 1000, 850).farms('us', 8, 400, 1600);
-    for (let i = 0; i < 11; i++) scene = scene.worker('us', i < 5 ? 540 : 1440, 550 + i % 5 * 20,
+      .player('us', { race, team: 'a' }).player('foe', { race: artillery === 'ballista' ? 'grove' : 'ember', team: 'b' })
+      .townHall('us', x(500), 500).goldMine('main', x(788), 500, 10000)
+      .townHall('us', x(1400), 500).goldMine('natural', x(1688), 500, 10000)
+      .townHall('foe', x(3500), 3500).unit('foe', artillery, x(3200), 3500, { order: { type: 'hold', x: x(3200), y: 3500 } })
+      .building('us', UNIT_DEFS[screen].trainedAt!, x(700), 850)
+      .building('us', UNIT_DEFS[caller].trainedAt!, x(1000), 850);
+    for (let i = 0; i < 8; i++) scene = scene.building('us', 'farm', x(400 + i * 64), 1600);
+    for (let i = 0; i < 11; i++) scene = scene.worker('us', x(i < 5 ? 540 : 1440), 550 + i % 5 * 20,
       { order: { type: 'mine', resourceId: i < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
-    for (let i = 0; i < 10; i++) scene = scene.unit('us', caller, 800 + i % 5 * 35, 1000 + Math.floor(i / 5) * 35);
+    for (let i = 0; i < 10; i++) scene = scene.unit('us', caller, x(800 + i % 5 * 35), 1000 + Math.floor(i / 5) * 35);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.v6 = { phase: 2 };
     let spells = 0;
@@ -42,6 +46,6 @@ describe('summon host support against artillery', () => {
     expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(4 * UNIT_DEFS[screen].cost);
     const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
     const carried = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
-    expect(game.players.us!.gold + game.match.stats.goldSpent.us!).toBeLessThanOrEqual(500 + mined - carried);
+    expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500 + mined);
   });
 });
