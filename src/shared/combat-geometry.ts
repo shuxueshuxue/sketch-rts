@@ -1,4 +1,5 @@
 import { detCos, detSin } from "./det-math";
+import { hypot2 } from "./hypot";
 import { shipProfile, type Point } from "./ship-geometry";
 import type { Building, Obstacle, Unit } from "./types";
 
@@ -54,4 +55,15 @@ export function strikeGap(from: Point, target: StrikeTarget) {
 /** Blast overlap uses the whole body, while troops aim at another troop's center. */
 export function bodyGap(from:Point,target:Unit|Building|Obstacle) {
   return 'order' in target && !shipProfile(target) ? Math.max(0,Math.hypot(from.x-target.x,from.y-target.y)-target.radius) : strikeGap(from,target);
+}
+
+/** Center geometry for a ground area cast; neither walking distance nor hull overlap.
+ * Beyond the cast range, use the middle of the radial interval shared by both
+ * disks. A tangent has no interior casting point. */
+export function areaCastPoint(from: Point, target: Point, castRange: number, areaRadius: number): Point | undefined {
+  const dx = target.x - from.x, dy = target.y - from.y, gap = hypot2(dx, dy);
+  if (gap <= castRange) return { x: target.x, y: target.y };
+  if (gap >= castRange + areaRadius) return undefined;
+  const reach = (gap - areaRadius + castRange) / 2;
+  return { x: from.x + dx * reach / gap, y: from.y + dy * reach / gap };
 }
