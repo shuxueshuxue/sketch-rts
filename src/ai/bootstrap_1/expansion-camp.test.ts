@@ -35,7 +35,7 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     const memory = createAiPolicyMemory();
     let restored = false;
-    const replacementLoads = new Set<string>();
+    const minedLoads = new Set<string>();
     memory.v6 = { phase: 0 };
     if (attacking) {
       const army = game.units.filter(unit => unit.owner === 'us' && unit.kind !== 'worker');
@@ -60,11 +60,11 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
       // A reassigned builder can still be carrying gold from the old mine.
       const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
-      const returning = game.units.filter(unit => unit.owner === 'us' && replacementLoads.has(unit.id) && unit.order.type === 'mine'
+      const returning = game.units.filter(unit => unit.owner === 'us' && minedLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
       for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'replacement'
-        && unit.order.phase === 'return' && unit.carryingGold > 0) replacementLoads.add(unit.id);
+        && unit.order.phase === 'return' && unit.carryingGold > 0) minedLoads.add(unit.id);
       restored = game.buildings.some(building => building.owner === 'us' && building.kind === 'townHall' && building.complete
         && Math.hypot(building.x - x(2500), building.y - 2300) < 320)
         && returning.some(unit => unit.hp > 0 && unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');

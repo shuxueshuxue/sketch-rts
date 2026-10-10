@@ -72,10 +72,11 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
     expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500 + mined);
   }, 20000);
 
-it.each(['covered', 'two-incomes', 'guarded', 'occupied', 'rising'] as const)(
+it.each(['covered', 'two-incomes', 'no-income', 'guarded', 'occupied', 'rising'] as const)(
   'does not buy replacement-mine cover when %s', condition => {
     const { game, memory } = replacementScene('grove', false);
     if (condition === 'two-incomes') game.resources.find(mine => mine.id === 'empty-main')!.amount = 10000;
+    if (condition === 'no-income') game.resources.find(mine => mine.id === 'working')!.amount = 0;
     if (condition === 'guarded' || condition === 'occupied') {
       const unit = game.units.find(unit => unit.id === 'garrison-0')!;
       unit.owner = condition === 'guarded' ? 'neutral' : 'foe';
