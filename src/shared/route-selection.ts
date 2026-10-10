@@ -16,6 +16,14 @@ export function routeTravelTicks(map: Pick<GameMap, 'terrain'>, from: Point, to:
   return road === undefined ? undefined : Math.ceil(road / speed * SIM_TICKS_PER_SECOND);
 }
 
+/** Reachable movers in arrival order, using each mover's own speed on the terrain road. */
+export function routeArrivals<T extends Point & { speed: number }>(map: Pick<GameMap, 'terrain'>, candidates: readonly T[], destination: Point, mover: Mover): { unit: T; ticks: number }[] {
+  return candidates.flatMap(unit => {
+    const ticks = routeTravelTicks(map, unit, destination, mover, unit.speed);
+    return ticks === undefined ? [] : [{ unit, ticks }];
+  }).sort((a, b) => a.ticks - b.ticks);
+}
+
 /** Shortest terrain route to one destination. Unreachable candidates do not compete.
  * Building detours, body clearance and sailing time belong to movement planning.
  * A single destination reuses the terrain's distance field for every candidate. */

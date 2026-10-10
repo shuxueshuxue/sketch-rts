@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { nearestByRoute, routeTravelTicks } from './route-selection';
+import { nearestByRoute, routeArrivals, routeTravelTicks } from './route-selection';
 import { walkingDistance } from './terrain';
 import { SIM_TICKS_PER_SECOND } from './time';
 
@@ -34,4 +34,18 @@ it('ranks around a wall by road length and converts that road to travel ticks at
   expect(routeTravelTicks(map, nearAcrossWall, home, 'land', 40)).toBe(Math.ceil(road / 40 * SIM_TICKS_PER_SECOND));
   expect(routeTravelTicks(map, nearAcrossWall, home, 'land', 80)).toBe(Math.ceil(road / 80 * SIM_TICKS_PER_SECOND));
   expect(routeTravelTicks(map, nearAcrossWall, home, 'sea', 80)).toBeUndefined();
+});
+
+it('orders arrivals by each mover speed, keeping equal arrivals stable and excluding another island', () => {
+  const map = { terrain: { cell: 32, cols: 24, rows: 8, cells: Array.from({ length: 192 }, (_, index) =>
+    index % 24 === 20 ? '~' : '.').join('') } };
+  const destination = { x: 80, y: 80 };
+  const slow = { x: 336, y: 80, speed: 32 };
+  const fast = { x: 464, y: 80, speed: 96 };
+  const peer = { ...fast };
+  const island = { x: 720, y: 80, speed: 96 };
+  const arrivals = routeArrivals(map, [slow, fast, peer, island], destination, 'land');
+  expect(arrivals.map(arrival => arrival.unit)).toEqual([fast, peer, slow]);
+  expect(arrivals.map(arrival => arrival.ticks)).toEqual([4, 4, 8].map(seconds => seconds * SIM_TICKS_PER_SECOND));
+  expect(nearestByRoute(map, [slow, fast], destination, 'land')).toBe(slow);
 });
