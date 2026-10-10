@@ -129,7 +129,16 @@ describe("SDK AI behavior A/B runner", () => {
 
     expect(report.enabled.telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
     expect(report.disabled.telemetry.behaviors.skirmishPreservation.disabledSkips).toBeGreaterThan(0);
-    expect(report.enabled.commandCounts.attackMove).toBeGreaterThan(0);
+    expect(report.enabled.commandCounts.move).toBeGreaterThan(0);
+    const front = report.enabled.snapshot.units.filter((unit) => unit.owner === "v2" && (unit.kind === "footman" || unit.kind === "archer"));
+    expect(front).toHaveLength(2);
+    for (const unit of front) {
+      const initial = unit.kind === "footman" ? { x: 1900, y: 1600 } : { x: 1940, y: 1640 };
+      expect(unit.order).toMatchObject({ type: "move", avoidCombat: true });
+      if (unit.order.type !== "move") throw new Error("Expected the disadvantaged front to disengage");
+      expect(unit.x).toBeLessThan(initial.x);
+      expect(Math.hypot(unit.x - unit.order.x, unit.y - unit.order.y)).toBeLessThan(Math.hypot(initial.x - unit.order.x, initial.y - unit.order.y));
+    }
     expect(report.scoreDelta).toBeGreaterThan(0);
   });
 
