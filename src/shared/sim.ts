@@ -1117,9 +1117,9 @@ function updateDockRepairs(game: Game) {
 
 function updateRegeneration(game: Game) {
   for (const unit of game.units) {
-    if (unit.hp <= 0) continue;
+    if (unit.hp <= 0 || unit.hp >= unit.maxHp) continue;
     const regenPerSecond = unitRegenPerSecond(game, unit);
-    if (regenPerSecond <= 0 || unit.hp >= unit.maxHp) continue;
+    if (regenPerSecond <= 0) continue;
     unit.hp = Math.min(unit.maxHp, unit.hp + regenPerSecond / 20);
   }
 }

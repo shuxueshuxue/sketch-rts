@@ -1553,12 +1553,16 @@ function claimedClearedExpansion(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 function planMercenary(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  const camps = mercenaryCamps(snapshot);
+  // A map without camps has no hire or camp-control objective. Do not run
+  // army closeout queries for a task that cannot issue an order.
+  if (camps.length === 0) return undefined;
   const army = combatUnits(snapshot, owner);
   const movable = army.filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove");
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
   // @@@merc-yields-to-closeout - Mercenary control converts spare map control into army value; it must not pull the main army away from a live kill window.
   if (options.version === "v2" && shouldMercenaryYieldToCloseout(snapshot, owner, army, movable, enemyArmy, options)) return undefined;
-  const candidates = mercenaryCamps(snapshot)
+  const candidates = camps
     .filter((camp) => camp.stock > 0 && camp.cooldownRemaining === 0)
     .filter((camp) => neutralGuardsNear(snapshot, camp, 260).length === 0)
     .filter((camp) => hiredMercenaryCount(snapshot, owner, camp.hireKind) < mercenaryRoleLimit(camp.hireKind, options))
@@ -4327,12 +4331,17 @@ function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, f
   const candidates = preferredAttackBuildings(enemyBuildings(snapshot, owner, options.teams), preferredOwner);
   const disabledTarget = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, from, options, soldiers, preferredOwner) : undefined;
   if (disabledTarget) return disabledTarget;
+  const defendersByTeam = new Map<string, number>();
   const weakTargets = candidates.filter((building) => {
     const targetTeam = teamFor(snapshot, building.owner, options);
-    const defenders = activePlayerIds(snapshot)
-      .filter((candidate) => teamFor(snapshot, candidate, options) === targetTeam)
-      .flatMap((candidate) => combatUnits(snapshot, candidate));
-    return defenders.length <= 4;
+    let defenders = defendersByTeam.get(targetTeam);
+    if (defenders === undefined) {
+      defenders = activePlayerIds(snapshot)
+        .filter((candidate) => teamFor(snapshot, candidate, options) === targetTeam)
+        .reduce((count, candidate) => count + combatUnits(snapshot, candidate).length, 0);
+      defendersByTeam.set(targetTeam, defenders);
+    }
+    return defenders <= 4;
   });
   return weakTargets.sort((a, b) => closeoutBuildingScore(b, from) - closeoutBuildingScore(a, from))[0];
 }
