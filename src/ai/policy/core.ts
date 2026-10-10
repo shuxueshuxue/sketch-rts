@@ -1,4 +1,5 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
+import { friendlyUnitsAtMercenaryCamp, hiredMercenaryCount, mercenaryRoleLimit } from './mercenary-model';
 import { isBootstrapVersion, planBootstrapCommands } from "../bootstrap_1/policy";
 import { createAiPolicyMemory } from "../memory";
 import { planMechanicalRepair } from "./mechanical-repair";
@@ -1769,25 +1770,6 @@ function mercenaryCampScore(camp: MercenaryCamp, snapshot: GameSnapshot, owner: 
   const roleBonus =
     camp.hireKind === "fieldMedic" ? (wounded ? 90 : 34) : camp.hireKind === "contractArcher" ? (outnumbered ? 76 : 44) : 38;
   return roleBonus + firstCombatBonus - distance(camp, anchor) / 18 - hiredMercenaryCount(snapshot, owner, camp.hireKind) * 24;
-}
-
-function hiredMercenaryCount(snapshot: GameSnapshot, owner: PlayerId, kind: MercenaryUnitKind) {
-  return units(snapshot, owner).filter((unit) => unit.kind === kind).length;
-}
-
-function friendlyUnitsAtMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp) {
-  return units(snapshot, owner).filter((unit) => distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
-}
-
-function mercenaryRoleLimit(kind: MercenaryUnitKind, options?: PresetAiPolicyOptions) {
-  if (options && isTowerMercPolicy(options)) {
-    if (kind === "fieldMedic") return 3;
-    if (kind === "contractArcher") return 7;
-    return 7;
-  }
-  if (kind === "fieldMedic") return 2;
-  if (kind === "contractArcher") return 3;
-  return 2;
 }
 
 function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
