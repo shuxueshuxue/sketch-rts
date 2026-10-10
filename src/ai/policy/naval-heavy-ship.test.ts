@@ -29,7 +29,7 @@ describe("heavy broadside ships in shared naval policy", () => {
     const game = coastFleet(), ship = game.spawnUnit("player", "shipOfTheLine", 1200, 1000);
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     expect(installedWeapons(game, ship)).toHaveLength(4);
-    expect(navalUnitIds(snapshotGame(game), "player", options).has(ship.id)).toBe(true);
+    expect(navalUnitIds(snapshotGame(game), "player", options, () => true).has(ship.id)).toBe(true);
     const gold = game.players.player!.gold;
     for (let tick = 0; tick < seconds(20) && installedWeapons(game, ship).length < 8; tick++) {
       const want = navalWant(snapshotGame(game), "player", options);
@@ -55,7 +55,7 @@ describe("heavy broadside ships in shared naval policy", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const snapshot = snapshotGame(game);
     expect(combatCapability(snapshot, ship)).toEqual({ armed: true, range: 312, dps: 40 });
-    expect(navalUnitIds(snapshot, "player", options).has(ship.id)).toBe(true);
+    expect(navalUnitIds(snapshot, "player", options, () => true).has(ship.id)).toBe(true);
     const commands = planNavalTactics(snapshot, "player", options);
     expect(commands).toContainEqual({ type: "attackMove", unitIds: [ship.id], x: enemy.x, y: enemy.y });
     for (const command of commands) issuePlayerCommand(game, "player", command);

@@ -244,7 +244,7 @@ describe('shared dock outfitting', () => {
     game.units=game.units.filter(unit=>unit.kind!=='worker');
     for (let i=0;i<6;i++) game.spawnUnit('player','footman',130,100+i*40);
     const options = {version,memory:createAiPolicyMemory()};
-    expect(navalUnitIds(snapshotGame(game),'player',options).has(ship.id)).toBe(true);
+    expect(navalUnitIds(snapshotGame(game),'player',options, () => true).has(ship.id)).toBe(true);
     const want = navalWant(snapshotGame(game),'player',options);
     expect(want?.id).toBe('naval:gun');
     const purchase = want!.issue(new Set())!;
@@ -554,7 +554,7 @@ describe("the AI on the water", () => {
     game.units.push(footman("landed", 21, 11));
     const landed = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "attackMove" && command.unitIds.includes("landed"));
     expect(landed).toMatchObject({ x: at(22, 9).x, y: at(22, 9).y });
-    expect(navalUnitIds(snapshotGame(game), "player", options).has("landed")).toBe(true);
+    expect(navalUnitIds(snapshotGame(game), "player", options, () => true).has("landed")).toBe(true);
   });
 
   it("counts the passengers aboard a transport in its supply, as the sim does", () => {
@@ -602,7 +602,7 @@ describe("the AI on the water", () => {
     const game = islandGame({ cell: 32, cols: 30, rows: 20, cells });
     const snapshot = snapshotGame(game);
     expect(navalWant(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
-    expect(navalUnitIds(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() }).size).toBe(0);
+    expect(navalUnitIds(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() }, () => true).size).toBe(0);
   });
   it("ships workers away from a depleted island to a live owned mine", () => {
     const game = islandGame();
