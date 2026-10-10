@@ -10,7 +10,7 @@ import { setBuildingBodies } from './terrain';
 import { poolMap } from './map-pool';
 
 it.each([false, true])('a transport turns before translating into its coastal boarding berth (mirror=%s)', mirror => {
-  const players = Array.from({ length: poolMap('sapphireArchipelago').players }, (_, index) => `p${index}`);
+  const players = Array.from({ length: poolMap('sapphireArchipelago')!.players }, (_, index) => `p${index}`);
   const game = createGame('sapphireArchipelago', { players, aiPlayers: [] });
   game.units = []; game.buildings = []; game.resources = []; game.scriptedVictory = true;
   // Reproduce the ordinary generated weather at the saved world's elapsed time.
