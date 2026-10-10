@@ -355,8 +355,8 @@
     "versionScope": "(requestedVersion ?? version) === v2; other same-id scripts retain their existing semantics.",
     "ownership": "Record actual filtered V2 skirmish attackMove fallbacks as retreat claims in the runner; existing move ownership is preserved.",
     "disengage": "Use move with avoidCombat for local enemy power > 1.5 times allied power, an already executing avoidCombat move, or enemies moving away from the local allied center. An attackMove with an active targetId remains combat, even when its destination points outward.",
-    "localGoal": "Ground disengagements move at most 600 from the local center toward safety, projected with walkableGoal and walkDestination from an actual allied position. Keep an unexpired in-progress retreat goal fixed; if danger persists after arrival, a later leg can continue the retreat.",
-    "preserved": "Wounded recovery, existing dead-opponent clean retreat, original safe regrouping conditions (within 110, no enemy within 420), selected new veteran skill values and Spark Archer 85 HP, victory limits, and CPU budgets."
+    "localGoal": "Ground disengagements propose a goal up to 600 from the local center toward safety, then project it with walkableGoal and walkDestination from an actual allied position. Projection and walking around terrain can change the resulting distance. Keep an unexpired in-progress retreat goal fixed; if danger persists after arrival, a later leg can continue the retreat.",
+    "preserved": "Wounded recovery, existing dead-opponent clean retreat, original safe regrouping conditions (within 110, idle or move, no hostile player or neutral unit within 420), selected new veteran skill values and Spark Archer 85 HP, victory limits, and CPU budgets."
   },
   "finalProbe": {
     "sourceCommit": "aedd0f3bce66636c109a3bb5f85bba6a6ee16e79",
