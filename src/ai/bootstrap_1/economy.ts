@@ -18,6 +18,7 @@ import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
 import { shoppingGoals } from './shopping';
+import { routeArrivals } from '../../shared/route-selection';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -60,10 +61,13 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
+  const issue = (workers: Unit[]) => issueV6Construction({ ...economy,
+    workers: routeArrivals(economy.snapshot.map, workers, point, 'land').slice(0, 1).map(({ unit }) => unit),
+  }, kind, point, used, play);
   // A replacement on the last working income uses its nearest eligible empty-handed worker.
   if (economy.own.filter(building => building.kind === 'townHall' && building.complete).length > 1
     && activeMiningBaseCount(economy.snapshot, economy.owner) === 1) {
-    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play);
+    return issue(ready);
   }
   const assigned = new Map<string, number>(economy.workers.flatMap(worker => worker.order.type === 'mine'
     ? [[worker.order.resourceId, 0] as const] : []));
@@ -73,7 +77,7 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   const priority = (worker: Unit) => worker.order.type === 'idle' ? 0
     : worker.order.type === 'mine' && assigned.get(worker.order.resourceId)! > GOLD_MINE_RULES.workstations ? 1 : 2;
   const preferred = Math.min(...ready.map(priority));
-  return issueV6Construction({ ...economy, workers: ready.filter(worker => priority(worker) === preferred) }, kind, point, used, play);
+  return issue(ready.filter(worker => priority(worker) === preferred));
 };
 
 // A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
