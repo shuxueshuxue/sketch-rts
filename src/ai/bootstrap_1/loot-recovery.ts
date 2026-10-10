@@ -3,7 +3,7 @@ import { canEquip, freeItemSlot } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
 import { walkingDistance } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
-import { itemCarrierScore } from '../policy/item-tactics';
+import { itemCarrierScore, planItemCommands } from '../policy/item-tactics';
 import { neutralUnitsNear } from '../policy/snapshot';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
@@ -52,6 +52,13 @@ function lootAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
 export function lootRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const active = liveLootTask(snapshot, owner, options);
   return new Set(active ? [active.unit.id] : lootAssignments(snapshot, owner, options).map(({ unit }) => unit.id));
+}
+
+/** Experience books belong to deliberate training; local pickups respect all other assigned loot. */
+export function planLootItemCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const books = new Set(snapshot.items.filter(item => item.kind === 'experienceBook').map(item => item.id));
+  return planItemCommands(snapshot, owner, options).filter(command =>
+    command.type !== 'pickupItem' || !books.has(command.itemId) && command.itemId !== options.memory.loot?.itemId);
 }
 
 /** The normal command queue preserves the return trip even after an experience book is consumed. */
