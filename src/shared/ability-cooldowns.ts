@@ -22,6 +22,14 @@ export function withAbilityCooldown(unit: Pick<Unit, "abilityCooldowns">, abilit
 // One tick later: what is left of each cooldown, or undefined once none is.
 export function tickedAbilityCooldowns(cooldowns: Unit["abilityCooldowns"]): Unit["abilityCooldowns"] {
   if (!cooldowns) return undefined;
-  const left = Object.entries(cooldowns).filter(([, ticks]) => (ticks ?? 0) > 1).map(([ability, ticks]) => [ability, (ticks ?? 0) - 1] as const);
-  return left.length > 0 ? (Object.fromEntries(left) as NonNullable<Unit["abilityCooldowns"]>) : undefined;
+  let left: NonNullable<Unit["abilityCooldowns"]> | undefined;
+  for (const ability of Object.keys(cooldowns)) {
+    const ticks = cooldowns[ability as AbilityKind] ?? 0;
+    if (!(ticks > 1)) continue;
+    left ??= {};
+    if (ability === "__proto__") {
+      Object.defineProperty(left, ability, { value: ticks - 1, writable: true, enumerable: true, configurable: true });
+    } else left[ability as AbilityKind] = ticks - 1;
+  }
+  return left;
 }

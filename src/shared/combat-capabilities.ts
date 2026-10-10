@@ -19,6 +19,14 @@ export function combatCapability(
         Math.max(1, unit.attackCooldown),
     };
   const rules = weaponRules(snapshot, unit);
+  // Land stats already include upgrades and training; equipment still supplies
+  // the weapon cooldown. Avoid building a one-weapon list for every army query.
+  if (!shipProfile(unit))
+    return {
+      armed: unit.attackDamage > 0,
+      range: Math.max(0, unit.attackRange),
+      dps: 0 + (unit.attackDamage * SIM_TICKS_PER_SECOND) / Math.max(1, rules.attackCooldown),
+    };
   // Saves without a fittings record retain their saved weapon stats until
   // the common restore path materializes the equipment. An empty record is
   // explicitly unarmed and must never fall back to the hull catalog.
