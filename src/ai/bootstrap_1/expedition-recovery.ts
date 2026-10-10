@@ -13,9 +13,7 @@ import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { planMedicalRecovery } from './medical-recovery';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
-/** An expedition's naval ownership also owns its land recovery orders. */
-export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const commands = planNavalTactics(snapshot, owner, options);
+function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
   const landed = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land'
     && unit.kind !== 'worker' && unit.order.type !== 'board' && home && !sameGround(snapshot.map, unit, home));
@@ -33,6 +31,17 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
       ? foe.attackDamage * Math.max(0, Math.ceil((window - foe.cooldown) / foe.attackCooldown)) : 0), 0);
     return patient.hp < patient.maxHp * V7_WOUNDED_SHARE || patient.hp <= incoming ? [{ patient, healer }] : [];
   });
+  return { recovering, foes };
+}
+
+export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return new Set(recoveryAssignments(snapshot, owner, options).recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]));
+}
+
+/** An expedition's naval ownership also owns its land recovery orders. */
+export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  const commands = planNavalTactics(snapshot, owner, options);
+  const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];

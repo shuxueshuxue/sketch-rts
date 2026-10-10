@@ -19,7 +19,8 @@ import { planSummonerScreen } from './summoner-screen';
 import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
-import { planBootstrapNaval } from './expedition-recovery';
+import { expeditionRecoveryUnitIds, planBootstrapNaval } from './expedition-recovery';
+import { navalUnitIds } from '../policy/naval';
 import { mercenaryControl } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
@@ -96,12 +97,17 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery, { ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
-    if (script === AI_SCRIPT_LIBRARY.allySupport) return version === 'v9_archer'
-      ? [mountedTasks, lootRecovery, mercenaryControl, script] : [lootRecovery, mercenaryControl, script];
+    if (script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval }, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
+    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval,
+      claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+        const riders = mountedTasks.claimsUnits!(snapshot, owner, options);
+        const recovering = expeditionRecoveryUnitIds(snapshot, owner, options);
+        return navalUnitIds(snapshot, owner, options, unit => !riders.has(unit.id) || recovering.has(unit.id));
+      },
+    }, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
   });
 }
 
