@@ -134,7 +134,7 @@ export function cancelShipPlanningJob(ship:Unit):void {if(ship.sailing){delete s
 export function shipPlanningSliceCost(ship:Unit):number {
   const job=read(ship);return job?.phase==='finished'?0:job?.phase==='refine'?4:2;
 }
-export function holdsShipPlanningOrigin(ship:Unit):boolean {const job=read(ship);return !!job && (job.phase!=='direct' || job.recovery) && !job.anchor;}
+export function holdsShipPlanningOrigin(ship:Unit):boolean {const job=read(ship);return !!job && (job.phase!=='direct' || !!job.recovery) && !job.anchor;}
 
 export function beginShipPlanningJob(ship:Unit,goal:ShipCourseGoal,map:GameMap,units:readonly Unit[],anchor?:ShipPose,recovery=false):void {
   const frozen=plannerUnit(ship);

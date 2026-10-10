@@ -24,7 +24,7 @@ describe('continued heading-lattice searches',()=>{
       planShipRoute(map,ship,{x:20.5*32,y:12.5*32},undefined,4,true);
     }
     expect(steps).toBeGreaterThan(2);expect(result).toEqual(expected);
-    let previous={x:ship.x,y:ship.y,heading:ship.sailing.heading};
+    let previous={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
     for(const point of result!.points){expect(hullPassageClear(map,ship,previous,point)).toBe(true);previous=point;}
     if(Number.isFinite(budget))expect(state.visited).toBeLessThanOrEqual(budget+1);
   });
