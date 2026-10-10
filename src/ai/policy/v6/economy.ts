@@ -45,6 +45,7 @@ type Economy = {
   construct: typeof issueV6Construction;
   naval: typeof navalWant;
   prepareExpansion: (economy: Economy, mine: Point, priority: number, target: number) => Goal[];
+  chooseMine: typeof nextExpansionMine;
   bases: Building[];
   threatened?: { hall: Building; threat: number };
 };
@@ -106,18 +107,19 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
-  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build, navalWant, () => []));
+  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build, navalWant, () => [],
+    isV9Policy(options) ? v9ExpansionMine : nextExpansionMine));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"]): Goal[] {
-  const economy = readEconomy(snapshot, owner, options, construct, naval, prepareExpansion);
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Goal[] {
+  const economy = readEconomy(snapshot, owner, options, construct, naval, prepareExpansion, chooseMine);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
   return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
-function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"]): Economy {
+function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Economy {
   const { strategy } = v6Doctrine(snapshot, owner, options);
   const intel = readV6Intel(snapshot, owner, options);
   const own = buildings(snapshot, owner);
@@ -134,6 +136,7 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     construct,
     naval,
     prepareExpansion,
+    chooseMine,
     bases,
     ...(threatened ? { threatened } : {}),
   };
@@ -367,7 +370,7 @@ function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
   const halls = economy.own.filter((building) => building.kind === "townHall");
   if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete)) return [];
   // V9 expands under a threat elsewhere (see v9-bases-first); only one near the mine holds it back.
-  const mine = isV9Policy(economy.options) ? v9ExpansionMine(economy.snapshot, economy.intel) : nextExpansionMine(economy.snapshot, economy.intel);
+  const mine = economy.chooseMine(economy.snapshot, economy.intel);
   if (economy.threatened && mine && distance(economy.threatened.hall, mine) < V9_THREAT_CLEARANCE) return [];
   if (!mine || mineGuards(economy.snapshot, mine).length > 0) return [];
   // V9 raises a hall only with its army or a tower by the mine (see v9-front).
