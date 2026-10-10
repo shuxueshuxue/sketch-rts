@@ -1,7 +1,7 @@
 import { detCos, detSin } from './det-math';
 import { clipToConvex, convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonRadius } from './navigation-math';
 import { bodyMass } from './physical-body';
-import { shipProfile, type Point } from './ship-geometry';
+import { isShipKind, shipProfile, type Point } from './ship-geometry';
 import { headingDifference, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
 import { CELL_GROUND, footprintHalf, isWalkable } from './terrain';
 import { SIM_TICKS_PER_SECOND } from './time';
@@ -78,11 +78,19 @@ function updateEntry(frame: Frame, entry: Entry) {
     }
 }
 export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, solids: readonly Solid[] = []) {
-  const hasShips = units.some(unit => unit.hp > 0 && !!shipProfile(unit));
-  const frame: Frame = { ...(map ? { map } : {}), hasShips, buckets: new Map(), shipBuckets: new Map(), entries: new Map(), velocities: new Map(), yawRates: new Map(), impacts: [], hitPairs: new Set() };
-  frames.set(units, frame);
-  if (!hasShips) return;
-  for (const body of [...units, ...solids]) {
+  let frame = frames.get(units);
+  if (frame) {
+    frame.buckets.clear(); frame.shipBuckets.clear(); frame.entries.clear();
+    frame.velocities.clear(); frame.yawRates.clear(); frame.impacts.length = 0; frame.hitPairs.clear();
+    if (map) frame.map = map; else delete frame.map;
+  } else {
+    frame = { ...(map ? { map } : {}), hasShips: false, buckets: new Map(), shipBuckets: new Map(), entries: new Map(), velocities: new Map(), yawRates: new Map(), impacts: [], hitPairs: new Set() };
+    frames.set(units, frame);
+  }
+  frame.hasShips = units.some(unit => unit.hp > 0 && isShipKind(unit.kind));
+  if (!frame.hasShips) return;
+  for (let i = 0; i < units.length + solids.length; i++) {
+    const body = i < units.length ? units[i]! : solids[i - units.length]!;
     if (body.hp <= 0 || unitBody(body) && body.deck) continue;
     const entry = { body, radius: radiusOf(map, body), keys: [] };
     frame.entries.set(body, entry); frame.velocities.set(body, velocity(body)); updateEntry(frame, entry);
@@ -255,7 +263,8 @@ export function shipCollisionImpactCount(units: readonly Unit[]): number { retur
 
 /** Ground crew retain their own layer; an off-deck body cannot walk or slide through a reachable hull. */
 export function constrainGroundShipStep(map: GameMap, unit: Unit, from: Point, to: Point, units: readonly Unit[]): Point {
-  if (unit.deck || shipProfile(unit) || !isWalkable(map, from.x, from.y, 'land')) return to;
+  if (frames.get(units)?.hasShips === false) return to;
+  if (unit.deck || isShipKind(unit.kind) || !isWalkable(map, from.x, from.y, 'land')) return to;
   const frame = frameFor(units, map);
   if (!frame.hasShips) return to;
   let fraction = 1;

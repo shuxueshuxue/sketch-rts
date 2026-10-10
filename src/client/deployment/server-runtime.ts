@@ -123,10 +123,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);
     });
-    const join = () => {
-      client.join();
-      client.requestCheckpoint("initial-sync");
-    };
+    const join = () => client.join();
     if (transport.onOpen) transport.onOpen(join);
     else join();
     return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };

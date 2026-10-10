@@ -1,25 +1,46 @@
-import { circleInPolygon, localToWorld, shipProfile, worldToLocal, type Point } from "./ship-geometry";
+import { detCos, detSin } from "./det-math";
+import { shipProfile, type Point } from "./ship-geometry";
 import type { Building, Obstacle, Unit } from "./types";
 
 export type StrikeTarget = Unit | Building | Obstacle | Point;
+type HullEdge = { x: number; y: number; dx: number; dy: number; length: number; squared: number };
+// Profiles expose immutable local hulls. Keep only their numeric edges, so
+// repeated ballistic probes neither allocate a point per edge nor recompute
+// edge lengths. A changed scale/profile naturally receives a new hull key.
+const hullEdges = new WeakMap<readonly Point[], readonly HullEdge[]>();
+function edgesFor(hull: readonly Point[]) {
+  let edges = hullEdges.get(hull);
+  if (!edges) {
+    edges = hull.map((a, index) => {
+      const b = hull[(index + 1) % hull.length]!, dx = b.x - a.x, dy = b.y - a.y;
+      return { x: a.x, y: a.y, dx, dy, length: Math.hypot(dx, dy), squared: dx * dx + dy * dy };
+    });
+    hullEdges.set(hull, edges);
+  }
+  return edges;
+}
 /** Selection, range, aiming and projectile travel share the same strike point.
  * Troops are aimed at their center; solid hulls and structures at their surface. */
 export function strikePoint(from: Point, target: StrikeTarget): Point {
   if ("order" in target) {
     const profile = shipProfile(target);
     if (!profile) return target;
-    const origin = worldToLocal(target, from);
-    if (circleInPolygon(origin, 0, profile.hull)) return from;
-    let nearest = profile.hull[0]!, gap = Infinity;
-    for (let i = 0; i < profile.hull.length; i++) {
-      const a = profile.hull[i]!, b = profile.hull[(i + 1) % profile.hull.length]!;
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const t = Math.max(0, Math.min(1, ((origin.x - a.x) * dx + (origin.y - a.y) * dy) / (dx * dx + dy * dy)));
-      const point = { x: a.x + dx * t, y: a.y + dy * t };
-      const distance = (point.x - origin.x)**2 + (point.y - origin.y)**2;
-      if (distance < gap) { gap = distance; nearest = point; }
+    const angle = target.sailing?.heading ?? 0, c = detCos(angle), s = detSin(angle);
+    const dx = from.x - target.x, dy = from.y - target.y;
+    const originX = dx * c + dy * s, originY = -dx * s + dy * c, edges = edgesFor(profile.hull);
+    let inside = true;
+    for (const edge of edges) {
+      if ((edge.dx * (originY - edge.y) - edge.dy * (originX - edge.x)) / edge.length < -1e-6) { inside = false; break; }
     }
-    return localToWorld(target, nearest);
+    if (inside) return from;
+    let nearestX = profile.hull[0]!.x, nearestY = profile.hull[0]!.y, gap = Infinity;
+    for (const edge of edges) {
+      const t = Math.max(0, Math.min(1, ((originX - edge.x) * edge.dx + (originY - edge.y) * edge.dy) / edge.squared));
+      const x = edge.x + edge.dx * t, y = edge.y + edge.dy * t;
+      const distance = (x - originX)**2 + (y - originY)**2;
+      if (distance < gap) { gap = distance; nearestX = x; nearestY = y; }
+    }
+    return { x: target.x + nearestX * c - nearestY * s, y: target.y + nearestX * s + nearestY * c };
   }
   if (!("radius" in target)) return target;
   const dx = from.x - target.x, dy = from.y - target.y, gap = Math.hypot(dx, dy);

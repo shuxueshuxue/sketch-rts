@@ -1,13 +1,16 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
+import { miningHallSite } from "../../shared/mining-site";
+import { strikeGap } from "../../shared/combat-geometry";
+import { segmentWalkable, walkDestination, walkRoute } from "../../shared/terrain";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
-import { opponentPlayerIds } from "./ownership";
+import { isEnemyOwner, opponentPlayerIds } from "./ownership";
 import { missingCombatProductionKind } from "./production-model";
-import { activePlayerIds, activeResources, allBuildings, buildings, combatUnits, completeBuildings, neutralUnitsNear, resources, units } from "./snapshot";
-import { averagePoint, distance } from "./spatial";
+import { activePlayerIds, activeResources, allBuildings, buildings, combatUnits, completeBuildings, enemyBuildingsNear, neutralUnitsNear, resources, units } from "./snapshot";
+import { averagePoint, distance, pointToSegmentDistance, type Point } from "./spatial";
 import { enemyPressure } from "./threats";
-import { hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
+import { availableBuilder, expansionOffset, hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy } from "./versions";
 import { onHomeGround } from "./ground";
@@ -58,6 +61,72 @@ export function expansionBaseTarget(options: PresetAiPolicyOptions) {
   return options.version === "v2" ? 5 : 2;
 }
 
+type ReplacementSite = { point: Point | undefined; reachable: WeakMap<Unit, boolean>; routes: WeakMap<Unit, Point[]> };
+const replacementSites = new WeakMap<GameSnapshot, Map<string, ReplacementSite>>();
+
+/** Replace exhausted mining bases rather than spending every remote haul on
+ * another isolated soldier. This is a working economy's next legal foundation,
+ * not a reserve for an unclaimed or contested speculative mine. */
+export function depletedEconomyExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || activeMiningBaseCount(snapshot, owner) > 0) return undefined;
+  const bases = completeBuildings(snapshot, owner, "townHall");
+  if (!bases.length || buildings(snapshot, owner).some(building => building.kind === "townHall" && !building.complete)) return undefined;
+  const main = mainBase(snapshot, owner);
+  if (enemyPressure(snapshot, owner, main, 640, options)) return undefined;
+  const ownWorkers = units(snapshot, owner).filter(unit => unit.hp > 0 && unit.kind === "worker" && !unit.deck && unit.order.type === "mine");
+  const mine = activeResources(snapshot)
+    .filter(resource => resource.amount + playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost)
+    .filter(resource => unoccupiedExpansionMine(snapshot, owner, resource, bases))
+    .filter(resource => ownWorkers.some(worker => worker.order.type === "mine" && worker.order.resourceId === resource.id))
+    .filter(resource => neutralUnitsNear(snapshot, resource, 360).length === 0
+      && !enemyPressure(snapshot, owner, resource, 640, options)
+      && enemyBuildingsNear(snapshot, owner, resource, 720, options.teams).length === 0)
+    .sort((a, b) => distance(a, main) - distance(b, main))[0];
+  if (!mine) return undefined;
+  const builder = availableBuilder(snapshot, owner, mine, options);
+  if (!builder || builder.hp <= 0) return undefined;
+  const offset = expansionOffset(snapshot, owner);
+  // Scripts share an immutable snapshot, while their claims and gold budget
+  // can change. Cache only that frame's foundation/path geometry; select the
+  // still-available builder and affordable live mine above on every call.
+  let sites = replacementSites.get(snapshot);
+  if (!sites) { sites = new Map(); replacementSites.set(snapshot, sites); }
+  const key = `${mine.id}:${offset.x}:${offset.y}`;
+  let site = sites.get(key);
+  if (!site) {
+    site = { point: miningHallSite(snapshot, mine, { x: mine.x + offset.x, y: mine.y + offset.y }), reachable: new WeakMap(), routes: new WeakMap() };
+    sites.set(key, site);
+  }
+  const point = site.point;
+  if (!point) return undefined;
+  let reachable = site.reachable.get(builder);
+  if (reachable === undefined) {
+    reachable = distance(walkDestination(snapshot.map, builder, point), point) <= 1e-6;
+    site.reachable.set(builder, reachable);
+  }
+  if (!reachable) return undefined;
+  const towers = allBuildings(snapshot).filter(building => building.hp > 0 && building.complete && building.attackDamage > 0
+    && isEnemyOwner(snapshot, owner, building.owner, options));
+  if (towers.length) {
+    const foundation = { ...point, radius: BUILDING_DEFS.townHall.radius };
+    if (towers.some(tower => strikeGap(tower, foundation) <= tower.attackRange)) return undefined;
+    let route = site.routes.get(builder);
+    if (!route) {
+      route = segmentWalkable(snapshot.map, builder, point) ? [point] : walkRoute(snapshot.map, builder, point, 1);
+      if (!route) return undefined;
+      site.routes.set(builder, route);
+    }
+    // The mine's exclusion radius does not cover an offset foundation or a
+    // builder approaching it from the far side of a hostile tower.
+    let from: Point = builder;
+    for (const to of route) {
+      if (towers.some(tower => pointToSegmentDistance(tower, from, to) <= tower.attackRange + builder.radius)) return undefined;
+      from = to;
+    }
+  }
+  return { mine, builder, point: { ...point } };
+}
+
 export function canExpandBeforeFullProductionChain(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return false;
   if (canTakeSevereEconomyGapFollowupExpansion(snapshot, owner, options)) return true;
@@ -104,6 +173,7 @@ function opponentBaseControlsExpansionMine(snapshot: GameSnapshot, opponents: re
 export function shouldReserveForExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (resources(snapshot).length <= activePlayerIds(snapshot).length) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
+  if (depletedEconomyExpansion(snapshot, owner, options)) return true;
   const ownCombatCount = combatUnits(snapshot, owner).length;
   const minimumReserveArmy = 4;
   if (ownCombatCount < minimumReserveArmy && !shouldReserveForClearedExpansion(snapshot, owner, options)) return false;

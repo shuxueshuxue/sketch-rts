@@ -168,10 +168,13 @@ export function runNavalStress(scene: Scene, record = false) {
           hp: unit.hp, order: unit.order.type, mode: unit.sailing!.sail?.mode, route: unit.sailing!.route?.points.slice(0, 16) })) });
     }
   }
+  const coldTicksMs = timings.slice(0, 2);
   timings.sort((a, b) => a - b);
   return { id: scene.id, label: scene.label, duration: scene.duration, setupMs, initial, windEvents,
-    step: { count: timings.length, meanMs: timings.reduce((sum, value) => sum + value, 0) / timings.length,
-      p50Ms: quantile(timings, .5), p95Ms: quantile(timings, .95), p99Ms: quantile(timings, .99), maxMs: timings.at(-1), over50Ms: timings.filter(value => value > 50).length },
+    step: { count: timings.length, coldTicksMs, meanMs: timings.reduce((sum, value) => sum + value, 0) / timings.length,
+      p50Ms: quantile(timings, .5), p95Ms: quantile(timings, .95), p99Ms: quantile(timings, .99), maxMs: timings.at(-1),
+      over16Ms: timings.filter(value => value > 16).length, over33Ms: timings.filter(value => value > 33).length,
+      over50Ms: timings.filter(value => value > 50).length },
     quality: { coastViolations, maxHullOverlap, overlapSamples, liveShips: ships.filter(unit => unit.hp > 0).length,
       initialQuarryGap, finalQuarryGap: quarry ? Math.min(...ships.filter(unit => unit.owner === 'player' && unit.hp > 0).map(unit => Math.hypot(unit.x - quarry.x, unit.y - quarry.y))) : undefined,
       ships: ships.map(unit => { const state = history.get(unit)!, goal = goals?.get(unit), origin = origins.get(unit)!;

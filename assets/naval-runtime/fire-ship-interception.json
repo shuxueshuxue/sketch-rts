@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "fixture": "scripts/ship-combat-review.ts#flame-crossing",
+  "durationTicks": 1800,
+  "ticksPerSecond": 20,
+  "conditions": [
+    "Original HP, mounted equipment, cooldowns and component damage",
+    "Original stop definition: actual per-tick displacement at most 1 unit/second",
+    "Original stop <= 6, damage > 0, yaw < 360 degrees and collision assertions retained"
+  ],
+  "before": {
+    "sourceCommit": "29259ad",
+    "metrics": {
+      "stopEpisodes": 7,
+      "firstShot": 11.3,
+      "shots": 15,
+      "teamDamage": 105,
+      "totalYawDegrees": 198.32314795748175,
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "routeRevisions": 4,
+      "early45LongestPendingStopSeconds": 3.85
+    }
+  },
+  "after": {
+    "state": "Working tree after the interception fix, before the final validation commit",
+    "ancestorCommit": "ddbbff9cf99504e2a94aa9caed0a800c3bc7b383",
+    "sourceSha256": {
+      "scripts/ship-combat-review.ts": "440a4b44440f7e59f35f37df86b72e66c1dd9cd08eaf6cb28d56e7ad167d9000",
+      "src/shared/ship-guidance.ts": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+      "src/shared/sailing.ts": "28b3bdc5de360e66fdc4b2f197e18e20c86e0f4c03bf96f0c148ba257946be2c",
+      "src/shared/ship-pursuit.ts": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+      "src/shared/ship-motion.ts": "f7d632213276dc00f97b0f0c67f4fa22a127fa75080ca84c3c57b914fb377cb1",
+      "src/shared/ship-collisions.ts": "3ecddb10f33a3bb82cf3d16de3116667f928bc2f21762c310bb49aa3584c0359",
+      "src/shared/ship-avoidance.ts": "881e935cd85ce865eac8f73444c5a60ca8ed34c32b06c2dacf4dc288c494c8e2",
+      "src/shared/ship-fire-control.ts": "c9832b3b0159685608583938330c62251d0bbf806793e44ba3cdaba09094c10d",
+      "src/shared/ship-navigation.ts": "b24fb48678f76ffc6e6c8b9a730b89a5ad51f0b275fe2d604e362d367f15210c",
+      "src/shared/ship-handling.ts": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+      "src/shared/sim.ts": "fc620510273623a1ed363730c4422540fb6d0425509ffc4468e8f062735496e8"
+    },
+    "diagnosticBundleSha256": "dee7f523ca22316e165178d8ae62d39140786e7268075e7a9a42fe79062ce3a0",
+    "metrics": {
+      "stopEpisodes": 6,
+      "firstShot": 11.75,
+      "shots": 22,
+      "teamDamage": 154,
+      "totalYawDegrees": 217.42422765434168,
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "routeRevisions": 8,
+      "early45LongestPendingStopSeconds": 8.35
+    },
+    "shots": {
+      "count": 22,
+      "outOfRange": 0,
+      "outOfArc": 0,
+      "ticks": [
+        235,
+        260,
+        284,
+        308,
+        332,
+        357,
+        382,
+        406,
+        430,
+        454,
+        479,
+        504,
+        528,
+        552,
+        576,
+        619,
+        723,
+        751,
+        779,
+        807,
+        835,
+        863
+      ]
+    },
+    "longestEarlyPendingStop": {
+      "firstTick": 461,
+      "lastTick": 627,
+      "seconds": 8.35,
+      "actualHitTicks": [
+        479,
+        504,
+        528,
+        552,
+        576,
+        619
+      ],
+      "reason": "Maintains a valid firing station after swept hull avoidance and fires six damaging projector bursts; this stop remains included in the unchanged metrics."
+    }
+  },
+  "targetedValidation": {
+    "node": "20.20.2",
+    "files": 3,
+    "passed": 78,
+    "tests": [
+      "ship-combat-quality.test.ts (25)",
+      "ship-pursuit.test.ts (24)",
+      "ship-steering.test.ts (29)"
+    ],
+    "newBoundaries": [
+      "Moving temporary marks at 0, 0.02 and 4 units retain actual headway and full JSON-restored checksums",
+      "Stationary, partial, tack, exact and berth marks still finish",
+      "A quarry that actually stops permits physical braking to a stationary firing station",
+      "Walking land targets remain stationary navigation targets; walking deck targets use the carrying hull"
+    ]
+  },
+  "implementation": [
+    "Do not finish or clip surge at an ordinary final moving interception mark",
+    "At zero carrot distance, keep the committed tangent for a fully swept step",
+    "Finite partial/tack/precision legs retain their original completion rules",
+    "Only a target with sailing state qualifies as underway; deck crew first resolve to their carrying hull"
+  ],
+  "scope": "This is an interception regression diagnosis, not a timing benchmark or a fleet-wide performance claim."
+}

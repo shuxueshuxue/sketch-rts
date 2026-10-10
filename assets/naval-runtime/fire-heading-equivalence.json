@@ -1,0 +1,147 @@
+{
+  "fixture": "moving-broadside-fleets-six-v-six; original first naval runtime scene",
+  "nodeVersion": "20.20.2",
+  "commonSourceManifestSha256": "551e661ba278e1e22a1b3823455bd1837f8ab6a2a7a83b93f0b2740403daf46d",
+  "sourceSha256": {
+    "before": {
+      "src/shared/ship-equipment.ts": "61c28b7df4dc7b174d6f528c3cad9279861143f1b93e8decf2431e7f5cc489f8",
+      "src/shared/ship-fire-control.ts": "d8634fc6985ab8149260a9839482424964d680e39f374b5d6e8585e2ffc1393b"
+    },
+    "after": {
+      "src/shared/ship-equipment.ts": "ccf57fbcf24cc812774b7227c6f502afbd050364e6e8ca0b75bb4cfa9ad48c76",
+      "src/shared/ship-fire-control.ts": "c9832b3b0159685608583938330c62251d0bbf806793e44ba3cdaba09094c10d"
+    }
+  },
+  "headingProof": {
+    "cases": 763,
+    "objectIsExact": true,
+    "coldHotJsonAndDeckScale": true,
+    "velocities": [
+      0,
+      1e-08,
+      1e-07,
+      1.00000001e-07,
+      30
+    ],
+    "beforeLaneQueries": 27464,
+    "afterLaneQueries": 6082,
+    "queriesAreOriginalLegalSubset": true,
+    "lanePolicy": "Deterministic synchronous read-only; same arguments return same verdict.",
+    "queryOrderIsPartOfContract": false
+  },
+  "simulationProof": {
+    "ticks": 600,
+    "ships": 12,
+    "checksumsEveryTickEqual": true,
+    "posesHeadingHpEveryTickEqual": true,
+    "shotCountsAndFirstShotEveryTickEqual": true,
+    "finalChecksum": "e83e2001",
+    "shots": [
+      [
+        "unit-player-shipOfTheLine-1000",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-player-warship-1001",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-player-warship-1002",
+        {
+          "shots": 3,
+          "firstShot": 24.35
+        }
+      ],
+      [
+        "unit-player-shipOfTheLine-1003",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-player-warship-1004",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-player-warship-1005",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-enemy-shipOfTheLine-1006",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-enemy-warship-1007",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-enemy-warship-1008",
+        {
+          "shots": 2,
+          "firstShot": 24.55
+        }
+      ],
+      [
+        "unit-enemy-shipOfTheLine-1009",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-enemy-warship-1010",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ],
+      [
+        "unit-enemy-warship-1011",
+        {
+          "shots": 0,
+          "firstShot": null
+        }
+      ]
+    ]
+  },
+  "performanceDiagnostic": {
+    "timingsAreNotReleaseBenchmark": true,
+    "quietAbbaRepetitionsPerVariant": 4,
+    "beforeFirstTwoFrameMedianMs": [
+      139.7102445,
+      54.2086655
+    ],
+    "afterFirstTwoFrameMedianMs": [
+      117.5372695,
+      37.1069055
+    ],
+    "note": "Earlier same-source Node20 v4 snapshot; absolute timings are machine-dependent. Full 600-tick production proof has no timing claim.",
+    "commonSourceManifestSha256": "6282563a9f5715cb7a7966db3e4a5852a5183ffe121121ea0c71bfcc4b164ac5"
+  },
+  "preservedSearch": {
+    "movingRefinements": 6,
+    "blockedLaneInteriorSamples": 48,
+    "interiorRefinements": 12,
+    "arcAndRangeAndLaneEligibilityUnchanged": true
+  },
+  "boundedLifetime": "Boundary cache is call-local per mount, at most 32 entries; no persistent target/pose/lane verdict."
+}

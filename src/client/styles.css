@@ -200,21 +200,6 @@ input[type="range"] {
   cursor: crosshair;
 }
 
-/* Over an enemy's or the creeps' (see @@@relation-ink), the attack cursor: a red ring and cross, dark-edged to read on
-   any ground; under pointer lock, the drawn cursor turns red. Placing a building keeps its own. */
-.pointer-over-enemy:not(.placement-active) .game-canvas {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cg stroke='%232e1d0e' stroke-width='4.5'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3Cg stroke='%23d8382b' stroke-width='2.2'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
-}
-
-.pointer-over-enemy:not(.placement-active) .virtual-pointer::before {
-  border-color: #6e1610;
-  background: rgba(216, 56, 43, 0.6);
-}
-
-.pointer-over-enemy:not(.placement-active) .virtual-pointer::after {
-  background: #6e1610;
-}
-
 .pointer-locked .game-canvas {
   cursor: none;
 }
@@ -249,6 +234,16 @@ input[type="range"] {
   content: "";
   background: #2e1d0e;
 }
+
+.virtual-pointer.relation-cursor {
+  width: 32px;
+  height: 32px;
+  background-size: 32px 32px;
+  background-repeat: no-repeat;
+}
+
+.virtual-pointer.relation-cursor::before,
+.virtual-pointer.relation-cursor::after { display: none; }
 
 /* Carved frames belong to the menu, separate from the battle HUD. */
 .menu-window, .pointer-lock-panel, .map-preview-frame {

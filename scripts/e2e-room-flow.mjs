@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { roomUiFlowCode } from "./room-ui-flow.mjs";
 
 const port = Number(process.env.ROOM_FLOW_PORT ?? 5178);
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -82,10 +83,11 @@ async page => {
     if (!condition) throw new Error(message);
   };
   const sleep = (ms) => page.waitForTimeout(ms);
+  ${roomUiFlowCode}
   const canvasPatch = (x, y, width, height) =>
     page.evaluate(
       ({ x, y, width, height }) => {
-        const canvas = document.querySelector("canvas");
+        const canvas = document.querySelector(".game-canvas");
         if (!canvas) throw new Error("canvas missing");
         const readback = document.createElement("canvas");
         readback.width = width;
@@ -133,7 +135,7 @@ async page => {
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   const roomBrowserLayoutProof = await page.evaluate(() => {
-    const actions = document.querySelector(".room-browser-actions")?.getBoundingClientRect();
+    const actions = document.querySelector("[data-room-browser] .menu-actions")?.getBoundingClientRect();
     const list = document.querySelector(".room-browser-list")?.getBoundingClientRect();
     return {
       hasCreate: Boolean(document.querySelector("[data-create-room]")),
@@ -143,20 +145,94 @@ async page => {
   });
   must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.actionsBelow, "rooms browser should show the room list with its actions below: " + JSON.stringify(roomBrowserLayoutProof));
   await page.locator("[data-create-room]").click();
-  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  must((await page.locator("[data-create-game-form] input[name='gameMode'][value='singlePlayer']").isChecked()) === true, "new games should default to single-player");
-  await page.locator("[data-map-entries] [data-map-id='pineshade']").click();
-  must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "map chooser did not show the chosen pool map");
-  await page.locator("[data-submit-create-game]").click();
+  const firstSoloId = await automaticSoloSetup("pineshade");
+  must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "map click did not show the chosen pool map");
+  const privateRoomProof = await page.evaluate(() => {
+    const query = new URLSearchParams(location.search);
+    return { visibility: query.get("visibility"), mapId: query.get("map"), slots: document.querySelectorAll(".slot-row").length };
+  });
+  must(privateRoomProof.visibility === "private", "map click did not create a local room: " + JSON.stringify(privateRoomProof));
+  must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "map click did not create the chosen pool map and its seats: " + JSON.stringify(privateRoomProof));
+  const privateLobbyProof = await page.evaluate(async (roomId) => {
+    const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
+    const publicLobby = await (await fetch("/api/rooms")).json();
+    const ownerLobby = await (await fetch("/api/rooms?userId=" + encodeURIComponent(profile.id))).json();
+    return {
+      listedPublicly: publicLobby.rooms.some((room) => room.id === roomId),
+      listedOnServerForOwner: ownerLobby.rooms.some((room) => room.id === roomId),
+      listedForOwner: false,
+    };
+  }, firstSoloId);
+  must(!privateLobbyProof.listedPublicly && !privateLobbyProof.listedOnServerForOwner, "browser-local solo room leaked into server lists: " + JSON.stringify(privateLobbyProof));
+  await page.locator("[data-back-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  privateLobbyProof.listedForOwner = (await page.locator("[data-room-id='" + firstSoloId + "']").count()) === 1;
+  must(privateLobbyProof.listedForOwner, "owned solo room was not visible after backing to Rooms UI");
+  await page.locator("[data-room-id='" + firstSoloId + "']").click();
+  await page.waitForSelector("[data-room-setup='" + firstSoloId + "']", { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-1'] [data-slot-race]").selectOption("ember");
+  await page.locator("[data-slot-id='slot-1'] [data-slot-team]").selectOption("team-1");
+  await page.locator("[data-slot-id='slot-2'] [data-slot-race]").selectOption("grove");
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("team-2");
+  await page.waitForFunction(() => new URLSearchParams(location.search).get("seats") === "human:team-1:ember:,ai:team-2:grove:random", null, { timeout: 5000 });
+  const configuredSoloUrl = new URL(page.url());
+  configuredSoloUrl.searchParams.set("seed", "room-flow-config-seed");
+  configuredSoloUrl.searchParams.set("name", "Room Flow Fleet");
+  await page.goto(configuredSoloUrl.href);
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-  const roomSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  const beforeSoloReloadId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  const beforeSoloReloadUrl = page.url();
+  await page.reload();
+  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
+  const soloReloadProof = await page.evaluate(() => ({
+    id: document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup"),
+    query: Object.fromEntries(new URLSearchParams(location.search)),
+    hostRace: document.querySelector("[data-slot-id='slot-1'] [data-slot-race]")?.value,
+    hostTeam: document.querySelector("[data-slot-id='slot-1'] [data-slot-team]")?.value,
+    aiRace: document.querySelector("[data-slot-id='slot-2'] [data-slot-race]")?.value,
+    aiTeam: document.querySelector("[data-slot-id='slot-2'] [data-slot-team]")?.value,
+    aiController: document.querySelector("[data-slot-id='slot-2'] [data-slot-controller-status]")?.textContent?.trim(),
+    title: document.querySelector("[data-menu-status]")?.textContent ?? "",
+  }));
+  must(soloReloadProof.id !== beforeSoloReloadId && page.url() === beforeSoloReloadUrl && soloReloadProof.query.map === "pineshade" &&
+    soloReloadProof.query.seed === "room-flow-config-seed" && soloReloadProof.query.name === "Room Flow Fleet" && soloReloadProof.query.visibility === "private" &&
+    soloReloadProof.hostRace === "ember" && soloReloadProof.hostTeam === "team-1" && soloReloadProof.aiRace === "grove" && soloReloadProof.aiTeam === "team-2" &&
+    soloReloadProof.aiController === "AI" && soloReloadProof.title.includes("Room Flow Fleet"), "solo reload did not rebuild exactly the configured map/seed/name/teams/races/controllers: " + JSON.stringify(soloReloadProof));
+
+  const roomSetupId = await serverSetupFromSolo(false);
+  const guestContext = await page.context().browser().newContext();
+  let guestJoinProof;
+  try {
+    const guest = await guestContext.newPage();
+    await guest.goto(page.url());
+    await guest.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 5000 });
+    await guest.locator("[data-slot-id='slot-2'] [data-slot-ready]").check();
+    await page.waitForFunction(async (roomId) => {
+      const room = await (await fetch("/api/rooms/" + roomId)).json();
+      return room.slots[1]?.controller === "human" && room.slots[1]?.ready === true;
+    }, roomSetupId, { timeout: 5000 });
+    guestJoinProof = await guest.evaluate(async (roomId) => {
+      const room = await (await fetch("/api/rooms/" + roomId)).json();
+      const user = JSON.parse(localStorage.getItem("sketch-rts-user"));
+      return { status: room.status, owner: room.hostUserId, userId: user.id, slots: room.slots.filter(slot => slot.userId === user.id), startDisabled: document.querySelector("[data-start-room]")?.disabled };
+    }, roomSetupId);
+    must(guestJoinProof.owner !== guestJoinProof.userId && guestJoinProof.slots.length === 1 && guestJoinProof.slots[0].id === "slot-2" &&
+      guestJoinProof.status === "open" && guestJoinProof.startDisabled, "public invitation did not join one guest seat and wait for the host: " + JSON.stringify(guestJoinProof));
+  } finally { await guestContext.close(); }
+  // Restore the authoritative AI fixture after testing the real invitation.
+  await page.evaluate(async (roomId) => {
+    const response = await fetch("/api/rooms/" + roomId + "/slots/slot-2", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ controller: "ai" }) });
+    if (!response.ok) throw new Error(await response.text());
+  }, roomSetupId);
+  await page.waitForFunction(() => document.querySelector("[data-slot-id='slot-2'] [data-slot-controller]")?.value === "ai" && document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
   must(roomSetupId, "room setup did not expose room id");
   const roomSetupLayoutProof = await page.evaluate(() => {
-    const mapPane = document.querySelector(".room-map-pane")?.getBoundingClientRect();
+    const mapPane = document.querySelector(".match-dossier")?.getBoundingClientRect();
     const slotPane = document.querySelector(".room-slot-pane")?.getBoundingClientRect();
     const rowRects = [...document.querySelectorAll(".slot-row")].map((row) => row.getBoundingClientRect());
     return {
-      seatsThenMap: Boolean(mapPane && slotPane && mapPane.left > slotPane.right + 8),
+      mapThenSeats: Boolean(mapPane && slotPane && slotPane.left > mapPane.right + 8),
       mapName: document.querySelector("[data-map-name]")?.textContent ?? "",
       rows: rowRects.length,
       maxSlotRowHeight: Math.max(...rowRects.map((rect) => rect.height)),
@@ -165,7 +241,7 @@ async page => {
       hostControllerStatus: document.querySelector("[data-slot-id='slot-1'] [data-slot-controller-status]")?.textContent ?? "",
     };
   });
-  must(roomSetupLayoutProof.seatsThenMap, "room setup should place seats on the left and the map on the right: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.mapThenSeats, "room setup should keep the map dossier left of the compact seats without overlap: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.mapName === "Pineshade" && roomSetupLayoutProof.rows === 2, "room setup should show the map's name and one row per seat: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.maxSlotRowHeight <= 52, "seat rows should stay one line high: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.slotActions.length === 1 && roomSetupLayoutProof.slotActions[0] === "Close Room", "seats come with the map: only closing the room should be offered: " + JSON.stringify(roomSetupLayoutProof));
@@ -173,26 +249,9 @@ async page => {
     roomSetupLayoutProof.controllerOptions.join(",") === "ai,open" && roomSetupLayoutProof.hostControllerStatus.toLowerCase() === "human",
     "a seat should be a computer's or open, and a claimed seat shown as identity: " + JSON.stringify(roomSetupLayoutProof),
   );
-  const privateRoomProof = await page.evaluate(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
-  }, roomSetupId);
-  must(privateRoomProof.visibility === "private", "single-player switch did not create a local room: " + JSON.stringify(privateRoomProof));
-  must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "create form did not create a room on the chosen pool map with its seats: " + JSON.stringify(privateRoomProof));
-  const privateLobbyProof = await page.evaluate(async (roomId) => {
-    const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
-    const publicLobby = await (await fetch("/api/rooms")).json();
-    const ownerLobby = await (await fetch("/api/rooms?userId=" + encodeURIComponent(profile.id))).json();
-    return {
-      listedPublicly: publicLobby.rooms.some((room) => room.id === roomId),
-      listedForOwner: ownerLobby.rooms.some((room) => room.id === roomId),
-    };
-  }, roomSetupId);
-  must(!privateLobbyProof.listedPublicly, "private room leaked into public room API list: " + JSON.stringify(privateLobbyProof));
-  must(privateLobbyProof.listedForOwner, "private room was not visible to its owning user query: " + JSON.stringify(privateLobbyProof));
   await page.locator("[data-back-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "owned private room was not visible after backing to Rooms UI");
+  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "owned multiplayer room was not visible after backing to Rooms UI");
   await page.locator("[data-back-home]").click();
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
   await page.locator("[data-open-room-browser]").click();
@@ -221,12 +280,13 @@ async page => {
     return room.slots.find((slot) => slot.id === "slot-2")?.controller === "open";
   }, roomSetupId, { timeout: 5000 });
   await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("ai");
-  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("west");
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("team-4");
   await page.locator("[data-slot-id='slot-2'] [data-slot-race]").selectOption("grove");
   await page.locator("[data-slot-id='slot-1'] [data-slot-race]").selectOption("ember");
   await page.locator("[data-slot-id='slot-1'] [data-slot-ready]").uncheck();
   await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === true, null, { timeout: 5000 });
   await page.locator("[data-slot-id='slot-1'] [data-slot-ready]").check();
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
   const slotEditProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return {
@@ -242,7 +302,7 @@ async page => {
       slotEditProof.host?.race === "ember" &&
       slotEditProof.ai?.controller === "ai" &&
       slotEditProof.ai?.name === "AI" &&
-      slotEditProof.ai?.team === "west" &&
+      slotEditProof.ai?.team === "team-4" &&
       slotEditProof.ai?.race === "grove",
     "slot controls did not update controller/team/race/ready through the UI: " + JSON.stringify(slotEditProof),
   );
@@ -291,6 +351,8 @@ async page => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
     return snapshot.buildings.some((building) => building.id === "ui-research-barracks");
   }, roomSetupId, { timeout: 5000 });
+  await page.waitForFunction(() => window.__sketchRtsView?.buildingIds.includes("ui-research-barracks"), null, { timeout: 5000 });
+  const authoritativeReloadProof = await page.evaluate(() => ({ tick: window.__sketchRtsView?.tick, buildingIds: window.__sketchRtsView?.buildingIds }));
   await page.evaluate(() => {
     const gate = document.querySelector("[data-pointer-lock-gate]");
     if (gate) {
@@ -298,15 +360,33 @@ async page => {
       gate.style.pointerEvents = "none";
     }
   });
+  // Opening a match centers the camera on the player's entities. Use the
+  // actual minimap to bring the research fixture into the screen center.
+  const researchNavigation = await page.evaluate(async (roomId) => {
+    const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
+    const barracks = snapshot.buildings.find(building => building.id === "ui-research-barracks");
+    const frame = document.querySelector("[data-minimap-frame]");
+    const canvas = document.querySelector(".game-canvas");
+    if (!barracks || !frame || !canvas) throw new Error("Research navigation fixture missing");
+    const transform = new DOMMatrixReadOnly(getComputedStyle(frame).transform);
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      minimap: { x: bounds.x + transform.m41 + parseFloat(frame.style.width) * barracks.x / snapshot.map.width,
+        y: bounds.y + transform.m42 + parseFloat(frame.style.height) * barracks.y / snapshot.map.height },
+      center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
+    };
+  }, roomSetupId);
+  await page.mouse.click(researchNavigation.minimap.x, researchNavigation.minimap.y);
   await page.waitForTimeout(250);
-  await page.mouse.click(640, 400);
+  await page.mouse.click(researchNavigation.center.x, researchNavigation.center.y);
   await page.waitForTimeout(300);
   const researchSelectionProof = await page.evaluate(() => ({
+    focusedId: window.__sketchRtsView?.focusedSelectionId,
     selection: document.querySelector("[data-selection]")?.textContent ?? "",
     selectionLabels: [...document.querySelectorAll("[data-selection] [aria-label]")].map((element) => element.getAttribute("aria-label") ?? ""),
     status: document.querySelector("[data-status]")?.textContent ?? "",
   }));
-  must(researchSelectionProof.selectionLabels.some((label) => label.includes("Barracks")), "research proof did not select the barracks: " + JSON.stringify(researchSelectionProof));
+  must(researchSelectionProof.focusedId === "ui-research-barracks" && researchSelectionProof.selectionLabels.some((label) => label.includes("Barracks")), "research proof did not select the barracks: " + JSON.stringify(researchSelectionProof));
   const researchDockProof = await page.evaluate(() => {
     const buttons = [...document.querySelectorAll("[data-command-dock] button")].filter((button) => !button.hidden);
     return {
@@ -330,13 +410,14 @@ async page => {
     const button = document.querySelector("[data-research-progress='weaponTraining']");
     if (!button) return false;
     const fill = button.querySelector(".research-progress-fill");
-    return {
+    const state = {
       ariaDisabled: button.getAttribute("aria-disabled"),
       ariaLabel: button.getAttribute("aria-label"),
       commandLabel: button.getAttribute("data-command-label"),
       progressValue: getComputedStyle(button).getPropertyValue("--research-progress"),
       progressWidth: fill ? getComputedStyle(fill).width : "",
     };
+    return state.progressValue !== "0%" && state.progressWidth !== "0px" ? state : false;
   }, null, { timeout: 5000 });
   const researchProgressState = await researchProgressProof.jsonValue();
   must(
@@ -348,7 +429,7 @@ async page => {
     "research progress button did not replace the clicked research command: " + JSON.stringify(researchProgressState),
   );
   await page.evaluate(() => {
-    const canvas = document.querySelector("canvas");
+    const canvas = document.querySelector(".game-canvas");
     let locked = true;
     window.__sketchRtsExitPointerLockCalled = false;
     Object.defineProperty(document, "pointerLockElement", {
@@ -363,6 +444,24 @@ async page => {
   });
 
   const ended = await page.evaluate(async (roomId) => {
+    const current = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
+    const playerBase = current.buildings.find(building => building.owner === "player" && building.kind === "townHall");
+    if (!playerBase) throw new Error("Results fixture requires the player's actual base");
+    const moduleBase = location.pathname;
+    const [{ landSpawnPoint }, { createUnit }, { footprintHalf }] = await Promise.all([
+      import(moduleBase + "src/shared/production-spawn.ts"), import(moduleBase + "src/shared/map.ts"), import(moduleBase + "src/shared/terrain.ts"),
+    ]);
+    const half = current.map.terrain ? footprintHalf(playerBase.radius, current.map.terrain.cell) : playerBase.radius;
+    const placementWorld = { ...current, units: [...current.units] };
+    const assault = [[1, 0], [-1, 0], [0, -1]].map(([dx, dy], index) => {
+      const unit = createUnit("result-golem-" + (index + 1), "enemy", "golem", playerBase.x, playerBase.y);
+      const reach = half + unit.radius + 4;
+      const source = { ...playerBase, rallyTarget: undefined, rallyX: playerBase.x + dx * reach, rallyY: playerBase.y + dy * reach };
+      const at = landSpawnPoint({ ...placementWorld, buildings: placementWorld.buildings.map(building => building.id === source.id ? source : building) }, source, unit);
+      if (!at) throw new Error("No legal assault berth beside the player's actual base");
+      placementWorld.units.push({ ...unit, ...at });
+      return { id: unit.id, owner: unit.owner, kind: unit.kind, ...at, order: { type: "attack", targetId: playerBase.id } };
+    });
     const reset = await fetch("/api/rooms/" + roomId + "/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -371,11 +470,7 @@ async page => {
         options: {
           aiPlayers: ["enemy"],
           scenario: {
-            addUnits: [
-              { id: "result-golem-1", owner: "enemy", kind: "golem", x: 640, y: 600 },
-              { id: "result-golem-2", owner: "enemy", kind: "golem", x: 690, y: 650 },
-              { id: "result-golem-3", owner: "enemy", kind: "golem", x: 720, y: 610 },
-            ],
+            addUnits: assault,
           },
         },
       }),
@@ -410,23 +505,38 @@ async page => {
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.locator("[data-create-room]").click();
-  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  await page.locator("[data-create-game-form] .game-mode-switch label").filter({ has: page.locator("input[value='multiplayer']") }).click();
-  await page.locator("[data-map-entries] [data-map-id='twoShores']").click();
-  await page.locator("[data-submit-create-game]").click();
-  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-  const sidesSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  await automaticSoloSetup("twoShores");
+  const sidesSetupId = await serverSetupFromSolo();
   const seatsReady = () => page.evaluate(() => !document.querySelector("[data-start-room]")?.disabled);
   const sidesBefore = await seatsReady();
-  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("north");
-  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === true, null, { timeout: 5000 });
-  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("south");
-  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
+  const waitForSeatEdit = (field, value, ready) => page.waitForFunction(({ field, value, ready }) => {
+    const select = document.querySelector(field);
+    const start = document.querySelector("[data-start-room]");
+    return select?.value === value && !select.disabled && start?.disabled === !ready;
+  }, { field, value, ready }, { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("team-1");
+  await waitForSeatEdit("[data-slot-id='slot-2'] [data-slot-team]", "team-1", true);
+  const unevenTeamsReady = await seatsReady();
+  await page.locator("[data-slot-id='slot-4'] [data-slot-team]").selectOption("team-1");
+  await waitForSeatEdit("[data-slot-id='slot-4'] [data-slot-team]", "team-1", false);
+  const oneTeamReady = await seatsReady();
+  await page.locator("[data-slot-id='slot-4'] [data-slot-team]").selectOption("team-2");
+  await waitForSeatEdit("[data-slot-id='slot-4'] [data-slot-team]", "team-2", true);
+  const opposingTeamsReady = await seatsReady();
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("team-2");
+  await waitForSeatEdit("[data-slot-id='slot-2'] [data-slot-team]", "team-2", true);
+  await page.locator("[data-slot-id='slot-4'] [data-slot-controller]").selectOption("open");
+  await waitForSeatEdit("[data-slot-id='slot-4'] [data-slot-controller]", "open", false);
+  const emptySeatReady = await seatsReady();
+  await page.locator("[data-slot-id='slot-4'] [data-slot-controller]").selectOption("ai");
+  await waitForSeatEdit("[data-slot-id='slot-4'] [data-slot-controller]", "ai", true);
+  const restoredSeatsReady = await seatsReady();
   const seatsProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return { visibility: room.visibility, mapId: room.mapId, seats: room.slots.length, rows: document.querySelectorAll(".slot-row").length };
   }, sidesSetupId);
-  must(sidesBefore && seatsProof.visibility === "public" && seatsProof.mapId === "twoShores" && seatsProof.seats === 4 && seatsProof.rows === 4, "a two-sides map should open with its four seats ready and start only on even teams: " + JSON.stringify(seatsProof));
+  const allianceReadinessProof = { sidesBefore, unevenTeamsReady, oneTeamReady, opposingTeamsReady, emptySeatReady, restoredSeatsReady };
+  must(sidesBefore && unevenTeamsReady && !oneTeamReady && opposingTeamsReady && !emptySeatReady && restoredSeatsReady && seatsProof.visibility === "public" && seatsProof.mapId === "twoShores" && seatsProof.seats === 4 && seatsProof.rows === 4, "a named two-shore map should retain four occupied seats and allow custom opposing alliances: " + JSON.stringify({ seatsProof, allianceReadinessProof }));
   await page.locator("[data-close-room]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   const closeRoomProof = await page.evaluate(async (roomId) => {
@@ -453,11 +563,19 @@ async page => {
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,
+    pointerLockReleasedForResults,
     researchDockProof,
+    researchSelectionProof,
+    authoritativeReloadProof,
+    researchProgressState,
     privateLobbyProof,
+    soloReloadProof,
+    guestJoinProof,
+    roomSetupLayoutProof,
     roomBrowserLayoutProof,
     slotEditProof,
     seatsProof,
+    allianceReadinessProof,
     closeRoomProof,
   });
 }

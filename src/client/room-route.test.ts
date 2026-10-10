@@ -9,30 +9,30 @@ describe("address-bar routes", () => {
     expect(parseRoomRoute(formatRoomRoute({ screen: "profile" }))).toEqual({ screen: "profile" });
     expect(parseRoomRoute("")).toEqual({ screen: "home" });
   });
-  it("restores the complete pre-creation setup, without user identity", () => {
+  it("restores the complete shareable setup configuration, without user identity", () => {
     const configuration = defaultRoomConfiguration("stillwater");
     configuration.name = "陆海练习 & 合作";
     configuration.layoutSeed = "same world";
     configuration.visibility = "public";
     configuration.seatSetup[1] = { controller: "open", race: "ember", team: "team-2" };
     configuration.seatSetup[2] = { controller: "ai", race: "grove", aiVersion: "v9_knight", team: "team-1" };
-    const url = formatRoomRoute({ screen: "create", configuration });
-    expect(parseRoomRoute(url)).toEqual({ screen: "create", configuration });
+    const url = formatRoomRoute({ screen: "setup", configuration });
+    expect(parseRoomRoute(url)).toEqual({ screen: "setup", configuration });
     expect(url).not.toContain("userId");
     expect(url).not.toContain("ready");
   });
   it("opens a map directly with its default full roster", () => {
     const route = parseRoomRoute("?map=grandEstuary");
-    expect(route).toEqual({ screen: "create", configuration: defaultRoomConfiguration("grandEstuary") });
+    expect(route).toEqual({ screen: "setup", configuration: defaultRoomConfiguration("grandEstuary") });
   });
-  it("keeps map selection and setup as distinct history entries with the same configuration", () => {
+  it("keeps map selection and automatic setup as distinct history entries with the same configuration", () => {
     const configuration = defaultRoomConfiguration("grandEstuary");
     configuration.seatSetup[1] = { controller: "ai", race: "ember", team: "team-2", aiVersion: "v9_summoner" };
     const selection = formatRoomRoute({ screen: "maps", configuration });
-    const setup = formatRoomRoute({ screen: "create", configuration });
+    const setup = formatRoomRoute({ screen: "setup", configuration });
     expect(selection).not.toEqual(setup);
     expect(parseRoomRoute(selection)).toEqual({ screen: "maps", configuration });
-    expect(parseRoomRoute(setup)).toEqual({ screen: "create", configuration });
+    expect(parseRoomRoute(setup)).toEqual({ screen: "setup", configuration });
   });
   it("rejects invalid or oversized setups without a partial configuration", () => {
     for (const search of ["?map=missing", "?map=stillwater&seats=ai:ffa:grove:v9_knight", "?map=stillwater&seed=", "?map=stillwater&visibility=bad", "?map=stillwater&seats=human:ffa:unknown:"]) {

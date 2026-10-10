@@ -8,6 +8,7 @@ import { shipContactGoal } from './ship-avoidance';
 import { checksumGame } from './sim/checksum';
 import { seconds } from './time';
 import { rebuildShipFittings } from './ship-equipment';
+import { createUnit } from './map';
 
 function scene() {
   const game=createGame('bareDuel',{aiPlayers:[]});
@@ -24,6 +25,17 @@ function alongside() {
   return {game,source,target,crew};
 }
 describe('boarding control at hull contact',()=>{
+  it('cleans an abandoned implicit approach even when the surviving list has no hulls',()=>{
+    const game=scene(),orphan=createUnit('orphan','player','worker',1000,1000);
+    orphan.deck={shipId:'missing-source',x:0,y:0};orphan.cabin={shipId:'missing-source'};
+    orphan.sailing={heading:0,speed:0,load:0,balance:0,route:{goalX:1200,goalY:1000,points:[],end:{x:1200,y:1000},trafficKey:''}};
+    orphan.order={type:'move',x:1200,y:1000,rendezvousFor:'missing-crew'};
+    game.units=[orphan];
+    prepareCrewRendezvous(game.map,game.units);
+    expect(orphan.order).toEqual({type:'idle'});expect(orphan.sailing.route).toBeUndefined();
+    expect(orphan.deck.shipId).toBe('missing-source');expect(orphan.cabin.shipId).toBe('missing-source');
+    expect(boardingHoldShips(game.units)).toEqual(new Set());
+  });
   it('requires a body-wide supported seam rather than bow point contact',()=>{
     const {game,source,target,crew}=alongside();
     expect(decksAllowCrossing(source,target,crew)).toBe(true);

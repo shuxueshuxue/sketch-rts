@@ -20,22 +20,25 @@ import {isWalkable,sameGround} from './terrain';
 // between islands for the enlarged fleet. Their authored economics keep the same mine counts.
 // Mineral isles and expansion clearings now include complete hauling foundations
 // and worker access around all four walls; named map bounds and mine counts stay fixed.
+// 10-09 follow-up: minimum hall distance 210 and all snapped initial hauling lanes
+// exactly 216; the shorter mineral offset also updates protected terrain around mains.
+// Prepared mineral courtyards stay dry in mire layouts; reedwater retains mud outside them.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'1f88b4628a1e6194',
-  grandEstuary:'b23091c91cc54303',
-  brokenSea: "6d17c654720eaab0",
-  templeSpring: "ddfa334dd15ef33d",
-  turtleLake: "b7e83ebee9b487ab",
-  elderwood: "05b236de1e4463bb",
-  ringwater: "d0c45be9f355956b",
-  loneMarket: "fde2ea8175564fd3",
-  reedwater: "b060dd837b1b70b3",
-  veiledHill: "0dba4e351e6a1cdd",
-  greystonePass: "7586e9b861260ff7",
-  pineshade: "304b90ad639a507c",
-  gullIsland: "033513173952c1f9",
-  stillwater: "23eba67fe7ae5e59",
-  twoShores: "bb079aecb1bd0956",
+  sapphireArchipelago:'b6703a780998228c',
+  grandEstuary:'f61173bfe2528d83',
+  brokenSea: "ccf2b2d83de2b3e1",
+  templeSpring: "573bc1e6dd39e87f",
+  turtleLake: "57468c4991eaf724",
+  elderwood: "2421b993970b6212",
+  ringwater: "8ea4e0320581a02b",
+  loneMarket: "ba20d16b14e5104b",
+  reedwater: "2a97d95f469f461e",
+  veiledHill: "b2c80d16362a59cc",
+  greystonePass: "f9a7a649d1d05728",
+  pineshade: "502472ad7ac76b35",
+  gullIsland: "2be7184ae9b2ba29",
+  stillwater: "e67ba5ef77911369",
+  twoShores: "db5e5da96cbefa5a",
 };
 
 const host = { id: "host", name: "Host" };

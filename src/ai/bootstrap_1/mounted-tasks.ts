@@ -11,7 +11,7 @@ import { THINK_TICKS, mountedEscape, mountedMicro, mountedTargetOrder, mountedTh
 
 const THREAT_RANGE = 750;
 
-function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Unit, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
+function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
     ...Array.from({ length: 16 }, (_, index) => index * Math.PI / 8)];
@@ -31,12 +31,18 @@ function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
   return snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && !unit.deck && distance(unit, hall) <= 650);
 }
 
-function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, towers: readonly Building[], defenders: readonly Unit[]) {
+function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, hall: Building, towers: readonly Building[], defenders: readonly Unit[]) {
   if (firingPoint(snapshot, rider, worker, towers, defenders)) return true;
   if (worker.order.type !== 'mine') return false;
   const resourceId = worker.order.resourceId;
-  const mine = snapshot.resources.find(mine => mine.id === resourceId)!;
-  return mine.amount > 0 && firingPoint(snapshot, rider, { ...worker, x: mine.x, y: mine.y }, towers, defenders) !== undefined;
+  const mine = snapshot.resources.find(resource => resource.id === resourceId && resource.amount > 0);
+  if (!mine) return false;
+  const gap = distance(hall, mine);
+  if (gap > GOLD_MINE_RULES.baseRange || gap <= GOLD_MINE_RULES.entryRange) return false;
+  const entry = { x: mine.x + (hall.x - mine.x) * GOLD_MINE_RULES.entryRange / gap,
+    y: mine.y + (hall.y - mine.y) * GOLD_MINE_RULES.entryRange / gap };
+  return isWalkable(snapshot.map, entry.x, entry.y) && sameGround(snapshot.map, worker, entry)
+    && firingPoint(snapshot, rider, entry, towers, defenders) !== undefined;
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -55,7 +61,7 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
     if (!hall) return false;
     const crew = assignment.unitIds.map(id => byId.get(id)!);
     // A cleared or fully covered mining line ends the raid; nearby pursuers still belong to this fight.
-    return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => exposedMiningLine(snapshot, rider, worker, towers, defenders)))
+    return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => exposedMiningLine(snapshot, rider, worker, hall, towers, defenders)))
       || snapshot.units.some(unit => unit.attackDamage > 0 && !unit.deck && isOpponentOwner(snapshot, owner, unit.owner, options)
         && crew.some(rider => distance(unit, rider) < THREAT_RANGE && (distance(unit, rider) <= rider.attackRange
           || (unit.order.type === 'attack' || unit.order.type === 'attackMove') && unit.order.targetId === rider.id)));
@@ -74,7 +80,7 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   if (!riders.length) return active;
   const lead = riders[0]!;
   const halls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
-    .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, towers, defenders)))
+    .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders)))
     .sort((a, b) => distance(lead, a) - distance(lead, b));
   const camp = neutralCamps(snapshot).filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
       && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)

@@ -6,7 +6,7 @@ import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
 import { battlefieldUnitIds, planBattlefieldCommands } from "./battlefield";
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { canReceiveHealing } from "../../shared/healing";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -32,6 +32,7 @@ import {
   desiredCatchUpExpansionMine,
   desiredExpansionMine,
   desiredForwardExpansionMine,
+  depletedEconomyExpansion,
   expansionBaseTarget,
   hasEstablishedExpansion,
   neutralGuardPower,
@@ -120,6 +121,8 @@ import {
 } from "./world-model";
 
 const AUTO_ACQUIRE_RANGE = 230;
+const MIN_TRAINING_COST = Math.min(...TRAINABLE_UNIT_KINDS.map(kind => UNIT_DEFS[kind].cost));
+const MIN_TRAINING_SUPPLY = Math.min(...TRAINABLE_UNIT_KINDS.map(kind => UNIT_DEFS[kind].supplyUsed));
 const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
 const MAIN_APPROACH_THREAT_RANGE = 1_550;
 const NEUTRAL_ASSIST_PLANNING_RANGE = 360;
@@ -218,6 +221,7 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.workerPressureCloseout,
   AI_SCRIPT_LIBRARY.expansionDenial,
   AI_SCRIPT_LIBRARY.objectiveControl,
+  AI_SCRIPT_LIBRARY.desperateWorkerFight,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
 ];
@@ -255,6 +259,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.workerPressure,
   AI_SCRIPT_LIBRARY.workerPressureCloseout,
   AI_SCRIPT_LIBRARY.expansionDenial,
+  AI_SCRIPT_LIBRARY.desperateWorkerFight,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
 ];
@@ -542,6 +547,11 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
 
 function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (resources(snapshot).length <= activePlayerIds(snapshot).length) return undefined;
+  const recovery = depletedEconomyExpansion(snapshot, owner, options);
+  if (recovery) {
+    if (playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost) return undefined;
+    return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: recovery.builder.id, buildingKind: "townHall", ...recovery.point }, options);
+  }
   const forwardMine = desiredForwardExpansionMine(snapshot, owner, options);
   const missingCombatProduction = isTowerMercPolicy(options) ? undefined : missingCombatProductionKind(snapshot, owner);
   if (!forwardMine && missingCombatProduction && failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options)) return undefined;
@@ -1773,6 +1783,13 @@ function mercenaryRoleLimit(kind: MercenaryUnitKind, options?: PresetAiPolicyOpt
 
 function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const player = playerState(snapshot, owner);
+  // Below every trained unit's cost, strategic reservations cannot change
+  // the empty result. Keep those scans for a budget that can buy a unit.
+  if (player.gold < MIN_TRAINING_COST) return [];
+  if (!buildings(snapshot, owner).some(building => building.complete && building.queue.length === 0
+    && BUILDING_DEFS[building.kind].trains.some(kind => UNIT_DEFS[kind].cost <= player.gold))) return [];
+  const initialSupply = projectedSupplyUsed(snapshot, owner);
+  if (initialSupply + MIN_TRAINING_SUPPLY > player.supplyCap) return [];
   const workerCount = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck).length;
   const routineWantedWorkers = routineWorkerCount(snapshot, owner, options);
   const repairLaborWorkers = wantsOneBaseRepairLabor(snapshot, owner, options) ? 1 : 0;
@@ -1806,7 +1823,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   const holdThinTwoMineDefenseBank = shouldHoldThinTwoMineDefenseBank(snapshot, owner, options, player.gold, workerCount, routineWantedWorkers);
   const commands: GameCommand[] = [];
   let remainingGold = player.gold;
-  let reservedSupply = projectedSupplyUsed(snapshot, owner);
+  let reservedSupply = initialSupply;
   let queuedWorkers = queuedUnitCount(snapshot, owner, "worker");
 
   for (const building of trainingBuildingsByPriority(snapshot, owner, options)) {

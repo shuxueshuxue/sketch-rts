@@ -2,7 +2,9 @@ import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import { drawWarfareEffect } from "./warfare-effects";
 import { seconds } from "../shared/time";
 import { SHIP_CAMERA } from "../shared/ship-geometry";
-import type { UnitKind, WorldEffect } from "../shared/types";
+import { drawVeteranCastEffect } from './ability-effects';
+import { shouldRenderCommandFeedback } from './command-feedback';
+import type { PlayerId, Unit, UnitKind, WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Rgb = { r: number; g: number; b: number };
@@ -14,6 +16,9 @@ type RenderWorldEffectsOptions = {
   nearScreen: (point: Point, pad: number) => boolean;
   /** Where a unit is drawn (world point), for effects that follow one (a charging rider's trail). */
   unitPosition?: (unitId: string) => Point | undefined;
+  unit?: (unitId:string)=>Unit|undefined;
+  viewer?:PlayerId | undefined;
+  reducedMotion?:boolean;
 };
 
 type EffectRenderContext = {
@@ -25,6 +30,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
   const { ctx, effects, worldToScreen, nearScreen, unitPosition } = options;
   const renderer = { ctx, worldToScreen };
   for (const effect of effects) {
+    if(effect.remaining<=0 || !shouldRenderCommandFeedback(effect,options.viewer))continue;
     if (drawWarfareEffect(ctx,effect,worldToScreen,nearScreen)) continue;
     if (effect.type === "chargeTrail" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
@@ -83,6 +89,9 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     if (!nearScreen(point, pad)) continue;
     const life = effect.remaining / effect.duration;
     const radius = 9 + (1 - life) * 22;
+    const caster=effect.unitId?options.unit?.(effect.unitId):undefined;
+    const casterPoint=effect.radius && effect.unitId ? unitPosition?.(effect.unitId) : undefined;
+    if(drawVeteranCastEffect(ctx,effect,caster,casterPoint?worldToScreen(casterPoint):point,options.reducedMotion))continue;
 
     if (effect.type === "hit") {
       // Brief, local contact glint, no expanding cross across adjacent troops.
@@ -112,6 +121,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "boardingBlocked") {
+      ctx.save();
       ctx.strokeStyle = "#c37639"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(point.x-5,point.y-12); ctx.lineTo(point.x+5,point.y-2);
       ctx.moveTo(point.x+5,point.y-12); ctx.lineTo(point.x-5,point.y-2); ctx.stroke(); ctx.restore(); continue;

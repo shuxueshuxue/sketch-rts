@@ -4,8 +4,67 @@ import { checksumGame } from './sim/checksum';
 import { headingDifference,hullFits,planVoyageRoute } from './ship-navigation';
 import { SHIP_WEAPONS,bestFiringHeading,shipGunCanAim,shipPartMax } from './ship-equipment';
 import { seconds } from './time';
+import { followShipRoute } from './ship-guidance';
+import { sailToward } from './sailing';
+import { syncDecks } from './decks';
+import { beginShipMotionFrame } from './ship-motion';
+import { avoidanceCourse } from './ship-avoidance';
+import { shipMotionLimits } from './ship-handling';
+import { coursePerformance } from './ship-wind';
 function scene(){const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;game.map.width=2400;game.map.height=2000;game.map.terrain={cell:40,cols:60,rows:50,cells:'~'.repeat(3000)};return game;}
 describe('predictable ship steering',()=>{
+  for(const offset of [0,.02,4])it(`keeps headway through a moving interception mark ${offset} units ahead, including JSON restoration`,()=>{
+    const game=scene(),ship=game.spawnUnit('player','fireShip',1000,1000),target=game.spawnUnit('enemy','transport',1700,1000);
+    game.map.wind={direction:Math.PI/2,speed:80};
+    ship.order={type:'attack',targetId:target.id};target.order={type:'move',x:2200,y:1000,avoidCombat:true};
+    // A completed simulation frame has synchronized the mounted fitting's
+    // mass into the hull load; restoration repeats that same synchronization.
+    syncDecks(game.units);
+    const point={x:ship.x+offset,y:ship.y,intent:'pursuit' as const,targetId:target.id,arrivalRadius:8};
+    const motion=ship.sailing!;
+    Object.assign(motion,{heading:0,speed:40,velocityX:40,velocityY:0,
+      pursuit:{targetId:target.id,phase:'approach',moving:true}});
+    motion.sail={angle:coursePerformance(ship,game.map,0,{assumeTrimmed:true}).targetSailAngle,set:1,billow:1,mode:'sail'};
+    motion.route={goalX:point.x,goalY:point.y,startX:900,startY:1000,startHeading:0,end:{x:point.x,y:point.y},
+      points:[{x:point.x,y:point.y,heading:0,curvature:0}],intent:'pursuit',targetId:target.id,
+      arrivalRadius:8,cruise:true,partial:false,windTried:true,windTryX:ship.x,windTryY:ship.y};
+    const restored=scene();restoreSnapshotIntoGame(restored,JSON.parse(JSON.stringify(snapshotGame(game))),game.nextId);
+    const savedShip=restored.units.find(unit=>unit.id===ship.id)!,route=motion.route;
+    expect(checksumGame(restored)).toBe(checksumGame(game));
+    beginShipMotionFrame(game.units,game.map);beginShipMotionFrame(restored.units,restored.map);
+    sailToward(ship,point,game.map,game.units);sailToward(savedShip,point,restored.map,restored.units);
+    expect(ship.x).toBeGreaterThan(1001);expect(ship.y).toBe(1000);expect(motion.speed).toBeGreaterThan(35);
+    expect(motion.route).toBe(route);expect(route.points).toHaveLength(1);expect(hullFits(game.map,ship)).toBe(true);
+    expect(checksumGame(restored)).toBe(checksumGame(game));
+  });
+  for(const kind of ['stationary','partial','tack','exact','berth'] as const)it(`still finishes a ${kind} mark instead of sailing past it`,()=>{
+    const game=scene(),ship=game.spawnUnit('player','fireShip',1000,1000),target=game.spawnUnit('enemy','transport',1700,1000);
+    game.map.wind={direction:Math.PI/2,speed:80};
+    ship.order={type:'attack',targetId:target.id};
+    const pursuit=kind!=='berth',motion=ship.sailing!;
+    Object.assign(motion,{heading:0,speed:40,velocityX:40,velocityY:0,
+      pursuit:{targetId:target.id,phase:'approach',moving:kind!=='stationary'}});
+    motion.route={goalX:1000,goalY:1000,startX:900,startY:1000,startHeading:0,end:{x:1000,y:1000},
+      points:[{x:1000,y:1000,heading:0,...(kind==='tack'?{tack:true}:{}),...(kind==='exact'||kind==='berth'?{exact:true}:{})}],
+      ...(pursuit?{intent:'pursuit' as const,targetId:target.id}:{}),arrivalRadius:8,cruise:kind!=='berth',
+      partial:kind==='partial',windTried:true,windTryX:ship.x,windTryY:ship.y};
+    sailToward(ship,{x:1000,y:1000,...(pursuit?{intent:'pursuit' as const,targetId:target.id}: {heading:0}),arrivalRadius:8},game.map,game.units);
+    expect(ship.x).toBe(1000);expect(ship.y).toBe(1000);expect(motion.speed).toBe(0);
+    expect(motion.route!.points).toHaveLength(0);
+  });
+  it('brakes to a real stationary firing station when the quarry has stopped',()=>{
+    const game=scene(),ship=game.spawnUnit('player','fireShip',1000,1000),target=game.spawnUnit('enemy','transport',1270,1000);
+    game.map.wind={direction:Math.PI/2,speed:80};target.order={type:'hold',x:target.x,y:target.y};
+    issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:target.id});
+    Object.assign(ship.sailing!,{heading:0,speed:35,velocityX:35,velocityY:0,
+      pursuit:{targetId:target.id,phase:'engage',moving:true}});
+    for(let tick=0;tick<60;tick++)stepGame(game);
+    expect(ship.sailing!.pursuit).toMatchObject({moving:false,phase:'engage'});expect(ship.sailing!.speed).toBe(0);
+    const stopped={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
+    for(let tick=0;tick<20;tick++)stepGame(game);
+    expect(ship.x).toBe(stopped.x);expect(ship.y).toBe(stopped.y);expect(ship.sailing!.heading).toBe(stopped.heading);
+    expect(target.hp).toBeLessThan(target.maxHp);expect(hullFits(game.map,ship)).toBe(true);
+  });
   for(const degrees of [-175,-120,-90,-45,45,90,120,175,180])it(`takes the short initial turn and follows a forward curve to a ${degrees} degree destination`,()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',1200,1000),angle=degrees*Math.PI/180;
     const goal={x:1200+450*Math.cos(angle),y:1000+450*Math.sin(angle)};
@@ -98,5 +157,77 @@ describe('predictable ship steering',()=>{
     const pose={...ship,sailing:{...ship.sailing!,heading:desired}};
     expect(shipGunCanAim(pose,near,target)).toBe(true);
     expect(bestFiringHeading(game,pose,target)).toBe(desired);
+  });
+  it('brakes at the real hull limit when a crossing vessel requires a passing slowdown',()=>{
+    const game=scene(),ship=game.spawnUnit('player','warship',600,800),crossing=game.spawnUnit('enemy','warship',920,1000);
+    const quarry=game.spawnUnit('enemy','warship',2100,1500);
+    game.map.wind={direction:Math.PI/2,speed:80};
+    ship.order={type:'attack',targetId:quarry.id};
+    crossing.order={type:'move',x:920,y:200};
+    Object.assign(crossing.sailing!,{heading:-Math.PI/2,speed:40,velocityX:0,velocityY:-40});
+    const motion=ship.sailing!;
+    Object.assign(motion,{heading:0,speed:50,velocityX:50,velocityY:0});
+    motion.sail={angle:coursePerformance(ship,game.map,0,{assumeTrimmed:true}).targetSailAngle,set:1,billow:1,mode:'sail'};
+    motion.route={goalX:1700,goalY:800,startX:ship.x,startY:ship.y,startHeading:0,end:{x:1700,y:800},
+      points:[{x:1700,y:800,heading:0,curvature:0}],intent:'pursuit',targetId:quarry.id,cruise:true};
+    const passing=avoidanceCourse(ship,game.units,0,motion.speed),route=motion.route;
+    expect(passing.active).toBe(true);expect(passing.speedScale).toBeLessThan(1);
+    expect(passing.speedLimit).toBeUndefined();
+    // The CPA decision is made by real moving hulls. Its slowdown must use
+    // the hull's deceleration, rather than waiting for wind drag to act.
+    expect(followShipRoute(ship,game.map,game.units,1)).toBe(true);
+    expect(motion.speed).toBeCloseTo(50-shipMotionLimits(ship).acceleration/20,12);
+    expect(ship.x).toBeGreaterThan(600);expect(motion.heading).toBeGreaterThan(0);
+    expect(motion.route).toBe(route);expect(hullFits(game.map,ship)).toBe(true);
+  });
+  it('retains entry headway when wind drive falls without a traffic braking order',()=>{
+    const game=scene(),ship=game.spawnUnit('player','warship',600,800),motion=ship.sailing!;
+    game.map.wind={direction:Math.PI,speed:80};
+    ship.order={type:'move',x:1700,y:800};
+    Object.assign(motion,{heading:0,speed:50,velocityX:50,velocityY:0});
+    motion.route={goalX:1700,goalY:800,startX:ship.x,startY:ship.y,startHeading:0,end:{x:1700,y:800},
+      points:[{x:1700,y:800,heading:0,curvature:0}],cruise:true};
+    expect(coursePerformance(ship,game.map,0,{assumeTrimmed:true}).noGo).toBe(true);
+    expect(followShipRoute(ship,game.map,game.units,1)).toBe(true);
+    expect(motion.speed).toBeCloseTo(50-shipMotionLimits(ship).acceleration/20*.2,12);
+    expect(ship.x).toBeGreaterThan(602);expect(motion.heading).toBe(0);
+  });
+  it('keeps its sails driving on a productive passing course while the old reference points into the wind',()=>{
+    const game=scene(),ship=game.spawnUnit('player','warship',600,800),crossing=game.spawnUnit('enemy','warship',920,1000);
+    const quarry=game.spawnUnit('enemy','warship',2100,1500);
+    game.map.wind={direction:Math.PI/2,speed:80};
+    ship.order={type:'attack',targetId:quarry.id};crossing.order={type:'move',x:920,y:200};
+    Object.assign(crossing.sailing!,{heading:-Math.PI/2,speed:40,velocityX:0,velocityY:-40});
+    const motion=ship.sailing!;
+    Object.assign(motion,{heading:0,speed:50,velocityX:50,velocityY:0});
+    motion.sail={angle:coursePerformance(ship,game.map,0,{assumeTrimmed:true}).targetSailAngle,set:1,billow:1,mode:'sail'};
+    motion.route={goalX:600,goalY:100,startX:ship.x,startY:ship.y,startHeading:0,end:{x:600,y:100},
+      points:[{x:600,y:100,heading:-Math.PI/2}],intent:'pursuit',targetId:quarry.id,cruise:true,
+      avoidHeading:0,avoidBaseHeading:0,avoidTargetId:crossing.id,avoidTicks:2420,avoidSide:1};
+    expect(coursePerformance(ship,game.map,-Math.PI/2,{assumeTrimmed:true}).noGo).toBe(true);
+    expect(coursePerformance(ship,game.map,0,{assumeTrimmed:true}).targetSpeed).toBeGreaterThan(40);
+    expect(followShipRoute(ship,game.map,game.units,1)).toBe(true);
+    expect(motion.sail.mode).toBe('sail');expect(motion.sail.set).toBe(1);
+    expect(motion.route.avoidTargetId).toBe(crossing.id);expect(ship.x).toBeGreaterThan(600);
+    expect(hullFits(game.map,ship)).toBe(true);
+  });
+  it('restores a powered stationary passing decision through JSON without losing its real motion',()=>{
+    const game=scene(),ship=game.spawnUnit('player','warship',1000,1400),parked=game.spawnUnit('enemy','transport',1320,930),heading=-Math.PI/3;
+    game.map.wind={direction:Math.PI,speed:80};
+    ship.order={type:'move',x:2000,y:200};parked.order={type:'idle'};
+    Object.assign(ship.sailing!,{heading,speed:40,velocityX:40*Math.cos(heading),velocityY:40*Math.sin(heading)});
+    Object.assign(parked.sailing!,{heading,speed:0,velocityX:0,velocityY:0});
+    ship.sailing!.route={goalX:2000,goalY:200,startX:ship.x,startY:ship.y,startHeading:heading,windKey:'-3.141592653589793:80',
+      points:[{x:2000,y:200,heading,curvature:0,tack:true}],end:{x:2000,y:200},cruise:true,windTried:true};
+    stepGame(game);
+    expect(ship.sailing!.route!.avoidTargetId).toBe(parked.id);
+    expect(avoidanceCourse(ship,game.units,heading,ship.sailing!.speed,game.map).speedScale).toBe(1);
+    const restored=scene();restoreSnapshotIntoGame(restored,JSON.parse(JSON.stringify(snapshotGame(game))),game.nextId);
+    const initial={x:ship.x,y:ship.y};
+    for(let tick=0;tick<60;tick++){
+      stepGame(game);stepGame(restored);
+      expect(checksumGame(restored)).toBe(checksumGame(game));expect(hullFits(game.map,ship)).toBe(true);
+    }
+    expect(Math.hypot(ship.x-initial.x,ship.y-initial.y)).toBeGreaterThan(10);
   });
 });

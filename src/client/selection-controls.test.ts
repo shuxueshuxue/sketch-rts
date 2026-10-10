@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits } from "./selection-controls";
+import { applySelectionClick, applySelectionPick, selectInScreenBox, selectNearbySameKindUnits } from "./selection-controls";
+import { unitAt, unitPointerPosition } from "./relations";
+import { syncFrontendWorldView } from "./frontend-world-view";
+import { createGame, snapshotGame } from "../shared/sim";
+import { boardUnit, syncDecks } from "../shared/decks";
+import type { GameAdapter } from "./game-adapter";
 import type { Building, GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 const player: PlayerState = {
@@ -54,6 +59,58 @@ describe("selection controls", () => {
 
     expect([...result.selectedIds]).toEqual(["worker-1", "barracks-1"]);
     expect(result.focusedSelectionId).toBe("barracks-1");
+  });
+
+  it("removes just the Shift-clicked unit and keeps the remaining command focus", () => {
+    const previous = { selectedIds: new Set(["worker-1", "worker-2", "archer-1"]), focusedSelectionId: "archer-1" };
+    const result = applySelectionClick(previous, "worker-2", true);
+    expect([...result.selectedIds]).toEqual(["worker-1", "archer-1"]);
+    expect(result.focusedSelectionId).toBe("archer-1");
+    expect([...previous.selectedIds]).toEqual(["worker-1", "worker-2", "archer-1"]);
+  });
+
+  it("moves command focus after removing its unit and clears it after the last removal", () => {
+    const previous = { selectedIds: new Set(["worker-1", "archer-1"]), focusedSelectionId: "archer-1" };
+    const remaining = applySelectionClick(previous, "archer-1", true);
+    expect(remaining.focusedSelectionId).toBe("worker-1");
+    const empty = applySelectionClick(remaining, "worker-1", true);
+    expect(empty.selectedIds.size).toBe(0);
+    expect(empty.focusedSelectionId).toBeUndefined();
+  });
+
+  it("adds an unselected Shift-clicked unit and preserves normal replacement on plain clicks", () => {
+    const previous = { selectedIds: new Set(["worker-1"]), focusedSelectionId: "worker-1" };
+    const added = applySelectionClick(previous, "archer-1", true);
+    expect([...added.selectedIds]).toEqual(["worker-1", "archer-1"]);
+    expect(added.focusedSelectionId).toBe("archer-1");
+    const replaced = applySelectionClick(added, "archer-1", false);
+    expect([...replaced.selectedIds]).toEqual(["archer-1"]);
+  });
+
+  it("keeps Shift-drag additive when its box includes units already selected", () => {
+    const snapshot = snapshotWith({ units: [unit("worker-1", 100, 100), unit("worker-2", 130, 110)] });
+    const previous = { selectedIds: new Set(["worker-1", "archer-1"]), focusedSelectionId: "archer-1" };
+    const result = selectInScreenBox(snapshot, "player", rect(60, 60, 180, 180), point => point, previous, true);
+    expect([...result.selectedIds]).toEqual(["worker-1", "archer-1", "worker-2"]);
+  });
+
+  it("deselects the visible deck crew hit instead of its hull and stays deselected on the next frame", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = []; delete game.map.terrain;
+    const ship = game.spawnUnit("player", "transport", 800, 800);
+    const crew = game.spawnUnit("player", "worker", 800, 800);
+    const soldier = game.spawnUnit("player", "footman", 1100, 800);
+    expect(boardUnit(ship, crew, game.units)).toBe(true);
+    syncDecks(game.units);
+    const snapshot = snapshotGame(game);
+    const hit = unitAt(snapshot.units, unitPointerPosition(snapshot.units, crew), () => true);
+    expect(hit?.id).toBe(crew.id);
+    const selected = applySelectionClick({ selectedIds: new Set([ship.id, crew.id, soldier.id]), focusedSelectionId: crew.id }, hit!.id, true);
+    const adapter = { currentSnapshot: () => snapshot, updateToRenderTime: () => false } as GameAdapter;
+    const normalized = syncFrontendWorldView(adapter, { ...selected, owner: "player", snapshot, selectedCampId: undefined, controlGroups: {} });
+    expect([...normalized.selectedIds]).toEqual([ship.id, soldier.id]);
+    expect(normalized.focusedSelectionId).toBe(ship.id);
+    expect(normalized.selectedIds.has(crew.id)).toBe(false);
   });
 
   it("double-click selects nearby same-kind friendly units around the clicked unit", () => {

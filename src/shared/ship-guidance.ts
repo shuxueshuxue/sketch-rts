@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { avoidanceCourse, shipTraffic } from './ship-avoidance';
+import { avoidanceCourse, shipFollowingSpeed, shipTraffic } from './ship-avoidance';
 import { shipProfile } from './ship-geometry';
 import { shipMotionLimits } from './ship-handling';
 import { advanceShip } from './ship-motion';
@@ -45,7 +45,11 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   if (isManeuver(points[0]!,origin)) return 'maneuver';
   const endGap=Math.hypot(last.x-ship.x,last.y-ship.y);
   const arrival=route.arrivalRadius ?? .3;
-  if(!firing && points.length===1 && endGap<=arrival){
+  // A moving quarry's predicted station is a reference to track, rather
+  // than a destination at which to discard headway. Finite corridor and
+  // tacking legs must still finish before the navigator replaces them.
+  const movingIntercept=route.intent==='pursuit' && motion.pursuit?.moving && !route.partial && !last.tack;
+  if(!firing && !movingIntercept && points.length===1 && endGap<=arrival){
     if(route.intent!=='pursuit'){points.length=0;motion.speed=0;motion.yawRate=0;}
     else {
       motion.yawRate=0;
@@ -66,7 +70,12 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     // their tangent and feed-forward curvature below.
   }
   let cx=carrot.x-ship.x,cy=carrot.y-ship.y,distance=Math.hypot(cx,cy);
-  if(distance<1e-7 && !firing)return false;
+  if(distance<1e-7 && !firing){
+    if(!movingIntercept)return false;
+    // At the temporary mark itself the bearing is undefined. Keep the
+    // committed tangent for this swept step until its live station moves.
+    cx=lookahead*detCos(last.heading);cy=lookahead*detSin(last.heading);distance=lookahead;
+  }
   const wasAvoiding=route.avoidHeading!==undefined;
   // On a described curve the tangent and curvature are the reference.
   // Feeding pure-pursuit curvature on top would command the same turn twice.
@@ -81,8 +90,8 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const reference=curved ? tangent-Math.atan2(crossTrack,lookahead) : Math.atan2(cy,cx);
   // A firing station owns its weapon attitude. Collision sweeps below still
   // stop contact; normal passing rules must not steer the battery away forever.
-  const avoidance=firing ? {heading:route.fireHeading!,speedScale:1,active:false}
-    : avoidanceCourse(ship,units,reference,motion.speed);
+  const avoidance:ReturnType<typeof avoidanceCourse>=firing ? {heading:route.fireHeading!,speedScale:1,active:false}
+    : avoidanceCourse(ship,units,reference,motion.speed,map);
   // Once clear of traffic, join the next mark from here. Forcing the vessel
   // back onto the old centreline can add an unnecessary upwind S-turn.
   // A stationary fighting station keeps its planned approach through the
@@ -103,7 +112,9 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   }
   let error=headingDifference(motion.heading,avoidance.heading);
   const current=coursePerformance(ship,map,undefined,{assumeTrimmed:true});
-  const wanted=coursePerformance(ship,map,Math.atan2(cy,cx),{assumeTrimmed:true});
+  // Trim follows the course actually selected for passing traffic. The old
+  // reference can still point upwind while the hull takes a powered detour.
+  const wanted=coursePerformance(ship,map,avoidance.active ? avoidance.heading : Math.atan2(cy,cx),{assumeTrimmed:true});
   const crossing=!current.calm && current.trueWindAngle<current.beatAngle && current.targetSpeed<current.auxiliarySpeed;
   const mode=current.calm?'calm-assist':firing && (route.retreat || crossing)?'maneuver':first.tack?'tacking':crossing || wanted.targetSpeed<wanted.auxiliarySpeed?'maneuver':'sail';
   if(motion.sail)motion.sail.mode=mode;
@@ -114,6 +125,9 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const terminal=points.length===1 && route.intent!=='pursuit' && endGap<profile.length;
   const curvature=2*detSin(error)/Math.max(distance,terminal?1:profile.length*.25);
   let targetSpeed=drive*pace*avoidance.speedScale;
+  const followingSpeed=Math.min(avoidance.speedLimit ?? Infinity,
+    firing || avoidance.active ? Infinity : shipFollowingSpeed(ship,units,reference));
+  targetSpeed=Math.min(targetSpeed,followingSpeed);
   if(route.targetSpeed!==undefined)targetSpeed=Math.min(targetSpeed,Math.max(0,route.targetSpeed));
   targetSpeed*=clamp(1-Math.abs(error)*.22,.4,1);
   if(firing){
@@ -146,7 +160,10 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     if(Math.abs(curvature)>1e-7)targetSpeed=Math.min(targetSpeed,limits.turnRate/Math.abs(curvature)*.8);
   }
   if(route.intent!=='pursuit')targetSpeed=Math.min(targetSpeed,Math.sqrt(2*limits.acceleration*endGap));
-  const braking=motion.speed>geometrySpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
+  // A traffic speed reduction orders actual braking. Using the gentle loss
+  // of sail drive here carries the hull past its passing course and can push
+  // it far outside a planned arc before the encounter clears.
+  const braking=avoidance.active && avoidance.speedScale<1 || motion.speed>geometrySpeed || motion.speed>followingSpeed || route.targetSpeed!==undefined || terminal && (Math.abs(error)>.2 || endGap<speedStoppingDistance(motion.speed,limits.acceleration));
   // Losing aerodynamic drive while crossing the wind releases the sails;
   // it does not command full braking and discard all entry headway.
   const slowing=braking?acceleration:acceleration*.2;
@@ -170,7 +187,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   const alongVelocity=(motion.velocityX??0)*detCos(motion.heading)+(motion.velocityY??0)*detSin(motion.heading);
   if(direction*alongVelocity < -1e-7){speed=0;direction=0;}
   let surge=perTick(speed)*direction,yaw=perTick(yawRate);
-  if(!firing && points.length===1 && endGap<=surge && Math.abs(error)<=perTick(limits.turnRate)){
+  if(!firing && !movingIntercept && points.length===1 && endGap<=surge && Math.abs(error)<=perTick(limits.turnRate)){
     surge=endGap;yaw=error;yawRate=yaw*SIM_TICKS_PER_SECOND;
   }
   const start:ShipPose={x:ship.x,y:ship.y,heading:motion.heading},traffic=shipTraffic(ship,units);

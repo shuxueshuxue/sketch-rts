@@ -18,7 +18,9 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 13: curved laylines, moving gun aim and stable firing stations.
 // 14: sheltered cabin crew, compartment damage and heavy broadside hulls.
 // 15: enlarged hulls, guard stations, population cabins and deployed boarding bridges.
-export const CHECKSUM_VERSION = 15;
+// 16: persisted, fairly scheduled complex ship route requests.
+// 17: exact saved state of deterministic incremental ship navigation.
+export const CHECKSUM_VERSION = 17;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));

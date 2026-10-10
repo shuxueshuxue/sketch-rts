@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { roomUiFlowCode } from "./room-ui-flow.mjs";
 
 const port = Number(process.env.PORT ?? 5173);
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -142,12 +143,10 @@ async page => {
     await page.click("[data-open-room-browser]");
     await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
     await page.click("[data-create-room]");
-    await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-    await page.click("[data-submit-create-game]");
-    await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-    activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+    await automaticSoloSetup();
+    activeRoomId = await serverSetupFromSolo();
     must(activeRoomId, "room setup did not expose room id");
-    await page.click("[data-map-id='" + mapId + "']");
+    await serverFixtureMap(activeRoomId, mapId);
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
     await page.evaluate(() => {
@@ -159,6 +158,7 @@ async page => {
     });
     await sleep(120);
   };
+  ${roomUiFlowCode}
   const waitFor = async (label, fn, timeout = 5000) => {
     const started = Date.now();
     let last;
@@ -180,15 +180,17 @@ async page => {
   const screenFromCamera = (camera, target) => ({ x: target.x - camera.x, y: target.y - camera.y });
   const centerCameraOnWorld = async (world) => {
     const current = await snapshot();
-    const mini = { x: 1280 - 192 - 12, y: 800 - 192 - 12, width: 192, height: 192 };
-    await page.mouse.click(mini.x + (world.x / current.map.width) * mini.width, mini.y + (world.y / current.map.height) * mini.height);
+    const mini = await displayedMinimapRect();
+    const click = { x: Math.round(mini.x + (world.x / current.map.width) * mini.width), y: Math.round(mini.y + (world.y / current.map.height) * mini.height) };
+    await page.mouse.click(click.x, click.y);
     await sleep(120);
-    return cameraForCenteredWorld(world, current);
+    return cameraForCenteredWorld({ x: (click.x - mini.x) / mini.width * current.map.width,
+      y: (click.y - mini.y) / mini.height * current.map.height }, current);
   };
   const canvasPatch = async (x, y, width = 56, height = 62) =>
     page.evaluate(
       ({ x, y, width, height }) => {
-        const canvas = document.querySelector("canvas");
+        const canvas = document.querySelector(".game-canvas");
         if (!canvas) throw new Error("canvas missing");
         const left = Math.max(0, Math.floor(x - width / 2));
         const top = Math.max(0, Math.floor(y - height / 2));
@@ -197,7 +199,10 @@ async page => {
         readback.height = height;
         const context = readback.getContext("2d", { willReadFrequently: true });
         if (!context) throw new Error("canvas readback context missing");
-        context.drawImage(canvas, left, top, width, height, 0, 0, width, height);
+        // Read the displayed scene, including the separate 3D ground and actors.
+        for (const layer of document.querySelectorAll(".world-ground, .world-actors, .game-canvas")) {
+          if (layer.getBoundingClientRect().width > 0) context.drawImage(layer, left, top, width, height, 0, 0, width, height);
+        }
         const data = context.getImageData(0, 0, width, height).data;
         let ink = 0;
         let gold = 0;
@@ -632,7 +637,7 @@ async page => {
     .sort((left, right) => left.x - right.x)[0];
   must(targetWildling, "expected a neutral wildling for real right-click attack proof");
   const neutralKillsBefore = afterSummon.match.stats.neutralUnitsKilled.player;
-  const mini = { x: 1280 - 192 - 12, y: 800 - 192 - 12, width: 192, height: 192 };
+  const mini = await displayedMinimapRect();
   const targetWildlingCamera = await centerCameraOnWorld(targetWildling);
   const targetWildlingScreen = screenFromCamera(targetWildlingCamera, targetWildling);
   const beforeLeftWildlingClick = await snapshot();

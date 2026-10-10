@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { roomUiFlowCode } from "./room-ui-flow.mjs";
 
 const port = Number(process.env.PORT ?? 5176);
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -135,25 +136,21 @@ async page => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
     await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   };
-  // A room on a pool map is chosen on the create screen; any other map (a test fixture) is set through the room API.
+  ${roomUiFlowCode}
+  // Pick a pool map through the real automatic solo flow, then use an
+  // authoritative multiplayer room for the gameplay fixture API.
   const enterRoomSetup = async (poolMapId) => {
     await page.click("[data-open-room-browser]");
     await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
     await page.click("[data-create-room]");
-    await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-    if (poolMapId) await page.click("[data-map-entries] [data-map-id='" + poolMapId + "']");
-    await page.click("[data-submit-create-game]");
-    await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-    activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+    await automaticSoloSetup(poolMapId);
+    activeRoomId = await serverSetupFromSolo();
     must(activeRoomId, "room setup did not expose room id");
   };
   const startLocalRoom = async (mapId, pool = false) => {
     await enterRoomSetup(pool ? mapId : undefined);
     if (!pool) {
-      await page.evaluate(async ({ roomId, mapId }) => {
-        const res = await fetch("/api/rooms/" + roomId + "/map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId }) });
-        if (!res.ok) throw new Error(await res.text());
-      }, { roomId: requireActiveRoomId(), mapId });
+      await serverFixtureMap(requireActiveRoomId(), mapId);
     }
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
@@ -171,7 +168,7 @@ async page => {
   const canvasPatch = async (x, y, width = 80, height = 80) =>
     page.evaluate(
       ({ x, y, width, height }) => {
-        const canvas = document.querySelector("canvas");
+        const canvas = document.querySelector(".game-canvas");
         if (!canvas) throw new Error("canvas missing");
         const left = Math.max(0, Math.floor(x - width / 2));
         const top = Math.max(0, Math.floor(y - height / 2));
@@ -180,7 +177,10 @@ async page => {
         readback.height = height;
         const context = readback.getContext("2d", { willReadFrequently: true });
         if (!context) throw new Error("canvas readback context missing");
-        context.drawImage(canvas, left, top, width, height, 0, 0, width, height);
+        // Read the displayed scene, including the separate 3D ground and actors.
+        for (const layer of document.querySelectorAll(".world-ground, .world-actors, .game-canvas")) {
+          if (layer.getBoundingClientRect().width > 0) context.drawImage(layer, left, top, width, height, 0, 0, width, height);
+        }
         const data = context.getImageData(0, 0, width, height).data;
         let ink = 0;
         let blue = 0;
@@ -253,11 +253,11 @@ async page => {
   await page.click("[data-open-room-browser]");
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.click("[data-create-room]");
-  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  await page.waitForSelector("[data-map-entries]", { timeout: 5000 });
   const createMapEntries = await page.locator("[data-map-entries] [data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
   const poolMapIds = menuCatalog.maps.filter((map) => map.tags.includes("pool")).map((map) => map.id);
   must(poolMapIds.length >= 12 && createMapEntries.join(",") === poolMapIds.join(","), "the create screen should list exactly the pool's maps: " + JSON.stringify({ createMapEntries, poolMapIds }));
-  await page.reload();
+  await returnToHomeDocument();
   await waitForMenu();
 
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
@@ -267,7 +267,7 @@ async page => {
 
   const mapSelectionProof = [];
   for (const mapId of ["greystonePass", "twoShores"]) {
-    await page.reload();
+    await returnToHomeDocument();
     activeRoomId = undefined;
     await waitForMenu();
     await startLocalRoom(mapId, true);
@@ -281,13 +281,13 @@ async page => {
     mapSelectionProof.push({ id: current.map.id, size: current.map.width, terrain });
   }
 
-  await page.reload();
+  await returnToHomeDocument();
   activeRoomId = undefined;
   await waitForMenu();
   await startLocalRoom("verdantCrossroads");
   await page.mouse.move(640, 400);
   const suppressedCanvasDefaults = await page.evaluate(() => {
-    const canvas = document.querySelector("canvas");
+    const canvas = document.querySelector(".game-canvas");
     const proof = {};
     const eventSpecs = [
       { type: "mousedown", ctor: "mouse" },
@@ -340,7 +340,7 @@ async page => {
     await page.evaluate(() => ({
       afterUrl: location.href,
       afterHistoryLength: history.length,
-      alive: Boolean(document.querySelector("canvas")),
+      alive: Boolean(document.querySelector(".game-canvas")),
       status: document.querySelector("[data-status]")?.textContent,
     })),
   );
@@ -373,7 +373,7 @@ async page => {
     hasGate: !!document.querySelector("[data-pointer-lock-gate]"),
     gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
     action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
-    locked: document.pointerLockElement === document.querySelector("canvas"),
+    locked: document.pointerLockElement === document.querySelector(".game-canvas"),
   }));
   must(!beforePointerLockClickState.hasTopStripButton, "Pointer Lock top-strip button should not exist in the game UI");
   must(beforePointerLockClickState.hasGate, "Pointer lock gate is missing from the game UI");
@@ -381,7 +381,7 @@ async page => {
   let pointerLockStateAfterButton = null;
   for (let i = 0; i < 50; i += 1) {
     pointerLockStateAfterButton = await page.evaluate(() => ({
-      locked: document.pointerLockElement === document.querySelector("canvas"),
+      locked: document.pointerLockElement === document.querySelector(".game-canvas"),
       pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
       gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
       action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
@@ -407,7 +407,7 @@ async page => {
     await page.mouse.click(640, 400);
     for (let i = 0; i < 50; i += 1) {
       pointerLockStateAfterFieldClick = await page.evaluate(() => ({
-        locked: document.pointerLockElement === document.querySelector("canvas"),
+        locked: document.pointerLockElement === document.querySelector(".game-canvas"),
         pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
         gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
         status: document.querySelector("[data-status]")?.textContent,
@@ -417,7 +417,7 @@ async page => {
     }
   }
   const pointerLockState = await page.evaluate(() => ({
-    locked: document.pointerLockElement === document.querySelector("canvas"),
+    locked: document.pointerLockElement === document.querySelector(".game-canvas"),
     pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
     hasTopStripButton: !!document.querySelector("[data-pointer-lock]"),
     gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
@@ -444,7 +444,7 @@ async page => {
     );
   }
   await sleep(80);
-  await page.reload();
+  await returnToHomeDocument();
   activeRoomId = undefined;
   await waitForMenu();
   await startLocalRoom("verdantCrossroads");
@@ -455,7 +455,7 @@ async page => {
   const afterEdgeScrollPatch = await canvasPatch(640, 400, 240, 160);
   must(beforeEdgeScrollPatch.hash !== afterEdgeScrollPatch.hash, "touching the right viewport edge did not scroll the camera");
   await page.mouse.move(640, 400);
-  await page.reload();
+  await returnToHomeDocument();
   activeRoomId = undefined;
   await waitForMenu();
   await startLocalRoom("verdantCrossroads");
@@ -550,7 +550,7 @@ async page => {
   );
   must(afterEnemyAttack.effects.some((effect) => effect.type === "attackTarget"), "right-clicking an enemy unit did not create an attack-target feedback effect");
 
-  const mini = { x: 1280 - 192 - 12, y: 800 - 192 - 12, width: 192, height: 192 };
+  const mini = await displayedMinimapRect();
   const beforeMinimapClickPatch = await canvasPatch(640, 400, 240, 160);
   await page.mouse.click(mini.x + mini.width * 0.82, mini.y + mini.height * 0.18);
   await sleep(120);

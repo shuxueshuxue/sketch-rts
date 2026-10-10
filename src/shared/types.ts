@@ -247,6 +247,14 @@ export type Unit = {
     defense?: { originX:number; originY:number; targetId?:string; returning?:boolean };
     gangway?: import('./ship-gangway').ShipGangway;
     gangwayCooldownUntilTick?: number;
+    /** Age of a deferred complex route request; persisted for fair replay-stable scheduling. */
+    planningRequestedAtTick?: number;
+    /** Last tick which still needed the queued plan; expires abandoned requests. */
+    planningLastRequestedAtTick?: number;
+    /** Exact finite JSON state of a deterministic, resumable route search. */
+    planningJob?: string;
+    /** Last live request for the saved job; abandoned work expires at tick boundaries. */
+    planningJobLastRequestedAtTick?: number;
     route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean; curvature?: number; speedLimit?: number; queuedTurn?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
       intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean;
       avoidSide?: number; avoidTicks?: number; avoidHeading?: number; avoidBaseHeading?: number; avoidTargetId?: string; tackHeading?: number;
