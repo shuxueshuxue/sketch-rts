@@ -48,6 +48,7 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     && !('order' in enemy && enemy.deck) && isEnemyOwner(snapshot, owner, enemy.owner, options));
   options.memory.jobs = options.memory.jobs.filter(job => !job.kind.startsWith(JOB_PREFIX)
     || (hazards.some(hazard => job.kind === JOB_PREFIX + hazard.id) && soldiers.some(unit => unit.id === job.id)));
+  if (hazards.length === 0) return [];
   const commands: Extract<GameCommand, { type: 'move' }>[] = [];
   const destinations: { x: number; y: number; radius: number }[] = [];
   for (const unit of soldiers) {
@@ -59,7 +60,16 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
       destinations.push({ x: order.x, y: order.y, radius: unit.radius });
       continue;
     }
-    const incoming = hazards.filter(hazard => overlaps(hazard, unit, unit.radius))
+    // A clear walking order can enter the visible fire before the next decision.
+    const walking = (order.type === 'move' || order.type === 'attackMove' && order.targetId === undefined)
+      && segmentWalkable(snapshot.map, unit, order) ? order : unit;
+    const step = (hazard: Hazard) => {
+      const budget = unit.speed * (hazard.remaining - 1) / SIM_TICKS_PER_SECOND;
+      const gap = Math.hypot(walking.x - unit.x, walking.y - unit.y);
+      const fraction = gap > budget ? budget / gap : 1;
+      return { x: unit.x + (walking.x - unit.x) * fraction, y: unit.y + (walking.y - unit.y) * fraction };
+    };
+    const incoming = hazards.filter(hazard => overlaps(hazard, unit, unit.radius) || overlaps(hazard, step(hazard), unit.radius))
       .sort((a, b) => a.remaining - b.remaining);
     const hazard = incoming[0];
     if (!hazard) {
@@ -69,7 +79,8 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
       continue;
     }
     const reach = hazard.radius + unit.radius + CLEARANCE;
-    const along = hazard.from ? boltIntersection(hazard.from, hazard, unit, hazard.radius)! : 0;
+    const along = hazard.from ? boltIntersection(hazard.from, hazard,
+      overlaps(hazard, unit, unit.radius) ? unit : step(hazard), hazard.radius)! : 0;
     const length = hazard.from ? Math.hypot(hazard.x - hazard.from.x, hazard.y - hazard.from.y) : 0;
     const origin = hazard.from ? { x: hazard.from.x + (hazard.x - hazard.from.x) * Math.min(1, along / length),
       y: hazard.from.y + (hazard.y - hazard.from.y) * Math.min(1, along / length) } : hazard;
