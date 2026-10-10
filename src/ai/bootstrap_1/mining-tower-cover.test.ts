@@ -42,15 +42,20 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
   'pays for cover, builds and mines the cleared replacement while the army holds elsewhere ($version/$race, mirror=$mirrored)', ({ version, race, mirrored }) => {
     const { game, memory, x } = replacementScene(race, mirrored);
     let returned = false, damage = 0;
+    const replacementLoads = new Set<string>();
     game.observer = { hit(_source, target, taken) { if (target.owner === 'us') damage += taken; } };
     for (let tick = 0; tick < 4000 && !returned; tick++) {
       if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game), {
         playerId: 'us', version, memory,
         scripts: [AI_SCRIPT_LIBRARY.economy, miningWorkforce, bootstrapEconomy, miningAssignments],
       }, { teams: game.teams }));
-      const carrying = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const carrying = game.units.filter(unit => unit.owner === 'us' && replacementLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'replacement'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) replacementLoads.add(unit.id);
       returned = carrying.some(unit => unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
     }
     expect(returned).toBe(true);
@@ -66,10 +71,11 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
     expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500 + mined);
   }, 20000);
 
-it.each(['covered', 'two-incomes', 'guarded', 'occupied', 'rising'] as const)(
+it.each(['covered', 'two-incomes', 'no-income', 'guarded', 'occupied', 'rising'] as const)(
   'does not buy replacement-mine cover when %s', condition => {
     const { game, memory } = replacementScene('grove', false);
     if (condition === 'two-incomes') game.resources.find(mine => mine.id === 'empty-main')!.amount = 10000;
+    if (condition === 'no-income') game.resources.find(mine => mine.id === 'working')!.amount = 0;
     if (condition === 'guarded' || condition === 'occupied') {
       const unit = game.units.find(unit => unit.id === 'garrison-0')!;
       unit.owner = condition === 'guarded' ? 'neutral' : 'foe';

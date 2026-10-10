@@ -65,17 +65,22 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
 };
 
 // A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
-const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority) => {
+const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority, target) => {
   const { snapshot, owner, intel, own } = economy;
-  if (activeMiningBaseCount(snapshot, owner) !== 1
-    || enemyPowerNear(intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
-    || own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange)) return [];
+  const incomes = activeMiningBaseCount(snapshot, owner);
+  const cover = own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange);
+  if (incomes > 1 || incomes === 0 && !cover) return [];
+  // The hall is the same purchase before and after cover arrives; keep its existing aging and ordinary price.
+  const capital = { id: `bases:${target}`, priority, cost: BUILDING_DEFS.townHall.cost, save: true, hold: true as const,
+    issue: () => undefined };
+  if (enemyPowerNear(intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
+    || cover) return [capital];
   const point = towerPointFor(snapshot, owner, mine, intel.home);
   if (!isBuildPlacementClear(snapshot, 'defenseTower', point)
     || snapshot.units.some(unit => unit.owner === 'neutral' && unit.attackDamage > 0
-      && distance(unit, point) <= BUILDING_DEFS.defenseTower.attackRange)) return [];
+      && distance(unit, point) <= BUILDING_DEFS.defenseTower.attackRange)) return [capital];
   return [{ id: `mining-cover:${mine.x}:${mine.y}`, priority, cost: BUILDING_DEFS.defenseTower.cost, save: true,
-    issue: used => economy.construct(economy, 'defenseTower', point, used, 'mining:cover') }];
+    issue: used => economy.construct(economy, 'defenseTower', point, used, 'mining:cover') }, capital];
 };
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
