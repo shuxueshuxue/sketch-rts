@@ -1109,7 +1109,7 @@ function enemyShipsNear(snapshot: GameSnapshot, owner: PlayerId, options: AiPoli
     return ships.filter((ship) => posts.some((post) => distance(ship, post) <= HOME_WATERS));
 }
 function nearestWorker(snapshot: GameSnapshot, owner: PlayerId, point: Point, builders: Set<string>) {
-    return nearestOf(units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle") && !builders.has(unit.id) && sameGround(snapshot.map, unit, point)), point);
+    return nearestByRoute(snapshot.map, units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle") && !builders.has(unit.id) && sameGround(snapshot.map, unit, point)), point, 'land');
 }
 function nearestOf<T extends Point>(things: T[], from: Point): T | undefined {
     let best: T | undefined;
