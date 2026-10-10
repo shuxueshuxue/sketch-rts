@@ -74,7 +74,7 @@ describe('bootstrap_1 summoner tower rush', () => {
     }
     expect(game.buildings.some(building => building.id === 'target')).toBe(false);
     expect(game.units.filter(unit => unit.kind === caster)).toHaveLength(20);
-    if (rearTower) expect(game.units.filter(unit => unit.kind === caster).every(unit => unit.x < 1600)).toBe(true);
+    expect(game.units.filter(unit => unit.kind === caster).every(unit => unit.hp === unit.maxHp)).toBe(true);
     expect(game.match.stats.goldSpent.us).toBe(0);
   });
 

@@ -117,6 +117,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   const commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
+    gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
     pursue: defense => walkingDistance(snapshot.map, defense.hall, defense.field)! <= distance(defense.hall, defense.field) + defense.leash!,
