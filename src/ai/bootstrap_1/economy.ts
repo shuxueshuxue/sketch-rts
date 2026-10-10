@@ -1,3 +1,4 @@
+import { missingMiningWorkers } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
@@ -42,17 +43,11 @@ function wantedUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
 /** Reserve one production wave, rather than two supply for every idle producer. */
 function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, goals: ReturnType<typeof rankV6Goals>, wanted: Set<TrainableUnitKind>) {
   const own = snapshot.buildings.filter(building => building.owner === owner);
-  const army = snapshot.units.filter(unit => unit.owner === owner);
   const production = new Set(wanted);
   for (const building of own) for (const kind of BUILDING_DEFS[building.kind].trains) {
     if (goals.some(goal => goal.id === `engineering:${kind}`)) production.add(kind);
   }
-  const halls = own.filter(building => building.kind === 'townHall');
-  const miningHalls = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
-    && Math.hypot(hall.x - mine.x, hall.y - mine.y) <= GOLD_MINE_RULES.baseRange));
-  const workers = army.filter(unit => unit.kind === 'worker' && !unit.deck).length
-    + halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
-  if (workers < Math.min(36, miningHalls.length * GOLD_MINE_RULES.workstations + towerRushConstructionCrew(snapshot, owner, options))) production.add('worker');
+  if (missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)) > 0) production.add('worker');
   return own.filter(building => building.complete).reduce((total, building) => {
     const kinds = [...BUILDING_DEFS[building.kind].trains.filter(kind => production.has(kind)), ...building.queue.map(job => job.unitKind)];
     return total + Math.max(0, ...kinds.map(kind => UNIT_DEFS[kind].supplyUsed));
@@ -141,6 +136,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
+    if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)) <= 0) return false;
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
     if (goal.id === 'farm' && player.supplyCap - projectedSupplyUsed(snapshot, owner) > wave) return false;
     if (goal.id.startsWith('unit:')) return wanted.has(goal.id.slice(5) as TrainableUnitKind);
