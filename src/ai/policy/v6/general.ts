@@ -130,6 +130,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!isV6Policy(options)) return [];
   return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), {
     reinforcements: "rally", expansionBasis: "halls", pursue: () => true,
+    recovery: (wounded, point) => retreatV6Front(snapshot, owner, wounded, point, options),
   });
 }
 
@@ -143,10 +144,11 @@ type ArmyPlan = {
   reinforcements: "rally" | "siege";
   expansionBasis: "halls" | "mines";
   pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
+  recovery: (wounded: Unit[], point: Point) => GameCommand[];
 };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
-  const { reinforcements, expansionBasis, pursue } = plan;
+  const { reinforcements, expansionBasis, pursue, recovery } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -186,10 +188,10 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const line = front.filter((unit) => !wounded.includes(unit));
     if (isV8Policy(options) && waitsForTowers(intel, defense, strength, line)) return towerWait(snapshot, owner, memory, line, defense, options);
     // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
-    if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE && pursue(defense)) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
-    if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
+    if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE && pursue(defense)) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...recovery(wounded, defense.hall)];
+    if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...recovery(wounded, defense.hall)];
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
-    return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
+    return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...recovery(wounded, intel.home)];
   }
   // Securing a cleared replacement includes its ordinary foundation; a distant attack cannot take that escort away.
   if (miningFirst && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
@@ -517,7 +519,7 @@ function quickStrike(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMe
   ];
 }
 
-function stepBack(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {
+export function retreatV6Front(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {
   const walking = wounded.filter((unit) => distance(unit, hall) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, hall) <= ORDER_SLACK));
   return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: hall.x, y: hall.y }, options)] : [];
 }
