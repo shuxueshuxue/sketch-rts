@@ -134,6 +134,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     gatherAssault: true,
     chooseCamp: chooseV7Camp,
     startCamp: startV7Creep,
+    campTerritory: 'home',
   });
 }
 
@@ -151,10 +152,11 @@ type ArmyPlan = {
   gatherAssault: boolean;
   chooseCamp: typeof chooseV7Camp;
   startCamp: typeof startV7Creep;
+  campTerritory: 'home' | 'ground';
 };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
-  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp } = plan;
+  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp, campTerritory } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -282,7 +284,8 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   if (isV7Policy(options)) {
     const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
-    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
+    const territory = campTerritory === 'ground' ? v7Uncontested : v7NearHome;
+    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, territory.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
     if (choice) {
       startCamp(snapshot, front, choice, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
