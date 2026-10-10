@@ -82,6 +82,8 @@ describe('bootstrap_1 production budget', () => {
       .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
       .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
       .building('us', UNIT_DEFS[caster].trainedAt!, 1800, 1200).farms('us', 7, 400, 1600);
+    // Keep a live opponent so abandoned-base demolition cannot end the medical observation early.
+    for (let index = 0; index < 3; index++) scene = scene.worker('foe', 3600, 3400 + index * 30);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 530 + index % 5 * 20,
       { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
     for (let index = 0; index < 4; index++) scene = scene.unit('us', caster, 2300 + index * 35, 1100)
