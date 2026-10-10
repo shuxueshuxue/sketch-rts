@@ -316,6 +316,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return snapshotGame(getLiveGame(roomId).game);
     },
 
+    currentTick(roomId: string): number {
+      return getLiveGame(roomId).game.tick;
+    },
+
     checksumRoom(roomId: string): string {
       return checksumGame(getLiveGame(roomId).game);
     },
@@ -518,13 +522,15 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   const frameOptions = input.frame ? { frame: input.frame } : {};
   hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
-  const snapshot = snapshotGame(game);
   const matchEnded = Boolean(game.match.winner);
+  // History and public tick results keep their independent snapshots. The
+  // internal event copy is only consumed by a listener or match cleanup.
+  const snapshot = matchEnded || completedFrame && hosted.frameListeners.size > 0 ? snapshotGame(game) : undefined;
   if (matchEnded) {
     hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
-    finishHostedRoom(hosted, snapshot);
+    finishHostedRoom(hosted, snapshot!);
   }
-  if (completedFrame) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
+  if (completedFrame && snapshot) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
   if (matchEnded) notifyHostedRoomLifecycle(hosted, { room: hosted.room });
   return completedFrame;
 }

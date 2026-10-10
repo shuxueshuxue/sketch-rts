@@ -7,8 +7,12 @@ export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
 export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
 export const AIM_SPEED_MULTIPLIER = 2 / 3;
 
+function requiresAiming(rules: UnitDef) {
+  return !(rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD);
+}
+
 export function aimingProfile(rules: UnitDef) {
-  if (rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
+  if (!requiresAiming(rules)) return undefined;
   return {
     speed: (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER,
     moveTolerance: rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE,
@@ -18,20 +22,28 @@ export function aimingProfile(rules: UnitDef) {
 /** Walking, crowd separation, shoves and unloading all invalidate the same displacement budget. */
 export function invalidateMovedAim(unit: Unit, rules: UnitDef) {
   if (!unit.aim) return;
-  const profile = aimingProfile(rules);
-  if (!profile) { unit.aim = undefined; return; }
-  const tolerance = profile.moveTolerance;
-  const displacement = unit.deck
-    ? Math.hypot(unit.deck.x-(unit.aim.anchorDeckX ?? unit.deck.x),unit.deck.y-(unit.aim.anchorDeckY ?? unit.deck.y))
-    : Math.hypot(unit.x-unit.aim.anchorX,unit.y-unit.aim.anchorY);
-  if (displacement > tolerance) unit.aim = undefined;
+  if (!requiresAiming(rules)) { unit.aim = undefined; return; }
+  invalidateAimByTolerance(unit, rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE);
+}
+
+function invalidateAimByTolerance(unit: Unit, tolerance: number) {
+  const aim = unit.aim;
+  if (!aim) return;
+  const deck = unit.deck;
+  const x = deck ? deck.x : unit.x, y = deck ? deck.y : unit.y;
+  const anchorX = deck ? aim.anchorDeckX ?? deck.x : aim.anchorX;
+  const anchorY = deck ? aim.anchorDeckY ?? deck.y : aim.anchorY;
+  // A moving hull carries a stationary reticle with its crew. Negative or
+  // NaN tolerances still follow the original radial comparison.
+  if (tolerance >= 0 && x === anchorX && y === anchorY) return;
+  if (Math.hypot(x - anchorX, y - anchorY) > tolerance) unit.aim = undefined;
 }
 
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
 export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, speedMultiplier = 1) {
   const profile = aimingProfile(rules);
   if (!profile) { unit.aim = undefined; return true; }
-  invalidateMovedAim(unit, rules);
+  invalidateAimByTolerance(unit, profile.moveTolerance);
   if (!unit.aim) {
     unit.aim = { x: unit.x, y: unit.y, anchorX: unit.x, anchorY: unit.y, tracking: true, updatedTick: tick - 1 };
     if(unit.deck){unit.aim.anchorDeckX=unit.deck.x;unit.aim.anchorDeckY=unit.deck.y;}

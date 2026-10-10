@@ -21,9 +21,6 @@ export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options
     const home = snapshot.buildings.find(building => building.owner === owner && building.kind === "townHall");
     if (!home)
         return undefined;
-    const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(snapshot.map, unit, home));
-    const towers = snapshot.buildings.filter(building => building.kind === "defenseTower" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, home));
-    const kind: TrainableUnitKind = player.race === "grove" ? "ballista" : towers.length >= 2 ? "catapult" : foes.filter(unit => unit.attackRange > 200).length >= 4 || foes.length >= 12 ? "organGun" : "siegeRam";
     const workshop = snapshot.buildings.find(building => building.owner === owner && building.kind === "workshop");
     if (!workshop)
         return { id: "engineering:workshop", cost: BUILDING_DEFS.workshop.cost, issue: used => {
@@ -35,7 +32,16 @@ export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options
                 used.add(worker.id);
                 return { type: "build", unitId: worker.id, buildingKind: "workshop", ...safeMainBuildPoint(snapshot, owner, 12, "workshop") };
             } };
-    return workshop.complete && !workshop.queue.length && canSupply(snapshot, owner, kind)
+    if (!workshop.complete || workshop.queue.length)
+        return undefined;
+    // Enemy composition only selects the next weapon, after its workshop can train.
+    let kind: TrainableUnitKind = "ballista";
+    if (player.race !== "grove") {
+        const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(snapshot.map, unit, home));
+        const towers = snapshot.buildings.filter(building => building.kind === "defenseTower" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, home));
+        kind = towers.length >= 2 ? "catapult" : foes.filter(unit => unit.attackRange > 200).length >= 4 || foes.length >= 12 ? "organGun" : "siegeRam";
+    }
+    return canSupply(snapshot, owner, kind)
         ? { id: `engineering:${kind}`, cost: UNIT_DEFS[kind].cost, issue: () => ({ type: "train", buildingId: workshop.id, unitKind: kind }) }
         : undefined;
 }

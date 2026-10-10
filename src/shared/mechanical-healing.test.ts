@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { UNIT_DEFS, resolveVariant } from "./catalog";
 import { boardUnit } from "./decks";
-import { createBuilding } from "./map";
-import { createGame, issuePlayerCommand, leadershipRegenPerSecond, refreshUnitStats, stepGame, unitRegenPerSecond } from "./sim";
+import { createBuilding, createUnit } from "./map";
+import { createGame, issuePlayerCommand, leadershipRegenPerSecond, refreshUnitStats, snapshotGame, stepGame, unitRegenPerSecond } from "./sim";
 import { seconds } from "./time";
 import { xpStarThresholds } from "./unit-value";
 import type { Unit } from "./types";
@@ -39,6 +39,74 @@ function mixed(skill?: VeteranSkillId) {
 }
 
 describe("mechanical bodies and medical effects in the shared simulation", () => {
+  it("preserves medical eligibility before a public leadership lookup for an absent owner", () => {
+    const game = scene();
+    const machine = createUnit("machine", "missing-owner", "golem", 900, 900);
+    machine.level = 3;
+    const rookie = createUnit("rookie", "missing-owner", "footman", 1000, 900);
+    const neutral = createUnit("neutral", "neutral", "footman", 1100, 900);
+    neutral.level = 3;
+    for (const unit of [machine, rookie, neutral]) {
+      expect(leadershipRegenPerSecond(game, unit)).toBe(0);
+      expect(unitRegenPerSecond(game, unit)).toBe(0);
+    }
+    rookie.level = 1;
+    expect(() => leadershipRegenPerSecond(game, rookie)).toThrow("Missing player state for missing-owner");
+    expect(() => unitRegenPerSecond(game, rookie)).toThrow("Missing player state for missing-owner");
+  });
+
+  it("adds innate, leadership and learned recovery live, then stops healing after a mechanical override", () => {
+    const game = scene();
+    game.variants = { recovery: resolveVariant({ base: "footman", regenPerSecond: 7 }) };
+    const fighter = game.spawnUnit("player", "footman", 1000, 1000);
+    fighter.variant = "recovery";
+    learn(game, fighter, "veteranEndurance");
+    fighter.order = { type: "hold", x: fighter.x, y: fighter.y };
+    game.players.player.upgrades.leadership = 3;
+    fighter.hp -= 50;
+    const hp = fighter.hp;
+    stepGame(game);
+    expect(fighter.hp).toBe(hp + (7 + 12 + 6) / 20);
+    expect(leadershipRegenPerSecond(game, fighter)).toBe(12);
+    expect(unitRegenPerSecond(game, fighter)).toBe(25);
+    const snapshot = snapshotGame(game);
+    expect(unitRegenPerSecond(snapshot, snapshot.units[0]!)).toBe(25);
+
+    game.variants.recovery = resolveVariant({ base: "footman", unitClass: "mechanical", regenPerSecond: 7 });
+    expect(leadershipRegenPerSecond(game, fighter)).toBe(0);
+    expect(unitRegenPerSecond(game, fighter)).toBe(0);
+    const unchanged = fighter.hp;
+    stepGame(game);
+    expect(fighter.hp).toBe(unchanged);
+    const mechanicalSnapshot = snapshotGame(game);
+    expect(unitRegenPerSecond(mechanicalSnapshot, mechanicalSnapshot.units[0]!)).toBe(0);
+  });
+
+  it("inherits saved variant classification and reads in-place overrides and missing variants live", () => {
+    const game = scene();
+    const savedRules = resolveVariant({ base: "footman", regenPerSecond: 7 });
+    // Older authored rules omitted classification and inherit the base row.
+    Reflect.deleteProperty(savedRules, "unitClass");
+    game.variants = { savedRecovery: savedRules };
+    const fighter = game.spawnUnit("player", "footman", 1000, 1000);
+    fighter.variant = "savedRecovery";
+    fighter.order = { type: "hold", x: fighter.x, y: fighter.y };
+    fighter.hp -= 40;
+    const hp = fighter.hp;
+    expect(unitRegenPerSecond(game, fighter)).toBe(7);
+    stepGame(game);
+    expect(fighter.hp).toBe(hp + 7 / 20);
+
+    savedRules.unitClass = "mechanical";
+    expect(unitRegenPerSecond(game, fighter)).toBe(0);
+    const damaged = fighter.hp;
+    stepGame(game);
+    expect(fighter.hp).toBe(damaged);
+    delete game.variants.savedRecovery;
+    expect(() => unitRegenPerSecond(game, fighter)).toThrow("Unknown unit variant savedRecovery");
+    expect(() => leadershipRegenPerSecond(game, fighter)).toThrow("Unknown unit variant savedRecovery");
+  });
+
   it("caps innate regeneration at full health and resumes on the next wounded tick", () => {
     const game = scene();
     const revenant = game.spawnUnit("player", "cinderRevenant", 900, 900);
