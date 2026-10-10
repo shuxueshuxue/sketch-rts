@@ -13,7 +13,8 @@ import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
-import { readIntrusion, readV6Intel, v9ExpansionMine, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
+import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
+import { bootstrapExpansionMine } from './expansion-target';
 import { availableV6Army, planV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
@@ -126,7 +127,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     chooseCamp: chooseBootstrapCamp,
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
-    chooseMine: v9ExpansionMine,
+    chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
