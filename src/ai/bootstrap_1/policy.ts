@@ -55,8 +55,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   const recovering = recoveryPatients(snapshot, owner).length > 0;
   const medical: V6Want[] = (version === 'v9_archer' || recovering) && (army.length >= 10
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
-      && snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt))
-    ? [{ unit: healer, count: Math.min(2, Math.floor(army.length / 5)), priority: 65 }] : [];
+      && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt)))
+    ? [{ unit: healer, count: Math.min(2, Math.max(1, Math.floor(army.length / 5))), priority: 65 }] : [];
   if (army.length < 10) return medical;
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
