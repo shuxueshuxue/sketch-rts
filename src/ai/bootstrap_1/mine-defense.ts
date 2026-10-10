@@ -1,6 +1,7 @@
 import { mercenaryControlUnitIds } from './mercenary-control';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
+import { chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { recoverBootstrapFront } from './front-recovery';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -120,6 +121,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   const commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
+    chooseCamp: chooseBootstrapCamp,
+    startCamp: startBootstrapCamp,
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.

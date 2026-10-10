@@ -2,6 +2,13 @@ import type { Point } from './ship-geometry';
 import { walkingDistance, type Mover } from './terrain';
 import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
+import { pointSegmentDistanceSquared } from './navigation-math';
+
+/** Check every actual road segment against physical circles, independently of route length. */
+export function routeClearsDisks(points: readonly Point[], disks: readonly (Point & { radius: number })[]): boolean {
+  return points.slice(1).every((point, index) => disks.every(disk =>
+    pointSegmentDistanceSquared(disk, points[index]!, point) > disk.radius * disk.radius));
+}
 
 /** Terrain travel at a supplied constant speed; excludes body detours and ship turning. */
 export function routeTravelTicks(map: Pick<GameMap, 'terrain'>, from: Point, to: Point, mover: Mover, speed: number): number | undefined {
