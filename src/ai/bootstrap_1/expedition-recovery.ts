@@ -12,6 +12,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { planMedicalRecovery } from './medical-recovery';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { planSettlerBoarding } from './ferry-preparation';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -41,6 +42,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const commands = planNavalTactics(snapshot, owner, options);
+  commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
   const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
