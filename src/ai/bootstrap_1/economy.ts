@@ -17,6 +17,7 @@ import { towerPointFor } from '../policy/build-layout';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
+import { shoppingGoals } from './shopping';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -97,6 +98,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant, prepareMiningCover);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
+  goals.push(...shoppingGoals(snapshot, owner, options));
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);

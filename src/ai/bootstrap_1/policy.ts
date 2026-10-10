@@ -1,4 +1,5 @@
 import { RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
@@ -86,6 +87,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
+    if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
     if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
