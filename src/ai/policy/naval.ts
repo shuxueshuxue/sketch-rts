@@ -445,7 +445,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     }
     return commands;
 }
-export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
+export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, claimLanded: (unit: Unit) => boolean): ReadonlySet<string> {
     const outfit = outfitting(snapshot,owner,options);
     const claimed = new Set<string>(navalServices(snapshot,owner,options).reserved);
     for(const command of clearTransferLanes(snapshot,owner))if('unitIds' in command)for(const id of command.unitIds)claimed.add(id);
@@ -459,7 +459,7 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
             delete ferries[id];
     for (const unit of units(snapshot, owner)) {
         const landed = home && unitMover(unit.kind) === "land" && unit.kind !== "worker" && !sameGround(snapshot.map, unit, home);
-        if (unitMover(unit.kind) === "sea" || unit.deck || unit.order.type === "board" || landed || Object.values(ferries).some(ferry => ferry.crewIds.includes(unit.id)))
+        if (unitMover(unit.kind) === "sea" || unit.deck || unit.order.type === "board" || landed && claimLanded(unit) || Object.values(ferries).some(ferry => ferry.crewIds.includes(unit.id)))
             claimed.add(unit.id);
     }
     return claimed;
