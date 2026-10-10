@@ -1,3 +1,5 @@
+import { hypot2 } from "../../shared/hypot";
+
 export type Point = { x: number; y: number };
 
 export function nearestEntity<T extends Point>(entities: T[], from: Point): T | undefined {
@@ -20,7 +22,7 @@ export function averagePoint(points: Point[]): Point {
 }
 
 export function distance(a: Point, b: Point) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return hypot2(a.x - b.x, a.y - b.y);
 }
 
 export function distanceSquared(a: Point, b: Point) {

@@ -1,6 +1,6 @@
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
-import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose } from './ship-collisions';
+import { constrainGroundShipStep, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
 import { shipFireLaneClear } from './ship-fire-control';
@@ -53,6 +53,7 @@ import { beginShipMotionFrame } from './ship-motion';
 import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
 import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
+import { hypot2 } from "./hypot";
 import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
@@ -755,9 +756,10 @@ export function stepGame(game: Game) {
   updateRegeneration(game);
   updateDockRepairs(game);
   updateTowerAttacks(game);
-  const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
-  beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings);
-  beginShipPlanningFrame(game.units,game.tick);
+  const vessels = shipsIn(game.units);
+  const starts = new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
+  beginShipPlanningFrame(game.units,game.tick,vessels);
   updateShipGangways(game.map,game.units,game.tick,game);
   prepareCrewRendezvous(game.map,game.units);
   game.boardingHolds=boardingHoldShips(game.units);
@@ -3972,7 +3974,7 @@ function slideUnits(game: Game) {
   }
 }
 
-type SeparationBucket = { x: number; y: number; units: Unit[] };
+type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number };
 const separationFrames = new WeakMap<Game, { buckets: Map<number, SeparationBucket>; pool: SeparationBucket[] }>();
 
 function separateUnits(game: Game) {
@@ -3997,13 +3999,13 @@ function separateUnits(game: Game) {
     const y = Math.floor(unit.y / cellSize);
     const key = numericBucketKey(x, y);
     let bucket = buckets.get(key);
-    if (bucket) bucket.units.push(unit);
+    if (bucket) bucket.units[bucket.count++] = unit;
     else {
       bucket = frame.pool[used++];
       if (bucket) {
-        bucket.x = x; bucket.y = y; bucket.units.push(unit);
+        bucket.x = x; bucket.y = y; bucket.units[0] = unit; bucket.count = 1;
       } else {
-        bucket = { x, y, units: [unit] };
+        bucket = { x, y, units: [unit], count: 1 };
         frame.pool.push(bucket);
       }
       buckets.set(key, bucket);
@@ -4011,16 +4013,17 @@ function separateUnits(game: Game) {
   }
 
   for (const bucket of buckets.values()) {
-    separateUnitBuckets(game, bucket.units, bucket.units, aPoint, bPoint);
+    separateUnitBuckets(game, bucket, bucket, aPoint, bPoint);
     for (const [ox, oy] of SEPARATION_NEIGHBORS) {
       const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
-      if (neighbor) separateUnitBuckets(game, bucket.units, neighbor.units, aPoint, bPoint);
+      if (neighbor) separateUnitBuckets(game, bucket, neighbor, aPoint, bPoint);
     }
   }
   for (const bucket of buckets.values()) {
     // The pool retains reusable storage, never bodies that died later in the
     // tick or left this Game through snapshot restoration.
-    bucket.units.length = 0;
+    for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
+    bucket.count = 0;
   }
 }
 
@@ -4031,11 +4034,12 @@ const SEPARATION_NEIGHBORS = [
   [0, 1],
 ] as const;
 
-function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[], aPoint: SpatialEntity, bPoint: SpatialEntity) {
-  const sameBucket = aUnits === bUnits;
-  for (let i = 0; i < aUnits.length; i += 1) {
+function separateUnitBuckets(game: Game, aBucket: SeparationBucket, bBucket: SeparationBucket, aPoint: SpatialEntity, bPoint: SpatialEntity) {
+  const aUnits = aBucket.units, bUnits = bBucket.units;
+  const sameBucket = aBucket === bBucket;
+  for (let i = 0; i < aBucket.count; i += 1) {
     const start = sameBucket ? i + 1 : 0;
-    for (let j = start; j < bUnits.length; j += 1) {
+    for (let j = start; j < bBucket.count; j += 1) {
       const a = aUnits[i]!, b = bUnits[j]!;
       const minDistance = a.radius + b.radius;
       const dx = b.x - a.x;
@@ -4060,7 +4064,7 @@ function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx:
   if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
   const aMover = unitMover(a.kind), bMover = unitMover(b.kind);
   if (aMover !== bMover) return;
-  const length = Math.hypot(dx, dy);
+  const length = hypot2(dx, dy);
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;
   if (a.pushX !== undefined || b.pushX !== undefined) pushContact(a, b, nx, ny);
@@ -4245,28 +4249,34 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   const goal=deckGoal(unit,ship || undefined,{x,y},units);
   if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
   if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
-  const from={x:unit.x,y:unit.y};
+  const from=groundShipFrameEmpty(units) ? undefined : {x:unit.x,y:unit.y};
   if (map.terrain) {
     walkToward(unit, x, y, map, pace);
-    const at=constrainGroundShipStep(map,unit,from,unit,units);
-    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    if (from) {
+      const at=constrainGroundShipStep(map,unit,from,unit,units);
+      if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    }
     return;
   }
   const speed = perTick(unit.speed) * pace;
   const dx = x - unit.x;
   const dy = y - unit.y;
-  const length = Math.hypot(dx, dy);
+  const length = hypot2(dx, dy);
   if (length <= speed || length === 0) {
     unit.x = clamp(x, 0, map.width);
     unit.y = clamp(y, 0, map.height);
-    const at=constrainGroundShipStep(map,unit,from,unit,units);
-    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    if (from) {
+      const at=constrainGroundShipStep(map,unit,from,unit,units);
+      if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    }
     return;
   }
   unit.x = clamp(unit.x + (dx / length) * speed, 0, map.width);
   unit.y = clamp(unit.y + (dy / length) * speed, 0, map.height);
-  const at=constrainGroundShipStep(map,unit,from,unit,units);
-  if(at!==unit){unit.x=at.x;unit.y=at.y;}
+  if (from) {
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+  }
 }
 
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
@@ -4291,7 +4301,7 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap, pace = 1) {
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return hypot2(a.x - b.x, a.y - b.y);
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {

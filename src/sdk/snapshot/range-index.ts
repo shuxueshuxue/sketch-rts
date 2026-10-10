@@ -1,4 +1,5 @@
 import type { EntityPoint } from "./query";
+import { hypot2 } from "../../shared/hypot";
 
 const RANGE_CELL = 256;
 const RANGE_INDEX_MIN_ITEMS = 32;
@@ -54,5 +55,5 @@ function cellKey(x: number, y: number) {
 }
 
 function distance(a: EntityPoint, b: EntityPoint) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return hypot2(a.x - b.x, a.y - b.y);
 }
