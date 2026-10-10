@@ -31,7 +31,7 @@ it.each(cases)('heals the $race patient reached by the shorter road (mirror=$mir
   expect(Math.hypot(healer.x - across.x, healer.y - across.y)).toBeLessThan(Math.hypot(healer.x - local.x, healer.y - local.y));
   expect(walkingDistance(game.map, healer, across)!).toBeGreaterThan(walkingDistance(game.map, healer, local)! * 4);
   const commands = planMedicalRecovery(snapshotGame(game), 'us', [across, local]);
-  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', command })), {}, { checksum: false });
+  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', scriptId: 'medicalRecovery', command })), {}, { checksum: false });
   for (let tick = 0; tick < 180; tick++) stepGame(game);
   expect(local.hp).toBe(local.maxHp);
   expect(across.hp).toBe(80);
@@ -42,7 +42,7 @@ it.each(cases)('heals the $race patient reached by the shorter road (mirror=$mir
 it.each(cases)('uses actual $race spell range for an immediate heal across a wall (mirror=$mirror)', ({ race, mirror }) => {
   const { game, across, local } = field(race, mirror, true);
   const commands = planMedicalRecovery(snapshotGame(game), 'us', [across, local]);
-  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', command })), {}, { checksum: false });
+  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', scriptId: 'medicalRecovery', command })), {}, { checksum: false });
   stepGame(game);
   expect(across.hp).toBe(across.maxHp);
   expect(local.hp).toBe(80);
@@ -53,7 +53,7 @@ it.each(cases)('keeps an unreachable $race island patient out of road selection 
   const { game, healer, across, local } = field(race, mirror, false, true);
   expect(walkingDistance(game.map, healer, across)).toBeUndefined();
   const commands = planMedicalRecovery(snapshotGame(game), 'us', [across, local]);
-  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', command })), {}, { checksum: false });
+  new SdkCommandFrameRuntime(game).issue(commands.map(command => ({ playerId: 'us', scriptId: 'medicalRecovery', command })), {}, { checksum: false });
   for (let tick = 0; tick < 180; tick++) stepGame(game);
   expect(local.hp).toBe(local.maxHp);
   expect(across.hp).toBe(80);
