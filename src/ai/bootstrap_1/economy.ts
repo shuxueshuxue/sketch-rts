@@ -12,13 +12,13 @@ import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
 import { isOpponentOwner } from '../policy/ownership';
 import { recoveryPatients } from './medical-recovery';
 import { activeMiningBaseCount } from '../policy/expansion-model';
-import { enemyPowerNear } from '../policy/v6/intel';
-import { bootstrapExpansionMine } from './expansion-target';
+import { bootstrapExpansionMine, enemyExpansionPower } from './expansion-target';
 import { towerPointFor } from '../policy/build-layout';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
 import { shoppingGoals } from './shopping';
+import { routeArrivals } from '../../shared/route-selection';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -61,10 +61,13 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
+  const issue = (workers: Unit[]) => issueV6Construction({ ...economy,
+    workers: routeArrivals(economy.snapshot.map, workers, point, 'land').slice(0, 1).map(({ unit }) => unit),
+  }, kind, point, used, play);
   // A replacement on the last working income uses its nearest eligible empty-handed worker.
   if (economy.own.filter(building => building.kind === 'townHall' && building.complete).length > 1
     && activeMiningBaseCount(economy.snapshot, economy.owner) === 1) {
-    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play);
+    return issue(ready);
   }
   const assigned = new Map<string, number>(economy.workers.flatMap(worker => worker.order.type === 'mine'
     ? [[worker.order.resourceId, 0] as const] : []));
@@ -74,7 +77,7 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   const priority = (worker: Unit) => worker.order.type === 'idle' ? 0
     : worker.order.type === 'mine' && assigned.get(worker.order.resourceId)! > GOLD_MINE_RULES.workstations ? 1 : 2;
   const preferred = Math.min(...ready.map(priority));
-  return issueV6Construction({ ...economy, workers: ready.filter(worker => priority(worker) === preferred) }, kind, point, used, play);
+  return issue(ready.filter(worker => priority(worker) === preferred));
 };
 
 // A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
@@ -86,7 +89,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
   // The hall is the same purchase before and after cover arrives; keep its existing aging and ordinary price.
   const capital = { id: `bases:${target}`, priority, cost: BUILDING_DEFS.townHall.cost, save: true, hold: true as const,
     issue: () => undefined };
-  if (enemyPowerNear(intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
+  if (enemyExpansionPower(snapshot, intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
     || cover) return [capital];
   const point = towerPointFor(snapshot, owner, mine, intel.home);
   if (!isBuildPlacementClear(snapshot, 'defenseTower', point)
