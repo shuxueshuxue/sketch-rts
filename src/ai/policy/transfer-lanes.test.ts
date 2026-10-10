@@ -70,7 +70,7 @@ describe('AI crowded shore transfers', () => {
       if (tick % 15 === 0) {
         const snapshot = snapshotGame(cleared.game);
         const commands = clearTransferLanes(snapshot, 'player');
-        const claimed = navalUnitIds(snapshot, 'player', { version: 'v8', memory });
+        const claimed = navalUnitIds(snapshot, 'player', { version: 'v8', memory }, () => true);
         for (const command of commands) {
           expect(command.type).toBe('move');
           if ('unitIds' in command) for (const id of command.unitIds) expect(claimed.has(id)).toBe(true);

@@ -199,7 +199,7 @@ export const AI_SCRIPT_LIBRARY = {
     return want && playerState(snapshot,owner).gold>=want.cost ? want.issue(new Set()) : undefined;
   } },
   navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
-  naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
+  naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: (snapshot, owner, options) => navalUnitIds(snapshot, owner, options, () => true) },
   shopping: { id: "shopping", phase: "tactics", run: planArmyShopping, claimsUnits: shopperIds },
 } satisfies Record<string, AiScript>;
 
