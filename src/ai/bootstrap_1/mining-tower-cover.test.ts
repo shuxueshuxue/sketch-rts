@@ -42,15 +42,21 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
   'pays for cover, builds and mines the cleared replacement while the army holds elsewhere ($version/$race, mirror=$mirrored)', ({ version, race, mirrored }) => {
     const { game, memory, x } = replacementScene(race, mirrored);
     let returned = false, damage = 0;
+    const replacementLoads = new Set<string>();
     game.observer = { hit(_source, target, taken) { if (target.owner === 'us') damage += taken; } };
     for (let tick = 0; tick < 4000 && !returned; tick++) {
       if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game), {
         playerId: 'us', version, memory,
         scripts: [AI_SCRIPT_LIBRARY.economy, miningWorkforce, bootstrapEconomy, miningAssignments],
       }, { teams: game.teams }));
-      const carrying = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      // A reassigned miner may still carry a load from the working mine.
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const carrying = game.units.filter(unit => unit.owner === 'us' && replacementLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'replacement'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) replacementLoads.add(unit.id);
       returned = carrying.some(unit => unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
     }
     expect(returned).toBe(true);

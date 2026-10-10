@@ -63,6 +63,14 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = economy.workers.filter(worker => worker.carryingGold === 0);
+  // With multiple completed halls but only one income, repeated trips by a
+  // distant idle builder delay restoring the second mine. Use a nearby empty-handed
+  // worker until that replacement is working, then resume lane preservation.
+  if (economy.own.filter(building => building.kind === 'townHall' && building.complete).length > 1
+    && activeMiningBaseCount(economy.snapshot, economy.owner) === 1) {
+    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play)
+      ?? issueV6Construction(economy, kind, point, used, play);
+  }
   const idle = ready.filter(worker => worker.order.type === 'idle');
   const free = issueV6Construction({ ...economy, workers: idle }, kind, point, used, play);
   if (free) return free;
