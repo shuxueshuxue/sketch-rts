@@ -145,6 +145,10 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     ownHalls: snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall'),
     intrusion: readIntrusion(buildings(snapshot, owner), intel.enemies, true) };
   const main: V6Intel = { ...world, army, power: strengthOf(army) };
+  // A spent birth mine no longer anchors the army's regrouping and defensive commitment.
+  const working = intel.ownHalls.find(hall => sameGround(snapshot.map, intel.home, hall)
+    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, hall) < GOLD_MINE_RULES.baseRange));
+  if (working) main.home = { x: working.x, y: working.y };
   if (army.length) main.armyCenter = averagePoint(army);
   const raid = uncoveredRaid(snapshot, intel, guard);
   if (raid) main.intrusion = raid;
