@@ -132,6 +132,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     reinforcements: "rally", expansionBasis: "halls", pursue: () => true,
     recovery: (wounded, point) => retreatV6Front(snapshot, owner, wounded, point, options),
     gatherAssault: true,
+    chooseCamp: chooseV7Camp,
+    startCamp: startV7Creep,
   });
 }
 
@@ -147,10 +149,12 @@ type ArmyPlan = {
   pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
   recovery: (wounded: Unit[], point: Point) => GameCommand[];
   gatherAssault: boolean;
+  chooseCamp: typeof chooseV7Camp;
+  startCamp: typeof startV7Creep;
 };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
-  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault } = plan;
+  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -231,9 +235,9 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
     const mine = !v7WantsBase(snapshot, owner, options, expansionBasis) ? undefined : isV9Policy(options) ? v9ExpansionMine(snapshot, intel) : nextExpansionMine(snapshot, intel);
-    const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, expansionBasis === "mines" ? v7Uncontested : v7Reachable, options, mine) : undefined;
+    const guard = mine ? chooseCamp(snapshot, front, v7Camps, expansionBasis === "mines" ? v7Uncontested : v7Reachable, options, mine) : undefined;
     if (guard) {
-      startV7Creep(snapshot, front, guard, options);
+      startCamp(snapshot, front, guard, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
       if (started) return creepOrders(memory, started);
     }
@@ -278,9 +282,9 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   if (isV7Policy(options)) {
     const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
-    const choice = pushed ? undefined : chooseV7Camp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
+    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
     if (choice) {
-      startV7Creep(snapshot, front, choice, options);
+      startCamp(snapshot, front, choice, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
       if (started) return creepOrders(memory, started);
     }
