@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs><radialGradient id="ground" cx=".48" cy=".38" r=".8"><stop stop-color="#a48b67" stop-opacity=".28"/><stop offset="1" stop-color="#101920"/></radialGradient><linearGradient id="edge" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b9a07b"/><stop offset=".48" stop-color="#655846"/><stop offset="1" stop-color="#403d34"/></linearGradient><linearGradient id="leather" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b68a61"/><stop offset=".48" stop-color="#76513b"/><stop offset="1" stop-color="#3f302b"/></linearGradient><linearGradient id="steel" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#e2e4d5"/><stop offset=".48" stop-color="#879ca4"/><stop offset="1" stop-color="#394952"/></linearGradient></defs>
+<path d="M12 3 C37 2 91 2 116 4 Q124 5 125 14 L125 114 Q125 124 114 125 L14 125 Q3 124 3 113 L3 15 Q3 5 12 3Z" fill="#11191f"/>
+<path d="M12 6 L116 6 Q122 7 122 14 L122 114 Q121 121 114 122 L14 122 Q7 121 6 113 L6 15 Q6 8 12 6Z" fill="url(#ground)" stroke="url(#edge)" stroke-width="2.2"/>
+<path d="M15 10 L43 10 M10 16 L10 42 M114 118 L89 118 M118 115 L118 90" stroke="#d6c19b" stroke-opacity=".32" stroke-width="1.2" fill="none"/>
+<g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M49 24 L80 28 L77 71 L99 84 C108 90 104 101 96 104 L40 103 C31 98 33 88 40 83 L42 51 Z" fill="url(#leather)"/>
+    <path d="M49 24 L80 28 L78 41 L46 38 Z M42 53 L77 57 L76 69 L41 66 Z" fill="url(#steel)"/>
+    <path d="M40 84 C45 89 53 90 60 91 L98 91 M42 99 L96 100" stroke="#b28c60" stroke-width="2.2" fill="none"/>
+    <path d="M58 40 L59 72 M66 43 L65 73 M56 48 L69 49 M56 57 L68 58 M55 66 L67 66" stroke="#ccb89a" stroke-width="1.5" fill="none"/>
+    <path d="M22 75 C16 70 17 60 23 58 C31 55 39 63 36 70 L33 78 C28 81 22 79 21 74 M26 63 L30 70" stroke="url(#steel)" stroke-width="7" fill="none"/>
+    <path d="M34 77 C34 68 40 64 47 67 C53 70 56 79 52 85 L46 90 C38 91 31 84 34 77 M41 73 L45 84" stroke="url(#steel)" stroke-width="7" fill="none"/>
+    <path d="M54 83 C55 75 65 72 72 78 C79 84 80 91 76 97 L68 102 C59 100 53 91 54 83 M62 83 L69 93" stroke="url(#steel)" stroke-width="7" fill="none"/>
+    <path d="M20 60 C25 58 30 61 31 65 M38 70 C42 67 46 70 49 74 M61 78 C66 77 71 81 73 84" stroke="#d1dce0" stroke-width="1.5" fill="none"/>
+    <path d="M91 29 L92 57 M102 37 L101 57" stroke="#8998a0" stroke-width="3" fill="none"/></g>
+</svg>

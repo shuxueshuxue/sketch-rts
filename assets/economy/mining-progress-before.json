@@ -1,0 +1,5564 @@
+{
+  "rules": {
+    "radius": 42,
+    "entryRange": 44,
+    "dropRange": 74,
+    "workstations": 5,
+    "goldPerTrip": 10,
+    "gatherSeconds": 3.2,
+    "entrySeconds": 1.5,
+    "townHallDistance": 210,
+    "mainDistance": 216,
+    "baseRange": 320
+  },
+  "warmupSeconds": 30,
+  "measuredSeconds": 60,
+  "rows": [
+    {
+      "scenario": "verdantCrossroads",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "verdantCrossroads",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "verdantCrossroads",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 25,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 7,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "verdantCrossroads",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "verdantCrossroads",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.9,
+      "meanWaitingWorkers": 0.5466666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 78,
+          "waiting": 14,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 60,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 53,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "verdantCrossroads",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.4,
+      "meanWaitingWorkers": 1.545,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 332,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 108,
+          "waiting": 44,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 90,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 83,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 288,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 310,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 25,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 7,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.9,
+      "meanWaitingWorkers": 0.5466666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 78,
+          "waiting": 14,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 60,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 53,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "bareDuel",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.4,
+      "meanWaitingWorkers": 1.545,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 332,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 108,
+          "waiting": 44,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 90,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 83,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 288,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 310,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 29,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 15,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 42,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 28,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 13,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.8,
+      "meanWaitingWorkers": 0.5333333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 72,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 58,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 43,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "sapphireArchipelago",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.3,
+      "meanWaitingWorkers": 1.5333333333333334,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 318,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 102,
+          "waiting": 42,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 88,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 73,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 288,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 310,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 360,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 15,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 63,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 45,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.9,
+      "meanWaitingWorkers": 0.5466666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 45,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 93,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 75,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "grandEstuary",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.4,
+      "meanWaitingWorkers": 1.545,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 75,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 276,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 123,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 318,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 105,
+          "waiting": 30,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 294,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 47,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 15,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 15,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.029166666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 41,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 17,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 11,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.9,
+      "meanWaitingWorkers": 0.56,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 71,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 56,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 41,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "brokenSea",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.4,
+      "meanWaitingWorkers": 1.5566666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 318,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 101,
+          "waiting": 42,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 336,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 86,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 336,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 71,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 288,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 12,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 310,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 1,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 2,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 10,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 3,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 19,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 4,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 360,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 70,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 49,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 25,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 5,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.9,
+      "meanWaitingWorkers": 0.5466666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 99,
+          "waiting": 5,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 29,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 78,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 144,
+          "maxWaitTicks": 18,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "templeSpring",
+      "count": 6,
+      "distance": 216.00000000000009,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.4,
+      "meanWaitingWorkers": 1.5433333333333332,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 317,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 123,
+          "waiting": 41,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 60,
+          "waitTicks": 311,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 53,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 102,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 78,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 293,
+          "maxWaitTicks": 48,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 287,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 11,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 1,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 2,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 3,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 250,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.3,
+      "meanWaitingWorkers": 0.010833333333333334,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 13,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 4,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 330,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.3,
+      "meanWaitingWorkers": 0.049166666666666664,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 43,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 16,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 61,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 5,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.4,
+      "meanWaitingWorkers": 0.14666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 64,
+          "maxWaitTicks": 8,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 16,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 91,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 63,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "turtleLake",
+      "count": 6,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1.9,
+      "meanWaitingWorkers": 1.1416666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 228,
+          "maxWaitTicks": 38,
+          "initialMaxWaitTicks": 38,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 217,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 224,
+          "maxWaitTicks": 32,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 225,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 121,
+          "waiting": 21,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 93,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 65,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 1,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 2,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 3,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 250,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 33,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 4,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 330,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 63,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 33,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 5,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.3,
+      "meanWaitingWorkers": 0.14666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 1,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 93,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 63,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 35,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "elderwood",
+      "count": 6,
+      "distance": 215.99999999999994,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1.8,
+      "meanWaitingWorkers": 1.1433333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 216,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 60,
+          "waitTicks": 219,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 223,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 123,
+          "waiting": 19,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 93,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 65,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 1,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 2,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 160,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 3,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 250,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 4,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 340,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 55,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 5,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.5,
+      "meanWaitingWorkers": 0.3333333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 10,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 85,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 56,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "ringwater",
+      "count": 6,
+      "distance": 215.99999999999986,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2,
+      "meanWaitingWorkers": 1.3333333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 240,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 251,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 269,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 115,
+          "waiting": 29,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 86,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 57,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 1,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 2,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 3,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 3,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 11,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 4,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 340,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 37,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 5,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.7,
+      "meanWaitingWorkers": 0.41333333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 67,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 12,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "loneMarket",
+      "count": 6,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.2,
+      "meanWaitingWorkers": 1.41,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 278,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 97,
+          "waiting": 26,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 294,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 94,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 252,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 42,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 294,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 54,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 294,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 79,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 1,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 2,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 20,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 3,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 20,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 10,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 4,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 360,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 20,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 5,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.8,
+      "meanWaitingWorkers": 0.49333333333333335,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 20,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 70,
+          "waiting": 8,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 128,
+          "maxWaitTicks": 16,
+          "initialMaxWaitTicks": 44,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "reedwater",
+      "count": 6,
+      "distance": 216.0000000000001,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.3,
+      "meanWaitingWorkers": 1.4883333333333333,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 272,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 8,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 282,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 302,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 100,
+          "waiting": 38,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 60,
+          "waitTicks": 300,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 322,
+          "maxWaitTicks": 46,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 308,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 74,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 1,
+      "distance": 216,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 2,
+      "distance": 216,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 19,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 3,
+      "distance": 216,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 19,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 37,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 4,
+      "distance": 216,
+      "goldPerMinute": 340,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.004166666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 19,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 5,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 37,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 5,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.6,
+      "meanWaitingWorkers": 0.3466666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 19,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 12,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 67,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 94,
+          "waiting": 2,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 38,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "veiledHill",
+      "count": 6,
+      "distance": 216,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.1,
+      "meanWaitingWorkers": 1.355,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 248,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 256,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 42,
+          "waiting": 4,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 97,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 272,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 124,
+          "waiting": 32,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 68,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 290,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 42,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 1,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 2,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 3,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.015,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 38,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 4,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.034166666666666665,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 5,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 68,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 39,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 5,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.7,
+      "meanWaitingWorkers": 0.44,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 98,
+          "waiting": 5,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 69,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 96,
+          "maxWaitTicks": 12,
+          "initialMaxWaitTicks": 43,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "greystonePass",
+      "count": 6,
+      "distance": 216.00000000000003,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.2,
+      "meanWaitingWorkers": 1.445,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 60,
+          "waitTicks": 291,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 269,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 5,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 299,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 128,
+          "waiting": 35,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 308,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 99,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 294,
+          "maxWaitTicks": 42,
+          "initialMaxWaitTicks": 73,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 273,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 1,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 2,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 160,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 3,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 250,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 4,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 340,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 35,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 5,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.5,
+      "meanWaitingWorkers": 0.32,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 10,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 10,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 80,
+          "maxWaitTicks": 10,
+          "initialMaxWaitTicks": 35,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 64,
+          "maxWaitTicks": 8,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "pineshade",
+      "count": 6,
+      "distance": 216.0000000000002,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2,
+      "meanWaitingWorkers": 1.3216666666666668,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 240,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 256,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 60,
+          "waitTicks": 280,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 266,
+          "maxWaitTicks": 38,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 264,
+          "maxWaitTicks": 40,
+          "initialMaxWaitTicks": 93,
+          "waiting": 24,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 1,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 2,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 3,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 4,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 350,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 5,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.7,
+      "meanWaitingWorkers": 0.4666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 64,
+          "waiting": 1,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 14,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 112,
+          "maxWaitTicks": 14,
+          "initialMaxWaitTicks": 55,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "gullIsland",
+      "count": 6,
+      "distance": 215.9999999999999,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.2,
+      "meanWaitingWorkers": 1.4666666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 295,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 94,
+          "waiting": 31,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 308,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 94,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 70,
+          "waitTicks": 277,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 265,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 44,
+          "waiting": 1,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 60,
+          "waitTicks": 307,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 55,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 308,
+          "maxWaitTicks": 44,
+          "initialMaxWaitTicks": 80,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 1,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 2,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 4,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 3,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 260,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 4,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 4,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 340,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 4,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 5,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.3,
+      "meanWaitingWorkers": 0.2,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 1,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "stillwater",
+      "count": 6,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1.9,
+      "meanWaitingWorkers": 1.2116666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 216,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 231,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 1,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 252,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 60,
+          "waitTicks": 252,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 252,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 64,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 251,
+          "maxWaitTicks": 38,
+          "initialMaxWaitTicks": 86,
+          "waiting": 23,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 1,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 80,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 2,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 170,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 3,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 250,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 4,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 330,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 5,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.4,
+      "meanWaitingWorkers": 0.18666666666666668,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 48,
+          "maxWaitTicks": 6,
+          "initialMaxWaitTicks": 6,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 32,
+          "maxWaitTicks": 4,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 64,
+          "maxWaitTicks": 8,
+          "initialMaxWaitTicks": 62,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "twoShores",
+      "count": 6,
+      "distance": 215.99999999999997,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1.9,
+      "meanWaitingWorkers": 1.2,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 216,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 60,
+          "waitTicks": 234,
+          "maxWaitTicks": 36,
+          "initialMaxWaitTicks": 36,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 34,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 238,
+          "maxWaitTicks": 34,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 248,
+          "maxWaitTicks": 38,
+          "initialMaxWaitTicks": 92,
+          "waiting": 20,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 266,
+          "maxWaitTicks": 38,
+          "initialMaxWaitTicks": 63,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 1,
+      "distance": 210,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 2,
+      "distance": 210,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.016666666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 20,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 3,
+      "distance": 210,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.016666666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 20,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 25,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 7,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 4,
+      "distance": 210,
+      "goldPerMinute": 370,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.02666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 100,
+          "waitTicks": 18,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 23,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 14,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 5,
+      "distance": 210,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1.1,
+      "meanWaitingWorkers": 0.7066666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 176,
+          "maxWaitTicks": 22,
+          "initialMaxWaitTicks": 78,
+          "waiting": 20,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 60,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 53,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 176,
+          "maxWaitTicks": 22,
+          "initialMaxWaitTicks": 22,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 176,
+          "maxWaitTicks": 22,
+          "initialMaxWaitTicks": 27,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-axis",
+      "count": 6,
+      "distance": 210,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.6,
+      "meanWaitingWorkers": 1.7,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 362,
+          "maxWaitTicks": 52,
+          "initialMaxWaitTicks": 108,
+          "waiting": 50,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 70,
+          "waitTicks": 350,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 90,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 350,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 83,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 332,
+          "maxWaitTicks": 52,
+          "initialMaxWaitTicks": 52,
+          "waiting": 20,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 314,
+          "maxWaitTicks": 52,
+          "initialMaxWaitTicks": 52,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 60,
+          "waitTicks": 332,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 53,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 1,
+      "distance": 210,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 2,
+      "distance": 210,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 3,
+      "distance": 210,
+      "goldPerMinute": 270,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 26,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 18,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 4,
+      "distance": 210,
+      "goldPerMinute": 370,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 100,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 48,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 40,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 22,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 90,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 5,
+      "distance": 210,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 1,
+      "meanWaitingWorkers": 0.6666666666666666,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 73,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 65,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 47,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 25,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 80,
+          "waitTicks": 160,
+          "maxWaitTicks": 20,
+          "initialMaxWaitTicks": 20,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "minimum-diagonal",
+      "count": 6,
+      "distance": 210,
+      "goldPerMinute": 400,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 2.5,
+      "meanWaitingWorkers": 1.6666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 70,
+          "waitTicks": 350,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 98,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 60,
+          "waitTicks": 350,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 90,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 60,
+          "waitTicks": 346,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 72,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 70,
+          "waitTicks": 316,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 50,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 70,
+          "waitTicks": 304,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 50,
+          "waiting": 4,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 70,
+          "waitTicks": 334,
+          "maxWaitTicks": 50,
+          "initialMaxWaitTicks": 50,
+          "waiting": 34,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 1,
+      "distance": 600,
+      "goldPerMinute": 30,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 2,
+      "distance": 600,
+      "goldPerMinute": 60,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0,
+      "meanWaitingWorkers": 0,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 16,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 3,
+      "distance": 600,
+      "goldPerMinute": 90,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.011666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 8,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 24,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 8,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 4,
+      "distance": 600,
+      "goldPerMinute": 120,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.011666666666666667,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 46,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 30,
+          "waitTicks": 8,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 30,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 22,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 5,
+      "distance": 600,
+      "goldPerMinute": 150,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.01,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 76,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 60,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 52,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 29,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "long-haul",
+      "count": 6,
+      "distance": 600,
+      "goldPerMinute": 180,
+      "conserved": true,
+      "maxSteadyWaitSeconds": 0.1,
+      "meanWaitingWorkers": 0.01,
+      "stats": [
+        {
+          "id": "unit-player-worker-1",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 106,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-2",
+          "delivered": 30,
+          "waitTicks": 6,
+          "maxWaitTicks": 2,
+          "initialMaxWaitTicks": 90,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "unit-player-worker-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 82,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-3",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 0,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-4",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 29,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        },
+        {
+          "id": "extra-5",
+          "delivered": 30,
+          "waitTicks": 0,
+          "maxWaitTicks": 0,
+          "initialMaxWaitTicks": 58,
+          "waiting": 0,
+          "stuck": 0,
+          "maxStuckTicks": 1
+        }
+      ]
+    },
+    {
+      "scenario": "no-repeat",
+      "count": 3,
+      "goldPerMinute": 240,
+      "conserved": true
+    },
+    {
+      "scenario": "repeat-command",
+      "count": 3,
+      "goldPerMinute": 0,
+      "conserved": true
+    }
+  ],
+  "sourceCommit": "ed93e7690619ccc729d7a25ffca6dcc55e148e48",
+  "sourceInputs": {
+    "src/shared/sim.ts": "86021d9e6b4b31914e8eb013cc1174c8be158140987ff42e5ffc60cc337f410a",
+    "src/shared/mining.ts": "a8c48726fda4a6030e8f183264d5f6b7f1a91296b339d01b1284b17d7eb84be7",
+    "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+    "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+    "src/shared/terrain.ts": "2e232df1aaf5913434ba62f41070d3b7c53bd838c0b7ca4225d65df752eef0de",
+    "src/shared/catalog.ts": "2dd742e037286a9a92b55ceff975bacbb0ffd613d64da75c459ee48d64bd8829",
+    "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+    "src/shared/mining-site.ts": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+    "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+    "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49"
+  },
+  "driverSha256": "f681cfe165503e4c3e3145bdbd9829fd7565fa6b4e75b7a17da8c8ea58e638c9"
+}

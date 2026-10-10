@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IDLE_FRAME, UnitAnimationTracker } from "./unit-animation";
+import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
+import { seconds } from "../shared/time";
 import type { Unit, WorldEffect } from "../shared/types";
 
 const soldier = (overrides: Partial<Unit> = {}): Unit => ({
@@ -96,6 +98,75 @@ describe("unit pose history", () => {
     expect(tracker.frame(worker, 350)).toEqual(tracker.frame(worker, 10_000));
     tracker.update({...snap(24, worker), effects:[]}, 700);
     expect(tracker.frame(worker, 700)).toEqual(IDLE_FRAME);
+  });
+
+  it("shows real mining work throughout a gather cycle and walks home with the gold", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find(unit => unit.owner === "player" && unit.kind === "worker")!;
+    const mine = game.resources.find(resource => resource.id === "gold-player-main")!;
+    game.units = [worker];
+    game.scriptedVictory = true;
+    issuePlayerCommand(game, "player", { type: "mine", resourceId: mine.id, unitIds: [worker.id] });
+    const tracker = new UnitAnimationTracker(), frames = new Set<number>();
+    let hauling = false, gathering = 0;
+    tracker.update(game, 0);
+    for (let tick = 0; tick < seconds(15); tick++) {
+      const before = { ...worker.order }, x = worker.x, y = worker.y;
+      stepGame(game);
+      tracker.update(game, game.tick * 50);
+      const frame = tracker.frame(worker, game.tick * 50);
+      if (worker.order.type === "mine" && worker.order.phase === "gather"
+        && before.type === "mine" && before.phase === "gather" && worker.order.timer < before.timer) {
+        expect(frame.mode).toBe("work");
+        frames.add(frame.frame); gathering++;
+      }
+      if (worker.order.type === "mine" && worker.order.phase === "toMine") expect(frame.mode).not.toBe("work");
+      if (worker.order.type === "mine" && worker.order.phase === "return") {
+        expect(frame.mode).not.toBe("work");
+        if (Math.hypot(worker.x - x, worker.y - y) > .25) {
+          expect(frame.mode).toBe("walk"); hauling = true;
+        }
+      }
+    }
+    expect(gathering).toBeGreaterThan(50);
+    expect([...frames].sort()).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(hauling).toBe(true);
+    expect(game.players.player!.gold).toBeGreaterThan(0);
+  });
+
+  it("never mistakes mine-entry queues or held timers for work, and freezes the last mining pose", () => {
+    const tracker = new UnitAnimationTracker();
+    const worker = soldier({ kind: "worker", order: { type: "mine", resourceId: "gold", phase: "toMine", timer: 1 } });
+    tracker.update(snap(0, worker), 0);
+    worker.order = { type: "mine", resourceId: "gold", phase: "toMine", timer: 2 };
+    tracker.update({ ...snap(1, worker), effects: [work(worker)] }, 50);
+    expect(tracker.frame(worker, 50)).toEqual(IDLE_FRAME);
+    worker.order = { type: "mine", resourceId: "gold", phase: "gather", timer: 64 };
+    tracker.update(snap(2, worker), 100);
+    expect(tracker.frame(worker, 100)).toEqual(IDLE_FRAME);
+    for (let tick = 3; tick <= 14; tick++) {
+      worker.order.timer--;
+      tracker.update(snap(tick, worker), tick * 50);
+    }
+    expect(tracker.frame(worker, 750)).toEqual({ mode: "work", frame: 5 });
+    expect(tracker.frame(worker, 750)).toEqual(tracker.frame(worker, 100_000));
+    tracker.update(snap(14, worker), 100_000);
+    expect(tracker.frame(worker, 100_000)).toEqual({ mode: "work", frame: 5 });
+    tracker.update(snap(15, worker), 100_050);
+    expect(tracker.frame(worker, 100_050)).toEqual(IDLE_FRAME);
+    worker.order.timer--;
+    worker.effects = [{ type: "stun", remaining: 4 }];
+    tracker.update(snap(16, worker), 100_100);
+    expect(tracker.frame(worker, 100_100)).toEqual(IDLE_FRAME);
+    worker.effects = [];
+    worker.pushX = 10;
+    worker.order.timer--;
+    tracker.update(snap(17, worker), 100_150);
+    expect(tracker.frame(worker, 100_150)).toEqual(IDLE_FRAME);
+    worker.pushX = undefined;
+    worker.order = { type: "mine", resourceId: "another-mine", phase: "gather", timer: 20 };
+    tracker.update(snap(18, worker), 100_200);
+    expect(tracker.frame(worker, 100_200)).toEqual(IDLE_FRAME);
   });
 
   it("animates an idle deck engineer repairing, but cancels work on walking or stun", () => {
