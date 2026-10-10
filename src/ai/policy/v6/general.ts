@@ -152,10 +152,13 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const available = availableV6Army(snapshot, options, intel);
   const front = available.filter((unit) => !isBacklineKind(unit) && unit.attackDamage > 0);
   const strength = strengthOf(available);
+  const miningFirst = expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
   // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
   // and at home under its towers while the armies closing on it outweigh it (see v9-fall-back).
   const outweighed = isV9Policy(options) && intel.enemies.filter((enemy) => enemy.state === "pushing").reduce((total, enemy) => total + enemy.power, 0) > strength * V9_FALL_BACK_SHARE;
-  const rally = isV9Policy(options) && !outweighed ? (v9EscortPoint(snapshot, owner, intel, options) ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
+  const escort = (isV9Policy(options) || miningFirst && isV7Policy(options)) && !outweighed
+    ? expansionEscortPoint(snapshot, owner, intel, options, expansionBasis) : undefined;
+  const rally = isV9Policy(options) && !outweighed ? (escort ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
   if (front.length === 0) {
     // No front left (every spirit gone): a gathering pulse is over, or its casters would hold their summons forever and
     // no front would ever come back (44 pyre callers stood at home without a spirit for twenty minutes).
@@ -188,6 +191,9 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
   }
+  // Securing a cleared replacement includes its ordinary foundation; a distant attack cannot take that escort away.
+  if (miningFirst && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
+
   // @@@v9-pursue - Intruders V9 has beaten are chased while they run, with the field edge it defends with, until they are
   // back by their own halls: V7's five summoners, their footmen dead, walked home from V9's natural and sent their spirits
   // at it from there while V9 held, 19 of 24 times to the end (the V9 exam's S2, the whole army).
@@ -195,7 +201,6 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   if (fleeing.length > 0 && strength >= strengthOf(fleeing) * FIELD_EDGE) return order(snapshot, owner, memory, "defend", front, averagePoint(fleeing), options);
 
   // With a single working mine, secure the requested replacement before continuing a distant assault.
-  const miningFirst = expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
   if (!miningFirst) {
     const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression);
     if (continued) return continued;
@@ -345,15 +350,17 @@ function v7WantsBase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
 // of 231 on the old maps), and V9 had its third by 9:00 in 7 of 16 games (11 of 16).
 const V9_ESCORT_STEP = 260;
 
-function v9EscortPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext): Point | undefined {
+function expansionEscortPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext, basis: "halls" | "mines"): Point | undefined {
   const phases = v6Doctrine(snapshot, owner, options).strategy.phases;
   const phase = phases[Math.min(v6Memory(options).phase ?? 0, phases.length - 1)];
   const wanted = Math.max(0, ...(phase?.wants ?? []).map((want) => ("bases" in want ? want.bases : 0)));
-  const rising = snapshot.buildings.some((building) => building.owner === owner && building.kind === "townHall" && !building.complete);
+  const rising = snapshot.buildings.find((building) => building.owner === owner && building.kind === "townHall" && !building.complete);
+  const front = () => isV9Policy(options) ? v9FrontPoint(snapshot, owner, intel) : rallyPoint(intel);
+  if (rising && basis === "mines") return toward(rising, front(), V9_ESCORT_STEP);
   if (rising || wanted <= activeMiningBaseCount(snapshot, owner)) return undefined;
-  const mine = v9ExpansionMine(snapshot, intel);
+  const mine = isV9Policy(options) ? v9ExpansionMine(snapshot, intel) : nextExpansionMine(snapshot, intel);
   if (!mine || mineGuards(snapshot, mine).length > 0) return undefined;
-  return toward(mine, v9FrontPoint(snapshot, owner, intel), V9_ESCORT_STEP);
+  return toward(mine, front(), V9_ESCORT_STEP);
 }
 
 function creepOrders(memory: V6PolicyMemory, under: { commands: GameCommand[]; point: Point }): GameCommand[] {
