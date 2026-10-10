@@ -1,6 +1,6 @@
 import { isHealingBuildingKind } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
-import { sameGround } from '../../shared/terrain';
+import { nearestByRoute } from '../../shared/route-selection';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { distance, type Point } from '../policy/spatial';
@@ -17,9 +17,9 @@ export function recoverBootstrapFront(snapshot: GameSnapshot, owner: PlayerId, w
     && isHealingBuildingKind(building.kind) && !threats.some(foe => distance(foe, building) <= mountedThreatReach(snapshot, foe, building, 0)));
   const groups = new Map<Point, Unit[]>();
   for (const unit of wounded) {
-    const posts = canReceiveHealing(unit, snapshot) ? wells.filter(well => sameGround(snapshot.map, unit, well)) : [];
-    const choices = [{ point, heals: 0 }, ...posts.map(point => ({ point, heals: 1 }))];
-    const target = choices.sort((a, b) => b.heals - a.heals || distance(unit, a.point) - distance(unit, b.point))[0]!.point;
+    const posts = canReceiveHealing(unit, snapshot) ? wells : [];
+    const post = nearestByRoute(snapshot.map, posts, unit, 'land');
+    const target = post === undefined ? point : post;
     const group = groups.get(target);
     if (group) group.push(unit); else groups.set(target, [unit]);
   }
