@@ -15,7 +15,7 @@ it.each(cases)('$version withdraws its focused $race mercenary through a free bo
     .townHall('us', x(1200), 1200).townHall('peer', x(3500), 3500)
     .unit('us', 'mercenary', x(2864), 2310, { id: 'patient', hp: 106 })
     .unit('us', 'mercenary', x(2802), 2317, { id: 'partner', hp: 140 })
-    .unit('neutral', 'ogreLord', x(2909), 2321, { id: 'lord', cooldown: 18,
+    .unit('neutral', 'ogreLord', x(2909), 2321, { id: 'lord',
       order: { type: 'attack', targetId: 'patient', leashX: x(2878), leashY: 2325 } });
   for (const [index, [px, py]] of [[2834, 2292], [2801, 2281], [2801, 2249], [2867, 2271], [2834, 2257]].entries())
     scene = scene.unit('us', race === 'grove' ? 'lancer' : 'emberRavager', x(px!), py!, { id: `front-${index}` });
