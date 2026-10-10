@@ -21,7 +21,7 @@ import { ITEM_DEFS, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalize
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
-import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
+import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
@@ -3249,10 +3249,6 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   return taken;
 }
 
-function crewBeforeHulls<T extends Unit | Building | Obstacle>(targets: T[]): T[] {
-  const occupied = new Set(targets.flatMap(target => isUnit(target) && target.deck ? [target.deck.shipId] : []));
-  return targets.filter(target => !isUnit(target) || !shipProfile(target) || !occupied.has(target.id));
-}
 function withDeckDamageBatch(game: Game, body: () => void) {
   if (game.deckDamageBatch) { body(); return; }
   const batch: NonNullable<Game["deckDamageBatch"]> = new Map();

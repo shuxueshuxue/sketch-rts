@@ -6,7 +6,7 @@ import { isWalkable, sameGround } from "../../shared/terrain";
 import { isEnemyOwner } from "./ownership";
 import { canCast } from "../../shared/ability-cooldowns";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
-import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
+import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
@@ -18,7 +18,19 @@ import type { PresetAiPolicyOptions } from "./types";
 import { unitStrength } from "./v6/strength";
 import { isV5HybridPolicy, isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "./versions";
 
+export type WeaponSkill = Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "weapon" }>;
+export type WeaponTargetScore = (snapshot: GameSnapshot, caster: Unit, def: WeaponSkill, targets: (Unit | Building)[], target: Unit | Building) => number;
+
+export function clusteredWeaponScore(_snapshot: GameSnapshot, _caster: Unit, def: WeaponSkill, targets: (Unit | Building)[], target: Unit | Building) {
+  return targets.filter(other => distance(other, target) < (def.weapon.radius ?? 80)).length
+    + (!("order" in target) ? (def.weapon.buildingMultiplier ?? 1) * 2 : target.attackDamage / 15);
+}
+
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
+  return planAbilityCommandsWithWeaponScore(snapshot, owner, options, clusteredWeaponScore);
+}
+
+export function planAbilityCommandsWithWeaponScore(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, scoreWeaponTarget: WeaponTargetScore): GameCommand[] {
   const commands: GameCommand[] = [];
   const cursed = new Set<string>();
   // Whether an enemy stands within 620 of a healer's regroup point: every wounded group of every healer asks, and testing
@@ -33,10 +45,8 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       const def=ABILITY_DEFS[ability];
       if(def.behavior!=="weapon" || abilityCooldown(caster,ability)>0)continue;
       const targets=[...snapshot.units,...snapshot.buildings].filter(target=>(!("order" in target) || matchesUnitTarget(target,def.targets,snapshot))&&isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0));
-      const target=targets.sort((a,b)=> {
-        const score=(target:typeof a)=>targets.filter(other=>distance(other,target)<(def.weapon.radius??80)).length + (!("order" in target)?(def.weapon.buildingMultiplier??1)*2:target.attackDamage/15);
-        return score(b)-score(a)||distance(caster,a)-distance(caster,b);
-      })[0];
+      const target = targets.map(target => ({ target, score: scoreWeaponTarget(snapshot, caster, def, targets, target) }))
+        .sort((a, b) => b.score - a.score || distance(caster, a.target) - distance(caster, b.target))[0]?.target;
       if(target) commands.push(def.target==="point"?{type:"cast",unitId:caster.id,ability,x:target.x,y:target.y}:{type:"cast",unitId:caster.id,ability,targetId:target.id});
     }
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
