@@ -1,0 +1,814 @@
+{
+  "schemaVersion": 1,
+  "scope": "Behavior-preserving allocation optimizations on the deterministic default-v2 bareDuel trajectory; this comparison does not measure other maps or AI versions.",
+  "method": {
+    "map": "bareDuel",
+    "players": [
+      "player",
+      "enemy"
+    ],
+    "aiVersion": "v2",
+    "maxIterations": 36000,
+    "sampleInterval": 600,
+    "damageObserver": false,
+    "standardChecksumVersion": 17,
+    "exactHashMethod": "SHA256 of JSON with sorted object keys; exact JSON numbers; array order preserved",
+    "commandsMethod": "rolling SHA256 of nonempty actually issued command frames prefixed by iteration",
+    "cpuLimitValidation": "Instrumented timing is diagnostic only; unchanged Vitest cold three-map CPU assertion is authoritative",
+    "samplingScope": "61 checkpoints: initial state and every 600 iterations through 36,000; game/AI state is not hashed on every tick. Every nonempty actually issued command frame participates in the rolling command digest.",
+    "finalStateContents": "Complete snapshotGame result, nextId, activePlayers and AI runtime. Exact SHA256 uses sorted object keys, preserves array order, and does not round numbers. Derived spatial/query caches are not serialized state.",
+    "driverStatus": "Scratch-only diagnostic driver; not committed to the repository. SHA256 identifies the actual driver used; the repository validation command below is independently executable.",
+    "driverSha256": "e3a56b3d2063e1fd857f50278e0ec7a9575b9ac86032c80667a69ccab9db376f",
+    "sourceManifestSelection": "All git-tracked .ts and .json files under src, excluding filenames containing .test.; conservative input manifest includes unimported source and fixtures, not a claim that all 449 files execute in this duel."
+  },
+  "before": {
+    "sourceCommit": "64082596eb59bf2fe6803a397828c6f41c5c2f57",
+    "workingTreeStatus": "",
+    "runtimeSourceFileCount": 449,
+    "sourceManifestSha256": "833bb8f9393534eb5c88aa1d890c6e347bac13f49ad3961aa39f8297f22571cb",
+    "capturedBeforeImports": true,
+    "nodeVersion": "v20.20.2",
+    "environment": {
+      "SKETCH_RTS_BASE_PATH": "/sketch-rts/",
+      "VITE_SKETCH_RTS_BASE_PATH": "/sketch-rts/"
+    },
+    "sourceInputsUnchangedThroughRun": true
+  },
+  "after": {
+    "sourceCommit": "38adfdbf81d6dc77aa89c9f8bde2db858471cc95",
+    "workingTreeStatus": "",
+    "runtimeSourceFileCount": 449,
+    "sourceManifestSha256": "3dc61ccb7b719969628df146c20f8381bf0376558b9cee22f033d1988b782849",
+    "capturedBeforeImports": true,
+    "nodeVersion": "v20.20.2",
+    "environment": {
+      "SKETCH_RTS_BASE_PATH": "/sketch-rts/",
+      "VITE_SKETCH_RTS_BASE_PATH": "/sketch-rts/"
+    },
+    "sourceInputsUnchangedThroughRun": true
+  },
+  "changedRuntimeInputs": [
+    {
+      "path": "src/ai/bootstrap_1/mounted-tasks.ts",
+      "beforeSha256": "9c030b82465328eb435a926b2d57dc69daac1f3e8c8ae9b3266164d7750ba6a7",
+      "afterSha256": "b6cffe532d81a490adc75557d75837605f8e7cbe41c6e81952b9837885a542fb"
+    },
+    {
+      "path": "src/ai/policy/core.ts",
+      "beforeSha256": "ad045714126483b92e8d984817701695f2df880316f9641b658affd119d5728b",
+      "afterSha256": "0248d89070368623fd26a25323a368b095249b163f9cc959faef0f48bafb78ad"
+    },
+    {
+      "path": "src/ai/policy/snapshot.ts",
+      "beforeSha256": "6c6812342517475f972432d8d76f1186d35378fbc1687844d780abfffcb483d1",
+      "afterSha256": "a8df1fb6f604744e40efcd8c4e3e6dd7c855b3cc39bf8e8a86fecb0064b967fa"
+    },
+    {
+      "path": "src/ai/policy/spatial.ts",
+      "beforeSha256": "c965c841c33dbb5a9497ac981acefb188c189707035c32a02070a8feca1d597e",
+      "afterSha256": "f26bb4a7ba6898781b8c5c2be5142b29d38c8c473f1ebfbc287afd559f61ca75"
+    },
+    {
+      "path": "src/shared/ability-cooldowns.ts",
+      "beforeSha256": "bc9f3a7359d624d14e31555ebb6fa435bd98a4a6b638527e491f7f5784413d63",
+      "afterSha256": "5e7ccee838e4cb1eb2fdd4993a13202367e0e873d95f86494ccfb399943218a9"
+    },
+    {
+      "path": "src/shared/combat-capabilities.ts",
+      "beforeSha256": "94d30fb982d360254162fecda338a741bf0ae08c10b797e4f63f4fd40b266fd4",
+      "afterSha256": "18229c99f1bb6b3b4bbc5a31680008edd1b6d2a214bf7b02210e3947c24b6095"
+    },
+    {
+      "path": "src/shared/mining.ts",
+      "beforeSha256": "18b44c3813e955295dd6b808c1c5162c6c51e652dd0b60041287d8c3eb926538",
+      "afterSha256": "d5564aa93f3c16318326d239d2a1794a6aee0d0d596cdbf6d42f2f5f93a399a0"
+    },
+    {
+      "path": "src/shared/sim.ts",
+      "beforeSha256": "f3fec8ddecaacb9c7433c00bc3817948507e79970b3e1be009f608ac7830dc7e",
+      "afterSha256": "4353be5e25f22deb5912bcad3b0b924c26385a51cf1d098943b4ac486dcf15ae"
+    }
+  ],
+  "unrelatedIntegratedChange": {
+    "path": "src/ai/bootstrap_1/mounted-tasks.ts",
+    "reason": "Main PR #257 was integrated between revisions; the measured default-v2 trajectory does not use bootstrap_1."
+  },
+  "optimizations": [
+    "Reuse a spatial index only when entity count, reference/order, cell size and separate cell coordinates still match; otherwise rebuild in the original order.",
+    "Skip mercenary army/closeout queries when the map has no mercenary camps.",
+    "Skip regeneration eligibility/stat calculations for units already at maximum HP.",
+    "Cache defender counts by team within one weak-closeout query invocation.",
+    "Cache one player view per immutable snapshot query and owner; copy each selected list for callers.",
+    "Reduce temporary objects in averagePoint while preserving arithmetic order.",
+    "Build cooldown and mining indexes with loops while preserving values and admission order.",
+    "Return early from victory scanning when a second contending active team is found.",
+    "Use a direct non-ship combat capability calculation while preserving equipment cooldowns."
+  ],
+  "equivalence": {
+    "matchedCheckpoints": 61,
+    "totalCheckpoints": 61,
+    "allCompleteCheckpointRowsEqual": true,
+    "standardChecksumsEqual": true,
+    "exactGameStateHashesEqual": true,
+    "exactAiRuntimeHashesEqual": true,
+    "actualCommandChainHashesEqual": true,
+    "exactFinalCombinedStateSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1",
+    "integratedActiveUnitTicksBefore": 1872729,
+    "integratedActiveUnitTicksAfter": 1872729,
+    "peakUnitsBefore": 73,
+    "peakUnitsAfter": 73,
+    "issuedCommandCountBefore": 2950,
+    "issuedCommandCountAfter": 2950,
+    "final": {
+      "tick": 36000,
+      "winner": null,
+      "endedAtTick": null,
+      "units": 39,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 14,
+          "armyHp": 1010,
+          "orders": {
+            "idle": 7,
+            "move": 7
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 14
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 13,
+          "armyHp": 1355,
+          "orders": {
+            "move": 9,
+            "idle": 2,
+            "attack": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 13
+          }
+        }
+      }
+    }
+  },
+  "checkpoints": [
+    {
+      "iteration": 0,
+      "tick": 0,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "7b190f8a",
+      "exactGameStateSha256": "d8e24129ad4ba5ffad4e98948491b37f270f25c636d5bf8bc4918830b91875bc",
+      "exactAiRuntimeSha256": "d5b40ab2540a30d868efa52af25a5307f23ce3b282178e0a93c266c4d91e7715",
+      "commandsThroughIterationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "iteration": 600,
+      "tick": 600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "fd475864",
+      "exactGameStateSha256": "5f77d1d50d28a3097f4a2a62df24d0765a3cff810c9801ff65a514d5e6d9a1c8",
+      "exactAiRuntimeSha256": "b16789a729fee9969ac58b9e314119caae250b23749a616da332afe4e5eebbce",
+      "commandsThroughIterationSha256": "4ea388adb18ae713cf82abb95d0d04b83e464512327beae5ab94895b1d02af12"
+    },
+    {
+      "iteration": 1200,
+      "tick": 1200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "931d1cc2",
+      "exactGameStateSha256": "88d880f17485b2022f61e8841dd627b2163b478d6dce496fdca249e72578413c",
+      "exactAiRuntimeSha256": "9d187478285e9d2e398950d40829c6336a44db96d97596ba3fa670263b9a35a7",
+      "commandsThroughIterationSha256": "875e6b2e09ad9af7b8bbd359006354f70c919dd70dddb7eebcc9f8cd099c48fa"
+    },
+    {
+      "iteration": 1800,
+      "tick": 1800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3c4ba05c",
+      "exactGameStateSha256": "a733de1a3923fde920b3c150d168752229f3f6693a347782bbd02b2f6627cbbd",
+      "exactAiRuntimeSha256": "480a28089a6a7f90a964c8e7a6f3f97520c9060e3eb2def16719e7a4abafe40e",
+      "commandsThroughIterationSha256": "16a0c820e40fc980cabbb7a9cd197a04ba9970b4535abea9b39a335de6311173"
+    },
+    {
+      "iteration": 2400,
+      "tick": 2400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "8f19576b",
+      "exactGameStateSha256": "0b162e38d3e3a13bb1724c899233e2e541da5feb2441def760c30a42aafda8a3",
+      "exactAiRuntimeSha256": "627b9a9a60580fb35911ae423f99159387aac041337cac86bc0bb805b05d219e",
+      "commandsThroughIterationSha256": "987ade6d04c1b38e2d82759c18d706fa189d9fe3da5dbdcedf167cd99443ae48"
+    },
+    {
+      "iteration": 3000,
+      "tick": 3000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "aac009e2",
+      "exactGameStateSha256": "461810fa72e550bee1ebcf20eba463a351921bc2fa036d245838aa802977e3ef",
+      "exactAiRuntimeSha256": "d8c8f528127fb7fa73b6dab0e12af7d7a4b549482fd793cf109284a7c08cd02d",
+      "commandsThroughIterationSha256": "b78cf9bda271087164712c119a3be95eeb1fa0f4f2076887e0c837c199b447e2"
+    },
+    {
+      "iteration": 3600,
+      "tick": 3600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "86ec9143",
+      "exactGameStateSha256": "75773cbb6c0de9b6d8ca87860588fb8b5d5eebe25dc36217326218d8781e9d8d",
+      "exactAiRuntimeSha256": "c0be643090169bbcdb3735ebfbc3ecd0eae383ebc946fc99065bb2dfff50ffa7",
+      "commandsThroughIterationSha256": "9799b88b343f160955e8a46ac0e325b384fc7e8e1e80949634b6af98e77ef017"
+    },
+    {
+      "iteration": 4200,
+      "tick": 4200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "08d60154",
+      "exactGameStateSha256": "30396ba01c95c174bb1ff37cc3ae388604e4f1e79aaf3bd8a6f94005c9cadc47",
+      "exactAiRuntimeSha256": "6446ce474a48ee0b802d59aaa0eec44cd0dc1209a311e9c00fc3556f3fb70dee",
+      "commandsThroughIterationSha256": "9a294b2067ea3f2d59cd9039701c25b430c91d31d865d9638fa224081977d746"
+    },
+    {
+      "iteration": 4800,
+      "tick": 4800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "792ff4d5",
+      "exactGameStateSha256": "74bec3b12f74544c01e7a0dc84a65076c99e12d0abf552fce1199aefe2142282",
+      "exactAiRuntimeSha256": "6cb048f6ad6814d7f5baa256bf8b69218fffb5472f88e212b67bc28ef05781c0",
+      "commandsThroughIterationSha256": "8bd9cb84aa1fb97812223c8a2b99441758a645f88f19ecba0a9c0812e288a88b"
+    },
+    {
+      "iteration": 5400,
+      "tick": 5400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "6f28ed05",
+      "exactGameStateSha256": "8cccd123a08002304afff43a5e22746038139cc0feae2cc382dc84fc0a61bf6d",
+      "exactAiRuntimeSha256": "4da922caca06ec758925618d1bbd89806db5a667a1fd46b12367ea864ac64404",
+      "commandsThroughIterationSha256": "e4e57d568f9196d580c07c1f3c80a1e1116478c99532db5eeaccb9a1848e1acd"
+    },
+    {
+      "iteration": 6000,
+      "tick": 6000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "da8f462a",
+      "exactGameStateSha256": "ff8d5634f152579f049605d52fdd05061e3fa574f742750c28e4ecf3f8c0819b",
+      "exactAiRuntimeSha256": "d2fb0da256338468f10dc96ba07501519a9a54f1ceec99f8694cff4e050f1f95",
+      "commandsThroughIterationSha256": "e24d326d5f59dd8b932df139cc2eecb3a0464a762ae415bcb0f7298ce68be00e"
+    },
+    {
+      "iteration": 6600,
+      "tick": 6600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "82ab7619",
+      "exactGameStateSha256": "3473357680130acbf105e861ad33596475cd42663953ddbd00073a8849067df5",
+      "exactAiRuntimeSha256": "8ebe77fa6df8896b16c3f3613937527a1851e090901fc3671e9fc125f0943f4c",
+      "commandsThroughIterationSha256": "80950ee0304cdac905eba7a665b89144b1c27d32275e825b8817d0c6a406c5c3"
+    },
+    {
+      "iteration": 7200,
+      "tick": 7200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b8997985",
+      "exactGameStateSha256": "7b734bbefd524f5901df9a35ec32c0ab534e644e20b395e390c4e6d707dacc94",
+      "exactAiRuntimeSha256": "fafe73b4cb57fecbaf36d46a8e93023e6c8f0cc63d29586f79960886b05153e2",
+      "commandsThroughIterationSha256": "7016e31a538d0c4f91da5dfe3da0af41ec3607b53a6c3e8b5471770dba89e4b9"
+    },
+    {
+      "iteration": 7800,
+      "tick": 7800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ef56c2d7",
+      "exactGameStateSha256": "cd7094aeec7046773bf8b37a503b19358f113a453b42b75d817699dfabe4e078",
+      "exactAiRuntimeSha256": "897a8cd9540aab98a4e0e9f0bf27d2f120e8fc3ae3f84f2ff82bdeae12ff611e",
+      "commandsThroughIterationSha256": "982997cb8d243aef0641a1ee425b33977ec904c4b43783c78da66390bcdd4239"
+    },
+    {
+      "iteration": 8400,
+      "tick": 8400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "272a0447",
+      "exactGameStateSha256": "1b195e5b30c13b4c7efef1f95be684cac5800375d181d71cea1cdd42c2c5fa81",
+      "exactAiRuntimeSha256": "e839d604075b1372b6a4151b1c2df6f2dde58143380bb144016b2cad70a2a53e",
+      "commandsThroughIterationSha256": "7c5602b79f92a4ac3feb535ed6de7ae3d4a818aa71d23fcdc23143db088e7029"
+    },
+    {
+      "iteration": 9000,
+      "tick": 9000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d29ff2f3",
+      "exactGameStateSha256": "eec06d22c838129d1dc9be4c630ce86e10f8f16e6bb4e9c2de8f6539460ef1d2",
+      "exactAiRuntimeSha256": "04d3b851c24df8b7d7714b5acad0975e217774ceeb8f60a6802d76c16bf0fe52",
+      "commandsThroughIterationSha256": "780b2e8c357e36c0f37ff3e22d0f15969f43592329e9a2454fac7a74bf37c128"
+    },
+    {
+      "iteration": 9600,
+      "tick": 9600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "5f135c84",
+      "exactGameStateSha256": "375ecfc8d65d47b1fa3e840f847e4c167ca6ad42b6e964e28dff541b9047e018",
+      "exactAiRuntimeSha256": "0511bb92dd538b303ff257e2e06018c6390f535e9842c1f9c736fe4b5aba66d9",
+      "commandsThroughIterationSha256": "2f03715f49e4e9e603238ba550b77046e8add1891fe3a546d097fdd94a124b55"
+    },
+    {
+      "iteration": 10200,
+      "tick": 10200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "c6ebbfa7",
+      "exactGameStateSha256": "c66a63659c5dbb9af6bdbc3d1c8b7354d492ed88261642f9cce8d1506cbaa722",
+      "exactAiRuntimeSha256": "477790887920dc643468d572d9e6dd32035aaf8768d5ca98256e3c5c05dbe9d0",
+      "commandsThroughIterationSha256": "f91dd0087f987440c224d06f2137fdd831af040f4324f9a5f959fc04577b5404"
+    },
+    {
+      "iteration": 10800,
+      "tick": 10800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f50c4812",
+      "exactGameStateSha256": "1ebd21ab025fd05f08a408775f65ea1ee2f3f0628e3b07272649dcae156e4f62",
+      "exactAiRuntimeSha256": "d920b3acd67299c1f59f7bb774a66073e34867cd020bd08c7a15c182048e4070",
+      "commandsThroughIterationSha256": "30fda5ea0783b70376ead5cbdfd6b1f23feaf275accab6f8c5d279b7727cd05a"
+    },
+    {
+      "iteration": 11400,
+      "tick": 11400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9b606c38",
+      "exactGameStateSha256": "70d4e6dc790f2f05b249cd52ed50e11e6090b87b33b7a2993b4e86533be49f60",
+      "exactAiRuntimeSha256": "6f9845431d4d5dc96adb4884ffb00f2e02fe576202de8ad4133f140a4afcf36a",
+      "commandsThroughIterationSha256": "fb91b05fd6d14bebdafc799079c97ea775348fc945054aaf1e90081cae84fe66"
+    },
+    {
+      "iteration": 12000,
+      "tick": 12000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "8a938c42",
+      "exactGameStateSha256": "d2cd2cf77ff7c1a25987c12f87cfc0869b479eb4ec2e1a0697d67ae61d02d48c",
+      "exactAiRuntimeSha256": "9561a540a5740f9742eb6408eb4265fe4cc0e4dda7befcd0798166b1357c082a",
+      "commandsThroughIterationSha256": "3cf2bddeaf8bad234969c6ee306dc9d5b290ca5f38977d6f1cacc6f61b108998"
+    },
+    {
+      "iteration": 12600,
+      "tick": 12600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "6c8799cb",
+      "exactGameStateSha256": "704e79c861bffde70bbc87aa9ec5db966f391e3b0e6c3f277bd219a399d75085",
+      "exactAiRuntimeSha256": "edec9c06693d3c47ac8e1f787b511b7b81d8ec1ec1456e9d1a2d41c7fdeb922c",
+      "commandsThroughIterationSha256": "ea408d47947e1005cf0c049244777a9f36c0602a90eb18f05d78d0d567be00ce"
+    },
+    {
+      "iteration": 13200,
+      "tick": 13200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f2b9404f",
+      "exactGameStateSha256": "deda8d952705c78006a15ad3121a67adb5bbbf5c9a24756c6d84af54254b93c3",
+      "exactAiRuntimeSha256": "dd89984a1a883c1b7194e9728db311bc28bfa53e5e0b794fa7f699bce547779b",
+      "commandsThroughIterationSha256": "d47f0e641bd019d5dae8c22d1aa6eb7e69cf87bd151365698bb97da21069fa23"
+    },
+    {
+      "iteration": 13800,
+      "tick": 13800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d6c433e1",
+      "exactGameStateSha256": "7f058185c1a24125885e3e1a8d4fc62223c17516fa3b2d22fec2f78caeca548e",
+      "exactAiRuntimeSha256": "40ddd7bd19df95466651f57fe011bc095852bdcfc2bd3f38a2cb26ed5d48fa78",
+      "commandsThroughIterationSha256": "8e2745ea7cddbf63439609696563871783a8942e3fa9a13c7f0528b5dfeaec82"
+    },
+    {
+      "iteration": 14400,
+      "tick": 14400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d2e2cd64",
+      "exactGameStateSha256": "1f8bccff8fcd57c64c8f1d231ad80d648b672e5fae7008ccf25e64894bde9cb4",
+      "exactAiRuntimeSha256": "54be526bb0159d68138a81426f0d129599754e144f094886219770b6c4c506b1",
+      "commandsThroughIterationSha256": "e6752aab59ae63c1917f76a796ed007689a5af776680ecd950491f9c7e36f355"
+    },
+    {
+      "iteration": 15000,
+      "tick": 15000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d4e2e220",
+      "exactGameStateSha256": "dc35f5a482110ac341e17a39c5b6a3fee825d0ff62e9adb1d8c217967ededa7f",
+      "exactAiRuntimeSha256": "1620dea5990c50c3ee7bb93d8ec6781a8e43a09b0fe3e6a314adcccf1a194b9c",
+      "commandsThroughIterationSha256": "e990556b834e467c23f0c7b82baf17e888c3b31338ac7ef6f13e87ecdfa231fc"
+    },
+    {
+      "iteration": 15600,
+      "tick": 15600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "10be97b4",
+      "exactGameStateSha256": "9a35fe196cdd4f03024869fb386ed16bd10b43169515bb50077dbe3c7f5d23c0",
+      "exactAiRuntimeSha256": "61ac4938b15fc4da9959be35c188b593fc540232e6944f7d29d0728cf18450f5",
+      "commandsThroughIterationSha256": "9c47eec97d20b3b5d7b0cbfc1c1f92ae8655e7f0be9b907288d7f27d28d32d37"
+    },
+    {
+      "iteration": 16200,
+      "tick": 16200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "02adf783",
+      "exactGameStateSha256": "2cc59948147146230557c0b0395a57a1c1bb32749ba7eb78f42ad2e1c762bc0c",
+      "exactAiRuntimeSha256": "5931cb3e1339fc39173a37c59ab86b6c296bec9c7ccb18a92c5704b5de4bdddf",
+      "commandsThroughIterationSha256": "ed1255b17928e6572210a613bd1c220f6f0baab88e714ccea7759efeea9c78db"
+    },
+    {
+      "iteration": 16800,
+      "tick": 16800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "5e3852b6",
+      "exactGameStateSha256": "cc0c5d7d3c0306b481647524e94bae9c2cacb1febd7743f32bc73a6a400f3cf9",
+      "exactAiRuntimeSha256": "f94e5664fdbce06b86ef8444688f45a8978b3934c82459e09b127e23260a0944",
+      "commandsThroughIterationSha256": "dd5b9c435b787d5897ac0f2880796b72b48ddd7f69c06ae48944d393e3b9fb11"
+    },
+    {
+      "iteration": 17400,
+      "tick": 17400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9fad8214",
+      "exactGameStateSha256": "e912ffef20e35e698d93538c945414f037a5857a5a2a9042158c2f4c9a049ac3",
+      "exactAiRuntimeSha256": "7cac47cd8676050c8b55388328fb08704444d487a280bc672c749982cef7c3d3",
+      "commandsThroughIterationSha256": "9126f8eb3d74a79d23e4feb540ea121d5de32fbf4fb64351714d8fbb1a12c6a1"
+    },
+    {
+      "iteration": 18000,
+      "tick": 18000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "eeecc087",
+      "exactGameStateSha256": "54e63c14191742c443ff5338e94b89b7070fb6ef755e53cbe75d7a578c735973",
+      "exactAiRuntimeSha256": "625eb8ea8d51a26f1efb90876b9e0f8812b4e0d1faa7b2b035d4c1f24c8b9890",
+      "commandsThroughIterationSha256": "bc2128619b7fbb64cf2a6385db3f303c685c72e881e5c6a0fb95814551c31f4b"
+    },
+    {
+      "iteration": 18600,
+      "tick": 18600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "bfeb60f6",
+      "exactGameStateSha256": "1499434a43f2d9ab908c874a587241fcd7ec4746a46b287f1f636780804fae9f",
+      "exactAiRuntimeSha256": "ffdbc9e7cdb4a061160a5a8dd02ab21895b8d9ea2705f57fb818795724ea8419",
+      "commandsThroughIterationSha256": "20bf584f46bbce1b80421615e598b4c033d5a48bdd85b099e8063af912792d9b"
+    },
+    {
+      "iteration": 19200,
+      "tick": 19200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9db596cd",
+      "exactGameStateSha256": "e5645c079eb0682306f86f8c9af2a9628dc088414bb257bcf3fb3becf9a7bda9",
+      "exactAiRuntimeSha256": "8a45146ea9b048d4d7783963bf22d3d87b8791eae255cfdcbdfcf479017bddb8",
+      "commandsThroughIterationSha256": "fc8ec6bb84a383ad4f6dfb3d63ea0bc10112a9afc83baed70c7b68d604e41a9d"
+    },
+    {
+      "iteration": 19800,
+      "tick": 19800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "00b01621",
+      "exactGameStateSha256": "13d6fbcf43d0684f1229a2d69b4a23b95f321901353b2b57cbd8fc975a265d43",
+      "exactAiRuntimeSha256": "d93666672c0dd9fe6ce00614f490971602ee8f5906a5d71c737efafcde10cffa",
+      "commandsThroughIterationSha256": "5eedf4041b3310eea8ab97560176ce5341a7a7d750b692b29191cbc0af5c19ef"
+    },
+    {
+      "iteration": 20400,
+      "tick": 20400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "53c3ef8c",
+      "exactGameStateSha256": "6bce05c85bed5461033eeb132e5467a28062dd7f87699ea81f5d0a57e04acf92",
+      "exactAiRuntimeSha256": "6126df7a6d3054982e75907c42c11409f9e6f4a490b4546c8e55815a88235311",
+      "commandsThroughIterationSha256": "484d2ef6ef84b502f6fba7c67284465b87e0a49e704d9255146429a772646787"
+    },
+    {
+      "iteration": 21000,
+      "tick": 21000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "08887efe",
+      "exactGameStateSha256": "5d3e75dabfd83f39e5ce119542aa9d0cea9cc12b3e9590f7ff8a7df264088833",
+      "exactAiRuntimeSha256": "cd9af13ca0ea22e165b160a0d4af2e046ece7b857cdd430d124ba11ba1aa9367",
+      "commandsThroughIterationSha256": "0f724f2877813d5915d54db2b9a37006c7504ff0a8c1591f3a4b84b1b29ad812"
+    },
+    {
+      "iteration": 21600,
+      "tick": 21600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "c666c06f",
+      "exactGameStateSha256": "cbef310fc4553baa049d8da94403f6f64dc85314b31f700d7b0bd8c3f4a5b1ee",
+      "exactAiRuntimeSha256": "aed36f52e9814d14abcde15278fcdb7d19081d0a4ac00bbeea77ccc529faa436",
+      "commandsThroughIterationSha256": "0b6032c0c7d678b307a2c5c9cf1832c6e41669a4bf95c6896eb29fa5f4cfc3db"
+    },
+    {
+      "iteration": 22200,
+      "tick": 22200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "68c4c06c",
+      "exactGameStateSha256": "f4c3bfcfc0317a2161a0770e115290bdd3e194c79cafaded4f58c6a7af49e59f",
+      "exactAiRuntimeSha256": "c3004f6675a714c0dcd190c235c78a8d01e070acd9890a83f420ff3c109485f5",
+      "commandsThroughIterationSha256": "f7d07dffb322793edd9f0f3384750382c12d88561c88de35f21256bff898b695"
+    },
+    {
+      "iteration": 22800,
+      "tick": 22800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "733befd8",
+      "exactGameStateSha256": "cb3dd55aa42c618efc028e8736a2f16942684b29cdbb835a2e50c2fb8f5ec6fb",
+      "exactAiRuntimeSha256": "ab8d4d011761794a244adbe8132ba850f8084f48b9221c83174620d38b5b61d5",
+      "commandsThroughIterationSha256": "b379e7482fbcbfb8bf86a01465f7129f74406d98c9d125791ce75f6c4d6ec080"
+    },
+    {
+      "iteration": 23400,
+      "tick": 23400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "769b7cc2",
+      "exactGameStateSha256": "37a10d994d43053475b6379391b479ef05bd78e205398e8b827bc063c4e910f2",
+      "exactAiRuntimeSha256": "f3608ab6e771277f3f0ce4044997b6c37e19412cbd193745ed4e5389fdcc091d",
+      "commandsThroughIterationSha256": "5efc9b0857ded532e39bf5eb04b393542f53b26d3dafe3b29e9d35dc4ae39846"
+    },
+    {
+      "iteration": 24000,
+      "tick": 24000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "78ef7639",
+      "exactGameStateSha256": "22fddf074e258bea856809da725ab7a3592fad9fd5fb88354fb63f48c4da388c",
+      "exactAiRuntimeSha256": "5eaab53f8ea86470ff3e44d879bfe6234d775b58c0e5aba35dc05e6ebea5f54f",
+      "commandsThroughIterationSha256": "7a13cd95683b61e44cea2d0502ff68778821a590465cf2a62019cec9cf18a0d6"
+    },
+    {
+      "iteration": 24600,
+      "tick": 24600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "607817ef",
+      "exactGameStateSha256": "1ca3392dbbe09c1ef8a94d11d132eb8d563f3c674a30a352180da7c8bd5959c3",
+      "exactAiRuntimeSha256": "299314cc473edbcf717174ec5a7eb91eb6358aa3de92c8d34f06dff7e97b24d2",
+      "commandsThroughIterationSha256": "a93952e27fee742e331b9cc2c67f1c71053b09cfe3c5b18668119d456cc1e9b6"
+    },
+    {
+      "iteration": 25200,
+      "tick": 25200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b51b6bf8",
+      "exactGameStateSha256": "69f00b9ff4f5c15f475ebff250e40f14505d26766a8068f07eb9f4387f982c1d",
+      "exactAiRuntimeSha256": "97ccda1497d5aa8997ba4ee40541c1e4242164053f562f43e881626818adb167",
+      "commandsThroughIterationSha256": "3caa7a6b77451dc561038b74344972abf67f1643b079556068185bd748816457"
+    },
+    {
+      "iteration": 25800,
+      "tick": 25800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b6c12897",
+      "exactGameStateSha256": "9a0a31521c398ce1c4d9ec6e262b06ebccbc1975bc2b093c2219fb2302e0ddd2",
+      "exactAiRuntimeSha256": "6ec2dfda2683609f8b63f3e2121a7e0e7bd92dc89fa0ee540d4a71d08b011ee1",
+      "commandsThroughIterationSha256": "baa5c8d11133c2c5a9924c0fab5252d464fefa7b06ed04183d9a60c69817a7e1"
+    },
+    {
+      "iteration": 26400,
+      "tick": 26400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "91fb5a61",
+      "exactGameStateSha256": "ef4b64f303b44870f2a28049290bb70867e67da0da68ce78eca832f585d00dfc",
+      "exactAiRuntimeSha256": "28a24da9cdb9462d8f110363e9cb0d9cdc6441e3237257e5bc94e2eadc0130ef",
+      "commandsThroughIterationSha256": "cee9c49aa7e7f352339652c2c0f3a81128b2bdb7ce542f817a56e6e9530055ae"
+    },
+    {
+      "iteration": 27000,
+      "tick": 27000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "168abd52",
+      "exactGameStateSha256": "765d3c7909a44e9a65b470d680361d580b24897982e0a2bd9b8cbe308178cf6f",
+      "exactAiRuntimeSha256": "ef07ccc6a5995fb50e4ce241a2e73f9b5f79b7129eadc73e9ca0fe6939128a8e",
+      "commandsThroughIterationSha256": "e5c567f60ad2676814e03a55298b358917e3cc2e289a2bf7d1f6e496c0ef94ac"
+    },
+    {
+      "iteration": 27600,
+      "tick": 27600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3d11d76e",
+      "exactGameStateSha256": "0093cd43f62fd944f961bb10597aebcf10494c35685bfe1002afe56d2bb82b5f",
+      "exactAiRuntimeSha256": "26223b31aa9aa255248bcc83cbbf30cfa400c108953618c3ef12b80f69f9ad16",
+      "commandsThroughIterationSha256": "cdf27d02e67f05788c61745b9005e52ec6f37bf6cb282575644619c4ad9de864"
+    },
+    {
+      "iteration": 28200,
+      "tick": 28200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "a50ea838",
+      "exactGameStateSha256": "62a23484c52cf993ea506852a29a53bdf4f3e1eca5ccfe7bfee8238da94d3fa0",
+      "exactAiRuntimeSha256": "3218ae32d132c756fb8913bf0fe3aba9c9f561eeb665c2bb888b5f1700d1ba76",
+      "commandsThroughIterationSha256": "2eb6edf49acda1ecf3a347238e404eb58a28aebbe11b765229413de88f6a1693"
+    },
+    {
+      "iteration": 28800,
+      "tick": 28800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f774293f",
+      "exactGameStateSha256": "3facc7d4e4f4e6221cee6a6b911438313c579ba0f4c3267f1bffc6181a34e951",
+      "exactAiRuntimeSha256": "a188640cbf441c05afff41156457d0832179979f5d9e445f758f661aa26572f1",
+      "commandsThroughIterationSha256": "cca295bfa210038bd7d9a18dcb8fee458edd668a7218ac7c5095b3b9dd128fad"
+    },
+    {
+      "iteration": 29400,
+      "tick": 29400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "94ae7962",
+      "exactGameStateSha256": "7f731bc4d4e88f95ed9ac022a0a0a1883300d7a2b2bbadca45a0d585a91036f3",
+      "exactAiRuntimeSha256": "cd893902dced689d031b41b94a3933f7ffaf4142e022d65475fdaefdc8bc098c",
+      "commandsThroughIterationSha256": "d509f354d29a84a6ba17a98ac990990e17ec79d3e05fb5ece3880a1a893f1039"
+    },
+    {
+      "iteration": 30000,
+      "tick": 30000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "cff275b5",
+      "exactGameStateSha256": "ebce50b6e552b1097f3879b9f7b0329428d06266b143264868eadd235170f96e",
+      "exactAiRuntimeSha256": "a5b25b1836eeb0325cfe614b8106f4b92600c3d507b2b15be960b8a1c638532f",
+      "commandsThroughIterationSha256": "ddac22e6cfd1a4ee2c4245b772aa36ea2d23cac84d27397c8116d42d2f8bfa2d"
+    },
+    {
+      "iteration": 30600,
+      "tick": 30600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ea06aa67",
+      "exactGameStateSha256": "230faec54a65a5d95b11af3f3eac42916681f220efc6beeda8adf8743604fb93",
+      "exactAiRuntimeSha256": "d59276b55fdfd4726c0c54de2c0a55cdf45a28dab4bd5f8bed4b713713f95eca",
+      "commandsThroughIterationSha256": "0414062e12298208ece2f8e739f4a0a2ccba4b90d204ef05bc57ed41cdd1c980"
+    },
+    {
+      "iteration": 31200,
+      "tick": 31200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "a13f3bb8",
+      "exactGameStateSha256": "4354ea4545f141fd62df856338811b3c6b3acd10d20ba4a89b07804871be58e3",
+      "exactAiRuntimeSha256": "fd47ee633ac651a5a2bba21c60cdd809dbf5c7586e53d2dbbdb340590d4a8e85",
+      "commandsThroughIterationSha256": "f6814a9dd296c358586c05ed774d48dd896e12325bdf536fd80d442ca20e9969"
+    },
+    {
+      "iteration": 31800,
+      "tick": 31800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3d5b86f7",
+      "exactGameStateSha256": "9cab7a6be41193197482fca4e0e85c605d71c09463e0bf0946b9008da62d8a0f",
+      "exactAiRuntimeSha256": "56e8b5084d43cc24ddc8206e7ab6963c6c4353171ecbff492344525fbe7352de",
+      "commandsThroughIterationSha256": "eb1b73787f824b542095a45b73f902d978b5fb3f3a40fb352aa3749a1591af66"
+    },
+    {
+      "iteration": 32400,
+      "tick": 32400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "093b1147",
+      "exactGameStateSha256": "a44e3379150f1515988f3a81ef64b7911b6fc76a801c0f1009dcc53539d538bc",
+      "exactAiRuntimeSha256": "6dd9da94ed9312f99f7a90074a9c269d6bdae667beed712b7b45d4630b6beaac",
+      "commandsThroughIterationSha256": "e3028a2161ef0be0056a3617f7f32fb65d53a1dbaffa35d252b859d085665e54"
+    },
+    {
+      "iteration": 33000,
+      "tick": 33000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "7609190c",
+      "exactGameStateSha256": "731e0e964c1ee96f486e6ea30d2887720a61ea3444b78b6465f8206f3bcb2398",
+      "exactAiRuntimeSha256": "ffa31fa518ca435048eb3bad8224f393b3a36c19a9197f61ee0e4d534be4f4c7",
+      "commandsThroughIterationSha256": "17bbc9663175a1270ca14ac934db1e872369fe13528bb21456dd549397c055a2"
+    },
+    {
+      "iteration": 33600,
+      "tick": 33600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "aedbcf87",
+      "exactGameStateSha256": "96414c9d4d355db56b38a73e70721189f7701c57e866dfe3349d16b7918bb3cf",
+      "exactAiRuntimeSha256": "7d8fc1ffb38a7bc66d6b707c5696cf2d9a8664a85a2f74c893d534805e73a853",
+      "commandsThroughIterationSha256": "91a05076a8a621cc4b6543b30fa0dadb5dd6cba7617e6471f8c507bbd24f325f"
+    },
+    {
+      "iteration": 34200,
+      "tick": 34200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "0dd286f0",
+      "exactGameStateSha256": "5832863d5f434a0f1f1bef2e51a6dc506371c8ca29e57032fa6e8e6719bc7d48",
+      "exactAiRuntimeSha256": "a83ab6c2b9f2c422143dfb1b3b542ec482689c80e3b0dc07f25a05e2e9fd1cb8",
+      "commandsThroughIterationSha256": "f190fbcda5a82a7f6204929a9e8935960b1c3588fcab5f2647de4c568238d242"
+    },
+    {
+      "iteration": 34800,
+      "tick": 34800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d4ea2c27",
+      "exactGameStateSha256": "595d668bc806905a4af224d0ac13108ad4190e7dfac65ab80bf2986e46b4e8ca",
+      "exactAiRuntimeSha256": "fcc6541e1c16457c256d779375c25d079dab505d69548917742028ed8148a907",
+      "commandsThroughIterationSha256": "4554f6258bfc71a29e1c8874b206d6b9f04b3d790b728e19df89b0caf847aa5c"
+    },
+    {
+      "iteration": 35400,
+      "tick": 35400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ba1deb77",
+      "exactGameStateSha256": "8b65cfdc7fb7a6b6d1c638b6fd8b06df8c1174ef66369750757a4272c9a76cdb",
+      "exactAiRuntimeSha256": "227e5c34654c14f320c32022af7df8e564ff19d9c20f7544b3cf3c9512a12ba0",
+      "commandsThroughIterationSha256": "fcc911c6b889ab1f9326950aae873208fa59a8fc5c44858b149c4fba769cb508"
+    },
+    {
+      "iteration": 36000,
+      "tick": 36000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "099608d0",
+      "exactGameStateSha256": "6e74030182c16d16f4ae32ec88cf056f21671c1f5175122aa1994faf37faefa9",
+      "exactAiRuntimeSha256": "16e4f049ba4312dd7337f52332f2c8438ffc4d06596a402dd90143cc940caac3",
+      "commandsThroughIterationSha256": "e57c715bc9082f9144bc3252e944120cf945fecbea7231987490123386e970ee"
+    }
+  ],
+  "singlePairedDiagnosticTiming": {
+    "beforeCpuMs": 12209.387,
+    "afterCpuMs": 11332.899,
+    "cpuReductionPercent": 7.18,
+    "beforeWallMs": 7788.532047000001,
+    "afterWallMs": 7102.75107,
+    "limitation": "One sequential pair, with sampling and hashing overhead. These timings are diagnostic rather than a statistical performance claim or the uninstrumented Vitest CPU budget result; wall time is not CPU time."
+  },
+  "repositoryValidation": {
+    "command": "SKETCH_RTS_BASE_PATH=/sketch-rts/ VITE_SKETCH_RTS_BASE_PATH=/sketch-rts/ npx vitest run src/shared/sim.test.ts --testNamePattern=\"runs a fast two-AI duel\" --maxWorkers=1 --minWorkers=1",
+    "nodeVersion": "v20.20.2",
+    "originalCpuAssertions": "All three original CPU assertions passed; limits retained at 12,000ms for bareDuel and 16,000ms each for verdantCrossroads and ladder1v1. No winner, simulated tick cap or gameplay parameter was weakened.",
+    "validationLogSha256": "bb5c645e8fca1756b9f4f92a71cbc00940e1193a292ecc2160943dc904ffb930",
+    "cases": [
+      {
+        "map": "bareDuel",
+        "status": "passed",
+        "cpuBudgetMs": 12000,
+        "simulatedIterationCap": 36000
+      },
+      {
+        "map": "verdantCrossroads",
+        "status": "passed",
+        "cpuBudgetMs": 16000,
+        "simulatedIterationCap": 48000
+      },
+      {
+        "map": "ladder",
+        "status": "passed",
+        "cpuBudgetMs": 16000,
+        "simulatedIterationCap": 48000
+      }
+    ],
+    "relatedRegressions": [
+      "src/ai/policy/mercenary-closeout.test.ts",
+      "src/ai/policy/snapshot.test.ts",
+      "src/ai/policy/spatial.test.ts",
+      "src/shared/ability-cooldowns.test.ts",
+      "src/shared/combat-capabilities.test.ts",
+      "src/shared/mechanical-healing.test.ts",
+      "src/shared/mining.test.ts",
+      "src/shared/sim/spatial-index.test.ts"
+    ]
+  }
+}
