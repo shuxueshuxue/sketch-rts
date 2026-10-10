@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { enemyCombatUnitsNear } from '../ai/policy/snapshot';
-import { enemyCombatUnitsNear as productionCombatUnitsNear } from '../ai/policy-v2prod/snapshot';
-import { createUnit } from '../shared/map';
-import { createGame, snapshotGame } from '../shared/sim';
-import { createSnapshotQuery } from './snapshot-query';
+import { enemyCombatUnitsNear } from './snapshot';
+import { enemyCombatUnitsNear as productionCombatUnitsNear } from '../policy-v2prod/snapshot';
+import { createUnit } from '../../shared/map';
+import { createGame, snapshotGame } from '../../shared/sim';
+import { createSnapshotQuery } from '../../sdk/snapshot-query';
 
 function scene() {
   const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: [] }));
