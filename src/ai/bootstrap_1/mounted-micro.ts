@@ -10,6 +10,7 @@ import { itemsFor } from '../../shared/equipment';
 import { LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from '../../shared/item-rules';
 import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
+import { hostileDamageDisks } from './damage-footprints';
 
 type Threat = Unit | Building;
 export const THINK_TICKS = 15;
@@ -103,6 +104,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
 export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined): GameCommand {
   const horizon = THINK_TICKS + rider.cooldown;
   const threats = foes.map(foe => ({ foe, range: mountedThreatReach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
+  const hazards = hostileDamageDisks(snapshot, rider, foes, horizon);
   const margin = (point: Point, threat: typeof threats[number]) => distance(point, threat.foe) - threat.range;
   const danger = [...threats].sort((a, b) => margin(rider, a) - a.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
@@ -125,8 +127,9 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) });
   const scored = choices.map(point => {
     const margins = threats.map(threat => margin(point, threat));
-    const room = Math.min(...margins.map((gap, index) => gap - threats[index]!.speed * THINK_TICKS / SIM_TICKS_PER_SECOND));
-    return { point, room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins), exit: room > 0 && !destination && exit(point),
+    const areas = hazards.map(hazard => distance(point, hazard) - hazard.radius);
+    const room = Math.min(...margins.map((gap, index) => gap - threats[index]!.speed * THINK_TICKS / SIM_TICKS_PER_SECOND), ...areas);
+    return { point, room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
       distance: destination ? distance(point, destination) : 0 };
   });
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
