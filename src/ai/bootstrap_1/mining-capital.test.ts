@@ -36,6 +36,7 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
     issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.id.startsWith('screen-')).map(unit => unit.id) });
     issuePlayerCommand(game, 'foe', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'foe').map(unit => unit.id) });
     let returned = false;
+    const replacementLoads = new Set<string>();
     for (let tick = 0; tick < 3000 && !returned; tick++) {
       if (tick % 15 === 0) {
         const snapshot = snapshotGame(game), context = bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams });
@@ -46,9 +47,13 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
         issueCommandFrame(game, runAiCommandEntriesFromScripts(snapshot, 'us', [AI_SCRIPT_LIBRARY.economy, bootstrapEconomy, miningAssignments], context)
           .map(entry => ({ ...entry, playerId: 'us', source: 'external-agent' as const })));
       }
-      const carrying = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const carrying = game.units.filter(unit => unit.owner === 'us' && replacementLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'replacement'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) replacementLoads.add(unit.id);
       returned = carrying.some(unit => unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
     }
     expect(returned).toBe(true);

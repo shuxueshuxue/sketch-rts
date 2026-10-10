@@ -35,6 +35,7 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     const memory = createAiPolicyMemory();
     let restored = false;
+    const minedLoads = new Set<string>();
     memory.v6 = { phase: 0 };
     if (attacking) {
       const army = game.units.filter(unit => unit.owner === 'us' && unit.kind !== 'worker');
@@ -56,9 +57,13 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
         issueCommandFrame(game, runAiCommandEntriesFromScripts(snapshot, 'us', scripts, context)
           .map(entry => ({ ...entry, playerId: 'us', source: 'external-agent' as const })));
       }
-      const returning = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const returning = game.units.filter(unit => unit.owner === 'us' && minedLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'replacement'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) minedLoads.add(unit.id);
       restored = game.buildings.some(building => building.owner === 'us' && building.kind === 'townHall' && building.complete
         && Math.hypot(building.x - x(2500), building.y - 2300) < 320)
         && returning.some(unit => unit.hp > 0 && unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
