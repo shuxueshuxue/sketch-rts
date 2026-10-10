@@ -59,8 +59,7 @@ export const campRecovery: AiScript = {
       const indirect = hostileDamageDisks(snapshot, patient, foes, THINK_TICKS)
         .some(area => distance(patient, area) <= area.radius);
       if (threats.length || indirect) {
-        const command = mountedEscape(snapshot, patient, indirect ? foes : threats, 0, point);
-        return command.type === 'move' ? { ...command, avoidCombat: true } : command;
+        return mountedEscape(snapshot, patient, indirect ? foes : threats, 0, point, true);
       }
       return distance(patient, point) <= V7_GATHERED_RANGE
         ? { type: 'holdPosition', unitIds: [patient.id] }
