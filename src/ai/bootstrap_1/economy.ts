@@ -12,8 +12,7 @@ import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
 import { isOpponentOwner } from '../policy/ownership';
 import { recoveryPatients } from './medical-recovery';
 import { activeMiningBaseCount } from '../policy/expansion-model';
-import { enemyPowerNear } from '../policy/v6/intel';
-import { bootstrapExpansionMine } from './expansion-target';
+import { bootstrapExpansionMine, enemyExpansionPower } from './expansion-target';
 import { towerPointFor } from '../policy/build-layout';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
@@ -86,7 +85,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
   // The hall is the same purchase before and after cover arrives; keep its existing aging and ordinary price.
   const capital = { id: `bases:${target}`, priority, cost: BUILDING_DEFS.townHall.cost, save: true, hold: true as const,
     issue: () => undefined };
-  if (enemyPowerNear(intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
+  if (enemyExpansionPower(snapshot, intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
     || cover) return [capital];
   const point = towerPointFor(snapshot, owner, mine, intel.home);
   if (!isBuildPlacementClear(snapshot, 'defenseTower', point)
