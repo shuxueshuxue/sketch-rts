@@ -1,18 +1,13 @@
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
-import { routeTravelTicks } from '../../shared/route-selection';
+import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 import { ABILITY_DEFS, UNIT_DEFS, MERCENARY_UNIT_KINDS, unitMover } from '../../shared/catalog';
-import { walkRoute } from '../../shared/terrain';
-import { pointSegmentDistanceSquared } from '../../shared/navigation-math';
-import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { friendlyUnitsAtMercenaryCamp, hiredMercenaryCount, mercenaryRoleLimit } from '../policy/mercenary-model';
 import { neutralUnitsNear } from '../policy/snapshot';
 import { canSupply } from '../policy/world-model';
-import { isEnemyOwner } from '../policy/ownership';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { distance } from '../policy/spatial';
-import { mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
 function expeditionUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land' && unit.kind !== 'worker'
@@ -55,20 +50,10 @@ export function mercenaryAssignment(snapshot: GameSnapshot, owner: PlayerId, opt
   const own = expeditionUnits(snapshot, owner, options).filter(unit => unit.kind !== 'horseArcher' && !returning.has(unit.id)
     && !UNIT_DEFS[unit.kind].abilities.some(ability => ['heal', 'summon'].includes(ABILITY_DEFS[ability].behavior))
     && unit.hp === unit.maxHp && unit.attackDamage > 0 && ['idle', 'move', 'attackMove', 'hold'].includes(unit.order.type));
-  const foes = [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0 && isEnemyOwner(snapshot, owner, foe.owner, options));
+  const foes = armedFoes(snapshot, owner, options);
   const assignments = camps.flatMap(camp => own.flatMap(unit => {
-    const travelTicks = routeTravelTicks(snapshot.map, unit, camp, 'land', unit.speed);
-    if (travelTicks === undefined)
-      return [];
-    const route = walkRoute(snapshot.map, unit, camp);
-    if (route === undefined)
-      return [];
-    const horizon = THINK_TICKS + travelTicks, points = [unit, ...route];
-    const safe = foes.every(foe => {
-      const range = mountedThreatReach(snapshot, foe, unit, horizon) + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND;
-      return points.slice(1).every((point, index) => pointSegmentDistanceSquared(foe, points[index]!, point) > range * range);
-    });
-    return safe ? [{ unit, camp, travelTicks }] : [];
+    const travelTicks = safeLandTravelTicks(snapshot, unit, camp, foes);
+    return travelTicks === undefined ? [] : [{ unit, camp, travelTicks }];
   })).sort((a, b) => a.unit.level - b.unit.level || a.travelTicks - b.travelTicks || a.unit.id.localeCompare(b.unit.id));
   return assignments.slice(0, 1);
 }
