@@ -133,9 +133,9 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
       distance: destination ? distance(point, destination) : 0 };
   });
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
-    || Number(b.bodyClear) - Number(a.bodyClear)
-    || (a.room > 0 ? destination ? a.distance - b.distance
-      : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
+    || (a.room > 0 ? Number(b.bodyClear) - Number(a.bodyClear)
+      || (destination ? a.distance - b.distance : Number(b.exit) - Number(a.exit) || b.margin - a.margin)
+      : b.room - a.room || Number(b.bodyClear) - Number(a.bodyClear)))[0]!;
   return innerWindow.length > 0 && chosen.point === rider ? { type: 'holdPosition', unitIds: [rider.id] }
     : { type: 'move', unitIds: [rider.id], x: chosen.point.x, y: chosen.point.y };
 }
