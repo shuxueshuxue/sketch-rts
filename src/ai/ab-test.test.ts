@@ -130,6 +130,7 @@ describe("SDK AI behavior A/B runner", () => {
     expect(report.enabled.telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
     expect(report.disabled.telemetry.behaviors.skirmishPreservation.disabledSkips).toBeGreaterThan(0);
     expect(report.enabled.commandCounts.move).toBeGreaterThan(0);
+    expect(report.disabled.commandCounts.move ?? 0).toBe(0);
     const front = report.enabled.snapshot.units.filter((unit) => unit.owner === "v2" && (unit.kind === "footman" || unit.kind === "archer"));
     expect(front).toHaveLength(2);
     for (const unit of front) {
