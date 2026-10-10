@@ -1,4 +1,4 @@
-import type { Building, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
+import type { Building, GameSnapshot, PlayerId, ResourceNode, Unit } from "../../../shared/types";
 import { opponentPlayerIds } from "../ownership";
 import { walkingDistance } from "../../../shared/terrain";
 import { sameGroundAs, withoutShips } from "../ground";
@@ -178,11 +178,16 @@ const V9_ENEMY_HALL_CLEARANCE = 900;
 const V9_MINE_ENEMY_RANGE = 800;
 
 export function v9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel) {
+  return chooseV9ExpansionMine(snapshot, intel, snapshot.resources);
+}
+
+/** Rank an explicit candidate set with the same territory, strength and road rules. */
+export function chooseV9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel, mines: readonly ResourceNode[]) {
   const halls = snapshot.buildings.filter((building) => building.kind === "townHall");
   const enemyHalls = intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall));
   const tolerance = v9ExpansionTolerance(intel);
   const own: Point[] = intel.ownHalls.length > 0 ? intel.ownHalls : [intel.home];
-  return snapshot.resources
+  return mines
     .filter((mine) => mine.amount > 0 && halls.every((hall) => distance(hall, mine) > 340) && enemyHalls.every((hall) => distance(hall, mine) > V9_ENEMY_HALL_CLEARANCE))
     .filter((mine) => enemyPowerNear(intel, mine, V9_MINE_ENEMY_RANGE) <= tolerance)
     .map((mine) => ({ mine, walk: Math.min(...own.map((hall) => walkingDistance(snapshot.map, hall, mine) ?? Infinity)) }))
