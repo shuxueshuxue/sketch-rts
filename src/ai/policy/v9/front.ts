@@ -37,18 +37,11 @@ export function v9FrontPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6I
     const natural = v9ExpansionMine(snapshot, intel);
     if (natural && mineGuards(snapshot, natural).length === 0 && distance(natural, intel.home) <= NATURAL_REACH) anchor = natural;
   }
-  // The front stands on the walk from the main toward the enemy, FRONT_STEP past the point of it nearest the anchor, or
-  // the nearest point to that of the walk that no creep stands near (CREEP_CLEARANCE): a front beside the natural's guard
-  // cost V9 a soldier a game to it by 3:00 (1000 games, against 0.06), and with the front only 330 from every creep its
-  // army's edge still pulled the camp beside it, 170 of V9's 1151 units lost to creeps in 500 games against three.
-  const route = walkRoute(snapshot.map, intel.home, target, 1);
+  // Walk out from the selected hall itself. Projecting an off-axis hall onto the main's route left its mine undefended.
+  const route = walkRoute(snapshot.map, anchor, target, 1);
   if (!route || route.length === 0) return anchor;
-  let nearest = 0;
-  route.forEach((point, index) => {
-    if (distance(point, anchor) < distance(route[nearest]!, anchor)) nearest = index;
-  });
-  let ideal = nearest;
-  for (let walked = 0; ideal < route.length - 1 && walked < FRONT_STEP; ideal += 1) walked += distance(route[ideal]!, route[ideal + 1]!);
+  let ideal = 0;
+  for (let walked = distance(anchor, route[0]!); ideal < route.length - 1 && walked < FRONT_STEP; ideal += 1) walked += distance(route[ideal]!, route[ideal + 1]!);
   const creeps = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.attackDamage > 0);
   const clear = (point: Point) => creeps.every((creep) => distance(creep, point) >= CREEP_CLEARANCE && distance({ x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }, point) >= CREEP_CLEARANCE);
   for (let offset = 0; offset < route.length; offset += 1) {
