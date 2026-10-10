@@ -63,6 +63,10 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   if (version === 'v9_knight' && army.filter(unit => unit.kind === main).length >= 4) {
     wants.push({ unit: grove ? 'ballista' : 'catapult', count: 2, priority: 64 });
   }
+  if (version === 'v9_archer' && (army.some(unit => unit.kind === healer)
+    || snapshot.buildings.some(building => building.owner === owner && building.queue.some(job => job.unitKind === healer)))) {
+    wants.push({ unit: grove ? 'knight' : 'ashChieftain', count: 2, priority: 64 });
+  }
   // The spirit host fights through summons, which these upgrades do not affect.
   if (version !== 'v9_summoner') wants.push(
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
