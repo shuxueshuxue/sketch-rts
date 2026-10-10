@@ -9,7 +9,7 @@ import { bootstrapScripts } from './policy';
 const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].flatMap(mirror => [3, 5].map(count => ({ version, race, mirror, count })))));
 
-it.each(cases)('$version fires through $count $race infantry instead of one off-axis target (mirror=$mirror)',
+it.each(cases)('$version selects three hits from $count $race infantry instead of an off-axis target (mirror=$mirror)',
   ({ version, race, mirror, count }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
     let scene = sketchScene('ordinary-piercing-formation').map('openClaims').replaceDefaults()
