@@ -8,7 +8,7 @@ import { shipFireLaneClear } from './ship-fire-control';
 import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
 import { assignPlayerColors } from './player-colors';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
-import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
+import { GOLD_MINE_RULES, prepareMiningFrame, upkeepGoldIncome, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
 import { SPARK_FIRE, sparkIgnites } from './spark-fire';
 import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
@@ -26,7 +26,7 @@ import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from ".
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
-import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { isStunned, unitAbilities } from "./unit-abilities";
 import { matchesUnitTarget, NON_MECHANICAL_TARGETS, type UnitClass } from "./unit-targeting";
@@ -159,8 +159,6 @@ const TOWN_HALL_DROP_RANGE = GOLD_MINE_RULES.dropRange;
 const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
 const GATHER_DURATION = seconds(GOLD_MINE_RULES.gatherSeconds);
 const GOLD_MINE_ENTRY_COOLDOWN = seconds(GOLD_MINE_RULES.entrySeconds);
-const LOW_UPKEEP_GOLD_RATE = 0.7;
-const HIGH_UPKEEP_GOLD_RATE = 0.4;
 
 const ITEM_PICKUP_RANGE = 72;
 const SCORCH_DURATION = seconds(8);
@@ -1970,12 +1968,6 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
 
 function cargoSupply(game: Game, ship: Unit) {
   return (ship.cargo ?? []).reduce((sum,passenger)=>sum+unitRules(game,passenger).supplyUsed,0);
-}
-
-function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
-  if (supplyUsed >= HIGH_UPKEEP_SUPPLY) return Math.floor(carriedGold * HIGH_UPKEEP_GOLD_RATE);
-  if (supplyUsed >= LOW_UPKEEP_SUPPLY) return Math.floor(carriedGold * LOW_UPKEEP_GOLD_RATE);
-  return carriedGold;
 }
 
 function updateBuildOrder(game: Game, unit: Unit) {

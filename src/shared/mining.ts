@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from "./catalog";
+import { BUILDING_DEFS, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY } from "./catalog";
 import { snapToFootprint } from "./terrain";
 import { isStaggered } from "./push";
 import { isStunned } from "./unit-abilities";
@@ -71,4 +71,14 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
   const nextWorker = new Map<string, string>();
   for (const [mine, unit] of waiting) nextWorker.set(mine, unit.id);
   return { resources, nextWorker, townHalls };
+}
+
+const HIGH_UPKEEP_GOLD_RATE = 0.4;
+const LOW_UPKEEP_GOLD_RATE = 0.7;
+
+/** Gold credited by one actual delivery, including the current population upkeep and integer rounding. */
+export function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
+  if (supplyUsed >= HIGH_UPKEEP_SUPPLY) return Math.floor(carriedGold * HIGH_UPKEEP_GOLD_RATE);
+  if (supplyUsed >= LOW_UPKEEP_SUPPLY) return Math.floor(carriedGold * LOW_UPKEEP_GOLD_RATE);
+  return carriedGold;
 }
