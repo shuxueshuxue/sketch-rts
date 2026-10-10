@@ -15,6 +15,7 @@ import { enemyPowerNear } from '../policy/v6/intel';
 import { towerPointFor } from '../policy/build-layout';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
+import { controlledMercenaryGoals } from './mercenary-goals';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -100,6 +101,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant, prepareMiningCover);
+  goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);
@@ -178,12 +180,14 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
       if (goal.hold) gold -= goal.cost;
       continue;
     }
-    if (command.type === 'train') {
-      if (producers.has(command.buildingId)) continue;
-      const used = UNIT_DEFS[command.unitKind].supplyUsed;
+    if (command.type === 'train' || command.type === 'hire') {
+      if (command.type === 'train' && producers.has(command.buildingId)) continue;
+      const kind = command.type === 'train' ? command.unitKind
+        : snapshot.mercenaryCamps.find(camp => camp.id === command.campId)!.hireKind;
+      const used = UNIT_DEFS[kind].supplyUsed;
       if (supply + used > player.supplyCap) continue;
       supply += used;
-      producers.add(command.buildingId);
+      if (command.type === 'train') producers.add(command.buildingId);
     }
     if (command.type === 'research') {
       labs.add(command.buildingId);
