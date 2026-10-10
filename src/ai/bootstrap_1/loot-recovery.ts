@@ -3,7 +3,8 @@ import { canEquip, freeItemSlot } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
 import { walkingDistance } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
-import { itemCarrierScore, planItemCommands } from '../policy/item-tactics';
+import { itemCarrierScore, planItemCommandsWithStormPoint } from '../policy/item-tactics';
+import { stormPoint } from './storm-point';
 import { neutralUnitsNear } from '../policy/snapshot';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
@@ -58,7 +59,7 @@ export function lootRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, opt
 export function planLootItemCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const items = snapshot.items.filter(item => item.carrierId || item.shipId
     || item.kind !== 'experienceBook' && item.id !== options.memory.loot?.itemId);
-  return planItemCommands({ ...snapshot, items }, owner, options);
+  return planItemCommandsWithStormPoint({ ...snapshot, items }, owner, options, stormPoint);
 }
 
 /** The normal command queue preserves the return trip even after an experience book is consumed. */

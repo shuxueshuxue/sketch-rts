@@ -10,11 +10,18 @@ import { carriedItemsFor, combatUnits, enemyBuildingsNear, groundItems, hostileU
 import { distance, nearestEntities, nearestEntity } from "./spatial";
 import type { PresetAiPolicyOptions } from "./types";
 import { isCoreProductionBuilding, mainBase } from "./world-model";
+import type { Point } from "./spatial";
 
 const GUARDIAN_SCROLL_THREAT_RANGE = 380;
 const GUARDIAN_SCROLL_CONTACT_RANGE = 300;
 
 export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
+  return planItemCommandsWithStormPoint(snapshot, owner, options, nearestStormTarget);
+}
+
+export type StormPointSelector = (snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, options: PresetAiPolicyOptions) => Point | undefined;
+
+export function planItemCommandsWithStormPoint(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, stormPoint: StormPointSelector): GameCommand[] {
   const commands: GameCommand[] = [];
   const ownUnits = units(snapshot, owner);
   const ownCombat = ownUnits.filter((unit) => unit.kind !== "worker");
@@ -22,7 +29,7 @@ export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, option
   for (const item of carriedItemsFor(snapshot, owner).filter((candidate) => candidate.cooldownRemaining === 0)) {
     const carrier = ownUnits.find((unit) => unit.id === item.carrierId);
     if (!carrier) continue;
-    const command = itemUseCommand(snapshot, owner, carrier, item, options);
+    const command = itemUseCommand(snapshot, owner, carrier, item, options, stormPoint);
     if (command) commands.push(command);
   }
 
@@ -37,7 +44,13 @@ export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, option
   return commands;
 }
 
-function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions): GameCommand | undefined {
+function nearestStormTarget(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, options: PresetAiPolicyOptions): Point | undefined {
+  const targets = hostileUnitsNear(snapshot, owner, carrier, 320, options.teams);
+  const real = targets.filter(unit => unit.kind !== "spirit");
+  return nearestEntity(real.length ? real : targets, carrier);
+}
+
+function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions, stormPoint: StormPointSelector): GameCommand | undefined {
   if (item.kind === "experienceBook") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options);
   // A healing scroll is read when the hurt friends round its carrier lack at least what it heals four of them for.
   if (item.kind === "healingScroll") {
@@ -73,12 +86,15 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
     const rangedBurstWindow = backlineCarrier && outnumbered && threatEnemies.length >= 3;
     return allies.length >= 4 && (contactFight || rangedBurstWindow) ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
-  const range = item.kind === "stormStaff" ? 320 : 280;
+  if (item.kind === "stormStaff") {
+    const point = stormPoint(snapshot, owner, carrier, options);
+    return point ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, x: point.x, y: point.y }, options) : undefined;
+  }
+  const range = 280;
   const hostileTargets = hostileUnitsNear(snapshot, owner, carrier, range, options.teams);
   // @@@item-real-target - Burst items should not spend their first hit on temporary summons while real combat units are available.
   const target = nearestEntity(hostileTargets.filter((unit) => unit.kind !== "spirit"), carrier) ?? nearestEntity(hostileTargets, carrier);
   if (!target) return undefined;
-  if (item.kind === "stormStaff") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, x: target.x, y: target.y }, options);
   if (item.kind === "lightningRod") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options);
   return undefined;
 }
