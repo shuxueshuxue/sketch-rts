@@ -73,7 +73,7 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
   }, 20000);
 
 it.each(['covered', 'two-incomes', 'no-income', 'guarded', 'occupied', 'rising'] as const)(
-  'does not buy replacement-mine cover when %s', condition => {
+  'decides cleared-mine cover from income and actual occupation when %s', condition => {
     const { game, memory } = replacementScene('grove', false);
     if (condition === 'two-incomes') game.resources.find(mine => mine.id === 'empty-main')!.amount = 10000;
     if (condition === 'no-income') game.resources.find(mine => mine.id === 'working')!.amount = 0;
@@ -90,6 +90,6 @@ it.each(['covered', 'two-incomes', 'no-income', 'guarded', 'occupied', 'rising']
     setBuildingBodies(game.map, game.buildings);
     const snapshot = snapshotGame(game);
     const options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
-    expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('mining-cover:'))).toBe(false);
+    expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('mining-cover:'))).toBe(condition === 'two-incomes');
     if (condition === 'covered') expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('bases:'))).toBe(true);
   });
