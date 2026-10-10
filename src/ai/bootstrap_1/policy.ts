@@ -19,6 +19,7 @@ import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
 import { planBootstrapNaval } from './expedition-recovery';
+import { mercenaryControl } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
@@ -91,7 +92,8 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery, { ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
-    if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, script];
+    if (script === AI_SCRIPT_LIBRARY.allySupport) return version === 'v9_archer'
+      ? [mountedTasks, mercenaryControl, script] : [mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.

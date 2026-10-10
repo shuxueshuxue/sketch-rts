@@ -1,3 +1,4 @@
+import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import { friendlyUnitsAtMercenaryCamp, hiredMercenaryCount, mercenaryRoleLimit } from './mercenary-model';
 import { isBootstrapVersion, planBootstrapCommands } from "../bootstrap_1/policy";
@@ -7,7 +8,7 @@ import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
 import { battlefieldUnitIds, planBattlefieldCommands } from "./battlefield";
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { canReceiveHealing } from "../../shared/healing";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -496,7 +497,7 @@ function towerMercWorkerHoldingPurchasableCamp(snapshot: GameSnapshot, owner: Pl
       canSupply(snapshot, owner, camp.hireKind) &&
       hiredMercenaryCount(snapshot, owner, camp.hireKind) < mercenaryRoleLimit(camp.hireKind, options) &&
       neutralGuardsNear(snapshot, camp, 260).length === 0 &&
-      distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE,
+      unitControlsMercenaryCamp(unit, camp),
   );
 }
 

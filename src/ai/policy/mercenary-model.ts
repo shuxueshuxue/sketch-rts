@@ -1,7 +1,6 @@
-import { MERCENARY_HIRE_RANGE } from '../../shared/catalog';
+import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import type { GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId } from '../../shared/types';
 import { units } from './snapshot';
-import { distance } from './spatial';
 import type { PresetAiPolicyOptions } from './types';
 import { isTowerMercPolicy } from './versions';
 
@@ -10,7 +9,7 @@ export function hiredMercenaryCount(snapshot: GameSnapshot, owner: PlayerId, kin
 }
 
 export function friendlyUnitsAtMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp) {
-  return units(snapshot, owner).filter(unit => distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
+  return units(snapshot, owner).filter(unit => unitControlsMercenaryCamp(unit, camp));
 }
 
 export function mercenaryRoleLimit(kind: MercenaryUnitKind, options: PresetAiPolicyOptions) {
