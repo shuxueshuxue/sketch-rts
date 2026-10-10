@@ -76,6 +76,8 @@ export type AiPolicyMemory = {
   perception?: Record<string, unknown>;
   v6?: V6PolicyMemory;
   naval?: NavalPlanMemory;
+  loot?: { unitId: string; itemId: string; homeId: string };
+  shopping?: { unitId: string; shopId: string; kind: ItemKind; homeId: string; returning: boolean };
 };
 
 export function createAiPolicyMemory(): AiPolicyMemory {

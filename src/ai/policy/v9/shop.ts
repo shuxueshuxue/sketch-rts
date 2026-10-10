@@ -4,7 +4,7 @@ import { isOpponentOwner } from "../ownership";
 import { unitMover } from "../../../shared/catalog";
 import { MAX_CARRIED_ITEMS, SHOP_REACH as BUY_REACH, carriedItemCount, shopBuyer, standsAtShop } from "../../../shared/shop";
 import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
-import type { GameCommand, GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "../../../shared/types";
+import type { Building, GameCommand, GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
 import { sameGroundAs } from "../ground";
 import { units } from "../snapshot";
@@ -90,12 +90,17 @@ function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
     .filter((candidate) => creeps.every((creep) => distance(creep, candidate) > candidate.radius + BUY_REACH + AUTO_ACQUIRE_RANGE))
     .sort((a, b) => distance(a, center) - distance(b, center))[0];
   if (!shop) return undefined;
+  return shopPurchaseAt(snapshot, owner, shop, army, army, towers);
+}
+
+/** Purchase intent is independent of shop location and travel ownership. */
+export function shopPurchaseAt(snapshot: GameSnapshot, owner: PlayerId, shop: Shop, army: readonly Unit[], buyers: readonly Unit[], towers: readonly Building[]): { shop: Shop; kind: ItemKind; unit: Unit } | undefined {
   const stocked = (kind: ItemKind) => {
     const good = shop.goods.find((candidate) => candidate.kind === kind);
     return good && good.stock > 0 ? good : undefined;
   };
   const carried = (kind: ItemKind) => snapshot.items.filter((item) => item.kind === kind && army.some((unit) => unit.id === item.carrierId));
-  const free = army.filter((unit) => carriedItemCount(snapshot, unit.id) < MAX_CARRIED_ITEMS);
+  const free = buyers.filter((unit) => carriedItemCount(snapshot, unit.id) < MAX_CARRIED_ITEMS);
   const nearest = (list: Unit[]) => list.sort((a, b) => distance(a, shop) - distance(b, shop))[0];
   const healable = army.filter((unit) => canReceiveHealing(unit, snapshot));
   const health = healable.reduce((total, unit) => total + unit.hp, 0) / Math.max(1, healable.reduce((total, unit) => total + unit.maxHp, 0));

@@ -1,4 +1,5 @@
 import { RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
@@ -21,6 +22,7 @@ import { medicalRecovery, recoveryPatients } from './medical-recovery';
 import { planBootstrapNaval } from './expedition-recovery';
 import { mercenaryControl } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
+import { lootRecovery } from './loot-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -84,6 +86,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
 export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
+    if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
     if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
@@ -93,7 +96,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (script === AI_SCRIPT_LIBRARY.allySupport) return version === 'v9_archer'
-      ? [mountedTasks, mercenaryControl, script] : [mercenaryControl, script];
+      ? [mountedTasks, lootRecovery, mercenaryControl, script] : [lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
