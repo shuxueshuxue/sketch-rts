@@ -1,0 +1,34 @@
+name: Simulation CPU Check
+
+on:
+  pull_request:
+    paths:
+      - src/shared/**
+      - src/ai/**
+      - src/sdk/**
+      - .github/workflows/simulation-cpu-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: simulation-cpu-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  duels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SKETCH_RTS_BASE_PATH: /sketch-rts/
+      VITE_SKETCH_RTS_BASE_PATH: /sketch-rts/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Test balanced AI duels and CPU budgets
+        run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
