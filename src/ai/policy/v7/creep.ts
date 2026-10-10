@@ -48,7 +48,7 @@ const WOUNDED_SHARE = 0.35;
 const ORDER_SLACK = 140;
 const RETRY_TICKS = 30 * 20;
 // A group sets out together: every fighter within this of the group's middle (routes are checked from there).
-const ASSEMBLED_RANGE = 450;
+export const CREEP_ASSEMBLED_RANGE = 450;
 // A group that reaches the staging point worn below this share of the force the camp calls for does not go in.
 const ARRIVAL_SHARE = 0.8;
 // An enemy army near the camp worth more than this share of the group ends the creep.
@@ -91,7 +91,7 @@ export function neutralCamps(snapshot: GameSnapshot): Camp[] {
   return camps;
 }
 
-function creepForce(units: readonly Unit[]) {
+export function creepForce(units: readonly Unit[]) {
   return units.reduce((total, unit) => total + combatRating(unit), 0);
 }
 
@@ -141,7 +141,7 @@ function activeCamp(state: CreepState | undefined, camps: Camp[]): Camp | undefi
   return camps.find((camp) => camp.creeps.some((creep) => distance({ x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }, state.center) <= CAMP_LINK + state.reach));
 }
 
-export type CreepChoice = { camp: Camp; why: "expansion" | "creep"; staging: Point };
+export type CreepChoice = { camp: Camp; why: "expansion" | "creep"; staging: Point; group: Unit[] };
 export type CampApproach = (camp: Camp, from: Point, camps: Camp[]) => { staging: Point; travelDistance: number } | undefined;
 
 // Carry on with the camp under way. Returns undefined once it is cleared or given up (memory says which).
@@ -206,7 +206,7 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
   const memory = v6Memory(options);
   const from = averagePoint(front);
   // Scattered units walk their own routes: the group assembles first (the general holds it at the rally point).
-  if (front.some((unit) => distance(unit, from) > ASSEMBLED_RANGE)) return undefined;
+  if (front.some((unit) => distance(unit, from) > CREEP_ASSEMBLED_RANGE)) return undefined;
   const force = creepForce(front);
   const retry = memory.creepRetry && memory.creepRetry.until > snapshot.tick ? memory.creepRetry : undefined;
   const open = candidates.filter((camp) => forceFor(camp) <= force && (!retry || distance(camp.center, retry.center) > CAMP_LINK))
@@ -216,7 +216,7 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
     });
   if (expansionMine) {
     const guard = open.find(({ camp }) => distance(camp.center, expansionMine) <= 450);
-    return guard ? { camp: guard.camp, staging: guard.staging, why: "expansion" } : undefined;
+    return guard ? { camp: guard.camp, staging: guard.staging, group: front, why: "expansion" } : undefined;
   }
   // @@@v7-creep-voluntary-margin - A camp taken for its own sake (stars, gold, items) is only worth it without losses: it
   // asks a wider margin than the expansion's guard, which the economy waits on. Every soldier a camp costs before 5:00 is
@@ -224,7 +224,7 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
   const easy = open.filter(({ camp }) => camp.strength + VOLUNTARY_MARGIN <= force);
   // The strongest camp the group beats, nearer ones first (V6's order).
   const best = easy.sort((a, b) => b.camp.strength - b.travelDistance / 500 - (a.camp.strength - a.travelDistance / 500))[0];
-  return best ? { camp: best.camp, staging: best.staging, why: "creep" } : undefined;
+  return best ? { camp: best.camp, staging: best.staging, group: front, why: "creep" } : undefined;
 }
 
 export function startV7Creep(snapshot: GameSnapshot, front: Unit[], choice: CreepChoice, options: AiPolicyContext) {
