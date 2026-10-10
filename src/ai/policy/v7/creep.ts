@@ -39,7 +39,7 @@ const VOLUNTARY_MARGIN = 3.5;
 // (cobaltVale, 2:40). A plain move is only stopped by a creep that attacks it first, at 150; idle at the staging point the
 // group again acquires within 230, so the point stands that far out from the camp's edge and a margin more.
 const STAGING_GAP = 300;
-const ROUTE_CLEARANCE = 260;
+export const CREEP_ROUTE_CLEARANCE = 260;
 export const V7_GATHERED_RANGE = 180;
 const GATHERED_SHARE = 0.8;
 const GATHER_TICKS = 25 * 20;
@@ -59,7 +59,7 @@ const ENEMY_RANGE = 900;
 // is looked for around the camp, facing the group first: facing it only, two camps 700 apart blocked each other and V7
 // held at home for five minutes beside its natural.
 const STAGING_CLEARANCE = 400;
-const STAGING_TURNS = [0, 30, -30, 60, -60, 90, -90].map((degrees) => (degrees * Math.PI) / 180);
+export const CREEP_STAGING_TURNS = [0, 30, -30, 60, -60, 90, -90].map((degrees) => (degrees * Math.PI) / 180);
 // "Near home": within this of one of V7's halls. Camps worth creeping for their own sake are the ones near home (a
 // natural's guard is cleared wherever the natural is), and a target farther off needs a real army (v7-far-attack).
 export const V7_HOME_REACH = 1_500;
@@ -115,15 +115,15 @@ export function stagingPoint(camp: Camp, from: Point, turn = 0): Point {
 // The first staging point around the camp, facing the group first, that no other camp crowds and that the group reaches
 // without passing another camp.
 export function clearStaging(camp: Camp, from: Point, camps: Camp[]): Point | undefined {
-  return STAGING_TURNS.map((turn) => stagingPoint(camp, from, turn)).find((staging) => stagingClear(staging, camps, camp) && routeClear(from, staging, camps, camp));
+  return CREEP_STAGING_TURNS.map((turn) => stagingPoint(camp, from, turn)).find((staging) => stagingClear(staging, camps, camp) && routeClear(from, staging, camps, camp));
 }
 
 // No creep of another camp stands within ROUTE_CLEARANCE of the straight walk from `from` to `to`.
 export function routeClear(from: Point, to: Point, camps: Camp[], target: Camp): boolean {
-  return camps.every((camp) => camp === target || camp.creeps.every((creep) => segmentDistance(creep, from, to) > ROUTE_CLEARANCE));
+  return camps.every((camp) => camp === target || camp.creeps.every((creep) => segmentDistance(creep, from, to) > CREEP_ROUTE_CLEARANCE));
 }
 
-function stagingClear(staging: Point, camps: Camp[], target: Camp) {
+export function stagingClear(staging: Point, camps: Camp[], target: Camp) {
   return camps.every((camp) => camp === target || camp.creeps.every((creep) => distance(creep, staging) > STAGING_CLEARANCE));
 }
 
@@ -141,7 +141,8 @@ function activeCamp(state: CreepState | undefined, camps: Camp[]): Camp | undefi
   return camps.find((camp) => camp.creeps.some((creep) => distance({ x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }, state.center) <= CAMP_LINK + state.reach));
 }
 
-export type CreepChoice = { camp: Camp; why: "expansion" | "creep" };
+export type CreepChoice = { camp: Camp; why: "expansion" | "creep"; staging: Point };
+export type CampApproach = (camp: Camp, from: Point, camps: Camp[]) => { staging: Point; travelDistance: number } | undefined;
 
 // Carry on with the camp under way. Returns undefined once it is cleared or given up (memory says which).
 export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: Unit[], camps: Camp[], intel: V6Intel, options: AiPolicyContext): { commands: GameCommand[]; point: Point } | undefined {
@@ -193,6 +194,14 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
 
 // Start on a camp: the natural's guard when `expansionMine` is given, otherwise the best camp in `candidates`.
 export function chooseV7Camp(snapshot: GameSnapshot, front: Unit[], camps: Camp[], candidates: Camp[], options: AiPolicyContext, expansionMine?: Point): CreepChoice | undefined {
+  return chooseCreepCamp(snapshot, front, camps, candidates, options, (camp, from, all) => {
+    const staging = clearStaging(camp, from, all);
+    return staging ? { staging, travelDistance: distance(camp.center, from) } : undefined;
+  }, expansionMine);
+}
+
+/** Strength and task selection use explicitly supplied approach geometry. */
+export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Camp[], candidates: Camp[], options: AiPolicyContext, approach: CampApproach, expansionMine: Point | undefined): CreepChoice | undefined {
   if (front.length === 0) return undefined;
   const memory = v6Memory(options);
   const from = averagePoint(front);
@@ -200,18 +209,22 @@ export function chooseV7Camp(snapshot: GameSnapshot, front: Unit[], camps: Camp[
   if (front.some((unit) => distance(unit, from) > ASSEMBLED_RANGE)) return undefined;
   const force = creepForce(front);
   const retry = memory.creepRetry && memory.creepRetry.until > snapshot.tick ? memory.creepRetry : undefined;
-  const open = candidates.filter((camp) => forceFor(camp) <= force && (!retry || distance(camp.center, retry.center) > CAMP_LINK) && clearStaging(camp, from, camps) !== undefined);
+  const open = candidates.filter((camp) => forceFor(camp) <= force && (!retry || distance(camp.center, retry.center) > CAMP_LINK))
+    .flatMap(camp => {
+      const geometry = approach(camp, from, camps);
+      return geometry ? [{ camp, ...geometry }] : [];
+    });
   if (expansionMine) {
-    const guard = open.find((camp) => distance(camp.center, expansionMine) <= 450);
-    return guard ? { camp: guard, why: "expansion" } : undefined;
+    const guard = open.find(({ camp }) => distance(camp.center, expansionMine) <= 450);
+    return guard ? { camp: guard.camp, staging: guard.staging, why: "expansion" } : undefined;
   }
   // @@@v7-creep-voluntary-margin - A camp taken for its own sake (stars, gold, items) is only worth it without losses: it
   // asks a wider margin than the expansion's guard, which the economy waits on. Every soldier a camp costs before 5:00 is
   // missing from the first pushes. Over 1900 games V7 won 1617 with 3.5 against 1563 with the guard's 1.5 (2.5: +2).
-  const easy = open.filter((camp) => camp.strength + VOLUNTARY_MARGIN <= force);
+  const easy = open.filter(({ camp }) => camp.strength + VOLUNTARY_MARGIN <= force);
   // The strongest camp the group beats, nearer ones first (V6's order).
-  const best = easy.sort((a, b) => b.strength - distance(b.center, from) / 500 - (a.strength - distance(a.center, from) / 500))[0];
-  return best ? { camp: best, why: "creep" } : undefined;
+  const best = easy.sort((a, b) => b.camp.strength - b.travelDistance / 500 - (a.camp.strength - a.travelDistance / 500))[0];
+  return best ? { camp: best.camp, staging: best.staging, why: "creep" } : undefined;
 }
 
 export function startV7Creep(snapshot: GameSnapshot, front: Unit[], choice: CreepChoice, options: AiPolicyContext) {

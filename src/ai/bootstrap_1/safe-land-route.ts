@@ -1,5 +1,4 @@
-import { pointSegmentDistanceSquared } from '../../shared/navigation-math';
-import { routeTravelTicks } from '../../shared/route-selection';
+import { routeClearsDisks, routeTravelTicks } from '../../shared/route-selection';
 import { walkRoute } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -20,9 +19,7 @@ export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Po
   const route = walkRoute(snapshot.map, unit, goal);
   if (route === undefined) return undefined;
   const horizon = THINK_TICKS + ticks, points = [unit, ...route];
-  return foes.every(foe => {
-    const range = mountedThreatReach(snapshot, foe, unit, horizon)
-      + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND;
-    return points.slice(1).every((point, index) => pointSegmentDistanceSquared(foe, points[index]!, point) > range * range);
-  }) ? ticks : undefined;
+  const disks = foes.map(foe => ({ x: foe.x, y: foe.y, radius: mountedThreatReach(snapshot, foe, unit, horizon)
+    + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }));
+  return routeClearsDisks(points, disks) ? ticks : undefined;
 }
