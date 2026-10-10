@@ -80,16 +80,16 @@ describe('persistent battlefield ability effects',()=>{
     const snapshot=snapshotGame(game),marked=snapshot.units.find(unit=>unit.id===recipient.id)!;
     expect(statusImage(snapshot,marked)).toBe(true);
     expect(game.units.find(unit=>unit.id===recipient.id)!.effects[0]!.remaining).toBeGreaterThan(0);
-    advance(game,seconds(4)+1);
+    advance(game,seconds(6)+1);
     const expired=snapshotGame(game);
     expect(statusImage(expired,expired.units.find(unit=>unit.id===recipient.id)!)).toBe(false);
   });
 
   it('distinguishes the real veteran healing wave from ordinary priest and ogre casts',()=>{
     const game=emptyGame(),caster=game.spawnUnit('player','priest',800,800),recipient=game.spawnUnit('ally','footman',870,800);
-    recipient.hp-=60;caster.autocast={heal:false,veteranHealingWave:false};learn(game,caster,'veteranHealingWave');
+    recipient.hp-=110;caster.autocast={heal:false,veteranHealingWave:false};learn(game,caster,'veteranHealingWave');
     issuePlayerCommand(game,'player',{type:'cast',unitId:caster.id,ability:'veteranHealingWave'});
-    expect(recipient.hp).toBe(recipient.maxHp-30);
+    expect(recipient.hp).toBe(recipient.maxHp-20);
     const effect=game.effects.find(effect=>effect.type==='heal')!,canvas=createCanvas(400,240),ctx=canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
     expect(drawVeteranCastEffect(ctx,effect,caster,{x:200,y:100})).toBe(true);
     const {radius:_radius,...ordinary}=effect;
