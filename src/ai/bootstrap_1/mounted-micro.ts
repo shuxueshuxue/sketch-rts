@@ -11,7 +11,7 @@ import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/typ
 import { distance, type Point } from '../policy/spatial';
 
 type Threat = Unit | Building;
-const THINK_TICKS = 15;
+export const THINK_TICKS = 15;
 
 /** Break healing support before shooting the troops it can keep alive. */
 export function mountedTargetOrder(a: Unit, b: Unit) {
@@ -19,10 +19,11 @@ export function mountedTargetOrder(a: Unit, b: Unit) {
   return Number(heals(b)) - Number(heals(a)) || a.hp - b.hp;
 }
 
-function chargeMinimum(foe: Unit, rider: Unit) {
+function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
   return unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
-    return rules.behavior === 'charge' && distance(rider, foe) < rules.minRange ? [rules.minRange] : [];
+    return rules.behavior === 'charge' && abilityCooldown(foe, ability) <= horizon
+      && distance(rider, foe) < rules.minRange ? [rules.minRange] : [];
   });
 }
 
@@ -33,9 +34,9 @@ function itemReach(snapshot: GameSnapshot, foe: Unit, horizon: number) {
       : item.kind === 'stormStaff' ? STORM_STAFF.range : LIGHTNING_ROD.range] : []);
 }
 
-function reach(snapshot: GameSnapshot, foe: Threat, rider: Unit, horizon: number) {
+export function mountedThreatReach(snapshot: GameSnapshot, foe: Threat, rider: Pick<Unit, 'x' | 'y' | 'radius'>, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
-  const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
+  const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider, horizon).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
   return Math.max(weaponReach, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
     return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
@@ -50,7 +51,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     const clearingTicks = foes.reduce((ticks, foe) => ticks + ('order' in foe && foe.owner === 'neutral'
       ? foe.hp * rider.attackCooldown / rider.attackDamage : 0), 0);
     if (foes.some(foe => 'order' in foe && foe.owner === 'neutral'
-      && reach(snapshot, foe, rider, THINK_TICKS + clearingTicks) >= rider.attackRange)) {
+      && mountedThreatReach(snapshot, foe, rider, THINK_TICKS + clearingTicks) >= rider.attackRange)) {
       const home = snapshot.buildings.filter(building => building.owner === rider.owner && building.kind === 'townHall'
         && building.complete && sameGround(snapshot.map, rider, building))
         .sort((a, b) => distance(rider, a) - distance(rider, b))[0];
@@ -61,24 +62,29 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   // While the weapon cannot fire this turn, only commit to waiting until the next think.
   const shot = rider.cooldown > THINK_TICKS ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
   const horizon = THINK_TICKS + rider.cooldown;
-  const margin = (point: Point, foe: Threat) => distance(point, foe) - reach(snapshot, foe, rider, horizon);
+  const margin = (point: Point, foe: Threat) => distance(point, foe) - mountedThreatReach(snapshot, foe, rider, horizon);
   // Inside a charge minimum, the shot and next think share the same narrow firing window.
-  const firingWindow = foes.some(foe => 'order' in foe && chargeMinimum(foe, rider).length > 0)
+  const firingWindow = foes.some(foe => 'order' in foe && chargeMinimum(foe, rider, horizon).length > 0)
     ? Math.max(THINK_TICKS / SIM_TICKS_PER_SECOND, shot) : THINK_TICKS / SIM_TICKS_PER_SECOND + shot;
   const safeShot = foes.every(foe => margin(rider, foe) > ('order' in foe ? foe.speed : 0)
     * ('order' in foe && foe.owner === 'neutral' && foe.order.type === 'idle'
       ? THINK_TICKS / SIM_TICKS_PER_SECOND : firingWindow));
   if (safeShot) {
     if (distance(rider, target) <= rider.attackRange) {
-      // A fleeing worker or leashing creep must not pull an attack order back under cover.
-      return goal.kind === 'camp' || target.order.type === 'attack' && target.order.targetId === rider.id
+      // Explicitly hit the worker when following it until the next think stays outside cover.
+      const angle = Math.atan2(target.y - rider.y, target.x - rider.x);
+      const travel = Math.min(rider.speed, target.speed) * THINK_TICKS / SIM_TICKS_PER_SECOND;
+      const following = { x: rider.x + detCos(angle) * travel, y: rider.y + detSin(angle) * travel, radius: rider.radius };
+      const safeFollow = segmentWalkable(snapshot.map, rider, following) && foes.every(foe => distance(following, foe)
+        > mountedThreatReach(snapshot, foe, following, horizon) + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0));
+      return goal.kind === 'camp' || target.order.type === 'attack' && target.order.targetId === rider.id || safeFollow
         ? { type: 'attack', unitIds: [rider.id], targetId: target.id }
         : { type: 'aim', unitIds: [rider.id], x: target.x, y: target.y };
     }
     if (!foes.some(foe => 'order' in foe && foe.order.type === 'attack' && foe.order.targetId === rider.id)) {
       const approach = 1 - rider.attackRange / distance(rider, target);
       const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
-      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > reach(snapshot, foe, rider, horizon))) {
+      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
       return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station));
@@ -95,13 +101,13 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
 
 export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined): GameCommand {
   const horizon = THINK_TICKS + rider.cooldown;
-  const threats = foes.map(foe => ({ foe, range: reach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
+  const threats = foes.map(foe => ({ foe, range: mountedThreatReach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
   const margin = (point: Point, threat: typeof threats[number]) => distance(point, threat.foe) - threat.range;
   const danger = [...threats].sort((a, b) => margin(rider, a) - a.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
   const angle = destination ? Math.atan2(destination.y - rider.y, destination.x - rider.x) : Math.atan2(rider.y - danger.foe.y, rider.x - danger.foe.x);
   const step = rider.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
-  const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider).map(limit => ({ foe, limit })) : []);
+  const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
   const choices = [rider, ...Array.from({ length: 16 }, (_, index) => ({
     x: rider.x + detCos(angle + index * Math.PI / 8) * step,
     y: rider.y + detSin(angle + index * Math.PI / 8) * step,
