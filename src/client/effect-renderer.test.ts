@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createCanvas } from '@napi-rs/canvas';
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import type { UnitKind, WorldEffect } from "../shared/types";
 import { arrowFrame, chargeImpactFrame, chargeTrailFrame, launchPoint, projectileLook, renderWorldEffects, spellOrbPalette } from "./effect-renderer";
@@ -182,7 +183,22 @@ describe("gold bounty receipts", () => {
     const { ctx } = pointRecorder();
     ctx.fillText = (text: string) => { labels.push(text); };
     const effect: WorldEffect = { id: "bounty", type: "goldBounty", x: 50, y: 60, duration: 24, remaining: 12, amount: 130, owner: "player" };
-    renderWorldEffects({ ctx, effects: [effect], worldToScreen: point => point, nearScreen: () => true });
+    renderWorldEffects({ ctx, effects: [effect], worldToScreen: point => point, nearScreen: () => true, viewer:"player" });
     expect(labels).toEqual(["+130"]);
+  });
+
+  it('hides other players and spectator command marks while keeping enemy combat spells public',()=>{
+    const canvas=createCanvas(300,200),ctx=canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+    const effect:WorldEffect={id:'enemy-move',type:'move',x:150,y:110,duration:20,remaining:10,owner:'enemy'};
+    const options={ctx,worldToScreen:(point:{x:number;y:number})=>point,nearScreen:()=>true};
+    const drawn=()=>canvas.getContext('2d').getImageData(0,0,300,200).data.some((value,index)=>index%4===3 && value>0);
+    for(const viewer of ['player',undefined]) {
+      renderWorldEffects({...options,effects:[effect],viewer});
+      expect(drawn()).toBe(false);
+    }
+    renderWorldEffects({...options,effects:[effect],viewer:'enemy'});
+    expect(drawn()).toBe(true);ctx.clearRect(0,0,300,200);
+    renderWorldEffects({...options,effects:[{...effect,type:'heal'}],viewer:'player'});
+    expect(drawn()).toBe(true);
   });
 });

@@ -1,9 +1,13 @@
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
 import type { CheckpointFrame, CheckpointRequestReason, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../../shared/net/types";
 import { restoreSnapshotIntoGame } from "../../shared/sim";
+import { prepareShipPlanningJobs } from "../../shared/ship-planning-job";
 import type { GameCommand, PlayerId } from "../../shared/types";
 import type { SimulationEngine } from "../../shared/sim/engine";
 import type { NetTransport } from "./transport";
+
+const MAX_FRAMES_PER_RENDER = 4;
+const RENDER_UPDATE_BUDGET_MS = 8;
 
 export type LockstepClientOptions = {
   roomId: string;
@@ -19,6 +23,7 @@ export class LockstepClient {
   private localInputSeq = 0;
   private lastChecksumTick = -1;
   private epoch = 0;
+  private closed = false;
   private readonly castsAwaitingFrame = new Map<number, Extract<GameCommand, { type: "cast" }>>();
 
   constructor(private readonly options: LockstepClientOptions) {
@@ -51,6 +56,9 @@ export class LockstepClient {
   }
 
   close(): void {
+    if (this.closed) return;
+    this.closed = true;
+    this.frameBuffer.clear();
     this.castsAwaitingFrame.clear();
     this.options.transport.close();
   }
@@ -79,13 +87,22 @@ export class LockstepClient {
   }
 
   receiveFrame(frame: CommandFrame): void {
+    if (this.closed) return;
     if (frame.roomId !== this.options.roomId) throw new Error(`Received frame for ${frame.roomId} while joined to ${this.options.roomId}`);
     this.frameBuffer.push(frame);
   }
 
   updateToRenderTime(): boolean {
+    if (this.closed) return false;
+    const started = performance.now();
+    // Restored navigation graphs are disposable derived state. Rebuild at
+    // most one prior search slice per render, leaving authoritative frames
+    // buffered until their exact simulation inputs are ready.
+    if (!prepareShipPlanningJobs(this.options.engine.game, 1)) return false;
+    if (performance.now() - started >= RENDER_UPDATE_BUDGET_MS) return false;
     let changed = false;
-    while (this.frameBuffer.has(this.options.engine.game.tick)) {
+    let appliedFrames = 0;
+    while (appliedFrames < MAX_FRAMES_PER_RENDER && this.frameBuffer.has(this.options.engine.game.tick)) {
       const frame = this.frameBuffer.take(this.options.engine.game.tick);
       if (!frame) return changed;
       try {
@@ -100,13 +117,22 @@ export class LockstepClient {
         return changed;
       }
       changed = true;
+      appliedFrames += 1;
       this.emitChecksumIfDue();
+      // Catch up in FIFO order while still giving input and paint a turn.
+      if (performance.now() - started >= RENDER_UPDATE_BUDGET_MS) break;
     }
     return changed;
   }
 
   private receiveMessage(message: ServerNetMessage): void {
-    if (message.type === "hello") this.epoch = message.epoch;
+    if (message.type === "hello") {
+      if (message.roomId !== this.options.roomId || message.playerId !== this.options.playerId) return;
+      this.epoch = message.epoch;
+      // A resumed or replaced match may already have a newer epoch; request truth only after the server handshake.
+      this.requestCheckpoint("initial-sync");
+      return;
+    }
     if (message.type === "frame") {
       if (!this.acceptsServerEpoch(message)) return;
       this.receiveFrame(message.frame);
@@ -130,6 +156,7 @@ export class LockstepClient {
   }
 
   private handleServerMessage(message: ServerNetMessage): void {
+    if (this.closed) return;
     try {
       this.receiveMessage(message);
     } catch (error) {

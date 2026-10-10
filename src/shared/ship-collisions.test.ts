@@ -4,7 +4,7 @@ import { createUnit } from './map';
 import { hullFits, type ShipPose } from './ship-navigation';
 import { hullContact, shipProfile } from './ship-geometry';
 import { beginShipMotionFrame, advanceShip } from './ship-motion';
-import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose, sweepShipCollision } from './ship-collisions';
+import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose, shipCollisionImpactCount, sweepShipCollision } from './ship-collisions';
 import { createGame } from './sim';
 import { perTick } from './time';
 import type { Building, GameMap, Unit } from './types';
@@ -30,6 +30,21 @@ function dock(x: number, radius = 32): Building {
 }
 
 describe('continuous physical ship impacts', () => {
+  it.each(['deck crew', 'ship', 'deep-water walker'] as const)('keeps collision-frame velocity lazy after ignoring a %s ground step', kind => {
+    const map = water(), { a, units } = pair();
+    const crew = createUnit('crew', 'player', 'worker', a.x, a.y), walker = createUnit('walker', 'player', 'footman', 700, 1000);
+    units.push(crew, walker);
+    expect(boardUnit(a, crew, units)).toBe(true);
+    const body = kind === 'deck crew' ? crew : kind === 'ship' ? a : walker;
+    const goal = { x: body.x + 100, y: body.y };
+    expect(constrainGroundShipStep(map, body, body, goal, units)).toBe(goal);
+    a.sailing!.speed = 32; a.sailing!.velocityX = 32;
+    expect(advanceShip(a, map, units, { surge: perTick(32) })).toBe(false);
+    const impacts = drainShipCollisionImpacts(units);
+    expect(impacts).toHaveLength(1);
+    expect(impacts[0]!.closingSpeed).toBeCloseTo(32);
+  });
+
   it('reports a high-speed friendly impact before overlap and stops inward momentum', () => {
     const map = water(), { a, b, units } = pair();
     beginShipMotionFrame(units, map);
@@ -162,5 +177,53 @@ describe('continuous physical ship impacts', () => {
       beginShipMotionFrame(units, map); advanceShip(ship, map, units, { surge: .1 });
       expect(drainShipCollisionImpacts(units)).toEqual([]); expect(hullFits(map, ship)).toBe(true);
     }
+  });
+
+  it('clears undrained impacts when the last hull dies and rebuilds current dock geometry when it returns', () => {
+    const map = water(), { a, b, units } = pair();
+    beginShipMotionFrame(units, map);
+    advanceShip(a, map, units, { surge: perTick(64) });
+    expect(shipCollisionImpactCount(units)).toBe(1);
+    a.hp = 0; b.hp = 0;
+    beginShipMotionFrame(units, map);
+    expect(shipCollisionImpactCount(units)).toBe(0);
+    expect(drainShipCollisionImpacts(units)).toEqual([]);
+
+    a.hp = a.maxHp; a.sailing!.speed = 64; a.sailing!.velocityX = 64;
+    const yard = dock(a.x + bow(a) + 32 + .4);
+    beginShipMotionFrame(units, map, [yard]);
+    expect(advanceShip(a, map, units, { surge: perTick(64) })).toBe(false);
+    expect(drainShipCollisionImpacts(units)[0]?.other).toBe(yard);
+    yard.x += 600;
+    beginShipMotionFrame(units, map, [yard]);
+    expect(advanceShip(a, map, units, { surge: perTick(64) })).toBe(true);
+    expect(drainShipCollisionImpacts(units)).toEqual([]);
+  });
+
+  it('keeps an empty frame separate from another game with undrained impacts and admits a newly added hull', () => {
+    const map = water(), impact = pair(), walker = createUnit('walker', 'player', 'footman', 700, 1000), units = [walker];
+    beginShipMotionFrame(impact.units, map);
+    advanceShip(impact.a, map, impact.units, { surge: perTick(64) });
+    beginShipMotionFrame(units, map);
+    const goal = { x: 1400, y: 1000 };
+    expect(constrainGroundShipStep(map, walker, walker, goal, units)).toBe(goal);
+    expect(drainShipCollisionImpacts(units)).toEqual([]);
+    expect(shipCollisionImpactCount(impact.units)).toBe(1);
+
+    map.terrain!.cells = ','.repeat(128 * 128);
+    units.push(boat('arriving', 1000, 0, 0));
+    beginShipMotionFrame(units, map);
+    expect(constrainGroundShipStep(map, walker, walker, goal, units).x).toBeLessThan(1000);
+    expect(drainShipCollisionImpacts(impact.units)).toHaveLength(1);
+  });
+
+  it('rebuilds a direct helper frame after an equal-length member replacement', () => {
+    const map = water(), walker = createUnit('walker', 'player', 'footman', 700, 1000), units = [walker];
+    beginShipMotionFrame(units, map);
+    const replacement = boat('replacement'), yard = dock(replacement.x + bow(replacement) + 32 + .4);
+    units[0] = replacement;
+    beginShipMotionFrame(units, map, [yard]);
+    expect(advanceShip(replacement, map, units, { surge: perTick(64) })).toBe(false);
+    expect(drainShipCollisionImpacts(units)[0]?.other).toBe(yard);
   });
 });

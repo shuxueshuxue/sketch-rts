@@ -1,0 +1,550 @@
+{
+  "formatVersion": 1,
+  "generatedWith": "image_gen",
+  "createdOn": "2026-10-09",
+  "description": "Original generated miniature paintings, cropped without repainting; physical skills in steel, wood and leather, magic in vivid jewel colors.",
+  "sourceImages": [
+    {
+      "file": "skills-source.webp",
+      "sha256": "cea726bbc2247ae1738e5e7238a425ec5e2119b31e2a0461ce818555083fe96c",
+      "width": 1254,
+      "height": 1254,
+      "columns": [
+        0,
+        251,
+        503,
+        753,
+        1003,
+        1254
+      ],
+      "rows": [
+        0,
+        240,
+        485,
+        724,
+        957,
+        1254
+      ]
+    },
+    {
+      "file": "statuses-source.webp",
+      "sha256": "f3a162645cca72c7106068986adec3adea72efe7aecfdfd3d0e89840659c5cb3",
+      "width": 1254,
+      "height": 1254,
+      "columns": [
+        0,
+        627,
+        1254
+      ],
+      "rows": [
+        0,
+        587,
+        1254
+      ]
+    }
+  ],
+  "output": {
+    "count": 29,
+    "size": 128,
+    "format": "webp",
+    "quality": 86,
+    "totalBytes": 184250,
+    "runtimePath": "public/art/abilities",
+    "reviewSheet": "ability-icons-review.webp"
+  },
+  "icons": [
+    {
+      "id": "heal",
+      "label": "Heal",
+      "family": "magic",
+      "file": "art/abilities/heal.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 5756,
+      "sha256": "6c3d5dc61240fadeb4922c171fe76cc6f86b553bd1c6d8663e216d1e48b326b4",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 2,
+        "width": 247,
+        "height": 236
+      }
+    },
+    {
+      "id": "summon",
+      "label": "Summon",
+      "family": "magic",
+      "file": "art/abilities/summon.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6274,
+      "sha256": "3dfbd7214a850af8d62a2e7475c46b1c22b2c451eb5d572f19f9b6a6aef8cab5",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 253,
+        "y": 2,
+        "width": 248,
+        "height": 236
+      }
+    },
+    {
+      "id": "curse",
+      "label": "Curse",
+      "family": "magic",
+      "file": "art/abilities/curse.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6194,
+      "sha256": "424f3f818e9dbddfe759f5841e28e191d1694895cfee4e99aa3e97db9661d3e2",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 505,
+        "y": 2,
+        "width": 246,
+        "height": 236
+      }
+    },
+    {
+      "id": "emberMend",
+      "label": "Ember Mend",
+      "family": "magic",
+      "file": "art/abilities/emberMend.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 5422,
+      "sha256": "79dcfd1ce63306e70b73e1a0b5d3343eb9208871e45400f81ca84cf24b7f7232",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 755,
+        "y": 2,
+        "width": 246,
+        "height": 236
+      }
+    },
+    {
+      "id": "cinderSoul",
+      "label": "Cinder Soul",
+      "family": "magic",
+      "file": "art/abilities/cinderSoul.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 7064,
+      "sha256": "0e528bf6dfb6c3411b5426d20bff5e2c287457052886c67e81aa83ce83d3650a",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 1005,
+        "y": 2,
+        "width": 247,
+        "height": 236
+      }
+    },
+    {
+      "id": "ashCurse",
+      "label": "Ash Curse",
+      "family": "magic",
+      "file": "art/abilities/ashCurse.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6586,
+      "sha256": "744c66171c3bd32d2a9c6674ebb1fb4493458cb70f5418470d59eb0bbc96b4c3",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 242,
+        "width": 247,
+        "height": 241
+      }
+    },
+    {
+      "id": "charge",
+      "label": "Charge",
+      "family": "physical",
+      "file": "art/abilities/charge.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 7224,
+      "sha256": "a50f05d856e611b27fbb291abdaeb830c9a0dd11fed6cc02ec06ac1c095db513",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 253,
+        "y": 242,
+        "width": 248,
+        "height": 241
+      }
+    },
+    {
+      "id": "stomp",
+      "label": "Stomp",
+      "family": "physical",
+      "file": "art/abilities/stomp.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 8872,
+      "sha256": "7c62cc36956b9ca4dc5a46baa0a6027fba0ad4407a515525ebf0ddf2ba6f1cdf",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 505,
+        "y": 242,
+        "width": 246,
+        "height": 241
+      }
+    },
+    {
+      "id": "bloodlust",
+      "label": "Bloodlust",
+      "family": "magic",
+      "file": "art/abilities/bloodlust.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6046,
+      "sha256": "fdea4868ef4b3047e4a6126476078e8bfeb7188f745ac281bac8199de0968150",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 755,
+        "y": 242,
+        "width": 246,
+        "height": 241
+      }
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "family": "magic",
+      "file": "art/abilities/web.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 8674,
+      "sha256": "d94b8b27853bd3f69e3a93542ca24a256197576776b01b6cb9ee8a5032ef6944",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 1005,
+        "y": 242,
+        "width": 247,
+        "height": 241
+      }
+    },
+    {
+      "id": "pinningBolt",
+      "label": "Pinning Bolt",
+      "family": "physical",
+      "file": "art/abilities/pinningBolt.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 7292,
+      "sha256": "3f7ceaab20f1f37682a6caa0b9417dc3e4f01001bde9614d6ea0b3e58b6780bd",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 487,
+        "width": 247,
+        "height": 235
+      }
+    },
+    {
+      "id": "incendiaryFlume",
+      "label": "Burning Oil",
+      "family": "physical",
+      "file": "art/abilities/incendiaryFlume.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6974,
+      "sha256": "f536f71179a374476297ff214a96f210c9696a9c77bed8579c1cf9295bddc222",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 253,
+        "y": 487,
+        "width": 248,
+        "height": 235
+      }
+    },
+    {
+      "id": "veteranResilience",
+      "label": "Battle Hardened",
+      "family": "physical",
+      "file": "art/abilities/veteranResilience.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6620,
+      "sha256": "b0423ac042802841b474dbd0abfb47b931684ce88c1c2ff1b98aee3275671da3",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 505,
+        "y": 487,
+        "width": 246,
+        "height": 235
+      }
+    },
+    {
+      "id": "veteranMobility",
+      "label": "Swift Movement",
+      "family": "physical",
+      "file": "art/abilities/veteranMobility.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6140,
+      "sha256": "5e858c97e369c41dd52d0ccd619cb5c934176fe377e30dbf54c0d436742f4a67",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 755,
+        "y": 487,
+        "width": 246,
+        "height": 235
+      }
+    },
+    {
+      "id": "veteranCommand",
+      "label": "Coordinated Assault",
+      "family": "physical",
+      "file": "art/abilities/veteranCommand.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 5618,
+      "sha256": "5aa34a0c4ef7505a115716847279448b7e20ebb77bb90930eac194a0f27330af",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 1005,
+        "y": 487,
+        "width": 247,
+        "height": 235
+      }
+    },
+    {
+      "id": "veteranVigilance",
+      "label": "Watchful Company",
+      "family": "physical",
+      "file": "art/abilities/veteranVigilance.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6768,
+      "sha256": "861fe10fd1010468448f8aefcf6aa39aa5ecb9c93e286869318a18fa6d1147cb",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 726,
+        "width": 247,
+        "height": 229
+      }
+    },
+    {
+      "id": "veteranRally",
+      "label": "Rallying Cry",
+      "family": "physical",
+      "file": "art/abilities/veteranRally.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 4862,
+      "sha256": "0f85a5683b2c3db79f661b29e0cefcae680521e0bad72913f17b6260e835129d",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 253,
+        "y": 726,
+        "width": 248,
+        "height": 229
+      }
+    },
+    {
+      "id": "veteranPhalanx",
+      "label": "Hold the Line",
+      "family": "physical",
+      "file": "art/abilities/veteranPhalanx.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6482,
+      "sha256": "2650c31eec3f0fef883483d88fc7a13d47af75320fd31339948ff4a63a8c951e",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 505,
+        "y": 726,
+        "width": 246,
+        "height": 229
+      }
+    },
+    {
+      "id": "veteranSteadyAim",
+      "label": "Steady Aim",
+      "family": "physical",
+      "file": "art/abilities/veteranSteadyAim.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 4792,
+      "sha256": "bd57c99267af2d7d710b50a4705265840ad2a8ff6107ae389613656e7b8b9ed6",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 755,
+        "y": 726,
+        "width": 246,
+        "height": 229
+      }
+    },
+    {
+      "id": "veteranMarch",
+      "label": "March Leader",
+      "family": "physical",
+      "file": "art/abilities/veteranMarch.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6776,
+      "sha256": "d83a1644e09d10c8ea070bc5ccb9a2c150e1d382b62f01b25b641db7d0c04077",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 1005,
+        "y": 726,
+        "width": 247,
+        "height": 229
+      }
+    },
+    {
+      "id": "veteranHealingWave",
+      "label": "Restoring Wave",
+      "family": "magic",
+      "file": "art/abilities/veteranHealingWave.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 7090,
+      "sha256": "23ff83c5dff47199156fa088e7acceecf7f653821ca95e6b9d09ce33004002c7",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 959,
+        "width": 247,
+        "height": 293
+      }
+    },
+    {
+      "id": "veteranInnerFire",
+      "label": "Inner Fire",
+      "family": "magic",
+      "file": "art/abilities/veteranInnerFire.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6012,
+      "sha256": "06f02ffd8be1c33d255773b26567826dc0a2878563d4f6f8169094a6fc2fbb09",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 253,
+        "y": 959,
+        "width": 248,
+        "height": 293
+      }
+    },
+    {
+      "id": "veteranRenewal",
+      "label": "Renewing Presence",
+      "family": "magic",
+      "file": "art/abilities/veteranRenewal.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6930,
+      "sha256": "be4444033263387ba1bf737a6e63d5ce9ed43620a729e1e521ffe1577fb5fe21",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 505,
+        "y": 959,
+        "width": 246,
+        "height": 293
+      }
+    },
+    {
+      "id": "veteranSiegeDrill",
+      "label": "Rangefinding",
+      "family": "physical",
+      "file": "art/abilities/veteranSiegeDrill.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 5872,
+      "sha256": "95ed51fa22f7525bcf004762014eb55bba5ca99e40d705df0719821ab43f8841",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 755,
+        "y": 959,
+        "width": 246,
+        "height": 293
+      }
+    },
+    {
+      "id": "veteranEndurance",
+      "label": "Enduring Recovery",
+      "family": "physical",
+      "file": "art/abilities/veteranEndurance.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 4448,
+      "sha256": "c1ebb22ca9c784aa2179571a4fe35ef205173b4769ab14b269aee81846d641fe",
+      "source": "skills-source.webp",
+      "crop": {
+        "x": 1005,
+        "y": 959,
+        "width": 247,
+        "height": 293
+      }
+    },
+    {
+      "id": "guardianScroll",
+      "label": "Guardian Ward",
+      "family": "magic",
+      "file": "art/abilities/guardianScroll.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6900,
+      "sha256": "0d66abba1bfc2c587e527a4d6e2a7e26f113b2744c1f4416a3aae88a1fcc310e",
+      "source": "statuses-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 2,
+        "width": 623,
+        "height": 583
+      }
+    },
+    {
+      "id": "statusSlow",
+      "label": "Slowed",
+      "family": "physical",
+      "file": "art/abilities/statusSlow.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 6394,
+      "sha256": "060c7a527ddb8d95a7304130ba7816aebb733abfae49b95d3f6f8be8f3312894",
+      "source": "statuses-source.webp",
+      "crop": {
+        "x": 629,
+        "y": 2,
+        "width": 623,
+        "height": 583
+      }
+    },
+    {
+      "id": "statusPoison",
+      "label": "Poisoned",
+      "family": "magic",
+      "file": "art/abilities/statusPoison.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 4648,
+      "sha256": "54bbdcbcd316dfe4b04ae6082e155f23878a6c47e965ab12d6d1ace34616102f",
+      "source": "statuses-source.webp",
+      "crop": {
+        "x": 2,
+        "y": 589,
+        "width": 623,
+        "height": 663
+      }
+    },
+    {
+      "id": "statusStun",
+      "label": "Stunned",
+      "family": "physical",
+      "file": "art/abilities/statusStun.webp",
+      "width": 128,
+      "height": 128,
+      "bytes": 5520,
+      "sha256": "5225027e56bda9b54f4ac11f31dad34bed9a8ddc23acc47891e0f3375ac5a4a0",
+      "source": "statuses-source.webp",
+      "crop": {
+        "x": 629,
+        "y": 589,
+        "width": 623,
+        "height": 663
+      }
+    }
+  ]
+}

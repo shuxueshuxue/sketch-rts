@@ -97,10 +97,18 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(JSON.stringify(frame.snapshot)).toBe(original);
     game.tick+=GANGWAY_SETUP_TICKS;updateShipGangways(game.map,game.units,game.tick,game);
     crew.gangway={sourceId:source.id,targetId:target.id,t:.5,lateral:0};
+    frame.selectedIds=new Set([crew.id]);frame.hoveredId=crew.id;
     frame.snapshot=snapshotGame(game);layer.draw(frame);
     expect(active()).toHaveLength(1);
     const point=gangwayCrossingPosition(crew.gangway,game.units)!;
     expect(layer.positions.get(crew.id)!.x).toBeCloseTo(point.x);expect(layer.positions.get(crew.id)!.y).toBeCloseTo(point.y);
+    const marker=gpu.scene!.children.find(object=>object.name==='SelectionSurface' && object.visible) as InstancedMesh;
+    expect(marker.count,'selected and hovered crew use one actual bridge-plane marker').toBe(1);
+    marker.getMatrixAt(0,matrix);
+    const bridgeHeight=(shipProfile(source)!.deckHeight+shipProfile(target)!.deckHeight)/2;
+    expect(matrix.elements[13]).toBeGreaterThan(bridgeHeight);expect(matrix.elements[13]).toBeLessThan(bridgeHeight+.16);
+    const slope=(shipProfile(target)!.deckHeight-shipProfile(source)!.deckHeight)/Math.hypot(surface.target.x-surface.source.x,surface.target.y-surface.source.y);
+    expect(matrix.elements[1]!/Math.hypot(matrix.elements[0]!,matrix.elements[2]!)).toBeCloseTo(slope,4);
     source.x+=32;target.x+=32;game.tick++;frame.snapshot=snapshotGame(game);layer.draw(frame);
     expect(layer.positions.get(crew.id)!.x).toBeCloseTo(point.x+32);
     active()[0]!.getMatrixAt(0,matrix);expect(matrix.elements[12]).toBeCloseTo((surface.source.x+surface.target.x)/2+32,4);

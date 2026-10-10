@@ -57,6 +57,7 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
         issueCommandFrame(game, runAiCommandEntriesFromScripts(snapshot, 'us', scripts, context)
           .map(entry => ({ ...entry, playerId: 'us', source: 'external-agent' as const })));
       }
+      // A reassigned builder can still be carrying gold from the old mine.
       const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
         && unit.order.resourceId === 'replacement' && unit.order.phase === 'gather' && unit.carryingGold === 0);
       const returning = game.units.filter(unit => unit.owner === 'us' && minedLoads.has(unit.id) && unit.order.type === 'mine'

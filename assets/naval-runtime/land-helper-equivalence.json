@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "scope": "600 ticks of complete helper-observable JSON equality; this is not a complete stepGame proof or a performance benchmark.",
+  "nodeVersion": "20.20.2",
+  "baselineHelpersCommit": "f33904e10552e1eb8d0c2a202b6709f536b5b4d6",
+  "testedFinalSourceCommit": "02ca8908a9b937d910b432457990870af8bff656",
+  "finalHelpersFirstPresentIn": "be1b062f863043a6e8397a3620ed07f6d7d13a32",
+  "baselineProvenance": "The five frozen helper files match f33904e byte-for-byte. The surrounding copied tree is not represented as a pure baseline commit; the local runtime import closure has only these five differing files.",
+  "sourceSha256": {
+    "before": {
+      "src/shared/ship-motion.ts": "6b7b0eb872455ea437f1cc690534ab62ed344e160a4e4dc2e59ad8a9bce563a2",
+      "src/shared/ship-collisions.ts": "f70744a906f2854e4a2252279195e0acd601111741018a7e765a8204c8804fad",
+      "src/shared/crew-rendezvous.ts": "38296157473b7e27034fd6e5ff5129cfcff7b8b10475f1bc4024133562a8587e",
+      "src/shared/ship-planning-budget.ts": "9d25baf916cbf43c08aea0ee06ea9c1dfd051a0dd5b4768789d58b7bfb87a213",
+      "src/shared/ship-defense.ts": "6d2ea73df4b5ed2f40e8add889ca2d1d875a6a92a6ba31ad4c5441f7b6ef1e7b"
+    },
+    "after": {
+      "src/shared/ship-motion.ts": "f7d632213276dc00f97b0f0c67f4fa22a127fa75080ca84c3c57b914fb377cb1",
+      "src/shared/ship-collisions.ts": "42043b515960aa8b889905931f24014f003af672ad3fb68c43b505268fc55dbe",
+      "src/shared/crew-rendezvous.ts": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+      "src/shared/ship-planning-budget.ts": "697f49f212856f8fdda2fafd549999adb1afcaa9c3e34e5eccf5a06845c88f25",
+      "src/shared/ship-defense.ts": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762"
+    }
+  },
+  "commonDependencies": {
+    "method": "Static local runtime import closure from the seven helper/deck/geometry entries, excluding type-only imports; sorted compact JSON of path-to-SHA256 values.",
+    "files": 52,
+    "sha256": "1820de4a23d692ed83218c08e48feadf5998433f00f8a0ee08d0404ea7ff901d",
+    "onlyChangedFiles": [
+      "src/shared/crew-rendezvous.ts",
+      "src/shared/ship-collisions.ts",
+      "src/shared/ship-defense.ts",
+      "src/shared/ship-motion.ts",
+      "src/shared/ship-planning-budget.ts"
+    ]
+  },
+  "observableProof": {
+    "ticks": 600,
+    "completeJsonEqualEveryTick": true,
+    "concatenatedCompleteJsonSha256": "dd30fbfa855d0f0dc1878c16fc49d5486801cbf94be07376a9b4848269ae2fa6",
+    "comparedFields": [
+      "units (all serialized fields, including orders, crew cabin/deck state, sailing routes and planner tickets)",
+      "map",
+      "collision impacts",
+      "undrained impact count",
+      "direct ground-step result",
+      "boarding hold ship IDs",
+      "automatic-defense intents",
+      "planner grant IDs"
+    ],
+    "physicalImpacts": 1,
+    "emptyFramesWithZeroImpactCountAndDrain": 20,
+    "groundClips": 0
+  },
+  "fixture": {
+    "map": "bareDuel metadata; 4096 x 4096; 128 x 128 all-water cells of size32",
+    "initialUnits": [
+      "two friendly transports",
+      "friendly warship hunter",
+      "enemy hold-order warship quarry",
+      "cabin/deck-attached footman",
+      "deep-water footman walker"
+    ],
+    "events": [
+      {
+        "tick": 40,
+        "operation": "Crew leaves cabin and receives a board order for the other transport."
+      },
+      {
+        "tick": 60,
+        "operation": "Crew receives idle order."
+      },
+      {
+        "tick": 100,
+        "operation": "Every existing ship dies; both sides retain their units array."
+      },
+      {
+        "tick": 120,
+        "operation": "Ships regain HP and each helper frame is rebuilt."
+      },
+      {
+        "tick": 200,
+        "operation": "Append a live transport to the same array."
+      },
+      {
+        "tick": 300,
+        "operation": "Replace the unit arrays through JSON serialization/restore; move the dock input300 units."
+      },
+      {
+        "tick": 400,
+        "operation": "Remove the second transport by replacing each unit array."
+      }
+    ],
+    "eachTick": "Begin motion/collision and planning frames; prepare crew and defense; request planner grants; two yaw/surge movement requests per moving hull; sync decks; settle crossings; direct ground constraint; count and drain collision impacts. Identical serialized results are asserted before updating the observable hash."
+  },
+  "coverageLimits": [
+    "This fixture observes one physical impact and 20 frames with all ships dead. It does not itself create ground clipping; groundClips is0.",
+    "Dock input is changed symmetrically, but dock geometry is not part of the serialized map and no separate dock impact is claimed.",
+    "Pure-helper early-return laziness, equal-length replacement, orphan cleanup, shoreline/ground-body/dock/obstacle contact and first boarding/transfer rely on the existing regression cases below, rather than a claim that this600-tick fixture exercises each one.",
+    "No frame duration, test threshold, original assertion, navigation resolution or physical check is weakened by this proof."
+  ],
+  "regressionCoverage": {
+    "src/shared/ship-collisions.test.ts": [
+      "keeps collision-frame velocity lazy after ignoring a deck crew / ship / deep-water walker ground step (three variants; actual later closing speed32)",
+      "clears undrained impacts when the last hull dies and rebuilds current dock geometry when it returns",
+      "keeps an empty frame separate from another game with undrained impacts and admits a newly added hull",
+      "rebuilds a direct helper frame after an equal-length member replacement",
+      "clips ground walking continuously at a hull without putting the soldier aboard",
+      "blocks a dock foundation and destructible obstacle using their real footprints",
+      "records a damaging shoreline impact and keeps gentle blocked coast contact quiet"
+    ],
+    "src/shared/ship-motion.test.ts": [
+      "replenishes the retained yaw, travel and astern budgets only at the next frame"
+    ],
+    "src/shared/boarding-control.test.ts": [
+      "cleans an abandoned implicit approach even when the surviving list has no hulls",
+      "finishes a large-to-small crew transfer and its saved continuation identically"
+    ]
+  },
+  "reproduction": {
+    "originalHarnessSha256": "a8fb0a86717138a35296ce8f044ac85f7421e056b7cec65e913bf6fb9fd867ad",
+    "portableHarnessSha256": "8f5a08a072a3490903b3451d400c0cad92b54208f8c5ade9b4b9a401c463ebcf",
+    "note": "Only module/result paths and erased TypeScript fixture types differ in the portable harness. The executed fixture statements, tick count, assertions and JSON hash formula are unchanged. Create two checkouts of testedFinalSourceCommit; replace the five listed files in the before checkout with baselineHelpersCommit versions. Save portableHarnessSource as compare-helpers.mts, then use the Node20 tsx loader with finalRoot beforeRoot outputJson as its three positional arguments.",
+    "portableHarnessSource": "import assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { writeFileSync } from 'node:fs';\nimport { pathToFileURL } from 'node:url';\ntype GameMap = any; type Unit = any;\n\nconst [finalRoot, beforeRoot, resultPath] = process.argv.slice(2);\nassert.ok(finalRoot && beforeRoot && resultPath, 'pass final checkout, baseline helper checkout and result JSON path');\nconst { createMap, createUnit } = await import(pathToFileURL(`${finalRoot}/src/shared/map.ts`).href);\nasync function bundle(root: string) {\n  const module = (name: string) => import(pathToFileURL(`${root}/src/shared/${name}.ts`).href);\n  return {\n    motion: await module('ship-motion'),\n    collision: await module('ship-collisions'),\n    rendezvous: await module('crew-rendezvous'),\n    planning: await module('ship-planning-budget'),\n    defense: await module('ship-defense'),\n    decks: await module('decks'),\n    geometry: await module('ship-geometry'),\n  };\n}\nconst before = await bundle(beforeRoot!), after = await bundle(finalRoot!);\nconst terrain = { cols: 128, rows: 128, cell: 32, cells: '~'.repeat(128 * 128) };\nconst map: GameMap = { ...createMap('bareDuel'), width: 4096, height: 4096, terrain };\nconst a = createUnit('a', 'player', 'transport', 1000, 1000);\nconst b = createUnit('b', 'player', 'transport', 1250, 1000);\nconst hunter = createUnit('hunter', 'player', 'warship', 1800, 1800);\nconst quarry = createUnit('quarry', 'enemy', 'warship', 2250, 1800);\nconst crew = createUnit('crew', 'player', 'footman', 1000, 1000);\nconst walker = createUnit('walker', 'player', 'footman', 700, 1000);\nfor (const ship of [a, b, hunter, quarry]) ship.sailing = { heading: 0, speed: ship === a ? 64 : 0, load: 0, balance: 0, velocityX: ship === a ? 64 : 0, velocityY: 0 };\na.order = { type: 'move', x: 2700, y: 1000 };\nquarry.order = { type: 'hold', x: quarry.x, y: quarry.y };\ncrew.deck = { shipId: a.id, x: -20, y: 0 };\ncrew.cabin = { shipId: a.id };\nconst yard = { id: 'dock', kind: 'shipyard', owner: 'player', x: 2000, y: 2300, radius: 32, hp: 1000, maxHp: 1000 };\nlet oldUnits = structuredClone([a, b, hunter, quarry, crew, walker]);\nlet newUnits = structuredClone(oldUnits);\nconst oldMap = structuredClone(map), newMap = structuredClone(map);\nconst oldYard = structuredClone(yard), newYard = structuredClone(yard);\nconst hash = createHash('sha256');\nlet contacts = 0, groundClips = 0, frameResets = 0;\n\nfunction transition(units: Unit[], tick: number) {\n  if (tick === 40) { const crew = units.find(unit => unit.id === 'crew')!; delete crew.cabin; crew.order = { type: 'board', transportId: 'b' }; }\n  if (tick === 60) units.find(unit => unit.id === 'crew')!.order = { type: 'idle' };\n  if (tick === 100) for (const unit of units) if (unit.sailing) unit.hp = 0;\n  if (tick === 120) for (const unit of units) if (unit.sailing) unit.hp = unit.maxHp;\n  if (tick === 200) { const ship = createUnit('late', 'player', 'transport', 1500, 2300); ship.sailing = { heading: 0, speed: 64, load: 0, balance: 0, velocityX: 64, velocityY: 0 }; ship.order = { type: 'move', x: 3000, y: 2300 }; units.push(ship); }\n  if (tick === 400) return units.filter(unit => unit.id !== 'b');\n  return units;\n}\n\nfunction step(mod: Awaited<ReturnType<typeof bundle>>, units: Unit[], map: GameMap, yard: typeof oldYard, tick: number) {\n  if (tick === 300) yard.x -= 300;\n  mod.motion.beginShipMotionFrame(units, map, [yard]);\n  mod.planning.beginShipPlanningFrame(units, tick);\n  mod.rendezvous.prepareCrewRendezvous(map, units);\n  const holds = mod.rendezvous.boardingHoldShips(units);\n  const defense = mod.defense.prepareShipDefenseFrame({ units, map, items: [], teams: { player: 'a', enemy: 'b' } }, (ship: Unit, range: number, visit: (unit: Unit) => void) => {\n    for (const enemy of units) if (enemy.owner !== ship.owner && Math.hypot(enemy.x - ship.x, enemy.y - ship.y) <= range) visit(enemy);\n  }, holds);\n  const grants: string[] = [];\n  for (const ship of units) if (ship.sailing && ship.hp > 0) {\n    if (mod.planning.tryAdmitShipPlan(ship)) grants.push(ship.id);\n    if (ship.id === 'b' || ship.id === 'hunter' || ship.id === 'quarry') continue;\n    const yaw = tick % 40 < 20 ? .004 : -.004;\n    mod.motion.advanceShip(ship, map, units, { yaw, surge: tick % 100 < 80 ? 3.2 : -1.6 });\n    mod.motion.advanceShip(ship, map, units, { yaw, surge: tick % 100 < 80 ? 3.2 : -1.6 });\n  }\n  mod.decks.syncDecks(units);\n  mod.decks.settleGangwayCrossings(units);\n  const walker = units.find(unit => unit.id === 'walker')!;\n  const at = mod.collision.constrainGroundShipStep(map, walker, walker, { x: 1400, y: 1000 }, units);\n  const impactCount = mod.collision.shipCollisionImpactCount(units);\n  const impacts = mod.collision.drainShipCollisionImpacts(units);\n  return { units, map, impacts, impactCount, at, holds: [...holds], defense: [...defense], grants };\n}\n\nfor (let tick = 0; tick < 600; tick++) {\n  oldUnits = transition(oldUnits, tick); newUnits = transition(newUnits, tick);\n  if (tick === 300) { oldUnits = JSON.parse(JSON.stringify(oldUnits)); newUnits = JSON.parse(JSON.stringify(newUnits)); }\n  const old = step(before, oldUnits, oldMap, oldYard, tick), current = step(after, newUnits, newMap, newYard, tick);\n  const previousJson = JSON.stringify(old), currentJson = JSON.stringify(current);\n  assert.equal(currentJson, previousJson, `complete helper state differs at tick ${tick}`);\n  hash.update(currentJson);\n  contacts += current.impacts.length;\n  if (current.at.x !== 1400) groundClips++;\n  if (tick >= 100 && tick < 120) { assert.equal(current.impactCount, 0); assert.equal(current.impacts.length, 0); frameResets++; }\n}\nconst result = { scope: '600 ticks of complete helper-observable JSON equivalence; identical map, orders, hull poses, crew, defense, saved planner tickets, impacts and direct ground queries', ticks: 600, contacts, groundClips, emptyFramesWithReset: frameResets, sha256: hash.digest('hex') };\nassert.ok(contacts > 0, 'fixture must exercise real physical impacts');\nwriteFileSync(resultPath!, JSON.stringify(result, null, 2) + '\\n');\nconsole.log(JSON.stringify(result));\n"
+  }
+}

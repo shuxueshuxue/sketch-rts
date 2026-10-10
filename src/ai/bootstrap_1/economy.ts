@@ -61,7 +61,29 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 // One pending construction of each kind: a walking colony builder does not lock home tech.
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
-  return issueV6Construction(economy, kind, point, used, play);
+  // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
+  const ready = economy.workers.filter(worker => worker.carryingGold === 0);
+  // With multiple completed halls but only one income, repeated trips by a
+  // distant idle builder delay restoring the second mine. Use a nearby empty-handed
+  // worker until that replacement is working, then resume lane preservation.
+  if (economy.own.filter(building => building.kind === 'townHall' && building.complete).length > 1
+    && activeMiningBaseCount(economy.snapshot, economy.owner) === 1) {
+    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play)
+      ?? issueV6Construction(economy, kind, point, used, play);
+  }
+  const idle = ready.filter(worker => worker.order.type === 'idle');
+  const free = issueV6Construction({ ...economy, workers: idle }, kind, point, used, play);
+  if (free) return free;
+  const assigned = new Map<string, number>();
+  for (const worker of economy.workers) if (worker.order.type === 'mine') {
+    assigned.set(worker.order.resourceId, (assigned.get(worker.order.resourceId) ?? 0) + 1);
+  }
+  const spare = ready.filter(worker => worker.order.type === 'mine'
+    && (assigned.get(worker.order.resourceId) ?? 0) > GOLD_MINE_RULES.workstations);
+  const surplus = issueV6Construction({ ...economy, workers: spare }, kind, point, used, play);
+  if (surplus) return surplus;
+  return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play)
+    ?? issueV6Construction(economy, kind, point, used, play);
 };
 
 // A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.

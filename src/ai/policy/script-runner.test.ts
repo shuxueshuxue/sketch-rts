@@ -4,8 +4,41 @@ import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import { sketchScene } from "../../sdk/scene";
 import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
+import { aiSnapshotQuery } from "./snapshot";
 
 describe("AI script runner", () => {
+  it("reuses unchanged budgets before isolating a spent budget", () => {
+    const game = sketchScene("shared-economy-frame").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .playerState("v2", { gold: 500 })
+      .townHall("v2", 500, 500, { id: "hall" }).townHall("v1", 3400, 3400)
+      .worker("v2", 620, 520, { id: "worker" }).build().createGame();
+    const snapshot = snapshotGame(game), query = aiSnapshotQuery(snapshot);
+    const frames: typeof snapshot[] = [];
+    const scripts: AiScript[] = [
+      { id: "inspect", phase: "economy", run: frame => { frames.push(frame); expect(aiSnapshotQuery(frame)).toBe(query); return undefined; } },
+      { id: "economy", phase: "economy", run: frame => { frames.push(frame); expect(aiSnapshotQuery(frame)).toBe(query); return { type: "train", buildingId: "hall", unitKind: "worker" }; } },
+      { id: "afterPurchase", phase: "economy", run: frame => {
+        frames.push(frame);
+        expect(frame).not.toBe(snapshot);
+        expect(frame.players.v2!.gold).toBe(500 - UNIT_DEFS.worker.cost);
+        expect(frame.units).toBe(snapshot.units);
+        expect(frame.players.v1).toBe(snapshot.players.v1);
+        const budgetQuery = aiSnapshotQuery(frame);
+        expect(budgetQuery).not.toBe(query);
+        expect(budgetQuery.snapshot).toBe(frame);
+        expect(budgetQuery.snapshot.players.v2!.gold).toBe(500 - UNIT_DEFS.worker.cost);
+        const own = budgetQuery.unitsFor("v2"); own.length = 0;
+        expect(query.unitsFor("v2")).toHaveLength(1);
+        return undefined;
+      } },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshot, "v2", scripts).map(entry => entry.command)).toEqual([
+      { type: "train", buildingId: "hall", unitKind: "worker" },
+    ]);
+    expect(frames.slice(0, 2)).toEqual([snapshot, snapshot]);
+    expect(snapshot.players.v2!.gold).toBe(500);
+  });
   it("deducts an earlier economy purchase before a later script decides what it can afford", () => {
     const game = sketchScene("one-purchase-budget").map("bareDuel").replaceDefaults()
       .player("v2", { race: "grove" }).player("v1", { race: "ember" })

@@ -3,6 +3,8 @@ import { unitGlyphScale } from "./glyphs";
 import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
 import { menuPageMarkup } from "./menu-page";
 import { commandIconMarkup } from "./command-icons";
+import { abilityIconMarkup, abilityIconUrl, type AbilityIconId } from './ability-icons';
+import { presentUnitStatuses, type PresentedUnitStatus } from './status-presentation';
 import { WorldPresentation } from './world-presentation';
 import { resources,resourceText } from './resources';
 import { resourcePanel,disposeResourcePanel } from './resource-panel';
@@ -25,7 +27,7 @@ import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
 import "./game-chrome.css";
 import "./game-ui.css";
-import { BattleHudSelection, type HudIdentity } from "./battle-hud";
+import { BattleHudSelection, type HudIdentity, type HudStatus } from "./battle-hud";
 import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
@@ -73,6 +75,9 @@ import {
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
+import { RoomSetupSession } from './room-setup-session';
+import { unitHoverCursor } from './unit-hover-cursor';
+import { unitHoverTarget } from './unit-hover-target';
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
@@ -84,7 +89,7 @@ import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { playerDisplayName } from "./player-name";
-import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
+import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
@@ -98,7 +103,7 @@ import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
-import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type CreateRoomInput } from "../shared/rooms";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
@@ -109,7 +114,7 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type: 'boardShip'; sourceIds: string[] } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "maps" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type MenuView = "maps" | "home" | "profile" | "rooms" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -237,6 +242,7 @@ const unitMotion = new UnitMotionSmoother();
 const unitAnimation = new UnitAnimationTracker();
 const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
+let focusedStatusProjection: { snapshot: GameSnapshot; tick: number; id: string; locale: 'zh' | 'en'; statuses: PresentedUnitStatus[] } | undefined;
 let selectedCampId: string | undefined;
 let inspectedShopItem: WorldItem["kind"] | undefined;
 const purchaseRecipients=new Map<string,string>();
@@ -265,6 +271,10 @@ let menuView: MenuView = "home";
 let chosenMapId: PoolMapId = MAP_POOL[0].id;
 let pendingRoomConfiguration = defaultRoomConfiguration(chosenMapId);
 let routeRequest = 0;
+let setupError: string | undefined;
+let setupOperation = 0;
+let closingRoom = false;
+let hoverCursor = unitHoverCursor(undefined, undefined, undefined);
 let commandMode: CommandMode | undefined;
 // The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
 let openPalette: "build" | "stance" | "veteran" | undefined;
@@ -280,6 +290,21 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
   },
   onRuntimeError(message) {
     statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+  },
+});
+const roomSetupSession = new RoomSetupSession({
+  runtime: deploymentRuntime, user: () => localUser,
+  changed(room, replace) {
+    if (applicationClosed) return;
+    setupError = undefined;
+    localPlayerId = slotForUser(room, localUser.id)?.playerId ?? 'player';
+    pendingRoomConfiguration = roomConfiguration(room);
+    openRoomSetup(room, replace); renderMainMenu();
+  },
+  busyChanged() {
+    if (applicationClosed) return;
+    if (menuView === 'setup' || menuView === 'maps') renderMainMenu();
+    if (!roomSetupSession.busy && menuView === 'setup' && currentRoom?.status === 'open') watchRoomSetup(currentRoom.id);
   },
 });
 const baseGameAdapter = deploymentRuntime.initialAdapter();
@@ -329,7 +354,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    withAutocastRing(createCommandButton(
+    withAbilityArtwork(withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
       command.icon,
       command.hotkey,
@@ -338,7 +363,7 @@ const commandButtons: CommandButton[] = [
       () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
       undefined,
       () => toggleAutocast(command.ability),
-    ), command.ability),
+    ), command.ability), command.ability),
   ),
   withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, STANCE_MENU_COMMAND.hotkey, stanceMenuButtonState, openStancePalette, () => ({
     title: t("command.stance.menu.title"),
@@ -465,7 +490,7 @@ animationFrame=requestAnimationFrame(frame);
 window.addEventListener('pagehide',event=>{
   // A cached page resumes with its existing scene and connections on Back.
   if(event.persisted||applicationClosed)return;
-  applicationClosed=true;routeRequest++;cancelAnimationFrame(animationFrame);clearRoomWatch();disconnectActiveMatch();deploymentRuntime.close();
+  applicationClosed=true;routeRequest++;roomSetupSession.cancel();cancelAnimationFrame(animationFrame);clearRoomWatch();disconnectActiveMatch();deploymentRuntime.close();
   worldPresentation.dispose();soundboard.dispose();disposeResourcePanel();
   const usedModels=[...resources.entries.keys()].some(url=>url.includes('/art/world3d/'));
   resources.dispose();snapshot=undefined;keys.clear();
@@ -593,11 +618,19 @@ function renderVeteranCommand(button: CommandButton) {
   button.element.setAttribute("aria-label", `${label}${button.hotkey ? ` (${button.hotkey.toUpperCase()})` : ""}`);
   if (button.element.dataset.veteranSkill !== skill) {
     button.element.dataset.veteranSkill = skill;
-    const icon = button.element.querySelector(".command-icon")!;
-    const markup = commandIconMarkup(definition.icon);
-    if (markup) icon.innerHTML = markup;
-    else icon.textContent = definition.icon;
+    renderAbilityArtwork(button.element, skill);
   }
+}
+
+function withAbilityArtwork(button: CommandButton, ability: AbilityIconId): CommandButton {
+  button.element.dataset.abilityId = ability;
+  return button;
+}
+
+function renderAbilityArtwork(element: HTMLElement, ability: AbilityIconId) {
+  if (element.dataset.abilityArt === ability) return;
+  element.dataset.abilityArt = ability;
+  element.querySelector('.command-icon')!.innerHTML = abilityIconMarkup(ability);
 }
 
 function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
@@ -783,7 +816,11 @@ function splitTooltipList(value: string | undefined) {
 }
 
 function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = false) {
+  const previous = currentRoom ?? roomSetupSession.currentRoom;
+  const previousSetup = (route.screen === 'maps' || route.screen === 'setup') && !closingRoom && previous?.status === 'open' && previous.hostUserId === localUser.id ? previous : undefined;
   routeRequest++;
+  roomSetupSession.cancel(); setupOperation++; setupError = undefined;
+  if (previousSetup) roomSetupSession.adopt(previousSetup);
   clearRoomWatch();
   disconnectActiveMatch();
   currentRoom = undefined;
@@ -794,7 +831,7 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = 
   menuOpen = true;
   releasePointerLockForMenu();
   shell.classList.add("menu-open"); mainMenu.classList.remove("hidden");
-  if (route.screen === "maps" || route.screen === "create") {
+  if (route.screen === "maps" || route.screen === "setup") {
     pendingRoomConfiguration = route.configuration ?? pendingRoomConfiguration;
     chosenMapId = pendingRoomConfiguration.mapId as PoolMapId;
     route = { screen: route.screen, configuration: pendingRoomConfiguration };
@@ -802,7 +839,8 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = 
   menuView = route.screen;
   setRoomRoute(route, replace);
   syncMatchActions();
-  renderMainMenu();
+  if (route.screen === 'setup') void createConfiguredRoom(pendingRoomConfiguration, true);
+  else renderMainMenu();
 }
 
 async function openRouteFromUrl() {
@@ -812,14 +850,15 @@ async function openRouteFromUrl() {
     await enterRoom(route.roomId, true);
     return;
   }
+  if (route.screen === 'setup' && currentRoom && deploymentRuntime.isLocalRoom(currentRoom.id) && formatRoomRoute({ screen: 'setup', configuration: roomConfiguration(currentRoom) }) === window.location.search) return;
   openMenuRoute(route, true);
 }
 
-function openRoomSetup(room: RoomState) {
+function openRoomSetup(room: RoomState, replace = false) {
   currentRoom = room;
   currentRoomId = undefined;
   menuView = "setup";
-  setRoomRoute({ screen: "room", roomId: room.id });
+  setRoomRoute(deploymentRuntime.isLocalRoom(room.id) ? { screen: 'setup', configuration: roomConfiguration(room) } : { screen: "room", roomId: room.id }, replace);
   watchRoomSetup(room.id);
 }
 
@@ -853,9 +892,7 @@ function renderMainMenu() {
         ? t("home.profile.title")
         : menuView === "rooms"
           ? t("home.rooms.title")
-          : menuView === "create"
-            ? t("home.create.title")
-            : menuView === "results"
+          : menuView === "results"
               ? t("home.results.title")
               : t("home.roomSetup.title");
   if (menuView === "profile") {
@@ -872,10 +909,6 @@ function renderMainMenu() {
   }
   if (menuView === "maps") {
     renderMapSelectionMenu();
-    return;
-  }
-  if (menuView === "create") {
-    renderCreateGameMenu();
     return;
   }
   if (menuView === "setup") {
@@ -896,10 +929,10 @@ function renderMainMenu() {
   );
 }
 
-// Map selection and match settings are separate screens, with independent URL/history states.
+// Selecting a map enters its ready-to-configure single-player room directly.
 function renderMapSelectionMenu() {
   menuTitle.textContent = t("roomCreate.chooseMap");
-  menuStatus.textContent = "";
+  menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : '');
   const panel = document.createElement("div");
   panel.className = "map-select menu-page";
   panel.innerHTML = menuPageMarkup(`
@@ -911,16 +944,16 @@ function renderMapSelectionMenu() {
       ${mapDetailMarkup()}
     </div>
 `, `
-      <button type="button" data-map-next>${escapeHtml(t("roomCreate.configure"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
 `);
   const renderMaps = () => {
     panel.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
       const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
-        if (chosenMapId !== map.id) pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: pendingRoomConfiguration.visibility };
+        pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: 'private' };
         chosenMapId = map.id;
         setRoomRoute({ screen: "maps", configuration: pendingRoomConfiguration }, true);
         renderMaps();
+        void createConfiguredRoom(pendingRoomConfiguration);
       }, map.id);
       entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
       entry.setAttribute("aria-pressed", String(map.id === chosenMapId));
@@ -929,7 +962,6 @@ function renderMapSelectionMenu() {
     showMapDetail(panel, chosenMapId, previewSeatsForRoom(draftRoom()), pendingRoomConfiguration.layoutSeed);
   };
   renderMaps();
-  panel.querySelector("[data-map-next]")!.addEventListener("click", () => openMenuRoute({ screen: "create", configuration: pendingRoomConfiguration }));
   panel.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
   mapList.replaceChildren(panel);
 }
@@ -939,73 +971,9 @@ function draftRoom() {
   return createRoom({ id: "preview", host: localUser, ...pendingRoomConfiguration, humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
 }
 
-function selectedMapMarkup() {
-  return `<div class="selected-map-summary">
-    <div class="selected-map-caption"><strong data-map-name></strong><div data-map-summary></div></div>
-    <div class="map-preview-space"><div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="256" height="256"></canvas></div></div>
-  </div>`;
-}
-
 function previewSeatsForRoom(room: RoomState) {
   const seats = roomPreviewSeats(room), pool = poolMap(room.mapId);
   return !pool || poolSeatsFit(pool, seats.map(seat => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) }));
-}
-
-function renderCreateGameMenu() {
-  menuTitle.textContent = t("roomCreate.configure");
-  menuStatus.textContent = "";
-  const form = document.createElement("form");
-  form.className = "create-game-form menu-page";
-  form.dataset.createGameForm = "true";
-  form.innerHTML = menuPageMarkup(`
-    <aside class="match-dossier">
-    ${selectedMapMarkup()}
-    <div class="create-options">
-      <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <fieldset class="game-mode-switch">
-        <legend>${escapeHtml(t("roomCreate.mode.label"))}</legend>
-        <label><input name="gameMode" type="radio" value="singlePlayer" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /><span>${escapeHtml(t("roomCreate.mode.singlePlayer"))}</span></label>
-        <label><input name="gameMode" type="radio" value="multiplayer" ${pendingRoomConfiguration.visibility === "public" ? "checked" : ""} /><span>${escapeHtml(t("roomCreate.mode.multiplayer"))}</span></label>
-      </fieldset>
-    </div>
-    </aside>
-    <section class="room-slot-pane create-slot-pane">
-      <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
-      ${slotColumnsMarkup()}
-      <div class="slot-list" data-draft-seats></div>
-    </section>
-`, `
-      <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
-      <button type="button" data-choose-map>${escapeHtml(t("roomCreate.backMaps"))}</button>
-`);
-  const syncDraft = () => {
-    pendingRoomConfiguration.name = form.querySelector<HTMLInputElement>("[name=name]")!.value;
-    pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=gameMode]:checked")!.value === "singlePlayer" ? "private" : "public";
-    setRoomRoute({ screen: "create", configuration: pendingRoomConfiguration }, true);
-  };
-  const renderSeats = () => {
-    const preview = draftRoom();
-    showMapDetail(form, chosenMapId, previewSeatsForRoom(preview), pendingRoomConfiguration.layoutSeed);
-    form.querySelector("[data-draft-seats]")!.replaceChildren(...preview.slots.map((slot, index) => slotRow(slot, index, false, patch => {
-      const seat = pendingRoomConfiguration.seatSetup[index]!;
-      pendingRoomConfiguration.seatSetup[index] = { ...seat, ...patch } as typeof seat;
-      syncDraft();
-      renderSeats();
-    })));
-  };
-  form.querySelector("[name=name]")!.addEventListener("input", syncDraft);
-  form.querySelectorAll("[name=gameMode]").forEach(input => input.addEventListener("change", syncDraft));
-  renderSeats();
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    syncDraft();
-    const humanCount = pendingRoomConfiguration.seatSetup.filter(seat => seat.controller !== "ai").length;
-    void createConfiguredRoom({ ...pendingRoomConfiguration,
-      name: pendingRoomConfiguration.name.trim() || t("roomCreate.defaultName", { name: localUser.name }),
-      humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
-  });
-  form.querySelector("[data-choose-map]")!.addEventListener("click", () => openMenuRoute({ screen: "maps", configuration: pendingRoomConfiguration }));
-  mapList.replaceChildren(form);
 }
 
 // A new room on a map: its host and a computer in every other seat; the host opens seats to players in the lobby.
@@ -1134,8 +1102,8 @@ async function renderRoomBrowser() {
 function renderRoomSetup() {
   const setupAction = roomSetupViewAction(currentRoom);
   if (setupAction === "empty") {
-    menuStatus.textContent = t("roomSetup.empty");
-    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
+    menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : t("roomSetup.empty"));
+    mapList.replaceChildren(menuButton(t('roomCreate.backMaps'), "", "data-choose-map", () => {
       openMenuRoute({ screen: "maps" });
     }));
     return;
@@ -1150,12 +1118,21 @@ function renderRoomSetup() {
     return;
   }
   const room = currentRoom!;
-  menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
+  menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) }));
+  const host = room.hostUserId === localUser.id;
+  const visibility = roomSetupSession.requestedVisibility ?? room.visibility;
   const setup = document.createElement("div");
   setup.className = "room-setup menu-page";
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = menuPageMarkup(`
-    <aside class="match-dossier">${mapDetailMarkup()}</aside>
+    <aside class="match-dossier">${mapDetailMarkup()}
+      <fieldset class="game-mode-switch">
+        <legend>${escapeHtml(t('roomCreate.mode.label'))}</legend>
+        <label><input name="gameMode" type="radio" value="singlePlayer" ${visibility === 'private' ? 'checked' : ''} ${host && !closingRoom ? '' : 'disabled'} /><span>${escapeHtml(t('roomCreate.mode.singlePlayer'))}</span></label>
+        <label title="${deploymentRuntime.kind === 'static' ? escapeHtml(t('roomSetup.staticOnly')) : ''}"><input name="gameMode" type="radio" value="multiplayer" ${visibility === 'public' ? 'checked' : ''} ${host && !closingRoom && deploymentRuntime.kind === 'server' ? '' : 'disabled'} /><span>${escapeHtml(t('roomCreate.mode.multiplayer'))}</span></label>
+      </fieldset>
+      ${deploymentRuntime.kind === 'static' ? `<p class="room-mode-note">${escapeHtml(t('roomSetup.staticOnly'))}</p>` : ''}
+    </aside>
     <div class="room-setup-layout">
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
@@ -1163,7 +1140,7 @@ function renderRoomSetup() {
             <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
+            <button type="button" class="danger-button" data-close-room ${host && !closingRoom && !roomSetupSession.busy ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
           </div>
         </div>
         ${slotColumnsMarkup(true)}
@@ -1173,15 +1150,19 @@ function renderRoomSetup() {
     </div>
 `, `
       <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
+      <button type="button" data-choose-map>${escapeHtml(t('roomCreate.backMaps'))}</button>
       <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>
 `);
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
-  startButton.disabled = !canStartRoom(room);
+  startButton.disabled = !host || closingRoom || roomSetupSession.busy || !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
   showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
   slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(slot, index, local)));
+  if (closingRoom || roomSetupSession.busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
+  setup.querySelectorAll<HTMLInputElement>('[name=gameMode]').forEach(input => input.addEventListener('change', () => void switchCurrentRoomMode(input.value === 'singlePlayer' ? 'private' : 'public')));
+  setup.querySelector('[data-choose-map]')!.addEventListener('click', () => openMenuRoute({ screen: 'maps', configuration: roomConfiguration(room) }));
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
@@ -1236,20 +1217,30 @@ function renderResultsMenu() {
   mapList.replaceChildren(panel);
 }
 
-async function createConfiguredRoom(input: Omit<CreateRoomInput, "id" | "host">) {
-  currentRoom = await deploymentRuntime.createRoom({
-    id: `room-${Date.now().toString(36)}`,
-    host: localUser,
-    ...input,
-  });
-  if(applicationClosed)return;
-  localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
-  openRoomSetup(currentRoom);
+async function createConfiguredRoom(configuration: RoomConfiguration, replace = false) {
+  const request = routeRequest, operation = ++setupOperation;
+  setupError = undefined;
+  const actual = { ...configuration, name: configuration.name.trim() || t('roomCreate.defaultName', { name: localUser.name }),
+    visibility: deploymentRuntime.kind === 'static' ? 'private' as const : configuration.visibility };
+  try { await roomSetupSession.create(actual, replace); }
+  catch (error) { if (!applicationClosed && request === routeRequest && operation === setupOperation) showRoomSetupError(error); }
+}
+
+async function switchCurrentRoomMode(visibility: RoomState['visibility']) {
+  if (closingRoom || !currentRoom || currentRoom.hostUserId !== localUser.id || deploymentRuntime.kind === 'static' && visibility === 'public') return;
+  const request = routeRequest, operation = ++setupOperation;
+  setupError = undefined; clearRoomWatch();
+  try { await roomSetupSession.switchMode(visibility); }
+  catch (error) { if (!applicationClosed && request === routeRequest && operation === setupOperation) showRoomSetupError(error); }
+}
+
+function showRoomSetupError(error: unknown) {
+  setupError = t('roomSetup.failed', { message: error instanceof Error ? error.message : String(error) });
   renderMainMenu();
 }
 
 async function startCurrentRoom() {
-  if (applicationClosed || !currentRoom) return;
+  if (applicationClosed || closingRoom || !currentRoom || roomSetupSession.busy || currentRoom.hostUserId !== localUser.id || !canStartRoom(currentRoom)) return;
   const roomId = currentRoom.id, request = routeRequest;
   const isCurrent = () => !applicationClosed && request === routeRequest && currentRoom?.id === roomId;
   try {
@@ -1279,13 +1270,14 @@ async function startCurrentRoom() {
   } catch (error) {
     // A page exit or route change can cancel preparation or a pending start.
     // Its obsolete click handler must not resume the match or reject globally.
-    if (isCurrent()) throw error;
+    if (isCurrent()) { watchRoomSetup(roomId); showRoomSetupError(error); }
   }
 }
 
 // A rematch: a private room on the same map, computers in the other seats.
 async function createReplayRoom(room: RoomState) {
-  await createConfiguredRoom({ name: t("roomCreate.defaultName", { name: localUser.name }), mapId: room.mapId, ...poolSeatCounts(room.mapId), visibility: "private" });
+  roomSetupSession.cancel();
+  await createConfiguredRoom({ ...defaultRoomConfiguration(room.mapId as PoolMapId), name: t("roomCreate.defaultName", { name: localUser.name }) });
 }
 
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
@@ -1361,14 +1353,22 @@ function slotRow(slot: RoomState["slots"][number], index: number, local: boolean
 }
 
 async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unknown>) {
-  if (!currentRoom) return;
-  currentRoom = await deploymentRuntime.updateRoomSlot(currentRoom.id, slotId, patch as SlotPatch);
-  renderMainMenu();
+  if (closingRoom || !currentRoom) return;
+  const request = routeRequest, operation = ++setupOperation;
+  setupError = undefined;
+  try { await roomSetupSession.updateSlot(slotId, patch as SlotPatch); }
+  catch (error) { if (!applicationClosed && request === routeRequest && operation === setupOperation) showRoomSetupError(error); }
 }
 
 async function closeCurrentRoom() {
-  if (!currentRoom) return;
-  await deploymentRuntime.closeRoom(currentRoom.id, localUser.id);
+  if (closingRoom || !currentRoom || roomSetupSession.busy) return;
+  const request = routeRequest, operation = ++setupOperation, id = currentRoom.id;
+  closingRoom = true; clearRoomWatch(); renderMainMenu();
+  try { await deploymentRuntime.closeRoom(id, localUser.id); }
+  catch (error) { if (request === routeRequest && operation === setupOperation) { watchRoomSetup(id); showRoomSetupError(error); } return; }
+  finally { closingRoom = false; if (!applicationClosed && (menuView === 'setup' || menuView === 'maps')) renderMainMenu(); }
+  if (request !== routeRequest || currentRoom?.id !== id) return;
+  roomSetupSession.cancel();
   clearRoomWatch();
   disconnectActiveMatch();
   currentRoom = undefined;
@@ -1412,11 +1412,13 @@ function returnHome() {
 
 async function enterRoom(roomId: string, replace = false) {
   const request = ++routeRequest;
+  roomSetupSession.cancel(); setupOperation++; setupError = undefined; clearRoomWatch();
   try {
     const entered = await deploymentRuntime.enterRoom(roomId, localUser);
     if (request !== routeRequest) return;
     setRoomRoute({ screen: "room", roomId }, replace);
     const room = entered.room;
+    roomSetupSession.adopt(room);
     currentRoom = room;
     spectatingRoom = entered.spectating;
     localPlayerId = entered.playerId;
@@ -1474,6 +1476,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch() {
+  focusedStatusProjection = undefined;
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
   activeChatUnsubscribe?.();
   activeChatUnsubscribe = undefined;
@@ -1484,6 +1487,12 @@ function disconnectActiveMatch() {
 
 function handleRuntimeRoomUpdate(room: RoomState) {
   if (currentRoom?.id !== room.id && currentRoomId !== room.id) return;
+  if (room.status === 'closed') {
+    openMenuRoute({ screen: 'rooms' }, true);
+    menuStatus.textContent = t('roomSetup.closed');
+    return;
+  }
+  roomSetupSession.accept(room);
   currentRoom = room;
   if (room.status === "ended" && room.result) openResults(room);
   else if (menuOpen && menuView === "setup") renderMainMenu();
@@ -2721,13 +2730,18 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
+  const shiftClick = additive;
   if (selectedIds.size && !selectedPlayerUnits().length && !selectedPlayerBuildings().length) additive = false;
   const unit = hitUnit(world, () => true);
   if (unit) {
     if (unit.owner !== localPlayerId) additive = false;
-    const result = sameKind && unit.owner === localPlayerId
+    // Removal precedes foreign-owner and double-click rules: neither may
+    // reselect the clicked body or expand the removal to its whole kind.
+    const result = shiftClick && selectedIds.has(unit.id)
+      ? applySelectionClick({ selectedIds, focusedSelectionId }, unit.id, true)
+      : sameKind && unit.owner === localPlayerId
       ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
-      : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
+      : applySelectionClick({ selectedIds, focusedSelectionId }, unit.id, additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
@@ -2737,7 +2751,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
   const building = hitBuilding(world, () => true);
   if (building) {
     if (building.owner !== localPlayerId) additive = false;
-    const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
+    const result = applySelectionClick({ selectedIds, focusedSelectionId }, building.id, (shiftClick && selectedIds.has(building.id)) || additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
@@ -2894,6 +2908,8 @@ function cycleFocusedSelection(direction: 1 | -1) {
 
 function updateHud() {
   if (!snapshot) return;
+  const statusTooltip = shownTooltipTarget?.dataset.unitStatus ? shownTooltipTarget : undefined;
+  const statusTooltipBefore = statusTooltip ? `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}` : '';
   for (const [id, tick] of pendingVeteranChoices) {
     const unit = snapshot.units.find(candidate => candidate.id === id);
     if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
@@ -2906,6 +2922,7 @@ function updateHud() {
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   if (!groups.length || selectedShop()) {
+    focusedStatusProjection = undefined;
     const subject = selectionLabel.querySelector<HTMLElement>(".hud-subject");
     if (subject) delete subject.dataset.tooltipTitle;
   }
@@ -2931,10 +2948,15 @@ function updateHud() {
       art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
+  if (statusTooltip && !statusTooltip.isConnected) {
+    tooltipLayer.classList.add('hidden'); shownTooltipTarget = undefined;
+    if (virtualTooltipTarget === statusTooltip) virtualTooltipTarget = undefined;
+  } else if (statusTooltip && !tooltipLayer.classList.contains('hidden') && statusTooltipBefore !== `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}`) renderTooltip(statusTooltip);
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
     if (state.visible) renderVeteranCommand(button);
+    if (state.visible && button.element.dataset.abilityId) renderAbilityArtwork(button.element, button.element.dataset.abilityId as AbilityIconId);
     if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
     if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     if (button.element.dataset.shipBoarding) {
@@ -2975,6 +2997,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   const focused = groups.find(group => group.focused) ?? groups[0]!;
   const identityId = focused.ids.includes(focusedSelectionId ?? "") ? focusedSelectionId : focused.ids[0];
   const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === identityId);
+  if (!entity || !('order' in entity)) focusedStatusProjection = undefined;
   const total = groups.reduce((sum, group) => sum + group.count, 0);
   const owner = entity?.owner ?? localPlayerId;
   const identity: HudIdentity = {
@@ -2988,6 +3011,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+    ...((entity && 'order' in entity) ? { statuses: focusedHudStatuses(entity) } : {}),
   };
   hudSelection.render(identity, groups.map(group => {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
@@ -3014,6 +3038,26 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   if (subject && entity) applyTooltip(subject, "order" in entity
     ? unitSelectionTooltip(entity.kind, [entity], snapshot!, i18n)
     : buildingTooltip(entity.kind, undefined, i18n, snapshot?.players[entity.owner]?.race));
+}
+
+function focusedHudStatuses(unit: Unit): HudStatus[] {
+  if (!snapshot) return [];
+  if (!focusedStatusProjection || focusedStatusProjection.snapshot !== snapshot || focusedStatusProjection.tick !== snapshot.tick || focusedStatusProjection.id !== unit.id || focusedStatusProjection.locale !== i18n.locale) {
+    focusedStatusProjection = { snapshot, tick: snapshot.tick, id: unit.id, locale: i18n.locale, statuses: presentUnitStatuses(snapshot, unit, i18n.locale) };
+  }
+  const zh = i18n.locale === 'zh';
+  return focusedStatusProjection.statuses.map(status => {
+    const category = zh ? status.polarity === 'buff' ? '增益' : status.polarity === 'debuff' ? '减益' : '状态' : status.polarity === 'buff' ? 'Buff' : status.polarity === 'debuff' ? 'Debuff' : 'Status';
+    const duration = status.remainingTicks !== undefined ? `${zh ? '剩余' : 'Remaining'} ${status.badge}` : status.type === 'aura' ? zh ? '光环范围内生效' : 'Active while in aura range' : '';
+    return {
+      key: status.key, name: status.name, polarity: status.polarity, iconUrl: abilityIconUrl(status.icon), badge: status.badge,
+      accessibleLabel: [status.name, category, duration].filter(Boolean).join(' · '),
+      decorate: element => applyTooltip(element, {
+        title: status.name, body: status.description, stats: [category, duration].filter(Boolean), requirements: [],
+        ...(status.type === 'aura' ? { notes: [zh ? '离开范围，或光环来源阵亡、撤入舱内后结束。' : 'Ends when you leave range, or the source dies or enters a cabin.'] } : {}),
+      }),
+    };
+  });
 }
 
 function sailingStatus(unit: Unit): string {
@@ -3229,12 +3273,14 @@ function trainIcon(kind: TrainableUnitKind) {
 function draw() {
   if(!visualsReady)return;
   if (menuOpen) {
+    updateHoverCursor();
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
     menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame,'home'));
     return;
   }
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   if (!snapshot) {
+    updateHoverCursor();
     drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.clientWidth, canvas.clientHeight);
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
@@ -3243,9 +3289,7 @@ function draw() {
   }
   const viewer = matchViewer();
   const hovered = hoveredTarget();
-  // Over an enemy's or the creeps', the cursor is the red one of an attack; over a friend's, it stays as it is.
-  const hostile = viewer && hovered ? relationTo(snapshot, viewer, hovered.owner) : undefined;
-  shell.classList.toggle("pointer-over-enemy", hostile === "enemy" || hostile === "creep");
+  updateHoverCursor(hovered?.id);
   worldPresentation.draw({
     ctx,
     snapshot,
@@ -3500,12 +3544,9 @@ function matchViewer() {
 
 // The unit or building under the pointer on the battlefield, not over the interface or the minimap.
 function hoveredTarget() {
-  if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
-  const target = snapshot ? visualPointerTarget(screenToWorld(lastMouse)) : undefined;
-  if(target?.kind === "unit")return target.unit;
-  if(target?.kind === "building")return target.building;
-  const world=screenToWorld(lastMouse),site=hitMercenaryCamp(world)??hitShop(world);
-  return site ? {...site,owner:"neutral" as const} : undefined;
+  if (!snapshot || !lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
+  const world = screenToWorld(lastMouse);
+  return unitHoverTarget(snapshot, world, () => visualHit(world));
 }
 
 function minimapRelationsOn() {
@@ -3592,8 +3633,25 @@ function syncVirtualPointerOverlay() {
     return;
   }
   virtualPointerElement.classList.remove("hidden");
-  virtualPointerElement.style.transform = virtualPointerTransform(virtualMouse, 18);
+  const icon = hoverCursor.iconUrl;
+  virtualPointerElement.classList.toggle('relation-cursor', Boolean(icon));
+  const background = icon ? `url(${JSON.stringify(icon)})` : '';
+  if (virtualPointerElement.style.backgroundImage !== background) virtualPointerElement.style.backgroundImage = background;
+  virtualPointerElement.style.transform = icon && hoverCursor.hotspot
+    ? `translate(${virtualMouse.x - hoverCursor.hotspot[0]}px, ${virtualMouse.y - hoverCursor.hotspot[1]}px)`
+    : virtualPointerTransform(virtualMouse, 18);
   syncVirtualTooltip(virtualMouse);
+}
+
+function updateHoverCursor(hoveredId?: string) {
+  hoverCursor = unitHoverCursor(menuOpen ? undefined : snapshot, menuOpen ? undefined : matchViewer(), hoveredId, {
+    mode: commandMode?.type === 'build' ? 'placement' : commandMode ? 'targeting' : 'inspect',
+    pointerLocked: document.pointerLockElement === canvas,
+  });
+  if (canvas.style.cursor !== hoverCursor.nativeCursor) canvas.style.cursor = hoverCursor.nativeCursor;
+  if (!hoverCursor.iconUrl) {
+    virtualPointerElement.classList.remove('relation-cursor'); virtualPointerElement.style.backgroundImage = '';
+  }
 }
 
 function syncVirtualTooltip(point: Point) {

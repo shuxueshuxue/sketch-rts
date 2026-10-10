@@ -1,0 +1,174 @@
+{
+  "scenario": "Complete scripts/e2e-room-flow.mjs browserProofCode, including real invite guest, authoritative match reload, research, results and room closure",
+  "renderer": "supported 2D fallback (WebGL2 unavailable)",
+  "chromeMode": "plain",
+  "requestAnimationFrame": "native, without throttling",
+  "network": "Real HTTP, SSE and game WebSocket; only the Vite HMR WebSocket is intercepted",
+  "budgets": {
+    "setupAndGameplayWaitMs": 5000,
+    "resultsMaximumTicks": 4800
+  },
+  "fixture": "Three original golems, original HP/damage and AI configuration; canonical full-body legal spawn beside the actual player hall with explicit attack orders",
+  "pointerLockCheck": "Results lifecycle release check with a controlled document.pointerLockElement fixture; native cursor and pointer-lock acceptance is recorded separately",
+  "performance": "Functional acceptance only; other correctness work ran concurrently, so these browser timings are not a performance comparison",
+  "passed": {
+    "ok": true,
+    "profileId": "user-d364899e-33c0-4073-8def-39a547c574e0",
+    "roomSetupId": "room-b74d6ee5-b619-4146-bb4b-a293fcc092dd",
+    "map": "pineshade",
+    "tick": 2,
+    "endedStatus": "ended",
+    "winner": "enemy",
+    "pointerLockReleasedForResults": true,
+    "researchDockProof": {
+      "labels": [
+        "Research Weapon Training",
+        "Research Reinforced Plating"
+      ],
+      "hotkeys": [
+        "W",
+        "P"
+      ]
+    },
+    "researchSelectionProof": {
+      "focusedId": "ui-research-barracks",
+      "selection": "Barracks620 / 620Barracks1Nothing selected",
+      "selectionLabels": [
+        "Selected unit types",
+        "Barracks × 1"
+      ],
+      "status": "Connecting to match..."
+    },
+    "authoritativeReloadProof": {
+      "tick": 14,
+      "buildingIds": [
+        "building-player-townhall",
+        "building-enemy-townhall",
+        "ui-research-barracks"
+      ]
+    },
+    "researchProgressState": {
+      "ariaDisabled": "true",
+      "ariaLabel": "Researching Weapon Training I - 1%",
+      "commandLabel": "Researching Weapon Training I",
+      "progressValue": "1%",
+      "progressWidth": "0.5px"
+    },
+    "privateLobbyProof": {
+      "listedPublicly": false,
+      "listedOnServerForOwner": false,
+      "listedForOwner": true
+    },
+    "soloReloadProof": {
+      "id": "room-76ee9d26-a09b-4b76-92f1-b142a19fe79b",
+      "query": {
+        "map": "pineshade",
+        "seed": "room-flow-config-seed",
+        "name": "Room Flow Fleet",
+        "visibility": "private",
+        "seats": "human:team-1:ember:,ai:team-2:grove:random"
+      },
+      "hostRace": "ember",
+      "hostTeam": "team-1",
+      "aiRace": "grove",
+      "aiTeam": "team-2",
+      "aiController": "AI",
+      "title": "Room Flow Fleet - Private - Open"
+    },
+    "guestJoinProof": {
+      "status": "open",
+      "owner": "user-d364899e-33c0-4073-8def-39a547c574e0",
+      "userId": "user-b896bac9-1671-4ff3-8ab5-3e433f8d07a1",
+      "slots": [
+        {
+          "id": "slot-2",
+          "playerId": "enemy",
+          "controller": "human",
+          "name": "Player 6149",
+          "team": "team-2",
+          "race": "grove",
+          "ready": true,
+          "userId": "user-b896bac9-1671-4ff3-8ab5-3e433f8d07a1"
+        }
+      ],
+      "startDisabled": true
+    },
+    "roomSetupLayoutProof": {
+      "mapThenSeats": true,
+      "mapName": "Pineshade",
+      "rows": 2,
+      "maxSlotRowHeight": 47,
+      "slotActions": [
+        "Close Room"
+      ],
+      "controllerOptions": [
+        "ai",
+        "open"
+      ],
+      "hostControllerStatus": "Human"
+    },
+    "roomBrowserLayoutProof": {
+      "hasCreate": true,
+      "hasList": true,
+      "actionsBelow": true
+    },
+    "slotEditProof": {
+      "startEnabled": true,
+      "host": {
+        "id": "slot-1",
+        "playerId": "player",
+        "controller": "human",
+        "name": "Room Flow Tester",
+        "team": "team-1",
+        "race": "ember",
+        "ready": true,
+        "userId": "user-d364899e-33c0-4073-8def-39a547c574e0"
+      },
+      "ai": {
+        "id": "slot-2",
+        "playerId": "enemy",
+        "controller": "ai",
+        "name": "AI",
+        "team": "team-4",
+        "race": "grove",
+        "ready": true,
+        "aiVersion": "random"
+      }
+    },
+    "seatsProof": {
+      "visibility": "public",
+      "mapId": "twoShores",
+      "seats": 4,
+      "rows": 4
+    },
+    "allianceReadinessProof": {
+      "sidesBefore": true,
+      "unevenTeamsReady": true,
+      "oneTeamReady": false,
+      "opposingTeamsReady": true,
+      "emptySeatReady": false,
+      "restoredSeatsReady": true
+    },
+    "closeRoomProof": {
+      "listed": false,
+      "visibleInUi": false
+    }
+  },
+  "consoleIssues": [],
+  "pageErrors": [],
+  "requestAborts": [
+    {
+      "kind": "SSE stream aborted during navigation or room closure",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "SSE stream aborted during navigation or room closure",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "SSE stream aborted during navigation or room closure",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "otherScripts": "e2e-brutal-spec.mjs, yatu-player-loop.mjs and room-sync-yatu.mjs: Node and expanded-browser-function syntax checks passed; their full end-to-end suites were not run"
+}

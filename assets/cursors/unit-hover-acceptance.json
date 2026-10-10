@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "scope": "Real application 2D and 3D input, original picking and rendering; production pointer-lock image screenshots. Native OS cursor pixels are not captured. Functional acceptance only, no FPS claim.",
+  "totalChecks": 24,
+  "results": [
+    {
+      "mode": "3D",
+      "rendered": {"is3D": true, "modelHits": 46},
+      "errors": [],
+      "checks": [
+        {"case":"native own inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/own.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native ally inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/ally.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native enemy inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/enemy.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native neutral inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/neutral.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"blank ground clears prior relation cursor","passed":true,"nativeCursor":"default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"active targeting retains crosshair over enemies","passed":true,"nativeCursor":"crosshair","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"active building placement retains copy cursor over enemies","passed":true,"nativeCursor":"copy","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"production pointer-lock own image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/own.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[482,398],"pointerPosition":[486,401.889]},
+        {"case":"production pointer-lock ally image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/ally.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[612,398],"pointerPosition":[616,401.889]},
+        {"case":"production pointer-lock enemy image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/enemy.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[742,398],"pointerPosition":[746,401.889]},
+        {"case":"locked targeting clears inspection artwork and restores command pointer","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"none","virtualSize":[18,18],"relationImage":false},
+        {"case":"menu clears cursor relation","passed":true,"nativeCursor":"default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false}
+      ]
+    },
+    {
+      "mode": "2D",
+      "rendered": {"is3D": false, "modelHits": 0},
+      "errors": [],
+      "checks": [
+        {"case":"native own inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/own.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native ally inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/ally.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native enemy inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/enemy.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"native neutral inspection cursor and shared arrow-tip hotspot","passed":true,"nativeCursor":"url(\"/art/cursors/neutral.svg\") 4 3, default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"blank ground clears prior relation cursor","passed":true,"nativeCursor":"default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"active targeting retains crosshair over enemies","passed":true,"nativeCursor":"crosshair","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"active building placement retains copy cursor over enemies","passed":true,"nativeCursor":"copy","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false},
+        {"case":"production pointer-lock own image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/own.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[482,455],"pointerPosition":[486,458.889]},
+        {"case":"production pointer-lock ally image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/ally.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[612,455],"pointerPosition":[616,458.889]},
+        {"case":"production pointer-lock enemy image with exact hotspot","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"url(\"/art/cursors/enemy.svg\")","virtualSize":[32,32],"relationImage":true,"actualTransform":[742,455],"pointerPosition":[746,458.889]},
+        {"case":"locked targeting clears inspection artwork and restores command pointer","passed":true,"nativeCursor":"none","pointerLocked":true,"virtualImage":"none","virtualSize":[18,18],"relationImage":false},
+        {"case":"menu clears cursor relation","passed":true,"nativeCursor":"default","pointerLocked":false,"virtualImage":"none","virtualSize":[0,0],"relationImage":false}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "sourceSha256": {
+    "src/client/main.ts": "9b9b0528c9e0bd600135c48296358b41fefc2a850706f7e81c51354dea3b68d2",
+    "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6",
+    "src/client/unit-hover-cursor.ts": "89c727a3d9b141d1f8df51e2cf2e31a29f321dd3211e7a2d61dfdbb3f8108f7b",
+    "src/client/world3d/world-layer.ts": "94a0f7ceab09b9cedf498c06288e8a427a79c5345e2f22e2f2934ac89f2447fd"
+  },
+  "checks": [
+    {
+      "case": "visible camp keeps neutral cursor over an occluded own unit and picks once per frame",
+      "passed": true,
+      "fixture": {
+        "kind": "camp",
+        "siteId": "hover-camp",
+        "unitId": "unit-player-footman-1000",
+        "point": {
+          "x": 769.5555555555557,
+          "y": 449.0666666666666
+        },
+        "world": {
+          "x": 816,
+          "y": 2030
+        }
+      },
+      "proof": {
+        "visual": {
+          "id": "hover-camp",
+          "height": 41.067979386367824
+        },
+        "ground": {
+          "kind": "unit",
+          "id": "unit-player-footman-1000"
+        },
+        "productionPickCounts": [
+          1,
+          1
+        ]
+      },
+      "state": {
+        "native": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\") 4 3, default",
+        "locked": false,
+        "image": "none"
+      }
+    },
+    {
+      "case": "visible shop keeps neutral cursor over an occluded own unit and picks once per frame",
+      "passed": true,
+      "fixture": {
+        "kind": "shop",
+        "siteId": "hover-shop",
+        "unitId": "unit-player-footman-1001",
+        "point": {
+          "x": 984.5555555555557,
+          "y": 439.0666666666666
+        },
+        "world": {
+          "x": 1031,
+          "y": 2020
+        }
+      },
+      "proof": {
+        "visual": {
+          "id": "hover-shop",
+          "height": 46.96072421026497
+        },
+        "ground": {
+          "kind": "unit",
+          "id": "unit-player-footman-1001"
+        },
+        "productionPickCounts": [
+          1,
+          1
+        ]
+      },
+      "state": {
+        "native": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\") 4 3, default",
+        "locked": false,
+        "image": "none"
+      }
+    },
+    {
+      "case": "pointer-lock camp shares neutral artwork above the hidden unit",
+      "passed": true,
+      "state": {
+        "native": "none",
+        "locked": true,
+        "image": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\")"
+      }
+    },
+    {
+      "case": "pointer-lock shop shares neutral artwork above the hidden unit",
+      "passed": true,
+      "state": {
+        "native": "none",
+        "locked": true,
+        "image": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\")"
+      }
+    }
+  ],
+  "errors": []
+}

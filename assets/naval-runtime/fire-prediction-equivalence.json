@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "scope": "Independent frozen before/predictor-only source pair. Pure numeric and complete observable simulation equality; 20Hz stepGame-only plain timings on this machine. Root navigation sources continued separately; these are not final whole-PR measurements.",
+  "runtime": {
+    "node": "v20.20.2",
+    "arch": "x64",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 24-Core Processor"
+  },
+  "sourcePair": {
+    "before": {
+      "src/shared/ship-equipment.ts": "ccf57fbcf24cc812774b7227c6f502afbd050364e6e8ca0b75bb4cfa9ad48c76",
+      "src/shared/ship-fire-control.ts": "c9832b3b0159685608583938330c62251d0bbf806793e44ba3cdaba09094c10d"
+    },
+    "predictor": {
+      "src/shared/ship-equipment.ts": "16b0fb7d3f57ac126f5bb8bb8a88ec47e50760fd42e6f63de98cc977711c3c32",
+      "src/shared/ship-fire-control.ts": "ea9b52dd7fa89825064e94add643c867580f1526daa5d3cbc5fcd8ac5c9b7585"
+    },
+    "commonDependencyCount": 91,
+    "commonManifestSha256": "ba5890c061f36718669796b685704b13a8aca9f697aec062ad7d10e85fa4a19b",
+    "commonDependencies": {
+      "scripts/naval-runtime-stress.ts": "3bc3ea3b8b55f0a479d541af258c0b13de0b61671e2995a3b8426fa99fc285f1",
+      "src/shared/ability-cooldowns.ts": "bc9f3a7359d624d14e31555ebb6fa435bd98a4a6b638527e491f7f5784413d63",
+      "src/shared/aiming.ts": "3285e7a05850cee040dddc3e0b1b733927f1b19ed6fae01bab2758cc22863fa4",
+      "src/shared/archipelago-map.ts": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+      "src/shared/attack-presentation.ts": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+      "src/shared/autocast.ts": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+      "src/shared/build-placement.ts": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+      "src/shared/camps.ts": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+      "src/shared/catalog.ts": "2dd742e037286a9a92b55ceff975bacbb0ffd613d64da75c459ee48d64bd8829",
+      "src/shared/combat-capabilities.ts": "94d30fb982d360254162fecda338a741bf0ae08c10b797e4f63f4fd40b266fd4",
+      "src/shared/combat-geometry.ts": "07444795a9fa120c74a056f1ccf2b1de22789739b0750de42eaf79f4b098a8b4",
+      "src/shared/combat-target.ts": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+      "src/shared/connected-decks.ts": "d4b44531960d043f453a0063bdfb1e456f5359989b378f108151f06ee2f450fb",
+      "src/shared/construction.ts": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+      "src/shared/crew-rendezvous.ts": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+      "src/shared/damage-reduction.ts": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+      "src/shared/damage-types.ts": "bfa6343a0eea33c669a718c1c522e34cc7ffbacb416a9b3c3536dad79c3608bc",
+      "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+      "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+      "src/shared/decks.ts": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+      "src/shared/det-math.ts": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+      "src/shared/environment/ecology.ts": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+      "src/shared/environment/fields.ts": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644",
+      "src/shared/environment/noise.ts": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+      "src/shared/equipment.ts": "3aae45fe1724de7e6cb003cbc1df11ca254a918bf002c71fd7474599f83d8f75",
+      "src/shared/estuary-map.ts": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+      "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+      "src/shared/generated/ship-geometry.json": "a9ad18f90d139fb1f0c5f5ffe98a03884ee166e0ccc4d7c90590acba95d0a0a1",
+      "src/shared/generated/ship-navigation-masks-64.json": "fcebf3558080a5d4206b40bba3e8cddb70e86aee9aefdaf9d41bd5f7b4681822",
+      "src/shared/generated/ship-navigation-masks.json": "fc5e54c8a4cae670c8a0c95d471d15c3c176ff03c55036b0b30bfe9f6ec1ede2",
+      "src/shared/grid-flood.ts": "5c6043d3dc1744007b97799c85f3eac08e0b664750d213411e9feffd924c7715",
+      "src/shared/healing.ts": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+      "src/shared/item-index.ts": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+      "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+      "src/shared/item-surfaces.ts": "007374f68912e6a18ef90677ac508b78a2bacfafefb5d29669a9dd1fc61c0db2",
+      "src/shared/map-dressing.ts": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+      "src/shared/map-ids.ts": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+      "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+      "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+      "src/shared/mining.ts": "a8c48726fda4a6030e8f183264d5f6b7f1a91296b339d01b1284b17d7eb84be7",
+      "src/shared/naval.ts": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+      "src/shared/navigation-masks.ts": "7b59b7137a93a66a33c8cc1fe7db9b15451143e8854f7629712f223cec6d01a3",
+      "src/shared/navigation-math.ts": "b5cb56b95daf9a7d74d3b92577e28892ae112d13d15d1e9e1998b415d28ead2b",
+      "src/shared/obstacle.ts": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+      "src/shared/physical-body.ts": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+      "src/shared/player-colors.ts": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+      "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49",
+      "src/shared/purchase.ts": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+      "src/shared/push.ts": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+      "src/shared/sailing.ts": "35f9cfbcbe929d8acc8d09961d434b72ff750cbe701dd1ab3968b573b31c92fa",
+      "src/shared/ship-avoidance.ts": "3d81acbd15d84de048e34987caa3c50a36f492c3025f27346b85fcb14f57d924",
+      "src/shared/ship-cabin-quota.ts": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+      "src/shared/ship-cabin.ts": "46aa77894309812c4678f46498a39cf2d70c51b96994728f89eb3e835aa4ff88",
+      "src/shared/ship-collisions.ts": "42043b515960aa8b889905931f24014f003af672ad3fb68c43b505268fc55dbe",
+      "src/shared/ship-defense.ts": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762",
+      "src/shared/ship-gangway.ts": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+      "src/shared/ship-geometry.ts": "839d3ba7f2b3d6405c61f87804155f539c5bb8af85695136ccf91098e80452f3",
+      "src/shared/ship-guidance.ts": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+      "src/shared/ship-handling.ts": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+      "src/shared/ship-launch.ts": "91e3dab0d4f51136cdb0689f79ad84215a59e48c332b7c25a82902f78391bc47",
+      "src/shared/ship-motion.ts": "f7d632213276dc00f97b0f0c67f4fa22a127fa75080ca84c3c57b914fb377cb1",
+      "src/shared/ship-navigation-potential.ts": "dd4f5a366637ce25657acc8a225639c6e23742d6fd81c229371e121230315fef",
+      "src/shared/ship-navigation.ts": "13352e1ed0e068b11a1d50e6812d01f57664dfaf4a9f0a38307850b20e6debc8",
+      "src/shared/ship-planning-budget.ts": "0782408bede2346d84fb8a76d5c013a7513492c49f3f1af379240ecd4b7832a9",
+      "src/shared/ship-planning-job.ts": "9749a7770b7e45cd3a93f5f3120d0b43c95b46733ac5cc4fe8eef683e0a12a75",
+      "src/shared/ship-pursuit.ts": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+      "src/shared/ship-queued-course.ts": "46faaccc797472158f92a9d5e4f7916b65b8157511e0077e8605ac9ea5c11737",
+      "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+      "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+      "src/shared/sim.ts": "8544167a9eefae46973394cc80b1d51773d099bee3ada230d41264b9af522374",
+      "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+      "src/shared/sim/checksum.ts": "d8733737efa18ab7d914c3c36b987807cd889342b4bd33a4f7aa1f2839c336ed",
+      "src/shared/sim/command-validation.ts": "dc020acef9badb8b5afdc00976620c6713041df0418c27bb67a7dcba932dc27a",
+      "src/shared/spark-fire.ts": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+      "src/shared/support-surface.ts": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+      "src/shared/terrain.ts": "d07b4773f1379c51117875dd74f321197158219292ffa65a4345f6ca6bee6e3c",
+      "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+      "src/shared/transport-role.ts": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+      "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+      "src/shared/unit-lookup.ts": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+      "src/shared/unit-repair.ts": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+      "src/shared/unit-targeting.ts": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+      "src/shared/unit-value.ts": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+      "src/shared/veteran-runtime.ts": "0c229511c77e346e9178b74e7eb2933bf282818de227b582c18617731706ed44",
+      "src/shared/veteran-skills.ts": "46e032713592a3d87358d09214cb15b64e210b2581a2b0b3a1f8eece9ecb4e2f",
+      "src/shared/veteran-stats.ts": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+      "src/shared/weapons.ts": "2c15ad1dbbb641cebec3ae78a4acaeb06cabbc4bbbc4857a4b8970b094fd564c",
+      "src/shared/wind-field.ts": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c",
+      "/workspace/work/naval-followup/fire-followup/counter-stress.mts": "4cc854c6980059c5954cc5d42247393731c61d2fb46d6443dac15b865a071496",
+      "/workspace/work/naval-followup/fire-followup/exports.mts": "8b890f34fdd2fe5f9619f8d1a61f3d0cd899dbb5b60e58731f81bd7db551a64b",
+      "/workspace/work/naval-followup/fire-followup/native.mts": "f073967967ce7a3c7505ed0653fb0e71a5528bbef30aabf3683bf66db2986198"
+    },
+    "commonManifestDigestEncoding": "SHA-256 of JSON.stringify(commonDependencies with /workspace/sketch-rts/ prepended only to relative keys; absolute work-only instrumentation paths remain unchanged. Listed insertion order; UTF-8, no whitespace.",
+    "repositoryDependencyCount": 88,
+    "instrumentationDependencyCount": 3,
+    "instrumentationDependencies": {
+      "/workspace/work/naval-followup/fire-followup/counter-stress.mts": {
+        "origin": "work-only instrumentation entry, not a repository runtime dependency",
+        "sha256": "4cc854c6980059c5954cc5d42247393731c61d2fb46d6443dac15b865a071496"
+      },
+      "/workspace/work/naval-followup/fire-followup/exports.mts": {
+        "origin": "work-only instrumentation entry, not a repository runtime dependency",
+        "sha256": "8b890f34fdd2fe5f9619f8d1a61f3d0cd899dbb5b60e58731f81bd7db551a64b"
+      },
+      "/workspace/work/naval-followup/fire-followup/native.mts": {
+        "origin": "work-only instrumentation entry, not a repository runtime dependency",
+        "sha256": "f073967967ce7a3c7505ed0653fb0e71a5528bbef30aabf3683bf66db2986198"
+      }
+    }
+  },
+  "headingCases": {
+    "cases": 763,
+    "callbacks": 6082,
+    "afterCallbacks": 6082,
+    "exact": true,
+    "beforeCounters": {
+      "calls": 763,
+      "alreadyComplete": 24,
+      "nearbyBoundComplete": 0,
+      "boundaries": 2018
+    },
+    "afterCounters": {
+      "calls": 763,
+      "alreadyComplete": 24,
+      "nearbyBoundComplete": 0,
+      "boundaries": 2018
+    }
+  },
+  "broadsideCases": {
+    "cases": 1440,
+    "callbacks": 53004,
+    "afterCallbacks": 53004,
+    "exactHeading": true,
+    "newCallbacksAllOriginal": true,
+    "beforeCounters": {
+      "calls": 1440,
+      "alreadyComplete": 0,
+      "nearbyBoundComplete": 0,
+      "boundaries": 12148
+    },
+    "afterCounters": {
+      "calls": 1440,
+      "alreadyComplete": 0,
+      "nearbyBoundComplete": 0,
+      "boundaries": 12148
+    }
+  },
+  "runtimeProof": {
+    "ticks": 600,
+    "observableJsonEveryTickExact": true,
+    "checksumEveryTickExact": true,
+    "twelveHullHeadingsEveryTickObjectIsExact": true,
+    "finalChecksum": "c526e4cf",
+    "completeJsonSha256": "9d143be75287237ac406a7abb484c024a0711c586849c7f79f33add896829c40",
+    "beforePredictionBodies": {
+      "created": 98944,
+      "reused": 0
+    },
+    "afterPredictionBodies": {
+      "created": 38063,
+      "reused": 60881
+    }
+  },
+  "plainComparison": {
+    "id": "fleet-moving-6v6",
+    "durationSeconds": 150,
+    "ticks": 3000,
+    "completeQualityFieldsExact": true,
+    "qualitySha256": "57e470eeb929dfde8d70b44a039d53d9c56681b776f44b05abfc3b31a391eece",
+    "checksum": "26f89868",
+    "shots": 177,
+    "before": {
+      "count": 3000,
+      "coldTicksMs": [
+        35.412262999999996,
+        16.733378999999985
+      ],
+      "meanMs": 7.365573274666669,
+      "p50Ms": 5.42401400000017,
+      "p95Ms": 22.464546000000155,
+      "p99Ms": 28.912866999999096,
+      "maxMs": 78.98023400000056,
+      "over16Ms": 356,
+      "over33Ms": 18,
+      "over50Ms": 4
+    },
+    "predictor": {
+      "count": 3000,
+      "coldTicksMs": [
+        33.73841899999999,
+        16.37051199999999
+      ],
+      "meanMs": 6.912959078333317,
+      "p50Ms": 5.134157000000414,
+      "p95Ms": 20.369024999999965,
+      "p99Ms": 25.74077099999886,
+      "maxMs": 71.3308560000005,
+      "over16Ms": 265,
+      "over33Ms": 10,
+      "over50Ms": 2
+    },
+    "meanReductionFraction": 0.06144996179592499,
+    "p99ReductionFraction": 0.10971226063469719
+  },
+  "limits": [
+    "Plain timings include actual normal-HP combat with 177 mounted shots; original weapon stats, cadence, binary probes, 48 interior samples and 12 refinements remain unchanged.",
+    "Caches are bounded to 128 exact flight-tick target bodies within one fixed target/velocity selection; no pose or verdict survives the call.",
+    "Two plain steps still exceeded 50ms; this artifact does not claim all long frames are resolved.",
+    "Native proof retains complete snapshot JSON and its timing is excluded from the performance comparison."
+  ],
+  "rejectedCandidate": {
+    "name": "conservative nearby-battery early return",
+    "landed": false,
+    "reason": "Actual plain mean improvement only 1.6%; p99 did not improve and maximum was worse.",
+    "before": {
+      "count": 3000,
+      "coldTicksMs": [
+        35.412262999999996,
+        16.733378999999985
+      ],
+      "meanMs": 7.365573274666669,
+      "p50Ms": 5.42401400000017,
+      "p95Ms": 22.464546000000155,
+      "p99Ms": 28.912866999999096,
+      "maxMs": 78.98023400000056,
+      "over16Ms": 356,
+      "over33Ms": 18,
+      "over50Ms": 4
+    },
+    "earlyOnly": {
+      "count": 3000,
+      "coldTicksMs": [
+        33.689453,
+        16.09039299999999
+      ],
+      "meanMs": 7.2469110649999955,
+      "p50Ms": 5.420959999999468,
+      "p95Ms": 21.60022299999946,
+      "p99Ms": 28.931323000000702,
+      "maxMs": 81.37596200000007,
+      "over16Ms": 333,
+      "over33Ms": 15,
+      "over50Ms": 3
+    }
+  }
+}

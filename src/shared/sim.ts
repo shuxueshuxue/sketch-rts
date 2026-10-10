@@ -2,6 +2,8 @@ import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from '
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
 import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
+import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
+import { shipFireLaneClear } from './ship-fire-control';
 import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
 import { assignPlayerColors } from './player-colors';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
@@ -14,7 +16,7 @@ import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
-import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
+import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
@@ -43,11 +45,13 @@ import { canBoard, boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreC
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksCanTransfer } from "./connected-decks";
 import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
-import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
+import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shareShipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { beginShipMotionFrame } from './ship-motion';
+import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
+import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
@@ -138,6 +142,7 @@ type SpatialEntity = {
 };
 
 type SpatialIndex<T extends SpatialEntity> = {
+  team?: string | undefined;
   cellSize: number;
   buckets: Map<number, T[]>;
   left: number;
@@ -195,11 +200,13 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   // A generated layout replaces the map id's own starts, mines, camps and scenery (see @@@generated-map); the id names it.
   // A pool map is its own layout (see @@@map-pool); the ladder map has none of its own: a game on it without a layout is
   // drawn from the seed "ladder".
-  const layout = options.layout ?? poolMap(mapId)?.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
+  const namedLayout = poolMap(mapId)?.layout;
+  const layout = options.layout ?? namedLayout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
   // Named two-shore maps retain their geometry when players change alliances.
   // Only the layout uses these physical sides; game diplomacy uses `teams`.
-  const teamSizes = [...new Set(Object.values(teams))].map(team => activePlayers.filter(id => teams[id] === team).length);
-  const layoutTeams = !options.layout && poolMap(mapId)?.layout.kind === "sides" && (teamSizes.length !== 2 || teamSizes[0] !== teamSizes[1])
+  const namedShores = namedLayout?.kind === "sides"
+    && (!options.layout || options.layout.kind === namedLayout.kind && options.layout.idea === namedLayout.idea);
+  const layoutTeams = namedShores
     ? Object.fromEntries(activePlayers.map((id, index) => [id, `shore-${index % 2}`])) : teams;
   const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
@@ -469,7 +476,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: "move", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }), command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -477,7 +484,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: unit.attackDamage > 0 ? "attackMove" : "move", x: command.x, y: command.y }), command.queued);
     }
-    addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28);
+    addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28, { owner });
     return;
   }
 
@@ -511,7 +518,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
       if (unit.attackDamage > 0) assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
     const target = findStrikeTarget(game, command.targetId);
-    if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32);
+    if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32, { owner });
     return;
   }
 
@@ -523,7 +530,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (unit !== target) assignUnitOrder(unit, { type: "follow", targetId: target.id }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -533,7 +540,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: unit.carryingGold > 0 ? "return" : "toMine", timer: 0 }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30);
+    addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30, { owner });
     return;
   }
 
@@ -654,7 +661,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }, command.queued);
     }
-    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
     return;
   }
 
@@ -745,6 +752,7 @@ export function stepGame(game: Game) {
   updateTowerAttacks(game);
   const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
   beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings);
+  beginShipPlanningFrame(game.units,game.tick);
   updateShipGangways(game.map,game.units,game.tick,game);
   prepareCrewRendezvous(game.map,game.units);
   game.boardingHolds=boardingHoldShips(game.units);
@@ -1030,11 +1038,12 @@ function updateTraining(game: Game) {
     if (!job) continue;
     job.remaining = Math.max(0,job.remaining-1);
     if (job.remaining > 0) continue;
-    const launch=unitMover(job.unitKind)==="sea" ? shipLaunchPose(game,building,shipLaunchPrototype(building,job.unitKind)) : undefined;
-    if(unitMover(job.unitKind)==="sea" && !launch)continue;
-    const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
-    // A ship is launched from the shipyard's own water, the nearest to it (see @@@shore-footprint).
-    const from = launch ?? { x: building.x + detCos(angle) * 80, y: building.y + detSin(angle) * 80 };
+    const sea=unitMover(job.unitKind)==="sea";
+    const launch=sea ? shipLaunchPose(game,building,shipLaunchPrototype(building,job.unitKind)) : undefined;
+    const from=sea ? launch : landSpawnPoint(game,building,landSpawnPrototype(building,job.unitKind));
+    // A paid job waits for a legal local exit. Rally direction chooses among
+    // those exits rather than placing the new unit inside a body or beyond it.
+    if(!from)continue;
     const unit = game.spawnUnit(building.owner, job.unitKind, from.x, from.y,launch);
     building.queue.shift();
     unit.order = rallyOrderForUnit(game, building, unit);
@@ -1179,29 +1188,52 @@ function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:n
   if(proxy.facing!==undefined)item.facing=proxy.facing;
   return ready?proxy:undefined;
 }
+function friendlyFireBlockers(game:Game,ship:Unit){
+  return shipsIn(game.units).filter(other=>other.id!==ship.id && other.hp>0 && !areEnemyOwners(game,ship.owner,other.owner));
+}
+function mountedShotClear(ship:Unit,blockers:readonly Unit[]):MountedShotClear|undefined{
+  if(!blockers.length)return undefined;
+  const poses=new Map<number,Unit>();
+  return(item,point,heading)=>{
+    let aimed=poses.get(heading);
+    if(!aimed){aimed={...ship,sailing:{...ship.sailing!,heading}};shareShipProfile(ship,aimed);poses.set(heading,aimed);}
+    return mountedFireLaneClear(aimed,item,point,blockers);
+  };
+}
 function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;heading:number}>,defenses:ShipDefenseFrame){
   const crossing=game.boardingHolds!;
   for(const ship of shipsIn(game.units)){
     if(ship.hp<=0 || isStaggered(ship) || isStunned(ship) || !shipProfile(ship) || "avoidCombat" in ship.order && ship.order.avoidCombat)continue;
     const order=ship.order;
+    const blockers=friendlyFireBlockers(game,ship);
+    const weapons=installedWeapons(game,ship),mounts=shipMounts(ship);
+    const acquisitionRange=weapons.reduce((reach,item)=>{
+      if((item.durability ?? 1)<=0)return reach;
+      const mount=mounts.find(mount=>mount.id===item.mountId);
+      const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
+      return mount ? Math.max(reach,veteranWeaponRange(ship,def.range)+Math.hypot(mount.x,mount.y)) : reach;
+    },ship.attackRange);
     const intrinsic=unitRules(game,ship).intrinsicAttack;
     const ordered=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
     const explicit=order.type==='attack' && order.leashX===undefined;
     const requested=defenses.get(ship.id)?.target ?? (ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined);
-    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,ship.attackRange) : undefined);
+    // Acquire far enough to include the offset battery, not just the hull
+    // center. Actual heading and firing still use each pivot's own range.
+    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,acquisitionRange) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
     const orientHull = ['idle', 'hold', 'aim'].includes(order.type)
       || (order.type === 'attack' || order.type === 'attackMove') && shipCanTurnForAttack(ship);
-    if(!crossing.has(ship.id) && facingPoint && (shipCanTurnForAttack(ship) || strikeGap(ship,facingPoint)<=ship.attackRange) && orientHull) {
-      turnShipToward(ship,bestFiringHeading(game,ship,facingPoint),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
+    if(!crossing.has(ship.id) && facingPoint && (shipCanTurnForAttack(ship) || strikeGap(ship,facingPoint)<=acquisitionRange) && orientHull) {
+      turnShipToward(ship,bestFiringHeading(game,ship,facingPoint,0,mountedShotClear(ship,blockers)),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
     }
-    for(const item of installedWeapons(game,ship)){
+    for(const item of weapons){
       if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && !intrinsic && ship.cooldown>0)continue;
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
       const range=veteranWeaponRange(ship,def.range);
       const canShoot=(candidate:Unit|Building|Obstacle)=>{
         const point=mountedTargetPoint(game,ship,item,candidate,pose),gap=distance(pose.pivot,point);
-        return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0);
+        return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0)
+          && (!blockers.length || mountedFireLaneClear(ship,item,point,blockers));
       };
       const preferred=requested && !isObstacle(requested) ? navalCombatTarget(game,ship,requested) : requested;
       // The ordered enemy remains the navigator's objective. A gun which
@@ -1213,7 +1245,9 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
       const proxy=aimMountedWeapon(game,ship,item,point,pose);
       if(!proxy || !target)continue;
-      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!,aimPoint:point});
+      const launchPose=mountedWeaponPose(ship,item)!;
+      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers))continue;
+      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:launchPose,aimPoint:point});
       markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }
   }
@@ -1400,7 +1434,7 @@ function updateShipOwnership(game:Game) {
     const owner=occupants[0]?.owner;
     if(!owner || occupants.some(unit=>areEnemyOwners(game,owner,unit.owner)))continue;
     ship.owner=owner;ship.order={type:"idle"};ship.orderQueue=[];ship.aim=undefined;
-    if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;}
+    if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;cancelShipPlanningJob(ship);}
     refreshUnitStats(game,ship);changed=true;
   }
   if(changed)updateSupplyState(game);
@@ -1420,7 +1454,9 @@ function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
   unit.order = order;
   unit.orderQueue = [];
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
-  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit; }
+  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    cancelShipPlanningJob(unit);
+    delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 
 function activateQueuedOrder(game:Game,unit: Unit) {
@@ -1432,7 +1468,9 @@ function activateQueuedOrder(game:Game,unit: Unit) {
   if(shipProfile(unit))cancelCrewRendezvous(game.units,new Set([unit.id]));
   unit.order = next;
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
-  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit; }
+  if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    cancelShipPlanningJob(unit);
+    delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 
 function updateFollowOrder(game: Game, unit: Unit) {
@@ -1600,31 +1638,46 @@ function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Ob
   const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
   const minimum = weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
     : weaponRules(game, ship).weapon?.minRange ?? 0;
+  const blockers=friendlyFireBlockers(game,ship);
   let firingHeading: number | undefined;
-  const canFire = () => {
-    if (!weapons.length) return targetGap(ship, target) <= ship.attackRange && targetGap(ship, target) >= minimum;
-    const start = { x: ship.x, y: ship.y, heading: ship.sailing!.heading };
+  const canFireFrom = (station:Unit,checkTurn:boolean) => {
+    if (!weapons.length) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
+    shareShipProfile(ship,station);
+    const start = { x: station.x, y: station.y, heading: station.sailing!.heading };
+    const shotClear=mountedShotClear(station,blockers);
     for (const margin of [Math.PI / 36, 0]) {
-      const heading = bestFiringHeading(game, ship, target, margin), aimed = { ...ship, sailing: { ...ship.sailing!, heading } }, end = { ...start, heading };
-      if (!hullPassageClear(game.map, ship, start, end) || !shipTraffic(ship, game.units)(start, end)) continue;
+      const heading = bestFiringHeading(game, station, target, margin,shotClear), aimed = { ...station, sailing: { ...station.sailing!, heading } }, end = { ...start, heading };
+      shareShipProfile(ship,aimed);
+      if (checkTurn && (!hullPassageClear(game.map, station, start, end) || !shipTraffic(station, game.units)(start, end))) continue;
       if (weapons.some(item => {
         const pose = mountedWeaponPose(aimed, item), def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
         if (!pose) return false;
         const point = mountedTargetPoint(game,aimed,item,target,pose);
         if (!shipGunCanAim(aimed, item, point)) return false;
         const gap = distance(pose.pivot, point);
-        return gap <= veteranWeaponRange(ship, def.range) && gap >= (def.weapon.minRange ?? 0);
-      })) { firingHeading = heading; return true; }
+        return gap <= veteranWeaponRange(station, def.range) && gap >= (def.weapon.minRange ?? 0)
+          && (!blockers.length || mountedFireLaneClear(aimed,item,point,blockers));
+      })) { if(checkTurn)firingHeading = heading; return true; }
     }
     return false;
   };
-  const firing = canFire();
+  const firing = canFireFrom(ship,true);
   const bow=weapons.find(item=>item.mountId==='bow' && veteranWeaponRange(ship,SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].range)>=ship.attackRange);
   const bowPose=bow && mountedWeaponPose(ship,bow);
   const stationBowReach=bowPose ? (bowPose.pivot.x-ship.x)*detCos(ship.sailing!.heading)+(bowPose.pivot.y-ship.y)*detSin(ship.sailing!.heading) : 0;
-  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach);
+  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false),()=>tryAdmitShipPlan(ship));
   const pace = statusPace(ship);
   if (goal && pace > 0) sailToward(ship, goal, game.map, game.units, pace);
+  else if (!goal && ship.sailing!.planningRequestedAtTick !== undefined && !ship.sailing!.route) {
+    // A new attack awaiting its first admitted station has no motion
+    // authority. It may use this frame's bounded, swept yaw to face the
+    // carrying hull, but cannot surge toward an untested firing station.
+    ship.sailing!.speed = 0;
+    if (pace > 0) {
+      const quarry = shipNavigationTarget(target, game.units);
+      turnShipToward(ship, Math.atan2(quarry.y - ship.y, quarry.x - ship.x), game.map, game.units);
+    }
+  }
 }
 
 function updateMineOrder(game: Game, unit: Unit) {
@@ -1810,7 +1863,10 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     // reaches the same island. landingSpot checks the actual hull reach and
     // the requested shore's ground component before putting anyone ashore.
     const arrived=walkEnded(game,ship,ship.order,8);
-    if(unloadCargo(game,ship)>0 || arrived || shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
+    // A deferred route can hold the departure pose without reaching the
+    // shore. Keep even an empty ship's unload order active during that wait.
+    const planning=ship.sailing?.planningJob!==undefined || ship.sailing?.planningRequestedAtTick!==undefined;
+    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
   }
 }
 
@@ -1828,7 +1884,7 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
     passenger.aim=undefined;
     Object.assign(passenger,spot);
     assignUnitOrder(passenger,{type:"idle"});
-    addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,sourceKind:passenger.kind});
+    addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
     landed++;
   });
   syncDecks(game.units);
@@ -1971,7 +2027,7 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
 function addRepairHammerEffect(game: Game, building: Building, queued = false) {
   const activeType = queued ? ["repair", "queuedRepair"] : ["repair"];
   if (game.effects.some((effect) => activeType.includes(effect.type) && effect.x === building.x && effect.y === building.y)) return;
-  addEffect(game, queued ? "queuedRepair" : "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION);
+  addEffect(game, queued ? "queuedRepair" : "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION, { owner: building.owner });
 }
 
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
@@ -1997,7 +2053,7 @@ function setRally(game: Game, owner: PlayerId, buildingIds: string[], x: number,
     building.rallyY = normalized.y;
     building.rallyTarget = normalized.target;
   }
-  addEffect(game, "move", normalized.x, normalized.y, 24);
+  addEffect(game, "move", normalized.x, normalized.y, 24, { owner });
 }
 
 function normalizeRallyTarget(game: Game, owner: PlayerId, x: number, y: number, target: RallyTarget | undefined) {
@@ -2019,7 +2075,7 @@ function rallyOrderForUnit(game: Game, building: Building, unit: Unit): Unit["or
   if (target?.type === "resource" && unit.kind === "worker" && game.resources.some((resource) => resource.id === target.resourceId && resource.amount > 0)) {
     return { type: "mine", resourceId: target.resourceId, phase: "toMine", timer: 0 };
   }
-  if (target?.type === "unit" && game.units.some((candidate) => candidate.id === target.unitId && candidate.owner === unit.owner)) {
+  if (target?.type === "unit" && game.units.some((candidate) => candidate.id === target.unitId && candidate.owner === unit.owner && candidate.hp > 0)) {
     return { type: "follow", targetId: target.unitId };
   }
   return { type: "move", x: building.rallyX, y: building.rallyY };
@@ -2147,7 +2203,7 @@ function deliverPurchase(game:Game,item:WorldItem,placement:PurchasePlacement){
   item.x=recipient.x;item.y=recipient.y;
   invalidateItemIndex(game.items);
   applyDerivedUnitStats(game,recipient);refreshEquipmentMass(game);
-  addEffect(game,"itemReceived",recipient.x,recipient.y,seconds(.8));
+  addEffect(game,"itemReceived",recipient.x,recipient.y,seconds(.8),{owner:recipient.owner});
 }
 
 function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
@@ -2261,7 +2317,7 @@ function castAbility(
   // Out of reach, or after the orders before it (shift), the caster walks to cast (see @@@cast-order).
   const later = (order: Extract<UnitOrder, { type: "cast" }>, at: { x: number; y: number }) => {
     assignUnitOrder(caster, order, queued);
-    addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24);
+    addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24, { owner });
   };
 
   if (def.behavior === "weapon") {
@@ -3637,8 +3693,8 @@ function findStrikeTarget(game: Game, targetId: string): Unit | Building | Obsta
 }
 
 function removeExpiredUnits(game: Game) {
+  if (!game.units.some(unit => unit.expiresTick !== undefined && unit.expiresTick <= game.tick)) return;
   const expiredUnits = game.units.filter((unit) => unit.expiresTick !== undefined && unit.expiresTick <= game.tick);
-  if (expiredUnits.length === 0) return;
   dropItemsFromDeadUnits(game, expiredUnits);
   const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
   game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
@@ -3646,6 +3702,12 @@ function removeExpiredUnits(game: Game) {
 }
 
 function removeDead(game: Game) {
+  // Empty cleanup frames still check every body. Avoid constructing death
+  // lists and wreck sets until a unit or building actually needs removal.
+  if (!game.units.some(unit => unit.hp <= 0) && !game.buildings.some(building => building.hp <= 0)) {
+    if (game.obstacles?.some(obstacle => obstacle.hp <= 0)) game.obstacles = game.obstacles.filter(obstacle => obstacle.hp > 0);
+    return;
+  }
   const deadUnits = game.units.filter((unit) => unit.hp <= 0);
   const wrecks=new Set(deadUnits.filter(unit=>shipProfile(unit)).map(unit=>unit.id));
   if(wrecks.size)for(const passenger of game.units)if(passenger.deck && wrecks.has(passenger.deck.shipId) && passenger.hp>0){passenger.hp=0;deadUnits.push(passenger);}
@@ -4011,7 +4073,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (bucket) bucket.push(entity);
     else buckets.set(key, [entity]);
   }
-  return { cellSize, buckets, left, right, top, bottom };
+  return { team: undefined, cellSize, buckets, left, right, top, bottom };
 }
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number) {
@@ -4019,7 +4081,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   for (const entity of entities) {
     const team = teamKey(game, entity.owner);
     let index = indexes.get(team);
-    if (!index) indexes.set(team, index = { cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
+    if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
@@ -4075,7 +4137,7 @@ function forEachNearbyEnemyUnit(game: Game, owner: Owner, point: { x: number; y:
     return;
   }
   const ownTeam = teamKey(game, owner);
-  for (const [team,index] of indexes) if (team !== ownTeam) forEachNearbyEntity(index, [], point, range, visit);
+  for (const index of indexes.values()) if (index.team !== ownTeam) forEachNearbyEntity(index, game.units, point, range, visit);
 }
 
 function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
@@ -4087,7 +4149,7 @@ function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number
     return;
   }
   const ownTeam = teamKey(game, owner);
-  for (const [team,index] of indexes) if (team !== ownTeam) forEachNearbyEntity(index, [], point, range, visit);
+  for (const index of indexes.values()) if (index.team !== ownTeam) forEachNearbyEntity(index, game.buildings, point, range, visit);
 }
 
 function forEachNearbyEntity<T extends SpatialEntity>(
@@ -4130,7 +4192,8 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   const from={x:unit.x,y:unit.y};
   if (map.terrain) {
     walkToward(unit, x, y, map, pace);
-    Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
     return;
   }
   const speed = perTick(unit.speed) * pace;
@@ -4140,12 +4203,14 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   if (length <= speed || length === 0) {
     unit.x = clamp(x, 0, map.width);
     unit.y = clamp(y, 0, map.height);
-    Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
     return;
   }
   unit.x = clamp(unit.x + (dx / length) * speed, 0, map.width);
   unit.y = clamp(unit.y + (dy / length) * speed, 0, map.height);
-  Object.assign(unit,constrainGroundShipStep(map,unit,from,unit,units));
+  const at=constrainGroundShipStep(map,unit,from,unit,units);
+  if(at!==unit){unit.x=at.x;unit.y=at.y;}
 }
 
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
