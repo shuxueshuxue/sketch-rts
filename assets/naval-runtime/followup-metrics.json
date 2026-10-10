@@ -12118,7 +12118,7 @@
     "checksum": "62dc5ddd",
     "sameQualityAndChecksum": true
   },
-  "sourceInputsVerifiedAtCommit": "8204dfe2097339220447a885be1f4e7c2eda01ee",
+  "sourceInputsVerifiedAtCommit": "bcd03c1fa220084fb313298445bb1758c7f1b1e7",
   "movingGcDiagnostic": {
     "scope": "Separate frozen-input diagnostic with per-tick start/duration and Node GC PerformanceObserver; not the formal ten-scene CPU result. Observed GC overlap does not establish the cause of the formal run's 69 ms step or make outside-overlap wall time a pure CPU measurement. All runtime inputs match the formal naval fixture; instrumented timer/observer work is additional.",
     "sourceCommit": "869245c873036fdd5e00dff1fc3c5ab45f5d8f47",

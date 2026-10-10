@@ -127,5 +127,5 @@
   "driver": "scripts/traffic-sweep-equivalence.mjs",
   "driverSha256": "c37b42f242825c074981ce1adc299ec71639498be977a8379e8f98946295c0d6",
   "reproduce": "node scripts/traffic-sweep-equivalence.mjs work/traffic-sweep-equivalence",
-  "sourceInputsVerifiedAtCommit": "8204dfe2097339220447a885be1f4e7c2eda01ee"
+  "sourceInputsVerifiedAtCommit": "bcd03c1fa220084fb313298445bb1758c7f1b1e7"
 }

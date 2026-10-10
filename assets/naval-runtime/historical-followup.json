@@ -10670,5 +10670,5 @@
   },
   "scope": "Seven historical mechanism fixtures and explicit engine criteria. Raw trajectories and checkpoints are omitted from this bounded report; the committed script reproduces them.",
   "reproduce": "npx tsx scripts/historical-naval-review.ts --validate --out work/naval-followup/historical.json --png work/naval-followup/historical.png",
-  "sourceInputsVerifiedAtCommit": "8204dfe2097339220447a885be1f4e7c2eda01ee"
+  "sourceInputsVerifiedAtCommit": "bcd03c1fa220084fb313298445bb1758c7f1b1e7"
 }
