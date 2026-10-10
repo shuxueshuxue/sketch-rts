@@ -5,20 +5,20 @@ import { joinPublicPath } from "../shared/deployment-base";
 export type AbilityIconId = AbilityKind | VeteranSkillId
   | "guardianScroll" | "statusSlow" | "statusPoison" | "statusStun";
 
-/** Each command and status loads one small image; the review atlas is never shipped to the browser. */
+/** Each command and status loads one self-contained hand-authored SVG; authoring sources and the review sheet stay outside the runtime. */
 export const ABILITY_ICON_FILES: Readonly<Record<AbilityIconId, string>> = {
-  heal: "heal.webp", summon: "summon.webp", curse: "curse.webp",
-  emberMend: "emberMend.webp", cinderSoul: "cinderSoul.webp", ashCurse: "ashCurse.webp",
-  charge: "charge.webp", stomp: "stomp.webp", bloodlust: "bloodlust.webp", web: "web.webp",
-  pinningBolt: "pinningBolt.webp", incendiaryFlume: "incendiaryFlume.webp",
-  veteranResilience: "veteranResilience.webp", veteranMobility: "veteranMobility.webp",
-  veteranCommand: "veteranCommand.webp", veteranVigilance: "veteranVigilance.webp",
-  veteranRally: "veteranRally.webp", veteranPhalanx: "veteranPhalanx.webp",
-  veteranSteadyAim: "veteranSteadyAim.webp", veteranMarch: "veteranMarch.webp",
-  veteranHealingWave: "veteranHealingWave.webp", veteranInnerFire: "veteranInnerFire.webp",
-  veteranRenewal: "veteranRenewal.webp", veteranSiegeDrill: "veteranSiegeDrill.webp",
-  veteranEndurance: "veteranEndurance.webp", guardianScroll: "guardianScroll.webp",
-  statusSlow: "statusSlow.webp", statusPoison: "statusPoison.webp", statusStun: "statusStun.webp",
+  heal: "heal.svg", summon: "summon.svg", curse: "curse.svg",
+  emberMend: "emberMend.svg", cinderSoul: "cinderSoul.svg", ashCurse: "ashCurse.svg",
+  charge: "charge.svg", stomp: "stomp.svg", bloodlust: "bloodlust.svg", web: "web.svg",
+  pinningBolt: "pinningBolt.svg", incendiaryFlume: "incendiaryFlume.svg",
+  veteranResilience: "veteranResilience.svg", veteranMobility: "veteranMobility.svg",
+  veteranCommand: "veteranCommand.svg", veteranVigilance: "veteranVigilance.svg",
+  veteranRally: "veteranRally.svg", veteranPhalanx: "veteranPhalanx.svg",
+  veteranSteadyAim: "veteranSteadyAim.svg", veteranMarch: "veteranMarch.svg",
+  veteranHealingWave: "veteranHealingWave.svg", veteranInnerFire: "veteranInnerFire.svg",
+  veteranRenewal: "veteranRenewal.svg", veteranSiegeDrill: "veteranSiegeDrill.svg",
+  veteranEndurance: "veteranEndurance.svg", guardianScroll: "guardianScroll.svg",
+  statusSlow: "statusSlow.svg", statusPoison: "statusPoison.svg", statusStun: "statusStun.svg",
 };
 
 export function abilityIconUrl(id: AbilityIconId, basePath = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/") {

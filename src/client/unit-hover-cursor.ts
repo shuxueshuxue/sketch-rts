@@ -3,14 +3,17 @@ import { isInCabin } from "../shared/ship-cabin";
 import type { GameSnapshot, Owner, PlayerId } from "../shared/types";
 import { relationTo, type Relation } from "./relations";
 
-export const HOVER_CURSOR_SIZE = 32;
-/** Every SVG's arrow tip is at this pixel, including the pointer-lock image. */
-export const HOVER_CURSOR_HOTSPOT = [4, 3] as const;
-export const HOVER_CURSOR_ART: Readonly<Record<Relation, { file: string; color: string; shape: string }>> = {
-  own: { file: "own.svg", color: "#88ce86", shape: "shield" },
-  ally: { file: "ally.svg", color: "#84d5e6", shape: "linked-rings" },
-  enemy: { file: "enemy.svg", color: "#ec9695", shape: "diamond" },
-  creep: { file: "neutral.svg", color: "#e8bd78", shape: "circle" },
+export const HOVER_CURSOR_SIZE = 24;
+export const HOVER_CURSOR_HOTSPOT = [12, 12] as const;
+export const LOCKED_HOVER_CURSOR_SIZE = 18;
+export const LOCKED_HOVER_CURSOR_HOTSPOT = [9, 9] as const;
+/** Inspection keeps the original crosshair, or ring and dot under pointer lock.
+ * Relationships change only its color, never its silhouette or click position. */
+export const HOVER_CURSOR_ART: Readonly<Record<Relation, { file: string; color: string }>> = {
+  own: { file: "own.svg", color: "#88ce86" },
+  ally: { file: "ally.svg", color: "#84d5e6" },
+  enemy: { file: "enemy.svg", color: "#ec9695" },
+  creep: { file: "neutral.svg", color: "#e8bd78" },
 };
 
 const publicBasePath = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
@@ -25,11 +28,11 @@ export type UnitHoverCursor = {
   nativeCursor: string;
   relation?: Relation;
   iconUrl?: string;
-  hotspot?: typeof HOVER_CURSOR_HOTSPOT;
+  hotspot?: typeof HOVER_CURSOR_HOTSPOT | typeof LOCKED_HOVER_CURSOR_HOTSPOT;
 };
 
-export function unitHoverCursorUrl(relation: Relation, basePath = publicBasePath) {
-  return joinPublicPath(basePath, `art/cursors/${HOVER_CURSOR_ART[relation].file}`);
+export function unitHoverCursorUrl(relation: Relation, basePath = publicBasePath, pointerLocked = false) {
+  return joinPublicPath(basePath, `art/cursors/${pointerLocked ? "locked/" : ""}${HOVER_CURSOR_ART[relation].file}`);
 }
 
 /** A relation marker for inspection, never a promise that the selection can attack.
@@ -42,7 +45,7 @@ export function unitHoverCursor(
   options: UnitHoverCursorOptions = {},
 ): UnitHoverCursor {
   const mode = options.mode ?? "inspect";
-  const fallback = mode === "placement" ? "copy" : mode === "targeting" ? "crosshair" : mode === "unavailable" ? "not-allowed" : "default";
+  const fallback = mode === "placement" ? "copy" : mode === "unavailable" ? "not-allowed" : "crosshair";
   const ordinary = { nativeCursor: options.pointerLocked ? "none" : fallback };
   if (mode !== "inspect" || !snapshot || !viewer || !Object.hasOwn(snapshot.players, viewer) || !hoveredId) return ordinary;
 
@@ -61,9 +64,10 @@ export function unitHoverCursor(
     } else return ordinary;
   }
   const relation = relationTo(snapshot, viewer, owner);
-  const iconUrl = unitHoverCursorUrl(relation, options.basePath ?? publicBasePath);
+  const iconUrl = unitHoverCursorUrl(relation, options.basePath ?? publicBasePath, options.pointerLocked);
+  const hotspot = options.pointerLocked ? LOCKED_HOVER_CURSOR_HOTSPOT : HOVER_CURSOR_HOTSPOT;
   return {
-    nativeCursor: options.pointerLocked ? "none" : `url(${JSON.stringify(iconUrl)}) ${HOVER_CURSOR_HOTSPOT.join(" ")}, default`,
-    relation, iconUrl, hotspot: HOVER_CURSOR_HOTSPOT,
+    nativeCursor: options.pointerLocked ? "none" : `url(${JSON.stringify(iconUrl)}) ${hotspot.join(" ")}, crosshair`,
+    relation, iconUrl, hotspot,
   };
 }
