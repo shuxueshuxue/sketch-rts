@@ -78,6 +78,7 @@ export type AiPolicyMemory = {
   naval?: NavalPlanMemory;
   loot?: { unitId: string; itemId: string; homeId: string };
   shopping?: { unitId: string; shopId: string; kind: ItemKind; homeId: string; returning: boolean };
+  mercenaryCourier?: { unitId: string; campId: string };
 };
 
 export function createAiPolicyMemory(): AiPolicyMemory {
