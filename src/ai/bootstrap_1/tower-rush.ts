@@ -9,7 +9,7 @@ import { averagePoint, distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import type { rankV6Goals } from '../policy/v6/economy';
 import { combatRating, TOWER_STRENGTH } from '../policy/v6/strength';
-import { planAbilityCommands } from '../policy/spell-tactics';
+import { planBootstrapAbilities } from './weapon-targets';
 import { isBacklineKind } from '../policy/v6/backline';
 import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
 import { summonHost } from './summon-host';
@@ -194,7 +194,7 @@ export const towerRushAbilities: AiScript = {
   id: 'abilities', phase: 'tactics',
   run(snapshot, owner, options) {
     const general = options.memory.v6?.general;
-    return planAbilityCommands(snapshot, owner, towerRushEngaged(options) && general?.stage === 'gather'
+    return planBootstrapAbilities(snapshot, owner, towerRushEngaged(options) && general?.stage === 'gather'
       ? { ...options, memory: { ...options.memory, v6: { ...options.memory.v6, general: { ...general, stage: 'strike' } } } }
       : options);
   },
