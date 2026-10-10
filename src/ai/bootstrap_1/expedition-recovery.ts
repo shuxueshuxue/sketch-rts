@@ -41,8 +41,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
       && distance(patient, foe) <= mountedThreatReach(snapshot, foe, patient, THINK_TICKS)
         + ('speed' in foe ? foe.speed : 0) * (THINK_TICKS + 2) / SIM_TICKS_PER_SECOND);
     if (threats.length) {
-      const command = mountedEscape(snapshot, patient, threats, 0, healer);
-      return command.type === 'move' ? { ...command, avoidCombat: true } : command;
+      return mountedEscape(snapshot, patient, threats, 0, healer, true);
     }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
   });

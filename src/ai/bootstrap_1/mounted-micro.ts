@@ -5,6 +5,7 @@ import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
 import { isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { unitAbilities } from '../../shared/unit-abilities';
 import { itemsFor } from '../../shared/equipment';
 import { LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from '../../shared/item-rules';
@@ -89,7 +90,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
-      return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station));
+      return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station), false);
     }
     // Aim while a pursuer is outside weapon range, including during the weapon's cooldown.
     const prepared = (rider.attackRange - rider.radius) / distance(rider, target);
@@ -98,10 +99,10 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   }
   const edge = Math.min(rider.x, rider.y, snapshot.map.width - rider.x, snapshot.map.height - rider.y);
   return mountedEscape(snapshot, rider, foes, shot, goal.kind === 'raid' && edge < rider.attackRange
-    ? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 } : undefined);
+    ? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 } : undefined, false);
 }
 
-export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined): GameCommand {
+export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined, avoidCombat: boolean): GameCommand {
   const horizon = THINK_TICKS + rider.cooldown;
   const threats = foes.map(foe => ({ foe, range: mountedThreatReach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
   const hazards = hostileDamageDisks(snapshot, rider, foes, horizon);
@@ -109,7 +110,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const danger = [...threats].sort((a, b) => margin(rider, a) - a.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
   const angle = destination ? Math.atan2(destination.y - rider.y, destination.x - rider.x) : Math.atan2(rider.y - danger.foe.y, rider.x - danger.foe.x);
-  // A fast pursuer needs a longer waypoint so arrival cannot interrupt the escape before the next think.
+  // Keep the original scoring radius; recovery extends the selected endpoint by the move arrival range below.
   const step = Math.max(rider.speed * THINK_TICKS,
     ...threats.map(threat => threat.speed * (THINK_TICKS + 2))) / SIM_TICKS_PER_SECOND;
   const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
@@ -125,17 +126,25 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   // Leave room for the following turn rather than maximizing distance into a cliff corner.
   const exit = (point: Point) => point !== rider && segmentWalkable(snapshot.map, point,
     { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) });
+  const endpoint = (point: Point) => {
+    if (!avoidCombat || point === rider || point === destination) return point;
+    const gap = distance(rider, point);
+    return { x: point.x + (point.x - rider.x) * MOVE_ORDER_ARRIVAL_RANGE / gap,
+      y: point.y + (point.y - rider.y) * MOVE_ORDER_ARRIVAL_RANGE / gap };
+  };
   const scored = choices.map(point => {
     const margins = threats.map(threat => margin(point, threat));
     const areas = hazards.map(hazard => distance(point, hazard) - hazard.radius);
     const room = Math.min(...margins.map((gap, index) => gap - threats[index]!.speed * THINK_TICKS / SIM_TICKS_PER_SECOND), ...areas);
-    return { point, room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
+    return { point, goal: endpoint(point), room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
       distance: destination ? distance(point, destination) : 0 };
-  });
+  }).filter(({ goal }) => goal.x >= 0 && goal.y >= 0 && goal.x < snapshot.map.width && goal.y < snapshot.map.height
+    && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
-    || (a.room > 0 ? Number(b.bodyClear) - Number(a.bodyClear)
-      || (destination ? a.distance - b.distance : Number(b.exit) - Number(a.exit) || b.margin - a.margin)
-      : b.room - a.room || Number(b.bodyClear) - Number(a.bodyClear)))[0]!;
+    || (avoidCombat && a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)
+    || Number(b.bodyClear) - Number(a.bodyClear)
+    || (a.room > 0 ? destination ? a.distance - b.distance
+      : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
   return innerWindow.length > 0 && chosen.point === rider ? { type: 'holdPosition', unitIds: [rider.id] }
-    : { type: 'move', unitIds: [rider.id], x: chosen.point.x, y: chosen.point.y };
+    : { type: 'move', unitIds: [rider.id], x: chosen.goal.x, y: chosen.goal.y, ...(avoidCombat ? { avoidCombat: true } : {}) };
 }

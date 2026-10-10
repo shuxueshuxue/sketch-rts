@@ -55,6 +55,7 @@ import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget
 import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { hypot2 } from "./hypot";
+import { MOVE_ORDER_ARRIVAL_RANGE } from './movement-rules';
 import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, hasCabinCrewMovementFrame, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
@@ -1405,7 +1406,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       case "move":
         if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
         moveToward(unit, unit.order.x, unit.order.y, game.map, game.units, navalUnitFrame);
-        if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
+        if (walkEnded(game, unit, unit.order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, unit.order);
         continue;
       case "attackMove":
         updateAttackMoveOrder(game, unit, navalUnitFrame);
