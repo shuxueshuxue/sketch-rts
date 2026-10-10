@@ -64,15 +64,16 @@ describe('bootstrap_1 summon host staging', () => {
     let scene = sketchScene('summoner-march-to-construction').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 400, 250).goldMine('main', 688, 250, 10000)
-      .townHall('foe', 3400, 800).farms('us', 8, 400, 2200)
+      .townHall('foe', 3400, 800).worker('foe', 3400, 1300).farms('us', 8, 400, 2200)
       .worker('us', 800, 900, { id: 'builder' }).unit('us', gun, 600, 800);
     for (let index = 0; index < 5; index++) scene = scene.worker('us', 440, 220 + index * 20,
       { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
     for (let index = 0; index < 3; index++) scene = scene.unit('us', body, 550, 750 + index * 40);
+    for (let index = 0; index < 3; index++) scene = scene.unit('foe', 'footman', 3350, 750 + index * 40);
     for (let index = 0; index < 6; index++) scene = scene.unit('us', caster, 800 - index % 2 * 35, 700 + Math.floor(index / 2) * 50);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.v6 = { phase: 2, general: { mode: 'attack', targetHallId: game.buildings.find(building => building.owner === 'foe')!.id,
-      target: { x: 3400, y: 800 }, group: game.units.filter(unit => unit.kind !== 'worker').map(unit => unit.id), groupStart: 10 } };
+      target: { x: 3400, y: 800 }, group: game.units.filter(unit => unit.owner === 'us' && unit.kind !== 'worker').map(unit => unit.id), groupStart: 10 } };
     const sites: { x: number; y: number }[] = [];
     for (let tick = 0; tick < 2400 && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
