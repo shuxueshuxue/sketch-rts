@@ -1,0 +1,138 @@
+{
+  "revision": "58cac102b5bc04578e76533a89df18c27efe3082",
+  "historicalPolicyHashesUnchanged": true,
+  "evidence": [
+    {
+      "version": "v5",
+      "race": "grove",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    },
+    {
+      "version": "v5",
+      "race": "ember",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    },
+    {
+      "version": "v7",
+      "race": "grove",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    },
+    {
+      "version": "v7",
+      "race": "ember",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    },
+    {
+      "version": "v8",
+      "race": "grove",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "heal",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    },
+    {
+      "version": "v8",
+      "race": "ember",
+      "original": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "mechanical"
+        }
+      ],
+      "originalError": "SDK command frame rejected us abilities command: Healing cannot restore mechanical units",
+      "corrected": [
+        {
+          "type": "cast",
+          "unitId": "healer",
+          "ability": "emberMend",
+          "targetId": "fighter"
+        }
+      ],
+      "fighterHp": 95
+    }
+  ]
+}

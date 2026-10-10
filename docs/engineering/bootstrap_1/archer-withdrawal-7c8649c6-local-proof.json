@@ -1,0 +1,77 @@
+{
+  "task": "bootstrap_1",
+  "status": "local evidence; unmerged and not a normal-opening acceptance win",
+  "enginePublicMain": "7c8649c6b095ab31b727950ac5b45bf458989f83",
+  "controlRuntime": "67b56948c58061e5f49f8aefff49dbced98b6a66",
+  "draftRuntime": "control plus archer-micro withdrawal conversion",
+  "draftSourceSha256": "73c0ae7faeb2d3b8c71da58bbfd98a133f2b1f8351aae9d334cc6b64bd6bee07",
+  "input": {
+    "path": "/tmp/bootstrap_1-archer-at4800.json.frames/4800.json",
+    "sha256": "cda4a2f7f11f851a257055c479a578bbd8b61330e3cea17e2efdaa0774c235ff",
+    "memorySha256": "857866970947537874a0439dfca34073e14beb78ac43c608fc56c412f418917b",
+    "map": "pineshade",
+    "race": "grove",
+    "side": 0,
+    "subject": "v9_archer",
+    "opponents": "v5+v7",
+    "tick": 4800,
+    "originalOpening": {
+      "tick": 0,
+      "gold": 500,
+      "workers": 3,
+      "halls": 1
+    }
+  },
+  "resumeControlMatchesOriginalWorldAt7200": true,
+  "at7200": {
+    "control": {
+      "tick": 7200,
+      "winner": null,
+      "bases": 2,
+      "army": 3,
+      "workers": 10,
+      "gold": 112,
+      "originalArchersAlive": [],
+      "incomingDamage": 733,
+      "damageDealt": 221,
+      "outputSha256": "3d4a3593812a9d612cfd2195bc6cb9bbb857f2143344e0c5720c2ea563d1a068"
+    },
+    "draft": {
+      "tick": 7200,
+      "winner": null,
+      "bases": 2,
+      "army": 6,
+      "workers": 11,
+      "gold": 82,
+      "originalArchersAlive": [
+        "unit-p0-archer-1163",
+        "unit-p0-archer-1192",
+        "unit-p0-archer-1270",
+        "unit-p0-archer-1395"
+      ],
+      "incomingDamage": 684,
+      "damageDealt": 47,
+      "outputSha256": "64aa5dbec3398a49a4e42b09477b8ebbe755afe3daadf1891f099053ebf484e1"
+    }
+  },
+  "draftAt9600": {
+    "tick": 9600,
+    "winner": null,
+    "bases": 2,
+    "army": 6,
+    "workers": 11,
+    "gold": 122,
+    "originalArchersAlive": [
+      "unit-p0-archer-1270",
+      "unit-p0-archer-1395"
+    ],
+    "incomingDamage": 995,
+    "damageDealt": 986,
+    "outputSha256": "a8e190bd70c7d52e4b3100b5d62ce159b7d67f036ec50acc905912a60cd8393e"
+  },
+  "limits": [
+    "Control and draft share the same 4800 world and memories.",
+    "The controller changed midgame; this is not a matrix acceptance cell.",
+    "Fewer losses also leave more enemy units alive; early survival alone does not demonstrate an eventual win."
+  ]
+}
