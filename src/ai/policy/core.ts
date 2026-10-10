@@ -2477,6 +2477,9 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   const firstExpansionMercenary = v5FirstExpansionLocalMercenaryObjectiveCommand(snapshot, owner, options);
   if (firstExpansionMercenary) return firstExpansionMercenary;
   if (firstClearedExpansionClaimPausesObjectiveControl(snapshot, owner, options)) return undefined;
+  // Recalls and claim releases above still run after a camp is cleared. Every
+  // new objective below needs neutral guards, so no new order is possible without them.
+  if (neutralUnits(snapshot, owner).length === 0) return undefined;
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
   const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
   if (army.length < minimumArmy) return undefined;

@@ -773,8 +773,11 @@ export function stepGame(game: Game) {
   if (game.shops) restockShops(game.shops);
   // Training can launch the first hull into the same array on an empty tick.
   // A native factory only appends; observers/custom factories never take this path.
-  if (!navalFrame && (game.units !== entryUnits || game.units.length !== entryCount)) navalFrame = navalFrameFlags(game) !== 0;
-  game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
+  const unitsChanged = game.units !== entryUnits || game.units.length !== entryCount;
+  if (!navalFrame && unitsChanged) navalFrame = navalFrameFlags(game) !== 0;
+  // Native grounded prelude work changes health, orders and push velocities,
+  // but no existing coordinates. The entry index remains current until birth.
+  if (navalFrame || unitsChanged) game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230, game.unitSpatialByTeam);
   game.shipReachPadding = navalFrame ? shipReachPadding(game.units) : 0;
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
@@ -941,12 +944,11 @@ export function snapshotGame(game: Game): GameSnapshot {
     }),
     buildings: game.buildings.map((building) => {
       const { rallyTarget, ...rest } = building;
-      return {
-        ...rest,
-        ...(rallyTarget ? { rallyTarget: { ...rallyTarget } } : {}),
-        queue: building.queue.map((job) => ({ ...job })),
-        researchQueue: building.researchQueue.map((job) => ({ ...job })),
-      };
+      const copy: Building = rest;
+      if (rallyTarget) copy.rallyTarget = { ...rallyTarget };
+      copy.queue = building.queue.map((job) => ({ ...job }));
+      copy.researchQueue = building.researchQueue.map((job) => ({ ...job }));
+      return copy;
     }),
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
@@ -1178,7 +1180,7 @@ function updateRegeneration(game: Game) {
 // A unit's own regeneration (the cinder revenant's) plus what leadership gives its veterans.
 export function unitRegenPerSecond(game: GameSnapshot, unit: Unit) {
   const veterans = "nextId" in game ? (game as Game).veteranFrame : buildVeteranFrame(game);
-  return canReceiveHealing(unit, game) ? (unitRules(game, unit).regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit) + (veterans?.get(unit.id)?.regenPerSecond ?? 0) : 0;
+  return canReceiveHealing(unit, game) ? (unitRules(game, unit).regenPerSecond ?? 0) + qualifiedLeadershipRegenPerSecond(game, unit) + (veterans?.get(unit.id)?.regenPerSecond ?? 0) : 0;
 }
 
 function veteranNearby(game: Game) {
@@ -1218,7 +1220,13 @@ function applyVeteranAbility(game: Game, caster: Unit, ability: Extract<(typeof 
 export { unitRules };
 
 export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
-  if (!canReceiveHealing(unit, game) || !isPlayerId(unit.owner) || unit.level <= 0) return 0;
+  return canReceiveHealing(unit, game) ? qualifiedLeadershipRegenPerSecond(game, unit) : 0;
+}
+
+// The caller has already applied the medical target filter. Keep owner and
+// upgrade lookup live, and leave the public entry's eligibility check intact.
+function qualifiedLeadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
+  if (!isPlayerId(unit.owner) || unit.level <= 0) return 0;
   const upgrade = UPGRADE_DEFS.leadership;
   const ownerState = game.players[unit.owner];
   if (!ownerState) throw new Error(`Missing player state for ${unit.owner}`);
@@ -4020,9 +4028,12 @@ function slideUnits(game: Game) {
   }
 }
 
-type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number };
+type SeparationBucket = { key: number; slot: number; x: number; y: number; units: (Unit | undefined)[]; count: number };
 type SeparationFrame = {
-  buckets: Map<number, SeparationBucket>;
+  buckets: SeparationBucket[];
+  lookup: (SeparationBucket | undefined)[];
+  mask: number;
+  shift: number;
   pool: SeparationBucket[];
   members: Unit[];
   cellX: number[];
@@ -4034,11 +4045,12 @@ type SeparationFrame = {
 const separationFrames = new WeakMap<Game, SeparationFrame>();
 
 function clearSeparationMembership(frame: SeparationFrame) {
-  for (const bucket of frame.buckets.values()) {
+  for (const bucket of frame.buckets) {
     for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
     bucket.count = 0;
+    frame.lookup[bucket.slot] = undefined;
   }
-  frame.buckets.clear();
+  frame.buckets.length = 0;
   frame.members.length = frame.cellX.length = frame.cellY.length = 0;
   frame.pairs.length = 0;
   frame.valid = false;
@@ -4047,6 +4059,19 @@ function clearSeparationMembership(frame: SeparationFrame) {
 function invalidateSeparationFrame(game: Game) {
   const frame = separationFrames.get(game);
   if (frame) clearSeparationMembership(frame);
+}
+
+// Keep a bounded reusable lookup separate from first-encounter traversal.
+// Exact numeric keys retain Map's SameValueZero behavior, including NaN and
+// signed zero; hashing only selects a probe start, never changes key equality.
+function separationBucketSlot(frame: SeparationFrame, key: number): number {
+  let slot = Math.imul(key, 0x9e3779b1) >>> frame.shift;
+  let bucket: SeparationBucket | undefined;
+  while ((bucket = frame.lookup[slot])) {
+    if (bucket.key === key || bucket.key !== bucket.key && key !== key) return slot;
+    slot = (slot + 1) & frame.mask;
+  }
+  return slot;
 }
 
 function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number): boolean {
@@ -4066,7 +4091,7 @@ function separateUnits(game: Game) {
   const cellSize = 80;
   let frame = separationFrames.get(game);
   if (!frame) {
-    frame = { buckets: new Map(), pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false };
+    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false };
     separationFrames.set(game, frame);
   }
   const buckets = frame.buckets;
@@ -4076,31 +4101,39 @@ function separateUnits(game: Game) {
     // Cell/order changes rebuild in precisely this frame's source order. Clear
     // the old metadata before reusing pooled buckets, never after filling them.
     clearSeparationMembership(frame);
+    // At most one bucket per source unit, with load no greater than one half.
+    let capacity = frame.mask + 1, shift = frame.shift;
+    while (capacity < game.units.length * 2) { capacity *= 2; shift -= 1; }
+    if (capacity !== frame.mask + 1) {
+      frame.lookup = new Array(capacity); frame.mask = capacity - 1; frame.shift = shift;
+    }
     let used = 0;
     for (const unit of game.units) {
       // Hulls use swept navigation contact; mining workers pass through bodies.
       if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
       const x = Math.floor(unit.x / cellSize), y = Math.floor(unit.y / cellSize);
       const key = numericBucketKey(x, y);
-      let bucket = buckets.get(key);
+      const slot = separationBucketSlot(frame, key);
+      let bucket = frame.lookup[slot];
       if (!bucket) {
         bucket = frame.pool[used++];
         if (bucket) {
-          bucket.x = x; bucket.y = y; bucket.count = 0;
+          bucket.key = key; bucket.slot = slot; bucket.x = x; bucket.y = y; bucket.count = 0;
         } else {
-          bucket = { x, y, units: [], count: 0 };
+          bucket = { key, slot, x, y, units: [], count: 0 };
           frame.pool.push(bucket);
         }
-        buckets.set(key, bucket);
+        frame.lookup[slot] = bucket;
+        buckets.push(bucket);
       }
       frame.members.push(unit);
       frame.cellX.push(x); frame.cellY.push(y);
       bucket.units[bucket.count++] = unit;
     }
-    for (const bucket of buckets.values()) {
+    for (const bucket of buckets) {
       frame.pairs.push(bucket, bucket);
       for (const [ox, oy] of SEPARATION_NEIGHBORS) {
-        const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
+        const neighbor = frame.lookup[separationBucketSlot(frame, numericBucketKey(bucket.x + ox, bucket.y + oy))];
         if (neighbor) frame.pairs.push(bucket, neighbor);
       }
     }

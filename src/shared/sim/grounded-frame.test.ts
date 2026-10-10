@@ -5,6 +5,7 @@ import { groundShipFrameEmpty, shipCollisionImpactCount } from "../ship-collisio
 import { shipProfile } from "../ship-geometry";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from "../sim";
 import { perTick } from "../time";
+import { temporaryAttackSpeedMultiplier } from "../veteran-runtime";
 
 function scene() {
   const game = createGame("bareDuel", { aiPlayers: [] });
@@ -17,6 +18,49 @@ function scene() {
 }
 
 describe("grounded simulation frames", () => {
+  it("includes a native birth in same-tick spatial spell targets", () => {
+    const game = scene();
+    const hall = createBuilding("hall", "player", "townHall", 1000, 1000, true);
+    game.buildings = [hall]; game.players.player.gold = 10000; game.players.player.supplyCap = 100;
+    const priest = game.spawnUnit("player", "priest", 1200, 1000);
+    priest.level = 3; priest.veteranSkill = "veteranRally";
+    priest.autocast = { heal: false, veteranRally: false };
+    priest.order = { type: "cast", ability: "veteranRally" };
+    issuePlayerCommand(game, "player", { type: "train", buildingId: hall.id, unitKind: "worker" });
+    hall.queue[0]!.remaining = 1;
+    const units = game.units;
+
+    stepGame(game);
+    expect(game.units).toBe(units);
+    const worker = game.units.find(unit => unit.kind === "worker")!;
+    expect(worker).toBeDefined();
+    expect(Math.hypot(worker.x - priest.x, worker.y - priest.y)).toBeLessThan(160);
+    expect(temporaryAttackSpeedMultiplier(worker)).toBe(1.6);
+    expect(priest.abilityCooldowns?.veteranRally).toBeGreaterThan(0);
+    expect(game.shipReachPadding).toBe(0);
+  });
+
+  it("refreshes the mid-frame query after a projectile observer moves an existing body", () => {
+    const game = scene();
+    const well = createBuilding("well", "player", "moonWell", 300, 300, true);
+    game.buildings = [well];
+    const fighter = game.spawnUnit("player", "footman", 1000, 300);
+    fighter.hp -= 50;
+    fighter.order = { type: "hold", x: fighter.x, y: fighter.y };
+    const bait = game.spawnUnit("player", "worker", 1800, 1800);
+    game.projectiles.push({ id: "observer-shot", owner: "enemy", attackerId: "departed-attacker", targetId: bait.id,
+      fromX: 2000, fromY: 1800, toX: bait.x, toY: bait.y, damage: 1, remaining: 1, duration: 1 });
+    let hits = 0;
+    game.observer = { hit: (_attacker, target) => {
+      if (target.id === bait.id) { hits++; fighter.x = 400; fighter.y = 300; }
+    } };
+    const hp = fighter.hp, units = game.units;
+    stepGame(game);
+    expect(hits).toBe(1);
+    expect(game.units).toBe(units);
+    expect(fighter.hp).toBe(hp + 5);
+  });
+
   it("matches the complete frame through movement, combat, summons, expiry and snapshot restore", () => {
     const game = scene();
     const walker = game.spawnUnit("player", "worker", 700, 800);
