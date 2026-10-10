@@ -897,7 +897,8 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     if(!target)return {points:[],partial:deferred};
     const destination=requested?target:{x:target.x,y:target.y};
     const direct=keelConnector(map,ship,start,destination,trafficClear);
-    if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7 || direct.length===1),partial:deferred};
+    if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
+      || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
     const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
     if(arrival)return {points:arrival,partial:deferred};
     const direction=Math.atan2(target.y-start.y,target.x-start.x);
