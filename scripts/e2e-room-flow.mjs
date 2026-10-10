@@ -145,14 +145,14 @@ async page => {
   });
   must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.actionsBelow, "rooms browser should show the room list with its actions below: " + JSON.stringify(roomBrowserLayoutProof));
   await page.locator("[data-create-room]").click();
-  const firstSoloId = await automaticSoloSetup("pineshade");
-  must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "map click did not show the chosen pool map");
+  const firstSoloId = await confirmedSoloSetup("pineshade");
+  must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "confirmed map did not show the chosen pool map");
   const privateRoomProof = await page.evaluate(() => {
     const query = new URLSearchParams(location.search);
     return { visibility: query.get("visibility"), mapId: query.get("map"), slots: document.querySelectorAll(".slot-row").length };
   });
-  must(privateRoomProof.visibility === "private", "map click did not create a local room: " + JSON.stringify(privateRoomProof));
-  must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "map click did not create the chosen pool map and its seats: " + JSON.stringify(privateRoomProof));
+  must(privateRoomProof.visibility === "private", "confirming the map did not create a local room: " + JSON.stringify(privateRoomProof));
+  must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "confirming the map did not create the chosen pool map and its seats: " + JSON.stringify(privateRoomProof));
   const privateLobbyProof = await page.evaluate(async (roomId) => {
     const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
     const publicLobby = await (await fetch("/api/rooms")).json();
@@ -505,7 +505,7 @@ async page => {
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.locator("[data-create-room]").click();
-  await automaticSoloSetup("twoShores");
+  await confirmedSoloSetup("twoShores");
   const sidesSetupId = await serverSetupFromSolo();
   const seatsReady = () => page.evaluate(() => !document.querySelector("[data-start-room]")?.disabled);
   const sidesBefore = await seatsReady();

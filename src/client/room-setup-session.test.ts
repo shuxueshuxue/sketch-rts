@@ -16,6 +16,8 @@ function fixture() {
   const user = { id: 'host', name: 'Host' }, server = createRoomLifecycleHost();
   const requests: string[] = [], changed: RoomState[] = [], created: string[] = [];
   const runtime = createDeploymentRuntime('server', {
+    // This in-memory HTTP fixture serves the root API, independently of the build mount.
+    publicBasePath: '/',
     fetchJson: async <T>(path: string, body?: unknown): Promise<T> => {
       requests.push(`${body ? 'POST' : 'GET'} ${path}`);
       if (path === '/api/rooms' && body) return server.createRoom(body as CreateRoomInput) as T;

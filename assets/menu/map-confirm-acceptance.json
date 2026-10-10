@@ -1,0 +1,342 @@
+{
+  "checks": [
+    {
+      "case": "map click only selects/updates preview and URL, no local/server room",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "view": "maps",
+          "seed": "pool-pineshade-1",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "maps",
+        "selected": "pineshade",
+        "confirm": 1,
+        "created": 0,
+        "closed": []
+      }
+    },
+    {
+      "case": "switch among maps without entering setup",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "view": "maps",
+          "seed": "pool-pineshade-1",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "maps",
+        "selected": "pineshade",
+        "confirm": 1,
+        "created": 0,
+        "closed": []
+      }
+    },
+    {
+      "case": "Continue remains visible in lower-right footer",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "view": "maps",
+          "seed": "pool-pineshade-1",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "maps",
+        "selected": "pineshade",
+        "confirm": 1,
+        "created": 0,
+        "closed": []
+      }
+    },
+    {
+      "case": "shared real UI helper confirms chosen map into default solo setup",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&seed=pool-pineshade-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "seed": "pool-pineshade-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "setup",
+        "id": "room-ea498677-fbce-448b-89cc-895c73efe99f",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 1,
+        "closed": []
+      }
+    },
+    {
+      "case": "return and repeat same map preserves seed/race/name and reuses room on confirmation",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&seed=pool-pineshade-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Aember%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "seed": "pool-pineshade-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:ffa:ember:,ai:ffa:random:random"
+        },
+        "menu": "setup",
+        "id": "room-ea498677-fbce-448b-89cc-895c73efe99f",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 1,
+        "closed": []
+      }
+    },
+    {
+      "case": "refresh maps URL stays in chooser and does not create room",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&view=maps&seed=pool-pineshade-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Aember%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "view": "maps",
+          "seed": "pool-pineshade-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:ffa:ember:,ai:ffa:random:random"
+        },
+        "menu": "maps",
+        "selected": "pineshade",
+        "confirm": 1,
+        "created": 0,
+        "closed": []
+      }
+    },
+    {
+      "case": "setup direct URL still restores room without another confirmation",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&seed=pool-pineshade-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Aember%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "seed": "pool-pineshade-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:ffa:ember:,ai:ffa:random:random"
+        },
+        "menu": "setup",
+        "id": "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 0,
+        "closed": []
+      }
+    },
+    {
+      "case": "single-player to multiplayer migration and URL still work",
+      "passed": true,
+      "state": {
+        "url": "?room=room-94ea7ae9-a92c-47dd-a03e-a6aa9211ec2d",
+        "query": {
+          "room": "room-94ea7ae9-a92c-47dd-a03e-a6aa9211ec2d"
+        },
+        "menu": "setup",
+        "id": "room-94ea7ae9-a92c-47dd-a03e-a6aa9211ec2d",
+        "mode": "multiplayer",
+        "confirm": 0,
+        "created": 0,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe"
+        ]
+      }
+    },
+    {
+      "case": "changing map preview keeps existing public room until confirmed",
+      "passed": true,
+      "state": {
+        "url": "?map=stillwater&view=maps&seed=pool-stillwater-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Ateam-1%3Agrove%3A%2Cai%3Ateam-2%3Arandom%3Arandom%2Cai%3Ateam-1%3Arandom%3Arandom%2Cai%3Ateam-2%3Arandom%3Arandom",
+        "query": {
+          "map": "stillwater",
+          "view": "maps",
+          "seed": "pool-stillwater-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:team-1:grove:,ai:team-2:random:random,ai:team-1:random:random,ai:team-2:random:random"
+        },
+        "menu": "maps",
+        "selected": "stillwater",
+        "confirm": 1,
+        "created": 0,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe"
+        ]
+      }
+    },
+    {
+      "case": "confirmed new map enters solo and cleans up previous public room",
+      "passed": true,
+      "state": {
+        "url": "?map=stillwater&seed=pool-stillwater-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Ateam-1%3Agrove%3A%2Cai%3Ateam-2%3Arandom%3Arandom%2Cai%3Ateam-1%3Arandom%3Arandom%2Cai%3Ateam-2%3Arandom%3Arandom",
+        "query": {
+          "map": "stillwater",
+          "seed": "pool-stillwater-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:team-1:grove:,ai:team-2:random:random,ai:team-1:random:random,ai:team-2:random:random"
+        },
+        "menu": "setup",
+        "id": "room-ab661724-5856-4821-b2b9-9efbb6b4daa8",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 1,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe"
+        ]
+      }
+    },
+    {
+      "case": "multiplayer to single-player migration still restores local URL",
+      "passed": true,
+      "state": {
+        "url": "?map=stillwater&seed=pool-stillwater-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Ateam-1%3Agrove%3A%2Cai%3Ateam-2%3Arandom%3Arandom%2Cai%3Ateam-1%3Arandom%3Arandom%2Cai%3Ateam-2%3Arandom%3Arandom",
+        "query": {
+          "map": "stillwater",
+          "seed": "pool-stillwater-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:team-1:grove:,ai:team-2:random:random,ai:team-1:random:random,ai:team-2:random:random"
+        },
+        "menu": "setup",
+        "id": "room-de1a2ece-d9c1-4608-be00-6790c679e997",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 2,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe",
+          "room-ab661724-5856-4821-b2b9-9efbb6b4daa8"
+        ]
+      }
+    },
+    {
+      "case": "delayed create disables confirmation/map edits and guards duplicate clicks",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&view=maps&seed=pool-pineshade-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "view": "maps",
+          "seed": "pool-pineshade-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "maps",
+        "selected": "pineshade",
+        "confirm": 1,
+        "created": 3,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe",
+          "room-ab661724-5856-4821-b2b9-9efbb6b4daa8"
+        ]
+      }
+    },
+    {
+      "case": "Back cancels pending setup and closes late room instead of reopening",
+      "passed": true,
+      "state": {
+        "url": "",
+        "query": {},
+        "menu": "home",
+        "confirm": 0,
+        "created": 3,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe",
+          "room-ab661724-5856-4821-b2b9-9efbb6b4daa8",
+          "room-e7f78bd3-b012-40c5-9bbb-6fb385489ce8"
+        ]
+      }
+    },
+    {
+      "case": "map chooser retains visible confirmation at narrow viewport",
+      "passed": true,
+      "state": {
+        "url": "?map=stillwater&view=maps&seed=pool-stillwater-1&name=Player+3275%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Ateam-1%3Agrove%3A%2Cai%3Ateam-2%3Arandom%3Arandom%2Cai%3Ateam-1%3Arandom%3Arandom%2Cai%3Ateam-2%3Arandom%3Arandom",
+        "query": {
+          "map": "stillwater",
+          "view": "maps",
+          "seed": "pool-stillwater-1",
+          "name": "Player 3275的房间",
+          "visibility": "private",
+          "seats": "human:team-1:grove:,ai:team-2:random:random,ai:team-1:random:random,ai:team-2:random:random"
+        },
+        "menu": "maps",
+        "selected": "stillwater",
+        "confirm": 1,
+        "created": 3,
+        "closed": [
+          "room-6dbd1580-c149-4806-a08f-1c0c4ac5d0fe",
+          "room-ab661724-5856-4821-b2b9-9efbb6b4daa8",
+          "room-e7f78bd3-b012-40c5-9bbb-6fb385489ce8"
+        ]
+      }
+    },
+    {
+      "case": "static hosting also waits for map confirmation then enters solo",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&seed=pool-pineshade-1&name=Player+1899%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "seed": "pool-pineshade-1",
+          "name": "Player 1899的房间",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "setup",
+        "id": "room-3ec4a8e5-d508-4515-aff0-9cecbc3383f5",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 1,
+        "closed": []
+      }
+    },
+    {
+      "case": "only explicit Start enters gameplay",
+      "passed": true,
+      "state": {
+        "url": "?map=pineshade&seed=pool-pineshade-1&name=Player+1899%E7%9A%84%E6%88%BF%E9%97%B4&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "query": {
+          "map": "pineshade",
+          "seed": "pool-pineshade-1",
+          "name": "Player 1899的房间",
+          "visibility": "private",
+          "seats": "human:ffa:grove:,ai:ffa:random:random"
+        },
+        "menu": "setup",
+        "id": "room-3ec4a8e5-d508-4515-aff0-9cecbc3383f5",
+        "mode": "singlePlayer",
+        "confirm": 0,
+        "created": 1,
+        "closed": []
+      }
+    }
+  ],
+  "errors": [],
+  "scope": "Real 2D-fallback browser menu flow, both server and static hosting; fixed animation cadence for functional checks, no performance claims. Hashes cover the menu inputs, not the entire application.",
+  "sourceHashes": {
+    "src/client/main.ts": "95caeacbb835a4571dc5913e26554ea7fbd36d61149e0e213060a0578ea06d98",
+    "src/client/room-route.ts": "740562f49a294cdec5dd4bcfb64d326f4bd3d59a86ee90e5b09412ab6e7d01a3",
+    "src/client/room-setup-session.ts": "12e1860d9f1cb18a6a2508fbc2af6bcd13cbb6e235ce8a6d657f447b8ae8db43",
+    "src/client/menu-page.css": "158edf85ef59773f4444206b75774701e9001d2ff8fa759d3ddac2d057061466",
+    "src/client/match-menu.css": "e9349a63d58b3c3c3108922dfa4129e77c930e1e0b97d02368d706db2df28b5c",
+    "src/client/deployment/runtime.ts": "1c1dfd8332e8297a691efe652a5d2ce4be3458411c1777233bd37325b9becf5e",
+    "src/client/deployment/static-runtime.ts": "edac527a19591379e1e45a5cf0e90816f54b32c65f6145c2b846403b775604cf",
+    "scripts/room-ui-flow.mjs": "31e6ccfebf6949f7862f661f7ac5b299430d1b72a744c4f2a99878763334f113"
+  },
+  "driverSha256": "6dd4d71b112ba38fde23acf4dfd415f0d400d2e22cd3371a2dd3aacfeeb8ea74"
+}

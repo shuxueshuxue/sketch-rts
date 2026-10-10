@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs><radialGradient id="ground" cx=".48" cy=".38" r=".8"><stop stop-color="#92ce99" stop-opacity=".28"/><stop offset="1" stop-color="#101920"/></radialGradient><linearGradient id="edge" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b9a07b"/><stop offset=".48" stop-color="#655846"/><stop offset="1" stop-color="#403d34"/></linearGradient><linearGradient id="bone" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f5ebc9"/><stop offset=".48" stop-color="#d6c396"/><stop offset="1" stop-color="#a58859"/></linearGradient><linearGradient id="bronze" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f0d7a0"/><stop offset=".48" stop-color="#bc8f50"/><stop offset="1" stop-color="#654526"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#e0f3a3"/><stop offset=".48" stop-color="#62cb8e"/><stop offset="1" stop-color="#196450"/></linearGradient></defs>
+<path d="M12 3 C37 2 91 2 116 4 Q124 5 125 14 L125 114 Q125 124 114 125 L14 125 Q3 124 3 113 L3 15 Q3 5 12 3Z" fill="#11191f"/>
+<path d="M12 6 L116 6 Q122 7 122 14 L122 114 Q121 121 114 122 L14 122 Q7 121 6 113 L6 15 Q6 8 12 6Z" fill="url(#ground)" stroke="url(#edge)" stroke-width="2.2"/>
+<path d="M15 10 L43 10 M10 16 L10 42 M114 118 L89 118 M118 115 L118 90" stroke="#d6c19b" stroke-opacity=".32" stroke-width="1.2" fill="none"/>
+<g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35 27 C35 20 44 18 51 21 L97 29 C105 31 106 41 102 46 L93 101 C88 107 74 105 70 97 L31 90 Z" fill="url(#bone)"/>
+    <path d="M35 27 C21 23 20 40 31 43 L40 44 L40 32 C41 26 47 25 51 29" fill="url(#bronze)"/>
+    <path d="M31 43 C26 57 26 77 31 90 L70 97 C65 88 67 83 77 84 L94 87" fill="url(#bone)"/>
+    <path d="M70 97 C73 86 76 87 85 88 L102 91 C109 98 97 107 88 104 L70 101" fill="url(#bronze)"/>
+    <path d="M47 39 L88 46 M44 46 L76 51 M38 78 L60 82" stroke="#a08151" stroke-width="2" fill="none"/>
+    <path d="M69 47 L85 58 L80 81 L63 88 L48 75 L52 54 Z" fill="url(#bronze)"/>
+    <path d="M68 52 L79 59 L76 75 L64 81 L54 72 L57 57 Z" fill="url(#green)"/>
+    <path d="M66 56 L62 68 L64 77 M58 66 L73 68" stroke="#d7fbd6" stroke-width="2.3" fill="none"/>
+    <path d="M43 26 C37 27 36 33 37 38 M92 95 C99 94 102 99 96 101" stroke="#f2e8b9" stroke-width="1.6" fill="none"/>
+    <path d="M77 26 L80 17 L84 26 L91 30 L83 33 L78 40 L76 32 L70 29 Z" fill="#b4efb8" stroke="none"/></g>
+</svg>

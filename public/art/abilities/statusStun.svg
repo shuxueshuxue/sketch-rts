@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs><radialGradient id="ground" cx=".48" cy=".38" r=".8"><stop stop-color="#a48b67" stop-opacity=".28"/><stop offset="1" stop-color="#101920"/></radialGradient><linearGradient id="edge" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b9a07b"/><stop offset=".48" stop-color="#655846"/><stop offset="1" stop-color="#403d34"/></linearGradient><linearGradient id="steel" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#e2e4d5"/><stop offset=".48" stop-color="#879ca4"/><stop offset="1" stop-color="#394952"/></linearGradient><linearGradient id="bronze" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f0d7a0"/><stop offset=".48" stop-color="#bc8f50"/><stop offset="1" stop-color="#654526"/></linearGradient><linearGradient id="bone" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f5ebc9"/><stop offset=".48" stop-color="#d6c396"/><stop offset="1" stop-color="#a58859"/></linearGradient></defs>
+<path d="M12 3 C37 2 91 2 116 4 Q124 5 125 14 L125 114 Q125 124 114 125 L14 125 Q3 124 3 113 L3 15 Q3 5 12 3Z" fill="#11191f"/>
+<path d="M12 6 L116 6 Q122 7 122 14 L122 114 Q121 121 114 122 L14 122 Q7 121 6 113 L6 15 Q6 8 12 6Z" fill="url(#ground)" stroke="url(#edge)" stroke-width="2.2"/>
+<path d="M15 10 L43 10 M10 16 L10 42 M114 118 L89 118 M118 115 L118 90" stroke="#d6c19b" stroke-opacity=".32" stroke-width="1.2" fill="none"/>
+<g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30 74 C31 45 38 34 61 32 C84 29 98 48 99 74 L89 100 L78 101 L77 82 L52 84 L47 102 L34 100 Z" fill="url(#steel)"/>
+    <path d="M57 34 L70 34 L76 74 L79 103 L65 109 L54 101 L53 81 Z" fill="url(#bronze)"/>
+    <path d="M35 71 L54 74 L53 85 L34 80 Z M75 74 L95 69 L92 82 L77 86 Z" fill="#172129"/>
+    <path d="M62 40 L64 68 M40 58 C43 43 49 39 54 38 M83 49 L88 60" stroke="#e6e6d2" stroke-width="2" fill="none"/>
+    <path d="M77 43 L83 49 L78 56 L83 62 M45 90 L41 95" stroke="#4b5559" stroke-width="1.8" fill="none"/>
+    <path d="M18 47 C10 29 28 17 59 17 C89 16 112 28 108 44" stroke="#aa894f" stroke-width="3" fill="none"/>
+    <path d="M13 58 L18 48 L28 48 L20 41 L23 31 L14 37 L5 33 L9 44 L3 51 Z" fill="url(#bronze)"/>
+    <path d="M99 34 L105 23 L111 33 L123 34 L115 42 L118 54 L106 49 L98 56 L99 43 L91 36 Z" fill="url(#bronze)"/>
+    <path d="M66 15 L69 5 L76 12 L85 12 L81 21 L83 29 L73 26 L66 32 L65 23 L58 18 Z" fill="url(#bone)"/>
+    <path d="M31 20 L34 24 M87 20 L90 24" stroke="#e1c996" stroke-width="2" fill="none"/></g>
+</svg>

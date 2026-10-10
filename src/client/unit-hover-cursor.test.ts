@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { boardUnit, syncDecks } from "../shared/decks";
 import { createGame, snapshotGame } from "../shared/sim";
 import { pointerTarget, targetCommand, unitAt, unitPointerPosition } from "./relations";
-import { HOVER_CURSOR_ART, HOVER_CURSOR_HOTSPOT, HOVER_CURSOR_SIZE, unitHoverCursor, unitHoverCursorUrl } from "./unit-hover-cursor";
+import { HOVER_CURSOR_ART, HOVER_CURSOR_HOTSPOT, HOVER_CURSOR_SIZE, LOCKED_HOVER_CURSOR_HOTSPOT, LOCKED_HOVER_CURSOR_SIZE, unitHoverCursor, unitHoverCursorUrl } from "./unit-hover-cursor";
 
 function fixture() {
   const game = createGame("verdantCrossroads", {
@@ -17,7 +17,7 @@ function fixture() {
 }
 
 describe("unit hover cursors", () => {
-  it("uses the viewer and current teams, with distinct shapes as well as colors", () => {
+  it("uses the viewer and current teams, with distinct relationship colors", () => {
     const { game, own, ally, foe } = fixture();
     const snapshot = snapshotGame(game);
     expect(unitHoverCursor(snapshot, "player", own.id).relation).toBe("own");
@@ -26,7 +26,6 @@ describe("unit hover cursors", () => {
     expect(unitHoverCursor(snapshot, "enemy2", foe.id).relation).toBe("own");
     expect(unitHoverCursor(snapshot, "enemy2", own.id).relation).toBe("enemy");
     expect(new Set([HOVER_CURSOR_ART.own.color, HOVER_CURSOR_ART.ally.color, HOVER_CURSOR_ART.enemy.color]).size).toBe(3);
-    expect(new Set([HOVER_CURSOR_ART.own.shape, HOVER_CURSOR_ART.ally.shape, HOVER_CURSOR_ART.enemy.shape]).size).toBe(3);
     game.teams!.enemy2 = "north";
     expect(unitHoverCursor(snapshotGame(game), "player", foe.id).relation).toBe("ally");
   });
@@ -48,7 +47,7 @@ describe("unit hover cursors", () => {
     expect(target).toMatchObject({ kind: "unit", unit: { id: crew.id } });
     expect(unitHoverCursor(snapshotGame(game), "player", target?.kind === "unit" ? target.unit.id : undefined).relation).toBe("own");
     expect(unitHoverCursor(snapshotGame(game), "player", ship.id).relation).toBe("enemy");
-    expect(unitHoverCursor(snapshotGame(game), "player", own.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshotGame(game), "player", own.id)).toEqual({ nativeCursor: "crosshair" });
   });
 
   it("removes stale ownership and dead or sheltered targets immediately", () => {
@@ -58,25 +57,25 @@ describe("unit hover cursors", () => {
     expect(unitHoverCursor(snapshotGame(game), "player", foe.id).relation).toBe("own");
     foe.deck = { shipId: "ship", x: 0, y: 0 };
     foe.cabin = { shipId: "ship" };
-    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "crosshair" });
     delete foe.cabin;
     delete foe.deck;
     foe.hp = 0;
-    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "crosshair" });
     game.units = game.units.filter(unit => unit.id !== foe.id);
-    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshotGame(game), "player", foe.id)).toEqual({ nativeCursor: "crosshair" });
     const hall = game.buildings[0]!;
     hall.hp = 0;
-    expect(unitHoverCursor(snapshotGame(game), "player", hall.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshotGame(game), "player", hall.id)).toEqual({ nativeCursor: "crosshair" });
   });
 
   it("keeps blank ground and spectators ordinary and neutral sites inspectable", () => {
     const { game, foe } = fixture();
     const snapshot = snapshotGame(game);
-    expect(unitHoverCursor(snapshot, "player", undefined)).toEqual({ nativeCursor: "default" });
-    expect(unitHoverCursor(snapshot, undefined, foe.id)).toEqual({ nativeCursor: "default" });
-    expect(unitHoverCursor(snapshot, "spectator", foe.id)).toEqual({ nativeCursor: "default" });
-    expect(unitHoverCursor(undefined, "player", foe.id)).toEqual({ nativeCursor: "default" });
+    expect(unitHoverCursor(snapshot, "player", undefined)).toEqual({ nativeCursor: "crosshair" });
+    expect(unitHoverCursor(snapshot, undefined, foe.id)).toEqual({ nativeCursor: "crosshair" });
+    expect(unitHoverCursor(snapshot, "spectator", foe.id)).toEqual({ nativeCursor: "crosshair" });
+    expect(unitHoverCursor(undefined, "player", foe.id)).toEqual({ nativeCursor: "crosshair" });
     const neutral = game.spawnUnit("neutral", "footman", 1200, 600);
     expect(unitHoverCursor(snapshotGame(game), "player", neutral.id).relation).toBe("creep");
     const camp = snapshot.mercenaryCamps[0]!;
@@ -104,27 +103,40 @@ describe("unit hover cursors", () => {
     const cursor = unitHoverCursor(snapshot, "player", ship.id);
     expect(cursor.relation).toBe("enemy");
     expect(cursor.nativeCursor).toContain("enemy.svg");
-    expect(cursor.nativeCursor).not.toContain("crosshair");
+    expect(cursor.hotspot).toEqual([12, 12]);
   });
 
-  it("keeps the native cursor hidden under pointer lock while returning the same visual and hotspot", () => {
+  it("keeps the native cursor hidden under pointer lock with the original centered ring", () => {
     const { game, foe } = fixture();
     const cursor = unitHoverCursor(snapshotGame(game), "player", foe.id, { pointerLocked: true, basePath: "/rts/" });
-    expect(cursor).toEqual({ nativeCursor: "none", relation: "enemy", iconUrl: "/rts/art/cursors/enemy.svg", hotspot: [4, 3] });
+    expect(cursor).toEqual({ nativeCursor: "none", relation: "enemy", iconUrl: "/rts/art/cursors/locked/enemy.svg", hotspot: [9, 9] });
     expect(unitHoverCursor(snapshotGame(game), "player", undefined, { pointerLocked: true })).toEqual({ nativeCursor: "none" });
   });
 
-  it("serves each small SVG below the deployment base with the drawn tip at the native hotspot", () => {
-    for (const relation of ["own", "ally", "enemy", "creep"] as const) {
-      expect(unitHoverCursorUrl(relation, "rts")).toBe(`/rts/art/cursors/${HOVER_CURSOR_ART[relation].file}`);
-      const svg = readFileSync(new URL(`../../public/art/cursors/${HOVER_CURSOR_ART[relation].file}`, import.meta.url), "utf8");
-      expect(svg).toContain(`width="${HOVER_CURSOR_SIZE}" height="${HOVER_CURSOR_SIZE}" viewBox="0 0 32 32"`);
-      expect(svg).toContain(`M${HOVER_CURSOR_HOTSPOT[0]} ${HOVER_CURSOR_HOTSPOT[1]}`);
-      expect(svg).toContain(HOVER_CURSOR_ART[relation].color);
-      expect(svg).not.toMatch(/<script|<image|href=|foreignObject/);
+  it("keeps relationship colors on the original crosshair and locked ring, centered on their hotspots", () => {
+    for (const pointerLocked of [false, true]) {
+      const size = pointerLocked ? LOCKED_HOVER_CURSOR_SIZE : HOVER_CURSOR_SIZE;
+      const hotspot = pointerLocked ? LOCKED_HOVER_CURSOR_HOTSPOT : HOVER_CURSOR_HOTSPOT;
+      let silhouette: string | undefined;
+      for (const relation of ["own", "ally", "enemy", "creep"] as const) {
+        const file = `${pointerLocked ? "locked/" : ""}${HOVER_CURSOR_ART[relation].file}`;
+        expect(unitHoverCursorUrl(relation, "rts", pointerLocked)).toBe(`/rts/art/cursors/${file}`);
+        const svg = readFileSync(new URL(`../../public/art/cursors/${file}`, import.meta.url), "utf8");
+        expect(svg).toContain(`width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"`);
+        expect(hotspot).toEqual([size / 2, size / 2]);
+        if (pointerLocked) {
+          expect(svg).toContain('<circle cx="9" cy="9" r="8"');
+          expect(svg).toContain('<circle cx="9" cy="9" r="2"');
+        } else expect(svg).toContain('d="M12 2v20M2 12h20"');
+        expect(svg).toContain(HOVER_CURSOR_ART[relation].color);
+        expect(svg).not.toMatch(/<script|<image|href=|foreignObject/);
+        const geometry = svg.replace(/#[\da-f]{6}/gi, "COLOR");
+        silhouette ??= geometry;
+        expect(geometry).toBe(silhouette);
+      }
     }
     const { game, ally } = fixture();
     expect(unitHoverCursor(snapshotGame(game), "player", ally.id, { basePath: "/rts" }).nativeCursor)
-      .toBe('url("/rts/art/cursors/ally.svg") 4 3, default');
+      .toBe('url("/rts/art/cursors/ally.svg") 12 12, crosshair');
   });
 });

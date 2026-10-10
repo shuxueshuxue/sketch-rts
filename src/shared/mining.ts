@@ -1,5 +1,7 @@
 import { BUILDING_DEFS } from "./catalog";
 import { snapToFootprint } from "./terrain";
+import { isStaggered } from "./push";
+import { isStunned } from "./unit-abilities";
 import type { Building, GameMap, GameSnapshot, Owner, ResourceNode } from "./types";
 
 /** Resource bodies, worker budgeting and rates belong to the economy. */
@@ -39,7 +41,9 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
   const resources = new Map(snapshot.resources.map(resource => [resource.id, resource]));
   const waiting = new Map<string, { id: string; timer: number }>();
   for (const unit of snapshot.units) {
-    if (unit.hp > 0 && unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "toMine") {
+    // A controlled worker keeps its waiting priority, but cannot hold the
+    // entrance while updateUnits is unable to execute its mining order.
+    if (unit.hp > 0 && unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "toMine" && !isStunned(unit) && !isStaggered(unit)) {
       const mine = resources.get(unit.order.resourceId);
       if (mine && Math.hypot(unit.x - mine.x, unit.y - mine.y) <= GOLD_MINE_RULES.entryRange) {
         const first = waiting.get(mine.id);

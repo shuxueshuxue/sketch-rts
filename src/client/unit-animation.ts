@@ -8,13 +8,15 @@ const WALK_FRAMES = 8;
 const ACTION_FRAMES = 6;
 const ATTACK_MS = 300;
 const CAST_MS = 500;
+const MINING_STROKE_TICKS = 13;
 
 type Track = {
   x: number; y: number; cooldown: number;
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   phase: number; speed: number; moving: boolean;
-  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number };
+  mining?: { resourceId: string; timer: number; workTicks: number };
+  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true };
 };
 
 /** Presentation only: observed displacement drives feet; a cooldown *increase*
@@ -30,8 +32,8 @@ export class UnitAnimationTracker {
     if (snapshot.tick === this.tick) return;
     const gap = this.tick === undefined ? 0 : snapshot.tick - this.tick;
     const continuous = gap > 0 && gap <= 10;
-    // A work pulse is emitted only when construction or repair actually occurs.
-    // Orders alone cannot animate an approaching or blocked builder.
+    // Construction and repair need a real pulse. Mining instead exposes actual
+    // progress in its gather timer; merely waiting at the entrance is not work.
     const work = new Map((snapshot.effects ?? []).filter(effect => effect.type === "repair" && effect.unitId && effect.remaining > 0).map(effect => [effect.unitId!, effect]));
     const next = new Map<string, Track>();
     for (const unit of snapshot.units) {
@@ -49,15 +51,25 @@ export class UnitAnimationTracker {
           ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
         if (cast) action = { mode: "cast", tick: snapshot.tick };
       }
-      const pulse = unit.kind === "worker" && !moving ? work.get(unit.id) : undefined;
+      const pulse = unit.kind === "worker" && unit.order.type !== "mine" && !moving ? work.get(unit.id) : undefined;
+      const gathering = unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "gather" && unit.order.timer > 0
+        ? unit.order : undefined;
+      const oldMining = gathering && previous?.mining?.resourceId === gathering.resourceId ? previous.mining : undefined;
+      const minedTicks = gathering && oldMining ? Math.max(0, oldMining.timer - gathering.timer) : 0;
+      const workTicks = ((oldMining?.workTicks ?? 0) + minedTicks) % MINING_STROKE_TICKS;
       if (pulse) action = { mode: "work", tick: snapshot.tick - pulse.duration + pulse.remaining, durationMs: pulse.duration * TICK_MS };
-      else if (moving && action?.mode === "work") action = undefined;
+      else if (minedTicks > 0 && !moving && unit.hp > 0 && unit.pushX === undefined && unit.pushY === undefined) {
+        // Count timer progress, rather than wall time or an order's age, so a
+        // held miner cannot keep swinging and a network pause freezes the pose.
+        action = { mode: "work", tick: snapshot.tick - workTicks, durationMs: MINING_STROKE_TICKS * TICK_MS, mining: true };
+      } else if (action?.mining || (moving || unit.order.type === "mine") && action?.mode === "work") action = undefined;
       if (unit.effects.some((effect) => effect.type === "stun")) action = undefined;
       const track: Track = {
         x: unit.x, y: unit.y, cooldown: unit.cooldown,
         abilities: { ...unit.abilityCooldowns }, phase: phase % 1,
         speed: moving ? distance / gap / 28 : 0,
         moving: moving && !unit.effects.some((effect) => effect.type === "stun"),
+        ...(gathering ? { mining: { resourceId: gathering.resourceId, timer: gathering.timer, workTicks } } : {}),
         ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
       };
@@ -75,7 +87,7 @@ export class UnitAnimationTracker {
     if (track.action) {
       const duration = track.action.durationMs ?? (track.action.mode === "cast" ? CAST_MS : ATTACK_MS);
       const progress = ((this.tick - track.action.tick + fraction) * TICK_MS) / duration;
-      if (progress >= 0 && progress < 1) return { mode: track.action.mode, frame: Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES)) };
+      if (progress >= 0 && (progress < 1 || track.action.mining)) return { mode: track.action.mode, frame: Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES)) };
     }
     return track.moving
       ? { mode: "walk", frame: Math.floor(((track.phase + track.speed * fraction) % 1) * WALK_FRAMES) }

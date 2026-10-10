@@ -1,0 +1,1029 @@
+{
+  "scope": "Real 2D and 3D status and skill command UI with SVG resources, actual effects/focus/expiry/loading; controlled units and animation cadence, not FPS.",
+  "results": [
+    {
+      "mode": "3D",
+      "checks": [
+        {
+          "case": "learned skill alone is not an active buff",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-footman-1000",
+              "tick": 19
+            },
+            "subject": "unit-player-footman-1000",
+            "statuses": [],
+            "hidden": true
+          }
+        },
+        {
+          "case": "real Rally cast plus neutral poison/net hits",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 36
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 2.6s",
+                "badge": "2.6s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 4s",
+                "badge": "4s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 6s",
+                "badge": "6s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          },
+          "tooltip": "中毒\n每秒受到 3 点毒性伤害。再次中毒刷新持续时间。\n减益\n剩余 3s"
+        },
+        {
+          "case": "Tab changes focus and hides other unit debuffs",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 56
+            },
+            "subject": "unit-player-footman-1000",
+            "statuses": [
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 5s",
+                "badge": "5s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "Tab returns to selected target",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 60
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 1.4s",
+                "badge": "1.4s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 2.4s",
+                "badge": "2.4s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 5s",
+                "badge": "5s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "duration decreases while the same DOM node survives",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 64
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 1.2s",
+                "badge": "1.2s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 2.2s",
+                "badge": "2.2s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 5s",
+                "badge": "5s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "short negative statuses disappear independently",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 114
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 1.7s",
+                "badge": "1.7s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "buff expiry removes strip while cooldown remains",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-97a5ef28-0e83-46a5-b3b7-747674e592d9",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 150
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [],
+            "hidden": true
+          },
+          "cooldown": 357
+        },
+        {
+          "case": "native priest selection loads ordinary spell and all three veteran choice images without emoji",
+          "subject": "unit-player-priest-1009",
+          "spellIcons": [
+            {
+              "id": "heal",
+              "url": "/art/abilities/heal.svg",
+              "loaded": true,
+              "iconText": ""
+            }
+          ],
+          "veteranIcons": [
+            {
+              "id": "veteranHealingWave",
+              "url": "/art/abilities/veteranHealingWave.svg",
+              "loaded": true,
+              "iconText": ""
+            },
+            {
+              "id": "veteranInnerFire",
+              "url": "/art/abilities/veteranInnerFire.svg",
+              "loaded": true,
+              "iconText": ""
+            },
+            {
+              "id": "veteranRenewal",
+              "url": "/art/abilities/veteranRenewal.svg",
+              "loaded": true,
+              "iconText": ""
+            }
+          ]
+        }
+      ],
+      "rendered": {
+        "is3D": true,
+        "pickHits": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "unit-player-footman-1000",
+          "unit-player-footman-1000",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "unit-player-archer-1001",
+          "unit-player-archer-1001",
+          "unit-player-archer-1001",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "unit-player-priest-1009",
+          "unit-player-priest-1009",
+          "unit-player-priest-1009",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "errors": []
+    },
+    {
+      "mode": "2D",
+      "checks": [
+        {
+          "case": "learned skill alone is not an active buff",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-footman-1000",
+              "tick": 7
+            },
+            "subject": "unit-player-footman-1000",
+            "statuses": [],
+            "hidden": true
+          }
+        },
+        {
+          "case": "real Rally cast plus neutral poison/net hits",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 25
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 2.6s",
+                "badge": "2.6s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 4s",
+                "badge": "4s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 6s",
+                "badge": "6s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          },
+          "tooltip": "中毒\n每秒受到 3 点毒性伤害。再次中毒刷新持续时间。\n减益\n剩余 4s"
+        },
+        {
+          "case": "Tab changes focus and hides other unit debuffs",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 45
+            },
+            "subject": "unit-player-footman-1000",
+            "statuses": [
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 5s",
+                "badge": "5s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "Tab returns to selected target",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 49
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 1.4s",
+                "badge": "1.4s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 2.4s",
+                "badge": "2.4s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 5s",
+                "badge": "5s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "duration decreases while the same DOM node survives",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 57
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "slow",
+                "polarity": "debuff",
+                "label": "减速 · 减益 · 剩余 1s",
+                "badge": "1s",
+                "icon": "/art/abilities/statusSlow.svg",
+                "loaded": true
+              },
+              {
+                "key": "poison",
+                "polarity": "debuff",
+                "label": "中毒 · 减益 · 剩余 2s",
+                "badge": "2s",
+                "icon": "/art/abilities/statusPoison.svg",
+                "loaded": true
+              },
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 4s",
+                "badge": "4s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "short negative statuses disappear independently",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 97
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [
+              {
+                "key": "temporaryAttackSpeed",
+                "polarity": "buff",
+                "label": "战斗号令 · 增益 · 剩余 1.9s",
+                "badge": "1.9s",
+                "icon": "/art/abilities/veteranRally.svg",
+                "loaded": true
+              }
+            ],
+            "hidden": false
+          }
+        },
+        {
+          "case": "buff expiry removes strip while cooldown remains",
+          "state": {
+            "view": {
+              "unitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "buildingIds": [
+                "building-player-townhall",
+                "building-enemy-townhall",
+                "building-enemy2-townhall",
+                "building-player-4-townhall",
+                "building-player-5-townhall",
+                "building-player-6-townhall"
+              ],
+              "selectedIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerUnitIds": [
+                "unit-player-footman-1000",
+                "unit-player-archer-1001"
+              ],
+              "localPlayerBuildingIds": [
+                "building-player-townhall"
+              ],
+              "roomId": "room-547fce3c-ed93-4c8b-b982-8fa978e3ce95",
+              "focusedSelectionId": "unit-player-archer-1001",
+              "tick": 137
+            },
+            "subject": "unit-player-archer-1001",
+            "statuses": [],
+            "hidden": true
+          },
+          "cooldown": 358
+        },
+        {
+          "case": "native priest selection loads ordinary spell and all three veteran choice images without emoji",
+          "subject": "unit-player-priest-1009",
+          "spellIcons": [
+            {
+              "id": "heal",
+              "url": "/art/abilities/heal.svg",
+              "loaded": true,
+              "iconText": ""
+            }
+          ],
+          "veteranIcons": [
+            {
+              "id": "veteranHealingWave",
+              "url": "/art/abilities/veteranHealingWave.svg",
+              "loaded": true,
+              "iconText": ""
+            },
+            {
+              "id": "veteranInnerFire",
+              "url": "/art/abilities/veteranInnerFire.svg",
+              "loaded": true,
+              "iconText": ""
+            },
+            {
+              "id": "veteranRenewal",
+              "url": "/art/abilities/veteranRenewal.svg",
+              "loaded": true,
+              "iconText": ""
+            }
+          ]
+        }
+      ],
+      "rendered": {
+        "is3D": false,
+        "pickHits": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "errors": []
+    }
+  ],
+  "sourceHashes": {
+    "src/client/ability-icons.ts": "c227488ef99b5330e5297eed75317edd7abc4b81f0d38c198f93aebbad1e1b73",
+    "src/client/battle-hud.ts": "60c98698687d47993d7a411f601c97dda30490824b6942583b394891fb97dea7",
+    "src/client/status-presentation.ts": "8b5cc0a454aebdf5ae7da44e9f9a2ac1e7248c2fe849b2db4b96236361e320b0",
+    "public/art/abilities/heal.svg": "52994a39fb01405afca7a1dab127a881c7f8470e011f5949901267e0c276c0ad",
+    "public/art/abilities/summon.svg": "3b55287c2d37a8e89324b492fe5b44ca9c72e057435774d0b1b4f0e59e0e55b9",
+    "public/art/abilities/curse.svg": "6fda68fab04e71313c8d42235440e948d70aa4f9738884c373f0d7a9cc6bf8e0",
+    "public/art/abilities/emberMend.svg": "91d44521225caa25d619a2931e4650e248d462efc377a3c8d561d43be1258414",
+    "public/art/abilities/cinderSoul.svg": "8b42ba4bc90fa72c47046886faa11c4d8f036a5d7e165d225b4a3404cf87e853",
+    "public/art/abilities/ashCurse.svg": "a1c6caf6d210f9e96ca8e785b0f98c41e5a5d26393fc5fdebfbdc856d41829d7",
+    "public/art/abilities/charge.svg": "72c93973f54eac37996d29cf6e9cdf98d997abac8682af4c649cabff34a9debc",
+    "public/art/abilities/stomp.svg": "7123bdf7eeb39f8a66acf2d1863d5d0e92b18305ae1af0328285c31d747cbb9d",
+    "public/art/abilities/bloodlust.svg": "c12df902f82d919aa7324cfa3689c5679093edf06ef730b6d13e090904272fdd",
+    "public/art/abilities/web.svg": "0525dc5297466ad65a5bd2ad13f05e5ec3dbccd5a735dfcd8855751df857594e",
+    "public/art/abilities/pinningBolt.svg": "37bb8ba4b79f2c4eefcc6df73d262b4347706913c5d544ce0746e2058f186b0b",
+    "public/art/abilities/incendiaryFlume.svg": "7bb0aa0bf206ec880c3a7f9ab739bd6dbf9f08792f9f6cce5b3a0a075c7577d7",
+    "public/art/abilities/veteranResilience.svg": "828bc0c4c61f02736309ab7fa6d003f9bd8141c87db489161b7d1419bc6abaec",
+    "public/art/abilities/veteranMobility.svg": "c6d0e602a761c363ed32e4cc00adb3d60fe751bb46815feafe34c957d1bcfd73",
+    "public/art/abilities/veteranCommand.svg": "5571bbc4cf7d620ff5837b27fcb4e443ac18705fc1e5f4f510e15aff8de4b46c",
+    "public/art/abilities/veteranVigilance.svg": "3723f3b00e7d1bd3cd28ff6c809484dabdd0041a2f83aad8239340f1d4df2eb2",
+    "public/art/abilities/veteranRally.svg": "77c96918a7a048315e6a1ecb14e8e6a1182c869bb572a6768de21ed093998946",
+    "public/art/abilities/veteranPhalanx.svg": "261c7ef9a862177ea58347da52407c1a9f09d792de4058f64e1c9611526c4179",
+    "public/art/abilities/veteranSteadyAim.svg": "ea07b3880fbbf9530ecadad1c5f8e08e33a2d5108b641bf75db5b11fef9d37f7",
+    "public/art/abilities/veteranMarch.svg": "a17daaf9c066c09be31afa9162ae6fa06195b503490dff266d6cd2b3f6196de3",
+    "public/art/abilities/veteranHealingWave.svg": "526fd02b97cd82d57dc917939fbd3d21faa7e572ee58f3964dcb8cd7ecdd8d4a",
+    "public/art/abilities/veteranInnerFire.svg": "4dce241a4c61cf683f9dda05ef2e492a26cb78a8bbe93ade709f6c2ec7c192a4",
+    "public/art/abilities/veteranRenewal.svg": "fbf2571605a2fc132c2bdca48b6a67eb68f44ad2b961e614bfc85b5d9154d4d5",
+    "public/art/abilities/veteranSiegeDrill.svg": "bb28df876ca1549f254db57f7caa108306ecf0b70839304a9929823ddbd02220",
+    "public/art/abilities/veteranEndurance.svg": "fbb48f26ed6d35e02b878051b0bb53fb906ce36886673bad51ec06815fdf221d",
+    "public/art/abilities/guardianScroll.svg": "008d56755700055bf9be1c4695c64d3723cd5970bd412eff8403e2ce0f7ef932",
+    "public/art/abilities/statusSlow.svg": "dbb14df5cd2b64108045c7e446729a8661adbac432ecf461a59b545654c52ca2",
+    "public/art/abilities/statusPoison.svg": "94638a0791b75fdef92a53b301deead1a558d3b5f284929c93df16f55af16f4d",
+    "public/art/abilities/statusStun.svg": "560c64e56b2a8b3d750e288d66d4af798e8ba800ede2296ec5b7f8346362c5ee"
+  },
+  "driverSha256": "dda1649b01942cde6e845b6a7c7330c1d95683ea4be1d20d30e8353d51ef9efb"
+}
