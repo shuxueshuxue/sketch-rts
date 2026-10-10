@@ -30,15 +30,19 @@ describe("deployment runtime factory", () => {
     expect(ready).toBe(1);
   });
 
-  it("plays a private room in the browser, asking the server nothing, and a public room on the server", async () => {
+  it.each([
+    { publicBasePath: "/", roomsApi: "/api/rooms" },
+    { publicBasePath: "/sketch-rts/", roomsApi: "/sketch-rts/api/rooms" },
+  ])("plays a private room in the browser, asking the server nothing, and a public room on the server at $publicBasePath", async ({ publicBasePath, roomsApi }) => {
     const host = { id: "user-host", name: "Host" };
     const served = createRoom({ id: "room-served", host: { id: "user-other", name: "Other" }, visibility: "public" });
     const requests: string[] = [];
     const runtime = createDeploymentRuntime("server", {
+      publicBasePath,
       tickMs: 1_000_000,
       fetchJson: async <T>(path: string, body?: unknown) => {
         requests.push(`${body ? "POST" : "GET"} ${path}`);
-        if (body && path === "/api/rooms") return createRoom(body as CreateRoomInput) as T;
+        if (body && path === roomsApi) return createRoom(body as CreateRoomInput) as T;
         return { rooms: [served] } as T;
       },
     });
@@ -54,7 +58,7 @@ describe("deployment runtime factory", () => {
     const shared = await runtime.createRoom({ id: "room-shared", host, visibility: "public", humanCount: 2, aiCount: 0 });
     expect(runtime.isLocalRoom(shared.id)).toBe(false);
     expect(runtime.canForfeitMatch(shared.id)).toBe(false);
-    expect(requests).toEqual(["POST /api/rooms"]);
+    expect(requests).toEqual([`POST ${roomsApi}`]);
     // The room browser shows the player's own rooms here and the server's.
     expect((await runtime.listRooms(host.id)).map((room) => room.id)).toEqual(["room-mine", "room-served"]);
     started.adapter.close();

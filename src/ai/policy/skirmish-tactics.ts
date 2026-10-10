@@ -2,7 +2,8 @@ import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import { canReceiveHealing } from "../../shared/healing";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { aimingProfile } from "../../shared/aiming";
-import { UNIT_DEFS } from "../../shared/catalog";
+import { UNIT_DEFS, unitMover } from "../../shared/catalog";
+import { walkDestination, walkableGoal } from "../../shared/terrain";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
@@ -73,10 +74,37 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (criticalPickoff) return [...commands, criticalPickoff];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
-  const intent = deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot, owner, skirmish, options)
-    ? { type: "move" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }
-    : { type: "attackMove" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y };
-  return [...commands, resolveAiCommandIntent(snapshot, owner, intent, options)];
+  // Healthy groups can return fire while falling back. They must disengage
+  // from a clearly superior force or fleeing targets instead of pursuing them.
+  const v2Fallback = (options.requestedVersion ?? options.version) === "v2";
+  const cleanRetreat = deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot, owner, skirmish, options);
+  const disengage = v2Fallback && v2SkirmishNeedsDisengage(skirmish.allies, skirmish.enemies);
+  const fallbackPoint = disengage && !cleanRetreat ? v2SkirmishFallbackPoint(snapshot, skirmish.allies, retreatPoint, options) : retreatPoint;
+  const intent = disengage || cleanRetreat
+    ? { type: "move" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: fallbackPoint.x, y: fallbackPoint.y }
+    : { type: "attackMove" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: fallbackPoint.x, y: fallbackPoint.y };
+  const command = resolveAiCommandIntent(snapshot, owner, intent, options);
+  return [...commands, v2Fallback && command.type === "move" ? { ...command, avoidCombat: true } : command];
+}
+
+function v2SkirmishNeedsDisengage(allies: Unit[], enemies: Unit[]) {
+  if (armyPower(enemies) > armyPower(allies) * 1.5) return true;
+  if (allies.some((unit) => unit.order.type === "move" && unit.order.avoidCombat)) return true;
+  const center = averagePoint(allies);
+  return enemies.some((enemy) => (enemy.order.type === "move" || enemy.order.type === "attackMove" && enemy.order.targetId === undefined) &&
+    (enemy.order.x - enemy.x) * (enemy.x - center.x) + (enemy.order.y - enemy.y) * (enemy.y - center.y) > 0);
+}
+
+function v2SkirmishFallbackPoint(snapshot: GameSnapshot, allies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): Point {
+  if (allies.some((unit) => unitMover(unit.kind) !== "land")) return safePoint;
+  // Reissuing a retreat must not roll its goal backward every policy frame.
+  for (const unit of allies) {
+    const claim = options.memory?.unitClaims[unit.id];
+    if (claim?.kind === "retreat" && claim.expiresTick >= snapshot.tick && unit.order.type === "move" && unit.order.avoidCombat && distance(unit.order, claim) < 1 && distance(unit, claim) > 110) return claim;
+  }
+  const center = averagePoint(allies);
+  const point = pullbackPoint(center, safePoint, Math.min(1, 600 / Math.max(1, distance(center, safePoint))));
+  return walkDestination(snapshot.map, allies[0]!, walkableGoal(snapshot.map, point.x, point.y));
 }
 
 function unassignedCombat(army: Unit[], commands: GameCommand[]): Unit[] {
@@ -310,7 +338,7 @@ function nearestEnemyBase(snapshot: GameSnapshot, owner: PlayerId, from: Point, 
   return nearestEntity(enemyBuildings(snapshot, owner, options.teams).filter((building) => building.kind === "townHall" && building.complete), from);
 }
 
-function pullbackPoint(unit: Unit, ownBase: Point, amount: number): Point {
+function pullbackPoint(unit: Point, ownBase: Point, amount: number): Point {
   return {
     x: unit.x + (ownBase.x - unit.x) * amount,
     y: unit.y + (ownBase.y - unit.y) * amount,

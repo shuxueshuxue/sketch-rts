@@ -68,7 +68,7 @@ describe("veteran progression in the shared simulation", () => {
     const follower = game.spawnUnit("player", "footman", 850, 800);
     learn(game, leader, "veteranMarch");
     stepGame(game);
-    expect(follower.speed).toBeCloseTo(68.2);
+    expect(follower.speed).toBeCloseTo(77.5);
     issuePlayerCommand(game, "player", { type: "move", unitIds: [follower.id], x: 1200, y: 800 });
     for (let tick = 0; tick < seconds(5) && follower.x < 1000; tick += 1) stepGame(game);
     expect(Math.hypot(follower.x - leader.x, follower.y - leader.y)).toBeGreaterThan(160);
@@ -78,7 +78,7 @@ describe("veteran progression in the shared simulation", () => {
     for (let tick = 0; tick < seconds(5) && follower.x > 930; tick += 1) stepGame(game);
     stepGame(game);
     expect(Math.hypot(follower.x - leader.x, follower.y - leader.y)).toBeLessThan(160);
-    expect(follower.speed).toBeCloseTo(68.2);
+    expect(follower.speed).toBeCloseTo(77.5);
     leader.hp = 0;
     stepGame(game);
     expect(follower.speed).toBe(UNIT_DEFS.footman.speed);
@@ -94,7 +94,7 @@ describe("veteran progression in the shared simulation", () => {
     expect(follower.hp).toBe(.2);
     stepGame(game);
     expect(follower.hp).toBe(.2);
-    expect(follower.speed).toBeCloseTo(UNIT_DEFS.footman.speed * 1.1);
+    expect(follower.speed).toBeCloseTo(UNIT_DEFS.footman.speed * 1.25);
 
     const restored = restoreGameFromSave(createSaveGameRecord(game, room, { id: "fractional-aura-health" }));
     const restoredFollower = restored.units.find(unit => unit.id === follower.id)!;
@@ -129,14 +129,14 @@ describe("veteran progression in the shared simulation", () => {
     const spawned = game.units.find(unit => unit.kind === (action === "summon" ? "spirit" : "mercenary"))!;
     const restored = restoreInteractivePlaytestSession(serializeInteractivePlaytestSession(session));
     expect(checksumGame(restored.game)).toBe(checksumGame(game));
-    expect(spawned.speed).toBeCloseTo(UNIT_DEFS[spawned.kind].speed * 1.1);
+    expect(spawned.speed).toBeCloseTo(UNIT_DEFS[spawned.kind].speed * 1.25);
     for (let tick = 0; tick < 10; tick += 1) {
       stepGame(game); stepGame(restored.game);
       expect(checksumGame(restored.game)).toBe(checksumGame(game));
     }
   });
 
-  it.each([1, 3, 6])("restores 1.2 health per second to each of %i nearby wounded allies", count => {
+  it.each([1, 3, 6])("restores 3 health per second to each of %i nearby wounded allies", count => {
     const game = scene();
     const leader = game.spawnUnit("player", "priest", 800, 800);
     leader.autocast = { heal: false };
@@ -148,31 +148,31 @@ describe("veteran progression in the shared simulation", () => {
     });
     const before = allies.reduce((sum, unit) => sum + unit.hp, 0);
     run(game, seconds(1));
-    expect(allies.reduce((sum, unit) => sum + unit.hp, 0) - before).toBeCloseTo(1.2 * count, 6);
+    expect(allies.reduce((sum, unit) => sum + unit.hp, 0) - before).toBeCloseTo(3 * count, 6);
   });
 
-  it("caps a real healing wave at five times thirty and preserves the separate 55-health base heal", () => {
+  it("caps a real healing wave at five times ninety and preserves the separate 55-health base heal", () => {
     const game = scene();
     const priest = game.spawnUnit("player", "priest", 800, 800);
     priest.autocast = { heal: false, veteranHealingWave: false };
     learn(game, priest, "veteranHealingWave");
     const allies = formation.map(([dx, dy]) => {
       const unit = game.spawnUnit("player", "footman", 800 + dx, 800 + dy);
-      unit.hp -= 70;
+      unit.hp -= 110;
       return unit;
     });
     const before = allies.reduce((sum, unit) => sum + unit.hp, 0);
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: "veteranHealingWave" });
-    expect(allies.reduce((sum, unit) => sum + unit.hp, 0) - before).toBe(150);
-    expect(allies.filter(unit => unit.hp === 105)).toHaveLength(5);
-    expect(priest.abilityCooldowns?.veteranHealingWave).toBe(seconds(24));
-    const untreated = allies.find(unit => unit.hp === 75)!;
+    expect(allies.reduce((sum, unit) => sum + unit.hp, 0) - before).toBe(450);
+    expect(allies.filter(unit => unit.hp === 125)).toHaveLength(5);
+    expect(priest.abilityCooldowns?.veteranHealingWave).toBe(seconds(18));
+    const untreated = allies.find(unit => unit.hp === 35)!;
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: "heal", targetId: untreated.id });
-    expect(untreated.hp).toBe(130);
+    expect(untreated.hp).toBe(90);
     expect(priest.abilityCooldowns?.heal).toBe(seconds(12));
-    expect(priest.abilityCooldowns?.veteranHealingWave).toBe(seconds(24));
+    expect(priest.abilityCooldowns?.veteranHealingWave).toBe(seconds(18));
     expect(() => issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: "veteranHealingWave" })).toThrow(/cooldown/);
-    run(game, seconds(24));
+    run(game, seconds(18));
     expect(priest.abilityCooldowns?.veteranHealingWave ?? 0).toBe(0);
   });
 
@@ -206,7 +206,7 @@ describe("veteran progression in the shared simulation", () => {
     const follower = game.spawnUnit("player", "footman", 2060, 2000);
     run(game, priorTicks);
     learn(game, leader, "veteranMarch");
-    expect(follower.speed).toBeCloseTo(UNIT_DEFS.footman.speed * 1.1);
+    expect(follower.speed).toBeCloseTo(UNIT_DEFS.footman.speed * 1.25);
     const learned = createSaveGameRecord(game, room, { id: "learned-before-next-tick" });
     expect(JSON.stringify(learned)).not.toContain('"veteranFrame"');
     expect(JSON.stringify(learned)).not.toContain('"veteranAutocastFrame"');

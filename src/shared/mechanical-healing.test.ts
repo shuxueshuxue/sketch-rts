@@ -39,11 +39,53 @@ function mixed(skill?: VeteranSkillId) {
 }
 
 describe("mechanical bodies and medical effects in the shared simulation", () => {
+  it("caps innate regeneration at full health and resumes on the next wounded tick", () => {
+    const game = scene();
+    const revenant = game.spawnUnit("player", "cinderRevenant", 900, 900);
+    stepGame(game);
+    expect(revenant.hp).toBe(revenant.maxHp);
+
+    revenant.hp -= 1;
+    const wounded = revenant.hp;
+    stepGame(game);
+    expect(revenant.hp).toBe(wounded + 7 / 20);
+    revenant.hp = revenant.maxHp - .1;
+    stepGame(game);
+    expect(revenant.hp).toBe(revenant.maxHp);
+    stepGame(game);
+    expect(revenant.hp).toBe(revenant.maxHp);
+
+    revenant.hp -= 3;
+    const woundedAgain = revenant.hp;
+    stepGame(game);
+    expect(revenant.hp).toBe(woundedAgain + 7 / 20);
+  });
+
+  it("resumes leadership regeneration for wounded deck crew while machines keep their damage", () => {
+    const { game, priest, crew, mechanical } = mixed();
+    crew.level = 3; crew.xp = xpStarThresholds(UNIT_DEFS[crew.kind])[2]!;
+    refreshUnitStats(game, crew);
+    game.players.player!.upgrades.leadership = 3;
+    crew.hp = crew.maxHp - .2;
+    priest.hp = priest.maxHp;
+    const before = mechanical.map(unit => unit.hp);
+    stepGame(game);
+    expect(crew.hp).toBe(crew.maxHp);
+    stepGame(game);
+    expect(crew.hp).toBe(crew.maxHp);
+    crew.hp -= 2;
+    const wounded = crew.hp;
+    stepGame(game);
+    expect(crew.hp).toBe(wounded + 12 / 20);
+    expect(mechanical.map(unit => unit.hp)).toEqual(before);
+  });
+
   it("heals deck crew with a group wave and scroll while leaving siege engines, stone golems and hulls unchanged", () => {
     const { game, priest, crew, mechanical } = mixed("veteranHealingWave");
+    crew.hp -= 30; // Leave room for both the stronger wave and the subsequent scroll.
     const before = mechanical.map(unit => unit.hp), crewBefore = crew.hp;
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: "veteranHealingWave" });
-    expect(crew.hp).toBe(crewBefore + 30);
+    expect(crew.hp).toBe(crewBefore + 90);
     expect(mechanical.map(unit => unit.hp)).toEqual(before);
     game.items.push({ id: "medical-scroll", kind: "healingScroll", carrierId: priest.id, slot: "carry0", x: priest.x, y: priest.y, cooldownRemaining: 0 });
     issuePlayerCommand(game, "player", { type: "useItem", unitId: priest.id, itemId: "medical-scroll" });
@@ -102,8 +144,8 @@ describe("mechanical bodies and medical effects in the shared simulation", () =>
     const { game, priest, crew, mechanical } = mixed(skill);
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: skill });
     for (const unit of [priest, crew, ...mechanical]) {
-      if (skill === "veteranInnerFire") expect(unit.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .2 }));
-      else expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.2);
+      if (skill === "veteranInnerFire") expect(unit.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .35 }));
+      else expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.6);
     }
   });
 
@@ -124,6 +166,6 @@ describe("mechanical bodies and medical effects in the shared simulation", () =>
     expect(metal.hp).toBe(before);
     expect(living.hp).toBeGreaterThan(livingBefore + 55);
     expect(unitRegenPerSecond(game, metal)).toBe(0);
-    expect(unitRegenPerSecond(game, living)).toBe(3);
+    expect(unitRegenPerSecond(game, living)).toBe(6);
   });
 });

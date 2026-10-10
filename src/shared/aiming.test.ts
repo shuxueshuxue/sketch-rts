@@ -31,10 +31,11 @@ describe("reticle aiming", () => {
     expect(aimingProfile(UNIT_DEFS.horseArcher)!.speed).toBeGreaterThan(aimingProfile(UNIT_DEFS.ballista)!.speed);
   });
 
-  it("restores fifteen percent shooter health without raising caster health", () => {
-    for (const [kind, oldHp] of [["archer", 72], ["sparkArcher", 65], ["horseArcher", 95], ["contractArcher", 81], ["thornSlinger", 72], ["murlocHunter", 85]] as const) {
+  it("retains shooter health and the adjusted Spark durability without raising caster health", () => {
+    for (const [kind, oldHp] of [["archer", 72], ["horseArcher", 95], ["contractArcher", 81], ["thornSlinger", 72], ["murlocHunter", 85]] as const) {
       expect(UNIT_DEFS[kind].hp).toBe(Math.round(oldHp * 1.15));
     }
+    expect(UNIT_DEFS.sparkArcher.hp).toBe(85);
     expect(UNIT_DEFS.priest.hp).toBe(90);
     expect(UNIT_DEFS.emberAcolyte.hp).toBe(78);
   });

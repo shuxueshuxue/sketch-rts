@@ -25,11 +25,12 @@ describe('focused unit status presentation', () => {
     target.order = { type: 'hold', x: target.x, y: target.y };
     issuePlayerCommand(game, 'player', { type: 'cast', unitId: caster.id, ability: 'veteranRally' });
     const before = checksumGame(game);
-    expect(statuses(game, target)).toMatchObject([{ type: 'veteranBuff', polarity: 'buff', icon: 'veteranRally', badge: '6s', remainingTicks: seconds(6) }]);
+    expect(statuses(game, target)).toMatchObject([{ type: 'veteranBuff', polarity: 'buff', icon: 'veteranRally', badge: '8s', remainingTicks: seconds(8) }]);
+    expect(statuses(game, target)[0]?.description).toContain('60%');
     expect(checksumGame(game)).toBe(before);
     advance(game, seconds(2));
-    expect(statuses(game, target)[0]?.badge).toBe('4s');
-    advance(game, seconds(4));
+    expect(statuses(game, target)[0]?.badge).toBe('6s');
+    advance(game, seconds(6));
     expect(statuses(game, target)).toEqual([]);
     expect(caster.abilityCooldowns?.veteranRally).toBeGreaterThan(0);
   });
@@ -71,10 +72,10 @@ describe('focused unit status presentation', () => {
     const target = game.spawnUnit('player', 'footman', 800, 800);
     const weak = game.spawnUnit('player', 'footman', 850, 800), strong = game.spawnUnit('enemy', 'footman', 800, 850), foe = game.spawnUnit('enemy2', 'footman', 780, 800);
     weak.veteranSkill = 'veteranVigilance'; strong.veteranSkill = foe.veteranSkill = 'veteranPhalanx';
-    expect(buildVeteranFrame(snapshotGame(game)).get(target.id)?.reductions).toEqual([{ group: 'aura', amount: .12 }]);
+    expect(buildVeteranFrame(snapshotGame(game)).get(target.id)?.reductions).toEqual([{ group: 'aura', amount: .25 }]);
     expect(statuses(game, target)).toMatchObject([{ key: 'aura:veteranPhalanx', badge: '∞', sourceIds: [strong.id] }]);
     strong.deck = { shipId: 'ship', x: 0, y: 0 }; strong.cabin = { shipId: 'ship' };
-    expect(buildVeteranFrame(snapshotGame(game)).get(target.id)?.reductions).toEqual([{ group: 'aura', amount: .08 }]);
+    expect(buildVeteranFrame(snapshotGame(game)).get(target.id)?.reductions).toEqual([{ group: 'aura', amount: .18 }]);
     expect(statuses(game, target)).toMatchObject([{ key: 'aura:veteranVigilance', sourceIds: [weak.id] }]);
     weak.hp = 0;
     expect(statuses(game, target)).toEqual([]);
