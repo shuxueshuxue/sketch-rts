@@ -48,6 +48,7 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     && !('order' in enemy && enemy.deck) && isEnemyOwner(snapshot, owner, enemy.owner, options));
   options.memory.jobs = options.memory.jobs.filter(job => !job.kind.startsWith(JOB_PREFIX)
     || (hazards.some(hazard => job.kind === JOB_PREFIX + hazard.id) && soldiers.some(unit => unit.id === job.id)));
+  if (hazards.length === 0) return [];
   const commands: Extract<GameCommand, { type: 'move' }>[] = [];
   const destinations: { x: number; y: number; radius: number }[] = [];
   for (const unit of soldiers) {
