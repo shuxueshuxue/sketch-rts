@@ -320,7 +320,10 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const commands: GameCommand[] = [...clearTransferLanes(snapshot,owner),...services.commands];
     if (outfit && !services.reserved.has(outfit.shipId)) commands.push(...outfitCommands(snapshot, owner, outfit));
     const harbor = buildings(snapshot, owner).find(building => building.kind === "shipyard");
-    const foes = [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
+    // Fleet and landed-expedition combat share the same immutable world list.
+    // A mainland army with no fighters or expedition never uses that list.
+    let combatFoes: Array<Unit | Building> | undefined;
+    const foesForCombat = () => combatFoes ??= [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
     const convoy = own.filter(unit => ferryCapacity(unit) > 0 && shipPassengers(snapshot.units,unit).length);
     const fighters=own.filter(unit=>combatHull(unit)&&combatCapability(snapshot,unit).armed&&!services.reserved.has(unit.id)&&unit.id!==outfit?.shipId&&!navalMemory(options).ferries?.[unit.id]);
     for (const id of Object.keys(navalMemory(options).combat ?? {})) if (!fighters.some(ship => ship.id === id)) delete navalMemory(options).combat![id];
@@ -336,6 +339,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const fleetGoal=assault?offshore(snapshot,assault.landing,assault.target):plan?offshore(snapshot,plan.landing,plan.mine):raidPlan(snapshot,owner,options)?.water;
     const stations=fleetStations(snapshot,fighters.filter(ship=>!escorts.has(ship.id)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
     for (const ship of fighters) {
+        const foes = foesForCombat();
         const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === ship.id);
         const aboard = shipPassengers(snapshot.units, ship);
         const safe = !foes.some(foe => combatCapability(snapshot,foe).armed && distance(foe, ship) < 600);
@@ -416,7 +420,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         for (const unit of troops) handled.add(unit.id);
         const center = { x: troops.reduce((n,u)=>n+u.x,0)/troops.length, y:troops.reduce((n,u)=>n+u.y,0)/troops.length };
         const power = troops.reduce((n,u)=>n+effectiveCombatRating(snapshot,u),0);
-        const localFoes = foes.filter(target => sameGround(snapshot.map, anchor, target));
+        const localFoes = foesForCombat().filter(target => sameGround(snapshot.map, anchor, target));
         const canFight = (point: Point) => {
             const defense = localFoes.filter(target => distance(target,point)<400).reduce((n,target)=>n+("order" in target ? effectiveCombatRating(snapshot,target) : target.attackDamage>0 ? TOWER_STRENGTH : 0),0);
             return power >= defense * 1.35;

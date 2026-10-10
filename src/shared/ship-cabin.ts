@@ -21,6 +21,11 @@ export function cabinCrewMovedThisTick(snapshot:CabinSnapshot,unit:Unit):boolean
   const frame=cabinFrames.get(snapshot.units);
   return frame!==undefined && frame.tick===snapshot.tick && frame.moved.has(unit.id);
 }
+/** Reading another tick must never replace a crew member's spent allowance. */
+export function hasCabinCrewMovementFrame(snapshot:CabinSnapshot):boolean {
+  const frame=cabinFrames.get(snapshot.units);
+  return frame!==undefined && frame.tick===snapshot.tick && frame.moved.size>0;
+}
 const NON_WALKING_CREW = new Set<Unit['kind']>(['knight','raider','horseArcher','spirit','ancientStag','dragonWhelp','redDragon','mossGnawer','stonebackBrute','deepSnapper','spiderling','venomSpider','spiderQueen']);
 const compareIds=(a:Unit,b:Unit)=>a.id<b.id?-1:a.id>b.id?1:0;
 const cabinRoutes = new WeakMap<Unit, { profile:NonNullable<ReturnType<typeof shipProfile>>; radius:number; shipId:string; x:number; y:number; reachable:boolean }>();

@@ -316,6 +316,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return snapshotGame(getLiveGame(roomId).game);
     },
 
+    currentTick(roomId: string): number {
+      return getLiveGame(roomId).game.tick;
+    },
+
     checksumRoom(roomId: string): string {
       return checksumGame(getLiveGame(roomId).game);
     },

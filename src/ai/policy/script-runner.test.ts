@@ -5,8 +5,97 @@ import { sketchScene } from "../../sdk/scene";
 import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
 import { aiSnapshotQuery } from "./snapshot";
+import { createAiPolicyMemory } from "../memory";
 
 describe("AI script runner", () => {
+  function tacticalScene() {
+    return sketchScene("empty-tactical-bookkeeping").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .townHall("v2", 500, 500).townHall("v1", 3400, 3400, { id: "enemy-hall" })
+      .unit("v2", "footman", 620, 520, { id: "guard" })
+      .unit("v2", "footman", 650, 550, { id: "free" }).build().createGame();
+  }
+  const retreatClaim = { kind: "retreat" as const, targetId: "retreat", x: 500, y: 500, sinceTick: 0, expiresTick: 900 };
+
+  it.each(["undefined", "array"] as const)("keeps an empty %s script's memory updates before later real commands", result => {
+    const game = tacticalScene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
+    const before = structuredClone(snapshot), calls: string[] = [];
+    const scripts: AiScript[] = [
+      { id: "inspect", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("inspect");
+        context.memory.unitClaims.guard = { ...retreatClaim };
+        return result === "array" ? [] : undefined;
+      } },
+      { id: "rescue", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("rescue");
+        expect(context.memory.unitClaims.guard?.kind).toBe("retreat");
+        return { type: "move", unitIds: ["guard"], x: 500, y: 500 };
+      } },
+      { id: "later", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("later");
+        expect(context.memory.unitClaims.guard).toBeUndefined();
+        return { type: "move", unitIds: ["free"], x: 700, y: 700 };
+      } },
+    ];
+    const entries = runAiCommandEntriesFromScripts(snapshot, "v2", scripts, { memory });
+    expect(calls).toEqual(["inspect", "rescue", "later"]);
+    expect(entries).toEqual([
+      { scriptId: "rescue", command: { type: "move", unitIds: ["guard"], x: 500, y: 500 } },
+      { scriptId: "later", command: { type: "move", unitIds: ["free"], x: 700, y: 700 } },
+    ]);
+    for (const entry of entries) issuePlayerCommand(game, "v2", entry.command);
+    expect(game.units.find(unit => unit.id === "guard")!.order).toEqual({ type: "move", x: 500, y: 500 });
+    expect(game.units.find(unit => unit.id === "free")!.order).toEqual({ type: "move", x: 700, y: 700 });
+    expect(snapshot).toEqual(before);
+  });
+
+  it("keeps a fully claim-filtered script's updates for its unit's owning script", () => {
+    const game = tacticalScene(), memory = createAiPolicyMemory(), calls: string[] = [];
+    const scripts: AiScript[] = [
+      { id: "blocked", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("blocked");
+        context.memory.unitClaims.guard = { ...retreatClaim };
+        return { type: "move", unitIds: ["guard"], x: 2000, y: 2000 };
+      } },
+      { id: "rescue", phase: "tactics", claimsUnits: () => new Set(["guard"]), run: (_frame, _owner, context) => {
+        calls.push("rescue");
+        expect(context.memory.unitClaims.guard?.kind).toBe("retreat");
+        return { type: "move", unitIds: ["guard"], x: 500, y: 500 };
+      } },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshotGame(game), "v2", scripts, { memory })).toEqual([
+      { scriptId: "rescue", command: { type: "move", unitIds: ["guard"], x: 500, y: 500 } },
+    ]);
+    expect(calls).toEqual(["blocked", "rescue"]);
+    expect(memory.unitClaims.guard).toBeUndefined();
+  });
+
+  it("keeps a fully conflict-filtered script's updates without recording its rejected command", () => {
+    const game = tacticalScene(), memory = createAiPolicyMemory(), calls: string[] = [];
+    const scripts: AiScript[] = [
+      { id: "first", phase: "tactics", run: () => {
+        calls.push("first");
+        return { type: "move", unitIds: ["guard"], x: 500, y: 500 };
+      } },
+      { id: "blocked", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("blocked");
+        context.memory.unitClaims.guard = { ...retreatClaim };
+        return { type: "attack", unitIds: ["guard"], targetId: "enemy-hall" };
+      } },
+      { id: "later", phase: "tactics", run: (_frame, _owner, context) => {
+        calls.push("later");
+        expect(context.memory.unitClaims.guard?.kind).toBe("retreat");
+        return { type: "move", unitIds: ["free"], x: 700, y: 700 };
+      } },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshotGame(game), "v2", scripts, { memory })).toEqual([
+      { scriptId: "first", command: { type: "move", unitIds: ["guard"], x: 500, y: 500 } },
+      { scriptId: "later", command: { type: "move", unitIds: ["free"], x: 700, y: 700 } },
+    ]);
+    expect(calls).toEqual(["first", "blocked", "later"]);
+    expect(memory.unitClaims.guard).toEqual(retreatClaim);
+  });
+
   it("reuses unchanged budgets before isolating a spent budget", () => {
     const game = sketchScene("shared-economy-frame").map("bareDuel").replaceDefaults()
       .player("v2", { race: "grove" }).player("v1", { race: "ember" })

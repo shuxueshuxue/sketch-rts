@@ -54,7 +54,7 @@ import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget
 import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { hypot2 } from "./hypot";
-import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
+import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, hasCabinCrewMovementFrame, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, hullPassageClear, nearestShipPose, type ShipPose } from "./ship-navigation";
@@ -194,6 +194,29 @@ const DEFAULT_RACES: Record<string, PlayerState["race"]> = { player: "grove", en
 // @@@runtime-id-band - Map-authored ids stay human-readable; runtime ids live above this band.
 const RUNTIME_ID_START = 1000;
 
+// Only the native factory promises that births append without changing existing
+// passengers. Custom factories and hit observers keep the complete naval pass.
+const nativeUnitSpawners = new WeakMap<Game, Game["spawnUnit"]>();
+const NAVAL_FRAME = 1;
+const CARGO_FRAME = 2;
+
+function navalFrameFlags(game: Game): number {
+  let flags = game.observer || nativeUnitSpawners.get(game) !== game.spawnUnit ? NAVAL_FRAME : 0;
+  for (const unit of game.units) {
+    // An empty old-format cargo array still needs to be removed by migration.
+    if (unit.cargo) return NAVAL_FRAME | CARGO_FRAME;
+    if (flags) continue;
+    const order = unit.order;
+    if (unit.deck || unit.cabin || unit.gangway || unit.sailing || isShipKind(unit.kind)
+      || order.type === "board" || order.type === "boardShip" || order.type === "unload" || order.type === "enterCabin"
+      || order.type === "move" && (order.rendezvousFor || order.deckPoint || order.deckShipId)
+      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags = NAVAL_FRAME;
+  }
+  // Preserve the existing vessel view even after direct equal-length array
+  // replacement. This shortcut must not change that public mutation behavior.
+  return flags || (shipsIn(game.units).length ? NAVAL_FRAME : 0);
+}
+
 export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOptions = {}): Game {
   const aiPlayers = options.aiPlayers ?? ["enemy"];
   const activePlayers = uniquePlayers(options.players ?? [...DEFAULT_PLAYERS, ...aiPlayers]);
@@ -264,6 +287,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   refreshEquipmentMass(game);
   keepShipsOnWater(game.map,game.units);
   updateSupplyState(game);
+  nativeUnitSpawners.set(game, game.spawnUnit);
   return game;
 }
 
@@ -722,10 +746,15 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
 export function stepGame(game: Game) {
   if (game.match.winner) return;
-  bindGangwayCrewRules(game.units,game);
-  if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
-  syncDecks(game.units);
-  updateCabinPassengers(game);
+  const entryFlags = navalFrameFlags(game);
+  let navalFrame = entryFlags !== 0;
+  if (navalFrame) {
+    bindGangwayCrewRules(game.units,game);
+    if (entryFlags & CARGO_FRAME) restoreCargoDecks(game.units);
+    syncDecks(game.units);
+    updateCabinPassengers(game);
+  }
+  const entryUnits = game.units, entryCount = game.units.length;
   game.tick += 1;
   updateWindField(game.map, game.tick);
   // Auras and their spatial query start from this tick's actual positions, including after restore.
@@ -742,9 +771,12 @@ export function stepGame(game: Game) {
   game.miningFrame = prepareMiningFrame(game);
   updateMercenaryCamps(game);
   if (game.shops) restockShops(game.shops);
+  // Training can launch the first hull into the same array on an empty tick.
+  // A native factory only appends; observers/custom factories never take this path.
+  if (!navalFrame && (game.units !== entryUnits || game.units.length !== entryCount)) navalFrame = navalFrameFlags(game) !== 0;
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230, game.unitSpatialByTeam);
-  game.shipReachPadding = shipReachPadding(game.units);
+  game.shipReachPadding = navalFrame ? shipReachPadding(game.units) : 0;
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
     game.buildingSpatial = createSpatialIndex(game.buildings, 420);
     game.buildingSpatialByTeam = createTeamSpatialIndexes(game, game.buildings, 260);
@@ -754,41 +786,55 @@ export function stepGame(game: Game) {
   updateItems(game);
   updateMoonWellHealing(game);
   updateRegeneration(game);
-  updateDockRepairs(game);
+  if (navalFrame) updateDockRepairs(game);
   updateTowerAttacks(game);
   const vessels = shipsIn(game.units);
   const starts = new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  // The empty collision frame still clears prior hull impacts and binds ground
+  // movement to this tick's no-hull geometry.
   beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
-  beginShipPlanningFrame(game.units,game.tick,vessels);
-  updateShipGangways(game.map,game.units,game.tick,game);
-  prepareCrewRendezvous(game.map,game.units);
-  game.boardingHolds=boardingHoldShips(game.units);
-  const defenses=prepareShipDefenseFrame(game,(ship,range,visit)=>forEachNearbyEnemyUnit(game,ship.owner,ship,range,visit),game.boardingHolds);
-  const shoreBoarders = new Map<string, Unit[]>();
-  for (const unit of game.units) if (unit.hp > 0 && !unit.deck && unit.order.type === 'board') {
-    const waiting = shoreBoarders.get(unit.order.transportId);
-    if (waiting) waiting.push(unit); else shoreBoarders.set(unit.order.transportId, [unit]);
+  let defenses: ShipDefenseFrame;
+  if (navalFrame) {
+    beginShipPlanningFrame(game.units,game.tick,vessels);
+    updateShipGangways(game.map,game.units,game.tick,game);
+    prepareCrewRendezvous(game.map,game.units);
+    game.boardingHolds=boardingHoldShips(game.units);
+    defenses=prepareShipDefenseFrame(game,(ship,range,visit)=>forEachNearbyEnemyUnit(game,ship.owner,ship,range,visit),game.boardingHolds);
+    const shoreBoarders = new Map<string, Unit[]>();
+    for (const unit of game.units) if (unit.hp > 0 && !unit.deck && unit.order.type === 'board') {
+      const waiting = shoreBoarders.get(unit.order.transportId);
+      if (waiting) waiting.push(unit); else shoreBoarders.set(unit.order.transportId, [unit]);
+    }
+    for (const ship of shipsIn(game.units)) {
+      // Shore boarding gives an idle boat a ferry voyage without replacing its
+      // order. Its sails must stay available while it approaches the passenger.
+      const collecting = ship.order.type === 'idle' && shoreBoarders.get(ship.id)?.some(unit => unit.owner === ship.owner && !alongside(unit, ship));
+      const idle = game.boardingHolds.has(ship.id) || ship.order.type === 'hold' || ship.order.type === 'idle' && !collecting && !defenses.has(ship.id)
+        || !!ship.sailing?.gangway && ship.sailing.gangway.phase!=='approach';
+      updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
+    }
+  } else {
+    game.boardingHolds = new Set();
+    defenses = new Map();
   }
-  for (const ship of shipsIn(game.units)) {
-    // Shore boarding gives an idle boat a ferry voyage without replacing its
-    // order. Its sails must stay available while it approaches the passenger.
-    const collecting = ship.order.type === 'idle' && shoreBoarders.get(ship.id)?.some(unit => unit.owner === ship.owner && !alongside(unit, ship));
-    const idle = game.boardingHolds.has(ship.id) || ship.order.type === 'hold' || ship.order.type === 'idle' && !collecting && !defenses.has(ship.id)
-      || !!ship.sailing?.gangway && ship.sailing.gangway.phase!=='approach';
-    updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
-  }
-  const ferry = updateUnits(game,defenses);
-  updateMountedWeapons(game,starts,defenses);
+  const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
+  const ferry = updateUnits(game,defenses,navalFrame);
+  // Summons act next tick, but their bodies participate in this tick's tail.
+  // A queued boarding/unload order can also activate during the unit pass.
+  if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && navalFrameFlags(game))) navalFrame = true;
+  if (navalFrame) updateMountedWeapons(game,starts,defenses);
   if (ferry) ferryUnits(game, ferry, starts);
-  for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
-  updateShipGangways(game.map,game.units,game.tick,game);
-  settleGangwayCrossings(game.units);
-  syncDecks(game.units);
-  settleDeckSupport(game.units,game.map);
-  updateCabinPassengers(game);
+  if (navalFrame) {
+    for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
+    updateShipGangways(game.map,game.units,game.tick,game);
+    settleGangwayCrossings(game.units);
+    syncDecks(game.units);
+    settleDeckSupport(game.units,game.map);
+    updateCabinPassengers(game);
+  }
   slideUnits(game);
   separateUnits(game);
-  syncDecks(game.units);
+  if (navalFrame) syncDecks(game.units);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
   for(const impact of drainShipCollisionImpacts(game.units)) {
     const other=impact.other;
@@ -802,7 +848,7 @@ export function stepGame(game: Game) {
       if(taken!==undefined && taken>0)addHitEffect(game,other,taken);
     }
   }
-  for (const ship of shipsIn(game.units)) {
+  if (navalFrame) for (const ship of shipsIn(game.units)) {
     const start = starts.get(ship.id);
     if (!ship.sailing) continue;
     ship.sailing.velocityX = start ? (ship.x - start.x) * SIM_TICKS_PER_SECOND : 0;
@@ -812,7 +858,7 @@ export function stepGame(game: Game) {
   removeExpiredUnits(game);
   removeDead(game);
   if(settleGroundItems(game.items,game.units,game.map))refreshEquipmentMass(game);
-  updateShipOwnership(game);
+  if (navalFrame) updateShipOwnership(game);
   syncBuildingBodies(game);
   // Snapshots and restored games observe the same aura boundary after movement, deaths and captures.
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
@@ -867,7 +913,9 @@ export function snapshotGame(game: Game): GameSnapshot {
     units: game.units.map((unit) => {
       // Most units have no deck or gun state. Copy only the nested state present,
       // rather than allocating empty intermediate objects for every optional field.
-      const copy = { ...unit, order: copyUnitOrder(unit.order), orderQueue: unit.orderQueue?.map(copyUnitOrder) ?? [] };
+      const copy = { ...unit };
+      copy.order = copyUnitOrder(unit.order);
+      copy.orderQueue = unit.orderQueue?.map(copyUnitOrder) ?? [];
       if (unit.aim) copy.aim = { ...unit.aim };
       if (unit.deck) copy.deck = { ...unit.deck };
       if (unit.cabin) copy.cabin = { ...unit.cabin };
@@ -1296,16 +1344,19 @@ function updateResources(game: Game) {
 // ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
-function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined {
+function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean): Ferry | undefined {
   game.veteranAutocastFrame = {};
+  const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
-  const vessels=shipsIn(game.units);
-  const ordered=vessels.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units;
+  const vessels=navalFrame ? shipsIn(game.units) : undefined;
+  const ordered=vessels?.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units;
   // Summoning only appends during unit updates. Capture the initial length so
   // newly born bodies first act next tick, as with the ships-first snapshot.
   const count = ordered.length;
+  const sourceCount = game.units.length;
   for (let i = 0; i < count; i += 1) {
     const unit = ordered[i]!;
+    const navalUnitFrame = navalFrame || game.units.length !== sourceCount;
     if (unit.sailing?.pursuit && !['attack', 'attackMove', 'follow'].includes(unit.order.type) && !defenses.has(unit.id)) delete unit.sailing.pursuit;
     if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
     unit.cooldown = Math.max(0, unit.cooldown - 1);
@@ -1314,7 +1365,8 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
       if (left) unit.abilityCooldowns = left;
       else unit.abilityCooldowns = undefined;
     }
-    if (isInCabin(unit) || cabinCrewMovedThisTick(game,unit)) continue;
+    if (navalUnitFrame && isInCabin(unit)
+      || (navalUnitFrame || cabinMovementFrame) && cabinCrewMovedThisTick(game,unit)) continue;
     if (unit.order.type === 'enterCabin') {
       if (!isStaggered(unit) && !isStunned(unit)) enterCabinStep(game,unit,statusPace(unit),other=>isStaggered(other)||isStunned(other)?0:statusPace(other));
       continue;
@@ -1325,7 +1377,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
       if ((unit.pushX !== undefined && isStaggered(unit)) || (unit.effects.length !== 0 && isStunned(unit))) continue;
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
-      if (autoRepairDeckShip(game, unit)) continue;
+      if (navalUnitFrame && autoRepairDeckShip(game, unit)) continue;
       autocastStep(game, unit);
     }
     switch (unit.order.type) {
@@ -1383,7 +1435,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
         continue;
     }
     if (unit.kind === "worker" && !unit.deck && updateAutoRepair(game, unit)) continue;
-    if(combatHull(unit) && unit.owner!=='neutral') {
+    if(navalUnitFrame && combatHull(unit) && unit.owner!=='neutral') {
       const defense=defenses.get(unit.id);
       if(defense?.target){
         const target=navalCombatTarget(game,unit,defense.target);
@@ -1398,7 +1450,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
       else updateHoldOrder(game,unit);
       continue;
     }
-    if(shipProfile(unit))continue;
+    if(navalUnitFrame && shipProfile(unit))continue;
     if (unit.kind !== "worker") {
       const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE);
       if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
@@ -4159,9 +4211,16 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (unchanged) return previous!;
   }
   const buckets = new Map<number, T[]>();
-  const cellX: number[] = [], cellY: number[] = [];
+  // Membership metadata is private. Transfer its storage to the new index,
+  // leaving the previous index's public buckets untouched for active visitors.
+  // An old index restored by a caller must rebuild, never consult reused data.
+  if (cached) spatialMembership.delete(previous!);
+  const members = cached?.members ?? [];
+  const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
+  members.length = cellX.length = cellY.length = 0;
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const entity of entities) {
+    members.push(entity);
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     cellX.push(x); cellY.push(y);
     left = Math.min(left, x); right = Math.max(right, x);
@@ -4173,7 +4232,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   }
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
-  spatialMembership.set(index, { members: entities.slice(), cellX, cellY });
+  spatialMembership.set(index, { members, cellX, cellY });
   return index;
 }
 
@@ -4202,8 +4261,13 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     if (unchanged) return previous!;
   }
   const indexes = new Map<string, SpatialIndex<T>>();
-  const cellX: number[] = [], cellY: number[] = [], teams: string[] = [];
+  const reusable = cached && Object.is(cached.cellSize, cellSize) ? cached : undefined;
+  if (reusable) teamSpatialMembership.delete(previous!);
+  const members = reusable?.members ?? [];
+  const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
+  members.length = cellX.length = cellY.length = teams.length = 0;
   for (const entity of entities) {
+    members.push(entity);
     const team = teamKey(game, entity.owner);
     teams.push(team);
     let index = indexes.get(team);
@@ -4216,7 +4280,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
-  teamSpatialMembership.set(indexes, { cellSize, members: entities.slice(), cellX, cellY, teams });
+  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams });
   return indexes;
 }
 

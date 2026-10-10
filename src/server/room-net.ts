@@ -57,8 +57,7 @@ export class RoomNetHub {
     // Keep delayed commands in the coordinator until restored derived work is
     // ready; building a frame earlier would consume its queue and sequence.
     if (!this.options.roomHost.prepareRoomTick(roomId, 1)) return undefined;
-    const snapshot = this.options.roomHost.snapshot(roomId);
-    const frame = state.coordinator.buildFrame(snapshot.tick);
+    const frame = state.coordinator.buildFrame(this.options.roomHost.currentTick(roomId));
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
     return result.frame;
   }
@@ -117,7 +116,7 @@ export class RoomNetHub {
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
       const state = this.stateFor(message.roomId);
-      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.snapshot(message.roomId).tick, epoch: state.epoch });
+      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.currentTick(message.roomId), epoch: state.epoch });
       return;
     }
     if (message.type === "command") {
@@ -149,10 +148,10 @@ export class RoomNetHub {
   private acceptCommand(message: Extract<ClientNetMessage, { type: "command" }>): void {
     const state = this.stateFor(message.roomId);
     if (!this.acceptsMessageEpoch(state, message)) return;
-    const snapshot = this.options.roomHost.snapshot(message.roomId);
+    const currentTick = this.options.roomHost.currentTick(message.roomId);
     this.options.roomHost.admitCommands(message.roomId, [{ playerId: message.playerId, command: message.command }]);
     state.coordinator.acceptCommand({
-      currentTick: snapshot.tick,
+      currentTick,
       playerId: message.playerId,
       command: message.command,
       ...(message.clientSeq !== undefined ? { clientSeq: message.clientSeq } : {}),
@@ -257,7 +256,7 @@ export class RoomNetHub {
       kind: "checkpoint-request",
       roomId,
       playerId: message.playerId,
-      localTick: message.clientTick ?? this.options.roomHost.snapshot(roomId).tick,
+      localTick: message.clientTick ?? this.options.roomHost.currentTick(roomId),
       serverTick: checkpoint.tick,
       reason,
       checkpointClass,
