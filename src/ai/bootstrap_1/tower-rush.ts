@@ -80,6 +80,9 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const opposition = combatPower(opponents)
     + snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
       && isOpponentOwner(snapshot, owner, building.owner, options) && distance(building, target) <= 800).length * TOWER_STRENGTH;
+  if (opposition === 0 && snapshot.players[owner]!.gold < BUILDING_DEFS.defenseTower.cost) {
+    endRush(options); return undefined;
+  }
   const power = combatPower(army);
   const screen = army.filter(unit => unit.kind === 'spirit' && distance(unit, center) <= 500);
   const press = screen.length > 0 && power + TOWER_STRENGTH >= opposition * (job?.kind === target.id ? .85 : 1.1);
