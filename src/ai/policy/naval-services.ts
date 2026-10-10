@@ -1,6 +1,6 @@
 import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
-import { shipPassengers, shipProfile } from "../../shared/ship-geometry";
+import { isShipKind, shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import { shipNeedsRepair } from "../../shared/ship-equipment";
 import { isInCabin } from '../../shared/ship-cabin';
 import { sameGround, walkableGoal } from "../../shared/terrain";
@@ -34,10 +34,7 @@ export function navalServices(
   const own = snapshot.units.filter(
       (unit) => unit.owner === owner && unit.hp > 0,
     ),
-    ships = own.filter(shipProfile);
-  const foes = snapshot.units.filter(
-    (unit) => unit.hp > 0 && isEnemyOwner(snapshot, owner, unit.owner, options),
-  );
+    ships = own.filter(unit => isShipKind(unit.kind));
   const working = (ship: Unit) => combatCapability(snapshot, ship).armed;
   const blocked = (ship: Unit) =>
     result.reserved.has(ship.id) ||
@@ -75,6 +72,12 @@ export function navalServices(
       const target = ships.find(ship => crew.order.type === 'board' && ship.id === crew.order.transportId);
       if (target) awaitBoarding(target);
     }
+  // Boarding reservations also cover missing or hostile destinations. Keep
+  // them above the empty-fleet return; repair and prize tasks need an own hull.
+  if (ships.length === 0) return result;
+  const foes = snapshot.units.filter(
+    (unit) => unit.hp > 0 && isEnemyOwner(snapshot, owner, unit.owner, options),
+  );
   if ((snapshot.players[owner]?.gold ?? 0) > 30)
     for (const ship of [...ships].sort(
       (a, b) => a.hp / a.maxHp - b.hp / b.maxHp,

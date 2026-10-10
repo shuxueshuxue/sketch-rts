@@ -1,6 +1,6 @@
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
-import { constrainGroundShipStep, drainShipCollisionImpacts, shipBodyClearAtPose } from './ship-collisions';
+import { constrainGroundShipStep, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
 import { shipFireLaneClear } from './ship-fire-control';
@@ -28,7 +28,7 @@ import type { WeaponDef } from "./catalog";
 import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { isStunned, unitAbilities } from "./unit-abilities";
-import { matchesUnitTarget } from "./unit-targeting";
+import { matchesUnitTarget, NON_MECHANICAL_TARGETS, type UnitClass } from "./unit-targeting";
 import { rollVeteranSkillChoices } from "./veteran-skills";
 import { unitClassOf } from "./unit-targeting";
 import { veteranWeaponRange } from "./veteran-stats";
@@ -53,7 +53,8 @@ import { beginShipMotionFrame } from './ship-motion';
 import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
 import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
-import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
+import { hypot2 } from "./hypot";
+import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, hasCabinCrewMovementFrame, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, hullPassageClear, nearestShipPose, type ShipPose } from "./ship-navigation";
@@ -193,6 +194,34 @@ const DEFAULT_RACES: Record<string, PlayerState["race"]> = { player: "grove", en
 // @@@runtime-id-band - Map-authored ids stay human-readable; runtime ids live above this band.
 const RUNTIME_ID_START = 1000;
 
+// Only the native factory promises that births append without changing existing
+// passengers. Custom factories and hit observers keep the complete naval pass.
+const nativeUnitSpawners = new WeakMap<Game, Game["spawnUnit"]>();
+const NAVAL_FRAME = 1;
+const CARGO_FRAME = 2;
+const EMPTY_VETERAN_FRAME = 4;
+
+function navalFrameFlags(game: Game): number {
+  // Native births and automatic star gains never assign a learned skill.
+  // Callbacks can change one mid-tick, so only the native frame may certify emptiness.
+  let flags = game.observer || nativeUnitSpawners.get(game) !== game.spawnUnit ? NAVAL_FRAME : EMPTY_VETERAN_FRAME;
+  for (const unit of game.units) {
+    // An empty old-format cargo array still needs to be removed by migration.
+    // Cargo migration may reveal skilled passengers not visited by this scan.
+    if (unit.cargo) return NAVAL_FRAME | CARGO_FRAME;
+    if (unit.veteranSkill !== undefined) flags &= ~EMPTY_VETERAN_FRAME;
+    if (flags & NAVAL_FRAME) continue;
+    const order = unit.order;
+    if (unit.deck || unit.cabin || unit.gangway || unit.sailing || isShipKind(unit.kind)
+      || order.type === "board" || order.type === "boardShip" || order.type === "unload" || order.type === "enterCabin"
+      || order.type === "move" && (order.rendezvousFor || order.deckPoint || order.deckShipId)
+      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags = NAVAL_FRAME;
+  }
+  // Preserve the existing vessel view even after direct equal-length array
+  // replacement. This shortcut must not change that public mutation behavior.
+  return flags | (flags & NAVAL_FRAME || shipsIn(game.units).length ? NAVAL_FRAME : 0);
+}
+
 export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOptions = {}): Game {
   const aiPlayers = options.aiPlayers ?? ["enemy"];
   const activePlayers = uniquePlayers(options.players ?? [...DEFAULT_PLAYERS, ...aiPlayers]);
@@ -263,6 +292,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   refreshEquipmentMass(game);
   keepShipsOnWater(game.map,game.units);
   updateSupplyState(game);
+  nativeUnitSpawners.set(game, game.spawnUnit);
   return game;
 }
 
@@ -721,15 +751,21 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
 export function stepGame(game: Game) {
   if (game.match.winner) return;
-  bindGangwayCrewRules(game.units,game);
-  if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
-  syncDecks(game.units);
-  updateCabinPassengers(game);
+  const entryFlags = navalFrameFlags(game);
+  const emptyVeteranFrame = !!(entryFlags & EMPTY_VETERAN_FRAME);
+  let navalFrame = !!(entryFlags & NAVAL_FRAME);
+  if (navalFrame) {
+    bindGangwayCrewRules(game.units,game);
+    if (entryFlags & CARGO_FRAME) restoreCargoDecks(game.units);
+    syncDecks(game.units);
+    updateCabinPassengers(game);
+  }
+  const entryUnits = game.units, entryCount = game.units.length;
   game.tick += 1;
   updateWindField(game.map, game.tick);
   // Auras and their spatial query start from this tick's actual positions, including after restore.
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
-  refreshVeteranFrame(game);
+  refreshVeteranFrame(game, emptyVeteranFrame);
   syncBuildingBodies(game);
   updateWorldEffects(game);
   updateProjectiles(game);
@@ -741,9 +777,15 @@ export function stepGame(game: Game) {
   game.miningFrame = prepareMiningFrame(game);
   updateMercenaryCamps(game);
   if (game.shops) restockShops(game.shops);
-  game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
-  game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
-  game.shipReachPadding = shipReachPadding(game.units);
+  // Training can launch the first hull into the same array on an empty tick.
+  // A native factory only appends; observers/custom factories never take this path.
+  const unitsChanged = game.units !== entryUnits || game.units.length !== entryCount;
+  if (!navalFrame && unitsChanged) navalFrame = !!(navalFrameFlags(game) & NAVAL_FRAME);
+  // Native grounded prelude work changes health, orders and push velocities,
+  // but no existing coordinates. The entry index remains current until birth.
+  if (navalFrame || unitsChanged) game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
+  game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230, game.unitSpatialByTeam);
+  game.shipReachPadding = navalFrame ? shipReachPadding(game.units) : 0;
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
     game.buildingSpatial = createSpatialIndex(game.buildings, 420);
     game.buildingSpatialByTeam = createTeamSpatialIndexes(game, game.buildings, 260);
@@ -753,40 +795,55 @@ export function stepGame(game: Game) {
   updateItems(game);
   updateMoonWellHealing(game);
   updateRegeneration(game);
-  updateDockRepairs(game);
+  if (navalFrame) updateDockRepairs(game);
   updateTowerAttacks(game);
-  const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
-  beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings);
-  beginShipPlanningFrame(game.units,game.tick);
-  updateShipGangways(game.map,game.units,game.tick,game);
-  prepareCrewRendezvous(game.map,game.units);
-  game.boardingHolds=boardingHoldShips(game.units);
-  const defenses=prepareShipDefenseFrame(game,(ship,range,visit)=>forEachNearbyEnemyUnit(game,ship.owner,ship,range,visit),game.boardingHolds);
-  const shoreBoarders = new Map<string, Unit[]>();
-  for (const unit of game.units) if (unit.hp > 0 && !unit.deck && unit.order.type === 'board') {
-    const waiting = shoreBoarders.get(unit.order.transportId);
-    if (waiting) waiting.push(unit); else shoreBoarders.set(unit.order.transportId, [unit]);
+  const vessels = shipsIn(game.units);
+  const starts = new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  // The empty collision frame still clears prior hull impacts and binds ground
+  // movement to this tick's no-hull geometry.
+  beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
+  let defenses: ShipDefenseFrame;
+  if (navalFrame) {
+    beginShipPlanningFrame(game.units,game.tick,vessels);
+    updateShipGangways(game.map,game.units,game.tick,game);
+    prepareCrewRendezvous(game.map,game.units);
+    game.boardingHolds=boardingHoldShips(game.units);
+    defenses=prepareShipDefenseFrame(game,(ship,range,visit)=>forEachNearbyEnemyUnit(game,ship.owner,ship,range,visit),game.boardingHolds);
+    const shoreBoarders = new Map<string, Unit[]>();
+    for (const unit of game.units) if (unit.hp > 0 && !unit.deck && unit.order.type === 'board') {
+      const waiting = shoreBoarders.get(unit.order.transportId);
+      if (waiting) waiting.push(unit); else shoreBoarders.set(unit.order.transportId, [unit]);
+    }
+    for (const ship of shipsIn(game.units)) {
+      // Shore boarding gives an idle boat a ferry voyage without replacing its
+      // order. Its sails must stay available while it approaches the passenger.
+      const collecting = ship.order.type === 'idle' && shoreBoarders.get(ship.id)?.some(unit => unit.owner === ship.owner && !alongside(unit, ship));
+      const idle = game.boardingHolds.has(ship.id) || ship.order.type === 'hold' || ship.order.type === 'idle' && !collecting && !defenses.has(ship.id)
+        || !!ship.sailing?.gangway && ship.sailing.gangway.phase!=='approach';
+      updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
+    }
+  } else {
+    game.boardingHolds = new Set();
+    defenses = new Map();
   }
-  for (const ship of shipsIn(game.units)) {
-    // Shore boarding gives an idle boat a ferry voyage without replacing its
-    // order. Its sails must stay available while it approaches the passenger.
-    const collecting = ship.order.type === 'idle' && shoreBoarders.get(ship.id)?.some(unit => unit.owner === ship.owner && !alongside(unit, ship));
-    const idle = game.boardingHolds.has(ship.id) || ship.order.type === 'hold' || ship.order.type === 'idle' && !collecting && !defenses.has(ship.id)
-      || !!ship.sailing?.gangway && ship.sailing.gangway.phase!=='approach';
-    updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
-  }
-  const ferry = updateUnits(game,defenses);
-  updateMountedWeapons(game,starts,defenses);
+  const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
+  const ferry = updateUnits(game,defenses,navalFrame);
+  // Summons act next tick, but their bodies participate in this tick's tail.
+  // A queued boarding/unload order can also activate during the unit pass.
+  if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && (navalFrameFlags(game) & NAVAL_FRAME))) navalFrame = true;
+  if (navalFrame) updateMountedWeapons(game,starts,defenses);
   if (ferry) ferryUnits(game, ferry, starts);
-  for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
-  updateShipGangways(game.map,game.units,game.tick,game);
-  settleGangwayCrossings(game.units);
-  syncDecks(game.units);
-  settleDeckSupport(game.units,game.map);
-  updateCabinPassengers(game);
+  if (navalFrame) {
+    for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
+    updateShipGangways(game.map,game.units,game.tick,game);
+    settleGangwayCrossings(game.units);
+    syncDecks(game.units);
+    settleDeckSupport(game.units,game.map);
+    updateCabinPassengers(game);
+  }
   slideUnits(game);
   separateUnits(game);
-  syncDecks(game.units);
+  if (navalFrame) syncDecks(game.units);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
   for(const impact of drainShipCollisionImpacts(game.units)) {
     const other=impact.other;
@@ -800,7 +857,7 @@ export function stepGame(game: Game) {
       if(taken!==undefined && taken>0)addHitEffect(game,other,taken);
     }
   }
-  for (const ship of shipsIn(game.units)) {
+  if (navalFrame) for (const ship of shipsIn(game.units)) {
     const start = starts.get(ship.id);
     if (!ship.sailing) continue;
     ship.sailing.velocityX = start ? (ship.x - start.x) * SIM_TICKS_PER_SECOND : 0;
@@ -810,11 +867,11 @@ export function stepGame(game: Game) {
   removeExpiredUnits(game);
   removeDead(game);
   if(settleGroundItems(game.items,game.units,game.map))refreshEquipmentMass(game);
-  updateShipOwnership(game);
+  if (navalFrame) updateShipOwnership(game);
   syncBuildingBodies(game);
   // Snapshots and restored games observe the same aura boundary after movement, deaths and captures.
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
-  refreshVeteranFrame(game);
+  refreshVeteranFrame(game, emptyVeteranFrame);
   updateVictory(game);
 }
 
@@ -865,7 +922,9 @@ export function snapshotGame(game: Game): GameSnapshot {
     units: game.units.map((unit) => {
       // Most units have no deck or gun state. Copy only the nested state present,
       // rather than allocating empty intermediate objects for every optional field.
-      const copy = { ...unit, order: copyUnitOrder(unit.order), orderQueue: unit.orderQueue?.map(copyUnitOrder) ?? [] };
+      const copy = { ...unit };
+      copy.order = copyUnitOrder(unit.order);
+      copy.orderQueue = unit.orderQueue?.map(copyUnitOrder) ?? [];
       if (unit.aim) copy.aim = { ...unit.aim };
       if (unit.deck) copy.deck = { ...unit.deck };
       if (unit.cabin) copy.cabin = { ...unit.cabin };
@@ -891,12 +950,11 @@ export function snapshotGame(game: Game): GameSnapshot {
     }),
     buildings: game.buildings.map((building) => {
       const { rallyTarget, ...rest } = building;
-      return {
-        ...rest,
-        ...(rallyTarget ? { rallyTarget: { ...rallyTarget } } : {}),
-        queue: building.queue.map((job) => ({ ...job })),
-        researchQueue: building.researchQueue.map((job) => ({ ...job })),
-      };
+      const copy: Building = rest;
+      if (rallyTarget) copy.rallyTarget = { ...rallyTarget };
+      copy.queue = building.queue.map((job) => ({ ...job }));
+      copy.researchQueue = building.researchQueue.map((job) => ({ ...job }));
+      return copy;
     }),
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
@@ -990,6 +1048,7 @@ function migrateSnapshotRates(game: Game): void {
 }
 
 function invalidateGameRuntimeCaches(game: Game): void {
+  invalidateSeparationFrame(game);
   delete game.veteranFrame;
   delete game.veteranAutocastFrame;
   delete game.boardingHolds;
@@ -1127,7 +1186,10 @@ function updateRegeneration(game: Game) {
 // A unit's own regeneration (the cinder revenant's) plus what leadership gives its veterans.
 export function unitRegenPerSecond(game: GameSnapshot, unit: Unit) {
   const veterans = "nextId" in game ? (game as Game).veteranFrame : buildVeteranFrame(game);
-  return canReceiveHealing(unit, game) ? (unitRules(game, unit).regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit) + (veterans?.get(unit.id)?.regenPerSecond ?? 0) : 0;
+  const rules = unitRules(game, unit);
+  const medicalClasses: readonly UnitClass[] = NON_MECHANICAL_TARGETS.unitClasses;
+  return (!medicalClasses || medicalClasses.includes(rules.unitClass ?? UNIT_DEFS[unit.kind].unitClass))
+    ? (rules.regenPerSecond ?? 0) + qualifiedLeadershipRegenPerSecond(game, unit) + (veterans?.get(unit.id)?.regenPerSecond ?? 0) : 0;
 }
 
 function veteranNearby(game: Game) {
@@ -1142,9 +1204,11 @@ function refreshVeteranFrameAfterCommandSpawn(game: Game) {
   game.unitSpatial = createSpatialIndex(game.units, 320);
   refreshVeteranFrame(game);
 }
-function refreshVeteranFrame(game: Game) {
+function refreshVeteranFrame(game: Game, empty = false) {
   const previous = game.veteranFrame;
-  game.veteranFrame = buildVeteranFrame(game, veteranNearby(game));
+  game.veteranFrame = empty ? new Map() : buildVeteranFrame(game, veteranNearby(game));
+  // No current or departed projection can change any unit's derived stats.
+  if (!previous?.size && game.veteranFrame.size === 0) return;
   for (const unit of game.units) {
     if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
       const hp = unit.hp;
@@ -1165,7 +1229,13 @@ function applyVeteranAbility(game: Game, caster: Unit, ability: Extract<(typeof 
 export { unitRules };
 
 export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
-  if (!canReceiveHealing(unit, game) || !isPlayerId(unit.owner) || unit.level <= 0) return 0;
+  return canReceiveHealing(unit, game) ? qualifiedLeadershipRegenPerSecond(game, unit) : 0;
+}
+
+// The caller has already applied the medical target filter. Keep owner and
+// upgrade lookup live, and leave the public entry's eligibility check intact.
+function qualifiedLeadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
+  if (!isPlayerId(unit.owner) || unit.level <= 0) return 0;
   const upgrade = UPGRADE_DEFS.leadership;
   const ownerState = game.players[unit.owner];
   if (!ownerState) throw new Error(`Missing player state for ${unit.owner}`);
@@ -1291,12 +1361,19 @@ function updateResources(game: Game) {
 // ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
-function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined {
+function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean): Ferry | undefined {
   game.veteranAutocastFrame = {};
+  const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
-  const vessels=shipsIn(game.units);
-  const ordered=vessels.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units.slice();
-  for (const unit of ordered) {
+  const vessels=navalFrame ? shipsIn(game.units) : undefined;
+  const ordered=vessels?.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units;
+  // Summoning only appends during unit updates. Capture the initial length so
+  // newly born bodies first act next tick, as with the ships-first snapshot.
+  const count = ordered.length;
+  const sourceCount = game.units.length;
+  for (let i = 0; i < count; i += 1) {
+    const unit = ordered[i]!;
+    const navalUnitFrame = navalFrame || game.units.length !== sourceCount;
     if (unit.sailing?.pursuit && !['attack', 'attackMove', 'follow'].includes(unit.order.type) && !defenses.has(unit.id)) delete unit.sailing.pursuit;
     if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
     unit.cooldown = Math.max(0, unit.cooldown - 1);
@@ -1305,7 +1382,8 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
       if (left) unit.abilityCooldowns = left;
       else unit.abilityCooldowns = undefined;
     }
-    if (isInCabin(unit) || cabinCrewMovedThisTick(game,unit)) continue;
+    if (navalUnitFrame && isInCabin(unit)
+      || (navalUnitFrame || cabinMovementFrame) && cabinCrewMovedThisTick(game,unit)) continue;
     if (unit.order.type === 'enterCabin') {
       if (!isStaggered(unit) && !isStunned(unit)) enterCabinStep(game,unit,statusPace(unit),other=>isStaggered(other)||isStunned(other)?0:statusPace(other));
       continue;
@@ -1313,82 +1391,68 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
     // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
     // strikes nor casts, and its order waits for it.
     if (unit.order.type !== "charge") {
-      if (isStaggered(unit) || isStunned(unit)) continue;
+      if ((unit.pushX !== undefined && isStaggered(unit)) || (unit.effects.length !== 0 && isStunned(unit))) continue;
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
-      if (autoRepairDeckShip(game, unit)) continue;
+      if (navalUnitFrame && autoRepairDeckShip(game, unit)) continue;
       autocastStep(game, unit);
     }
-    if (unit.order.type === "charge") {
-      updateChargeOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "move") {
-      if (followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
-      if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
-      continue;
-    }
-    if (unit.order.type === "attackMove") {
-      updateAttackMoveOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "hold") {
-      updateHoldOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "aim") {
-      updateAimOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "follow") {
-      updateFollowOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "cast") {
-      updateCastOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "attack") {
-      updateAttackOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "mine") {
-      updateMineOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "build") {
-      updateBuildOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "repair") {
-      updateRepairOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "repairUnit" || unit.order.type === "repairShip") {
-      updateUnitRepairOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "pickupItem") {
-      updatePickupItemOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "board") {
-      updateBoardOrder(game, unit);
-      (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
-      continue;
-    }
-    if(unit.order.type==='boardShip') {
-      updateBoardShipOrder(game,unit);
-      continue;
-    }
-    if (unit.order.type === "unload") {
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
-      (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
-      continue;
+    switch (unit.order.type) {
+      case "charge":
+        updateChargeOrder(game, unit);
+        continue;
+      case "move":
+        if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
+        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units, navalUnitFrame);
+        if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
+        continue;
+      case "attackMove":
+        updateAttackMoveOrder(game, unit, navalUnitFrame);
+        continue;
+      case "hold":
+        updateHoldOrder(game, unit, navalUnitFrame);
+        continue;
+      case "aim":
+        updateAimOrder(game, unit, navalUnitFrame);
+        continue;
+      case "follow":
+        updateFollowOrder(game, unit);
+        continue;
+      case "cast":
+        updateCastOrder(game, unit);
+        continue;
+      case "attack":
+        updateAttackOrder(game, unit, navalUnitFrame);
+        continue;
+      case "mine":
+        updateMineOrder(game, unit);
+        continue;
+      case "build":
+        updateBuildOrder(game, unit);
+        continue;
+      case "repair":
+        updateRepairOrder(game, unit);
+        continue;
+      case "repairUnit": case "repairShip":
+        updateUnitRepairOrder(game, unit);
+        continue;
+      case "pickupItem":
+        updatePickupItemOrder(game, unit);
+        continue;
+      case "board":
+        updateBoardOrder(game, unit);
+        (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
+        continue;
+      case "boardShip":
+        updateBoardShipOrder(game, unit);
+        continue;
+      case "unload":
+        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units, navalUnitFrame);
+        (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
+        continue;
     }
     if (unit.kind === "worker" && !unit.deck && updateAutoRepair(game, unit)) continue;
-    if(combatHull(unit) && unit.owner!=='neutral') {
+    if(navalUnitFrame && combatHull(unit) && unit.owner!=='neutral') {
       const defense=defenses.get(unit.id);
       if(defense?.target){
         const target=navalCombatTarget(game,unit,defense.target);
@@ -1403,9 +1467,9 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
       else updateHoldOrder(game,unit);
       continue;
     }
-    if(shipProfile(unit))continue;
+    if(navalUnitFrame && shipProfile(unit))continue;
     if (unit.kind !== "worker") {
-      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE);
+      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE, navalUnitFrame);
       if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
     }
 
@@ -1519,10 +1583,10 @@ function updateNeutralLeash(game: Game, unit: Unit) {
   return true;
 }
 
-function updateHoldOrder(game: Game, unit: Unit) {
-  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
+function updateHoldOrder(game: Game, unit: Unit, navalFrame = true) {
+  if(navalFrame && shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
-  const target = nearestEnemyTarget(game, unit, unit.attackRange);
+  const target = nearestEnemyTarget(game, unit, unit.attackRange, navalFrame);
   if (!target) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1530,60 +1594,64 @@ function updateHoldOrder(game: Game, unit: Unit) {
   unit.cooldown = attackCooldownOf(game, unit);
 }
 
-function updateAimOrder(game: Game, unit: Unit) {
+function updateAimOrder(game: Game, unit: Unit, navalFrame = true) {
   if (unit.order.type !== "aim") return;
   const point = unit.order;
   if (distance(unit, point) > unit.attackRange) {
     unit.aim = undefined;
-    moveToward(unit, point.x, point.y, game.map, game.units);
+    moveToward(unit, point.x, point.y, game.map, game.units, navalFrame);
     if (distance(unit, point) > unit.attackRange && walkEnded(game, unit, point, 5)) unit.order = { type: "idle" };
     return;
   }
-  if (backOutOfDeadZone(game, unit, point)) { unit.aim = undefined; return; }
-  if (nearestEnemyTarget(game, unit, unit.attackRange)) updateHoldOrder(game, unit);
+  if (backOutOfDeadZone(game, unit, point, navalFrame)) { unit.aim = undefined; return; }
+  if (nearestEnemyTarget(game, unit, unit.attackRange, navalFrame)) updateHoldOrder(game, unit, navalFrame);
   else aimAt(unit, weaponRules(game, unit), point, game.tick, veteranAimSpeed(game, unit));
 }
 
-function updateAttackMoveOrder(game: Game, unit: Unit) {
+function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
   if (unit.order.type !== "attackMove") return;
   const order = unit.order;
   if (order.targetId) {
     const target = findTarget(game, order.targetId);
-    if (target && target.hp > 0 && automaticTargetAllowed(game.units,unit.owner,target) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target, game.units)) {
-      const chosen = automaticCombatTarget(game, unit, target);
-      unit.order = { ...order, targetId: chosen.id };
-      attackMoveTowardTarget(game, unit, chosen);
+    // The public entity lookup can retain an old body after equal-length
+    // direct array replacement. A stale hull or passenger still uses its
+    // original geometry even when this frame's current bodies are grounded.
+    if (!navalFrame && target && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
+    if (target && target.hp > 0 && (!navalFrame || automaticTargetAllowed(game.units,unit.owner,target)) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && (!navalFrame && !game.map.terrain || canReach(game.map, unit, target, game.units))) {
+      const chosen = automaticCombatTarget(game, unit, target, navalFrame);
+      if (chosen.id !== order.targetId) unit.order = { ...order, targetId: chosen.id };
+      attackMoveTowardTarget(game, unit, chosen, navalFrame);
       return;
     }
     const { targetId: _lost, ...destination } = order;
     unit.order = destination;
   }
 
-  const profile=shipProfile(unit);
+  const profile=navalFrame ? shipProfile(unit) : undefined;
   const acquisition=profile ? Math.max(unit.attackRange,Math.min(700,Math.max(AUTO_ACQUIRE_RANGE,unit.attackRange+profile.length*.4+100)))
     : unitRules(game,unit).weapon ? Math.max(AUTO_ACQUIRE_RANGE,unit.attackRange) : AUTO_ACQUIRE_RANGE;
-  const target = nearestEnemyTarget(game, unit, acquisition);
+  const target = nearestEnemyTarget(game, unit, acquisition, navalFrame);
   if (target) {
     unit.order = { ...order, targetId: target.id };
-    attackMoveTowardTarget(game, unit, target);
+    attackMoveTowardTarget(game, unit, target, navalFrame);
     return;
   }
   if (unit.sailing) delete unit.sailing.pursuit;
-  moveToward(unit, order.x, order.y, game.map, game.units);
+  moveToward(unit, order.x, order.y, game.map, game.units, navalFrame);
   if (walkEnded(game, unit, order, 8)) arrive(unit, order);
 }
 
-function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
-  target = navalCombatTarget(game, unit, target);
-  const gap = targetGap(unit, target);
-  const ship = Boolean(shipProfile(unit));
+function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building, navalFrame = true) {
+  if (navalFrame) target = navalCombatTarget(game, unit, target);
+  const gap = targetGap(unit, target, navalFrame);
+  const ship = navalFrame && Boolean(shipProfile(unit));
   if (ship) navigateShipAttack(game, unit, target);
-  else if (backOutOfDeadZone(game, unit, target)) return;
+  else if (backOutOfDeadZone(game, unit, target, false)) return;
   if (gap > unit.attackRange) {
-    if (!ship) moveToward(unit, target.x, target.y, game.map, game.units);
+    if (!ship) moveToward(unit, target.x, target.y, game.map, game.units, navalFrame);
     return;
   }
-  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
+  if(ship && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1591,7 +1659,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
   unit.cooldown = attackCooldownOf(game, unit);
 }
 
-function updateAttackOrder(game: Game, unit: Unit) {
+function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   const order = unit.order;
   if (order.type !== "attack") return;
   let target = findStrikeTarget(game, order.targetId);
@@ -1599,38 +1667,39 @@ function updateAttackOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
-  if (!isObstacle(target)) target = navalCombatTarget(game, unit, target);
+  if (!navalFrame && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
+  if (navalFrame && !isObstacle(target)) target = navalCombatTarget(game, unit, target);
   // A target that is as good as dead, or out of reach from the attacker's ground (see @@@reach), gives way to the next.
-  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || !canReach(game.map, unit, target, game.units)) {
-    const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange));
+  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units)) {
+    const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
     if (!replacement) {
       unit.order = { type: "idle" };
       return;
     }
     unit.order = { ...order, targetId: replacement.id };
-    updateAttackOrder(game, unit);
+    updateAttackOrder(game, unit, navalFrame);
     return;
   }
   // Only automatic orders reconsider living targets here. Explicit player attacks keep their target.
   if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
-    if(!automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
-    target = automaticCombatTarget(game, unit, target);
-    unit.order = { ...order, targetId: target.id };
+    if(navalFrame && !automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
+    target = automaticCombatTarget(game, unit, target, navalFrame);
+    if (target.id !== order.targetId) unit.order = { ...order, targetId: target.id };
   }
-  const gap = targetGap(unit, target);
-  const ship = Boolean(shipProfile(unit));
-  if (!ship && backOutOfDeadZone(game, unit, target)) return;
+  const gap = targetGap(unit, target, navalFrame);
+  const ship = navalFrame && Boolean(shipProfile(unit));
+  if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
   if (gap > unit.attackRange) {
     if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       unit.order = { type: "move", x: order.leashX, y: order.leashY };
       return;
     }
     if (ship) navigateShipAttack(game, unit, target);
-    else moveToward(unit, target.x, target.y, game.map, game.units);
+    else moveToward(unit, target.x, target.y, game.map, game.units, navalFrame);
     return;
   }
   if (ship) navigateShipAttack(game, unit, target);
-  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
+  if(ship && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -2985,9 +3054,9 @@ function applyWeaponAbility(game:Game,caster:Unit,ability:AbilityKind,at:{x:numb
   const mounted=ability==='incendiaryFlume' ? installedWeapons(game,caster).find(item=>item.kind==='flameProjector' && (item.durability ?? 1)>0 && shipGunCanAim(caster,item,at)) : undefined;
   fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(game, caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId,mounted?{item:mounted,pose:mountedWeaponPose(caster,mounted)!}:undefined);
 }
-function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number}){
+function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalFrame=true){
   let minimum=weaponRules(game,unit).weapon?.minRange;
-  if(isShipKind(unit.kind)){
+  if(navalFrame && isShipKind(unit.kind)){
     const weapons=installedWeapons(game,unit).filter(item=>(item.durability ?? 1)>0);
     if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
   }
@@ -3337,13 +3406,13 @@ function incomingThreatOutranks(game: Game, unit: Unit, targetId: string, attack
   return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current) ** 2, unit), incoming);
 }
 
-function automaticCombatTarget(game: Game, unit: Unit, current: Unit | Building): Unit | Building {
+function automaticCombatTarget(game: Game, unit: Unit, current: Unit | Building, navalFrame = true): Unit | Building {
   // Incoming damage reacts immediately; ordinary reconsideration happens as the next shot becomes available.
   if (unit.cooldown > 0) return current;
-  const next = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange));
+  const next = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
   if (!next || next.id === current.id) return current;
-  return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current) ** 2, unit),
-    targetPriorityScore(game, unit.owner, next, targetGap(unit, next) ** 2, unit)) ? next : current;
+  return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current, navalFrame) ** 2, unit),
+    targetPriorityScore(game, unit.owner, next, targetGap(unit, next, navalFrame) ** 2, unit)) ? next : current;
 }
 
 function neutralHasValidAttackTarget(game: Game, unit: Unit) {
@@ -3587,29 +3656,32 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 
 // The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
 // (see @@@reach).
-function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
+function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true): Unit | Building | undefined {
   if (unit.attackDamage <= 0) return undefined;
-  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit);
+  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, undefined, navalFrame);
 }
 
 // @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a
 // town hall's wall, 48 from a center 66 away. While units could walk into a building they struck it from inside.
-function targetGap(from: { x: number; y: number }, target: Unit | Building | Obstacle) {
+function targetGap(from: { x: number; y: number }, target: Unit | Building | Obstacle, navalFrame = true) {
+  if (!navalFrame && isUnit(target)) return hypot2(target.x - from.x, target.y - from.y);
   return strikeGap(from,target);
 }
 
-function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean): Unit | Building | undefined {
+function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
-  forEachNearbyEnemyUnit(game, owner, point, range + (game.shipReachPadding ?? shipReachPadding(game.units)), (candidate) => {
-    if (isInCabin(candidate)) return;
-    if(!automaticTargetAllowed(game.units,owner,candidate))return;
-    if (shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
+  // Only the native frame certificate supplies false. Births, cabins, hulls,
+  // observers and custom factories retain the complete target rules.
+  forEachNearbyEnemyUnit(game, owner, point, range + (navalFrame ? game.shipReachPadding ?? shipReachPadding(game.units) : 0), (candidate) => {
+    if (navalFrame && isInCabin(candidate)) return;
+    if(navalFrame && !automaticTargetAllowed(game.units,owner,candidate))return;
+    if (navalFrame && shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
     if(accepts && !accepts(candidate))return;
-    const candidateDistance = isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
+    const candidateDistance = navalFrame && isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
     if (candidateDistance > limit) return;
-    if (attacker && !automaticCandidateReachable(game, attacker, candidate)) return;
+    if (attacker && !automaticCandidateReachable(game, attacker, candidate, navalFrame)) return;
     const score = targetPriorityScore(game, owner, candidate, candidateDistance, attacker);
     if (score > bestScore) {
       best = candidate;
@@ -3620,7 +3692,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
     if(accepts && !accepts(building))return;
     const gap = targetGap(point, building);
     if (gap > range) return;
-    if (attacker && !automaticCandidateReachable(game, attacker, building)) return;
+    if (attacker && !automaticCandidateReachable(game, attacker, building, navalFrame)) return;
     const score = targetPriorityScore(game, owner, building, gap * gap, attacker);
     if (score > bestScore) {
       best = building;
@@ -3639,8 +3711,8 @@ function shipReachPadding(units: readonly Unit[]) {
   return padding;
 }
 
-function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building): boolean {
-  if (!canReach(game.map, unit, candidate, game.units)) return false;
+function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building, navalFrame = true): boolean {
+  if ((navalFrame || game.map.terrain) && !canReach(game.map, unit, candidate, game.units)) return false;
   if (unit.owner !== "neutral") return true;
   const origin = neutralResponseOrigin(unit);
   return !origin || distance(candidate, origin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE;
@@ -3699,6 +3771,7 @@ function removeExpiredUnits(game: Game) {
   dropItemsFromDeadUnits(game, expiredUnits);
   const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
   game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
+  invalidateSeparationFrame(game);
   updateSupplyState(game);
 }
 
@@ -3723,7 +3796,10 @@ function removeDead(game: Game) {
       kind: unit.kind, owner: unit.owner, x: unit.x, y: unit.y, radius: unit.radius,
       diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}) });
   }
-  if(deadUnits.length)game.units = game.units.filter((unit) => unit.hp > 0);
+  if(deadUnits.length) {
+    game.units = game.units.filter((unit) => unit.hp > 0);
+    invalidateSeparationFrame(game);
+  }
   if(deadBuildings.length)game.buildings = game.buildings.filter((building) => building.hp > 0);
   // A rock pile or gate broken is gone, and its way open (see @@@obstacle).
   if (game.obstacles?.some((obstacle) => obstacle.hp <= 0)) game.obstacles = game.obstacles.filter((obstacle) => obstacle.hp > 0);
@@ -3837,6 +3913,7 @@ export function removeUnit(game: Game, unitId: string) {
   if (!unit) return;
   dropItemsFromDeadUnits(game, [unit]);
   game.units = game.units.filter((candidate) => candidate.id !== unitId);
+  invalidateSeparationFrame(game);
   game.entityById?.delete(unitId);
   if (unit.veteranSkill) {
     game.unitSpatial = createSpatialIndex(game.units, 320);
@@ -3968,29 +4045,144 @@ function slideUnits(game: Game) {
   }
 }
 
+type SeparationBucket = { key: number; slot: number; x: number; y: number; units: (Unit | undefined)[]; count: number };
+type SeparationFrame = {
+  buckets: SeparationBucket[];
+  lookup: (SeparationBucket | undefined)[];
+  mask: number;
+  shift: number;
+  pool: SeparationBucket[];
+  members: Unit[];
+  cellX: number[];
+  cellY: number[];
+  // Flattened bucket pairs preserve the original map and neighbor traversal.
+  pairs: SeparationBucket[];
+  valid: boolean;
+  unchangedSource: number;
+  unchangedMembers: number;
+};
+const separationFrames = new WeakMap<Game, SeparationFrame>();
+
+function clearSeparationBuckets(frame: SeparationFrame) {
+  for (const bucket of frame.buckets) {
+    for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
+    bucket.count = 0;
+    frame.lookup[bucket.slot] = undefined;
+  }
+  frame.buckets.length = 0;
+  frame.pairs.length = 0;
+  frame.valid = false;
+}
+
+function clearSeparationMembership(frame: SeparationFrame) {
+  clearSeparationBuckets(frame);
+  frame.members.length = frame.cellX.length = frame.cellY.length = 0;
+}
+
+function invalidateSeparationFrame(game: Game) {
+  const frame = separationFrames.get(game);
+  if (frame) clearSeparationMembership(frame);
+}
+
+// Keep a bounded reusable lookup separate from first-encounter traversal.
+// Exact numeric keys retain Map's SameValueZero behavior, including NaN and
+// signed zero; hashing only selects a probe start, never changes key equality.
+function separationBucketSlot(frame: SeparationFrame, key: number): number {
+  let slot = Math.imul(key, 0x9e3779b1) >>> frame.shift;
+  let bucket: SeparationBucket | undefined;
+  while ((bucket = frame.lookup[slot])) {
+    if (bucket.key === key || bucket.key !== bucket.key && key !== key) return slot;
+    slot = (slot + 1) & frame.mask;
+  }
+  return slot;
+}
+
+function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number): boolean {
+  frame.unchangedSource = frame.unchangedMembers = 0;
+  if (!frame.valid) return false;
+  let member = 0;
+  for (let i = 0; i < game.units.length; i += 1) {
+    const unit = game.units[i]!;
+    // Orders, cabin state and unit kind can change without replacing the array.
+    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+    if (frame.members[member] !== unit || !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
+      || !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
+      frame.unchangedSource = i; frame.unchangedMembers = member;
+      return false;
+    }
+    member += 1;
+  }
+  frame.unchangedSource = game.units.length; frame.unchangedMembers = member;
+  return member === frame.members.length;
+}
+
 function separateUnits(game: Game) {
   const cellSize = 80;
-  const buckets = new Map<number, { x: number; y: number; units: Unit[] }>();
-  // Hull contact is constrained by advanceShip's swept collision check.
-  // Land separation must never relocate a ship sideways after navigation.
-  for (const unit of game.units) {
-    // Mining workers already pass through every body; exclude them once rather than testing every nearby pair.
-    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
-    const x = Math.floor(unit.x / cellSize);
-    const y = Math.floor(unit.y / cellSize);
-    const key = numericBucketKey(x, y);
-    const bucket = buckets.get(key);
-    if (bucket) bucket.units.push(unit);
-    else buckets.set(key, { x, y, units: [unit] });
+  let frame = separationFrames.get(game);
+  if (!frame) {
+    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false, unchangedSource: 0, unchangedMembers: 0 };
+    separationFrames.set(game, frame);
   }
-
-  for (const bucket of buckets.values()) {
-    separateUnitBuckets(game, bucket.units, bucket.units);
-    for (const [ox, oy] of SEPARATION_NEIGHBORS) {
-      const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
-      if (neighbor) separateUnitBuckets(game, bucket.units, neighbor.units);
+  const buckets = frame.buckets;
+  const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
+  const openGround = !game.map.terrain && groundShipFrameEmpty(game.units);
+  if (!separationMembershipMatches(game, frame, cellSize)) {
+    // The verified prefix already has this frame's exact cells and source
+    // order. Retain its private metadata while rebuilding bucket storage;
+    // classify only the suffix starting at the first actual mismatch.
+    const prefix = frame.unchangedMembers, sourceStart = frame.unchangedSource;
+    clearSeparationBuckets(frame);
+    // At most one bucket per source unit, with load no greater than one half.
+    let capacity = frame.mask + 1, shift = frame.shift;
+    while (capacity < game.units.length * 2) { capacity *= 2; shift -= 1; }
+    if (capacity !== frame.mask + 1) {
+      frame.lookup = new Array(capacity); frame.mask = capacity - 1; frame.shift = shift;
     }
+    let used = 0, member = 0;
+    // Prefix metadata is overwritten only by its identical verified member.
+    // Once consumed, suffix slots can replace old live references safely.
+    const insert = (unit: Unit, x: number, y: number) => {
+      const key = numericBucketKey(x, y);
+      const slot = separationBucketSlot(frame, key);
+      let bucket = frame.lookup[slot];
+      if (!bucket) {
+        bucket = frame.pool[used++];
+        if (bucket) {
+          bucket.key = key; bucket.slot = slot; bucket.x = x; bucket.y = y; bucket.count = 0;
+        } else {
+          bucket = { key, slot, x, y, units: [], count: 0 };
+          frame.pool.push(bucket);
+        }
+        frame.lookup[slot] = bucket;
+        buckets.push(bucket);
+      }
+      frame.members[member] = unit;
+      frame.cellX[member] = x; frame.cellY[member++] = y;
+      bucket.units[bucket.count++] = unit;
+    };
+    for (let i = 0; i < prefix; i += 1) insert(frame.members[i]!, frame.cellX[i]!, frame.cellY[i]!);
+    for (let i = sourceStart; i < game.units.length; i += 1) {
+      const unit = game.units[i]!;
+      // Hulls use swept navigation contact; mining workers pass through bodies.
+      if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+      insert(unit, Math.floor(unit.x / cellSize), Math.floor(unit.y / cellSize));
+    }
+    frame.members.length = frame.cellX.length = frame.cellY.length = member;
+    for (const bucket of buckets) {
+      frame.pairs.push(bucket, bucket);
+      for (const [ox, oy] of SEPARATION_NEIGHBORS) {
+        const neighbor = frame.lookup[separationBucketSlot(frame, numericBucketKey(bucket.x + ox, bucket.y + oy))];
+        if (neighbor) frame.pairs.push(bucket, neighbor);
+      }
+    }
+    // Captured cells describe positions before collision pairs move bodies.
+    frame.valid = true;
   }
+  for (let i = 0; i < frame.pairs.length; i += 2) {
+    separateUnitBuckets(game, frame.pairs[i]!, frame.pairs[i + 1]!, aPoint, bPoint, openGround);
+  }
+  // Buckets and metadata retain the same bounded live membership. Removal,
+  // restore and any membership change clear both before storage is reused.
 }
 
 const SEPARATION_NEIGHBORS = [
@@ -4000,12 +4192,20 @@ const SEPARATION_NEIGHBORS = [
   [0, 1],
 ] as const;
 
-function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[]) {
-  const sameBucket = aUnits === bUnits;
-  for (let i = 0; i < aUnits.length; i += 1) {
+function separateUnitBuckets(game: Game, aBucket: SeparationBucket, bBucket: SeparationBucket, aPoint: SpatialEntity, bPoint: SpatialEntity, openGround: boolean) {
+  const aUnits = aBucket.units, bUnits = bBucket.units;
+  const sameBucket = aBucket === bBucket;
+  for (let i = 0; i < aBucket.count; i += 1) {
     const start = sameBucket ? i + 1 : 0;
-    for (let j = start; j < bUnits.length; j += 1) {
-      separateUnitPair(game, aUnits[i]!, bUnits[j]!);
+    const a = aUnits[i]!;
+    for (let j = start; j < bBucket.count; j += 1) {
+      const b = bUnits[j]!;
+      const minDistance = a.radius + b.radius;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distanceSq = dx * dx + dy * dy;
+      if (distanceSq >= minDistance * minDistance) continue;
+      separateUnitPair(game, a, b, minDistance, dx, dy, aPoint, bPoint, openGround);
     }
   }
 }
@@ -4019,15 +4219,11 @@ function minerGhost(unit: Unit) {
 
 // Hulls are constrained by swept motion. Ground separation cannot push a body
 // underneath a reachable hull; passengers use the deck's local floor instead.
-function separateUnitPair(game: Game, a: Unit, b: Unit) {
-  const minDistance = a.radius + b.radius;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const distanceSq = dx * dx + dy * dy;
-  if (distanceSq >= minDistance * minDistance) return;
+function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx: number, dy: number, aPoint: SpatialEntity, bPoint: SpatialEntity, openGround: boolean) {
   if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
-  if (unitMover(a.kind) !== unitMover(b.kind)) return;
-  const length = Math.hypot(dx, dy);
+  const aMover = unitMover(a.kind), bMover = unitMover(b.kind);
+  if (aMover !== bMover) return;
+  const length = hypot2(dx, dy);
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;
   if (a.pushX !== undefined || b.pushX !== undefined) pushContact(a, b, nx, ny);
@@ -4036,9 +4232,17 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const ay = clamp(a.y - ny * push, 0, game.map.height);
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
+  if (openGround && !a.deck && !b.deck) {
+    // Open terrain and an initialized empty hull frame return these exact
+    // endpoints; retain the constrained path for every deck or hull contact.
+    a.x = ax; a.y = ay; b.x = bx; b.y = by;
+    return;
+  }
   // Neither is pushed onto ground it cannot stand on (see @@@terrain): one by a wall slides along it (see openStep).
-  const aAt = a.deck ? deckSeparationPoint(game,a,{x:ax,y:ay}) : constrainGroundShipStep(game.map,a,a,openStep(game.map, a, { x: ax, y: ay }, unitMover(a.kind)),game.units);
-  const bAt = b.deck ? deckSeparationPoint(game,b,{x:bx,y:by}) : constrainGroundShipStep(game.map,b,b,openStep(game.map, b, { x: bx, y: by }, unitMover(b.kind)),game.units);
+  aPoint.x = ax; aPoint.y = ay;
+  const aAt = a.deck ? deckSeparationPoint(game,a,aPoint) : constrainGroundShipStep(game.map,a,a,openStep(game.map, a, aPoint, aMover),game.units);
+  bPoint.x = bx; bPoint.y = by;
+  const bAt = b.deck ? deckSeparationPoint(game,b,bPoint) : constrainGroundShipStep(game.map,b,b,openStep(game.map, b, bPoint, bMover),game.units);
   a.x = aAt.x;
   a.y = aAt.y;
   b.x = bAt.x;
@@ -4079,9 +4283,16 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (unchanged) return previous!;
   }
   const buckets = new Map<number, T[]>();
-  const cellX: number[] = [], cellY: number[] = [];
+  // Membership metadata is private. Transfer its storage to the new index,
+  // leaving the previous index's public buckets untouched for active visitors.
+  // An old index restored by a caller must rebuild, never consult reused data.
+  if (cached) spatialMembership.delete(previous!);
+  const members = cached?.members ?? [];
+  const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
+  members.length = cellX.length = cellY.length = 0;
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const entity of entities) {
+    members.push(entity);
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     cellX.push(x); cellY.push(y);
     left = Math.min(left, x); right = Math.max(right, x);
@@ -4093,23 +4304,55 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   }
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
-  spatialMembership.set(index, { members: entities.slice(), cellX, cellY });
+  spatialMembership.set(index, { members, cellX, cellY });
   return index;
 }
 
-function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number) {
+const teamSpatialMembership = new WeakMap<object, {
+  cellSize: number;
+  members: (SpatialEntity & { owner: Owner })[];
+  cellX: number[];
+  cellY: number[];
+  teams: string[];
+}>();
+
+function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
+  const cached = previous ? teamSpatialMembership.get(previous) : undefined;
+  if (cached && Object.is(cached.cellSize, cellSize) && cached.members.length === entities.length) {
+    let unchanged = true;
+    for (let i = 0; i < entities.length; i += 1) {
+      const entity = entities[i]!;
+      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize)) || cached.teams[i] !== teamKey(game, entity.owner)) {
+        unchanged = false;
+        break;
+      }
+    }
+    // Internal indexes retain live bodies. Team membership and visit order
+    // must match independently of coordinate-key aliases and mutable owners.
+    if (unchanged) return previous!;
+  }
   const indexes = new Map<string, SpatialIndex<T>>();
+  const reusable = cached && Object.is(cached.cellSize, cellSize) ? cached : undefined;
+  if (reusable) teamSpatialMembership.delete(previous!);
+  const members = reusable?.members ?? [];
+  const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
+  members.length = cellX.length = cellY.length = teams.length = 0;
   for (const entity of entities) {
+    members.push(entity);
     const team = teamKey(game, entity.owner);
+    teams.push(team);
     let index = indexes.get(team);
     if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
+    cellX.push(x); cellY.push(y);
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
     const key = numericBucketKey(x, y), bucket = index.buckets.get(key);
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
+  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams });
   return indexes;
 }
 
@@ -4201,37 +4444,48 @@ function forEachNearbyEntity<T extends SpatialEntity>(
   }
 }
 
-function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: readonly Unit[] = []) {
+function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: readonly Unit[] = [], navalFrame = true) {
   // A rooted or stunned unit stands, a netted one walks slower (see @@@creep-status).
   const pace = statusPace(unit);
   if (pace === 0) return;
-  if(shipProfile(unit)){sailToward(unit,{x,y,...(unit.order.type==="move" && unit.order.heading!==undefined?{heading:unit.order.heading}:{})},map,units,pace);return;}
-  const ship=unit.deck && units.find(ship=>ship.id===unit.deck!.shipId);
-  const goal=deckGoal(unit,ship || undefined,{x,y},units);
-  if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
-  if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
-  const from={x:unit.x,y:unit.y};
+  if(navalFrame && shipProfile(unit)){sailToward(unit,{x,y,...(unit.order.type==="move" && unit.order.heading!==undefined?{heading:unit.order.heading}:{})},map,units,pace);return;}
+  // Native grounded callers have already certified the same unit list. Other
+  // callers continue consulting the initialized hull collision frame.
+  const knownEmpty = !navalFrame || groundShipFrameEmpty(units);
+  if (!knownEmpty || unit.deck) {
+    const ship=unit.deck && units.find(ship=>ship.id===unit.deck!.shipId);
+    const goal=deckGoal(unit,ship || undefined,{x,y},units);
+    if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
+    if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
+  }
+  const from=knownEmpty ? undefined : {x:unit.x,y:unit.y};
   if (map.terrain) {
     walkToward(unit, x, y, map, pace);
-    const at=constrainGroundShipStep(map,unit,from,unit,units);
-    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    if (from) {
+      const at=constrainGroundShipStep(map,unit,from,unit,units);
+      if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    }
     return;
   }
   const speed = perTick(unit.speed) * pace;
   const dx = x - unit.x;
   const dy = y - unit.y;
-  const length = Math.hypot(dx, dy);
+  const length = hypot2(dx, dy);
   if (length <= speed || length === 0) {
     unit.x = clamp(x, 0, map.width);
     unit.y = clamp(y, 0, map.height);
-    const at=constrainGroundShipStep(map,unit,from,unit,units);
-    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    if (from) {
+      const at=constrainGroundShipStep(map,unit,from,unit,units);
+      if(at!==unit){unit.x=at.x;unit.y=at.y;}
+    }
     return;
   }
   unit.x = clamp(unit.x + (dx / length) * speed, 0, map.width);
   unit.y = clamp(unit.y + (dy / length) * speed, 0, map.height);
-  const at=constrainGroundShipStep(map,unit,from,unit,units);
-  if(at!==unit){unit.x=at.x;unit.y=at.y;}
+  if (from) {
+    const at=constrainGroundShipStep(map,unit,from,unit,units);
+    if(at!==unit){unit.x=at.x;unit.y=at.y;}
+  }
 }
 
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
@@ -4256,7 +4510,7 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap, pace = 1) {
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return hypot2(a.x - b.x, a.y - b.y);
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {

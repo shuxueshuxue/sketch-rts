@@ -72,27 +72,27 @@ export function neutralUnitsNear(snapshot: GameSnapshot, point: { x: number; y: 
 }
 
 export function neutralUnits(snapshot: GameSnapshot, owner: PlayerId) {
-  return aiSnapshotQuery(snapshot).forPlayer(owner).neutral.units;
+  return aiSnapshotQuery(snapshot).neutralUnitsFor(owner);
 }
 
 export function enemyUnits(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).forPlayer(owner).enemy.units;
+  return aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy");
 }
 
 export function enemyCombatUnits(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).forPlayer(owner).enemy.combatUnits;
+  return aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy", "combat");
 }
 
 export function enemyWorkers(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).forPlayer(owner).enemy.workers;
+  return aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy", "worker");
 }
 
 export function enemyBuildings(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).forPlayer(owner).enemy.buildings;
+  return aiSnapshotQuery(snapshot, teams).playerBuildings(owner, "enemy");
 }
 
 export function enemyCombatUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).opponentUnitsNear(owner, point, range).filter((unit) => unit.kind !== "worker");
+  return aiSnapshotQuery(snapshot, teams).opponentCombatUnitsNear(owner, point, range);
 }
 
 export function enemyUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {

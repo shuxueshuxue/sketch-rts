@@ -1,0 +1,3615 @@
+{
+  "review": "simulation-cpu-budget",
+  "sourceManifestSelection": "All git-tracked .ts and .json files under src, excluding filenames containing .test.; a conservative source input manifest, not a claim that every listed file executes.",
+  "method": {
+    "map": "bareDuel",
+    "players": [
+      "player",
+      "enemy"
+    ],
+    "aiVersion": "v2",
+    "maxIterations": 36000,
+    "sampleInterval": 600,
+    "damageObserver": false,
+    "standardChecksumVersion": 17,
+    "exactHashMethod": "SHA256 of JSON with sorted object keys; exact JSON numbers; array order preserved",
+    "commandsMethod": "rolling SHA256 of nonempty actually issued command frames prefixed by iteration",
+    "cpuLimitValidation": "Instrumented timing is diagnostic only; unchanged Vitest cold three-map CPU assertion is authoritative"
+  },
+  "baseline": {
+    "provenance": {
+      "capturedBeforeImports": true,
+      "sourceCommit": "7c8649c6b095ab31b727950ac5b45bf458989f83",
+      "workingTreeStatus": "",
+      "runtimeSourceFileCount": 449,
+      "sourceManifestSha256": "77c876666488ac3f643db001b81530c825250a8369d5d862113cd997bce80d04",
+      "sourceInputs": {
+        "src/ai/ab-test.ts": "1c38e8d67877eec6b7a0bbddbb9617f9d1a1029629ee318bd8f1f82678ed063c",
+        "src/ai/benchmark/army-balance-stats.ts": "92b843010d7893640a770a0b616b51044e789a97492c7c4611686d421e353aec",
+        "src/ai/benchmark/command-stats.ts": "b87f809883a7686d5d8b68a3a10d10cc8519c0ec782eefce7a40b66fe0fe2d42",
+        "src/ai/benchmark/control.ts": "3963286454827fd20a89583b8c90354eec32c613d5c2437fa7807fa17085e0f6",
+        "src/ai/benchmark/dashboard-store.ts": "1445c3ea3430f5b944c1c224b97317c0f2e2659def5bc024b309fdf1ecb825bb",
+        "src/ai/benchmark/expansion-claim-timeline.ts": "9d6cbab20d8d2198d889c7be988a6e528ded81bb900f18592cfb21f4378cf6de",
+        "src/ai/benchmark/gauntlet-cli.ts": "3d4b6f863490c907a8c9f5ecceb23f94e1fcd6139a53c667291055c8e51f8957",
+        "src/ai/benchmark/gauntlet.ts": "5f4bf64d403235e42635eae8546f79ad9b1008500da6eae5d063280d3526263e",
+        "src/ai/benchmark/matrix.ts": "56df993abf199692dc6679ea4676cc38743c8d18e03660124a2eca9340689393",
+        "src/ai/benchmark/nudge.ts": "c19d5a5469b49c212aa34e24fd8a586aa97861d8d5e3916e703ac7509a265418",
+        "src/ai/benchmark/parallel-worker.ts": "7af5c80803111f253d9028519b0aaa6909a829458311c33d62e3bd292d58c7b4",
+        "src/ai/benchmark/parity.ts": "9ce55dc806612c8d2e14ea4a52be900826dbc1aba4e398c087d526128f839625",
+        "src/ai/benchmark/presets.ts": "67a0fb51829b1010a7a13a57e46328dc525e1fe168281401290f0ec7adf45661",
+        "src/ai/benchmark/subject-gauntlet.ts": "b6cf7879f057f937056b0ba630b39baedbbfe46a78fcc2dbfb324ea9737def87",
+        "src/ai/benchmark/unit-roster-stats.ts": "2fd993892dc8a02875c2aa9f120b3b6f8167aa1e0e22dbe084b5f45e42ee3200",
+        "src/ai/benchmark/v5-arena.ts": "67446377cb95938d5453ee631fd4bc846d74dcfd884d76ae84190d293e8b6884",
+        "src/ai/benchmark/v6-doctrine-stats.ts": "66afb13278e5910d39a99bd2ebe8dccb5ab89270e4213ea7be978086b110f872",
+        "src/ai/benchmark/v6-gauntlet.ts": "5b9f609210e759397821eb8c6d59fa720d3ab6b3022de48710160b2698b577bf",
+        "src/ai/benchmark/v7-gauntlet.ts": "49e7ede47e0e9a1b7b36a1328d708748b99234bd2c184962b50ee33772e79840",
+        "src/ai/benchmark/v8-gauntlet.ts": "193279c46f9ddfefa11c7f942b8f63cfe3f35ee1ac5bb7c96423f3bc3bed641a",
+        "src/ai/benchmark/v9-gauntlet.ts": "f2dd2b87039847cf9ee34907764391355c35bc9b1e533c9d19334691dfd9103c",
+        "src/ai/benchmark/wounded-moonwell-stats.ts": "e926476fe88fce2c9ce0c35b1d63ee8b14370c4739ee3126c4440b00090207c1",
+        "src/ai/bootstrap_1/archer-doctrine.ts": "31a10c060c86a362f7ece39a40c8b08a22189ffb0c5f7b5568eb44cc2fc9707a",
+        "src/ai/bootstrap_1/archer-micro.ts": "b5e342d075720d910df2167d4f7367f9908c9977068166d084f824e2c6fb7874",
+        "src/ai/bootstrap_1/economy.ts": "386298eb5becc291e86bc4807a32e79b8101a666b05ca197294c877769b72604",
+        "src/ai/bootstrap_1/front-recovery.ts": "12ae2d4589593eeb220698e41ac0aeeece7075c4a9a82ec4e2f7e2182b1cfcfc",
+        "src/ai/bootstrap_1/medical-recovery.ts": "dcbd1e3f69238f1e6c013d9b9e3b9939bcabeebee1568bfb3a5cb38eccb91440",
+        "src/ai/bootstrap_1/mine-defense.ts": "ba736091539b04916e8152a0438db32b4522c518c30f11e09268100424e0a4c2",
+        "src/ai/bootstrap_1/mining-assignments.ts": "61e4a6fdffd5004a41e0a95fd534dbb25ce3998d6096c3e4a8e027aa57ef7001",
+        "src/ai/bootstrap_1/mounted-micro.ts": "075da72c88165e2ec6dcabf536c1482f4c335e5a37893df6cc364d5a6badfb47",
+        "src/ai/bootstrap_1/mounted-tasks.ts": "b6cffe532d81a490adc75557d75837605f8e7cbe41c6e81952b9837885a542fb",
+        "src/ai/bootstrap_1/policy.ts": "c7449d62000f39de2b2b3a67d2cc95dfb426750ec1dc4f26c1d3f61c81d54e6b",
+        "src/ai/bootstrap_1/repair.ts": "3d48ba8fba4de24c754f690606513b4e6252875a7794b288d4878cea57d5067b",
+        "src/ai/bootstrap_1/shell-evasion.ts": "a88b3ce1a135bf0101fd35ec4c59eaaaad4090c3d5d7a4638c50f0f535eaba76",
+        "src/ai/bootstrap_1/summon-host.ts": "547281151a45b03df6b03a0cbd7eb19a026da75d470f47d3117f19a7fe860e7a",
+        "src/ai/bootstrap_1/summoner-screen.ts": "37d81e8779950cec9942f19eb8992fcbc9393eb8f307195a047fec5c99fb1169",
+        "src/ai/bootstrap_1/tower-rush.ts": "ea5108693e00f79c62eb8aaef942e7b2bca7fbbbeba6099b0f399be7a258d753",
+        "src/ai/bootstrap_1/weapon-targets.ts": "35b706531eb2802b3bcff8720cea5cb778f65188889a2b68571422af528665de",
+        "src/ai/bootstrap_1/workforce.ts": "f4002a6c7700aafb70dbac69af25f0d263e17ea43cf0b6fc31a4d1c1f64ee0a7",
+        "src/ai/game-runner.ts": "d15acb3cc44c3e17aa3a82b6a503672bda7df190310c2d53524cb7c45e518bba",
+        "src/ai/memory.ts": "e6695c66b16945b2dcb34deedfaf87bb7a2bfc6617fc11aec2db9b29c4e04721",
+        "src/ai/planner-context.ts": "6512062bc03d517676f5cb95a468eed0a429cca20a413a70b4a594149d560938",
+        "src/ai/playtest-command-manifest.ts": "79c8e756bc2f922477c0b0f91aa63ccbcfacd0adad65fac129365ed8a663b3da",
+        "src/ai/playtest-diagnosis.ts": "97b3fa09fb8b9b5adc2194a1352af373e10974dacbe2f082e0316278f934cbfe",
+        "src/ai/playtest-session-file.ts": "6d858e015802c24f24fb79eb09f4f1f3e204fc3c142db00fd9f688e4968f5440",
+        "src/ai/playtest-session-setup.ts": "635aceaa161805ffecff61b264d62ea27b6c160d111f73fc552272bf685231ad",
+        "src/ai/playtest.ts": "b0f79db69f17567ee18344da3731e7009985df808f0fb836371cb63bb9c73cfa",
+        "src/ai/policy-v2prod/base-defense-model.ts": "2cbaf01df1ac9cac6f25663ae5ef709ce157c5b532ff08472b01fb3cf7eff656",
+        "src/ai/policy-v2prod/build-layout.ts": "f3b0bd33549cbbf86cf40cd8f12c610251c8661f1f171243b432fa04b6416c7f",
+        "src/ai/policy-v2prod/claims.ts": "c64e3f7894c521b5ee7d923b1429793b67a6781a5c2dc5ad04c251967a8869a5",
+        "src/ai/policy-v2prod/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+        "src/ai/policy-v2prod/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+        "src/ai/policy-v2prod/core.ts": "e4d177f085287bab23511605cd23ec10ea8d71fa9c7a41be7afed3e7628c46c1",
+        "src/ai/policy-v2prod/expansion-model.ts": "b98496273c459575bd753567eaade776d75b8a835391d580975b45c9a45695e6",
+        "src/ai/policy-v2prod/item-tactics.ts": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238",
+        "src/ai/policy-v2prod/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+        "src/ai/policy-v2prod/playbook.ts": "32c5d51db4c2a136b277e8e34eb14749f3f643d1cc526cd4752c44c71aa2ab62",
+        "src/ai/policy-v2prod/production-model.ts": "912ee409b9a1a792a5fba105cc0d3338330824e117eab1369c1e70e0a27db7b9",
+        "src/ai/policy-v2prod/script-runner.ts": "ec51c8571f479260fb035f4f4802311dd3d2de4b12ff5f5352646a8d25fd0d83",
+        "src/ai/policy-v2prod/skirmish-tactics.ts": "72855d9b3afecfd5e27b3610443d096ae3daa7dc387a29db1b3b843bf825dc7e",
+        "src/ai/policy-v2prod/snapshot.ts": "34d2b5245b5a66f58a5982fe3d381875553133151b39032840f04e4cf8ce4b2a",
+        "src/ai/policy-v2prod/spatial.ts": "1a958780f43c4e32213118f4fe5bf0da20945f17fee5a289e2e1e877234351ac",
+        "src/ai/policy-v2prod/spell-tactics.ts": "588a1b34f9f7f2a253ebdf33647891ca81b2bff43ed5b162aa0cd26900252ed9",
+        "src/ai/policy-v2prod/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+        "src/ai/policy-v2prod/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+        "src/ai/policy-v2prod/training-choice.ts": "7b0b7ab8b9b26c2eb6a711f0f6c7431efa37552e2c46c2111dfbfce1c94ed7e9",
+        "src/ai/policy-v2prod/types.ts": "f15b3b03cd776e5fae52b50cee8cf34f9b49cea0ade9490f3b622a9ed45ea75e",
+        "src/ai/policy-v2prod/world-model.ts": "b1361f2b4b1001dbc15eca2d6998bcaa5d6169ee3e8b36bc38c9907a3f09e685",
+        "src/ai/policy.ts": "2d43f6a5dd021f546769c2e1f89bd572e6ed082df44ce62a693432a9f01a373e",
+        "src/ai/policy/adaptive-army.ts": "620e36491a435f798c7e2c57bdb20051dff26089af6cd6181bfd78df310769a7",
+        "src/ai/policy/ally-support.ts": "d1e7b6539cbbef4d65ae1687e3e558ae7f62a2d013deae2603b8ec340147a9a2",
+        "src/ai/policy/base-defense-model.ts": "8fe2b400e5c8f9acea361745f347f1e5d6178d0a57686e9b8ad9b4b225d9128d",
+        "src/ai/policy/base-pressure.ts": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3",
+        "src/ai/policy/battlefield.ts": "4772eadda29f9929ecf847bc39bf541b42e4840a8c0a9337dc80eaf9d3d5cbb2",
+        "src/ai/policy/build-layout.ts": "e29054d10b3f641b72c2f8e949a22c92c19e43ba6b29c43b3879f05804a9e76f",
+        "src/ai/policy/claims.ts": "045fdd30dab87f14370c7b024e1f822b5c5028e7842b2d77f2ccdb6055bf2e4e",
+        "src/ai/policy/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+        "src/ai/policy/combat-readiness.ts": "b461e9c7d64650729326f36ab8ba18c6679a157f4a346e1a6687ec8fff3d6def",
+        "src/ai/policy/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+        "src/ai/policy/convoy-load.ts": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
+        "src/ai/policy/core.ts": "0248d89070368623fd26a25323a368b095249b163f9cc959faef0f48bafb78ad",
+        "src/ai/policy/engagements.ts": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
+        "src/ai/policy/engineering.ts": "bc6dbf29f4a5d1b5cb0f7b5040b38f5408d9c60ecf165e0a294e8553a976bd30",
+        "src/ai/policy/expansion-model.ts": "34e74778c757876b776072bdbafdedf3bd30595a4b3da763f9dfaa9dbbbd439a",
+        "src/ai/policy/fleet-engagement.ts": "2cccb5e9a36df0827ee758d096cf1ff0d94490faa824df645c009720d1a2ff0e",
+        "src/ai/policy/fleet-formation.ts": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+        "src/ai/policy/ground.ts": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
+        "src/ai/policy/item-tactics.ts": "663771a4a731d21a37af4615b8241edeae0cdc06d8b6292243d6dcd721e25d4c",
+        "src/ai/policy/mechanical-repair.ts": "e3ddf0d2e899a6fe71b0406791e53f0f00a3b2ded56a4432aff705c1cbc37ff7",
+        "src/ai/policy/naval-services.ts": "2a8f2cc659ca3350de1703471027c9c33d6af9790d59d9c7c079bcd0c4e9f5d6",
+        "src/ai/policy/naval.ts": "f813c455b93b4e5e97008a21343078a781728da5617ed9dfe144a237b1c470b5",
+        "src/ai/policy/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+        "src/ai/policy/playbook.ts": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
+        "src/ai/policy/production-model.ts": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
+        "src/ai/policy/script-runner.ts": "fa88a2b2bc6238b4ec57bcfc9a7fe43473c9d949a08fda52df17422dc62cf3fa",
+        "src/ai/policy/skirmish-tactics.ts": "1b05a80942f286ac10681a22e8e6919f6d2fdc083442b03c2bf85c7b00692e3e",
+        "src/ai/policy/snapshot.ts": "a8df1fb6f604744e40efcd8c4e3e6dd7c855b3cc39bf8e8a86fecb0064b967fa",
+        "src/ai/policy/spatial.ts": "f26bb4a7ba6898781b8c5c2be5142b29d38c8c473f1ebfbc287afd559f61ca75",
+        "src/ai/policy/spell-tactics.ts": "2e4892729fb39e55222acb89b91f6cc3d0ea792f659b59b7fb913871a0800e22",
+        "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+        "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+        "src/ai/policy/training-choice.ts": "4f952fb0fd4016127244e277caea5638c9a967f1641bebc463806a6687af01df",
+        "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
+        "src/ai/policy/types.ts": "97cab1aff747cc4f4d5bf32816727929a9a6234b4eeaf326a3cbc28a08fc0d65",
+        "src/ai/policy/v6/backline.ts": "24ea1e219de49bf637ca974ce74436c8a31ce637e05d9440135ad3f80ed1a5a5",
+        "src/ai/policy/v6/closeout.ts": "a23defb92af85a8059a20c7a8fc798f53fe9a1b60ab3712e6765216122f0c922",
+        "src/ai/policy/v6/doctrine.ts": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
+        "src/ai/policy/v6/economy.ts": "efe14f017864b84a0e751924d5792c1d896689cbf4986e83879b1834e5c962b9",
+        "src/ai/policy/v6/general.ts": "75b94a90dc3c347e6af703e1dcf8042c1f708ca1ebda10ab2499ee2339fb263f",
+        "src/ai/policy/v6/intel.ts": "2f95f695bffe98a02de07a817c06cf1fe49d79be6499c5c161b727d213f61dac",
+        "src/ai/policy/v6/memory.ts": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
+        "src/ai/policy/v6/raid.ts": "4924a2b64cfa5a5e71b971a29c5bd18282b69ce7799338c9f8ded76a34bb38ec",
+        "src/ai/policy/v6/rng.ts": "b2fbac706071c48c9476b5968330affaffb7cdaa1c0d0415ff4db4f579b7bd62",
+        "src/ai/policy/v6/select.ts": "56c6ab5be29e38051da66b1ca35f7b9d28d73e69dca90492280e26afb8aab8ab",
+        "src/ai/policy/v6/strength.ts": "bd474f113ea57894a442ae846f727432e70e3d63da9f9e86eeb837f281999823",
+        "src/ai/policy/v7/creep.ts": "543a851617955b7375ff02e282708e91476332f6d9ca63c6fd960291dc5fb261",
+        "src/ai/policy/v7/discipline.ts": "9132b684e9fb71ce3aebdf58521c3aacd8690eb7c7a320bc2dd6e47544f1a910",
+        "src/ai/policy/v8/charge.ts": "d113ffd1cca8d615d68e80a1c74e5af32723a99718b6fa71d24a4e35b4eb89df",
+        "src/ai/policy/v8/doctrine.ts": "94fc1aff9dd33707cf5c111c19bcd6cff4e06d623a1ea43a7e0d71587b7c6f02",
+        "src/ai/policy/v8/well.ts": "955bbe13995d1a7df5d503ad364ab95f2c6e0b688d83024492a507c71c5052f0",
+        "src/ai/policy/v9/doctrine.ts": "c0ae229e6b37adc7bbb04961e64b5e1c6dc1f52cc4675ebaecee48401596a0c1",
+        "src/ai/policy/v9/front.ts": "b44b085784ee77ff840b3b45cf511a4400079485397c3553518fc439367e7cfa",
+        "src/ai/policy/v9/march.ts": "14b175e155aa1f3f0235f23b1375e2c327aeb7e2b1f13fa9be30a18993fcab1e",
+        "src/ai/policy/v9/shop.ts": "151295123598130f159273b5aa57f213f3a59e0a745b7318c3cb141bcd5df07c",
+        "src/ai/policy/versions.ts": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
+        "src/ai/policy/veterancy.ts": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
+        "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+        "src/ai/runtime-test-helpers.ts": "37131d4672da797710241063260d424ffe49e4f4f6e55e416aeda56d2d3e85a5",
+        "src/ai/runtime.ts": "89e4ffc549528072f9e803aa83108d88a6e5cdba9f637c573f636661cf8d59e5",
+        "src/ai/squad/squad.ts": "11d89ec2dff88495c789cfffc9f6e677add18ee9d7b21cb2777a56b5e0ded5ec",
+        "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+        "src/benchmark-dashboard/main.ts": "646fcf9e098cdca3bf4bccfe5bcac4b5952b2b31e7d8ff8258b415ae75a52760",
+        "src/benchmark-dashboard/page-size.ts": "ae399cec15474c164ff60a6dcf49e7e71a9615db04c03727cf8fde1425acb966",
+        "src/benchmark-dashboard/view-model.ts": "247fe92a3604cf0cb25156a40fb37650077ed126b00ddb538b591f77b2978c1b",
+        "src/benchmark-dashboard/warnings.ts": "1fc78b2965740860a9c0ed04a1b2501308c05e756341e29773e764d6887ff8ec",
+        "src/campaigns/ashen-march/cast.ts": "78b2070ff16d428dcdbfa25848e22c674ae258105fd9f6015b25e6bc3488a704",
+        "src/campaigns/ashen-march/chapters/ashwood.ts": "d80f441cfa1a4957add76e4b446e45c7aa93893e7d2b50dc19e8b0f392a5cb5d",
+        "src/campaigns/ashen-march/chapters/grove.ts": "5b7a5a49c36d285fdecedca12d4acf7e5ab227d0025ed88105e29f0969e07b38",
+        "src/campaigns/ashen-march/chapters/outpost.ts": "fc9ce947fe0c73e0a380ed8ebe261bfc5244946fbad1171024409d436aff819e",
+        "src/campaigns/ashen-march/chapters/pass.ts": "47462a54f999fffe1ed1240b6d7bf5801c6f624a64a62b6792ad3e4819aa336e",
+        "src/campaigns/ashen-march/chapters/prologue.ts": "ee61232c3eb730ed5b673e0de7038cafdb8868efa10ad58096156d5de880ab57",
+        "src/campaigns/ashen-march/chapters/reedholm.ts": "3e6edd28058803b5abdf2e6be54295eeee18af294ad06b9e4548f0a1ccd2cc98",
+        "src/campaigns/ashen-march/chapters/respite.ts": "5de424dfb1fbe9ca7eb7151a8e0d2199538826281d4301d4b30963d1ab6fe1ff",
+        "src/campaigns/ashen-march/common.ts": "2c49907fe98914fc39121aeb0956329c5f1f1ed80ae9240fe88f0efaf40a94a8",
+        "src/campaigns/ashen-march/index.ts": "e69baf91761b8d796906a77b7d72ed5202e5a1f0335b4ca246640642d49566c6",
+        "src/campaigns/ashen-march/models.ts": "cd1cfa97be1543146329ce0b4659697f8363777adb1b0d69dcc699453fdb7a1e",
+        "src/campaigns/ashen-march/pilot.ts": "0d3b7234c9e9012218b1d1793a3ebd95776557176e2a6060f3cecd159a6cc8b3",
+        "src/campaigns/ashen-march/places.ts": "73b8bae3c85477cf82cc3db73928770907629c5863509ac08e70fb78423a57c5",
+        "src/campaigns/ashen-march/powers.ts": "ba8a3ddfa30d8364c5266d8cb54cf0ef0e2162b9eb5d6c2282908db24dcbf869",
+        "src/campaigns/ashen-march/scenery.ts": "d56dec93ca0621a9f7574009a6c6ca95bba67eb6a6dc0215a8491b65a2ffa2a0",
+        "src/client/ability-effects.ts": "7e6551116d38af1eafc264939b107e0a498ab780f95fbe1595b2dda9ecd3c97b",
+        "src/client/ability-icons.ts": "c227488ef99b5330e5297eed75317edd7abc4b81f0d38c198f93aebbad1e1b73",
+        "src/client/ability-targeting.ts": "d64186a8ea8a7c2e38a280627ed95a8cfbd76f71efad73e92bb195c4525bf61d",
+        "src/client/art/building-models.ts": "cd18cfcf4a42291b18a79c4d6c79dae31c00d7d360452359e00297b3ed1b7c21",
+        "src/client/art/canvas-ships.ts": "71c1455403f063f4f8f9abc7de9e1e8c67f1c1df048523f775604987bfa1a2a4",
+        "src/client/art/corpses.ts": "0b736505c4ea6a58182b7f2be0f152b8185034afd83768066bd61ada6f0821d5",
+        "src/client/art/items.ts": "e1745b2c981523969db2c355604cf3984d5505b521166c5f0de57e5017b8701e",
+        "src/client/art/kit.ts": "19941879e55045581eb107095a2dd41a3a767c29de9bd2ca5e10bed7ba741a1b",
+        "src/client/art/painted-creatures.ts": "df3c2e337c2cedcf5ec8945f7223466ecb0919d2ac8e3ab2b4c20e22a8004611",
+        "src/client/art/painted-units.ts": "3733755f4090bfca090998335ca7810cc4b7b80408a3fde60953b44421f715b6",
+        "src/client/art/portrait-fit.ts": "24a36053e2c7e5dcd48c728273fd8d1f015f697f7d87d89215c6ca13be99649b",
+        "src/client/art/pose.ts": "5a98943a62e8b898f429142b1a8f64926e201b890df3726b560c448cc454c7e3",
+        "src/client/art/scenery.ts": "961ab921b4ecbd48aa23d3c9b54616fe235562389c2c9db955b9881c0bde8a67",
+        "src/client/art/scratch-canvas.ts": "90b2dd1e58d0de1ed8122c9ef5e03ca172db6420e07628c35010eceeb6b10cbc",
+        "src/client/art/warfare-units.ts": "af95f453b018e3ef57da87f73a470083a290531e45b44bd616a617ff5e037aea",
+        "src/client/atlas-art.ts": "cc739238b5d0b236cafb2c0117b01e1cb21fc34324e6275943b6b6e3759e7d64",
+        "src/client/battle-hud.ts": "60c98698687d47993d7a411f601c97dda30490824b6942583b394891fb97dea7",
+        "src/client/bootstrap.ts": "9ae4d2b3d7a9554f83a4b0b77651faa054664007ec7975ae3e4008232c6f288d",
+        "src/client/build-placement-controls.ts": "e3d2d4bd98b87fd2deeebf7d3d4b883a9a8afc1c4d8bc70f7cbea221e829f34c",
+        "src/client/building-glyphs.ts": "5ffa74c3be5da6b2374ead0ffb7cca98aa436b414888142271b481c2962c889a",
+        "src/client/cabin-controls.ts": "0bb30cec3d511dfecfbb7aabe05f76123de02404b3b52f4842db7d9e350287a0",
+        "src/client/charge-targeting.ts": "2326e1114b0b37e7222398b7f886374b422791ed6c3dbdf4cc62847656839d16",
+        "src/client/chat-controller.ts": "96816fa8e06966fd7229f9192007da3f86139f386002008fa1fd931cf2804229",
+        "src/client/command-button-state.ts": "5ce06e4a0fedd0d37b407670666530d8cc7a841a7619e17d743bfdc3924ce9db",
+        "src/client/command-feedback.ts": "894b2f0166975db2678f19f741f9be773c4e3b565a7982c68d524776a7e6a44e",
+        "src/client/command-icons.ts": "154c223174cc8fc90ade24443f0ae7c1c4cbd2ec8b25744826598b2852072152",
+        "src/client/content/abilities.ts": "22a62eff67d9f77760833965c759f533736bc9809477fae5bb62b1dc3991a06b",
+        "src/client/content/buildings.ts": "51b1b3e62259ff9115e1342a9fa08af3396ab9ccb0afc3c89f84cbcc628133f7",
+        "src/client/content/cards.ts": "df24edd4a7b81bf073b768d121da4e959db85b486306dbfb8975a3b39ddea903",
+        "src/client/content/units-common.ts": "e981321fdc2b266e067dc25d9c04b88af8f9271b40173c1cabe0f599535e5e94",
+        "src/client/content/units-creeps.ts": "647ceb9086e5d01ec307bd89328f58bcbb66a745c9c7ca082759a6439f9d8d90",
+        "src/client/content/units-ember.ts": "034979c0e451f238d73fb0830847ca2f68bca23a50545c493f635cea195f0b62",
+        "src/client/content/units-grove.ts": "0fce9487cfd443ba8c4daa0855e736e28d2a705854bdf0a872fda5c54227a5b3",
+        "src/client/content/units-neutral.ts": "6ee0d618bd257b32a6d21faa99cb65b52c3215011153116bd82840182bed48d8",
+        "src/client/content/units-warfare.ts": "f433f63b94c1f88eb893a0da6bf8f780057fb69a74f14986b576b5ee5a7234ca",
+        "src/client/content/units.ts": "78ab9082a65add1bdfd5238df42bd31454457bf6d58bbdca8f683e352f3a453c",
+        "src/client/control-groups.ts": "2e04ab9b8ad5b2cdced85cfc337b1c1c3de73600339d53356c5a62501a311039",
+        "src/client/debug-view.ts": "a6fe887d6e17b69b851f1e963841ade28da1231565e0e868b7c36b998b123cf4",
+        "src/client/deck-plan-projection.ts": "333117842bb2453a5c397e8cb3d7b32ae5a5c6981c194671b3c2de4085a204f6",
+        "src/client/deployment/mode.ts": "814880202ff1de4472759c0a43016123937a2990cb033706de1e0cf9fe2ef16c",
+        "src/client/deployment/runtime.ts": "1c1dfd8332e8297a691efe652a5d2ce4be3458411c1777233bd37325b9becf5e",
+        "src/client/deployment/server-runtime.ts": "0ad86c1c9dc73627e9691eac84e0b51536bf107ea3c6cfedb8ed5866359d5845",
+        "src/client/deployment/static-runtime.ts": "edac527a19591379e1e45a5cf0e90816f54b32c65f6145c2b846403b775604cf",
+        "src/client/edge-scroll.ts": "b74f7aac6f668f9faba821d518d153647b538c6f23e15ffad740f7176dd464ab",
+        "src/client/effect-renderer.ts": "ef98ce15a24dff5d3e36428398e5b7035d30d7b1a3dad3fdf2b9bdb59df5250d",
+        "src/client/equipment-panel.ts": "5080cbac62feb2a8cdd961acdc6115730ff5390b77b4485b297b23a02358ec97",
+        "src/client/footprint-view.ts": "d3a5c81d6650221497a4451d7027dd0fee150b6f99bc8eea16d58a61128a2b1d",
+        "src/client/format-mass.ts": "04a26d072ad94326b0739b8ed9b379174360931ebb3e398982c258cd0edead63",
+        "src/client/frontend-world-view.ts": "c92d923e1eac9c8a2d18bf1469ca39d361ae91168ee0a3406ea274831b2d9887",
+        "src/client/game-adapter.ts": "463469b6db039c60f19ea9ab0676bf67d0a1beb73ed1836d2f404e2b75fee110",
+        "src/client/game-shell.ts": "8a1fdf8a519c8e40a6bad3e256f17b9fbac7936bedea4c739420c94fbb385c64",
+        "src/client/glyphs.ts": "4424881496aa74ff46f1f2cfd05e1223f85373e29b8d18bdb3c9f400ba84d634",
+        "src/client/health-bars.ts": "3adaca0e7983b95b53db722f2614b04625858cf1ae9323b86c97f2e59811329e",
+        "src/client/hud-model.ts": "783646e4c139dcdc46f76f5a5710c091202248d6c676a2832e156eaf1e027834",
+        "src/client/i18n.ts": "b40e0ba2aa6f10c3a86cb74b32e0b4e97efaf7bc52a5913249f5bb45c61335d7",
+        "src/client/item-controls.ts": "8e8092d4f96558edee47493d52274cab30c408f91db3b1b01c2ad285a98e588b",
+        "src/client/keybindings.ts": "7f059d7d50e2ed1d71166f6a8f6925acfecd62727df4e414553dae991be7bbbc",
+        "src/client/level-star.ts": "cf317b1f85d7246621cbcf45103723f62deb65b1f8ee10c76d9d38434923b456",
+        "src/client/main.ts": "95caeacbb835a4571dc5913e26554ea7fbd36d61149e0e213060a0578ea06d98",
+        "src/client/map-preview.ts": "df2f94c738e1262493d475b98d7f4965669dd910568438e147727b994404751f",
+        "src/client/menu-page.ts": "707c2f280864e2168a688e019f56bc74ab8c3d50e4e3f646f90bca46fe6e315b",
+        "src/client/menu-scenes.ts": "4073554c9483644431d389971e60b6f26d5fdc40e99e172291932c4c472dad14",
+        "src/client/minimap-art.ts": "7225b25a3b01fae53574528031ae35d4b33ee3af5e7c72bac40542a513dcc734",
+        "src/client/minimap-wind.ts": "bdd45b556c1b7bb8199442ce9043ef14c481e3a04e4abb924542c599641e5f62",
+        "src/client/minimap.ts": "1a8caca58f691ce6f333c3b3a6537a0d71c82d65429e0740a9003f02a8e2e28b",
+        "src/client/model-portraits.ts": "c043587482fb8627edebcf7ccbf0d5e2ff586d526d3c88ece01a47758cfb5632",
+        "src/client/net/local-adapter.ts": "08a9f90aa18797e5932a53999b204a2ef30f4643ca9ba41aa54c7d98ccc8d484",
+        "src/client/net/lockstep-client.ts": "b09d2712b4a17ce50072816f841c280c9992bd3b09329d36927c51a3880a5124",
+        "src/client/net/transport.ts": "7eac7ee924ae870c571477bf8ac8f6ef846af656fc537c5d741f19aef89b24dc",
+        "src/client/net/websocket-transport.ts": "b2bfb4cbc3427b161efb6dc495a3106e050eef5d66b949bbcd92c88470619dd6",
+        "src/client/player-name.ts": "0bd69233a5c96be3ca2ed69c35d1793ea25133690993f3f211dfb3dd10d73cae",
+        "src/client/pointer-lock.ts": "2f9e486c341cd0ae9b48f2a7ea8b7a17eae74f48852a339e5018bfe64a0bfcb5",
+        "src/client/portrait-cache.ts": "444254808028e41af2413bad9cb66e6e87e307970f0988fbabdf07577f587ed1",
+        "src/client/rally-visual.ts": "f42e13cc016131c956a73672fce1c1201eed36e645313e9a5f74a91dffa5ff11",
+        "src/client/relations.ts": "6cb20798d4b4b4f81e7356b84a3359e61c7b7e56c9b0dcaaf3f49f1df694b4bd",
+        "src/client/research-controls.ts": "c058936dda75016131871f037abbef4f61b49374b06eb8cafd7a3197f72cad2d",
+        "src/client/resource-panel.ts": "85433a9adade7553094bcbb1b7a26178a84c8096d7ae0ae9a9f6e8cc01ff4f76",
+        "src/client/resources.ts": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97",
+        "src/client/room-browser-model.ts": "1c6f0983306e1b8d18759fe9e6c631e455523240a17fc7e024c09e5daa997f72",
+        "src/client/room-route.ts": "740562f49a294cdec5dd4bcfb64d326f4bd3d59a86ee90e5b09412ab6e7d01a3",
+        "src/client/room-setup-session.ts": "12e1860d9f1cb18a6a2508fbc2af6bcd13cbb6e235ce8a6d657f447b8ae8db43",
+        "src/client/room-view-state.ts": "212ec324fa8a6d15194398b8c208b794de55c0980d9e4290cf1d6036b833e596",
+        "src/client/selection-controls.ts": "26fb4fdffee9153d41a4bc53aa4e189cbb58af1fb2bb266266154a93bbd1625a",
+        "src/client/ship-boarding-controls.ts": "d8e2aa47eb2760b2e026fecf07bd8a7b11cb3cfd16947faa29295b51e036d9bf",
+        "src/client/ship-gangway-visual.ts": "4382adaee18bb02aed321012415f03077125ea1c1f7c111ef3125a0c84cd1332",
+        "src/client/ship-wakes.ts": "6de6cfb98710450b34a648fc233ae88dbca66bba0b66fc31d7d75b48ab6acd24",
+        "src/client/sound-cues.ts": "144d7375d62ac1f46234f4e6f5a96280f5d4063e5ccbc100da8552376336b07c",
+        "src/client/sound-packs.ts": "a58594ac8e113d73e20b8eaf02f511346850aa4ac1169b223610ee015d937dca",
+        "src/client/sound-settings.ts": "78200501a42ce42707c0dbadb6017d0191678053ebdc2506a7ae52ac78439886",
+        "src/client/sound.ts": "34cb42fd40b088ccdede777559afb54a8310e23fbd0376153c0feeff42bfa18c",
+        "src/client/status-presentation.ts": "8b5cc0a454aebdf5ae7da44e9f9a2ac1e7248c2fe849b2db4b96236361e320b0",
+        "src/client/story-renderer.ts": "c8d7f102c96d750e1c0a236736db428464c5bfb9e0cd06365bb225595a2be7fa",
+        "src/client/terrain-art.ts": "e5bcbac4857bdd538c4d2115523c9aa9b967bfd5bfa166fc5ff6481dcc6048c1",
+        "src/client/terrain-materials.ts": "4b355122c24d198a6c8f5ad070a158774c7c34273396e0c438eff1f4e3ec89ea",
+        "src/client/terrain-texture.ts": "52bdcd919baa02e7a30d5b7707f563255c34b85ddfea4fe2949007dd1351b535",
+        "src/client/tooltips.ts": "cf4dafb2ab922a190ed8ae6febb5e0cb088244ed3e9b6b06a88d496ac0d8681f",
+        "src/client/training-queue.ts": "82818eeaf07631833b0bc2e2863927d13bb1eb5ac897b3bb506bc05ce126e363",
+        "src/client/unit-animation.ts": "5fde1f383e25817236c700ace28f3076628cf7ac30e933a16d110bc2616092c3",
+        "src/client/unit-art.ts": "e6b7dd075c637785132d2a91f243a736fa19d13d9a0df69241a54116a45a4751",
+        "src/client/unit-facing.ts": "64bafcd8ed64e71b76d01c30d85b1d8e9a55c5314a07c948f8e9ad5358506105",
+        "src/client/unit-hover-cursor.ts": "e4ad7fcea5a38108c482197ea347236cbec1b3ff984dc5fd615a749b502083d3",
+        "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6",
+        "src/client/unit-motion.ts": "d1417c5359cee0804f51de689d90b201c02ea5c80f28f8524bfbf2793c47e1a6",
+        "src/client/unit-sheet.ts": "e1cdba4f08f5fd2bfd16e001cd343c605c9a244cb2da448568aee8f9a38860d8",
+        "src/client/user-profile.ts": "a9057e5185bbaa8615c94e9a2244d1bf5ae901e2e359a9f2adf0dca9249b386b",
+        "src/client/veteran-controls.ts": "050d298454a9fb74cbdf7ad9c11ca9d94a74c5c8a7762fb858714d46406b5318",
+        "src/client/virtual-ui.ts": "0a516a93a5e80ce304dcfe32b0edef776bb8fb9c9156f2660752b2c1190ab6b0",
+        "src/client/warfare-effects.ts": "ed1dd69688c9284033c8a85c1c508fef76c3e3a168c7dbd791562ae8042f82e3",
+        "src/client/water-art.ts": "9b4cdb70ca3b12e8663e61a0832757e69ce42986d4801eaa3de0996008c289c1",
+        "src/client/water-field.ts": "7f4aa06fe887e7fae17fe940408491a31b8b1c550b9e863ec0be566c27fc245c",
+        "src/client/weapon-condition.ts": "ae3896bd9951d746264ee6d97d3893e685c332b112391aa9b8be20db58269f86",
+        "src/client/world-presentation.ts": "4d9b6ae572f740d4fce6049b6d9b77fe3cbc8d8e36a584c37779a1b8aee100f7",
+        "src/client/world-renderer.ts": "05f1f6a5e3fd95ebe8446a3a135b17c1d04cdc25502b15619cef1f8c196d4d1e",
+        "src/client/world3d/batches.ts": "790c219b2d9d590cf51c7881b837b97587f8bcc4a9a67d4e7e41b3c271f8590e",
+        "src/client/world3d/crew-pose.ts": "c057b0bcfd1e47d2b027111330043dc34f131af593fb22fc24068e31745e687f",
+        "src/client/world3d/flight-pose.ts": "496e64effe56c2cf19b5c7768f3333d7208e73d2da71757cb4869375297c65a1",
+        "src/client/world3d/model-library.ts": "572bedeeb489af6ad8080f47a1e580cbb1398451f62d01b8ca91dc3557505b0a",
+        "src/client/world3d/model-portraits.ts": "0ecf433c697cca7402d1e352596e40513e73d7fcb876587ab266ae439622f445",
+        "src/client/world3d/painted-hit.ts": "c19b1dd815cee9404f72d9c4b0866e2a6da1ead560fce09088042a9b0f5fc364",
+        "src/client/world3d/projection.ts": "17dd588f2c07ecc6d9ab4b1bbb255068a2d8eb89e383cf11b32641df908d3ec2",
+        "src/client/world3d/sail-rig.ts": "68a03f39854385ece38bd723b1a3088cd2e021a4c61a66ef759c44a1bdf8804f",
+        "src/client/world3d/selection-markers.ts": "5fee0c25157f1ab13f3d6bc534eaaeb1da8ee9b9df39db96811fd1de8d32fd49",
+        "src/client/world3d/water.ts": "99f4d8500e18e392b0bfaf5875e4fc86d965261d26beebdb64551dc2a642c5e6",
+        "src/client/world3d/world-layer.ts": "94a0f7ceab09b9cedf498c06288e8a427a79c5345e2f22e2f2934ac89f2447fd",
+        "src/recorder/camera.ts": "1363d93eed83cc52c13be06a9ac83b8ff885fa579b286abb689f0cde4cb532c5",
+        "src/recorder/cli.ts": "69c5f52c637a6b388967f72b9670a4a09f7ecff8bf663d50a0921d16a11db62f",
+        "src/recorder/formation.ts": "0ec04df3c6e669fe493062a72184af762d479b7b416633a241d94bad61e277fc",
+        "src/recorder/gifenc.d.ts": "e409b5f1d24f6a19d5067be3c4dcf106e93919498c7ea772beb8d50274e150e0",
+        "src/recorder/options.ts": "cf124f37fe9bed17416580b4d9e2850be56c3df7cbb7f1c5a46f48b6da6eee15",
+        "src/recorder/previews/equipment.ts": "9f6aa7adf240bb7784e65ddd4a5221de2d8187ccfb945acf157ddca713976b11",
+        "src/recorder/record.ts": "393e056e7000707ee158a59811f3225872e7bab3b8a4df7ad980b5eec41a47fe",
+        "src/recorder/scene.ts": "7dbf3ecab740b0a5591f87966bca772ce82446fecac0336ee7a37160ae0a6a88",
+        "src/recorder/scenes/ashen-march.ts": "b7d51a9d36c81c9c8f4f75300536d55f3ba9f809bfec2266ac04fd4bc2e3bf40",
+        "src/recorder/scenes/boarding-rescue.ts": "e7a1de7ca083bced7791af3a40fbd1a21a9944f9d1b50ee6b15f9a1a6e5c6af8",
+        "src/recorder/scenes/cavalry-charge.ts": "1edafce7e52b684361c5378fa9fea56544be7e66412eca91bc1f21cf524ea71d",
+        "src/recorder/scenes/cavalry-flank.ts": "52d9a95370f9a71b89f164a66c36b39688939f82793f638e78c2c2836ce077a0",
+        "src/recorder/scenes/coast-landing.ts": "e58af641cf723b3ef6447dc077170e75c8368236a99b0e8f614a046f920c9ebd",
+        "src/recorder/scenes/crew-rendezvous.ts": "7be3fda5fcf5c53365fa12715c60a334db44949e67b5097a307a37423fe0c5a8",
+        "src/recorder/scenes/deck-battle.ts": "2fafc66195e41e00bc4d86cb2c8f6c5b05e1f163ba5aaa688c3f17fe1486ce34",
+        "src/recorder/scenes/index.ts": "2f8b6e6cf77073005e64d29eb9a5a5075b97553c69239be6751d561c0d5a0a5f",
+        "src/recorder/scenes/infantry-clash.ts": "3455f3089b4ceeb1b153537634990127a5ac85233e70f2db6a9c76c8cc0c9df4",
+        "src/recorder/scenes/ship-webgl.ts": "19ba0fb4001116df044a32ff0303fe0b96ef11a88bfab7f1bb45ffbd76c8f7b9",
+        "src/recorder/sinks.ts": "605c896b6af708d6aabffc4828417e47178118e30fd3186544653d0865e28194",
+        "src/recorder/story-camera.ts": "b435616823804111f70433050bc629e53c82a6cc95c03688c405454473eba938",
+        "src/sdk/benchmark.ts": "938f5f74f0cbe33fdb398f8bd97fc5d4a4cb3ddab9f033ccba0d5ba42bf6bdf7",
+        "src/sdk/benchmark/core-worker.ts": "858e408eb20a65872eafda10ce86b48c87b3e2e3b9830aae37628a945787ed59",
+        "src/sdk/benchmark/core.ts": "6dd2a4ed5a5d19f43ec2370a5107c190f2fd413f6a895db4835374f1811533e0",
+        "src/sdk/benchmark/manifest.ts": "308016b640d282ab6a2f0231efbb09ad12e9231f329b4f439c626a2f97bada7b",
+        "src/sdk/benchmark/parallel-child.ts": "d2026c975e912855101616b971750f9e471067849ae057cf24963ba40dbf8ea6",
+        "src/sdk/benchmark/parallel.ts": "c7843d1e0b2504e9728eeace8df83db150bac7c4184d8d5dc9fdf3b4482f3cfd",
+        "src/sdk/benchmark/persistent-worker-fixture.ts": "46cf74299b31117989294e2ab3f185e94aa9ba9116b04d0c882398b65999b8cd",
+        "src/sdk/browser.ts": "22043852374bfedfcbbec3a80491bf1c805ae0858c690e5d8233f69ef1bbdda1",
+        "src/sdk/client.ts": "d40b10b002ed554cd40687a9fa0ac5040e95e800dc62136ae48d96a65d963133",
+        "src/sdk/commands/frame.ts": "e611072ad0fd5f879c76aa7ea7ad1eb6d062573aec1594ae7bb42e125d474cf2",
+        "src/sdk/commands/intent.ts": "bb6f41a6cc92fb108c79f8e06d76e9530a66874af9e36e9b0924bc1384c63cc6",
+        "src/sdk/external-agent-room-runner.ts": "143fa1a9008547786d5bb7bc45cd38441dc99ddf0ee3d752819e4aa248f5ec6b",
+        "src/sdk/game-runner.ts": "dbf83422d4bc203de7114d96d4fdbc8b49188616f9eb255c77fcfef9c6df0ef1",
+        "src/sdk/map-analysis.ts": "54d2bb016e7f5fff8c729cfd1a1613ddf99828f0225243ad7e6f817a4180ea42",
+        "src/sdk/match-report.ts": "7baa60b35dae1e4dd069763b1468b7abf75e71ed1f32a9cc869d9f50670e6e6c",
+        "src/sdk/playtest.ts": "47d10ec43c2e8a6d8697f2320f389426c0d25194e1c1f72a16420e424ee0153c",
+        "src/sdk/scenarios/combat.ts": "f3d6f9180fb6382b231fda6cf56a2acd78cf9e6f27081c2eec31366e02db0053",
+        "src/sdk/scene.ts": "0fcdc3aca5b56c146a461c28e729530db90d4028142991dc73982ad5fa8f1112",
+        "src/sdk/snapshot-query.ts": "1c7f75e65d8324dec5048e5ae4df4c07e30dc9fd6e6c89145db41671beb9e025",
+        "src/sdk/snapshot/query.ts": "9387bd510a90d8283037ce2da0ed93a51a29aab751124be864611d94439fad14",
+        "src/sdk/snapshot/range-index.ts": "453b34c6856bd7a160e18885ab9a242f33210840aa16d02f38b0618aba48c669",
+        "src/sdk/winner-mode.ts": "26251648e35ca43e6d7b36642a7531df1adadb68c4c34b29456febba2f7ade38",
+        "src/server/benchmark-dashboard-api.ts": "b2100a816d666318b2e5b38a87216c09abccd09e1d667efd870cdcf5583b9d95",
+        "src/server/index.ts": "dd71e455407ab572825777895c3457b435ba2036b029817fe2fa32a89b3a9fdb",
+        "src/server/lockstep-room.ts": "92c986281240e411d67f115fd2d13dc4cc54bfee50c4ca068d45e3ae9a771c30",
+        "src/server/network.ts": "50790139cc7fba897fb16c5cff1d6ce4be6aec0a7332fdc05686ba9b74105dfe",
+        "src/server/room-history.ts": "9946afcbd298bfdc3c5d17c1d37381e44cfc7ef2f5e15edd1a3220d9cf261d80",
+        "src/server/room-host.ts": "12276168b808968852ce4df623c4a67a649a35df319ca4461a7dea8a85152cb7",
+        "src/server/room-net.ts": "35d558b41a6509e53b7bdcecf5058e17e86ca210b322ea9d460c45065ae20529",
+        "src/server/ws-routes.ts": "1ddc50fc11c5212e2c5fdab0ddb3e6ba48f575198bd6ebb17169ecd033421768",
+        "src/shared/ability-cooldowns.ts": "5e7ccee838e4cb1eb2fdd4993a13202367e0e873d95f86494ccfb399943218a9",
+        "src/shared/aiming.ts": "3285e7a05850cee040dddc3e0b1b733927f1b19ed6fae01bab2758cc22863fa4",
+        "src/shared/archipelago-map.ts": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+        "src/shared/attack-presentation.ts": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+        "src/shared/autocast.ts": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+        "src/shared/build-placement.ts": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+        "src/shared/camps.ts": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+        "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+        "src/shared/chat.ts": "fa0124ca978c67c0d0200dd9cc3c0bc2192b99d0edc500bb48540a07a2f21a63",
+        "src/shared/combat-capabilities.ts": "18229c99f1bb6b3b4bbc5a31680008edd1b6d2a214bf7b02210e3947c24b6095",
+        "src/shared/combat-geometry.ts": "07444795a9fa120c74a056f1ccf2b1de22789739b0750de42eaf79f4b098a8b4",
+        "src/shared/combat-save-upgrade.ts": "eba692c658d150200033ac11582f4bd6cae0beef6d70dcfadfde2df45891dd6c",
+        "src/shared/combat-target.ts": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+        "src/shared/command-schema.ts": "40c2e421da152a615157e39e7c3c55188557d3256cd398b256aa9517b279aabf",
+        "src/shared/connected-decks.ts": "d4b44531960d043f453a0063bdfb1e456f5359989b378f108151f06ee2f450fb",
+        "src/shared/construction.ts": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+        "src/shared/crew-rendezvous.ts": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+        "src/shared/damage-reduction.ts": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+        "src/shared/damage-types.ts": "bfa6343a0eea33c669a718c1c522e34cc7ffbacb416a9b3c3536dad79c3608bc",
+        "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+        "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+        "src/shared/decks.ts": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+        "src/shared/deployment-base.ts": "7adf1a4ea5ec581f861ab962e163af574456fa1640158120085f2ce280345587",
+        "src/shared/det-math.ts": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+        "src/shared/environment/ecology.ts": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+        "src/shared/environment/fields.ts": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644",
+        "src/shared/environment/noise.ts": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+        "src/shared/equipment.ts": "3aae45fe1724de7e6cb003cbc1df11ca254a918bf002c71fd7474599f83d8f75",
+        "src/shared/estuary-map.ts": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+        "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+        "src/shared/generated/ship-geometry.json": "a9ad18f90d139fb1f0c5f5ffe98a03884ee166e0ccc4d7c90590acba95d0a0a1",
+        "src/shared/generated/ship-navigation-masks-64.json": "fcebf3558080a5d4206b40bba3e8cddb70e86aee9aefdaf9d41bd5f7b4681822",
+        "src/shared/generated/ship-navigation-masks.json": "fc5e54c8a4cae670c8a0c95d471d15c3c176ff03c55036b0b30bfe9f6ec1ede2",
+        "src/shared/grid-flood.ts": "5c6043d3dc1744007b97799c85f3eac08e0b664750d213411e9feffd924c7715",
+        "src/shared/healing.ts": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+        "src/shared/item-index.ts": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+        "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+        "src/shared/item-surfaces.ts": "007374f68912e6a18ef90677ac508b78a2bacfafefb5d29669a9dd1fc61c0db2",
+        "src/shared/map-dressing.ts": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+        "src/shared/map-ids.ts": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+        "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+        "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+        "src/shared/mining-site.ts": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+        "src/shared/mining.ts": "d5564aa93f3c16318326d239d2a1794a6aee0d0d596cdbf6d42f2f5f93a399a0",
+        "src/shared/naval.ts": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+        "src/shared/navigation-masks.ts": "7b59b7137a93a66a33c8cc1fe7db9b15451143e8854f7629712f223cec6d01a3",
+        "src/shared/navigation-math.ts": "b5cb56b95daf9a7d74d3b92577e28892ae112d13d15d1e9e1998b415d28ead2b",
+        "src/shared/net/checkpoint-semantics.ts": "38b3ff4a08318cf583a36da71cf3a4e5f0858c97c00e90d4699182da36448180",
+        "src/shared/net/codec.ts": "7b888d40c62010a02c4356065da38a258f1cc34a46b8359d4b00bf90335cb768",
+        "src/shared/net/frame-buffer.ts": "5823a3e015fc20612c32f50012c9a3b93cccca86a2275eb1ae0adcb814bb57e6",
+        "src/shared/net/types.ts": "016b19bab2080ce51bbb4d01363645f52be77af726e94739342552259c082618",
+        "src/shared/obstacle.ts": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+        "src/shared/physical-body.ts": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+        "src/shared/player-colors.ts": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+        "src/shared/presentation.ts": "94b0030646ad646d9c5b787e0fcae9b87e4cc55ddb84a4f0b19dd47bdcbe23a6",
+        "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49",
+        "src/shared/purchase.ts": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+        "src/shared/push.ts": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+        "src/shared/replay.ts": "73ce64320597ab60bbd192698c7420dc9634795868fa92aa567944348567688b",
+        "src/shared/room-lifecycle.ts": "ba995af814b8b4ecf088ba438dee903200201441dd2d5c0157fa661f9031569d",
+        "src/shared/room-schema.ts": "d63d847cd0c00db19b7f8eafdcf39d6a650001e52dd0e1abc5db3b8c80b6f1d4",
+        "src/shared/room-slot-counts.ts": "4f0790dcfe6cf67f77eb9e5aeba064a8ce18142bcc52906afe2e5c03fdb38b7e",
+        "src/shared/rooms.ts": "d7199dcc142ea40c20c8cfc8b601e1171721dd2c7f5a37e1945a5f7be9e56690",
+        "src/shared/sailing.ts": "c34ba22e59728cbacfe49e425d9aa3fd707d3518117acaaf7054d0e17ce2270d",
+        "src/shared/savegame.ts": "73575c3203c5a47a0082cc822d3dff1957a1364970f60b6c042bfdd596d48caf",
+        "src/shared/ship-avoidance.ts": "fc7decf9246b3e6a143b78c4492f9c7e835231ecaac9262e1f291b4701738a0e",
+        "src/shared/ship-cabin-quota.ts": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+        "src/shared/ship-cabin.ts": "46aa77894309812c4678f46498a39cf2d70c51b96994728f89eb3e835aa4ff88",
+        "src/shared/ship-collisions.ts": "42043b515960aa8b889905931f24014f003af672ad3fb68c43b505268fc55dbe",
+        "src/shared/ship-defense.ts": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762",
+        "src/shared/ship-equipment.ts": "16b0fb7d3f57ac126f5bb8bb8a88ec47e50760fd42e6f63de98cc977711c3c32",
+        "src/shared/ship-fire-control.ts": "ea9b52dd7fa89825064e94add643c867580f1526daa5d3cbc5fcd8ac5c9b7585",
+        "src/shared/ship-gangway.ts": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+        "src/shared/ship-geometry.ts": "839d3ba7f2b3d6405c61f87804155f539c5bb8af85695136ccf91098e80452f3",
+        "src/shared/ship-guidance.ts": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+        "src/shared/ship-handling.ts": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+        "src/shared/ship-launch.ts": "91e3dab0d4f51136cdb0689f79ad84215a59e48c332b7c25a82902f78391bc47",
+        "src/shared/ship-motion.ts": "f7d632213276dc00f97b0f0c67f4fa22a127fa75080ca84c3c57b914fb377cb1",
+        "src/shared/ship-navigation-potential.ts": "dd4f5a366637ce25657acc8a225639c6e23742d6fd81c229371e121230315fef",
+        "src/shared/ship-navigation.ts": "c1255fb83dafabf4cd031c7885866ac3944417c18df1b7b4369e9a3cc2cb772f",
+        "src/shared/ship-planning-budget.ts": "d37f2eddfaed543417d5d2a452b4419ffe3b0fe9ff02704c5862c059daf2df3a",
+        "src/shared/ship-planning-job.ts": "34f9ea62da5182351c7fdef4cd581f1631404999e689ca25c8801ea63edd3b6f",
+        "src/shared/ship-pursuit.ts": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+        "src/shared/ship-queued-course.ts": "46faaccc797472158f92a9d5e4f7916b65b8157511e0077e8605ac9ea5c11737",
+        "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+        "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+        "src/shared/sim.ts": "4353be5e25f22deb5912bcad3b0b924c26385a51cf1d098943b4ac486dcf15ae",
+        "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+        "src/shared/sim/checksum.ts": "d8733737efa18ab7d914c3c36b987807cd889342b4bd33a4f7aa1f2839c336ed",
+        "src/shared/sim/command-frame-runtime.ts": "6496d692982acc41f1b5e42fc22dd052e8430815163067712bdbf93163de7ad4",
+        "src/shared/sim/command-validation.ts": "dc020acef9badb8b5afdc00976620c6713041df0418c27bb67a7dcba932dc27a",
+        "src/shared/sim/engine.ts": "0a13689009409b817196e4b4f7a8c385f409c3e56508ffb0b93fb43d172820f3",
+        "src/shared/sim/frame.ts": "e0fa92deef57423c7c9a2d501aea3ca4913eed67790ee09481c64713f9c77472",
+        "src/shared/spark-fire.ts": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+        "src/shared/support-surface.ts": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+        "src/shared/terrain.ts": "2e232df1aaf5913434ba62f41070d3b7c53bd838c0b7ca4225d65df752eef0de",
+        "src/shared/test-fixtures/near-coincident-hull.json": "44fb06e8195405b789b3196f6f02426984cfb60aadc592b724ca11170d44a4a5",
+        "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+        "src/shared/transport-role.ts": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+        "src/shared/types.ts": "7cc4957767d4f5448e74d5aac56e8235ea6c79bee511bfcd1ef3e2e3535623fc",
+        "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+        "src/shared/unit-lookup.ts": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+        "src/shared/unit-repair.ts": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+        "src/shared/unit-targeting.ts": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+        "src/shared/unit-value.ts": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+        "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+        "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+        "src/shared/veteran-stats.ts": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+        "src/shared/weapons.ts": "193cd5eecd5b53e1692363d4fea5b22984d4d9f8c0f70b8c45c6c7b852d213e4",
+        "src/shared/wind-field.ts": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c",
+        "src/story/campaign.ts": "2c63427461ab269f99b4059680f713a06200d85a85959a10a92617a9832f48fb",
+        "src/story/cast.ts": "901c84ebd009ac7c49675b2ce16d8174c8458eb6f818321f304446b892424511",
+        "src/story/director.ts": "09aa65f661912bd647ef04802665521ff00d96e839f1642be8a4dca9452da8de",
+        "src/story/events.ts": "d91edaaba31e623af1fe62f5596f0309bd98df81949bbfb2ef24849e5317e22b",
+        "src/story/index.ts": "c2779a8b2ff281bacd8399d57c6120f7b4c5fb6765c5b09d641ba252de3dafc2",
+        "src/story/kernel.ts": "cf42fbaa1b5e53605f8c8b535d9b05b50211cd45dc54966d919209f15bffc15d",
+        "src/story/ops.ts": "f8f1aa1fe348b40839d3fe2681f022f7b4ce21396d1a26ab4f029c62e13ff16c",
+        "src/story/powers.ts": "cd74a4d89bb100ec59bc40fd463280504b843bf05f90b7c811598c938a2a9f32",
+        "src/story/region.ts": "0b2e5f3a45f9f5f78f81ef1d5ad7519e487061d6b4aa2929fdc701ddd6280064",
+        "src/story/rpg.ts": "b6d9299ce2ec66554da4c1bd6867c5a4e1d7df1075f5319ede8f71f4314f292c",
+        "src/story/stage.ts": "aba87d577f2a257d7820dfa650faa24f195a1a099e48180e94a9e76f7fccde4c",
+        "src/story/time.ts": "26a5d36abdc48d5f8174c0370bbde7c7c69f31e7b2a3b1e15458f56444c43921",
+        "src/story/watch.ts": "bf13eea03c754ef58d7125e407a78c7aa7caf328da5b0fff6d393ac3385a4703",
+        "src/story/world.ts": "2598653b16f81a5581ab456c999e13756232ed787b44ac9316e272280565d8f3",
+        "src/vite-env.d.ts": "dafff2ed8faa60bcaebec1d9610d38d2ea88b58949f82f9783dd099fddb76b69"
+      },
+      "driverSha256": "e3a56b3d2063e1fd857f50278e0ec7a9575b9ac86032c80667a69ccab9db376f",
+      "nodeVersion": "v20.20.2",
+      "environment": {
+        "SKETCH_RTS_BASE_PATH": "/sketch-rts/",
+        "VITE_SKETCH_RTS_BASE_PATH": "/sketch-rts/"
+      }
+    },
+    "sourceInputsUnchangedThroughRun": true,
+    "integratedActiveUnitTicks": 1872729,
+    "peakUnits": 73,
+    "commandCount": 2950,
+    "instrumentedCpuMs": 11220.018,
+    "instrumentedWallMs": 7242.246211,
+    "exactFinalCombinedStateSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1"
+  },
+  "optimized": {
+    "provenance": {
+      "capturedBeforeImports": true,
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "workingTreeStatus": "",
+      "runtimeSourceFileCount": 450,
+      "sourceManifestSha256": "1981f156441e8fe14af17a635d055a256668445e363a8993bfa6e3d864577af9",
+      "sourceInputs": {
+        "src/ai/ab-test.ts": "1c38e8d67877eec6b7a0bbddbb9617f9d1a1029629ee318bd8f1f82678ed063c",
+        "src/ai/benchmark/army-balance-stats.ts": "92b843010d7893640a770a0b616b51044e789a97492c7c4611686d421e353aec",
+        "src/ai/benchmark/command-stats.ts": "b87f809883a7686d5d8b68a3a10d10cc8519c0ec782eefce7a40b66fe0fe2d42",
+        "src/ai/benchmark/control.ts": "3963286454827fd20a89583b8c90354eec32c613d5c2437fa7807fa17085e0f6",
+        "src/ai/benchmark/dashboard-store.ts": "1445c3ea3430f5b944c1c224b97317c0f2e2659def5bc024b309fdf1ecb825bb",
+        "src/ai/benchmark/expansion-claim-timeline.ts": "9d6cbab20d8d2198d889c7be988a6e528ded81bb900f18592cfb21f4378cf6de",
+        "src/ai/benchmark/gauntlet-cli.ts": "3d4b6f863490c907a8c9f5ecceb23f94e1fcd6139a53c667291055c8e51f8957",
+        "src/ai/benchmark/gauntlet.ts": "5f4bf64d403235e42635eae8546f79ad9b1008500da6eae5d063280d3526263e",
+        "src/ai/benchmark/matrix.ts": "56df993abf199692dc6679ea4676cc38743c8d18e03660124a2eca9340689393",
+        "src/ai/benchmark/nudge.ts": "c19d5a5469b49c212aa34e24fd8a586aa97861d8d5e3916e703ac7509a265418",
+        "src/ai/benchmark/parallel-worker.ts": "7af5c80803111f253d9028519b0aaa6909a829458311c33d62e3bd292d58c7b4",
+        "src/ai/benchmark/parity.ts": "9ce55dc806612c8d2e14ea4a52be900826dbc1aba4e398c087d526128f839625",
+        "src/ai/benchmark/presets.ts": "67a0fb51829b1010a7a13a57e46328dc525e1fe168281401290f0ec7adf45661",
+        "src/ai/benchmark/subject-gauntlet.ts": "b6cf7879f057f937056b0ba630b39baedbbfe46a78fcc2dbfb324ea9737def87",
+        "src/ai/benchmark/unit-roster-stats.ts": "2fd993892dc8a02875c2aa9f120b3b6f8167aa1e0e22dbe084b5f45e42ee3200",
+        "src/ai/benchmark/v5-arena.ts": "67446377cb95938d5453ee631fd4bc846d74dcfd884d76ae84190d293e8b6884",
+        "src/ai/benchmark/v6-doctrine-stats.ts": "66afb13278e5910d39a99bd2ebe8dccb5ab89270e4213ea7be978086b110f872",
+        "src/ai/benchmark/v6-gauntlet.ts": "5b9f609210e759397821eb8c6d59fa720d3ab6b3022de48710160b2698b577bf",
+        "src/ai/benchmark/v7-gauntlet.ts": "49e7ede47e0e9a1b7b36a1328d708748b99234bd2c184962b50ee33772e79840",
+        "src/ai/benchmark/v8-gauntlet.ts": "193279c46f9ddfefa11c7f942b8f63cfe3f35ee1ac5bb7c96423f3bc3bed641a",
+        "src/ai/benchmark/v9-gauntlet.ts": "f2dd2b87039847cf9ee34907764391355c35bc9b1e533c9d19334691dfd9103c",
+        "src/ai/benchmark/wounded-moonwell-stats.ts": "e926476fe88fce2c9ce0c35b1d63ee8b14370c4739ee3126c4440b00090207c1",
+        "src/ai/bootstrap_1/archer-doctrine.ts": "31a10c060c86a362f7ece39a40c8b08a22189ffb0c5f7b5568eb44cc2fc9707a",
+        "src/ai/bootstrap_1/archer-micro.ts": "b5e342d075720d910df2167d4f7367f9908c9977068166d084f824e2c6fb7874",
+        "src/ai/bootstrap_1/economy.ts": "386298eb5becc291e86bc4807a32e79b8101a666b05ca197294c877769b72604",
+        "src/ai/bootstrap_1/front-recovery.ts": "12ae2d4589593eeb220698e41ac0aeeece7075c4a9a82ec4e2f7e2182b1cfcfc",
+        "src/ai/bootstrap_1/medical-recovery.ts": "dcbd1e3f69238f1e6c013d9b9e3b9939bcabeebee1568bfb3a5cb38eccb91440",
+        "src/ai/bootstrap_1/mine-defense.ts": "ba736091539b04916e8152a0438db32b4522c518c30f11e09268100424e0a4c2",
+        "src/ai/bootstrap_1/mining-assignments.ts": "61e4a6fdffd5004a41e0a95fd534dbb25ce3998d6096c3e4a8e027aa57ef7001",
+        "src/ai/bootstrap_1/mounted-micro.ts": "075da72c88165e2ec6dcabf536c1482f4c335e5a37893df6cc364d5a6badfb47",
+        "src/ai/bootstrap_1/mounted-tasks.ts": "b6cffe532d81a490adc75557d75837605f8e7cbe41c6e81952b9837885a542fb",
+        "src/ai/bootstrap_1/policy.ts": "c7449d62000f39de2b2b3a67d2cc95dfb426750ec1dc4f26c1d3f61c81d54e6b",
+        "src/ai/bootstrap_1/repair.ts": "3d48ba8fba4de24c754f690606513b4e6252875a7794b288d4878cea57d5067b",
+        "src/ai/bootstrap_1/shell-evasion.ts": "a88b3ce1a135bf0101fd35ec4c59eaaaad4090c3d5d7a4638c50f0f535eaba76",
+        "src/ai/bootstrap_1/summon-host.ts": "547281151a45b03df6b03a0cbd7eb19a026da75d470f47d3117f19a7fe860e7a",
+        "src/ai/bootstrap_1/summoner-screen.ts": "37d81e8779950cec9942f19eb8992fcbc9393eb8f307195a047fec5c99fb1169",
+        "src/ai/bootstrap_1/tower-rush.ts": "ea5108693e00f79c62eb8aaef942e7b2bca7fbbbeba6099b0f399be7a258d753",
+        "src/ai/bootstrap_1/weapon-targets.ts": "35b706531eb2802b3bcff8720cea5cb778f65188889a2b68571422af528665de",
+        "src/ai/bootstrap_1/workforce.ts": "f4002a6c7700aafb70dbac69af25f0d263e17ea43cf0b6fc31a4d1c1f64ee0a7",
+        "src/ai/game-runner.ts": "d15acb3cc44c3e17aa3a82b6a503672bda7df190310c2d53524cb7c45e518bba",
+        "src/ai/memory.ts": "e6695c66b16945b2dcb34deedfaf87bb7a2bfc6617fc11aec2db9b29c4e04721",
+        "src/ai/planner-context.ts": "6512062bc03d517676f5cb95a468eed0a429cca20a413a70b4a594149d560938",
+        "src/ai/playtest-command-manifest.ts": "79c8e756bc2f922477c0b0f91aa63ccbcfacd0adad65fac129365ed8a663b3da",
+        "src/ai/playtest-diagnosis.ts": "97b3fa09fb8b9b5adc2194a1352af373e10974dacbe2f082e0316278f934cbfe",
+        "src/ai/playtest-session-file.ts": "6d858e015802c24f24fb79eb09f4f1f3e204fc3c142db00fd9f688e4968f5440",
+        "src/ai/playtest-session-setup.ts": "635aceaa161805ffecff61b264d62ea27b6c160d111f73fc552272bf685231ad",
+        "src/ai/playtest.ts": "b0f79db69f17567ee18344da3731e7009985df808f0fb836371cb63bb9c73cfa",
+        "src/ai/policy-v2prod/base-defense-model.ts": "2cbaf01df1ac9cac6f25663ae5ef709ce157c5b532ff08472b01fb3cf7eff656",
+        "src/ai/policy-v2prod/build-layout.ts": "f3b0bd33549cbbf86cf40cd8f12c610251c8661f1f171243b432fa04b6416c7f",
+        "src/ai/policy-v2prod/claims.ts": "c64e3f7894c521b5ee7d923b1429793b67a6781a5c2dc5ad04c251967a8869a5",
+        "src/ai/policy-v2prod/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+        "src/ai/policy-v2prod/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+        "src/ai/policy-v2prod/core.ts": "e4d177f085287bab23511605cd23ec10ea8d71fa9c7a41be7afed3e7628c46c1",
+        "src/ai/policy-v2prod/expansion-model.ts": "b98496273c459575bd753567eaade776d75b8a835391d580975b45c9a45695e6",
+        "src/ai/policy-v2prod/item-tactics.ts": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238",
+        "src/ai/policy-v2prod/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+        "src/ai/policy-v2prod/playbook.ts": "32c5d51db4c2a136b277e8e34eb14749f3f643d1cc526cd4752c44c71aa2ab62",
+        "src/ai/policy-v2prod/production-model.ts": "912ee409b9a1a792a5fba105cc0d3338330824e117eab1369c1e70e0a27db7b9",
+        "src/ai/policy-v2prod/script-runner.ts": "ec51c8571f479260fb035f4f4802311dd3d2de4b12ff5f5352646a8d25fd0d83",
+        "src/ai/policy-v2prod/skirmish-tactics.ts": "72855d9b3afecfd5e27b3610443d096ae3daa7dc387a29db1b3b843bf825dc7e",
+        "src/ai/policy-v2prod/snapshot.ts": "9de9d896870b3139c954b3410775f1d64ad6e77e3307b0bcd5c5e719b30f09b6",
+        "src/ai/policy-v2prod/spatial.ts": "1a958780f43c4e32213118f4fe5bf0da20945f17fee5a289e2e1e877234351ac",
+        "src/ai/policy-v2prod/spell-tactics.ts": "588a1b34f9f7f2a253ebdf33647891ca81b2bff43ed5b162aa0cd26900252ed9",
+        "src/ai/policy-v2prod/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+        "src/ai/policy-v2prod/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+        "src/ai/policy-v2prod/training-choice.ts": "7b0b7ab8b9b26c2eb6a711f0f6c7431efa37552e2c46c2111dfbfce1c94ed7e9",
+        "src/ai/policy-v2prod/types.ts": "f15b3b03cd776e5fae52b50cee8cf34f9b49cea0ade9490f3b622a9ed45ea75e",
+        "src/ai/policy-v2prod/world-model.ts": "b1361f2b4b1001dbc15eca2d6998bcaa5d6169ee3e8b36bc38c9907a3f09e685",
+        "src/ai/policy.ts": "2d43f6a5dd021f546769c2e1f89bd572e6ed082df44ce62a693432a9f01a373e",
+        "src/ai/policy/adaptive-army.ts": "620e36491a435f798c7e2c57bdb20051dff26089af6cd6181bfd78df310769a7",
+        "src/ai/policy/ally-support.ts": "d1e7b6539cbbef4d65ae1687e3e558ae7f62a2d013deae2603b8ec340147a9a2",
+        "src/ai/policy/base-defense-model.ts": "8fe2b400e5c8f9acea361745f347f1e5d6178d0a57686e9b8ad9b4b225d9128d",
+        "src/ai/policy/base-pressure.ts": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3",
+        "src/ai/policy/battlefield.ts": "4772eadda29f9929ecf847bc39bf541b42e4840a8c0a9337dc80eaf9d3d5cbb2",
+        "src/ai/policy/build-layout.ts": "e29054d10b3f641b72c2f8e949a22c92c19e43ba6b29c43b3879f05804a9e76f",
+        "src/ai/policy/claims.ts": "045fdd30dab87f14370c7b024e1f822b5c5028e7842b2d77f2ccdb6055bf2e4e",
+        "src/ai/policy/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+        "src/ai/policy/combat-readiness.ts": "b461e9c7d64650729326f36ab8ba18c6679a157f4a346e1a6687ec8fff3d6def",
+        "src/ai/policy/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+        "src/ai/policy/convoy-load.ts": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
+        "src/ai/policy/core.ts": "f79cec8bb92d11be5bf7d97157703e5ff7f4c7b429f36851a5b6602a269d932d",
+        "src/ai/policy/engagements.ts": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
+        "src/ai/policy/engineering.ts": "b98d5a468a9d901b6ed2cc63bb3914cc171db0d96a6c533889117ec506a5c350",
+        "src/ai/policy/expansion-model.ts": "34e74778c757876b776072bdbafdedf3bd30595a4b3da763f9dfaa9dbbbd439a",
+        "src/ai/policy/fleet-engagement.ts": "2cccb5e9a36df0827ee758d096cf1ff0d94490faa824df645c009720d1a2ff0e",
+        "src/ai/policy/fleet-formation.ts": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+        "src/ai/policy/ground.ts": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
+        "src/ai/policy/item-tactics.ts": "663771a4a731d21a37af4615b8241edeae0cdc06d8b6292243d6dcd721e25d4c",
+        "src/ai/policy/mechanical-repair.ts": "e3ddf0d2e899a6fe71b0406791e53f0f00a3b2ded56a4432aff705c1cbc37ff7",
+        "src/ai/policy/naval-services.ts": "0c1729565067e2dd3530e75d75ac7b1cb49e5358597ab1b135ff8a185539df83",
+        "src/ai/policy/naval.ts": "4f0182e938688ea4031d38030872390f81f728c9d4cdd234e059ac9e374879bf",
+        "src/ai/policy/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+        "src/ai/policy/playbook.ts": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
+        "src/ai/policy/production-model.ts": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
+        "src/ai/policy/script-runner.ts": "452ab4cb71daa5a41535ee24f11153d954bf3cf6e441711eb637f190574b6e9b",
+        "src/ai/policy/skirmish-tactics.ts": "1b05a80942f286ac10681a22e8e6919f6d2fdc083442b03c2bf85c7b00692e3e",
+        "src/ai/policy/snapshot.ts": "0ea6107b277597318544265cf4dacfb34f4fc76104210df5055215625768ea91",
+        "src/ai/policy/spatial.ts": "5e3b82ef490f1fb544e57e5a39a1b6ba6a7bea4bbee871d5be70fa9040273f48",
+        "src/ai/policy/spell-tactics.ts": "a2ee4d4bfe51347fe36c86ca310701032564cfaeded08ba8789febce5f3f172a",
+        "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+        "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+        "src/ai/policy/training-choice.ts": "4f952fb0fd4016127244e277caea5638c9a967f1641bebc463806a6687af01df",
+        "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
+        "src/ai/policy/types.ts": "97cab1aff747cc4f4d5bf32816727929a9a6234b4eeaf326a3cbc28a08fc0d65",
+        "src/ai/policy/v6/backline.ts": "24ea1e219de49bf637ca974ce74436c8a31ce637e05d9440135ad3f80ed1a5a5",
+        "src/ai/policy/v6/closeout.ts": "a23defb92af85a8059a20c7a8fc798f53fe9a1b60ab3712e6765216122f0c922",
+        "src/ai/policy/v6/doctrine.ts": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
+        "src/ai/policy/v6/economy.ts": "efe14f017864b84a0e751924d5792c1d896689cbf4986e83879b1834e5c962b9",
+        "src/ai/policy/v6/general.ts": "75b94a90dc3c347e6af703e1dcf8042c1f708ca1ebda10ab2499ee2339fb263f",
+        "src/ai/policy/v6/intel.ts": "2f95f695bffe98a02de07a817c06cf1fe49d79be6499c5c161b727d213f61dac",
+        "src/ai/policy/v6/memory.ts": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
+        "src/ai/policy/v6/raid.ts": "4924a2b64cfa5a5e71b971a29c5bd18282b69ce7799338c9f8ded76a34bb38ec",
+        "src/ai/policy/v6/rng.ts": "b2fbac706071c48c9476b5968330affaffb7cdaa1c0d0415ff4db4f579b7bd62",
+        "src/ai/policy/v6/select.ts": "56c6ab5be29e38051da66b1ca35f7b9d28d73e69dca90492280e26afb8aab8ab",
+        "src/ai/policy/v6/strength.ts": "bd474f113ea57894a442ae846f727432e70e3d63da9f9e86eeb837f281999823",
+        "src/ai/policy/v7/creep.ts": "543a851617955b7375ff02e282708e91476332f6d9ca63c6fd960291dc5fb261",
+        "src/ai/policy/v7/discipline.ts": "9132b684e9fb71ce3aebdf58521c3aacd8690eb7c7a320bc2dd6e47544f1a910",
+        "src/ai/policy/v8/charge.ts": "d113ffd1cca8d615d68e80a1c74e5af32723a99718b6fa71d24a4e35b4eb89df",
+        "src/ai/policy/v8/doctrine.ts": "94fc1aff9dd33707cf5c111c19bcd6cff4e06d623a1ea43a7e0d71587b7c6f02",
+        "src/ai/policy/v8/well.ts": "955bbe13995d1a7df5d503ad364ab95f2c6e0b688d83024492a507c71c5052f0",
+        "src/ai/policy/v9/doctrine.ts": "c0ae229e6b37adc7bbb04961e64b5e1c6dc1f52cc4675ebaecee48401596a0c1",
+        "src/ai/policy/v9/front.ts": "b44b085784ee77ff840b3b45cf511a4400079485397c3553518fc439367e7cfa",
+        "src/ai/policy/v9/march.ts": "14b175e155aa1f3f0235f23b1375e2c327aeb7e2b1f13fa9be30a18993fcab1e",
+        "src/ai/policy/v9/shop.ts": "151295123598130f159273b5aa57f213f3a59e0a745b7318c3cb141bcd5df07c",
+        "src/ai/policy/versions.ts": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
+        "src/ai/policy/veterancy.ts": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
+        "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+        "src/ai/runtime-test-helpers.ts": "37131d4672da797710241063260d424ffe49e4f4f6e55e416aeda56d2d3e85a5",
+        "src/ai/runtime.ts": "89e4ffc549528072f9e803aa83108d88a6e5cdba9f637c573f636661cf8d59e5",
+        "src/ai/squad/squad.ts": "11d89ec2dff88495c789cfffc9f6e677add18ee9d7b21cb2777a56b5e0ded5ec",
+        "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+        "src/benchmark-dashboard/main.ts": "646fcf9e098cdca3bf4bccfe5bcac4b5952b2b31e7d8ff8258b415ae75a52760",
+        "src/benchmark-dashboard/page-size.ts": "ae399cec15474c164ff60a6dcf49e7e71a9615db04c03727cf8fde1425acb966",
+        "src/benchmark-dashboard/view-model.ts": "247fe92a3604cf0cb25156a40fb37650077ed126b00ddb538b591f77b2978c1b",
+        "src/benchmark-dashboard/warnings.ts": "1fc78b2965740860a9c0ed04a1b2501308c05e756341e29773e764d6887ff8ec",
+        "src/campaigns/ashen-march/cast.ts": "78b2070ff16d428dcdbfa25848e22c674ae258105fd9f6015b25e6bc3488a704",
+        "src/campaigns/ashen-march/chapters/ashwood.ts": "d80f441cfa1a4957add76e4b446e45c7aa93893e7d2b50dc19e8b0f392a5cb5d",
+        "src/campaigns/ashen-march/chapters/grove.ts": "5b7a5a49c36d285fdecedca12d4acf7e5ab227d0025ed88105e29f0969e07b38",
+        "src/campaigns/ashen-march/chapters/outpost.ts": "fc9ce947fe0c73e0a380ed8ebe261bfc5244946fbad1171024409d436aff819e",
+        "src/campaigns/ashen-march/chapters/pass.ts": "47462a54f999fffe1ed1240b6d7bf5801c6f624a64a62b6792ad3e4819aa336e",
+        "src/campaigns/ashen-march/chapters/prologue.ts": "ee61232c3eb730ed5b673e0de7038cafdb8868efa10ad58096156d5de880ab57",
+        "src/campaigns/ashen-march/chapters/reedholm.ts": "3e6edd28058803b5abdf2e6be54295eeee18af294ad06b9e4548f0a1ccd2cc98",
+        "src/campaigns/ashen-march/chapters/respite.ts": "5de424dfb1fbe9ca7eb7151a8e0d2199538826281d4301d4b30963d1ab6fe1ff",
+        "src/campaigns/ashen-march/common.ts": "2c49907fe98914fc39121aeb0956329c5f1f1ed80ae9240fe88f0efaf40a94a8",
+        "src/campaigns/ashen-march/index.ts": "e69baf91761b8d796906a77b7d72ed5202e5a1f0335b4ca246640642d49566c6",
+        "src/campaigns/ashen-march/models.ts": "cd1cfa97be1543146329ce0b4659697f8363777adb1b0d69dcc699453fdb7a1e",
+        "src/campaigns/ashen-march/pilot.ts": "0d3b7234c9e9012218b1d1793a3ebd95776557176e2a6060f3cecd159a6cc8b3",
+        "src/campaigns/ashen-march/places.ts": "73b8bae3c85477cf82cc3db73928770907629c5863509ac08e70fb78423a57c5",
+        "src/campaigns/ashen-march/powers.ts": "ba8a3ddfa30d8364c5266d8cb54cf0ef0e2162b9eb5d6c2282908db24dcbf869",
+        "src/campaigns/ashen-march/scenery.ts": "d56dec93ca0621a9f7574009a6c6ca95bba67eb6a6dc0215a8491b65a2ffa2a0",
+        "src/client/ability-effects.ts": "7e6551116d38af1eafc264939b107e0a498ab780f95fbe1595b2dda9ecd3c97b",
+        "src/client/ability-icons.ts": "c227488ef99b5330e5297eed75317edd7abc4b81f0d38c198f93aebbad1e1b73",
+        "src/client/ability-targeting.ts": "d64186a8ea8a7c2e38a280627ed95a8cfbd76f71efad73e92bb195c4525bf61d",
+        "src/client/art/building-models.ts": "cd18cfcf4a42291b18a79c4d6c79dae31c00d7d360452359e00297b3ed1b7c21",
+        "src/client/art/canvas-ships.ts": "71c1455403f063f4f8f9abc7de9e1e8c67f1c1df048523f775604987bfa1a2a4",
+        "src/client/art/corpses.ts": "0b736505c4ea6a58182b7f2be0f152b8185034afd83768066bd61ada6f0821d5",
+        "src/client/art/items.ts": "e1745b2c981523969db2c355604cf3984d5505b521166c5f0de57e5017b8701e",
+        "src/client/art/kit.ts": "19941879e55045581eb107095a2dd41a3a767c29de9bd2ca5e10bed7ba741a1b",
+        "src/client/art/painted-creatures.ts": "df3c2e337c2cedcf5ec8945f7223466ecb0919d2ac8e3ab2b4c20e22a8004611",
+        "src/client/art/painted-units.ts": "3733755f4090bfca090998335ca7810cc4b7b80408a3fde60953b44421f715b6",
+        "src/client/art/portrait-fit.ts": "24a36053e2c7e5dcd48c728273fd8d1f015f697f7d87d89215c6ca13be99649b",
+        "src/client/art/pose.ts": "5a98943a62e8b898f429142b1a8f64926e201b890df3726b560c448cc454c7e3",
+        "src/client/art/scenery.ts": "961ab921b4ecbd48aa23d3c9b54616fe235562389c2c9db955b9881c0bde8a67",
+        "src/client/art/scratch-canvas.ts": "90b2dd1e58d0de1ed8122c9ef5e03ca172db6420e07628c35010eceeb6b10cbc",
+        "src/client/art/warfare-units.ts": "af95f453b018e3ef57da87f73a470083a290531e45b44bd616a617ff5e037aea",
+        "src/client/atlas-art.ts": "cc739238b5d0b236cafb2c0117b01e1cb21fc34324e6275943b6b6e3759e7d64",
+        "src/client/battle-hud.ts": "60c98698687d47993d7a411f601c97dda30490824b6942583b394891fb97dea7",
+        "src/client/bootstrap.ts": "9ae4d2b3d7a9554f83a4b0b77651faa054664007ec7975ae3e4008232c6f288d",
+        "src/client/build-placement-controls.ts": "e3d2d4bd98b87fd2deeebf7d3d4b883a9a8afc1c4d8bc70f7cbea221e829f34c",
+        "src/client/building-glyphs.ts": "5ffa74c3be5da6b2374ead0ffb7cca98aa436b414888142271b481c2962c889a",
+        "src/client/cabin-controls.ts": "0bb30cec3d511dfecfbb7aabe05f76123de02404b3b52f4842db7d9e350287a0",
+        "src/client/charge-targeting.ts": "2326e1114b0b37e7222398b7f886374b422791ed6c3dbdf4cc62847656839d16",
+        "src/client/chat-controller.ts": "96816fa8e06966fd7229f9192007da3f86139f386002008fa1fd931cf2804229",
+        "src/client/command-button-state.ts": "5ce06e4a0fedd0d37b407670666530d8cc7a841a7619e17d743bfdc3924ce9db",
+        "src/client/command-feedback.ts": "894b2f0166975db2678f19f741f9be773c4e3b565a7982c68d524776a7e6a44e",
+        "src/client/command-icons.ts": "154c223174cc8fc90ade24443f0ae7c1c4cbd2ec8b25744826598b2852072152",
+        "src/client/content/abilities.ts": "22a62eff67d9f77760833965c759f533736bc9809477fae5bb62b1dc3991a06b",
+        "src/client/content/buildings.ts": "51b1b3e62259ff9115e1342a9fa08af3396ab9ccb0afc3c89f84cbcc628133f7",
+        "src/client/content/cards.ts": "df24edd4a7b81bf073b768d121da4e959db85b486306dbfb8975a3b39ddea903",
+        "src/client/content/units-common.ts": "e981321fdc2b266e067dc25d9c04b88af8f9271b40173c1cabe0f599535e5e94",
+        "src/client/content/units-creeps.ts": "647ceb9086e5d01ec307bd89328f58bcbb66a745c9c7ca082759a6439f9d8d90",
+        "src/client/content/units-ember.ts": "034979c0e451f238d73fb0830847ca2f68bca23a50545c493f635cea195f0b62",
+        "src/client/content/units-grove.ts": "0fce9487cfd443ba8c4daa0855e736e28d2a705854bdf0a872fda5c54227a5b3",
+        "src/client/content/units-neutral.ts": "6ee0d618bd257b32a6d21faa99cb65b52c3215011153116bd82840182bed48d8",
+        "src/client/content/units-warfare.ts": "f433f63b94c1f88eb893a0da6bf8f780057fb69a74f14986b576b5ee5a7234ca",
+        "src/client/content/units.ts": "78ab9082a65add1bdfd5238df42bd31454457bf6d58bbdca8f683e352f3a453c",
+        "src/client/control-groups.ts": "2e04ab9b8ad5b2cdced85cfc337b1c1c3de73600339d53356c5a62501a311039",
+        "src/client/debug-view.ts": "a6fe887d6e17b69b851f1e963841ade28da1231565e0e868b7c36b998b123cf4",
+        "src/client/deck-plan-projection.ts": "333117842bb2453a5c397e8cb3d7b32ae5a5c6981c194671b3c2de4085a204f6",
+        "src/client/deployment/mode.ts": "814880202ff1de4472759c0a43016123937a2990cb033706de1e0cf9fe2ef16c",
+        "src/client/deployment/runtime.ts": "1c1dfd8332e8297a691efe652a5d2ce4be3458411c1777233bd37325b9becf5e",
+        "src/client/deployment/server-runtime.ts": "0ad86c1c9dc73627e9691eac84e0b51536bf107ea3c6cfedb8ed5866359d5845",
+        "src/client/deployment/static-runtime.ts": "edac527a19591379e1e45a5cf0e90816f54b32c65f6145c2b846403b775604cf",
+        "src/client/edge-scroll.ts": "b74f7aac6f668f9faba821d518d153647b538c6f23e15ffad740f7176dd464ab",
+        "src/client/effect-renderer.ts": "ef98ce15a24dff5d3e36428398e5b7035d30d7b1a3dad3fdf2b9bdb59df5250d",
+        "src/client/equipment-panel.ts": "5080cbac62feb2a8cdd961acdc6115730ff5390b77b4485b297b23a02358ec97",
+        "src/client/footprint-view.ts": "d3a5c81d6650221497a4451d7027dd0fee150b6f99bc8eea16d58a61128a2b1d",
+        "src/client/format-mass.ts": "04a26d072ad94326b0739b8ed9b379174360931ebb3e398982c258cd0edead63",
+        "src/client/frontend-world-view.ts": "c92d923e1eac9c8a2d18bf1469ca39d361ae91168ee0a3406ea274831b2d9887",
+        "src/client/game-adapter.ts": "463469b6db039c60f19ea9ab0676bf67d0a1beb73ed1836d2f404e2b75fee110",
+        "src/client/game-shell.ts": "8a1fdf8a519c8e40a6bad3e256f17b9fbac7936bedea4c739420c94fbb385c64",
+        "src/client/glyphs.ts": "4424881496aa74ff46f1f2cfd05e1223f85373e29b8d18bdb3c9f400ba84d634",
+        "src/client/health-bars.ts": "3adaca0e7983b95b53db722f2614b04625858cf1ae9323b86c97f2e59811329e",
+        "src/client/hud-model.ts": "783646e4c139dcdc46f76f5a5710c091202248d6c676a2832e156eaf1e027834",
+        "src/client/i18n.ts": "b40e0ba2aa6f10c3a86cb74b32e0b4e97efaf7bc52a5913249f5bb45c61335d7",
+        "src/client/item-controls.ts": "8e8092d4f96558edee47493d52274cab30c408f91db3b1b01c2ad285a98e588b",
+        "src/client/keybindings.ts": "7f059d7d50e2ed1d71166f6a8f6925acfecd62727df4e414553dae991be7bbbc",
+        "src/client/level-star.ts": "cf317b1f85d7246621cbcf45103723f62deb65b1f8ee10c76d9d38434923b456",
+        "src/client/main.ts": "95caeacbb835a4571dc5913e26554ea7fbd36d61149e0e213060a0578ea06d98",
+        "src/client/map-preview.ts": "df2f94c738e1262493d475b98d7f4965669dd910568438e147727b994404751f",
+        "src/client/menu-page.ts": "707c2f280864e2168a688e019f56bc74ab8c3d50e4e3f646f90bca46fe6e315b",
+        "src/client/menu-scenes.ts": "4073554c9483644431d389971e60b6f26d5fdc40e99e172291932c4c472dad14",
+        "src/client/minimap-art.ts": "7225b25a3b01fae53574528031ae35d4b33ee3af5e7c72bac40542a513dcc734",
+        "src/client/minimap-wind.ts": "bdd45b556c1b7bb8199442ce9043ef14c481e3a04e4abb924542c599641e5f62",
+        "src/client/minimap.ts": "1a8caca58f691ce6f333c3b3a6537a0d71c82d65429e0740a9003f02a8e2e28b",
+        "src/client/model-portraits.ts": "c043587482fb8627edebcf7ccbf0d5e2ff586d526d3c88ece01a47758cfb5632",
+        "src/client/net/local-adapter.ts": "08a9f90aa18797e5932a53999b204a2ef30f4643ca9ba41aa54c7d98ccc8d484",
+        "src/client/net/lockstep-client.ts": "b09d2712b4a17ce50072816f841c280c9992bd3b09329d36927c51a3880a5124",
+        "src/client/net/transport.ts": "7eac7ee924ae870c571477bf8ac8f6ef846af656fc537c5d741f19aef89b24dc",
+        "src/client/net/websocket-transport.ts": "b2bfb4cbc3427b161efb6dc495a3106e050eef5d66b949bbcd92c88470619dd6",
+        "src/client/player-name.ts": "0bd69233a5c96be3ca2ed69c35d1793ea25133690993f3f211dfb3dd10d73cae",
+        "src/client/pointer-lock.ts": "2f9e486c341cd0ae9b48f2a7ea8b7a17eae74f48852a339e5018bfe64a0bfcb5",
+        "src/client/portrait-cache.ts": "444254808028e41af2413bad9cb66e6e87e307970f0988fbabdf07577f587ed1",
+        "src/client/rally-visual.ts": "f42e13cc016131c956a73672fce1c1201eed36e645313e9a5f74a91dffa5ff11",
+        "src/client/relations.ts": "6cb20798d4b4b4f81e7356b84a3359e61c7b7e56c9b0dcaaf3f49f1df694b4bd",
+        "src/client/research-controls.ts": "c058936dda75016131871f037abbef4f61b49374b06eb8cafd7a3197f72cad2d",
+        "src/client/resource-panel.ts": "85433a9adade7553094bcbb1b7a26178a84c8096d7ae0ae9a9f6e8cc01ff4f76",
+        "src/client/resources.ts": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97",
+        "src/client/room-browser-model.ts": "1c6f0983306e1b8d18759fe9e6c631e455523240a17fc7e024c09e5daa997f72",
+        "src/client/room-route.ts": "740562f49a294cdec5dd4bcfb64d326f4bd3d59a86ee90e5b09412ab6e7d01a3",
+        "src/client/room-setup-session.ts": "12e1860d9f1cb18a6a2508fbc2af6bcd13cbb6e235ce8a6d657f447b8ae8db43",
+        "src/client/room-view-state.ts": "212ec324fa8a6d15194398b8c208b794de55c0980d9e4290cf1d6036b833e596",
+        "src/client/selection-controls.ts": "26fb4fdffee9153d41a4bc53aa4e189cbb58af1fb2bb266266154a93bbd1625a",
+        "src/client/ship-boarding-controls.ts": "d8e2aa47eb2760b2e026fecf07bd8a7b11cb3cfd16947faa29295b51e036d9bf",
+        "src/client/ship-gangway-visual.ts": "4382adaee18bb02aed321012415f03077125ea1c1f7c111ef3125a0c84cd1332",
+        "src/client/ship-wakes.ts": "6de6cfb98710450b34a648fc233ae88dbca66bba0b66fc31d7d75b48ab6acd24",
+        "src/client/sound-cues.ts": "144d7375d62ac1f46234f4e6f5a96280f5d4063e5ccbc100da8552376336b07c",
+        "src/client/sound-packs.ts": "a58594ac8e113d73e20b8eaf02f511346850aa4ac1169b223610ee015d937dca",
+        "src/client/sound-settings.ts": "78200501a42ce42707c0dbadb6017d0191678053ebdc2506a7ae52ac78439886",
+        "src/client/sound.ts": "34cb42fd40b088ccdede777559afb54a8310e23fbd0376153c0feeff42bfa18c",
+        "src/client/status-presentation.ts": "8b5cc0a454aebdf5ae7da44e9f9a2ac1e7248c2fe849b2db4b96236361e320b0",
+        "src/client/story-renderer.ts": "c8d7f102c96d750e1c0a236736db428464c5bfb9e0cd06365bb225595a2be7fa",
+        "src/client/terrain-art.ts": "e5bcbac4857bdd538c4d2115523c9aa9b967bfd5bfa166fc5ff6481dcc6048c1",
+        "src/client/terrain-materials.ts": "4b355122c24d198a6c8f5ad070a158774c7c34273396e0c438eff1f4e3ec89ea",
+        "src/client/terrain-texture.ts": "52bdcd919baa02e7a30d5b7707f563255c34b85ddfea4fe2949007dd1351b535",
+        "src/client/tooltips.ts": "cf4dafb2ab922a190ed8ae6febb5e0cb088244ed3e9b6b06a88d496ac0d8681f",
+        "src/client/training-queue.ts": "82818eeaf07631833b0bc2e2863927d13bb1eb5ac897b3bb506bc05ce126e363",
+        "src/client/unit-animation.ts": "5fde1f383e25817236c700ace28f3076628cf7ac30e933a16d110bc2616092c3",
+        "src/client/unit-art.ts": "e6b7dd075c637785132d2a91f243a736fa19d13d9a0df69241a54116a45a4751",
+        "src/client/unit-facing.ts": "64bafcd8ed64e71b76d01c30d85b1d8e9a55c5314a07c948f8e9ad5358506105",
+        "src/client/unit-hover-cursor.ts": "e4ad7fcea5a38108c482197ea347236cbec1b3ff984dc5fd615a749b502083d3",
+        "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6",
+        "src/client/unit-motion.ts": "d1417c5359cee0804f51de689d90b201c02ea5c80f28f8524bfbf2793c47e1a6",
+        "src/client/unit-sheet.ts": "e1cdba4f08f5fd2bfd16e001cd343c605c9a244cb2da448568aee8f9a38860d8",
+        "src/client/user-profile.ts": "a9057e5185bbaa8615c94e9a2244d1bf5ae901e2e359a9f2adf0dca9249b386b",
+        "src/client/veteran-controls.ts": "050d298454a9fb74cbdf7ad9c11ca9d94a74c5c8a7762fb858714d46406b5318",
+        "src/client/virtual-ui.ts": "0a516a93a5e80ce304dcfe32b0edef776bb8fb9c9156f2660752b2c1190ab6b0",
+        "src/client/warfare-effects.ts": "ed1dd69688c9284033c8a85c1c508fef76c3e3a168c7dbd791562ae8042f82e3",
+        "src/client/water-art.ts": "9b4cdb70ca3b12e8663e61a0832757e69ce42986d4801eaa3de0996008c289c1",
+        "src/client/water-field.ts": "7f4aa06fe887e7fae17fe940408491a31b8b1c550b9e863ec0be566c27fc245c",
+        "src/client/weapon-condition.ts": "ae3896bd9951d746264ee6d97d3893e685c332b112391aa9b8be20db58269f86",
+        "src/client/world-presentation.ts": "4d9b6ae572f740d4fce6049b6d9b77fe3cbc8d8e36a584c37779a1b8aee100f7",
+        "src/client/world-renderer.ts": "05f1f6a5e3fd95ebe8446a3a135b17c1d04cdc25502b15619cef1f8c196d4d1e",
+        "src/client/world3d/batches.ts": "790c219b2d9d590cf51c7881b837b97587f8bcc4a9a67d4e7e41b3c271f8590e",
+        "src/client/world3d/crew-pose.ts": "c057b0bcfd1e47d2b027111330043dc34f131af593fb22fc24068e31745e687f",
+        "src/client/world3d/flight-pose.ts": "496e64effe56c2cf19b5c7768f3333d7208e73d2da71757cb4869375297c65a1",
+        "src/client/world3d/model-library.ts": "572bedeeb489af6ad8080f47a1e580cbb1398451f62d01b8ca91dc3557505b0a",
+        "src/client/world3d/model-portraits.ts": "0ecf433c697cca7402d1e352596e40513e73d7fcb876587ab266ae439622f445",
+        "src/client/world3d/painted-hit.ts": "c19b1dd815cee9404f72d9c4b0866e2a6da1ead560fce09088042a9b0f5fc364",
+        "src/client/world3d/projection.ts": "17dd588f2c07ecc6d9ab4b1bbb255068a2d8eb89e383cf11b32641df908d3ec2",
+        "src/client/world3d/sail-rig.ts": "68a03f39854385ece38bd723b1a3088cd2e021a4c61a66ef759c44a1bdf8804f",
+        "src/client/world3d/selection-markers.ts": "5fee0c25157f1ab13f3d6bc534eaaeb1da8ee9b9df39db96811fd1de8d32fd49",
+        "src/client/world3d/water.ts": "99f4d8500e18e392b0bfaf5875e4fc86d965261d26beebdb64551dc2a642c5e6",
+        "src/client/world3d/world-layer.ts": "94a0f7ceab09b9cedf498c06288e8a427a79c5345e2f22e2f2934ac89f2447fd",
+        "src/recorder/camera.ts": "1363d93eed83cc52c13be06a9ac83b8ff885fa579b286abb689f0cde4cb532c5",
+        "src/recorder/cli.ts": "69c5f52c637a6b388967f72b9670a4a09f7ecff8bf663d50a0921d16a11db62f",
+        "src/recorder/formation.ts": "0ec04df3c6e669fe493062a72184af762d479b7b416633a241d94bad61e277fc",
+        "src/recorder/gifenc.d.ts": "e409b5f1d24f6a19d5067be3c4dcf106e93919498c7ea772beb8d50274e150e0",
+        "src/recorder/options.ts": "cf124f37fe9bed17416580b4d9e2850be56c3df7cbb7f1c5a46f48b6da6eee15",
+        "src/recorder/previews/equipment.ts": "9f6aa7adf240bb7784e65ddd4a5221de2d8187ccfb945acf157ddca713976b11",
+        "src/recorder/record.ts": "393e056e7000707ee158a59811f3225872e7bab3b8a4df7ad980b5eec41a47fe",
+        "src/recorder/scene.ts": "7dbf3ecab740b0a5591f87966bca772ce82446fecac0336ee7a37160ae0a6a88",
+        "src/recorder/scenes/ashen-march.ts": "b7d51a9d36c81c9c8f4f75300536d55f3ba9f809bfec2266ac04fd4bc2e3bf40",
+        "src/recorder/scenes/boarding-rescue.ts": "e7a1de7ca083bced7791af3a40fbd1a21a9944f9d1b50ee6b15f9a1a6e5c6af8",
+        "src/recorder/scenes/cavalry-charge.ts": "1edafce7e52b684361c5378fa9fea56544be7e66412eca91bc1f21cf524ea71d",
+        "src/recorder/scenes/cavalry-flank.ts": "52d9a95370f9a71b89f164a66c36b39688939f82793f638e78c2c2836ce077a0",
+        "src/recorder/scenes/coast-landing.ts": "e58af641cf723b3ef6447dc077170e75c8368236a99b0e8f614a046f920c9ebd",
+        "src/recorder/scenes/crew-rendezvous.ts": "7be3fda5fcf5c53365fa12715c60a334db44949e67b5097a307a37423fe0c5a8",
+        "src/recorder/scenes/deck-battle.ts": "2fafc66195e41e00bc4d86cb2c8f6c5b05e1f163ba5aaa688c3f17fe1486ce34",
+        "src/recorder/scenes/index.ts": "2f8b6e6cf77073005e64d29eb9a5a5075b97553c69239be6751d561c0d5a0a5f",
+        "src/recorder/scenes/infantry-clash.ts": "3455f3089b4ceeb1b153537634990127a5ac85233e70f2db6a9c76c8cc0c9df4",
+        "src/recorder/scenes/ship-webgl.ts": "19ba0fb4001116df044a32ff0303fe0b96ef11a88bfab7f1bb45ffbd76c8f7b9",
+        "src/recorder/sinks.ts": "605c896b6af708d6aabffc4828417e47178118e30fd3186544653d0865e28194",
+        "src/recorder/story-camera.ts": "b435616823804111f70433050bc629e53c82a6cc95c03688c405454473eba938",
+        "src/sdk/benchmark.ts": "938f5f74f0cbe33fdb398f8bd97fc5d4a4cb3ddab9f033ccba0d5ba42bf6bdf7",
+        "src/sdk/benchmark/core-worker.ts": "858e408eb20a65872eafda10ce86b48c87b3e2e3b9830aae37628a945787ed59",
+        "src/sdk/benchmark/core.ts": "6dd2a4ed5a5d19f43ec2370a5107c190f2fd413f6a895db4835374f1811533e0",
+        "src/sdk/benchmark/manifest.ts": "308016b640d282ab6a2f0231efbb09ad12e9231f329b4f439c626a2f97bada7b",
+        "src/sdk/benchmark/parallel-child.ts": "d2026c975e912855101616b971750f9e471067849ae057cf24963ba40dbf8ea6",
+        "src/sdk/benchmark/parallel.ts": "c7843d1e0b2504e9728eeace8df83db150bac7c4184d8d5dc9fdf3b4482f3cfd",
+        "src/sdk/benchmark/persistent-worker-fixture.ts": "46cf74299b31117989294e2ab3f185e94aa9ba9116b04d0c882398b65999b8cd",
+        "src/sdk/browser.ts": "22043852374bfedfcbbec3a80491bf1c805ae0858c690e5d8233f69ef1bbdda1",
+        "src/sdk/client.ts": "d40b10b002ed554cd40687a9fa0ac5040e95e800dc62136ae48d96a65d963133",
+        "src/sdk/commands/frame.ts": "e611072ad0fd5f879c76aa7ea7ad1eb6d062573aec1594ae7bb42e125d474cf2",
+        "src/sdk/commands/intent.ts": "bb6f41a6cc92fb108c79f8e06d76e9530a66874af9e36e9b0924bc1384c63cc6",
+        "src/sdk/external-agent-room-runner.ts": "143fa1a9008547786d5bb7bc45cd38441dc99ddf0ee3d752819e4aa248f5ec6b",
+        "src/sdk/game-runner.ts": "dbf83422d4bc203de7114d96d4fdbc8b49188616f9eb255c77fcfef9c6df0ef1",
+        "src/sdk/map-analysis.ts": "54d2bb016e7f5fff8c729cfd1a1613ddf99828f0225243ad7e6f817a4180ea42",
+        "src/sdk/match-report.ts": "7baa60b35dae1e4dd069763b1468b7abf75e71ed1f32a9cc869d9f50670e6e6c",
+        "src/sdk/playtest.ts": "47d10ec43c2e8a6d8697f2320f389426c0d25194e1c1f72a16420e424ee0153c",
+        "src/sdk/scenarios/combat.ts": "f3d6f9180fb6382b231fda6cf56a2acd78cf9e6f27081c2eec31366e02db0053",
+        "src/sdk/scene.ts": "0fcdc3aca5b56c146a461c28e729530db90d4028142991dc73982ad5fa8f1112",
+        "src/sdk/snapshot-query.ts": "1c7f75e65d8324dec5048e5ae4df4c07e30dc9fd6e6c89145db41671beb9e025",
+        "src/sdk/snapshot/query.ts": "a9da30710ad8516fae3ce9719931c85b827322b533a1d2818e2a2283eae1afd6",
+        "src/sdk/snapshot/range-index.ts": "a8b9f1a7665622baf38694226576fbcef4351ef775670f9ff4a0393cd47dfdf1",
+        "src/sdk/winner-mode.ts": "26251648e35ca43e6d7b36642a7531df1adadb68c4c34b29456febba2f7ade38",
+        "src/server/benchmark-dashboard-api.ts": "b2100a816d666318b2e5b38a87216c09abccd09e1d667efd870cdcf5583b9d95",
+        "src/server/index.ts": "dd71e455407ab572825777895c3457b435ba2036b029817fe2fa32a89b3a9fdb",
+        "src/server/lockstep-room.ts": "92c986281240e411d67f115fd2d13dc4cc54bfee50c4ca068d45e3ae9a771c30",
+        "src/server/network.ts": "50790139cc7fba897fb16c5cff1d6ce4be6aec0a7332fdc05686ba9b74105dfe",
+        "src/server/room-history.ts": "9946afcbd298bfdc3c5d17c1d37381e44cfc7ef2f5e15edd1a3220d9cf261d80",
+        "src/server/room-host.ts": "f9ec98765824e1a170939e0d98ef3990d444357a92b16292fd219a5f60eb2044",
+        "src/server/room-net.ts": "5b8aa8936b8a159b5ba840f6ab93ee2f90be78780d36479a097d89b893a84ef7",
+        "src/server/ws-routes.ts": "1ddc50fc11c5212e2c5fdab0ddb3e6ba48f575198bd6ebb17169ecd033421768",
+        "src/shared/ability-cooldowns.ts": "5e7ccee838e4cb1eb2fdd4993a13202367e0e873d95f86494ccfb399943218a9",
+        "src/shared/aiming.ts": "b32b5d8c010732b91d3d16c4178f666bf75edc1b80f4f382bd3f8d9ad85cc880",
+        "src/shared/archipelago-map.ts": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+        "src/shared/attack-presentation.ts": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+        "src/shared/autocast.ts": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+        "src/shared/build-placement.ts": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+        "src/shared/camps.ts": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+        "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+        "src/shared/chat.ts": "fa0124ca978c67c0d0200dd9cc3c0bc2192b99d0edc500bb48540a07a2f21a63",
+        "src/shared/combat-capabilities.ts": "18229c99f1bb6b3b4bbc5a31680008edd1b6d2a214bf7b02210e3947c24b6095",
+        "src/shared/combat-geometry.ts": "07444795a9fa120c74a056f1ccf2b1de22789739b0750de42eaf79f4b098a8b4",
+        "src/shared/combat-save-upgrade.ts": "eba692c658d150200033ac11582f4bd6cae0beef6d70dcfadfde2df45891dd6c",
+        "src/shared/combat-target.ts": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+        "src/shared/command-schema.ts": "40c2e421da152a615157e39e7c3c55188557d3256cd398b256aa9517b279aabf",
+        "src/shared/connected-decks.ts": "d4b44531960d043f453a0063bdfb1e456f5359989b378f108151f06ee2f450fb",
+        "src/shared/construction.ts": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+        "src/shared/crew-rendezvous.ts": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+        "src/shared/damage-reduction.ts": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+        "src/shared/damage-types.ts": "bfa6343a0eea33c669a718c1c522e34cc7ffbacb416a9b3c3536dad79c3608bc",
+        "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+        "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+        "src/shared/decks.ts": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+        "src/shared/deployment-base.ts": "7adf1a4ea5ec581f861ab962e163af574456fa1640158120085f2ce280345587",
+        "src/shared/det-math.ts": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+        "src/shared/environment/ecology.ts": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+        "src/shared/environment/fields.ts": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644",
+        "src/shared/environment/noise.ts": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+        "src/shared/equipment.ts": "3aae45fe1724de7e6cb003cbc1df11ca254a918bf002c71fd7474599f83d8f75",
+        "src/shared/estuary-map.ts": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+        "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+        "src/shared/generated/ship-geometry.json": "a9ad18f90d139fb1f0c5f5ffe98a03884ee166e0ccc4d7c90590acba95d0a0a1",
+        "src/shared/generated/ship-navigation-masks-64.json": "fcebf3558080a5d4206b40bba3e8cddb70e86aee9aefdaf9d41bd5f7b4681822",
+        "src/shared/generated/ship-navigation-masks.json": "fc5e54c8a4cae670c8a0c95d471d15c3c176ff03c55036b0b30bfe9f6ec1ede2",
+        "src/shared/grid-flood.ts": "5c6043d3dc1744007b97799c85f3eac08e0b664750d213411e9feffd924c7715",
+        "src/shared/healing.ts": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+        "src/shared/hypot.ts": "127dc80c93dc99a3374df4407ade7a63f3c7473ea8bbafcd278fab0c0ed578b1",
+        "src/shared/item-index.ts": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+        "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+        "src/shared/item-surfaces.ts": "495028bac93bd2932a1b3cb8bc6ed01bcaec84a4521c983007b193a6ee1430e0",
+        "src/shared/map-dressing.ts": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+        "src/shared/map-ids.ts": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+        "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+        "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+        "src/shared/mining-site.ts": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+        "src/shared/mining.ts": "d5564aa93f3c16318326d239d2a1794a6aee0d0d596cdbf6d42f2f5f93a399a0",
+        "src/shared/naval.ts": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+        "src/shared/navigation-masks.ts": "7b59b7137a93a66a33c8cc1fe7db9b15451143e8854f7629712f223cec6d01a3",
+        "src/shared/navigation-math.ts": "b5cb56b95daf9a7d74d3b92577e28892ae112d13d15d1e9e1998b415d28ead2b",
+        "src/shared/net/checkpoint-semantics.ts": "38b3ff4a08318cf583a36da71cf3a4e5f0858c97c00e90d4699182da36448180",
+        "src/shared/net/codec.ts": "7b888d40c62010a02c4356065da38a258f1cc34a46b8359d4b00bf90335cb768",
+        "src/shared/net/frame-buffer.ts": "5823a3e015fc20612c32f50012c9a3b93cccca86a2275eb1ae0adcb814bb57e6",
+        "src/shared/net/types.ts": "016b19bab2080ce51bbb4d01363645f52be77af726e94739342552259c082618",
+        "src/shared/obstacle.ts": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+        "src/shared/physical-body.ts": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+        "src/shared/player-colors.ts": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+        "src/shared/presentation.ts": "94b0030646ad646d9c5b787e0fcae9b87e4cc55ddb84a4f0b19dd47bdcbe23a6",
+        "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49",
+        "src/shared/purchase.ts": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+        "src/shared/push.ts": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+        "src/shared/replay.ts": "73ce64320597ab60bbd192698c7420dc9634795868fa92aa567944348567688b",
+        "src/shared/room-lifecycle.ts": "ba995af814b8b4ecf088ba438dee903200201441dd2d5c0157fa661f9031569d",
+        "src/shared/room-schema.ts": "d63d847cd0c00db19b7f8eafdcf39d6a650001e52dd0e1abc5db3b8c80b6f1d4",
+        "src/shared/room-slot-counts.ts": "4f0790dcfe6cf67f77eb9e5aeba064a8ce18142bcc52906afe2e5c03fdb38b7e",
+        "src/shared/rooms.ts": "d7199dcc142ea40c20c8cfc8b601e1171721dd2c7f5a37e1945a5f7be9e56690",
+        "src/shared/sailing.ts": "c34ba22e59728cbacfe49e425d9aa3fd707d3518117acaaf7054d0e17ce2270d",
+        "src/shared/savegame.ts": "73575c3203c5a47a0082cc822d3dff1957a1364970f60b6c042bfdd596d48caf",
+        "src/shared/ship-avoidance.ts": "fc7decf9246b3e6a143b78c4492f9c7e835231ecaac9262e1f291b4701738a0e",
+        "src/shared/ship-cabin-quota.ts": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+        "src/shared/ship-cabin.ts": "fa363520cd78534655ca36954d50aff62c36136a8a074cde39c181715ffcbdb9",
+        "src/shared/ship-collisions.ts": "81013c83e051792651211ebe5dc3a6eb868672d938d59903fbb144f85022ba21",
+        "src/shared/ship-defense.ts": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762",
+        "src/shared/ship-equipment.ts": "16b0fb7d3f57ac126f5bb8bb8a88ec47e50760fd42e6f63de98cc977711c3c32",
+        "src/shared/ship-fire-control.ts": "ea9b52dd7fa89825064e94add643c867580f1526daa5d3cbc5fcd8ac5c9b7585",
+        "src/shared/ship-gangway.ts": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+        "src/shared/ship-geometry.ts": "468fb007589bdfeb7223062f8de554265021013ebec88978dd7629af2af8d99f",
+        "src/shared/ship-guidance.ts": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+        "src/shared/ship-handling.ts": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+        "src/shared/ship-launch.ts": "91e3dab0d4f51136cdb0689f79ad84215a59e48c332b7c25a82902f78391bc47",
+        "src/shared/ship-motion.ts": "d12008d71681bfc456aa2e06a791fa7a172a43587a15e0a54d0c212eee797e72",
+        "src/shared/ship-navigation-potential.ts": "dd4f5a366637ce25657acc8a225639c6e23742d6fd81c229371e121230315fef",
+        "src/shared/ship-navigation.ts": "c1255fb83dafabf4cd031c7885866ac3944417c18df1b7b4369e9a3cc2cb772f",
+        "src/shared/ship-planning-budget.ts": "1ecabca1169965605e0960d74fbd525161012ea72d569ae5559c12fa6636d0ed",
+        "src/shared/ship-planning-job.ts": "34f9ea62da5182351c7fdef4cd581f1631404999e689ca25c8801ea63edd3b6f",
+        "src/shared/ship-pursuit.ts": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+        "src/shared/ship-queued-course.ts": "46faaccc797472158f92a9d5e4f7916b65b8157511e0077e8605ac9ea5c11737",
+        "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+        "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+        "src/shared/sim.ts": "bcc9670441f78f0d8e070bc953910721d7b41678a017224aa216d52d8b3751bf",
+        "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+        "src/shared/sim/checksum.ts": "d8733737efa18ab7d914c3c36b987807cd889342b4bd33a4f7aa1f2839c336ed",
+        "src/shared/sim/command-frame-runtime.ts": "6496d692982acc41f1b5e42fc22dd052e8430815163067712bdbf93163de7ad4",
+        "src/shared/sim/command-validation.ts": "dc020acef9badb8b5afdc00976620c6713041df0418c27bb67a7dcba932dc27a",
+        "src/shared/sim/engine.ts": "0a13689009409b817196e4b4f7a8c385f409c3e56508ffb0b93fb43d172820f3",
+        "src/shared/sim/frame.ts": "e0fa92deef57423c7c9a2d501aea3ca4913eed67790ee09481c64713f9c77472",
+        "src/shared/spark-fire.ts": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+        "src/shared/support-surface.ts": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+        "src/shared/terrain.ts": "2e232df1aaf5913434ba62f41070d3b7c53bd838c0b7ca4225d65df752eef0de",
+        "src/shared/test-fixtures/near-coincident-hull.json": "44fb06e8195405b789b3196f6f02426984cfb60aadc592b724ca11170d44a4a5",
+        "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+        "src/shared/transport-role.ts": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+        "src/shared/types.ts": "7cc4957767d4f5448e74d5aac56e8235ea6c79bee511bfcd1ef3e2e3535623fc",
+        "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+        "src/shared/unit-lookup.ts": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+        "src/shared/unit-repair.ts": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+        "src/shared/unit-targeting.ts": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+        "src/shared/unit-value.ts": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+        "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+        "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+        "src/shared/veteran-stats.ts": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+        "src/shared/weapons.ts": "193cd5eecd5b53e1692363d4fea5b22984d4d9f8c0f70b8c45c6c7b852d213e4",
+        "src/shared/wind-field.ts": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c",
+        "src/story/campaign.ts": "2c63427461ab269f99b4059680f713a06200d85a85959a10a92617a9832f48fb",
+        "src/story/cast.ts": "901c84ebd009ac7c49675b2ce16d8174c8458eb6f818321f304446b892424511",
+        "src/story/director.ts": "09aa65f661912bd647ef04802665521ff00d96e839f1642be8a4dca9452da8de",
+        "src/story/events.ts": "d91edaaba31e623af1fe62f5596f0309bd98df81949bbfb2ef24849e5317e22b",
+        "src/story/index.ts": "c2779a8b2ff281bacd8399d57c6120f7b4c5fb6765c5b09d641ba252de3dafc2",
+        "src/story/kernel.ts": "cf42fbaa1b5e53605f8c8b535d9b05b50211cd45dc54966d919209f15bffc15d",
+        "src/story/ops.ts": "f8f1aa1fe348b40839d3fe2681f022f7b4ce21396d1a26ab4f029c62e13ff16c",
+        "src/story/powers.ts": "cd74a4d89bb100ec59bc40fd463280504b843bf05f90b7c811598c938a2a9f32",
+        "src/story/region.ts": "0b2e5f3a45f9f5f78f81ef1d5ad7519e487061d6b4aa2929fdc701ddd6280064",
+        "src/story/rpg.ts": "b6d9299ce2ec66554da4c1bd6867c5a4e1d7df1075f5319ede8f71f4314f292c",
+        "src/story/stage.ts": "aba87d577f2a257d7820dfa650faa24f195a1a099e48180e94a9e76f7fccde4c",
+        "src/story/time.ts": "26a5d36abdc48d5f8174c0370bbde7c7c69f31e7b2a3b1e15458f56444c43921",
+        "src/story/watch.ts": "bf13eea03c754ef58d7125e407a78c7aa7caf328da5b0fff6d393ac3385a4703",
+        "src/story/world.ts": "2598653b16f81a5581ab456c999e13756232ed787b44ac9316e272280565d8f3",
+        "src/vite-env.d.ts": "dafff2ed8faa60bcaebec1d9610d38d2ea88b58949f82f9783dd099fddb76b69"
+      },
+      "driverSha256": "e3a56b3d2063e1fd857f50278e0ec7a9575b9ac86032c80667a69ccab9db376f",
+      "nodeVersion": "v20.20.2",
+      "environment": {
+        "SKETCH_RTS_BASE_PATH": "/sketch-rts/",
+        "VITE_SKETCH_RTS_BASE_PATH": "/sketch-rts/"
+      }
+    },
+    "sourceInputsUnchangedThroughRun": true,
+    "integratedActiveUnitTicks": 1872729,
+    "peakUnits": 73,
+    "commandCount": 2950,
+    "instrumentedCpuMs": 8247.3,
+    "instrumentedWallMs": 4859.262659999999,
+    "exactFinalCombinedStateSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1"
+  },
+  "comparison": {
+    "rowCount": 61,
+    "allRowsEqual": true,
+    "commandsEqual": true,
+    "finalCombinedEqual": true,
+    "integratedActiveUnitTicksEqual": true,
+    "peakUnitsEqual": true,
+    "baselineCpuMs": 11220.018,
+    "newCpuMs": 8247.3,
+    "baselineWallMs": 7242.246211,
+    "newWallMs": 4859.262659999999,
+    "finalCombinedSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1",
+    "commandCount": 2950,
+    "unitTicks": 1872729,
+    "peakUnits": 73
+  },
+  "singlePairDiagnosticCpuReductionPercent": 26.494770329245465,
+  "timingLimits": "Instrumented timings are a single diagnostic pair, not repeated statistical measurements. Vitest case durations are wall time, not CPU readings; unchanged three-map assertions provide CI budget validation.",
+  "identicalCheckpoints": [
+    {
+      "iteration": 0,
+      "tick": 0,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "7b190f8a",
+      "exactGameStateSha256": "d8e24129ad4ba5ffad4e98948491b37f270f25c636d5bf8bc4918830b91875bc",
+      "exactAiRuntimeSha256": "d5b40ab2540a30d868efa52af25a5307f23ce3b282178e0a93c266c4d91e7715",
+      "commandsThroughIterationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "commandCount": 0,
+      "units": 6,
+      "owners": {
+        "player": {
+          "workers": 3,
+          "army": 0,
+          "armyHp": 0,
+          "orders": {},
+          "buildings": 1,
+          "skills": {}
+        },
+        "enemy": {
+          "workers": 3,
+          "army": 0,
+          "armyHp": 0,
+          "orders": {},
+          "buildings": 1,
+          "skills": {}
+        }
+      }
+    },
+    {
+      "iteration": 600,
+      "tick": 600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "fd475864",
+      "exactGameStateSha256": "5f77d1d50d28a3097f4a2a62df24d0765a3cff810c9801ff65a514d5e6d9a1c8",
+      "exactAiRuntimeSha256": "b16789a729fee9969ac58b9e314119caae250b23749a616da332afe4e5eebbce",
+      "commandsThroughIterationSha256": "4ea388adb18ae713cf82abb95d0d04b83e464512327beae5ab94895b1d02af12",
+      "commandCount": 25,
+      "units": 12,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 0,
+          "armyHp": 0,
+          "orders": {},
+          "buildings": 3,
+          "skills": {}
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 0,
+          "armyHp": 0,
+          "orders": {},
+          "buildings": 3,
+          "skills": {}
+        }
+      }
+    },
+    {
+      "iteration": 1200,
+      "tick": 1200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "931d1cc2",
+      "exactGameStateSha256": "88d880f17485b2022f61e8841dd627b2163b478d6dce496fdca249e72578413c",
+      "exactAiRuntimeSha256": "9d187478285e9d2e398950d40829c6336a44db96d97596ba3fa670263b9a35a7",
+      "commandsThroughIterationSha256": "875e6b2e09ad9af7b8bbd359006354f70c919dd70dddb7eebcc9f8cd099c48fa",
+      "commandCount": 29,
+      "units": 16,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 2,
+          "armyHp": 290,
+          "orders": {
+            "idle": 2
+          },
+          "buildings": 3,
+          "skills": {
+            "none": 2
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 2,
+          "armyHp": 214,
+          "orders": {
+            "idle": 2
+          },
+          "buildings": 3,
+          "skills": {
+            "none": 2
+          }
+        }
+      }
+    },
+    {
+      "iteration": 1800,
+      "tick": 1800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3c4ba05c",
+      "exactGameStateSha256": "a733de1a3923fde920b3c150d168752229f3f6693a347782bbd02b2f6627cbbd",
+      "exactAiRuntimeSha256": "480a28089a6a7f90a964c8e7a6f3f97520c9060e3eb2def16719e7a4abafe40e",
+      "commandsThroughIterationSha256": "16a0c820e40fc980cabbb7a9cd197a04ba9970b4535abea9b39a335de6311173",
+      "commandCount": 34,
+      "units": 17,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 3,
+          "armyHp": 420,
+          "orders": {
+            "idle": 3
+          },
+          "buildings": 4,
+          "skills": {
+            "none": 3
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 2,
+          "armyHp": 214,
+          "orders": {
+            "idle": 2
+          },
+          "buildings": 4,
+          "skills": {
+            "none": 2
+          }
+        }
+      }
+    },
+    {
+      "iteration": 2400,
+      "tick": 2400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "8f19576b",
+      "exactGameStateSha256": "0b162e38d3e3a13bb1724c899233e2e541da5feb2441def760c30a42aafda8a3",
+      "exactAiRuntimeSha256": "627b9a9a60580fb35911ae423f99159387aac041337cac86bc0bb805b05d219e",
+      "commandsThroughIterationSha256": "987ade6d04c1b38e2d82759c18d706fa189d9fe3da5dbdcedf167cd99443ae48",
+      "commandCount": 39,
+      "units": 18,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 3,
+          "armyHp": 420,
+          "orders": {
+            "idle": 3
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 3
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 3,
+          "armyHp": 332,
+          "orders": {
+            "idle": 3
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 3
+          }
+        }
+      }
+    },
+    {
+      "iteration": 3000,
+      "tick": 3000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "aac009e2",
+      "exactGameStateSha256": "461810fa72e550bee1ebcf20eba463a351921bc2fa036d245838aa802977e3ef",
+      "exactAiRuntimeSha256": "d8c8f528127fb7fa73b6dab0e12af7d7a4b549482fd793cf109284a7c08cd02d",
+      "commandsThroughIterationSha256": "b78cf9bda271087164712c119a3be95eeb1fa0f4f2076887e0c837c199b447e2",
+      "commandCount": 43,
+      "units": 21,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 5,
+          "armyHp": 695,
+          "orders": {
+            "idle": 5
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 5
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 4,
+          "armyHp": 428,
+          "orders": {
+            "idle": 4
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 4
+          }
+        }
+      }
+    },
+    {
+      "iteration": 3600,
+      "tick": 3600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "86ec9143",
+      "exactGameStateSha256": "75773cbb6c0de9b6d8ca87860588fb8b5d5eebe25dc36217326218d8781e9d8d",
+      "exactAiRuntimeSha256": "c0be643090169bbcdb3735ebfbc3ecd0eae383ebc946fc99065bb2dfff50ffa7",
+      "commandsThroughIterationSha256": "9799b88b343f160955e8a46ac0e325b384fc7e8e1e80949634b6af98e77ef017",
+      "commandCount": 52,
+      "units": 25,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 985,
+          "orders": {
+            "attackMove": 7
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 7
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 6,
+          "armyHp": 598,
+          "orders": {
+            "attackMove": 6
+          },
+          "buildings": 5,
+          "skills": {
+            "none": 6
+          }
+        }
+      }
+    },
+    {
+      "iteration": 4200,
+      "tick": 4200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "08d60154",
+      "exactGameStateSha256": "30396ba01c95c174bb1ff37cc3ae388604e4f1e79aaf3bd8a6f94005c9cadc47",
+      "exactAiRuntimeSha256": "6446ce474a48ee0b802d59aaa0eec44cd0dc1209a311e9c00fc3556f3fb70dee",
+      "commandsThroughIterationSha256": "9a294b2067ea3f2d59cd9039701c25b430c91d31d865d9638fa224081977d746",
+      "commandCount": 119,
+      "units": 26,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 929,
+          "orders": {
+            "attack": 7
+          },
+          "buildings": 6,
+          "skills": {
+            "none": 7
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 593,
+          "orders": {
+            "idle": 3,
+            "move": 4
+          },
+          "buildings": 6,
+          "skills": {
+            "none": 7
+          }
+        }
+      }
+    },
+    {
+      "iteration": 4800,
+      "tick": 4800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "792ff4d5",
+      "exactGameStateSha256": "74bec3b12f74544c01e7a0dc84a65076c99e12d0abf552fce1199aefe2142282",
+      "exactAiRuntimeSha256": "6cb048f6ad6814d7f5baa256bf8b69218fffb5472f88e212b67bc28ef05781c0",
+      "commandsThroughIterationSha256": "8bd9cb84aa1fb97812223c8a2b99441758a645f88f19ecba0a9c0812e288a88b",
+      "commandCount": 150,
+      "units": 26,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 984,
+          "orders": {
+            "attack": 5,
+            "move": 2
+          },
+          "buildings": 6,
+          "skills": {
+            "none": 7
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 593,
+          "orders": {
+            "idle": 2,
+            "move": 5
+          },
+          "buildings": 8,
+          "skills": {
+            "none": 7
+          }
+        }
+      }
+    },
+    {
+      "iteration": 5400,
+      "tick": 5400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "6f28ed05",
+      "exactGameStateSha256": "8cccd123a08002304afff43a5e22746038139cc0feae2cc382dc84fc0a61bf6d",
+      "exactAiRuntimeSha256": "4da922caca06ec758925618d1bbd89806db5a667a1fd46b12367ea864ac64404",
+      "commandsThroughIterationSha256": "e4e57d568f9196d580c07c1f3c80a1e1116478c99532db5eeaccb9a1848e1acd",
+      "commandCount": 162,
+      "units": 26,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 984,
+          "orders": {
+            "attack": 7
+          },
+          "buildings": 7,
+          "skills": {
+            "none": 7
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 593,
+          "orders": {
+            "idle": 3,
+            "attackMove": 4
+          },
+          "buildings": 9,
+          "skills": {
+            "none": 7
+          }
+        }
+      }
+    },
+    {
+      "iteration": 6000,
+      "tick": 6000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "da8f462a",
+      "exactGameStateSha256": "ff8d5634f152579f049605d52fdd05061e3fa574f742750c28e4ecf3f8c0819b",
+      "exactAiRuntimeSha256": "d2fb0da256338468f10dc96ba07501519a9a54f1ceec99f8694cff4e050f1f95",
+      "commandsThroughIterationSha256": "e24d326d5f59dd8b932df139cc2eecb3a0464a762ae415bcb0f7298ce68be00e",
+      "commandCount": 181,
+      "units": 27,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 1035,
+          "orders": {
+            "attackMove": 5,
+            "idle": 2,
+            "attack": 1
+          },
+          "buildings": 8,
+          "skills": {
+            "none": 8
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 7,
+          "armyHp": 598,
+          "orders": {
+            "move": 6,
+            "idle": 1
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 7
+          }
+        }
+      }
+    },
+    {
+      "iteration": 6600,
+      "tick": 6600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "82ab7619",
+      "exactGameStateSha256": "3473357680130acbf105e861ad33596475cd42663953ddbd00073a8849067df5",
+      "exactAiRuntimeSha256": "8ebe77fa6df8896b16c3f3613937527a1851e090901fc3671e9fc125f0943f4c",
+      "commandsThroughIterationSha256": "80950ee0304cdac905eba7a665b89144b1c27d32275e825b8817d0c6a406c5c3",
+      "commandCount": 207,
+      "units": 28,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 1007,
+          "orders": {
+            "attackMove": 5,
+            "move": 3
+          },
+          "buildings": 10,
+          "skills": {
+            "none": 8
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 788,
+          "orders": {
+            "attack": 6,
+            "idle": 2
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 8
+          }
+        }
+      }
+    },
+    {
+      "iteration": 7200,
+      "tick": 7200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b8997985",
+      "exactGameStateSha256": "7b734bbefd524f5901df9a35ec32c0ab534e644e20b395e390c4e6d707dacc94",
+      "exactAiRuntimeSha256": "fafe73b4cb57fecbaf36d46a8e93023e6c8f0cc63d29586f79960886b05153e2",
+      "commandsThroughIterationSha256": "7016e31a538d0c4f91da5dfe3da0af41ec3607b53a6c3e8b5471770dba89e4b9",
+      "commandCount": 260,
+      "units": 30,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 978,
+          "orders": {
+            "attack": 8
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 8
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 10,
+          "armyHp": 1013,
+          "orders": {
+            "move": 5,
+            "idle": 1,
+            "attackMove": 1,
+            "attack": 3
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 10
+          }
+        }
+      }
+    },
+    {
+      "iteration": 7800,
+      "tick": 7800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ef56c2d7",
+      "exactGameStateSha256": "cd7094aeec7046773bf8b37a503b19358f113a453b42b75d817699dfabe4e078",
+      "exactAiRuntimeSha256": "897a8cd9540aab98a4e0e9f0bf27d2f120e8fc3ae3f84f2ff82bdeae12ff611e",
+      "commandsThroughIterationSha256": "982997cb8d243aef0641a1ee425b33977ec904c4b43783c78da66390bcdd4239",
+      "commandCount": 308,
+      "units": 32,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 978,
+          "orders": {
+            "idle": 7,
+            "move": 1
+          },
+          "buildings": 12,
+          "skills": {
+            "none": 8
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 12,
+          "armyHp": 1252,
+          "orders": {
+            "move": 8,
+            "attack": 2,
+            "idle": 2
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 12
+          }
+        }
+      }
+    },
+    {
+      "iteration": 8400,
+      "tick": 8400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "272a0447",
+      "exactGameStateSha256": "1b195e5b30c13b4c7efef1f95be684cac5800375d181d71cea1cdd42c2c5fa81",
+      "exactAiRuntimeSha256": "e839d604075b1372b6a4151b1c2df6f2dde58143380bb144016b2cad70a2a53e",
+      "commandsThroughIterationSha256": "7c5602b79f92a4ac3feb535ed6de7ae3d4a818aa71d23fcdc23143db088e7029",
+      "commandCount": 318,
+      "units": 34,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 8,
+          "armyHp": 978,
+          "orders": {
+            "idle": 8
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 8
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 14,
+          "armyHp": 1555,
+          "orders": {
+            "idle": 3,
+            "attackMove": 7,
+            "attack": 3,
+            "move": 1
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 14
+          }
+        }
+      }
+    },
+    {
+      "iteration": 9000,
+      "tick": 9000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d29ff2f3",
+      "exactGameStateSha256": "eec06d22c838129d1dc9be4c630ce86e10f8f16e6bb4e9c2de8f6539460ef1d2",
+      "exactAiRuntimeSha256": "04d3b851c24df8b7d7714b5acad0975e217774ceeb8f60a6802d76c16bf0fe52",
+      "commandsThroughIterationSha256": "780b2e8c357e36c0f37ff3e22d0f15969f43592329e9a2454fac7a74bf37c128",
+      "commandCount": 343,
+      "units": 35,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 9,
+          "armyHp": 1088,
+          "orders": {
+            "idle": 9
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 9
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 14,
+          "armyHp": 1555,
+          "orders": {
+            "attackMove": 14
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 14
+          }
+        }
+      }
+    },
+    {
+      "iteration": 9600,
+      "tick": 9600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "5f135c84",
+      "exactGameStateSha256": "375ecfc8d65d47b1fa3e840f847e4c167ca6ad42b6e964e28dff541b9047e018",
+      "exactAiRuntimeSha256": "0511bb92dd538b303ff257e2e06018c6390f535e9842c1f9c736fe4b5aba66d9",
+      "commandsThroughIterationSha256": "2f03715f49e4e9e603238ba550b77046e8add1891fe3a546d097fdd94a124b55",
+      "commandCount": 357,
+      "units": 39,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 11,
+          "armyHp": 1378,
+          "orders": {
+            "attack": 11
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 11
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 16,
+          "armyHp": 1769,
+          "orders": {
+            "attackMove": 13,
+            "attack": 2,
+            "idle": 1
+          },
+          "buildings": 11,
+          "skills": {
+            "none": 16
+          }
+        }
+      }
+    },
+    {
+      "iteration": 10200,
+      "tick": 10200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "c6ebbfa7",
+      "exactGameStateSha256": "c66a63659c5dbb9af6bdbc3d1c8b7354d492ed88261642f9cce8d1506cbaa722",
+      "exactAiRuntimeSha256": "477790887920dc643468d572d9e6dd32035aaf8768d5ca98256e3c5c05dbe9d0",
+      "commandsThroughIterationSha256": "f91dd0087f987440c224d06f2137fdd831af040f4324f9a5f959fc04577b5404",
+      "commandCount": 388,
+      "units": 42,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 13,
+          "armyHp": 1653,
+          "orders": {
+            "attack": 10,
+            "move": 3
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 13
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 17,
+          "armyHp": 1865,
+          "orders": {
+            "attack": 7,
+            "move": 8,
+            "idle": 2
+          },
+          "buildings": 12,
+          "skills": {
+            "none": 17
+          }
+        }
+      }
+    },
+    {
+      "iteration": 10800,
+      "tick": 10800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f50c4812",
+      "exactGameStateSha256": "1ebd21ab025fd05f08a408775f65ea1ee2f3f0628e3b07272649dcae156e4f62",
+      "exactAiRuntimeSha256": "d920b3acd67299c1f59f7bb774a66073e34867cd020bd08c7a15c182048e4070",
+      "commandsThroughIterationSha256": "30fda5ea0783b70376ead5cbdfd6b1f23feaf275accab6f8c5d279b7727cd05a",
+      "commandCount": 413,
+      "units": 45,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1907,
+          "orders": {
+            "move": 7,
+            "attack": 8
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 18,
+          "armyHp": 1983,
+          "orders": {
+            "attack": 7,
+            "idle": 4,
+            "move": 6,
+            "attackMove": 1
+          },
+          "buildings": 12,
+          "skills": {
+            "none": 18
+          }
+        }
+      }
+    },
+    {
+      "iteration": 11400,
+      "tick": 11400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9b606c38",
+      "exactGameStateSha256": "70d4e6dc790f2f05b249cd52ed50e11e6090b87b33b7a2993b4e86533be49f60",
+      "exactAiRuntimeSha256": "6f9845431d4d5dc96adb4884ffb00f2e02fe576202de8ad4133f140a4afcf36a",
+      "commandsThroughIterationSha256": "fb91b05fd6d14bebdafc799079c97ea775348fc945054aaf1e90081cae84fe66",
+      "commandCount": 436,
+      "units": 49,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 17,
+          "armyHp": 2197,
+          "orders": {
+            "move": 8,
+            "attack": 8,
+            "idle": 1
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 17
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 20,
+          "armyHp": 2244,
+          "orders": {
+            "attack": 19,
+            "move": 1
+          },
+          "buildings": 12,
+          "skills": {
+            "none": 20
+          }
+        }
+      }
+    },
+    {
+      "iteration": 12000,
+      "tick": 12000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "8a938c42",
+      "exactGameStateSha256": "d2cd2cf77ff7c1a25987c12f87cfc0869b479eb4ec2e1a0697d67ae61d02d48c",
+      "exactAiRuntimeSha256": "9561a540a5740f9742eb6408eb4265fe4cc0e4dda7befcd0798166b1357c082a",
+      "commandsThroughIterationSha256": "3cf2bddeaf8bad234969c6ee306dc9d5b290ca5f38977d6f1cacc6f61b108998",
+      "commandCount": 460,
+      "units": 52,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 19,
+          "armyHp": 2472,
+          "orders": {
+            "attack": 12,
+            "move": 5,
+            "idle": 2
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 19
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 21,
+          "armyHp": 2362,
+          "orders": {
+            "attack": 15,
+            "idle": 2,
+            "move": 4
+          },
+          "buildings": 13,
+          "skills": {
+            "none": 21
+          }
+        }
+      }
+    },
+    {
+      "iteration": 12600,
+      "tick": 12600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "6c8799cb",
+      "exactGameStateSha256": "704e79c861bffde70bbc87aa9ec5db966f391e3b0e6c3f277bd219a399d75085",
+      "exactAiRuntimeSha256": "edec9c06693d3c47ac8e1f787b511b7b81d8ec1ec1456e9d1a2d41c7fdeb922c",
+      "commandsThroughIterationSha256": "ea408d47947e1005cf0c049244777a9f36c0602a90eb18f05d78d0d567be00ce",
+      "commandCount": 492,
+      "units": 54,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 21,
+          "armyHp": 2747,
+          "orders": {
+            "move": 8,
+            "attack": 9,
+            "attackMove": 3,
+            "idle": 1
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 21
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 21,
+          "armyHp": 2280,
+          "orders": {
+            "move": 11,
+            "attack": 7,
+            "idle": 3
+          },
+          "buildings": 13,
+          "skills": {
+            "none": 21
+          }
+        }
+      }
+    },
+    {
+      "iteration": 13200,
+      "tick": 13200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f2b9404f",
+      "exactGameStateSha256": "deda8d952705c78006a15ad3121a67adb5bbbf5c9a24756c6d84af54254b93c3",
+      "exactAiRuntimeSha256": "dd89984a1a883c1b7194e9728db311bc28bfa53e5e0b794fa7f699bce547779b",
+      "commandsThroughIterationSha256": "d47f0e641bd019d5dae8c22d1aa6eb7e69cf87bd151365698bb97da21069fa23",
+      "commandCount": 521,
+      "units": 57,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 23,
+          "armyHp": 3037,
+          "orders": {
+            "move": 7,
+            "attack": 16
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 23
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 22,
+          "armyHp": 2398,
+          "orders": {
+            "attack": 19,
+            "idle": 3
+          },
+          "buildings": 13,
+          "skills": {
+            "none": 22
+          }
+        }
+      }
+    },
+    {
+      "iteration": 13800,
+      "tick": 13800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d6c433e1",
+      "exactGameStateSha256": "7f058185c1a24125885e3e1a8d4fc62223c17516fa3b2d22fec2f78caeca548e",
+      "exactAiRuntimeSha256": "40ddd7bd19df95466651f57fe011bc095852bdcfc2bd3f38a2cb26ed5d48fa78",
+      "commandsThroughIterationSha256": "8e2745ea7cddbf63439609696563871783a8942e3fa9a13c7f0528b5dfeaec82",
+      "commandCount": 543,
+      "units": 60,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 24,
+          "armyHp": 3167,
+          "orders": {
+            "move": 13,
+            "idle": 4,
+            "attack": 7
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 24
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 24,
+          "armyHp": 2612,
+          "orders": {
+            "attack": 24
+          },
+          "buildings": 13,
+          "skills": {
+            "none": 24
+          }
+        }
+      }
+    },
+    {
+      "iteration": 14400,
+      "tick": 14400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d2e2cd64",
+      "exactGameStateSha256": "1f8bccff8fcd57c64c8f1d231ad80d648b672e5fae7008ccf25e64894bde9cb4",
+      "exactAiRuntimeSha256": "54be526bb0159d68138a81426f0d129599754e144f094886219770b6c4c506b1",
+      "commandsThroughIterationSha256": "e6752aab59ae63c1917f76a796ed007689a5af776680ecd950491f9c7e36f355",
+      "commandCount": 575,
+      "units": 61,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 25,
+          "armyHp": 3312,
+          "orders": {
+            "attack": 19,
+            "move": 6
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 25
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 24,
+          "armyHp": 2612,
+          "orders": {
+            "move": 13,
+            "attackMove": 6,
+            "attack": 5
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 24
+          }
+        }
+      }
+    },
+    {
+      "iteration": 15000,
+      "tick": 15000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d4e2e220",
+      "exactGameStateSha256": "dc35f5a482110ac341e17a39c5b6a3fee825d0ff62e9adb1d8c217967ededa7f",
+      "exactAiRuntimeSha256": "1620dea5990c50c3ee7bb93d8ec6781a8e43a09b0fe3e6a314adcccf1a194b9c",
+      "commandsThroughIterationSha256": "e990556b834e467c23f0c7b82baf17e888c3b31338ac7ef6f13e87ecdfa231fc",
+      "commandCount": 604,
+      "units": 64,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 27,
+          "armyHp": 3559,
+          "orders": {
+            "move": 21,
+            "attack": 6
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 27
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 25,
+          "armyHp": 2777,
+          "orders": {
+            "move": 11,
+            "attack": 12,
+            "idle": 2
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 25
+          }
+        }
+      }
+    },
+    {
+      "iteration": 15600,
+      "tick": 15600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "10be97b4",
+      "exactGameStateSha256": "9a35fe196cdd4f03024869fb386ed16bd10b43169515bb50077dbe3c7f5d23c0",
+      "exactAiRuntimeSha256": "61ac4938b15fc4da9959be35c188b593fc540232e6944f7d29d0728cf18450f5",
+      "commandsThroughIterationSha256": "9c47eec97d20b3b5d7b0cbfc1c1f92ae8655e7f0be9b907288d7f27d28d32d37",
+      "commandCount": 636,
+      "units": 66,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 28,
+          "armyHp": 3704,
+          "orders": {
+            "move": 13,
+            "attack": 12,
+            "idle": 3
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 28
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 26,
+          "armyHp": 2895,
+          "orders": {
+            "attackMove": 10,
+            "attack": 10,
+            "idle": 4,
+            "move": 2
+          },
+          "buildings": 14,
+          "skills": {
+            "none": 26
+          }
+        }
+      }
+    },
+    {
+      "iteration": 16200,
+      "tick": 16200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "02adf783",
+      "exactGameStateSha256": "2cc59948147146230557c0b0395a57a1c1bb32749ba7eb78f42ad2e1c762bc0c",
+      "exactAiRuntimeSha256": "5931cb3e1339fc39173a37c59ab86b6c296bec9c7ccb18a92c5704b5de4bdddf",
+      "commandsThroughIterationSha256": "ed1255b17928e6572210a613bd1c220f6f0baab88e714ccea7759efeea9c78db",
+      "commandCount": 670,
+      "units": 66,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 27,
+          "armyHp": 3635,
+          "orders": {
+            "move": 2,
+            "attack": 21,
+            "idle": 4
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 27
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 27,
+          "armyHp": 2991,
+          "orders": {
+            "move": 20,
+            "attackMove": 6,
+            "idle": 1
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 27
+          }
+        }
+      }
+    },
+    {
+      "iteration": 16800,
+      "tick": 16800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "5e3852b6",
+      "exactGameStateSha256": "cc0c5d7d3c0306b481647524e94bae9c2cacb1febd7743f32bc73a6a400f3cf9",
+      "exactAiRuntimeSha256": "f94e5664fdbce06b86ef8444688f45a8978b3934c82459e09b127e23260a0944",
+      "commandsThroughIterationSha256": "dd5b9c435b787d5897ac0f2880796b72b48ddd7f69c06ae48944d393e3b9fb11",
+      "commandCount": 698,
+      "units": 69,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 29,
+          "armyHp": 3916,
+          "orders": {
+            "attack": 27,
+            "move": 2
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 29
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 28,
+          "armyHp": 3109,
+          "orders": {
+            "attack": 19,
+            "move": 9
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 28
+          }
+        }
+      }
+    },
+    {
+      "iteration": 17400,
+      "tick": 17400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9fad8214",
+      "exactGameStateSha256": "e912ffef20e35e698d93538c945414f037a5857a5a2a9042158c2f4c9a049ac3",
+      "exactAiRuntimeSha256": "7cac47cd8676050c8b55388328fb08704444d487a280bc672c749982cef7c3d3",
+      "commandsThroughIterationSha256": "9126f8eb3d74a79d23e4feb540ea121d5de32fbf4fb64351714d8fbb1a12c6a1",
+      "commandCount": 727,
+      "units": 71,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 4046,
+          "orders": {
+            "attack": 21,
+            "move": 9
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 30
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 29,
+          "armyHp": 3205,
+          "orders": {
+            "attackMove": 15,
+            "move": 14
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 29
+          }
+        }
+      }
+    },
+    {
+      "iteration": 18000,
+      "tick": 18000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "eeecc087",
+      "exactGameStateSha256": "54e63c14191742c443ff5338e94b89b7070fb6ef755e53cbe75d7a578c735973",
+      "exactAiRuntimeSha256": "625eb8ea8d51a26f1efb90876b9e0f8812b4e0d1faa7b2b035d4c1f24c8b9890",
+      "commandsThroughIterationSha256": "bc2128619b7fbb64cf2a6385db3f303c685c72e881e5c6a0fb95814551c31f4b",
+      "commandCount": 756,
+      "units": 72,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 4126,
+          "orders": {
+            "move": 13,
+            "attack": 12,
+            "idle": 6
+          },
+          "buildings": 15,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 29,
+          "armyHp": 3184,
+          "orders": {
+            "idle": 5,
+            "move": 16,
+            "attack": 8
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 29
+          }
+        }
+      }
+    },
+    {
+      "iteration": 18600,
+      "tick": 18600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "bfeb60f6",
+      "exactGameStateSha256": "1499434a43f2d9ab908c874a587241fcd7ec4746a46b287f1f636780804fae9f",
+      "exactAiRuntimeSha256": "ffdbc9e7cdb4a061160a5a8dd02ab21895b8d9ea2705f57fb818795724ea8419",
+      "commandsThroughIterationSha256": "20bf584f46bbce1b80421615e598b4c033d5a48bdd85b099e8063af912792d9b",
+      "commandCount": 806,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3998,
+          "orders": {
+            "move": 14,
+            "attack": 17
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3266,
+          "orders": {
+            "move": 10,
+            "attack": 15,
+            "attackMove": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 19200,
+      "tick": 19200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "9db596cd",
+      "exactGameStateSha256": "e5645c079eb0682306f86f8c9af2a9628dc088414bb257bcf3fb3becf9a7bda9",
+      "exactAiRuntimeSha256": "8a45146ea9b048d4d7783963bf22d3d87b8791eae255cfdcbdfcf479017bddb8",
+      "commandsThroughIterationSha256": "fc8ec6bb84a383ad4f6dfb3d63ea0bc10112a9afc83baed70c7b68d604e41a9d",
+      "commandCount": 886,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3998,
+          "orders": {
+            "move": 11,
+            "attack": 16,
+            "idle": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3286,
+          "orders": {
+            "move": 7,
+            "attack": 18,
+            "attackMove": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 19800,
+      "tick": 19800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "00b01621",
+      "exactGameStateSha256": "13d6fbcf43d0684f1229a2d69b4a23b95f321901353b2b57cbd8fc975a265d43",
+      "exactAiRuntimeSha256": "d93666672c0dd9fe6ce00614f490971602ee8f5906a5d71c737efafcde10cffa",
+      "commandsThroughIterationSha256": "5eedf4041b3310eea8ab97560176ce5341a7a7d750b692b29191cbc0af5c19ef",
+      "commandCount": 936,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3905,
+          "orders": {
+            "attack": 14,
+            "move": 14,
+            "idle": 2,
+            "attackMove": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3199,
+          "orders": {
+            "attack": 12,
+            "move": 13,
+            "idle": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 20400,
+      "tick": 20400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "53c3ef8c",
+      "exactGameStateSha256": "6bce05c85bed5461033eeb132e5467a28062dd7f87699ea81f5d0a57e04acf92",
+      "exactAiRuntimeSha256": "6126df7a6d3054982e75907c42c11409f9e6f4a490b4546c8e55815a88235311",
+      "commandsThroughIterationSha256": "484d2ef6ef84b502f6fba7c67284465b87e0a49e704d9255146429a772646787",
+      "commandCount": 962,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3905,
+          "orders": {
+            "attack": 15,
+            "move": 14,
+            "attackMove": 1,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3169,
+          "orders": {
+            "attack": 22,
+            "move": 6,
+            "idle": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 21000,
+      "tick": 21000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "08887efe",
+      "exactGameStateSha256": "5d3e75dabfd83f39e5ce119542aa9d0cea9cc12b3e9590f7ff8a7df264088833",
+      "exactAiRuntimeSha256": "cd9af13ca0ea22e165b160a0d4af2e046ece7b857cdd430d124ba11ba1aa9367",
+      "commandsThroughIterationSha256": "0f724f2877813d5915d54db2b9a37006c7504ff0a8c1591f3a4b84b1b29ad812",
+      "commandCount": 990,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3905,
+          "orders": {
+            "move": 14,
+            "attack": 16,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3169,
+          "orders": {
+            "attack": 20,
+            "move": 10
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 21600,
+      "tick": 21600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "c666c06f",
+      "exactGameStateSha256": "cbef310fc4553baa049d8da94403f6f64dc85314b31f700d7b0bd8c3f4a5b1ee",
+      "exactAiRuntimeSha256": "aed36f52e9814d14abcde15278fcdb7d19081d0a4ac00bbeea77ccc529faa436",
+      "commandsThroughIterationSha256": "0b6032c0c7d678b307a2c5c9cf1832c6e41669a4bf95c6896eb29fa5f4cfc3db",
+      "commandCount": 1016,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3905,
+          "orders": {
+            "attack": 24,
+            "move": 6,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3169,
+          "orders": {
+            "idle": 4,
+            "move": 17,
+            "attack": 9
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 22200,
+      "tick": 22200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "68c4c06c",
+      "exactGameStateSha256": "f4c3bfcfc0317a2161a0770e115290bdd3e194c79cafaded4f58c6a7af49e59f",
+      "exactAiRuntimeSha256": "c3004f6675a714c0dcd190c235c78a8d01e070acd9890a83f420ff3c109485f5",
+      "commandsThroughIterationSha256": "f7d07dffb322793edd9f0f3384750382c12d88561c88de35f21256bff898b695",
+      "commandCount": 1043,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3887,
+          "orders": {
+            "attack": 8,
+            "move": 18,
+            "idle": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3169,
+          "orders": {
+            "move": 26,
+            "attack": 3,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 22800,
+      "tick": 22800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "733befd8",
+      "exactGameStateSha256": "cb3dd55aa42c618efc028e8736a2f16942684b29cdbb835a2e50c2fb8f5ec6fb",
+      "exactAiRuntimeSha256": "ab8d4d011761794a244adbe8132ba850f8084f48b9221c83174620d38b5b61d5",
+      "commandsThroughIterationSha256": "b379e7482fbcbfb8bf86a01465f7129f74406d98c9d125791ce75f6c4d6ec080",
+      "commandCount": 1070,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3867,
+          "orders": {
+            "move": 12,
+            "attack": 17,
+            "idle": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3189,
+          "orders": {
+            "attack": 13,
+            "move": 17
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 23400,
+      "tick": 23400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "769b7cc2",
+      "exactGameStateSha256": "37a10d994d43053475b6379391b479ef05bd78e205398e8b827bc063c4e910f2",
+      "exactAiRuntimeSha256": "f3608ab6e771277f3f0ce4044997b6c37e19412cbd193745ed4e5389fdcc091d",
+      "commandsThroughIterationSha256": "5efc9b0857ded532e39bf5eb04b393542f53b26d3dafe3b29e9d35dc4ae39846",
+      "commandCount": 1101,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3839,
+          "orders": {
+            "attack": 8,
+            "move": 18,
+            "idle": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3199,
+          "orders": {
+            "move": 20,
+            "attackMove": 4,
+            "idle": 4,
+            "attack": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 24000,
+      "tick": 24000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "78ef7639",
+      "exactGameStateSha256": "22fddf074e258bea856809da725ab7a3592fad9fd5fb88354fb63f48c4da388c",
+      "exactAiRuntimeSha256": "5eaab53f8ea86470ff3e44d879bfe6234d775b58c0e5aba35dc05e6ebea5f54f",
+      "commandsThroughIterationSha256": "7a13cd95683b61e44cea2d0502ff68778821a590465cf2a62019cec9cf18a0d6",
+      "commandCount": 1133,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3811,
+          "orders": {
+            "attack": 16,
+            "move": 10,
+            "idle": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3219,
+          "orders": {
+            "move": 20,
+            "attackMove": 5,
+            "idle": 5
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 24600,
+      "tick": 24600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "607817ef",
+      "exactGameStateSha256": "1ca3392dbbe09c1ef8a94d11d132eb8d563f3c674a30a352180da7c8bd5959c3",
+      "exactAiRuntimeSha256": "299314cc473edbcf717174ec5a7eb91eb6358aa3de92c8d34f06dff7e97b24d2",
+      "commandsThroughIterationSha256": "a93952e27fee742e331b9cc2c67f1c71053b09cfe3c5b18668119d456cc1e9b6",
+      "commandCount": 1162,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3811,
+          "orders": {
+            "attack": 21,
+            "move": 9,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3219,
+          "orders": {
+            "attack": 1,
+            "move": 18,
+            "attackMove": 11
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 25200,
+      "tick": 25200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b51b6bf8",
+      "exactGameStateSha256": "69f00b9ff4f5c15f475ebff250e40f14505d26766a8068f07eb9f4387f982c1d",
+      "exactAiRuntimeSha256": "97ccda1497d5aa8997ba4ee40541c1e4242164053f562f43e881626818adb167",
+      "commandsThroughIterationSha256": "3caa7a6b77451dc561038b74344972abf67f1643b079556068185bd748816457",
+      "commandCount": 1202,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3677,
+          "orders": {
+            "attack": 17,
+            "move": 13,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3189,
+          "orders": {
+            "move": 17,
+            "attackMove": 5,
+            "idle": 1,
+            "attack": 7
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 25800,
+      "tick": 25800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "b6c12897",
+      "exactGameStateSha256": "9a0a31521c398ce1c4d9ec6e262b06ebccbc1975bc2b093c2219fb2302e0ddd2",
+      "exactAiRuntimeSha256": "6ec2dfda2683609f8b63f3e2121a7e0e7bd92dc89fa0ee540d4a71d08b011ee1",
+      "commandsThroughIterationSha256": "baa5c8d11133c2c5a9924c0fab5252d464fefa7b06ed04183d9a60c69817a7e1",
+      "commandCount": 1261,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3643,
+          "orders": {
+            "idle": 6,
+            "attack": 17,
+            "move": 8
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3209,
+          "orders": {
+            "move": 14,
+            "attackMove": 5,
+            "attack": 5,
+            "idle": 6
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 26400,
+      "tick": 26400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "91fb5a61",
+      "exactGameStateSha256": "ef4b64f303b44870f2a28049290bb70867e67da0da68ce78eca832f585d00dfc",
+      "exactAiRuntimeSha256": "28a24da9cdb9462d8f110363e9cb0d9cdc6441e3237257e5bc94e2eadc0130ef",
+      "commandsThroughIterationSha256": "cee9c49aa7e7f352339652c2c0f3a81128b2bdb7ce542f817a56e6e9530055ae",
+      "commandCount": 1328,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3643,
+          "orders": {
+            "attack": 20,
+            "move": 10,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3209,
+          "orders": {
+            "attack": 13,
+            "move": 17
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 27000,
+      "tick": 27000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "168abd52",
+      "exactGameStateSha256": "765d3c7909a44e9a65b470d680361d580b24897982e0a2bd9b8cbe308178cf6f",
+      "exactAiRuntimeSha256": "ef07ccc6a5995fb50e4ce241a2e73f9b5f79b7129eadc73e9ca0fe6939128a8e",
+      "commandsThroughIterationSha256": "e5c567f60ad2676814e03a55298b358917e3cc2e289a2bf7d1f6e496c0ef94ac",
+      "commandCount": 1372,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3615,
+          "orders": {
+            "attack": 20,
+            "move": 9,
+            "idle": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3224,
+          "orders": {
+            "attackMove": 5,
+            "move": 21,
+            "attack": 3,
+            "idle": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 27600,
+      "tick": 27600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3d11d76e",
+      "exactGameStateSha256": "0093cd43f62fd944f961bb10597aebcf10494c35685bfe1002afe56d2bb82b5f",
+      "exactAiRuntimeSha256": "26223b31aa9aa255248bcc83cbbf30cfa400c108953618c3ef12b80f69f9ad16",
+      "commandsThroughIterationSha256": "cdf27d02e67f05788c61745b9005e52ec6f37bf6cb282575644619c4ad9de864",
+      "commandCount": 1420,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3533,
+          "orders": {
+            "move": 9,
+            "attack": 20,
+            "idle": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3244,
+          "orders": {
+            "move": 13,
+            "attack": 17
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 28200,
+      "tick": 28200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "a50ea838",
+      "exactGameStateSha256": "62a23484c52cf993ea506852a29a53bdf4f3e1eca5ccfe7bfee8238da94d3fa0",
+      "exactAiRuntimeSha256": "3218ae32d132c756fb8913bf0fe3aba9c9f561eeb665c2bb888b5f1700d1ba76",
+      "commandsThroughIterationSha256": "2eb6edf49acda1ecf3a347238e404eb58a28aebbe11b765229413de88f6a1693",
+      "commandCount": 1510,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3505,
+          "orders": {
+            "move": 20,
+            "attack": 8,
+            "idle": 2,
+            "attackMove": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3192,
+          "orders": {
+            "attack": 28,
+            "idle": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 28800,
+      "tick": 28800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "f774293f",
+      "exactGameStateSha256": "3facc7d4e4f4e6221cee6a6b911438313c579ba0f4c3267f1bffc6181a34e951",
+      "exactAiRuntimeSha256": "a188640cbf441c05afff41156457d0832179979f5d9e445f758f661aa26572f1",
+      "commandsThroughIterationSha256": "cca295bfa210038bd7d9a18dcb8fee458edd668a7218ac7c5095b3b9dd128fad",
+      "commandCount": 1553,
+      "units": 73,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 31,
+          "armyHp": 3505,
+          "orders": {
+            "move": 18,
+            "attackMove": 9,
+            "idle": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 31
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3237,
+          "orders": {
+            "move": 30
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 29400,
+      "tick": 29400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "94ae7962",
+      "exactGameStateSha256": "7f731bc4d4e88f95ed9ac022a0a0a1883300d7a2b2bbadca45a0d585a91036f3",
+      "exactAiRuntimeSha256": "cd893902dced689d031b41b94a3933f7ffaf4142e022d65475fdaefdc8bc098c",
+      "commandsThroughIterationSha256": "d509f354d29a84a6ba17a98ac990990e17ec79d3e05fb5ece3880a1a893f1039",
+      "commandCount": 1595,
+      "units": 71,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 29,
+          "armyHp": 3264,
+          "orders": {
+            "attack": 15,
+            "attackMove": 9,
+            "idle": 3,
+            "move": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 29
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 30,
+          "armyHp": 3228,
+          "orders": {
+            "idle": 26,
+            "attack": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 30
+          }
+        }
+      }
+    },
+    {
+      "iteration": 30000,
+      "tick": 30000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "cff275b5",
+      "exactGameStateSha256": "ebce50b6e552b1097f3879b9f7b0329428d06266b143264868eadd235170f96e",
+      "exactAiRuntimeSha256": "a5b25b1836eeb0325cfe614b8106f4b92600c3d507b2b15be960b8a1c638532f",
+      "commandsThroughIterationSha256": "ddac22e6cfd1a4ee2c4245b772aa36ea2d23cac84d27397c8116d42d2f8bfa2d",
+      "commandCount": 1723,
+      "units": 56,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 19,
+          "armyHp": 1916,
+          "orders": {
+            "idle": 7,
+            "move": 8,
+            "attack": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 19
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 25,
+          "armyHp": 2601,
+          "orders": {
+            "attack": 24,
+            "move": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 25
+          }
+        }
+      }
+    },
+    {
+      "iteration": 30600,
+      "tick": 30600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ea06aa67",
+      "exactGameStateSha256": "230faec54a65a5d95b11af3f3eac42916681f220efc6beeda8adf8743604fb93",
+      "exactAiRuntimeSha256": "d59276b55fdfd4726c0c54de2c0a55cdf45a28dab4bd5f8bed4b713713f95eca",
+      "commandsThroughIterationSha256": "0414062e12298208ece2f8e739f4a0a2ccba4b90d204ef05bc57ed41cdd1c980",
+      "commandCount": 1994,
+      "units": 50,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1479,
+          "orders": {
+            "attackMove": 15
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 23,
+          "armyHp": 2007,
+          "orders": {
+            "idle": 4,
+            "move": 5,
+            "attack": 14
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 23
+          }
+        }
+      }
+    },
+    {
+      "iteration": 31200,
+      "tick": 31200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "a13f3bb8",
+      "exactGameStateSha256": "4354ea4545f141fd62df856338811b3c6b3acd10d20ba4a89b07804871be58e3",
+      "exactAiRuntimeSha256": "fd47ee633ac651a5a2bba21c60cdd809dbf5c7586e53d2dbbdb340590d4a8e85",
+      "commandsThroughIterationSha256": "f6814a9dd296c358586c05ed774d48dd896e12325bdf536fd80d442ca20e9969",
+      "commandCount": 2123,
+      "units": 50,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1479,
+          "orders": {
+            "idle": 15
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 23,
+          "armyHp": 2092,
+          "orders": {
+            "idle": 16,
+            "attackMove": 6,
+            "attack": 1
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 23
+          }
+        }
+      }
+    },
+    {
+      "iteration": 31800,
+      "tick": 31800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "3d5b86f7",
+      "exactGameStateSha256": "9cab7a6be41193197482fca4e0e85c605d71c09463e0bf0946b9008da62d8a0f",
+      "exactAiRuntimeSha256": "56e8b5084d43cc24ddc8206e7ab6963c6c4353171ecbff492344525fbe7352de",
+      "commandsThroughIterationSha256": "eb1b73787f824b542095a45b73f902d978b5fb3f3a40fb352aa3749a1591af66",
+      "commandCount": 2179,
+      "units": 49,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1507,
+          "orders": {
+            "idle": 15
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 22,
+          "armyHp": 2132,
+          "orders": {
+            "idle": 16,
+            "attackMove": 6
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 22
+          }
+        }
+      }
+    },
+    {
+      "iteration": 32400,
+      "tick": 32400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "093b1147",
+      "exactGameStateSha256": "a44e3379150f1515988f3a81ef64b7911b6fc76a801c0f1009dcc53539d538bc",
+      "exactAiRuntimeSha256": "6dd9da94ed9312f99f7a90074a9c269d6bdae667beed712b7b45d4630b6beaac",
+      "commandsThroughIterationSha256": "e3028a2161ef0be0056a3617f7f32fb65d53a1dbaffa35d252b859d085665e54",
+      "commandCount": 2240,
+      "units": 48,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1456,
+          "orders": {
+            "attackMove": 12,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 21,
+          "armyHp": 2036,
+          "orders": {
+            "attack": 16,
+            "move": 2,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 21
+          }
+        }
+      }
+    },
+    {
+      "iteration": 33000,
+      "tick": 33000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "7609190c",
+      "exactGameStateSha256": "731e0e964c1ee96f486e6ea30d2887720a61ea3444b78b6465f8206f3bcb2398",
+      "exactAiRuntimeSha256": "ffa31fa518ca435048eb3bad8224f393b3a36c19a9197f61ee0e4d534be4f4c7",
+      "commandsThroughIterationSha256": "17bbc9663175a1270ca14ac934db1e872369fe13528bb21456dd549397c055a2",
+      "commandCount": 2342,
+      "units": 48,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1456,
+          "orders": {
+            "move": 12,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 21,
+          "armyHp": 1952,
+          "orders": {
+            "move": 8,
+            "attack": 10,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 21
+          }
+        }
+      }
+    },
+    {
+      "iteration": 33600,
+      "tick": 33600,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "aedbcf87",
+      "exactGameStateSha256": "96414c9d4d355db56b38a73e70721189f7701c57e866dfe3349d16b7918bb3cf",
+      "exactAiRuntimeSha256": "7d8fc1ffb38a7bc66d6b707c5696cf2d9a8664a85a2f74c893d534805e73a853",
+      "commandsThroughIterationSha256": "91a05076a8a621cc4b6543b30fa0dadb5dd6cba7617e6471f8c507bbd24f325f",
+      "commandCount": 2519,
+      "units": 46,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1395,
+          "orders": {
+            "move": 12,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 19,
+          "armyHp": 1776,
+          "orders": {
+            "move": 12,
+            "idle": 7
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 19
+          }
+        }
+      }
+    },
+    {
+      "iteration": 34200,
+      "tick": 34200,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "0dd286f0",
+      "exactGameStateSha256": "5832863d5f434a0f1f1bef2e51a6dc506371c8ca29e57032fa6e8e6719bc7d48",
+      "exactAiRuntimeSha256": "a83ab6c2b9f2c422143dfb1b3b542ec482689c80e3b0dc07f25a05e2e9fd1cb8",
+      "commandsThroughIterationSha256": "f190fbcda5a82a7f6204929a9e8935960b1c3588fcab5f2647de4c568238d242",
+      "commandCount": 2639,
+      "units": 46,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1395,
+          "orders": {
+            "move": 12,
+            "idle": 3
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 19,
+          "armyHp": 1841,
+          "orders": {
+            "move": 12,
+            "attack": 7
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 19
+          }
+        }
+      }
+    },
+    {
+      "iteration": 34800,
+      "tick": 34800,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "d4ea2c27",
+      "exactGameStateSha256": "595d668bc806905a4af224d0ac13108ad4190e7dfac65ab80bf2986e46b4e8ca",
+      "exactAiRuntimeSha256": "fcc6541e1c16457c256d779375c25d079dab505d69548917742028ed8148a907",
+      "commandsThroughIterationSha256": "4554f6258bfc71a29e1c8874b206d6b9f04b3d790b728e19df89b0caf847aa5c",
+      "commandCount": 2710,
+      "units": 44,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 15,
+          "armyHp": 1307,
+          "orders": {
+            "move": 11,
+            "idle": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 15
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 17,
+          "armyHp": 1710,
+          "orders": {
+            "move": 11,
+            "attack": 1,
+            "idle": 3,
+            "attackMove": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 17
+          }
+        }
+      }
+    },
+    {
+      "iteration": 35400,
+      "tick": 35400,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "ba1deb77",
+      "exactGameStateSha256": "8b65cfdc7fb7a6b6d1c638b6fd8b06df8c1174ef66369750757a4272c9a76cdb",
+      "exactAiRuntimeSha256": "227e5c34654c14f320c32022af7df8e564ff19d9c20f7544b3cf3c9512a12ba0",
+      "commandsThroughIterationSha256": "fcc911c6b889ab1f9326950aae873208fa59a8fc5c44858b149c4fba769cb508",
+      "commandCount": 2834,
+      "units": 39,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 14,
+          "armyHp": 1153,
+          "orders": {
+            "move": 5,
+            "attackMove": 9
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 14
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 13,
+          "armyHp": 1418,
+          "orders": {
+            "move": 9,
+            "idle": 4
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 13
+          }
+        }
+      }
+    },
+    {
+      "iteration": 36000,
+      "tick": 36000,
+      "winner": null,
+      "endedAtTick": null,
+      "standardGameChecksum": "099608d0",
+      "exactGameStateSha256": "6e74030182c16d16f4ae32ec88cf056f21671c1f5175122aa1994faf37faefa9",
+      "exactAiRuntimeSha256": "16e4f049ba4312dd7337f52332f2c8438ffc4d06596a402dd90143cc940caac3",
+      "commandsThroughIterationSha256": "e57c715bc9082f9144bc3252e944120cf945fecbea7231987490123386e970ee",
+      "commandCount": 2950,
+      "units": 39,
+      "owners": {
+        "player": {
+          "workers": 6,
+          "army": 14,
+          "armyHp": 1010,
+          "orders": {
+            "idle": 7,
+            "move": 7
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 14
+          }
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 13,
+          "armyHp": 1355,
+          "orders": {
+            "move": 9,
+            "idle": 2,
+            "attack": 2
+          },
+          "buildings": 16,
+          "skills": {
+            "none": 13
+          }
+        }
+      }
+    }
+  ],
+  "retainedBalance": {
+    "groveArcherHp": 83,
+    "emberSparkArcherHp": 85,
+    "commandAuraAttackSpeedBonus": 0.35
+  },
+  "cpuBudgetsMs": {
+    "bareDuel": 12000,
+    "verdantCrossroads": 16000,
+    "ladder": 16000
+  },
+  "validation": {
+    "githubOriginalProductionFailure": {
+      "runId": 38030722786,
+      "sourceCommit": "7c8649c6b095ab31b727950ac5b45bf458989f83",
+      "conclusion": "failure",
+      "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38030722786",
+      "observedCpuMs": {
+        "bareDuel": 15875.243,
+        "ladder": 17318.627
+      }
+    },
+    "githubIntermediateFailures": [
+      {
+        "sourceCommit": "129bc73d14f30e81d03acffa91742fa0951c69eb",
+        "observedCpuMs": {
+          "bareDuel": 14772.336
+        }
+      },
+      {
+        "sourceCommit": "fa4744f47b12dcffede7a354ba3ec086648d346e",
+        "observedCpuMs": {
+          "bareDuel": 14368.788,
+          "ladder": 16486.994
+        }
+      },
+      {
+        "sourceCommit": "1b4e93ea7e6c1c804ecae057b1e095af530efe5a",
+        "runId": 38034480453,
+        "observedCpuMs": {
+          "bareDuel": 14455.437
+        }
+      },
+      {
+        "sourceCommit": "1d7f09d14de5d28ee13dc345c1a0bcc4c0288f2e",
+        "runId": 38035666540,
+        "observedCpuMs": {
+          "bareDuel": 13977.408
+        }
+      },
+      {
+        "sourceCommit": "073e9e1a8b10fe8b4429e8f7e17047a500fb52f5",
+        "runId": 38037398176,
+        "observedCpuMs": {
+          "bareDuel": 12939
+        }
+      },
+      {
+        "sourceCommit": "2b6c716fba6b81208d920886882d2a6b6df997f3",
+        "runId": 38038959634,
+        "observedCpuMs": {
+          "bareDuel": 12788.394
+        }
+      }
+    ],
+    "githubFinalColdThreeMap": {
+      "runId": 38040382395,
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "conclusion": "success",
+      "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38040382395",
+      "nodeMajor": 20,
+      "unchangedOriginalCpuAssertions": true,
+      "displayedTestWallMs": [
+        7102,
+        4995,
+        9826
+      ],
+      "testedCheckoutCommit": "f52e28f2112c6057a824dddde1c2434f41d5e577"
+    },
+    "localColdThreeMap": {
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "conclusion": "pass",
+      "displayedTestWallMs": [
+        4999,
+        3515,
+        7574
+      ],
+      "log": "perf-ci-query-frame-cold3.log"
+    },
+    "fullSuite": {
+      "conclusion": "pass",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "runtimeSourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "nodeMajor": 20,
+      "maxWorkers": 2,
+      "testFiles": 453,
+      "tests": 4166,
+      "durationSeconds": 284.74,
+      "basePath": "/sketch-rts/",
+      "log": "cpu-query-frame-full-suite.log"
+    },
+    "productionBuild": {
+      "conclusion": "pass",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "runtimeSourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "exitCode": 0,
+      "observedFromToolProcessCompletion": true,
+      "log": "cpu-query-frame-production-build.log"
+    },
+    "productionDeployment": {
+      "status": "pending after merge"
+    },
+    "githubEarlierColdThreeMapSuccesses": [
+      {
+        "runId": 38033881284,
+        "sourceCommit": "1b6442fc252fbe005d911e5d199737f1850bdb79",
+        "conclusion": "success",
+        "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38033881284",
+        "nodeMajor": 20,
+        "unchangedOriginalCpuAssertions": true,
+        "displayedTestWallMs": [
+          6768,
+          4375,
+          8094
+        ]
+      },
+      {
+        "sourceCommit": "81cd9bfaff82264fcad97135bd854e14911a499a",
+        "runId": 38036958705,
+        "conclusion": "success"
+      },
+      {
+        "runId": 38038366711,
+        "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+        "conclusion": "success",
+        "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38038366711",
+        "nodeMajor": 20,
+        "unchangedOriginalCpuAssertions": true,
+        "displayedTestWallMs": [
+          4515,
+          3228,
+          5943
+        ]
+      }
+    ],
+    "fullSuiteEarlierFailure": {
+      "sourceCommit": "81cd9bfaff82264fcad97135bd854e14911a499a",
+      "testFilesPassed": 443,
+      "testsPassed": 4093,
+      "failedTests": 1,
+      "reason": "New SDK/AI integration fixture was placed in SDK directory; relocated under AI policy and package boundary checks retained.",
+      "log": "cpu-empty-frame-full-suite-boundary-failure.log"
+    }
+  },
+  "inputReportSha256": {
+    "perf-ci-equivalence-before.json": "0c6d25b83f62d69aec1614e80a83bded5db58c5aa945df61b21c130f0784e306",
+    "perf-ci-query-frame-after.json": "060ca7d606517060bf0df5f8675c0070b38b7e42fe949db58bef22fac72aa61b",
+    "perf-ci-query-frame-comparison.json": "df8877dbaab89c8c275f052fe5c37f5848bdedc992a48d7726e6984d28d4562b"
+  },
+  "scopeLimit": "Exact equality is demonstrated for this bareDuel V2 36,000-tick diagnostic only, not every map or every match. Three-map CPU assertions and the full suite are separate validations."
+}

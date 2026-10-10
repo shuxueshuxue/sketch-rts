@@ -77,7 +77,7 @@ function updateEntry(frame: Frame, entry: Entry) {
       if (ship) { let ships = frame.shipBuckets.get(key); if (!ships) frame.shipBuckets.set(key, ships = new Set()); ships.add(entry); }
     }
 }
-export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, solids: readonly Solid[] = []) {
+export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, solids: readonly Solid[] = [], vessels: readonly Unit[] = units) {
   let frame = frames.get(units);
   if (frame) {
     frame.buckets.clear(); frame.shipBuckets.clear(); frame.entries.clear();
@@ -87,7 +87,7 @@ export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, s
     frame = { ...(map ? { map } : {}), hasShips: false, buckets: new Map(), shipBuckets: new Map(), entries: new Map(), velocities: new Map(), yawRates: new Map(), impacts: [], hitPairs: new Set() };
     frames.set(units, frame);
   }
-  frame.hasShips = units.some(unit => unit.hp > 0 && isShipKind(unit.kind));
+  frame.hasShips = vessels.some(unit => unit.hp > 0 && isShipKind(unit.kind));
   if (!frame.hasShips) return;
   for (let i = 0; i < units.length + solids.length; i++) {
     const body = i < units.length ? units[i]! : solids[i - units.length]!;
@@ -260,6 +260,8 @@ export function updateShipCollisionPosition(units: readonly Unit[], ship: Unit) 
 export function drainShipCollisionImpacts(units: readonly Unit[]): ShipCollisionImpact[] { const frame = frames.get(units); return frame ? frame.impacts.splice(0) : []; }
 /** Read-only diagnostics survive the damage drain until the next motion frame. */
 export function shipCollisionImpactCount(units: readonly Unit[]): number { return frames.get(units)?.hitPairs.size ?? 0; }
+/** Only an initialized empty frame can bypass hull constraints. */
+export function groundShipFrameEmpty(units: readonly Unit[]): boolean { return frames.get(units)?.hasShips === false; }
 
 /** Ground crew retain their own layer; an off-deck body cannot walk or slide through a reachable hull. */
 export function constrainGroundShipStep(map: GameMap, unit: Unit, from: Point, to: Point, units: readonly Unit[]): Point {

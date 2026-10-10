@@ -79,7 +79,7 @@ import {
   resources,
   units,
 } from "./snapshot";
-import { averagePoint, clamp, distance, distanceSquared, nearestEntities, nearestEntity, pointToSegmentDistance, type Point } from "./spatial";
+import { averagePoint, clamp, distance, distanceSquared, nearestEntities, nearestEntity, pointToSegmentDistance, withinRangeOf, type Point } from "./spatial";
 import { planSkirmishPreservation } from "./skirmish-tactics";
 import { planAbilityCommands, planFocusFireCommand } from "./spell-tactics";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
@@ -123,6 +123,7 @@ import {
 const AUTO_ACQUIRE_RANGE = 230;
 const MIN_TRAINING_COST = Math.min(...TRAINABLE_UNIT_KINDS.map(kind => UNIT_DEFS[kind].cost));
 const MIN_TRAINING_SUPPLY = Math.min(...TRAINABLE_UNIT_KINDS.map(kind => UNIT_DEFS[kind].supplyUsed));
+const MIN_ENGINEERING_COST = Math.min(BUILDING_DEFS.workshop.cost, UNIT_DEFS.ballista.cost, UNIT_DEFS.catapult.cost, UNIT_DEFS.organGun.cost, UNIT_DEFS.siegeRam.cost);
 const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
 const MAIN_APPROACH_THREAT_RANGE = 1_550;
 const NEUTRAL_ASSIST_PLANNING_RANGE = 360;
@@ -190,7 +191,11 @@ export const AI_SCRIPT_LIBRARY = {
   v6General: { id: "v6General", phase: "tactics", run: planV6General, claimsUnits: v7CreepGroupIds },
   v6Economy: { id: "v6Economy", phase: "economy", run: planV6Economy },
   v8Charge: { id: "v8Charge", phase: "tactics", run: planV8Charge },
-  engineering: { id: "engineering", phase: "economy", run: (snapshot,owner,options) => { const want=engineeringWant(snapshot,owner,options); return want && playerState(snapshot,owner).gold>=want.cost ? want.issue(new Set()) : undefined; } },
+  engineering: { id: "engineering", phase: "economy", run: (snapshot,owner,options) => {
+    if (playerState(snapshot,owner).gold < MIN_ENGINEERING_COST) return undefined;
+    const want=engineeringWant(snapshot,owner,options);
+    return want && playerState(snapshot,owner).gold>=want.cost ? want.issue(new Set()) : undefined;
+  } },
   navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
   naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
   shopping: { id: "shopping", phase: "tactics", run: planArmyShopping, claimsUnits: shopperIds },
@@ -1863,6 +1868,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (!unitKind) continue;
     if (isTowerMercPolicy(options) && unitKind !== "worker") continue;
     const cost = UNIT_DEFS[unitKind].cost;
+    if (remainingGold < cost || reservedSupply + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) continue;
     const routineWorkerSaturation = unitKind === "worker" && projectedWorkers < routineWantedWorkers;
     const workerSaturatingEstablishedMines = unitKind === "worker" && activeMiningBaseCount(snapshot, owner) >= 2 && projectedWorkers < routineWantedWorkers;
     const nearTowerMoney = remainingGold >= BUILDING_DEFS.defenseTower.cost - 10;
@@ -1913,7 +1919,6 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     )
       continue;
     if (reserveSensitive && reserveDuplicateProduction && remainingGold < BUILDING_DEFS[reserveDuplicateProduction].cost + cost) continue;
-    if (remainingGold < cost || reservedSupply + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "train", buildingId: building.id, unitKind }, options));
     remainingGold -= cost;
     reservedSupply += UNIT_DEFS[unitKind].supplyUsed;
@@ -2477,6 +2482,9 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   const firstExpansionMercenary = v5FirstExpansionLocalMercenaryObjectiveCommand(snapshot, owner, options);
   if (firstExpansionMercenary) return firstExpansionMercenary;
   if (firstClearedExpansionClaimPausesObjectiveControl(snapshot, owner, options)) return undefined;
+  // Recalls and claim releases above still run after a camp is cleared. Every
+  // new objective below needs neutral guards, so no new order is possible without them.
+  if (neutralUnits(snapshot, owner).length === 0) return undefined;
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
   const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
   if (army.length < minimumArmy) return undefined;
@@ -3267,7 +3275,7 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
     .slice(0, 5);
   if (workers.length < 2) return undefined;
   if (options.version === "v2" && mainHallNeedsDesperateWorkerFight(snapshot, owner, main, ownCombat)) {
-    const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
+    const target = sortMainDefenseTargets(enemies, main, snapshot, owner)[0];
     return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
   }
   if (shouldEvacuateV5SevereWorkersWithoutDefenseLine(snapshot, owner, options, main, ownCombat)) {
@@ -3282,7 +3290,7 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
     const point = workerEvacuationPoint(snapshot, main, averagePoint(enemies));
     return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: evacuatingWorkers.map((unit) => unit.id), x: point.x, y: point.y }, options);
   }
-  const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
+  const target = sortMainDefenseTargets(enemies, main, snapshot, owner)[0];
   return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
@@ -3357,12 +3365,19 @@ function workerEvacuationPoint(snapshot: GameSnapshot, main: Point, enemyCenter:
 function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const soldiers = combatUnits(snapshot, owner);
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
-  const movable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
-  const recallable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && attackWaveReadyUnit(snapshot, owner, unit, options));
 
-  if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
+  if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, attackWaveMovableUnits(snapshot, owner, soldiers, options), enemyArmy, options);
 
-  const mainBreakIn = mainBuildingBreakInCommand(snapshot, owner, soldiers, enemyArmy, options);
+  let cachedPressure: Building | undefined;
+  let pressureEvaluated = false;
+  const getPressuredBuilding = () => {
+    if (!pressureEvaluated) {
+      cachedPressure = mostPressuredAlliedBuilding(snapshot, owner, options);
+      pressureEvaluated = true;
+    }
+    return cachedPressure;
+  };
+  const mainBreakIn = mainBuildingBreakInCommand(snapshot, owner, soldiers, enemyArmy, options, getPressuredBuilding);
   if (mainBreakIn) return mainBreakIn;
   const focus = mainDefenseFocusCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (focus) return focus;
@@ -3371,6 +3386,10 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const mainApproachPickoff = v5MainApproachDetachmentPickoffCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (mainApproachPickoff) return mainApproachPickoff;
 
+  // Base defense owns these earlier branches regardless of the field wave's
+  // readiness. Only inspect each unit's retreat and objective claims when the
+  // planner actually reaches a branch that uses the movable wave.
+  const movable = attackWaveMovableUnits(snapshot, owner, soldiers, options);
   const minimumWaveSize = attackWaveMinimumSize(snapshot, owner, options);
   if (options.version !== "v2") {
     const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOpponentOwner(snapshot, owner, options));
@@ -3383,7 +3402,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     }
   }
 
-  const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
+  const pressuredBuilding = getPressuredBuilding();
   if (pressuredBuilding && soldiers.length >= 3) {
     const localEnemies = enemyCombatUnitsNear(snapshot, owner, pressuredBuilding, 620, options.teams);
     const isMainPressure = pressuredBuilding.owner === owner && distance(pressuredBuilding, mainBase(snapshot, owner)) <= 500;
@@ -3415,6 +3434,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   }
 
   const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
+  const recallable = outnumberedV2 ? soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && attackWaveReadyUnit(snapshot, owner, unit, options)) : [];
   const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, recallable, options);
   const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
   if (committedRecall) return committedRecall;
@@ -3642,6 +3662,10 @@ function committedAttackWaveRouteCovered(snapshot: GameSnapshot, owner: PlayerId
   return localEnemies.length >= 3 && armyPower(localEnemies) >= ownPower * 1.08;
 }
 
+function attackWaveMovableUnits(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
+  return soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
+}
+
 function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
   if (movable.length === 0 || enemyArmy.length === 0) return undefined;
   const point = averagePoint(enemyArmy);
@@ -3727,9 +3751,10 @@ function safeStoppedRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerI
 
 function deadEconomyRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, claim: { kind: string }, options: PresetAiPolicyOptions) {
   if (claim.kind !== "retreat" || unit.hp < unit.maxHp * 0.58) return false;
+  if (!deadEconomyCloseoutReady(snapshot, owner, options, combatUnits(snapshot, owner))) return false;
   if (enemyCombatUnitsNear(snapshot, owner, unit, 520, options.teams).length > 0 || neutralUnitsNear(snapshot, unit, 420).length > 0) return false;
   // @@@dead-economy-retreat-release - Once enemy workers are gone, healthy safe retreaters should rejoin the final army before the exact rally point.
-  return deadEconomyCloseoutReady(snapshot, owner, options, combatUnits(snapshot, owner));
+  return true;
 }
 
 function committedAttackWaveOwner(snapshot: GameSnapshot, owner: PlayerId, recallable: Unit[], options: PresetAiPolicyOptions): PlayerId | undefined {
@@ -3795,19 +3820,33 @@ function opponentHasPresence(snapshot: GameSnapshot, owner: PlayerId, opponent: 
 function mostPressuredAlliedBuilding(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): Building | undefined {
   const candidates = alliedBuildings(snapshot, owner, options).filter((building) => building.complete);
   if (candidates.length === 0) return undefined;
-  const pressures = new Map<string, number>();
+  const pressureSlots = new Map<string, number>();
+  const pressures: number[] = [];
+  const candidateSlots = candidates.map((building) => {
+    let slot = pressureSlots.get(building.id);
+    if (slot === undefined) {
+      slot = pressures.length;
+      pressureSlots.set(building.id, slot);
+      pressures.push(0);
+    }
+    return slot;
+  });
   const pressureRangeSq = 620 * 620;
   for (const unit of enemyUnits(snapshot, owner, options.teams)) {
-    for (const building of candidates) {
-      if (distanceSquared(unit, building) < pressureRangeSq) pressures.set(building.id, (pressures.get(building.id) ?? 0) + 1);
+    const targetId = unitOrderTargetId(unit);
+    for (let index = 0; index < candidates.length; index += 1) {
+      const building = candidates[index]!;
+      const slot = candidateSlots[index]!;
+      if (distanceSquared(unit, building) < pressureRangeSq) pressures[slot] = pressures[slot]! + 1;
       // @@@targeted-building-pressure - Ranged sieges can kill tech before five bodies stand near the building; an active target is pressure too.
-      if (unitTargetsBuilding(unit, building) && distance(unit, building) <= unit.attackRange + 180) pressures.set(building.id, (pressures.get(building.id) ?? 0) + 2);
+      if (targetId === building.id && distance(unit, building) <= unit.attackRange + 180) pressures[slot] = pressures[slot]! + 2;
     }
   }
 
   let best: { building: Building; pressure: number } | undefined;
-  for (const building of candidates) {
-    const pressure = pressures.get(building.id) ?? 0;
+  for (let index = 0; index < candidates.length; index += 1) {
+    const building = candidates[index]!;
+    const pressure = pressures[candidateSlots[index]!]!;
     if (pressure < 5 && !(pressure >= 2 && building.hp < building.maxHp * 0.75)) continue;
     if (!best || pressuredBuildingBeats(owner, building, pressure, best.building, best.pressure)) best = { building, pressure };
   }
@@ -3888,17 +3927,17 @@ function mainDefenseFocusCommand(snapshot: GameSnapshot, owner: PlayerId, soldie
     .filter((unit) => distance(unit, rally) <= 360 || (distance(unit, rally) <= 660 && targetPressuresAlliedBuilding(snapshot, owner, unit, options)))
     .filter((unit) => !v5DistantHealthyMeleeApproachTarget(snapshot, owner, defenderCenter, unit, options));
   if (targets.length === 0) return undefined;
-  const target = targets.sort((a, b) => mainDefenseTargetScore(b, rally, snapshot, owner) - mainDefenseTargetScore(a, rally, snapshot, owner))[0];
+  const target = sortMainDefenseTargets(targets, rally, snapshot, owner)[0];
   if (!target) return undefined;
   const attackers = defenders.filter((unit) => canJoinMainDefenseFocus(snapshot, owner, unit, target, options));
   return attackers.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
-function mainBuildingBreakInCommand(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
+function mainBuildingBreakInCommand(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions, getPressuredBuilding: () => Building | undefined): GameCommand | undefined {
   if (options.version !== "v2") return undefined;
   if (opponentPlayerIds(snapshot, owner, options).length !== 1) return undefined;
   const main = mainBase(snapshot, owner);
-  const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
+  const pressuredBuilding = getPressuredBuilding();
   if (!pressuredBuilding || pressuredBuilding.owner !== owner || distance(pressuredBuilding, main) > 620) return undefined;
   if (pressuredBuilding.kind !== "farm") return undefined;
   const targeters = enemyArmy.filter((unit) => targetPressuresAlliedBuilding(snapshot, owner, unit, options) && distance(unit, pressuredBuilding) <= unit.attackRange + 220);
@@ -3998,6 +4037,19 @@ function outmatchedPressurePickoffCommand(snapshot: GameSnapshot, owner: PlayerI
     .sort((a, b) => a.hp / Math.max(1, a.maxHp) - b.hp / Math.max(1, b.maxHp))[0];
   // @@@outmatched-base-pickoff - Holding rally is correct against a larger base hit, but idle defenders should still delete reachable wounded attackers.
   return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function sortMainDefenseTargets(targets: Unit[], rally: Point, snapshot: GameSnapshot, owner: PlayerId) {
+  const scores = new Map<Unit, number>();
+  const score = (unit: Unit) => {
+    let value = scores.get(unit);
+    if (value === undefined) {
+      value = mainDefenseTargetScore(unit, rally, snapshot, owner);
+      scores.set(unit, value);
+    }
+    return value;
+  };
+  return targets.sort((a, b) => score(b) - score(a));
 }
 
 function mainDefenseTargetScore(unit: Unit, rally: Point, snapshot: GameSnapshot, owner: PlayerId) {
@@ -4125,12 +4177,20 @@ function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, 
   const army = enemyCombatUnits(snapshot, owner, options.teams);
   if (army.length <= 4) return undefined;
   const ownPower = armyPower(soldiers);
+  const nearbyArmy = withinRangeOf(army, 520);
   return army
     // @@@local-significant-target - Direct attack is for local army contact; distant isolated units near a base belong to objective movement, not chase orders.
     .filter((unit) => distance(unit, from) <= 1_450)
     .filter((unit) => !v5UnminedFirstExpansionDirectChaseTarget(snapshot, owner, from, unit, options))
     .filter((unit) => !v5DistantHealthyMeleeApproachTarget(snapshot, owner, from, unit, options))
-    .filter((unit) => armyPower(army.filter((candidate) => distance(candidate, unit) <= 520)) <= ownPower * 0.95)
+    .filter((unit) => {
+      // Keep the original scan for coordinates beyond the grid key's exact
+      // integer range. Ordinary map positions use one shared local index.
+      const localArmy = Math.abs(unit.x) <= 2 ** 40 && Math.abs(unit.y) <= 2 ** 40
+        ? nearbyArmy(unit)
+        : army.filter((candidate) => distance(candidate, unit) <= 520);
+      return armyPower(localArmy) <= ownPower * 0.95;
+    })
     .filter((unit) => !routeArmyCoversOpponentTarget(army, from, unit, ownPower))
     .sort((a, b) => strategicArmyTargetScore(b, from) - strategicArmyTargetScore(a, from))[0];
 }
@@ -4282,7 +4342,7 @@ function closeoutAttackWaveTarget(snapshot: GameSnapshot, owner: PlayerId, soldi
   if (deadEconomyCleanup) return deadEconomyCleanup;
   if (crippledCleanup) return crippledCleanup;
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 1.25) return undefined;
-  return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner);
+  return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, preferredOwner);
 }
 
 function shouldWaitForExpansionBeforePressure(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -4327,10 +4387,8 @@ function deadEconomyBuildingIsCleanable(snapshot: GameSnapshot, owner: PlayerId,
   return armyPower(routeDefenders) <= soldierPower * 1.1;
 }
 
-function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, soldiers: Unit[] = [], preferredOwner?: PlayerId) {
+function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, preferredOwner?: PlayerId) {
   const candidates = preferredAttackBuildings(enemyBuildings(snapshot, owner, options.teams), preferredOwner);
-  const disabledTarget = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, from, options, soldiers, preferredOwner) : undefined;
-  if (disabledTarget) return disabledTarget;
   const defendersByTeam = new Map<string, number>();
   const weakTargets = candidates.filter((building) => {
     const targetTeam = teamFor(snapshot, building.owner, options);

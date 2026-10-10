@@ -1,10 +1,9 @@
 import type { BuildingKind, GameSnapshot, PlayerId } from "../../shared/types";
-import { createSnapshotQuery, type SnapshotPlayerView, type SnapshotQuery } from "../../sdk/snapshot-query";
+import { createSnapshotQuery, type SnapshotQuery } from "../../sdk/snapshot-query";
 import { onOwnGround, withoutShips } from "./ground";
 
 const noTeamsQueryKey = {};
 const snapshotQueryCache = new WeakMap<GameSnapshot, WeakMap<object, SnapshotQuery>>();
-const playerViewCache = new WeakMap<SnapshotQuery, Map<PlayerId, SnapshotPlayerView>>();
 // The last query handed out: a plan asks for the same snapshot's query thousands of times in a row, so it skips the maps.
 let lastQuery: { snapshot: GameSnapshot; key: object; query: SnapshotQuery } | undefined;
 
@@ -23,16 +22,6 @@ export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<P
   }
   lastQuery = { snapshot, key, query };
   return query;
-}
-
-// A policy often needs one list from the view. Copy the complete view once per
-// immutable query, then return a fresh selected list so callers can sort it.
-function playerView(query: SnapshotQuery, owner: PlayerId): SnapshotPlayerView {
-  let byOwner = playerViewCache.get(query);
-  if (!byOwner) playerViewCache.set(query, byOwner = new Map());
-  let view = byOwner.get(owner);
-  if (!view) byOwner.set(owner, view = query.forPlayer(owner));
-  return view;
 }
 
 export function activePlayerIds(snapshot: GameSnapshot) {
@@ -89,28 +78,28 @@ export function neutralUnitsNear(snapshot: GameSnapshot, point: { x: number; y: 
 }
 
 export function neutralUnits(snapshot: GameSnapshot, owner: PlayerId) {
-  return playerView(aiSnapshotQuery(snapshot), owner).neutral.units.slice();
+  return aiSnapshotQuery(snapshot).neutralUnitsFor(owner);
 }
 
 export function enemyUnits(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return playerView(aiSnapshotQuery(snapshot, teams), owner).enemy.units.slice();
+  return aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy");
 }
 
 export function enemyCombatUnits(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return withoutShips(snapshot, playerView(aiSnapshotQuery(snapshot, teams), owner).enemy.combatUnits.slice());
+  return withoutShips(snapshot, aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy", "combat"));
 }
 
 export function enemyWorkers(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return playerView(aiSnapshotQuery(snapshot, teams), owner).enemy.workers.slice();
+  return aiSnapshotQuery(snapshot, teams).playerUnits(owner, "enemy", "worker");
 }
 
 // The enemy's buildings the owner's army can walk to (see @@@ai-home-ground).
 export function enemyBuildings(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return onOwnGround(snapshot, owner, playerView(aiSnapshotQuery(snapshot, teams), owner).enemy.buildings.slice());
+  return onOwnGround(snapshot, owner, aiSnapshotQuery(snapshot, teams).playerBuildings(owner, "enemy"));
 }
 
 export function enemyCombatUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).opponentUnitsNear(owner, point, range).filter((unit) => unit.kind !== "worker");
+  return aiSnapshotQuery(snapshot, teams).opponentCombatUnitsNear(owner, point, range);
 }
 
 export function enemyUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
