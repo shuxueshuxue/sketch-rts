@@ -40,12 +40,12 @@ function stepUntil(game: ReturnType<typeof damageBattle>, predicate: () => boole
 
 describe("damage pipeline integration", () => {
   it.each([
-    { name: "physical melee", kind: "footman", delivery: "melee", profile: P.MELEE_CUT, expected: 49.5616 },
-    { name: "physical ranged", kind: "archer", delivery: "ranged", profile: P.RANGED_PIERCE, expected: 24.7808 },
-    { name: "physical effect", kind: "footman", delivery: "effect", profile: P.EXPLOSION, expected: 49.5616 },
-    { name: "magic melee", kind: "spirit", delivery: "melee", profile: P.MAGIC_MELEE, expected: 61.952 },
-    { name: "magic ranged", kind: "priest", delivery: "ranged", profile: P.MAGIC_RANGED, expected: 30.976 },
-    { name: "magic effect", kind: "priest", delivery: "effect", profile: P.BURNING, expected: 61.952 },
+    { name: "physical melee", kind: "footman", delivery: "melee", profile: P.MELEE_CUT, expected: 36 },
+    { name: "physical ranged", kind: "archer", delivery: "ranged", profile: P.RANGED_PIERCE, expected: 18 },
+    { name: "physical effect", kind: "footman", delivery: "effect", profile: P.EXPLOSION, expected: 36 },
+    { name: "magic melee", kind: "spirit", delivery: "melee", profile: P.MAGIC_MELEE, expected: 45 },
+    { name: "magic ranged", kind: "priest", delivery: "ranged", profile: P.MAGIC_RANGED, expected: 22.5 },
+    { name: "magic effect", kind: "priest", delivery: "effect", profile: P.BURNING, expected: 45 },
   ] satisfies { name: string; kind: UnitKind; delivery: DamageDelivery; profile: DamageProfile; expected: number }[])("settles $name through combined defenses and lets guardian block it entirely", ({ kind, delivery, profile, expected }) => {
     const game = damageBattle();
     const target = game.spawnUnit("player", "knight", 800, 800);
@@ -160,7 +160,7 @@ describe("damage pipeline integration", () => {
     const before = target.hp;
     stepGame(game);
     // Hits in one tick share its initial aura projection; it is cleared at tick end.
-    expect(before - target.hp).toBeCloseTo(followShot.damage * 0.92);
+    expect(before - target.hp).toBeCloseTo(followShot.damage * 0.82);
     expect(game.units.some(unit => unit.id === leader.id)).toBe(false);
     expect(game.veteranFrame?.get(target.id)?.reductions ?? []).toEqual([]);
     game.projectiles.push({ ...followShot, id: "next-frame-shot", remaining: 1 });

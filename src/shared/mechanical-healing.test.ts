@@ -41,9 +41,10 @@ function mixed(skill?: VeteranSkillId) {
 describe("mechanical bodies and medical effects in the shared simulation", () => {
   it("heals deck crew with a group wave and scroll while leaving siege engines, stone golems and hulls unchanged", () => {
     const { game, priest, crew, mechanical } = mixed("veteranHealingWave");
+    crew.hp -= 30; // Leave room for both the stronger wave and the subsequent scroll.
     const before = mechanical.map(unit => unit.hp), crewBefore = crew.hp;
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: "veteranHealingWave" });
-    expect(crew.hp).toBe(crewBefore + 30);
+    expect(crew.hp).toBe(crewBefore + 90);
     expect(mechanical.map(unit => unit.hp)).toEqual(before);
     game.items.push({ id: "medical-scroll", kind: "healingScroll", carrierId: priest.id, slot: "carry0", x: priest.x, y: priest.y, cooldownRemaining: 0 });
     issuePlayerCommand(game, "player", { type: "useItem", unitId: priest.id, itemId: "medical-scroll" });
@@ -102,8 +103,8 @@ describe("mechanical bodies and medical effects in the shared simulation", () =>
     const { game, priest, crew, mechanical } = mixed(skill);
     issuePlayerCommand(game, "player", { type: "cast", unitId: priest.id, ability: skill });
     for (const unit of [priest, crew, ...mechanical]) {
-      if (skill === "veteranInnerFire") expect(unit.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .2 }));
-      else expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.2);
+      if (skill === "veteranInnerFire") expect(unit.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .35 }));
+      else expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.6);
     }
   });
 
@@ -124,6 +125,6 @@ describe("mechanical bodies and medical effects in the shared simulation", () =>
     expect(metal.hp).toBe(before);
     expect(living.hp).toBeGreaterThan(livingBefore + 55);
     expect(unitRegenPerSecond(game, metal)).toBe(0);
-    expect(unitRegenPerSecond(game, living)).toBe(3);
+    expect(unitRegenPerSecond(game, living)).toBe(6);
   });
 });
