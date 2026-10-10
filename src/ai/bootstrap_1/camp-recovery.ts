@@ -8,6 +8,7 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { hostileDamageDisks } from './damage-footprints';
 
 function campRecoveryPatients(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const camp = options.memory.v6?.creep;
@@ -43,8 +44,10 @@ export const campRecovery: AiScript = {
       const threats = foes.filter(foe => sameGround(snapshot.map, patient, foe)
         && distance(patient, foe) <= mountedThreatReach(snapshot, foe, patient, THINK_TICKS)
           + ('speed' in foe ? foe.speed : 0) * (THINK_TICKS + 2) / SIM_TICKS_PER_SECOND);
-      if (threats.length) {
-        const command = mountedEscape(snapshot, patient, threats, 0, point);
+      const indirect = hostileDamageDisks(snapshot, patient, foes, THINK_TICKS)
+        .some(area => distance(patient, area) <= area.radius);
+      if (threats.length || indirect) {
+        const command = mountedEscape(snapshot, patient, indirect ? foes : threats, 0, point);
         return command.type === 'move' ? { ...command, avoidCombat: true } : command;
       }
       return distance(patient, point) <= V7_GATHERED_RANGE
