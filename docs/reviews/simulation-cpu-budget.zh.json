@@ -492,10 +492,10 @@
   "optimized": {
     "provenance": {
       "capturedBeforeImports": true,
-      "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
       "workingTreeStatus": "",
       "runtimeSourceFileCount": 450,
-      "sourceManifestSha256": "e6c27a70df5a5df627e92a338f285fc0c9a070a4f43e16cb82a4844f2718fd07",
+      "sourceManifestSha256": "1981f156441e8fe14af17a635d055a256668445e363a8993bfa6e3d864577af9",
       "sourceInputs": {
         "src/ai/ab-test.ts": "1c38e8d67877eec6b7a0bbddbb9617f9d1a1029629ee318bd8f1f82678ed063c",
         "src/ai/benchmark/army-balance-stats.ts": "92b843010d7893640a770a0b616b51044e789a97492c7c4611686d421e353aec",
@@ -557,7 +557,7 @@
         "src/ai/policy-v2prod/production-model.ts": "912ee409b9a1a792a5fba105cc0d3338330824e117eab1369c1e70e0a27db7b9",
         "src/ai/policy-v2prod/script-runner.ts": "ec51c8571f479260fb035f4f4802311dd3d2de4b12ff5f5352646a8d25fd0d83",
         "src/ai/policy-v2prod/skirmish-tactics.ts": "72855d9b3afecfd5e27b3610443d096ae3daa7dc387a29db1b3b843bf825dc7e",
-        "src/ai/policy-v2prod/snapshot.ts": "ab0458d20a94b47e5869c29ea5e43ebfba5729e46d90430429f290f5d609211a",
+        "src/ai/policy-v2prod/snapshot.ts": "9de9d896870b3139c954b3410775f1d64ad6e77e3307b0bcd5c5e719b30f09b6",
         "src/ai/policy-v2prod/spatial.ts": "1a958780f43c4e32213118f4fe5bf0da20945f17fee5a289e2e1e877234351ac",
         "src/ai/policy-v2prod/spell-tactics.ts": "588a1b34f9f7f2a253ebdf33647891ca81b2bff43ed5b162aa0cd26900252ed9",
         "src/ai/policy-v2prod/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
@@ -577,7 +577,7 @@
         "src/ai/policy/combat-readiness.ts": "b461e9c7d64650729326f36ab8ba18c6679a157f4a346e1a6687ec8fff3d6def",
         "src/ai/policy/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
         "src/ai/policy/convoy-load.ts": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
-        "src/ai/policy/core.ts": "f5d8db534bbde6bae54ab75f49f2877f8beaa809de67b41554eeda065ae96c42",
+        "src/ai/policy/core.ts": "f79cec8bb92d11be5bf7d97157703e5ff7f4c7b429f36851a5b6602a269d932d",
         "src/ai/policy/engagements.ts": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
         "src/ai/policy/engineering.ts": "b98d5a468a9d901b6ed2cc63bb3914cc171db0d96a6c533889117ec506a5c350",
         "src/ai/policy/expansion-model.ts": "34e74778c757876b776072bdbafdedf3bd30595a4b3da763f9dfaa9dbbbd439a",
@@ -586,14 +586,14 @@
         "src/ai/policy/ground.ts": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
         "src/ai/policy/item-tactics.ts": "663771a4a731d21a37af4615b8241edeae0cdc06d8b6292243d6dcd721e25d4c",
         "src/ai/policy/mechanical-repair.ts": "e3ddf0d2e899a6fe71b0406791e53f0f00a3b2ded56a4432aff705c1cbc37ff7",
-        "src/ai/policy/naval-services.ts": "c5e55e9958c2abd8490f85a48db64bb47a603f60ce66ac047fd71054867e2f6c",
-        "src/ai/policy/naval.ts": "893a96d1911a7f6850d46d7c1531efa6c1c803cbee1b42dc0445374c3dc37ed7",
+        "src/ai/policy/naval-services.ts": "0c1729565067e2dd3530e75d75ac7b1cb49e5358597ab1b135ff8a185539df83",
+        "src/ai/policy/naval.ts": "4f0182e938688ea4031d38030872390f81f728c9d4cdd234e059ac9e374879bf",
         "src/ai/policy/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
         "src/ai/policy/playbook.ts": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
         "src/ai/policy/production-model.ts": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
         "src/ai/policy/script-runner.ts": "452ab4cb71daa5a41535ee24f11153d954bf3cf6e441711eb637f190574b6e9b",
         "src/ai/policy/skirmish-tactics.ts": "1b05a80942f286ac10681a22e8e6919f6d2fdc083442b03c2bf85c7b00692e3e",
-        "src/ai/policy/snapshot.ts": "fe5190f399e38c9f622fec05ba19642bfd0993daad74eff8b972533269770e7e",
+        "src/ai/policy/snapshot.ts": "0ea6107b277597318544265cf4dacfb34f4fc76104210df5055215625768ea91",
         "src/ai/policy/spatial.ts": "5e3b82ef490f1fb544e57e5a39a1b6ba6a7bea4bbee871d5be70fa9040273f48",
         "src/ai/policy/spell-tactics.ts": "a2ee4d4bfe51347fe36c86ca310701032564cfaeded08ba8789febce5f3f172a",
         "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
@@ -810,7 +810,7 @@
         "src/sdk/scenarios/combat.ts": "f3d6f9180fb6382b231fda6cf56a2acd78cf9e6f27081c2eec31366e02db0053",
         "src/sdk/scene.ts": "0fcdc3aca5b56c146a461c28e729530db90d4028142991dc73982ad5fa8f1112",
         "src/sdk/snapshot-query.ts": "1c7f75e65d8324dec5048e5ae4df4c07e30dc9fd6e6c89145db41671beb9e025",
-        "src/sdk/snapshot/query.ts": "ab8a403375deb58e1962190e7336f9d02dbb7bb9366cd51be44867aa2f32160a",
+        "src/sdk/snapshot/query.ts": "a9da30710ad8516fae3ce9719931c85b827322b533a1d2818e2a2283eae1afd6",
         "src/sdk/snapshot/range-index.ts": "a8b9f1a7665622baf38694226576fbcef4351ef775670f9ff4a0393cd47dfdf1",
         "src/sdk/winner-mode.ts": "26251648e35ca43e6d7b36642a7531df1adadb68c4c34b29456febba2f7ade38",
         "src/server/benchmark-dashboard-api.ts": "b2100a816d666318b2e5b38a87216c09abccd09e1d667efd870cdcf5583b9d95",
@@ -908,7 +908,7 @@
         "src/shared/ship-queued-course.ts": "46faaccc797472158f92a9d5e4f7916b65b8157511e0077e8605ac9ea5c11737",
         "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
         "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
-        "src/shared/sim.ts": "2f69b33cde238a832d1eca08a13683bb6ed31c20e2f81c0bc94dbb1df58a8a96",
+        "src/shared/sim.ts": "bcc9670441f78f0d8e070bc953910721d7b41678a017224aa216d52d8b3751bf",
         "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
         "src/shared/sim/checksum.ts": "d8733737efa18ab7d914c3c36b987807cd889342b4bd33a4f7aa1f2839c336ed",
         "src/shared/sim/command-frame-runtime.ts": "6496d692982acc41f1b5e42fc22dd052e8430815163067712bdbf93163de7ad4",
@@ -959,8 +959,8 @@
     "integratedActiveUnitTicks": 1872729,
     "peakUnits": 73,
     "commandCount": 2950,
-    "instrumentedCpuMs": 9089.993,
-    "instrumentedWallMs": 5349.874997,
+    "instrumentedCpuMs": 8247.3,
+    "instrumentedWallMs": 4859.262659999999,
     "exactFinalCombinedStateSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1"
   },
   "comparison": {
@@ -971,15 +971,15 @@
     "integratedActiveUnitTicksEqual": true,
     "peakUnitsEqual": true,
     "baselineCpuMs": 11220.018,
-    "newCpuMs": 9089.993,
+    "newCpuMs": 8247.3,
     "baselineWallMs": 7242.246211,
-    "newWallMs": 5349.874997,
+    "newWallMs": 4859.262659999999,
     "finalCombinedSha256": "89e2869c30426db96b6e421a357a4fc49b48554257a5f1a7a9c9d4851ef721f1",
     "commandCount": 2950,
     "unitTicks": 1872729,
     "peakUnits": 73
   },
-  "singlePairDiagnosticCpuReductionPercent": 18.984149579795684,
+  "singlePairDiagnosticCpuReductionPercent": 26.494770329245465,
   "timingLimits": "Instrumented timings are a single diagnostic pair, not repeated statistical measurements. Vitest case durations are wall time, not CPU readings; unchanged three-map assertions provide CI budget validation.",
   "identicalCheckpoints": [
     {
@@ -3508,49 +3508,58 @@
         "observedCpuMs": {
           "bareDuel": 12939
         }
+      },
+      {
+        "sourceCommit": "2b6c716fba6b81208d920886882d2a6b6df997f3",
+        "runId": 38038959634,
+        "observedCpuMs": {
+          "bareDuel": 12788.394
+        }
       }
     ],
     "githubFinalColdThreeMap": {
-      "runId": 38038366711,
-      "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+      "runId": 38040382395,
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
       "conclusion": "success",
-      "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38038366711",
+      "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38040382395",
       "nodeMajor": 20,
       "unchangedOriginalCpuAssertions": true,
       "displayedTestWallMs": [
-        4515,
-        3228,
-        5943
-      ]
+        7102,
+        4995,
+        9826
+      ],
+      "testedCheckoutCommit": "f52e28f2112c6057a824dddde1c2434f41d5e577"
     },
     "localColdThreeMap": {
-      "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
       "conclusion": "pass",
       "displayedTestWallMs": [
-        5834,
-        3734,
-        8007
+        4999,
+        3515,
+        7574
       ],
-      "log": "perf-ci-lookup-cold3.log"
+      "log": "perf-ci-query-frame-cold3.log"
     },
     "fullSuite": {
       "conclusion": "pass",
-      "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
-      "runtimeSourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "runtimeSourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
       "nodeMajor": 20,
       "maxWorkers": 2,
-      "testFiles": 448,
-      "tests": 4128,
-      "durationSeconds": 286.93,
+      "testFiles": 453,
+      "tests": 4166,
+      "durationSeconds": 284.74,
       "basePath": "/sketch-rts/",
-      "log": "cpu-lookup-full-suite.log"
+      "log": "cpu-query-frame-full-suite.log"
     },
     "productionBuild": {
       "conclusion": "pass",
-      "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
-      "runtimeSourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+      "sourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
+      "runtimeSourceCommit": "b09ccc5d44e066622183c0f2fc246e309723beb2",
       "exitCode": 0,
-      "log": "cpu-lookup-production-build.log"
+      "observedFromToolProcessCompletion": true,
+      "log": "cpu-query-frame-production-build.log"
     },
     "productionDeployment": {
       "status": "pending after merge"
@@ -3573,6 +3582,19 @@
         "sourceCommit": "81cd9bfaff82264fcad97135bd854e14911a499a",
         "runId": 38036958705,
         "conclusion": "success"
+      },
+      {
+        "runId": 38038366711,
+        "sourceCommit": "64d146cbf64621f0d0fcc7602e824630392365d0",
+        "conclusion": "success",
+        "url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38038366711",
+        "nodeMajor": 20,
+        "unchangedOriginalCpuAssertions": true,
+        "displayedTestWallMs": [
+          4515,
+          3228,
+          5943
+        ]
       }
     ],
     "fullSuiteEarlierFailure": {
@@ -3586,8 +3608,8 @@
   },
   "inputReportSha256": {
     "perf-ci-equivalence-before.json": "0c6d25b83f62d69aec1614e80a83bded5db58c5aa945df61b21c130f0784e306",
-    "perf-ci-lookup-after.json": "ced093087bfb599bebbe514a53c31797137fd04b5063c3b37e4edc34e7a337f9",
-    "perf-ci-lookup-comparison.json": "19faf9b83162e6a4160658752527b7bfc233d43d383ff46d256b292558e250cb"
+    "perf-ci-query-frame-after.json": "060ca7d606517060bf0df5f8675c0070b38b7e42fe949db58bef22fac72aa61b",
+    "perf-ci-query-frame-comparison.json": "df8877dbaab89c8c275f052fe5c37f5848bdedc992a48d7726e6984d28d4562b"
   },
   "scopeLimit": "Exact equality is demonstrated for this bareDuel V2 36,000-tick diagnostic only, not every map or every match. Three-map CPU assertions and the full suite are separate validations."
 }
