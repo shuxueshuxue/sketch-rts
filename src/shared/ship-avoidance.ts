@@ -12,6 +12,11 @@ const trafficShapes=new Map<string,Point[]>();
 const trafficBases=new Map<string,Point[]>();
 let trafficBasePoints=0;
 const TRAFFIC_BASE_POINTS=16_384;
+// Sampling a turn needs many temporary vertices. Only the copied negative
+// hull below escapes, so successive synchronous sweeps can reuse this bounded
+// scratch storage without retaining units, poses or collision decisions.
+const trafficSweepScratch:Point[]=[];
+const TRAFFIC_SWEEP_SCRATCH_POINTS=2_048;
 
 function cacheTrafficBase(key:string,polygon:Point[]) {
   if(polygon.length>TRAFFIC_BASE_POINTS)return;
@@ -295,7 +300,12 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
         if(!negative){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
           for(let i=0;i<=steps;i++){
             const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);
-            for(const p of hull)points.push({x:p.x*c-p.y*s,y:p.x*s+p.y*c});
+            for(const p of hull){
+              const index=points.length;
+              const point=index<TRAFFIC_SWEEP_SCRATCH_POINTS
+                ? trafficSweepScratch[index]??(trafficSweepScratch[index]={x:0,y:0}) : {x:0,y:0};
+              point.x=p.x*c-p.y*s;point.y=p.x*s+p.y*c;points.push(point);
+            }
           }
           let shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);
           negative=shape.map(p=>({x:-p.x,y:-p.y}));sweeps.set(sweepKey,negative);
