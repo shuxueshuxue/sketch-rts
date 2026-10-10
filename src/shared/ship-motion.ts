@@ -10,14 +10,16 @@ type MotionBudget = { yaw: number; distance: number; astern: number };
 type ShipControls = { surge?: number; yaw?: number; pivotLever?: number; spentYaw?: number };
 const budgets = new WeakMap<Unit, MotionBudget>();
 
-/** One budget for propulsion, aiming turns and impulses in the whole step. */
-export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids: readonly (Building | Obstacle)[] = []) {
-  for (const ship of units) if (isShipKind(ship.kind)) {
+/** One budget for propulsion, aiming turns and impulses in the whole step.
+ * Simulation may supply its complete current hull view, including dead hulls;
+ * direct callers retain a full scan, even after replacing array members. */
+export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids: readonly (Building | Obstacle)[] = [], vessels: readonly Unit[] = units) {
+  for (const ship of vessels) if (isShipKind(ship.kind)) {
     const budget = budgets.get(ship);
     if (budget) { budget.yaw = 0; budget.distance = 0; budget.astern = 0; }
     else budgets.set(ship, { yaw: 0, distance: 0, astern: 0 });
   }
-  beginShipCollisionFrame(units, map, solids);
+  beginShipCollisionFrame(units, map, solids, vessels);
 }
 
 /** Navigation supplies controls, never a world-space displacement. The keel

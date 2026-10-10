@@ -33,6 +33,22 @@ function sea() {
   return game;
 }
 describe("physical naval service tasks", () => {
+  it("reserves a boarding crew and both endpoints even when its own hull is missing", () => {
+    const game = sea();
+    const crew = game.spawnUnit("player", "worker", 900, 900);
+    const hostile = game.spawnUnit("enemy", "transport", 1200, 900);
+    crew.deck = { shipId: "departed-hull", x: 0, y: 0 };
+    crew.order = { type: "board", transportId: hostile.id };
+    const snapshot = snapshotGame(game);
+    const before = JSON.stringify(snapshot);
+    const options = { version: "v5" as const, memory: createAiPolicyMemory() };
+    const memoryBefore = JSON.stringify(options.memory);
+    const service = navalServices(snapshot, "player", options);
+    expect(service.reserved).toEqual(new Set([crew.id, "departed-hull", hostile.id]));
+    expect(service.commands).toEqual([]);
+    expect(JSON.stringify(snapshot)).toBe(before);
+    expect(JSON.stringify(options.memory)).toBe(memoryBefore);
+  });
   for (const version of ["v5", "v7", "v8"] as const) {
     it(`${version} sends a repair worker across decks and the shared simulation repairs the hull`, () => {
       const game = sea(),

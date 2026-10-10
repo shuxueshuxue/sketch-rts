@@ -53,9 +53,13 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
     const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
+    // The script still runs: it may update its memory even without issuing a
+    // command. Empty results need no conflict copies or command bookkeeping.
+    if (rawScriptCommands.length === 0) continue;
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+    if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));

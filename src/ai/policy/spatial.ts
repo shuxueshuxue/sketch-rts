@@ -1,3 +1,5 @@
+import { hypot2 } from "../../shared/hypot";
+
 export type Point = { x: number; y: number };
 
 export function nearestEntity<T extends Point>(entities: T[], from: Point): T | undefined {
@@ -20,7 +22,7 @@ export function averagePoint(points: Point[]): Point {
 }
 
 export function distance(a: Point, b: Point) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return hypot2(a.x - b.x, a.y - b.y);
 }
 
 export function distanceSquared(a: Point, b: Point) {
@@ -39,7 +41,7 @@ const RANGE_GRID_MIN_ITEMS = 32;
 // sums over it (averagePoint) come out the same. Short lists are simply filtered; an item or point off the grid (a
 // coordinate that is not finite) is tested the plain way.
 export function withinRangeOf<T extends Point>(items: T[], range: number): (point: Point) => T[] {
-  const plain = (point: Point) => items.filter((item) => distance(item, point) <= range);
+  const plain = (point: Point) => items.filter((item) => withinRange(item, point, range));
   if (items.length < RANGE_GRID_MIN_ITEMS) return plain;
   const cell = range + 1;
   let grid: PointGrid<number> | undefined;
@@ -51,12 +53,18 @@ export function withinRangeOf<T extends Point>(items: T[], range: number): (poin
     const hits: number[] = [];
     for (let x = cx - 1; x <= cx + 1; x += 1) {
       for (let y = cy - 1; y <= cy + 1; y += 1) {
-        for (const index of grid.cells.get(gridCellKey(x, y)) ?? []) if (distance(items[index]!, point) <= range) hits.push(index);
+        for (const index of grid.cells.get(gridCellKey(x, y)) ?? []) if (withinRange(items[index]!, point, range)) hits.push(index);
       }
     }
-    for (const index of grid.offGrid) if (distance(items[index]!, point) <= range) hits.push(index);
+    for (const index of grid.offGrid) if (withinRange(items[index]!, point, range)) hits.push(index);
     return hits.sort((a, b) => a - b).map((index) => items[index]!);
   };
+}
+
+function withinRange(a: Point, b: Point, range: number) {
+  const dx = a.x - b.x, dy = a.y - b.y;
+  if (Math.abs(dx) > range || Math.abs(dy) > range) return false;
+  return hypot2(dx, dy) <= range;
 }
 
 // Whether some item is within range of a point, as !items.every((item) => distance(item, point) > range), for many points

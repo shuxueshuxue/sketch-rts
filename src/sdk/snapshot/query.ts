@@ -1,5 +1,5 @@
 import type { Building, BuildingKind, GameSnapshot, MercenaryCamp, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../../shared/types";
-import { createRangeIndex } from "./range-index";
+import { createRangeIndex, type RangeQuery } from "./range-index";
 import { bindGangwayCrewRules } from '../../shared/ship-gangway';
 
 export type SnapshotQueryOptions = {
@@ -25,6 +25,8 @@ export type SnapshotPlayerEntityView = {
   buildings: Building[];
   completeBuildings: Building[];
 };
+
+export type SnapshotPlayerRelation = "own" | "allied" | "enemy";
 
 export type SnapshotPlayerView = {
   owner: PlayerId;
@@ -66,9 +68,14 @@ export type SnapshotQuery = {
   completeBuildingsFor(owner: PlayerId, kind?: BuildingKind): Building[];
   neutralUnitsNear(point: EntityPoint, range: number): Unit[];
   opponentUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
+  opponentCombatUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   opponentBuildingsNear(owner: PlayerId, point: EntityPoint, range: number): Building[];
   hostileUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   hostileCombatUnitsFor(owner: PlayerId): Unit[];
+  /** Selected lists share forPlayer's first-read classification, with a fresh array per call. */
+  playerUnits(owner: PlayerId, relation: SnapshotPlayerRelation, kind?: "worker" | "combat"): Unit[];
+  playerBuildings(owner: PlayerId, relation: SnapshotPlayerRelation, completeOnly?: boolean): Building[];
+  neutralUnitsFor(owner: PlayerId): Unit[];
   forPlayer(owner: PlayerId): SnapshotPlayerView;
 };
 
@@ -88,30 +95,49 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
   let ground:WorldItem[]|undefined;
   const carriedByOwner=new Map<PlayerId,WorldItem[]>();
   let activePlayers: PlayerId[] | undefined;
+  const cachedActivePlayers = () => activePlayers ??= Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
   const unitsByOwner = new Map<PlayerId, Unit[]>();
   const combatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const buildingsByOwner = new Map<PlayerId, Building[]>();
+  const completeBuildingsByOwner = new Map<PlayerId, Map<BuildingKind | undefined, Building[]>>();
   const hostileCombatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const viewByOwner = new Map<PlayerId, SnapshotPlayerView>();
   let unitsById: Map<string, Unit> | undefined;
   let buildingsById: Map<string, Building> | undefined;
   let neutralUnits: Unit[] | undefined;
-  const nearIndexes = new Map<string, (point: EntityPoint, range: number) => Unit[]>();
+  const nearIndexes = new Map<string, RangeQuery<Unit>>();
+  const combatUnit = (unit: Unit) => unit.kind !== "worker";
   const unitsNear = (key: string, matches: (unit: Unit) => boolean) => {
     let near = nearIndexes.get(key);
     if (!near) nearIndexes.set(key, (near = createRangeIndex(snapshot.units.filter(matches))));
     return near;
+  };
+  const cachedPlayerView = (owner: PlayerId, query: SnapshotQuery): SnapshotPlayerView => {
+    let view = viewByOwner.get(owner);
+    if (!view) {
+      const ownTeam = teamFor(owner);
+      const entities = playerEntityViews(snapshot, owner, ownTeam, teamFor);
+      view = {
+        owner,
+        team: ownTeam,
+        ...entities,
+        resources: entitySet(snapshot.resources),
+        mercenaryCamps: entitySet(snapshot.mercenaryCamps),
+        items: { ground: query.groundItems(), carried: query.carriedItemsFor(owner) },
+      };
+      viewByOwner.set(owner, view);
+    }
+    return view;
   };
   return {
     snapshot,
     teamFor,
     isOpponent,
     activePlayerIds() {
-      activePlayers ??= Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
-      return activePlayers.slice();
+      return cachedActivePlayers().slice();
     },
     opponentPlayerIds(owner) {
-      return this.activePlayerIds().filter((candidate) => isOpponent(owner, candidate));
+      return cachedActivePlayers().filter((candidate) => isOpponent(owner, candidate));
     },
     unitById(id) {
       unitsById ??= firstById(snapshot.units);
@@ -173,7 +199,11 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return buildings.slice();
     },
     completeBuildingsFor(owner, kind) {
-      return this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind));
+      let byKind = completeBuildingsByOwner.get(owner);
+      if (!byKind) completeBuildingsByOwner.set(owner, (byKind = new Map()));
+      let buildings = byKind.get(kind);
+      if (!buildings) byKind.set(kind, (buildings = this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind))));
+      return buildings.slice();
     },
     neutralUnitsNear(point, range) {
       neutralUnits ??= snapshot.units.filter((unit) => unit.owner === "neutral");
@@ -181,6 +211,9 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     },
     opponentUnitsNear(owner, point, range) {
       return unitsNear(`opponent ${owner}`, (unit) => isOpponent(owner, unit.owner))(point, range);
+    },
+    opponentCombatUnitsNear(owner, point, range) {
+      return unitsNear(`opponent ${owner}`, (unit) => isOpponent(owner, unit.owner))(point, range, combatUnit);
     },
     opponentBuildingsNear(owner, point, range) {
       return snapshot.buildings.filter((building) => isOpponent(owner, building.owner) && distance(building, point) <= range);
@@ -193,26 +226,19 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       if (!units) hostileCombatUnitsByOwner.set(owner, (units = snapshot.units.filter((unit) => (isOpponent(owner, unit.owner) || unit.owner === "neutral") && unit.kind !== "worker")));
       return units.slice();
     },
+    playerUnits(owner, relation, kind) {
+      const view = cachedPlayerView(owner, this)[relation];
+      return (kind === "worker" ? view.workers : kind === "combat" ? view.combatUnits : view.units).slice();
+    },
+    playerBuildings(owner, relation, completeOnly) {
+      const view = cachedPlayerView(owner, this)[relation];
+      return (completeOnly ? view.completeBuildings : view.buildings).slice();
+    },
+    neutralUnitsFor(owner) {
+      return cachedPlayerView(owner, this).neutral.units.slice();
+    },
     forPlayer(owner) {
-      let view = viewByOwner.get(owner);
-      if (!view) {
-        const ownTeam = teamFor(owner);
-        view = {
-          owner,
-          team: ownTeam,
-          own: entityView(snapshot, (candidate) => candidate === owner),
-          allied: entityView(snapshot, (candidate) => candidate !== owner && candidate !== "neutral" && teamFor(candidate) === ownTeam),
-          enemy: entityView(snapshot, (candidate) => candidate !== "neutral" && teamFor(candidate) !== ownTeam),
-          neutral: { units: snapshot.units.filter((unit) => unit.owner === "neutral") },
-          resources: entitySet(snapshot.resources),
-          mercenaryCamps: entitySet(snapshot.mercenaryCamps),
-          items: {
-            ground: this.groundItems(),
-            carried: this.carriedItemsFor(owner),
-          },
-        };
-        viewByOwner.set(owner, view);
-      }
+      const view = cachedPlayerView(owner, this);
       // resources and mercenaryCamps stay the snapshot's own arrays, as before (see claims.ts, which sorts them in place).
       return {
         owner: view.owner,
@@ -235,16 +261,40 @@ function firstById<T extends { id: string }>(entities: T[]) {
   return byId;
 }
 
-function entityView(snapshot: GameSnapshot, ownerMatches: (owner: Owner) => boolean): SnapshotPlayerEntityView {
-  const units = snapshot.units.filter((unit) => ownerMatches(unit.owner));
-  const buildings = snapshot.buildings.filter((building) => ownerMatches(building.owner));
-  return {
-    units,
-    workers: units.filter((unit) => unit.kind === "worker"),
-    combatUnits: units.filter((unit) => unit.kind !== "worker"),
-    buildings,
-    completeBuildings: buildings.filter((building) => building.complete),
+function playerEntityViews(snapshot: GameSnapshot, owner: PlayerId, ownTeam: string, teamFor: (candidate: Owner) => string) {
+  const emptyView = (): SnapshotPlayerEntityView => ({ units: [], workers: [], combatUnits: [], buildings: [], completeBuildings: [] });
+  const own = emptyView(), allied = emptyView(), enemy = emptyView();
+  const neutral: Unit[] = [];
+  const addUnit = (view: SnapshotPlayerEntityView, unit: Unit) => {
+    view.units.push(unit);
+    (unit.kind === "worker" ? view.workers : view.combatUnits).push(unit);
   };
+  const addBuilding = (view: SnapshotPlayerEntityView, building: Building) => {
+    view.buildings.push(building);
+    if (building.complete) view.completeBuildings.push(building);
+  };
+  // forEach skips sparse slots like filter. Relations remain independent: a
+  // neutral viewer also owns neutrals, and NaN team values never compare equal.
+  snapshot.units.forEach(unit => {
+    const candidate = unit.owner;
+    if (candidate === "neutral") neutral.push(unit);
+    if (candidate === owner) addUnit(own, unit);
+    if (candidate !== "neutral") {
+      const team = teamFor(candidate);
+      if (candidate !== owner && team === ownTeam) addUnit(allied, unit);
+      if (team !== ownTeam) addUnit(enemy, unit);
+    }
+  });
+  snapshot.buildings.forEach(building => {
+    const candidate = building.owner;
+    if (candidate === owner) addBuilding(own, building);
+    if (candidate !== "neutral") {
+      const team = teamFor(candidate);
+      if (candidate !== owner && team === ownTeam) addBuilding(allied, building);
+      if (team !== ownTeam) addBuilding(enemy, building);
+    }
+  });
+  return { own, allied, enemy, neutral: { units: neutral } };
 }
 
 function copyEntityView(view: SnapshotPlayerEntityView): SnapshotPlayerEntityView {
