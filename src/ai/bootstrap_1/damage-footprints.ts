@@ -7,7 +7,7 @@ import { distance } from '../policy/spatial';
 
 /** Damage areas have their own centers; an ally can carry a ground-targeted spell beyond its caster's reach. */
 export function hostileDamageDisks(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[], horizon: number) {
-  const teams = { teams: snapshot.teams };
+  const teams = {};
   const active = snapshot.effects.filter(effect => (effect.type === 'storm' || effect.type === 'burningGround')
     && isEnemyOwner(snapshot, patient.owner, effect.owner!, teams)).map(effect =>
     ({ x: effect.x, y: effect.y, radius: effect.radius! + (effect.type === 'burningGround' ? patient.radius : 0) }));
