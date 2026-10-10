@@ -1,5 +1,6 @@
 import { detCos, detSin } from '../../shared/det-math';
-import { isWalkable, sameGround } from '../../shared/terrain';
+import { isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
+import { nearestByRoute } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -15,7 +16,7 @@ function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers:
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
     ...Array.from({ length: 16 }, (_, index) => index * Math.PI / 8)];
-  return angles.map(angle => ({ x: worker.x + detCos(angle) * (rider.attackRange - 10), y: worker.y + detSin(angle) * (rider.attackRange - 10) }))
+  const points = angles.map(angle => ({ x: worker.x + detCos(angle) * (rider.attackRange - 10), y: worker.y + detSin(angle) * (rider.attackRange - 10) }))
     .filter(point => point.x >= 0 && point.y >= 0 && point.x < snapshot.map.width && point.y < snapshot.map.height
       && isWalkable(snapshot.map, point.x, point.y) && sameGround(snapshot.map, rider, point)
       && towers.every(tower => distance(point, tower) > tower.attackRange + rider.radius)
@@ -23,8 +24,8 @@ function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers:
         const gap = distance(point, foe);
         return gap >= THREAT_RANGE || gap > mountedThreatReach(snapshot, foe, { ...point, radius: rider.radius }, THINK_TICKS + rider.cooldown)
           + foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
-      }))
-    .sort((a, b) => distance(rider, a) - distance(rider, b))[0];
+      }));
+  return nearestByRoute(snapshot.map, points, rider, 'land');
 }
 
 function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
@@ -79,17 +80,16 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   }
   if (!riders.length) return active;
   const lead = riders[0]!;
-  const halls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
-    .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders)))
-    .sort((a, b) => distance(lead, a) - distance(lead, b));
-  const camp = neutralCamps(snapshot).filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
+  const hall = nearestByRoute(snapshot.map, snapshot.buildings
+    .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
+    .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders))), lead, 'land');
+  const camps = neutralCamps(snapshot).filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
       && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
-    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange))
-    .sort((a, b) => distance(lead, a.center) - distance(lead, b.center))[0];
+    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange));
+  const camp = nearestByRoute(snapshot.map, camps.map(camp => ({ ...camp.center, camp })), lead, 'land')?.camp;
   // A lone scout raids an exposed line when it is closer than the next camp.
-  if (halls.length && (riders.length >= 2 || !camp
-    || distance(lead, halls[0]!) < distance(lead, camp.center))) {
-    const hall = halls[0]!;
+  if (hall && (riders.length >= 2 || !camp
+    || walkingDistance(snapshot.map, lead, hall, 'land')! < walkingDistance(snapshot.map, lead, camp.center, 'land')!)) {
     active.push({ unitIds: riders.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
     return active;
   }
