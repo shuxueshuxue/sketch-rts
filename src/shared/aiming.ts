@@ -11,10 +11,14 @@ function requiresAiming(rules: UnitDef) {
   return !(rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD);
 }
 
+function aimingSpeed(rules: UnitDef) {
+  return (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER;
+}
+
 export function aimingProfile(rules: UnitDef) {
   if (!requiresAiming(rules)) return undefined;
   return {
-    speed: (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER,
+    speed: aimingSpeed(rules),
     moveTolerance: rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE,
   };
 }
@@ -41,9 +45,9 @@ function invalidateAimByTolerance(unit: Unit, tolerance: number) {
 
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
 export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, speedMultiplier = 1) {
-  const profile = aimingProfile(rules);
-  if (!profile) { unit.aim = undefined; return true; }
-  invalidateAimByTolerance(unit, profile.moveTolerance);
+  if (!requiresAiming(rules)) { unit.aim = undefined; return true; }
+  const speed = aimingSpeed(rules);
+  invalidateAimByTolerance(unit, rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE);
   if (!unit.aim) {
     unit.aim = { x: unit.x, y: unit.y, anchorX: unit.x, anchorY: unit.y, tracking: true, updatedTick: tick - 1 };
     if(unit.deck){unit.aim.anchorDeckX=unit.deck.x;unit.aim.anchorDeckY=unit.deck.y;}
@@ -57,7 +61,7 @@ export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, s
     }
     const dx = target.x - aim.x, dy = target.y - aim.y;
     const gap = Math.hypot(dx, dy);
-    const step = perTick(profile.speed * speedMultiplier);
+    const step = perTick(speed * speedMultiplier);
     if (gap <= step) { aim.x = target.x; aim.y = target.y; }
     else { aim.x += dx / gap * step; aim.y += dy / gap * step; }
     aim.updatedTick = tick;
