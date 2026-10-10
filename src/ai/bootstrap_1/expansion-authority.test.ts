@@ -33,6 +33,7 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
       }).join('')).join('') };
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     let returned = false;
+    const minedLoads = new Set<string>();
     const sites: { x: number; y: number }[] = [];
     for (let tick = 0; tick < 6000 && !returned && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
@@ -40,9 +41,13 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
         for (const { command } of entries) if (command.type === 'build' && command.buildingKind === 'townHall') sites.push(command);
         issueCommandFrame(game, entries);
       }
-      const returning = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'natural' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const returning = game.units.filter(unit => unit.owner === 'us' && minedLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'natural' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'natural'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) minedLoads.add(unit.id);
       returned = returning.some(unit => unit.hp > 0 && unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
     }
     expect(returned).toBe(true);
@@ -80,6 +85,7 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
       }).join('')).join('') };
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     let returned = false;
+    const minedLoads = new Set<string>();
     for (let tick = 0; tick < 3000 && !returned; tick++) {
       if (tick % 15 === 0) {
         const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
@@ -90,9 +96,13 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
           [AI_SCRIPT_LIBRARY.economy, miningWorkforce, bootstrapEconomy, miningAssignments], options)
           .map(entry => ({ ...entry, playerId: 'us', source: 'external-agent' as const })));
       }
-      const returning = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+      const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine'
+        && unit.order.resourceId === 'next' && unit.order.phase === 'gather' && unit.carryingGold === 0);
+      const returning = game.units.filter(unit => unit.owner === 'us' && minedLoads.has(unit.id) && unit.order.type === 'mine'
         && unit.order.resourceId === 'next' && unit.order.phase === 'return' && unit.carryingGold > 0);
       stepGame(game);
+      for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'next'
+        && unit.order.phase === 'return' && unit.carryingGold > 0) minedLoads.add(unit.id);
       returned = returning.some(unit => unit.hp > 0 && unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
     }
     expect(returned).toBe(true);
