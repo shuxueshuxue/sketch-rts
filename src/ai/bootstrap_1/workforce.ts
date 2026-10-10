@@ -14,11 +14,7 @@ export const miningWorkforce: AiScript = {
 
 export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, constructionCrew = 1): GameCommand[] {
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
-  const miningHalls = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
-    && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
-  const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && !unit.deck).length;
-  const queued = halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
-  let missing = Math.min(36, miningHalls.length * GOLD_MINE_RULES.workstations + constructionCrew) - workers - queued;
+  let missing = missingMiningWorkers(snapshot, owner, constructionCrew);
   let gold = snapshot.players[owner]!.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
   const commands: GameCommand[] = [];
@@ -31,4 +27,14 @@ export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, con
     supply += UNIT_DEFS.worker.supplyUsed;
   }
   return commands;
+}
+
+/** A living worker in transit or a paid recruit still belongs to the mining workforce. */
+export function missingMiningWorkers(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number) {
+  const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
+  const mining = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
+    && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
+  const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker').length;
+  const queued = halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
+  return Math.min(36, mining.length * GOLD_MINE_RULES.workstations + constructionCrew) - workers - queued;
 }
