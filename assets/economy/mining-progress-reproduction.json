@@ -1,0 +1,22 @@
+{
+  "scope": "Portable repository driver reproduces all 122 rows of the original after measurement; additionally checks conservation every tick in both command scenarios. The original after record and its actual temporary-driver hash are preserved.",
+  "sourceCommit": "68dc45a1cde6f58c06c48796e2ad66d821dd5b9d",
+  "driver": "scripts/mining-waiting-review.ts",
+  "driverSha256": "c051ad1485fe862018d999cf1823b81c4c610101e3e24248ef993823b68a0d88",
+  "rows": 122,
+  "allRowsExactlyEqual": true,
+  "allRowsConservedEveryTick": true,
+  "rowsSha256": "9d84ea8b99372260de12cf7c71f1f1bf1450f48ab41983960e513f59ffccaf60",
+  "sourceInputs": {
+    "src/shared/sim.ts": "9075e76a13cea91720fa8e0d82c76c93f088fdb3cf5a382ae31ea886446eb206",
+    "src/shared/mining.ts": "18b44c3813e955295dd6b808c1c5162c6c51e652dd0b60041287d8c3eb926538",
+    "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+    "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+    "src/shared/terrain.ts": "2e232df1aaf5913434ba62f41070d3b7c53bd838c0b7ca4225d65df752eef0de",
+    "src/shared/catalog.ts": "2dd742e037286a9a92b55ceff975bacbb0ffd613d64da75c459ee48d64bd8829",
+    "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+    "src/shared/mining-site.ts": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+    "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+    "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49"
+  }
+}

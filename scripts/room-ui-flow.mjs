@@ -9,12 +9,22 @@ export const roomUiFlowCode = String.raw`
     return { x: bounds.x + transform.m41, y: bounds.y + transform.m42,
       width: parseFloat(frame.style.width), height: parseFloat(frame.style.height) };
   });
-  const automaticSoloSetup = async (poolMapId) => {
+  const confirmedSoloSetup = async (poolMapId) => {
     await page.waitForSelector("[data-map-entries] [data-map-id]", { timeout: 5000 });
     const entry = poolMapId ? page.locator("[data-map-entries] [data-map-id='" + poolMapId + "']") : page.locator("[data-map-entries] [data-map-id]").first();
     const selectedMapId = await entry.getAttribute("data-map-id");
     must(selectedMapId, "map chooser did not expose a selected map");
     await entry.click();
+    const draft = await page.evaluate(() => ({
+      mapId: new URLSearchParams(location.search).get("map"),
+      view: new URLSearchParams(location.search).get("view"),
+      selected: document.querySelector("[data-map-entries] [aria-pressed='true']")?.getAttribute("data-map-id"),
+      rooms: document.querySelectorAll("[data-room-setup]").length,
+      confirms: document.querySelectorAll("[data-map-next]").length,
+    }));
+    must(draft.mapId === selectedMapId && draft.selected === selectedMapId && draft.view === "maps" && draft.rooms === 0 && draft.confirms === 1,
+      "map click must only select and preview the map: " + JSON.stringify(draft));
+    await page.locator("[data-map-next]").click();
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
     await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
     const setup = await page.evaluate(() => {
@@ -27,7 +37,7 @@ export const roomUiFlowCode = String.raw`
       };
     });
     must(setup.id && setup.mapId === selectedMapId && setup.seed && setup.seats && setup.visibility === "private" && setup.solo && setup.createButtons === 0,
-      "map click must create the configured solo setup directly: " + JSON.stringify(setup));
+      "confirming the map must enter the configured solo setup: " + JSON.stringify(setup));
     return setup.id;
   };
   // Gameplay proofs use authoritative HTTP/WS fixtures. Move the real solo

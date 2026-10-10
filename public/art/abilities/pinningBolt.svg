@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs><radialGradient id="ground" cx=".48" cy=".38" r=".8"><stop stop-color="#a48b67" stop-opacity=".28"/><stop offset="1" stop-color="#101920"/></radialGradient><linearGradient id="edge" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b9a07b"/><stop offset=".48" stop-color="#655846"/><stop offset="1" stop-color="#403d34"/></linearGradient><linearGradient id="wood" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#d0b280"/><stop offset=".48" stop-color="#987149"/><stop offset="1" stop-color="#513c2c"/></linearGradient><linearGradient id="leather" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b68a61"/><stop offset=".48" stop-color="#76513b"/><stop offset="1" stop-color="#3f302b"/></linearGradient><linearGradient id="bronze" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f0d7a0"/><stop offset=".48" stop-color="#bc8f50"/><stop offset="1" stop-color="#654526"/></linearGradient><linearGradient id="steel" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#e2e4d5"/><stop offset=".48" stop-color="#879ca4"/><stop offset="1" stop-color="#394952"/></linearGradient><linearGradient id="bone" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#f5ebc9"/><stop offset=".48" stop-color="#d6c396"/><stop offset="1" stop-color="#a58859"/></linearGradient></defs>
+<path d="M12 3 C37 2 91 2 116 4 Q124 5 125 14 L125 114 Q125 124 114 125 L14 125 Q3 124 3 113 L3 15 Q3 5 12 3Z" fill="#11191f"/>
+<path d="M12 6 L116 6 Q122 7 122 14 L122 114 Q121 121 114 122 L14 122 Q7 121 6 113 L6 15 Q6 8 12 6Z" fill="url(#ground)" stroke="url(#edge)" stroke-width="2.2"/>
+<path d="M15 10 L43 10 M10 16 L10 42 M114 118 L89 118 M118 115 L118 90" stroke="#d6c19b" stroke-opacity=".32" stroke-width="1.2" fill="none"/>
+<g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m40 28 27-7 24 11 4 34-11 25-26 17-23-20-9-30Z" fill="url(#wood)"/>
+    <path d="m43 34 23-7 19 9 4 29-10 21-21 16-19-18-8-26Z" fill="url(#leather)"/>
+    <path d="m43 35 6 22-1 33m13-61 1 66m16-61-5 21 6 28" fill="none" stroke="#977449" stroke-width="1.7"/>
+    <path d="m44 40 19-6 18 8m-44 22 6 18 14 12m26-34-8 21-9 7" fill="none" stroke="#d6ad76" stroke-width="1.7"/>
+    <path d="m37 34 7 4m43-2-6 5m11 23-6-1m-48 23 6-4m17 23-1-7m23-10-6-3" fill="none" stroke="#f0c995" stroke-width="2"/>
+    <path d="m41 38 1 1m-7 16 1 1m2 22 1 1m14 18 1 1m18-7 1-1m14-25 1-1m-5-18 1-1m-21-16 1 1" fill="none" stroke="#2d2922" stroke-width="3.4"/>
+    <path d="m48 67 6-8 13 1 6 10-8 9-12-3Z" fill="url(#bronze)"/>
+    <path d="m54 66 7-3 6 4-1 7-8 2-5-5Z" fill="#8b683e"/>
+    <path d="m21 89 72-54 5 6-73 55Z" fill="url(#wood)"/>
+    <path d="m90 35 14-13 6 4-8 17-10 3Z" fill="url(#steel)"/>
+    <path d="m100 30 6-4-6 13m-8 3-3-4" fill="none" stroke="#e4ece5" stroke-width="1.5"/>
+    <path d="m24 86-8 0 9-11 10-3 0 8m-8 13-3 11 16-8 2-11" fill="url(#bone)"/>
+    <path d="m20 84 9-6m1 20 6-8m2-9 48-35" fill="none" stroke="#e0c698" stroke-width="1.5"/>
+    <path d="m57 59-6-9m16 17 12-4m-20 12-2 11m7-29 5-7m-18 24-7 3" fill="none" stroke-width="1.5"/>
+    <path d="m86 98 8-7m-63-53-8 9" fill="none" stroke="#a6c1aa" stroke-width="1.7"/>
+  </g></g>
+</svg>

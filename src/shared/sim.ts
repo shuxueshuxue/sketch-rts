@@ -538,7 +538,12 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const resource = game.resources.find((candidate) => candidate.id === command.resourceId);
     if (!resource) throw new Error(`Unknown resource ${command.resourceId}`);
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
-      assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: unit.carryingGold > 0 ? "return" : "toMine", timer: 0 }, command.queued);
+      // Reaffirming the same mine keeps the current haul and queue position.
+      // Resetting gather here discarded completed work on every right-click.
+      const order: UnitOrder = !command.queued && unit.order.type === "mine" && unit.order.resourceId === resource.id
+        ? unit.order
+        : { type: "mine", resourceId: resource.id, phase: unit.carryingGold > 0 ? "return" : "toMine", timer: 0 };
+      assignUnitOrder(unit, order, command.queued);
     }
     addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30, { owner });
     return;

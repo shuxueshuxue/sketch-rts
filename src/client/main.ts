@@ -929,7 +929,7 @@ function renderMainMenu() {
   );
 }
 
-// Selecting a map enters its ready-to-configure single-player room directly.
+// Map clicks only preview the draft; the footer confirms entry to room setup.
 function renderMapSelectionMenu() {
   menuTitle.textContent = t("roomCreate.chooseMap");
   menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : '');
@@ -944,17 +944,19 @@ function renderMapSelectionMenu() {
       ${mapDetailMarkup()}
     </div>
 `, `
+      <button type="button" data-map-next ${roomSetupSession.busy ? 'disabled' : ''}>${escapeHtml(t("common.continue"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
 `);
   const renderMaps = () => {
     panel.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
       const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
-        pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: 'private' };
+        if (roomSetupSession.busy) return;
+        if (chosenMapId !== map.id) pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: 'private' };
         chosenMapId = map.id;
         setRoomRoute({ screen: "maps", configuration: pendingRoomConfiguration }, true);
         renderMaps();
-        void createConfiguredRoom(pendingRoomConfiguration);
       }, map.id);
+      entry.disabled = roomSetupSession.busy;
       entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
       entry.setAttribute("aria-pressed", String(map.id === chosenMapId));
       return entry;
@@ -962,6 +964,9 @@ function renderMapSelectionMenu() {
     showMapDetail(panel, chosenMapId, previewSeatsForRoom(draftRoom()), pendingRoomConfiguration.layoutSeed);
   };
   renderMaps();
+  panel.querySelector("[data-map-next]")!.addEventListener("click", () => {
+    if (!roomSetupSession.busy) void createConfiguredRoom(pendingRoomConfiguration);
+  });
   panel.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
   mapList.replaceChildren(panel);
 }
@@ -3638,7 +3643,7 @@ function syncVirtualPointerOverlay() {
   const background = icon ? `url(${JSON.stringify(icon)})` : '';
   if (virtualPointerElement.style.backgroundImage !== background) virtualPointerElement.style.backgroundImage = background;
   virtualPointerElement.style.transform = icon && hoverCursor.hotspot
-    ? `translate(${virtualMouse.x - hoverCursor.hotspot[0]}px, ${virtualMouse.y - hoverCursor.hotspot[1]}px)`
+    ? `translate(${Math.round(virtualMouse.x - hoverCursor.hotspot[0])}px, ${Math.round(virtualMouse.y - hoverCursor.hotspot[1])}px)`
     : virtualPointerTransform(virtualMouse, 18);
   syncVirtualTooltip(virtualMouse);
 }

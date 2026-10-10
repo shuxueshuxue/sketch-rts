@@ -1,5 +1,7 @@
 {
   "schemaVersion": 1,
+  "artFormatAtCapture": "webp",
+  "retainedAs": "Historical status-strip functional acceptance; captured URLs and PNG screenshots precede the hand-authored SVG replacement and are not evidence of its current appearance or loading.",
   "scope": "actual app entry, native selection/Tab/skill commands, original renderer; functional acceptance, no FPS claim",
   "totalChecks": 16,
   "results": [

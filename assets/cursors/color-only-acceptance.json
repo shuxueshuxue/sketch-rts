@@ -1,0 +1,448 @@
+{
+  "scope": "Real 2D and 3D hover, native styles/URLs/hotspots and actual locked pointer DOM; fixed unit fixtures and animation cadence, not FPS or native cursor pixel capture.",
+  "results": [
+    {
+      "mode": "3D",
+      "checks": [
+        {
+          "case": "native own inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/own.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native ally inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/ally.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native enemy inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/enemy.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native neutral inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "blank ground clears prior relation cursor",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "active targeting retains crosshair over enemies",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "active building placement retains copy cursor over enemies",
+          "passed": true,
+          "state": {
+            "native": "copy",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "production pointer-lock own image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/own.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 477,
+            "y": 392,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 486,
+            "y": 401.8888888888887
+          }
+        },
+        {
+          "case": "production pointer-lock ally image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/ally.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 607,
+            "y": 392,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 616,
+            "y": 401.8888888888887
+          }
+        },
+        {
+          "case": "production pointer-lock enemy image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/enemy.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 737,
+            "y": 392,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 746,
+            "y": 401.8888888888887
+          }
+        },
+        {
+          "case": "locked targeting clears inspection artwork and restores command pointer",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "none",
+            "width": 18,
+            "height": 18,
+            "x": 477,
+            "y": 392,
+            "hidden": false,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "menu clears cursor relation",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        }
+      ],
+      "rendered": {
+        "is3D": true,
+        "modelHits": 46
+      },
+      "errors": []
+    },
+    {
+      "mode": "2D",
+      "checks": [
+        {
+          "case": "native own inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/own.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native ally inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/ally.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native enemy inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/enemy.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "native neutral inspection cursor and same crosshair geometry and centered hotspot",
+          "passed": true,
+          "state": {
+            "native": "url(\"http://127.0.0.1:5173/art/cursors/neutral.svg\") 12 12, crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "blank ground clears prior relation cursor",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "active targeting retains crosshair over enemies",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "active building placement retains copy cursor over enemies",
+          "passed": true,
+          "state": {
+            "native": "copy",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "production pointer-lock own image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/own.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 477,
+            "y": 449,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 486,
+            "y": 458.8888888888887
+          }
+        },
+        {
+          "case": "production pointer-lock ally image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/ally.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 607,
+            "y": 449,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 616,
+            "y": 458.8888888888887
+          }
+        },
+        {
+          "case": "production pointer-lock enemy image with exact hotspot",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "url(\"http://127.0.0.1:5173/art/cursors/locked/enemy.svg\")",
+            "width": 18,
+            "height": 18,
+            "x": 737,
+            "y": 449,
+            "hidden": false,
+            "relation": true,
+            "before": "none"
+          },
+          "point": {
+            "x": 746,
+            "y": 458.8888888888887
+          }
+        },
+        {
+          "case": "locked targeting clears inspection artwork and restores command pointer",
+          "passed": true,
+          "state": {
+            "native": "none",
+            "locked": true,
+            "image": "none",
+            "width": 18,
+            "height": 18,
+            "x": 477,
+            "y": 449,
+            "hidden": false,
+            "relation": false,
+            "before": "block"
+          }
+        },
+        {
+          "case": "menu clears cursor relation",
+          "passed": true,
+          "state": {
+            "native": "crosshair",
+            "locked": false,
+            "image": "none",
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "hidden": true,
+            "relation": false,
+            "before": "block"
+          }
+        }
+      ],
+      "rendered": {
+        "is3D": false,
+        "modelHits": 0
+      },
+      "errors": []
+    }
+  ],
+  "sourceHashes": {
+    "src/client/unit-hover-cursor.ts": "e4ad7fcea5a38108c482197ea347236cbec1b3ff984dc5fd615a749b502083d3",
+    "src/client/main.ts": "95caeacbb835a4571dc5913e26554ea7fbd36d61149e0e213060a0578ea06d98",
+    "src/client/styles.css": "4f8e78f921b248a46967f1897ce0ccf1d9e9bce2e9870f802ae1de7ec34903d9",
+    "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6",
+    "public/art/cursors/own.svg": "34600ae27d7e0d2c6230a3598f293c1661f34e479ebdfb2bb44832f8947df939",
+    "public/art/cursors/ally.svg": "adf2f6344752b45dab4efe206656bb078fcc9e348f20027079c885e4f695bb79",
+    "public/art/cursors/enemy.svg": "842d201907d577db5d1111c9794b3d5211b66f2efc5275ab835be4a05b247224",
+    "public/art/cursors/neutral.svg": "eb2c4de29871deab4786c87294108284f362242401efcabac51fa3bb8bc771cd",
+    "public/art/cursors/locked/own.svg": "c83b885218c75ea1e9c3d22a2ae4cc52495dcb5027e61da992d9ce61744a3c1f",
+    "public/art/cursors/locked/ally.svg": "12fb3f0c970d6c59aece7d2434d1de101815c465be291c22902db8a6f120a0ef",
+    "public/art/cursors/locked/enemy.svg": "be87f4556049c967af077c0e0d565e88bbb781f53afdfb63ec38f513b721bee8",
+    "public/art/cursors/locked/neutral.svg": "1d986e5cee2235225dc9cf75406272ec11d16b77a61b13e67770efc575ab4413"
+  },
+  "driverSha256": "c63a93b9d77f149e23b8ccb36feccd8f91e12d663b8bd837f868dab61133db2e"
+}
