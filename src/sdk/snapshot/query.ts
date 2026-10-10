@@ -1,5 +1,5 @@
 import type { Building, BuildingKind, GameSnapshot, MercenaryCamp, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../../shared/types";
-import { createRangeIndex } from "./range-index";
+import { createRangeIndex, type RangeQuery } from "./range-index";
 import { bindGangwayCrewRules } from '../../shared/ship-gangway';
 
 export type SnapshotQueryOptions = {
@@ -66,6 +66,7 @@ export type SnapshotQuery = {
   completeBuildingsFor(owner: PlayerId, kind?: BuildingKind): Building[];
   neutralUnitsNear(point: EntityPoint, range: number): Unit[];
   opponentUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
+  opponentCombatUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   opponentBuildingsNear(owner: PlayerId, point: EntityPoint, range: number): Building[];
   hostileUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   hostileCombatUnitsFor(owner: PlayerId): Unit[];
@@ -88,6 +89,7 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
   let ground:WorldItem[]|undefined;
   const carriedByOwner=new Map<PlayerId,WorldItem[]>();
   let activePlayers: PlayerId[] | undefined;
+  const cachedActivePlayers = () => activePlayers ??= Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
   const unitsByOwner = new Map<PlayerId, Unit[]>();
   const combatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const buildingsByOwner = new Map<PlayerId, Building[]>();
@@ -97,7 +99,8 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
   let unitsById: Map<string, Unit> | undefined;
   let buildingsById: Map<string, Building> | undefined;
   let neutralUnits: Unit[] | undefined;
-  const nearIndexes = new Map<string, (point: EntityPoint, range: number) => Unit[]>();
+  const nearIndexes = new Map<string, RangeQuery<Unit>>();
+  const combatUnit = (unit: Unit) => unit.kind !== "worker";
   const unitsNear = (key: string, matches: (unit: Unit) => boolean) => {
     let near = nearIndexes.get(key);
     if (!near) nearIndexes.set(key, (near = createRangeIndex(snapshot.units.filter(matches))));
@@ -108,11 +111,10 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     teamFor,
     isOpponent,
     activePlayerIds() {
-      activePlayers ??= Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
-      return activePlayers.slice();
+      return cachedActivePlayers().slice();
     },
     opponentPlayerIds(owner) {
-      return this.activePlayerIds().filter((candidate) => isOpponent(owner, candidate));
+      return cachedActivePlayers().filter((candidate) => isOpponent(owner, candidate));
     },
     unitById(id) {
       unitsById ??= firstById(snapshot.units);
@@ -186,6 +188,9 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     },
     opponentUnitsNear(owner, point, range) {
       return unitsNear(`opponent ${owner}`, (unit) => isOpponent(owner, unit.owner))(point, range);
+    },
+    opponentCombatUnitsNear(owner, point, range) {
+      return unitsNear(`opponent ${owner}`, (unit) => isOpponent(owner, unit.owner))(point, range, combatUnit);
     },
     opponentBuildingsNear(owner, point, range) {
       return snapshot.buildings.filter((building) => isOpponent(owner, building.owner) && distance(building, point) <= range);

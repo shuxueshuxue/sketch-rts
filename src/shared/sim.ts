@@ -1322,79 +1322,65 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
     // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
     // strikes nor casts, and its order waits for it.
     if (unit.order.type !== "charge") {
-      if (isStaggered(unit) || isStunned(unit)) continue;
+      if ((unit.pushX !== undefined && isStaggered(unit)) || (unit.effects.length !== 0 && isStunned(unit))) continue;
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
       if (autoRepairDeckShip(game, unit)) continue;
       autocastStep(game, unit);
     }
-    if (unit.order.type === "charge") {
-      updateChargeOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "move") {
-      if (followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
-      if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
-      continue;
-    }
-    if (unit.order.type === "attackMove") {
-      updateAttackMoveOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "hold") {
-      updateHoldOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "aim") {
-      updateAimOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "follow") {
-      updateFollowOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "cast") {
-      updateCastOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "attack") {
-      updateAttackOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "mine") {
-      updateMineOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "build") {
-      updateBuildOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "repair") {
-      updateRepairOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "repairUnit" || unit.order.type === "repairShip") {
-      updateUnitRepairOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "pickupItem") {
-      updatePickupItemOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "board") {
-      updateBoardOrder(game, unit);
-      (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
-      continue;
-    }
-    if(unit.order.type==='boardShip') {
-      updateBoardShipOrder(game,unit);
-      continue;
-    }
-    if (unit.order.type === "unload") {
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
-      (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
-      continue;
+    switch (unit.order.type) {
+      case "charge":
+        updateChargeOrder(game, unit);
+        continue;
+      case "move":
+        if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
+        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
+        if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
+        continue;
+      case "attackMove":
+        updateAttackMoveOrder(game, unit);
+        continue;
+      case "hold":
+        updateHoldOrder(game, unit);
+        continue;
+      case "aim":
+        updateAimOrder(game, unit);
+        continue;
+      case "follow":
+        updateFollowOrder(game, unit);
+        continue;
+      case "cast":
+        updateCastOrder(game, unit);
+        continue;
+      case "attack":
+        updateAttackOrder(game, unit);
+        continue;
+      case "mine":
+        updateMineOrder(game, unit);
+        continue;
+      case "build":
+        updateBuildOrder(game, unit);
+        continue;
+      case "repair":
+        updateRepairOrder(game, unit);
+        continue;
+      case "repairUnit": case "repairShip":
+        updateUnitRepairOrder(game, unit);
+        continue;
+      case "pickupItem":
+        updatePickupItemOrder(game, unit);
+        continue;
+      case "board":
+        updateBoardOrder(game, unit);
+        (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
+        continue;
+      case "boardShip":
+        updateBoardShipOrder(game, unit);
+        continue;
+      case "unload":
+        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
+        (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
+        continue;
     }
     if (unit.kind === "worker" && !unit.deck && updateAutoRepair(game, unit)) continue;
     if(combatHull(unit) && unit.owner!=='neutral') {
@@ -3982,15 +3968,13 @@ function slideUnits(game: Game) {
   }
 }
 
-type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number; cachedCount: number };
+type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number };
 type SeparationFrame = {
   buckets: Map<number, SeparationBucket>;
   pool: SeparationBucket[];
   members: Unit[];
   cellX: number[];
   cellY: number[];
-  memberBuckets: SeparationBucket[];
-  memberSlots: number[];
   // Flattened bucket pairs preserve the original map and neighbor traversal.
   pairs: SeparationBucket[];
   valid: boolean;
@@ -4001,11 +3985,10 @@ function clearSeparationMembership(frame: SeparationFrame) {
   for (const bucket of frame.buckets.values()) {
     for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
     bucket.count = 0;
-    bucket.cachedCount = 0;
   }
   frame.buckets.clear();
   frame.members.length = frame.cellX.length = frame.cellY.length = 0;
-  frame.memberBuckets.length = frame.memberSlots.length = frame.pairs.length = 0;
+  frame.pairs.length = 0;
   frame.valid = false;
 }
 
@@ -4031,17 +4014,13 @@ function separateUnits(game: Game) {
   const cellSize = 80;
   let frame = separationFrames.get(game);
   if (!frame) {
-    frame = { buckets: new Map(), pool: [], members: [], cellX: [], cellY: [], memberBuckets: [], memberSlots: [], pairs: [], valid: false };
+    frame = { buckets: new Map(), pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false };
     separationFrames.set(game, frame);
   }
   const buckets = frame.buckets;
   const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
-  if (separationMembershipMatches(game, frame, cellSize)) {
-    for (let i = 0; i < frame.members.length; i += 1) {
-      frame.memberBuckets[i]!.units[frame.memberSlots[i]!] = frame.members[i]!;
-    }
-    for (const bucket of buckets.values()) bucket.count = bucket.cachedCount;
-  } else {
+  const openGround = !game.map.terrain && groundShipFrameEmpty(game.units);
+  if (!separationMembershipMatches(game, frame, cellSize)) {
     // Cell/order changes rebuild in precisely this frame's source order. Clear
     // the old metadata before reusing pooled buckets, never after filling them.
     clearSeparationMembership(frame);
@@ -4057,18 +4036,16 @@ function separateUnits(game: Game) {
         if (bucket) {
           bucket.x = x; bucket.y = y; bucket.count = 0;
         } else {
-          bucket = { x, y, units: [], count: 0, cachedCount: 0 };
+          bucket = { x, y, units: [], count: 0 };
           frame.pool.push(bucket);
         }
         buckets.set(key, bucket);
       }
       frame.members.push(unit);
       frame.cellX.push(x); frame.cellY.push(y);
-      frame.memberBuckets.push(bucket); frame.memberSlots.push(bucket.count);
       bucket.units[bucket.count++] = unit;
     }
     for (const bucket of buckets.values()) {
-      bucket.cachedCount = bucket.count;
       frame.pairs.push(bucket, bucket);
       for (const [ox, oy] of SEPARATION_NEIGHBORS) {
         const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
@@ -4079,14 +4056,10 @@ function separateUnits(game: Game) {
     frame.valid = true;
   }
   for (let i = 0; i < frame.pairs.length; i += 2) {
-    separateUnitBuckets(game, frame.pairs[i]!, frame.pairs[i + 1]!, aPoint, bPoint);
+    separateUnitBuckets(game, frame.pairs[i]!, frame.pairs[i + 1]!, aPoint, bPoint, openGround);
   }
-  for (const bucket of buckets.values()) {
-    // Only bounded live membership metadata retains bodies between phases.
-    // Removal and restore hooks release it; working slots never retain bodies.
-    for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
-    bucket.count = 0;
-  }
+  // Buckets and metadata retain the same bounded live membership. Removal,
+  // restore and any membership change clear both before storage is reused.
 }
 
 const SEPARATION_NEIGHBORS = [
@@ -4096,7 +4069,7 @@ const SEPARATION_NEIGHBORS = [
   [0, 1],
 ] as const;
 
-function separateUnitBuckets(game: Game, aBucket: SeparationBucket, bBucket: SeparationBucket, aPoint: SpatialEntity, bPoint: SpatialEntity) {
+function separateUnitBuckets(game: Game, aBucket: SeparationBucket, bBucket: SeparationBucket, aPoint: SpatialEntity, bPoint: SpatialEntity, openGround: boolean) {
   const aUnits = aBucket.units, bUnits = bBucket.units;
   const sameBucket = aBucket === bBucket;
   for (let i = 0; i < aBucket.count; i += 1) {
@@ -4108,7 +4081,7 @@ function separateUnitBuckets(game: Game, aBucket: SeparationBucket, bBucket: Sep
       const dy = b.y - a.y;
       const distanceSq = dx * dx + dy * dy;
       if (distanceSq >= minDistance * minDistance) continue;
-      separateUnitPair(game, a, b, minDistance, dx, dy, aPoint, bPoint);
+      separateUnitPair(game, a, b, minDistance, dx, dy, aPoint, bPoint, openGround);
     }
   }
 }
@@ -4122,7 +4095,7 @@ function minerGhost(unit: Unit) {
 
 // Hulls are constrained by swept motion. Ground separation cannot push a body
 // underneath a reachable hull; passengers use the deck's local floor instead.
-function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx: number, dy: number, aPoint: SpatialEntity, bPoint: SpatialEntity) {
+function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx: number, dy: number, aPoint: SpatialEntity, bPoint: SpatialEntity, openGround: boolean) {
   if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
   const aMover = unitMover(a.kind), bMover = unitMover(b.kind);
   if (aMover !== bMover) return;
@@ -4135,6 +4108,12 @@ function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx:
   const ay = clamp(a.y - ny * push, 0, game.map.height);
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
+  if (openGround && !a.deck && !b.deck) {
+    // Open terrain and an initialized empty hull frame return these exact
+    // endpoints; retain the constrained path for every deck or hull contact.
+    a.x = ax; a.y = ay; b.x = bx; b.y = by;
+    return;
+  }
   // Neither is pushed onto ground it cannot stand on (see @@@terrain): one by a wall slides along it (see openStep).
   aPoint.x = ax; aPoint.y = ay;
   const aAt = a.deck ? deckSeparationPoint(game,a,aPoint) : constrainGroundShipStep(game.map,a,a,openStep(game.map, a, aPoint, aMover),game.units);

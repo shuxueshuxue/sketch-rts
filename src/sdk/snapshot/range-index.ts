@@ -4,6 +4,8 @@ import { hypot2 } from "../../shared/hypot";
 const RANGE_CELL = 256;
 const RANGE_INDEX_MIN_ITEMS = 32;
 
+export type RangeQuery<T extends EntityPoint> = (point: EntityPoint, range: number, matches?: (item: T) => boolean) => T[];
+
 // @@@range-index - items.filter((item) => distance(item, point) <= range) for many points and ranges against the same
 // items. With big armies a planner asks "which enemies are near this unit" once per unit, and a filter over every unit each
 // time made a think grow with the square of the army. The items go into a grid of RANGE_CELL cells on the first question; a
@@ -11,15 +13,17 @@ const RANGE_INDEX_MIN_ITEMS = 32;
 // take (the 1 absorbs rounding in the distance), gives each the same distance test and returns the hits in the items' own
 // order. A short list, a range so wide that its cells outnumber the items, or a point, range or item whose coordinates are
 // not finite get the plain test.
-export function createRangeIndex<T extends EntityPoint>(items: T[]): (point: EntityPoint, range: number) => T[] {
-  const plain = (point: EntityPoint, range: number) => items.filter((item) => withinRange(item, point, range));
+export function createRangeIndex<T extends EntityPoint>(items: T[]): RangeQuery<T> {
+  const plain: RangeQuery<T> = (point, range, matches) => matches
+    ? items.filter((item) => withinRange(item, point, range) && matches(item))
+    : items.filter((item) => withinRange(item, point, range));
   if (items.length < RANGE_INDEX_MIN_ITEMS) return plain;
   let grid: { cells: Map<number, number[]>; offGrid: number[] } | undefined;
-  return (point, range) => {
+  return (point, range, matches) => {
     const span = Math.ceil((range + 1) / RANGE_CELL);
     const cx = Math.floor(point.x / RANGE_CELL);
     const cy = Math.floor(point.y / RANGE_CELL);
-    if (!Number.isFinite(span) || !Number.isFinite(cx) || !Number.isFinite(cy) || (2 * span + 1) ** 2 > items.length) return plain(point, range);
+    if (!Number.isFinite(span) || !Number.isFinite(cx) || !Number.isFinite(cy) || (2 * span + 1) ** 2 > items.length) return plain(point, range, matches);
     grid ??= indexCells(items);
     const hits: number[] = [];
     for (let x = cx - span; x <= cx + span; x += 1) {
@@ -28,7 +32,16 @@ export function createRangeIndex<T extends EntityPoint>(items: T[]): (point: Ent
       }
     }
     for (const index of grid.offGrid) if (withinRange(items[index]!, point, range)) hits.push(index);
-    return hits.sort((a, b) => a - b).map((index) => items[index]!);
+    hits.sort((a, b) => a - b);
+    if (!matches) return hits.map((index) => items[index]!);
+    // Apply the final predicate in source order, just like filtering a query
+    // result, while allocating only the selected output array.
+    const selected: T[] = [];
+    for (const index of hits) {
+      const item = items[index]!;
+      if (matches(item)) selected.push(item);
+    }
+    return selected;
   };
 }
 

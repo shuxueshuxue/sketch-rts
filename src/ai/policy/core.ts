@@ -3357,9 +3357,8 @@ function workerEvacuationPoint(snapshot: GameSnapshot, main: Point, enemyCenter:
 function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const soldiers = combatUnits(snapshot, owner);
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
-  const movable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
 
-  if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
+  if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, attackWaveMovableUnits(snapshot, owner, soldiers, options), enemyArmy, options);
 
   let cachedPressure: Building | undefined;
   let pressureEvaluated = false;
@@ -3379,6 +3378,10 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const mainApproachPickoff = v5MainApproachDetachmentPickoffCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (mainApproachPickoff) return mainApproachPickoff;
 
+  // Base defense owns these earlier branches regardless of the field wave's
+  // readiness. Only inspect each unit's retreat and objective claims when the
+  // planner actually reaches a branch that uses the movable wave.
+  const movable = attackWaveMovableUnits(snapshot, owner, soldiers, options);
   const minimumWaveSize = attackWaveMinimumSize(snapshot, owner, options);
   if (options.version !== "v2") {
     const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOpponentOwner(snapshot, owner, options));
@@ -3649,6 +3652,10 @@ function committedAttackWaveRouteCovered(snapshot: GameSnapshot, owner: PlayerId
   if (routeEnemies.length >= 3 && armyPower(routeEnemies) >= ownPower * 0.95) return true;
   const localEnemies = enemyCombatUnitsNear(snapshot, owner, objective, 620, options.teams);
   return localEnemies.length >= 3 && armyPower(localEnemies) >= ownPower * 1.08;
+}
+
+function attackWaveMovableUnits(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
+  return soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
 }
 
 function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {

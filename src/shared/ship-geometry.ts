@@ -2,17 +2,20 @@ import geometry from "./generated/ship-geometry.json";
 import { detCos, detSin } from "./det-math";
 import type { Unit, UnitKind, UnitOrder } from "./types";
 
+// Generated geometry is immutable. Keep the hot kind lookup on its local
+// table instead of resolving the JSON module export for every ground unit.
+const shipGeometry = geometry.ships;
 export type ShipKind = keyof typeof geometry.ships;
 export type Point = { x: number; y: number };
 export const SHIP_CAMERA = geometry.camera;
-export const SHIP_KINDS = Object.keys(geometry.ships) as ShipKind[];
+export const SHIP_KINDS = Object.keys(shipGeometry) as ShipKind[];
 /** Stored campaign scales retain their authored units; the fleet-wide size change is applied once here. */
 export const SHIP_SIZE_MULTIPLIER = 1.2;
 export const AUTHORED_DEFAULT_SHIP_SCALE = 1.1;
 export const DEFAULT_SHIP_SCALE = AUTHORED_DEFAULT_SHIP_SCALE * SHIP_SIZE_MULTIPLIER;
 export const SHIP_SIZE_VERSION = 1;
 
-export function isShipKind(kind: UnitKind): kind is ShipKind { return kind in geometry.ships; }
+export function isShipKind(kind: UnitKind): kind is ShipKind { return kind in shipGeometry; }
 export function authoredShipScale(ship: Unit) {
   return ship.deckScale ?? (ship.cargoCapacity === undefined ? AUTHORED_DEFAULT_SHIP_SCALE : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
 }
@@ -77,7 +80,7 @@ export function shareShipProfile(source:Unit,pose:Unit) {
   if(shipProfile(source))profiles.set(pose,profiles.get(source)!);
 }
 function computeShipProfile(ship:Unit,kind:ShipKind,scale:number){
-  const raw = geometry.ships[kind];
+  const raw = shipGeometry[kind];
   return { ...raw, length: raw.length*scale, beam: raw.beam*scale, deckHeight: raw.deckHeight*scale, mastHeight: raw.mastHeight*scale,
     hullMass: raw.hullMass*scale**3, loadCapacity: raw.loadCapacity*scale**2,
     hull: raw.hull.map(([x,y]) => ({ x:x!*scale, y:y!*scale })),

@@ -92,7 +92,7 @@ export function enemyBuildings(snapshot: GameSnapshot, owner: PlayerId, teams?: 
 }
 
 export function enemyCombatUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
-  return aiSnapshotQuery(snapshot, teams).opponentUnitsNear(owner, point, range).filter((unit) => unit.kind !== "worker");
+  return aiSnapshotQuery(snapshot, teams).opponentCombatUnitsNear(owner, point, range);
 }
 
 export function enemyUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
