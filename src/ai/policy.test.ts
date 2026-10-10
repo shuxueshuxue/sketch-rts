@@ -5332,7 +5332,9 @@ describe("SDK preset AI policy", () => {
     const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
 
     expect(commands).toHaveLength(1);
-    expect(commands[0]).toMatchObject({ type: "attackMove", x: 500, y: 500 });
+    expect(commands[0]).toMatchObject({ type: "move", avoidCombat: true });
+    expect(commands[0]?.type === "move" ? commands[0].x : 9999).toBeLessThan(1400);
+    expect(commands[0]?.type === "move" ? Math.hypot(commands[0].x - 1430, commands[0].y - 650) : 0).toBeCloseTo(600);
   });
 
   it("v2 does not pull the whole army into a doomed expansion defense against a much stronger force", () => {
@@ -13141,14 +13143,15 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "attackMove");
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
     const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment", "skirmishPreservation"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "move" && candidate.unitIds.some((id) => id.includes("footman") || id.includes("archer")),
     );
 
-    expect(enabled).toMatchObject({ type: "attackMove" });
-    expect(enabled?.type === "attackMove" ? enabled.x : 0).toBeCloseTo(500, -2);
-    expect(enabled?.type === "attackMove" ? enabled.unitIds.length : 0).toBe(2);
+    expect(enabled).toMatchObject({ type: "move", avoidCombat: true });
+    expect(enabled?.type === "move" ? enabled.x : 9999).toBeLessThan(1900);
+    expect(enabled?.type === "move" ? Math.hypot(enabled.x - 1920, enabled.y - 1620) : 0).toBeCloseTo(600);
+    expect(enabled?.type === "move" ? enabled.unitIds.length : 0).toBe(2);
     expect(disabled).toBeUndefined();
     expect(telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
   });
