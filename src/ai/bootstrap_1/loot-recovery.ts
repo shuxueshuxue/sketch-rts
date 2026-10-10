@@ -56,9 +56,9 @@ export function lootRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, opt
 
 /** Experience books belong to deliberate training; local pickups respect all other assigned loot. */
 export function planLootItemCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const books = new Set(snapshot.items.filter(item => item.kind === 'experienceBook').map(item => item.id));
-  return planItemCommands(snapshot, owner, options).filter(command =>
-    command.type !== 'pickupItem' || !books.has(command.itemId) && command.itemId !== options.memory.loot?.itemId);
+  const items = snapshot.items.filter(item => item.carrierId || item.shipId
+    || item.kind !== 'experienceBook' && item.id !== options.memory.loot?.itemId);
+  return planItemCommands({ ...snapshot, items }, owner, options);
 }
 
 /** The normal command queue preserves the return trip even after an experience book is consumed. */

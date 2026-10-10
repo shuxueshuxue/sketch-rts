@@ -52,3 +52,24 @@ it.each(cases)('$version keeps a reserved veteran book away from a passing $race
   expect(game.players.us!.gold).toBe(500);
   expect(game.match.stats.unitsLost.us).toBe(0);
 });
+
+it('keeps available nearby scroll pickups outside the book assignment command budget', () => {
+  let scene = sketchScene('book-and-scroll-allocation').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove', team: 'a' }).player('peer', { race: 'grove', team: 'a' })
+    .townHall('us', 500, 500).townHall('peer', 3500, 3500)
+    .item('book-1', 'experienceBook', 650, 700).item('book-2', 'experienceBook', 665, 700)
+    .item('scroll', 'guardianScroll', 680, 700);
+  for (let index = 0; index < 4; index++) scene = scene.unit('us', 'footman', 600 + index * 25, 700);
+  const game = scene.build().createGame(), memory = createAiPolicyMemory(), sdk = new SdkCommandFrameRuntime(game);
+  game.scriptedVictory = true;
+  game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
+  memory.v6 = { phase: 3 };
+  const entries = planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_archer', memory },
+    { teams: game.teams, policyMode: 'combat' });
+  expect(entries.some(entry => entry.command.type === 'pickupItem' && entry.command.itemId === 'scroll'), JSON.stringify(entries)).toBe(true);
+  sdk.issue(entries, {}, { checksum: false });
+  stepGame(game);
+  expect(game.items.find(item => item.id === 'scroll')!.carrierId).toBeDefined();
+  expect(game.players.us!.gold).toBe(500);
+  expect(game.match.stats.unitsLost.us).toBe(0);
+});
