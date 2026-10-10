@@ -1,9 +1,9 @@
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
-import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind } from '../../shared/types';
+import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
 import { colonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -62,28 +62,21 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
-  const ready = economy.workers.filter(worker => worker.carryingGold === 0);
-  // With multiple completed halls but only one income, repeated trips by a
-  // distant idle builder delay restoring the second mine. Use a nearby empty-handed
-  // worker until that replacement is working, then resume lane preservation.
+  const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
+  // A replacement on the last working income uses its nearest eligible empty-handed worker.
   if (economy.own.filter(building => building.kind === 'townHall' && building.complete).length > 1
     && activeMiningBaseCount(economy.snapshot, economy.owner) === 1) {
-    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play)
-      ?? issueV6Construction(economy, kind, point, used, play);
+    return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play);
   }
-  const idle = ready.filter(worker => worker.order.type === 'idle');
-  const free = issueV6Construction({ ...economy, workers: idle }, kind, point, used, play);
-  if (free) return free;
-  const assigned = new Map<string, number>();
+  const assigned = new Map<string, number>(economy.workers.flatMap(worker => worker.order.type === 'mine'
+    ? [[worker.order.resourceId, 0] as const] : []));
   for (const worker of economy.workers) if (worker.order.type === 'mine') {
-    assigned.set(worker.order.resourceId, (assigned.get(worker.order.resourceId) ?? 0) + 1);
+    assigned.set(worker.order.resourceId, assigned.get(worker.order.resourceId)! + 1);
   }
-  const spare = ready.filter(worker => worker.order.type === 'mine'
-    && (assigned.get(worker.order.resourceId) ?? 0) > GOLD_MINE_RULES.workstations);
-  const surplus = issueV6Construction({ ...economy, workers: spare }, kind, point, used, play);
-  if (surplus) return surplus;
-  return issueV6Construction({ ...economy, workers: ready }, kind, point, used, play)
-    ?? issueV6Construction(economy, kind, point, used, play);
+  const priority = (worker: Unit) => worker.order.type === 'idle' ? 0
+    : worker.order.type === 'mine' && assigned.get(worker.order.resourceId)! > GOLD_MINE_RULES.workstations ? 1 : 2;
+  const preferred = Math.min(...ready.map(priority));
+  return issueV6Construction({ ...economy, workers: ready.filter(worker => priority(worker) === preferred) }, kind, point, used, play);
 };
 
 // A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
