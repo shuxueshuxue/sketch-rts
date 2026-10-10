@@ -83,6 +83,8 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
 // Working mines can fund cover at a safe, cleared expansion while the army fights elsewhere.
 const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority, target) => {
   const { snapshot, owner, intel, own } = economy;
+  // An issued hall construction already owns this expansion, including its walk to the site.
+  if (economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === 'townHall')) return [];
   const incomes = activeMiningBaseCount(snapshot, owner);
   const cover = own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange);
   if (incomes === 0 && !cover) return [];
