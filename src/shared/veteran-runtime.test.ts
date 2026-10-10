@@ -26,12 +26,12 @@ describe("veteran passives and auras", () => {
     const phalanx = soldier("phalanx", "veteranPhalanx");
     const game = snapshot(veteran, watch, phalanx);
     const protection = buildVeteranFrame(game).get(veteran.id)!.reductions;
-    expect(protection).toEqual([{ group: "passive", amount: .12 }, { group: "aura", amount: .12 }]);
-    expect(resolveDamage(100, { reductions: protection }).damage).toBeCloseTo(77.44);
+    expect(protection).toEqual([{ group: "passive", amount: .25 }, { group: "aura", amount: .25 }]);
+    expect(resolveDamage(100, { reductions: protection }).damage).toBeCloseTo(56.25);
     phalanx.x += 131;
-    expect(buildVeteranFrame(game).get(veteran.id)!.reductions).toEqual([{ group: "passive", amount: .12 }, { group: "aura", amount: .08 }]);
+    expect(buildVeteranFrame(game).get(veteran.id)!.reductions).toEqual([{ group: "passive", amount: .25 }, { group: "aura", amount: .18 }]);
     watch.hp = 0;
-    expect(buildVeteranFrame(game).get(veteran.id)!.reductions).toEqual([{ group: "passive", amount: .12 }]);
+    expect(buildVeteranFrame(game).get(veteran.id)!.reductions).toEqual([{ group: "passive", amount: .25 }]);
   });
 
   it("affects self and teammates, excluding enemies, neutrals, dead units and out-of-range query hits", () => {
@@ -46,7 +46,7 @@ describe("veteran passives and auras", () => {
     const frame = buildVeteranFrame(game, query);
     expect(query).toHaveBeenCalledWith(500, 500, 160);
     expect([...frame.keys()]).toEqual(["leader", "ally"]);
-    expect(frame.get(ally.id)!.attackSpeedMultiplier).toBe(1.08);
+    expect(frame.get(ally.id)!.attackSpeedMultiplier).toBe(1.35);
     delete game.teams;
     expect(buildVeteranFrame(game).has(ally.id)).toBe(false);
   });
@@ -58,8 +58,8 @@ describe("veteran passives and auras", () => {
     const game = snapshot(runner, first, second);
     const speed = runner.speed;
     const once = buildVeteranFrame(game);
-    expect(once.get(runner.id)!.moveSpeedMultiplier).toBeCloseTo(1.21);
-    expect(once.get(first.id)!.moveSpeedMultiplier).toBe(1.1);
+    expect(once.get(runner.id)!.moveSpeedMultiplier).toBeCloseTo(1.625);
+    expect(once.get(first.id)!.moveSpeedMultiplier).toBe(1.25);
     expect(buildVeteranFrame(game)).toEqual(once);
     expect(runner.speed).toBe(speed);
   });
@@ -70,8 +70,8 @@ describe("veteran passives and auras", () => {
     const another = soldier("another", "veteranRenewal", "priest");
     const ship = soldier("ship", undefined, "warship");
     const frame = buildVeteranFrame(snapshot(veteran, healer, another, ship));
-    expect(frame.get(veteran.id)!.regenPerSecond).toBe(4.2);
-    expect(frame.get(healer.id)!.regenPerSecond).toBe(1.2);
+    expect(frame.get(veteran.id)!.regenPerSecond).toBe(9);
+    expect(frame.get(healer.id)!.regenPerSecond).toBe(3);
     expect(frame.get(ship.id)?.regenPerSecond ?? 0).toBe(0);
   });
 
@@ -79,7 +79,8 @@ describe("veteran passives and auras", () => {
     const archer = soldier("archer", "veteranSteadyAim", "archer");
     const ballista = soldier("ballista", "veteranSiegeDrill", "ballista");
     const frame = buildVeteranFrame(snapshot(archer, ballista));
-    expect(frame.get(archer.id)!.aimSpeedMultiplier).toBe(1.3);
+    expect(frame.get(archer.id)!.aimSpeedMultiplier).toBe(1.8);
+    expect(frame.get(archer.id)!.attackSpeedMultiplier).toBe(1.2);
     expect(frame.get(ballista.id)!.attackRangeMultiplier).toBe(1.1);
     expect(frame.get(ballista.id)!.attackSpeedMultiplier).toBe(1);
   });
@@ -96,12 +97,12 @@ describe("veteran passives and auras", () => {
     };
     const frame = buildVeteranFrame(game);
     expect(frame.has(metal.id)).toBe(false);
-    expect(frame.get(living.id)!.regenPerSecond).toBe(4.2);
-    metal.hp -= 80; living.hp -= 80;
+    expect(frame.get(living.id)!.regenPerSecond).toBe(9);
+    metal.hp -= 100; living.hp -= 100;
     const metalBefore = metal.hp, livingBefore = living.hp;
     expect(castVeteranAbility(game, healer, "veteranHealingWave", true)).toBe(true);
     expect(metal.hp).toBe(metalBefore);
-    expect(living.hp).toBe(livingBefore + 30);
+    expect(living.hp).toBe(Math.min(living.maxHp, livingBefore + 90));
   });
 });
 
@@ -112,7 +113,7 @@ describe("veteran active skills", () => {
     caster.abilityCooldowns = { heal: 9 };
     const wounded = Array.from({ length: 6 }, (_, index) => {
       const unit = soldier(`ally-${index}`, undefined, "footman", index === 0 ? "ally" : "player");
-      unit.hp = unit.maxHp - (35 + index * 5);
+      unit.hp = unit.maxHp - (95 + index * 5);
       return unit;
     });
     const ship = soldier("ship", undefined, "warship"); ship.hp -= 100;
@@ -123,20 +124,22 @@ describe("veteran active skills", () => {
     const emit = vi.fn();
     const before = new Map(game.units.map(unit => [unit.id, unit.hp]));
     expect(castVeteranAbility(game, caster, "veteranHealingWave", true, emit)).toBe(true);
-    for (const unit of wounded.slice(1)) expect(unit.hp).toBe(before.get(unit.id)! + 30);
+    for (const unit of wounded.slice(1)) expect(unit.hp).toBe(before.get(unit.id)! + 90);
     for (const unit of [caster, wounded[0]!, ship, enemy, dead, distant]) expect(unit.hp).toBe(before.get(unit.id));
-    expect(caster.abilityCooldowns).toEqual({ heal: 9, veteranHealingWave: seconds(24) });
+    expect(caster.abilityCooldowns).toEqual({ heal: 9, veteranHealingWave: seconds(18) });
     expect(caster.cooldown).toBe(15);
     expect(emit).toHaveBeenCalledWith("heal", 500, 500, 30, expect.objectContaining({ radius: 180, unitId: caster.id }));
     expect(castVeteranAbility(game, caster, "veteranHealingWave", false)).toBe(false);
   });
 
-  it("holds automatic healing until it can heal 30 HP, with an exception for a critically wounded ally", () => {
+  it("holds automatic healing until it can heal 90 HP, with an exception for a critically wounded ally", () => {
     const caster = soldier("caster", "veteranHealingWave", "priest");
     const ally = soldier("ally");
+    // Isolate the effective-healing threshold from the separate critical-health exception.
+    ally.maxHp = 300; ally.hp = 300;
     const game = snapshot(caster, ally);
     expect(castVeteranAbility(game, caster, "veteranHealingWave", true)).toBe(false);
-    ally.hp -= 29;
+    ally.hp -= 89;
     expect(castVeteranAbility(game, caster, "veteranHealingWave", true)).toBe(false);
     expect(caster.abilityCooldowns).toBeUndefined();
     caster.hp -= 1;
@@ -170,8 +173,8 @@ describe("veteran active skills", () => {
     expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(false);
     enemy.x = 525;
     expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(true);
-    expect(veteranAttackSpeedMultiplier(caster)).toBe(1.2);
-    expect(caster.effects[0]!.remaining).toBe(seconds(6));
+    expect(veteranAttackSpeedMultiplier(caster)).toBe(1.6);
+    expect(caster.effects[0]!.remaining).toBe(seconds(8));
     expect(enemy.effects).toEqual([]);
   });
 
@@ -183,7 +186,7 @@ describe("veteran active skills", () => {
     enemy.order = { type: "attack", targetId: victim.id };
     const game = snapshot(caster, ...allies, victim, enemy);
     expect(castVeteranAbility(game, caster, "veteranInnerFire", true)).toBe(true);
-    expect(victim.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .2, protectionGroup: "ward" }));
+    expect(victim.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .35, protectionGroup: "ward" }));
     expect(game.units.filter(unit => unit.effects.length > 0)).toHaveLength(5);
     expect(enemy.effects).toEqual([]);
   });
@@ -230,8 +233,8 @@ describe("veteran active skills", () => {
     const frame: VeteranAutocastFrame = {};
     expect(castVeteranAbility(game, first, "veteranRally", true, undefined, query, frame)).toBe(true);
     expect(castVeteranAbility(game, second, "veteranRally", true, undefined, query, frame)).toBe(true);
-    expect(temporaryAttackSpeedMultiplier(first)).toBe(1.2);
-    expect(temporaryAttackSpeedMultiplier(second)).toBe(1.2);
+    expect(temporaryAttackSpeedMultiplier(first)).toBe(1.6);
+    expect(temporaryAttackSpeedMultiplier(second)).toBe(1.6);
     expect(casterQueries).toBe(2);
     expect(towerQueries).toBe(1);
     // Fresh ticks observe the ended fight instead of retaining the previous frame's decision.
@@ -253,7 +256,7 @@ describe("veteran active skills", () => {
     const game = snapshot(caster);
     expect(castVeteranAbility(game, caster, "veteranInnerFire", false)).toBe(true);
     expect(caster.effects).toHaveLength(3);
-    expect(caster.effects[2]).toEqual({ type: "protection", sourceId: caster.id, remaining: seconds(6), damageReduction: .2, protectionGroup: "ward" });
+    expect(caster.effects[2]).toEqual({ type: "protection", sourceId: caster.id, remaining: seconds(8), damageReduction: .35, protectionGroup: "ward" });
     caster.abilityCooldowns = undefined;
     expect(castVeteranAbility(game, caster, "veteranInnerFire", false)).toBe(false);
     expect(caster.abilityCooldowns).toBeUndefined();
@@ -268,26 +271,26 @@ describe("veteran active skills", () => {
     expect(veteranAttackSpeedMultiplier(caster)).toBe(1);
   });
 
-  it("holds rally while bloodlust already provides a stronger bonus, then permits it after bloodlust expires", () => {
+  it("upgrades weaker bloodlust, uses the strongest temporary layer, and resumes bloodlust when rally expires", () => {
     const caster = soldier("caster", "veteranRally");
     const enemy = soldier("enemy", undefined, "footman", "enemy", 525);
     caster.order = { type: "attack", targetId: enemy.id };
-    caster.effects = [{ type: "bloodlust", remaining: 1 }];
+    caster.effects = [{ type: "bloodlust", remaining: seconds(15) }];
     const game = snapshot(caster, enemy);
     expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.3);
+    expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(true);
+    expect(caster.effects).toHaveLength(2);
+    expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.6);
+    caster.abilityCooldowns = undefined;
     expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(false);
     expect(caster.abilityCooldowns).toBeUndefined();
-    expect(caster.effects).toHaveLength(1);
-    caster.effects[0]!.remaining = 0;
-    expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(true);
-    expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.2);
-    caster.effects.push({ type: "bloodlust", remaining: 1 });
+    caster.effects.find(effect => effect.type === "veteranBuff")!.remaining = 0;
     expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.3);
-    caster.effects.at(-1)!.remaining = 0;
-    expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.2);
+    caster.effects.find(effect => effect.type === "bloodlust")!.remaining = 0;
+    expect(temporaryAttackSpeedMultiplier(caster)).toBe(1);
   });
 
-  it("skips bloodlusted allies when assigning rally targets while still buffing an unbuffed combatant", () => {
+  it("upgrades bloodlusted allies while still helping an unbuffed combatant", () => {
     const caster = soldier("caster", "veteranRally");
     caster.effects = [{ type: "bloodlust", remaining: seconds(15) }];
     const ally = soldier("ally");
@@ -295,8 +298,9 @@ describe("veteran active skills", () => {
     ally.order = { type: "attack", targetId: enemy.id };
     const game = snapshot(caster, ally, enemy);
     expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(true);
-    expect(caster.effects).toEqual([{ type: "bloodlust", remaining: seconds(15) }]);
-    expect(temporaryAttackSpeedMultiplier(ally)).toBe(1.2);
+    expect(caster.effects).toContainEqual({ type: "bloodlust", remaining: seconds(15) });
+    expect(temporaryAttackSpeedMultiplier(caster)).toBe(1.6);
+    expect(temporaryAttackSpeedMultiplier(ally)).toBe(1.6);
   });
 
   it("does not waste rally on a lone unarmed transport under attack", () => {
@@ -318,7 +322,7 @@ describe("veteran active skills", () => {
     expect(castVeteranAbility(snapshot(caster, ally, enemy), caster, "veteranRally", true)).toBe(true);
     expect(caster.abilityCooldowns?.veteranRally).toBe(seconds(24));
     expect(caster.effects).toEqual([]);
-    expect(temporaryAttackSpeedMultiplier(ally)).toBe(1.2);
+    expect(temporaryAttackSpeedMultiplier(ally)).toBe(1.6);
   });
 
   it("reserves rally's five targets for working weapons, including intact mounted guns and excluding broken or unloaded guns", () => {
@@ -343,7 +347,7 @@ describe("veteran active skills", () => {
     ];
     expect(castVeteranAbility(game, caster, "veteranRally", true)).toBe(true);
     expect(game.units.filter(unit => unit.effects.some(effect => effect.type === "veteranBuff"))).toHaveLength(5);
-    for (const unit of [armed, ...allies]) expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.2);
+    for (const unit of [armed, ...allies]) expect(temporaryAttackSpeedMultiplier(unit)).toBe(1.6);
     for (const unit of [caster, broken, unloaded, enemy]) expect(unit.effects).toEqual([]);
   });
 
@@ -357,7 +361,7 @@ describe("veteran active skills", () => {
     expect(caster.abilityCooldowns).toBeUndefined();
     expect(castVeteranAbility(game, caster, "veteranInnerFire", false)).toBe(true);
     expect(caster.effects).toContainEqual(expect.objectContaining({ type: "guardian" }));
-    expect(caster.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .2 }));
+    expect(caster.effects).toContainEqual(expect.objectContaining({ type: "protection", damageReduction: .35 }));
     caster.abilityCooldowns = undefined; caster.effects = []; caster.invulnerable = true;
     expect(castVeteranAbility(game, caster, "veteranInnerFire", true)).toBe(false);
     caster.invulnerable = false;

@@ -9,7 +9,14 @@ export function nearestEntities<T extends Point>(entities: T[], from: Point): T[
 }
 
 export function averagePoint(points: Point[]): Point {
-  return points.reduce((total, point) => ({ x: total.x + point.x / points.length, y: total.y + point.y / points.length }), { x: 0, y: 0 });
+  const total = { x: 0, y: 0 };
+  // Divide each coordinate before adding, in input order, to retain the same
+  // floating-point result. Like reduce, forEach skips empty array slots.
+  points.forEach((point) => {
+    total.x += point.x / points.length;
+    total.y += point.y / points.length;
+  });
+  return total;
 }
 
 export function distance(a: Point, b: Point) {

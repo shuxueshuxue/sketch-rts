@@ -4,12 +4,12 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 
-describe("server REST and WebSocket command ingress", () => {
+describe.each(["/", "/sketch-rts/"])("server REST and WebSocket command ingress at %s", (basePath) => {
   it("streams pre-match room lifecycle updates at a real REST boundary", async () => {
     const port = await freePort();
-    const server = await startServer(port);
+    const server = await startServer(port, basePath);
     try {
-      const room = await postJson(`http://127.0.0.1:${port}/api/rooms`, {
+      const room = await postJson(`http://127.0.0.1:${port}${basePath}api/rooms`, {
         id: `room-events-${Date.now()}`,
         host: { id: "host", name: "Host" },
         mapId: "bareDuel",
@@ -17,10 +17,10 @@ describe("server REST and WebSocket command ingress", () => {
         aiCount: 0,
         visibility: "public",
       });
-      const events = openRoomEvents(`http://127.0.0.1:${port}/api/rooms/${room.id}/events`);
+      const events = openRoomEvents(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/events`);
 
       await expect(events.nextRoom()).resolves.toMatchObject({ id: room.id, slots: [expect.objectContaining({ name: "Host" }), expect.objectContaining({ controller: "open" })] });
-      await postJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/join`, { user: { id: "guest", name: "Guest" } });
+      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/join`, { user: { id: "guest", name: "Guest" } });
       await expect(events.nextRoom()).resolves.toMatchObject({ id: room.id, slots: [expect.objectContaining({ name: "Host" }), expect.objectContaining({ name: "Guest" })] });
       await events.close();
     } finally {
@@ -30,18 +30,18 @@ describe("server REST and WebSocket command ingress", () => {
 
   it("rejects malformed commands at both real network boundaries", async () => {
     const port = await freePort();
-    const server = await startServer(port);
+    const server = await startServer(port, basePath);
     try {
-      const room = await postJson(`http://127.0.0.1:${port}/api/rooms`, {
+      const room = await postJson(`http://127.0.0.1:${port}${basePath}api/rooms`, {
         id: `malformed-command-${Date.now()}`,
         host: { id: "host", name: "Host" },
         mapId: "bareDuel",
         humanCount: 1,
         aiCount: 1,
       });
-      await postJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/start`, {});
+      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, {});
 
-      const rest = await fetch(`http://127.0.0.1:${port}/api/rooms/${room.id}/command`, {
+      const rest = await fetch(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/command`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerId: "player", command: { type: "move" } }),
@@ -49,7 +49,7 @@ describe("server REST and WebSocket command ingress", () => {
 
       expect(rest.status).toBe(400);
       expect(await rest.json()).toEqual({ error: "Malformed room command" });
-      await expect(webSocketMalformedCommand(`ws://127.0.0.1:${port}/ws/rooms/${room.id}`, room.id)).resolves.toEqual({
+      await expect(webSocketMalformedCommand(`ws://127.0.0.1:${port}${basePath}ws/rooms/${room.id}`, room.id)).resolves.toEqual({
         type: "error",
         roomId: room.id,
         message: "Malformed client command message",
@@ -61,19 +61,19 @@ describe("server REST and WebSocket command ingress", () => {
 
   it("rejects malformed room reset setup payloads through the shared room schema", async () => {
     const port = await freePort();
-    const server = await startServer(port);
+    const server = await startServer(port, basePath);
     try {
-      const room = await postJson(`http://127.0.0.1:${port}/api/rooms`, {
+      const room = await postJson(`http://127.0.0.1:${port}${basePath}api/rooms`, {
         id: `malformed-reset-${Date.now()}`,
         host: { id: "host", name: "Host" },
         mapId: "bareDuel",
         humanCount: 1,
         aiCount: 1,
       });
-      await postJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/start`, {});
+      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, {});
 
       await expect(
-        postRawJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/reset`, {
+        postRawJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/reset`, {
           mapId: "bareDuel",
           options: { scenario: { addUnits: [{ id: "bad", owner: "neutral", kind: "wildling", x: 1, y: 2, hp: 9999 }] } },
         }),
@@ -88,19 +88,19 @@ describe("server REST and WebSocket command ingress", () => {
 
   it("rejects malformed save and debug replay payloads at real REST boundaries", async () => {
     const port = await freePort();
-    const server = await startServer(port);
+    const server = await startServer(port, basePath);
     try {
       const roomId = `malformed-save-${Date.now()}`;
 
-      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/save`, {})).resolves.toEqual({
+      await expect(postRawJson(`http://127.0.0.1:${port}${basePath}api/rooms/${roomId}/save`, {})).resolves.toEqual({
         status: 400,
         body: { error: "Malformed savegame input" },
       });
-      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/debug-replay`, { id: "trace", label: 12 })).resolves.toEqual({
+      await expect(postRawJson(`http://127.0.0.1:${port}${basePath}api/rooms/${roomId}/debug-replay`, { id: "trace", label: 12 })).resolves.toEqual({
         status: 400,
         body: { error: "Malformed debug replay input" },
       });
-      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/debug-replay/ticks/65/save`, { label: "missing id" })).resolves.toEqual({
+      await expect(postRawJson(`http://127.0.0.1:${port}${basePath}api/rooms/${roomId}/debug-replay/ticks/65/save`, { label: "missing id" })).resolves.toEqual({
         status: 400,
         body: { error: "Malformed replay frame save input" },
       });
@@ -202,10 +202,10 @@ async function waitForSocketOpen(socket: WebSocket): Promise<void> {
   });
 }
 
-async function startServer(port: number): Promise<ChildProcessWithoutNullStreams> {
+async function startServer(port: number, basePath: string): Promise<ChildProcessWithoutNullStreams> {
   const server = spawn(process.execPath, ["--import", "tsx", "src/server/index.ts"], {
     cwd: process.cwd(),
-    env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), ROOM_AUTOTICK: "0" },
+    env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), ROOM_AUTOTICK: "0", SKETCH_RTS_BASE_PATH: basePath },
   });
   const chunks: string[] = [];
   const collect = (chunk: Buffer) => chunks.push(chunk.toString());

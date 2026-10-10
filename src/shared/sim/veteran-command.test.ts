@@ -139,7 +139,7 @@ describe("veteran command boundary", () => {
     const hp = follower.hp;
     strikeUnit(game, source, follower, 20, "spell");
     strikeUnit(restored, restored.units.find(unit => unit.id === source.id)!, copiedFollower, 20, "spell");
-    expect(hp - follower.hp).toBeCloseTo(18.4);
+    expect(hp - follower.hp).toBeCloseTo(16.4);
     expect(copiedFollower.hp).toBe(follower.hp);
     expect(checksumGame(restored)).toBe(checksumGame(game));
     stepGame(game);
@@ -189,6 +189,6 @@ describe("veteran command boundary", () => {
     expect(game.units.some(unit => unit.kind === "spirit")).toBe(false);
     expect(caster.abilityCooldowns?.summon ?? 0).toBe(0);
     expect(caster.abilityCooldowns?.veteranInnerFire).toBeGreaterThan(0);
-    expect(caster.effects).toEqual(expect.arrayContaining([expect.objectContaining({ type: "protection", damageReduction: .2 })]));
+    expect(caster.effects).toEqual(expect.arrayContaining([expect.objectContaining({ type: "protection", damageReduction: .35 })]));
   });
 });

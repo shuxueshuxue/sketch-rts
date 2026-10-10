@@ -728,7 +728,7 @@ export function stepGame(game: Game) {
   game.tick += 1;
   updateWindField(game.map, game.tick);
   // Auras and their spatial query start from this tick's actual positions, including after restore.
-  game.unitSpatial = createSpatialIndex(game.units, 320);
+  game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   refreshVeteranFrame(game);
   syncBuildingBodies(game);
   updateWorldEffects(game);
@@ -741,7 +741,7 @@ export function stepGame(game: Game) {
   game.miningFrame = prepareMiningFrame(game);
   updateMercenaryCamps(game);
   if (game.shops) restockShops(game.shops);
-  game.unitSpatial = createSpatialIndex(game.units, 320);
+  game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
   game.shipReachPadding = shipReachPadding(game.units);
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
@@ -813,7 +813,7 @@ export function stepGame(game: Game) {
   updateShipOwnership(game);
   syncBuildingBodies(game);
   // Snapshots and restored games observe the same aura boundary after movement, deaths and captures.
-  game.unitSpatial = createSpatialIndex(game.units, 320);
+  game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   refreshVeteranFrame(game);
   updateVictory(game);
 }
@@ -1117,9 +1117,9 @@ function updateDockRepairs(game: Game) {
 
 function updateRegeneration(game: Game) {
   for (const unit of game.units) {
-    if (unit.hp <= 0) continue;
+    if (unit.hp <= 0 || unit.hp >= unit.maxHp) continue;
     const regenPerSecond = unitRegenPerSecond(game, unit);
-    if (regenPerSecond <= 0 || unit.hp >= unit.maxHp) continue;
+    if (regenPerSecond <= 0) continue;
     unit.hp = Math.min(unit.maxHp, unit.hp + regenPerSecond / 20);
   }
 }
@@ -3746,21 +3746,20 @@ function dropItemsFromDeadUnits(game: Game, deadUnits: Unit[]) {
 
 function updateVictory(game: Game) {
   if (game.match.winner || game.scriptedVictory) return;
-  const buildingTeams = new Set<string>();
-  const buildingOwnersByTeam = new Map<string, PlayerId>();
+  const activeTeams = new Set<string>();
+  for (const owner of game.activePlayers) activeTeams.add(teamKey(game, owner));
+  let winnerTeam: string | undefined;
+  let winner: PlayerId | null = null;
   for (const building of game.buildings) {
     const team = teamKey(game, building.owner);
-    buildingTeams.add(team);
-    if (!buildingOwnersByTeam.has(team)) buildingOwnersByTeam.set(team, building.owner);
+    if (!activeTeams.has(team)) continue;
+    if (winnerTeam !== undefined && team !== winnerTeam) return;
+    if (winnerTeam === undefined) {
+      winnerTeam = team;
+      winner = building.owner;
+    }
   }
-  const contendingTeams = new Set([...new Set(game.activePlayers.map((owner) => teamKey(game, owner)))].filter((team) => buildingTeams.has(team)));
-  if (contendingTeams.size > 1) return;
-  if (contendingTeams.size === 0) {
-    game.match.endedAtTick = game.tick;
-    return;
-  }
-  const winnerTeam = [...contendingTeams][0]!;
-  game.match.winner = buildingOwnersByTeam.get(winnerTeam) ?? null;
+  game.match.winner = winner;
   game.match.endedAtTick = game.tick;
 }
 
@@ -4062,11 +4061,29 @@ function spatialBucketKey(entity: SpatialEntity, cellSize: number) {
   return numericBucketKey(Math.floor(entity.x / cellSize), Math.floor(entity.y / cellSize));
 }
 
-function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number): SpatialIndex<T> {
+const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[] }>();
+
+function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number, previous?: SpatialIndex<T>): SpatialIndex<T> {
+  const cached = previous && Object.is(previous.cellSize, cellSize) ? spatialMembership.get(previous) : undefined;
+  if (cached && cached.members.length === entities.length) {
+    let unchanged = true;
+    for (let i = 0; i < entities.length; i += 1) {
+      const entity = entities[i]!;
+      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize)) || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
+        unchanged = false;
+        break;
+      }
+    }
+    // Buckets hold live entity references. Within a cell, narrow-phase range
+    // checks still read current coordinates; membership and visit order match.
+    if (unchanged) return previous!;
+  }
   const buckets = new Map<number, T[]>();
+  const cellX: number[] = [], cellY: number[] = [];
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const entity of entities) {
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
+    cellX.push(x); cellY.push(y);
     left = Math.min(left, x); right = Math.max(right, x);
     top = Math.min(top, y); bottom = Math.max(bottom, y);
     const key = numericBucketKey(x, y);
@@ -4074,7 +4091,10 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (bucket) bucket.push(entity);
     else buckets.set(key, [entity]);
   }
-  return { team: undefined, cellSize, buckets, left, right, top, bottom };
+  const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
+  // Copy membership separately: callers append, replace and reorder game.units.
+  spatialMembership.set(index, { members: entities.slice(), cellX, cellY });
+  return index;
 }
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number) {

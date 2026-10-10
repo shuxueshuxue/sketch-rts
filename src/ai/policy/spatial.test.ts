@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { anyWithinRangeOf, distance, withinRangeOf, type Point } from "./spatial";
+import { anyWithinRangeOf, averagePoint, distance, withinRangeOf, type Point } from "./spatial";
+
+describe("averagePoint", () => {
+  it("returns an independent zero for an empty list and skips sparse slots while counting their length", () => {
+    const empty = averagePoint([]);
+    expect(empty).toEqual({ x: 0, y: 0 });
+    expect(averagePoint([])).not.toBe(empty);
+    const sparse: Point[] = new Array(3);
+    sparse[1] = { x: 9, y: -6 };
+    expect(averagePoint(sparse)).toEqual({ x: 3, y: -2 });
+  });
+
+  it("divides before accumulation and retains input order for large cancelling coordinates", () => {
+    expect(averagePoint([{ x: 1e16, y: 0 }, { x: 1, y: 0 }, { x: -1e16, y: 0 }]).x).toBe(0.5);
+    expect(averagePoint([{ x: 1e16, y: 0 }, { x: -1e16, y: 0 }, { x: 1, y: 0 }]).x).toBe(1 / 3);
+    const large = Number.MAX_VALUE;
+    expect(averagePoint([{ x: large, y: 0 }, { x: large, y: 0 }]).x).toBe(large);
+  });
+
+  it("preserves signed zero and non-finite coordinate arithmetic", () => {
+    const zero = averagePoint([{ x: -0, y: -0 }]);
+    expect(Object.is(zero.x, 0)).toBe(true);
+    expect(Object.is(zero.y, 0)).toBe(true);
+    const point = averagePoint([{ x: Infinity, y: NaN }, { x: -Infinity, y: 4 }]);
+    expect(point.x).toBeNaN();
+    expect(point.y).toBeNaN();
+    expect(averagePoint([{ x: Infinity, y: -Infinity }])).toEqual({ x: Infinity, y: -Infinity });
+  });
+});
 
 describe("withinRangeOf and anyWithinRangeOf", () => {
   it("answer exactly what filtering by distance answers, in the same order, on the grid and without it", () => {

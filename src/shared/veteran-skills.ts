@@ -38,58 +38,58 @@ export type VeteranSkillDef = {
 export const VETERAN_SKILLS: Record<VeteranSkillId, VeteranSkillDef> = {
   veteranResilience: {
     id: "veteranResilience", name: { zh: "百战之躯", en: "Battle Hardened" }, icon: "◆", pool: "common",
-    description: { zh: "被动：自身受到的伤害降低 12%。", en: "Passive: take 12% less damage." },
-    effect: { type: "passive", modifiers: { damageReduction: .12 } },
+    description: { zh: "被动：自身受到的伤害降低 25%。", en: "Passive: take 25% less damage." },
+    effect: { type: "passive", modifiers: { damageReduction: .25 } },
   },
   veteranMobility: {
     id: "veteranMobility", name: { zh: "迅捷行动", en: "Swift Movement" }, icon: "➤", pool: "common",
-    description: { zh: "被动：自身移动速度提高 10%。", en: "Passive: gain 10% movement speed." },
-    effect: { type: "passive", modifiers: { moveSpeedMultiplier: 1.1 } },
+    description: { zh: "被动：自身移动速度提高 30%。", en: "Passive: gain 30% movement speed." },
+    effect: { type: "passive", modifiers: { moveSpeedMultiplier: 1.3 } },
   },
   veteranCommand: {
     id: "veteranCommand", name: { zh: "协同作战", en: "Coordinated Assault" }, icon: "⚑", pool: "common",
-    description: { zh: "光环：160 范围内友军（含自身）攻击速度提高 8%；同类光环不叠加。", en: "Aura: allies within 160, including self, gain 8% attack speed. Identical auras do not stack." },
-    effect: { type: "aura", radius: 160, modifiers: { attackSpeedMultiplier: 1.08 } },
+    description: { zh: "光环：160 范围内友军（含自身）攻击速度提高 35%；同类光环不叠加。", en: "Aura: allies within 160, including self, gain 35% attack speed. Identical auras do not stack." },
+    effect: { type: "aura", radius: 160, modifiers: { attackSpeedMultiplier: 1.35 } },
   },
   veteranVigilance: {
     id: "veteranVigilance", name: { zh: "警戒互助", en: "Watchful Company" }, icon: "◇", pool: "common",
-    description: { zh: "光环：160 范围内友军（含自身）受到的伤害降低 8%；防护光环只取最强。", en: "Aura: allies within 160, including self, take 8% less damage. Only the strongest protection aura applies." },
-    effect: { type: "aura", radius: 160, modifiers: { damageReduction: .08 } },
+    description: { zh: "光环：160 范围内友军（含自身）受到的伤害降低 18%；防护光环只取最强。", en: "Aura: allies within 160, including self, take 18% less damage. Only the strongest protection aura applies." },
+    effect: { type: "aura", radius: 160, modifiers: { damageReduction: .18 } },
   },
   veteranRally: {
     id: "veteranRally", name: { zh: "战斗号令", en: "Rallying Cry" }, icon: "⚑", pool: "common",
-    description: { zh: "主动／自动施放：160 范围内至多 5 名友军攻击速度提高 20%，持续 6 秒；冷却 24 秒。", en: "Active / autocast: up to 5 allies within 160 gain 20% attack speed for 6 seconds. Cooldown: 24 seconds." },
-    effect: { type: "active", action: "buff", radius: 160, maxTargets: 5, cooldown: seconds(24), duration: seconds(6), modifiers: { attackSpeedMultiplier: 1.2 } },
+    description: { zh: "主动／自动施放：160 范围内至多 5 名友军攻击速度提高 60%，持续 8 秒；冷却 24 秒。", en: "Active / autocast: up to 5 allies within 160 gain 60% attack speed for 8 seconds. Cooldown: 24 seconds." },
+    effect: { type: "active", action: "buff", radius: 160, maxTargets: 5, cooldown: seconds(24), duration: seconds(8), modifiers: { attackSpeedMultiplier: 1.6 } },
   },
   veteranPhalanx: {
     id: "veteranPhalanx", name: { zh: "坚守阵线", en: "Hold the Line" }, icon: "▣", pool: "specialist",
-    description: { zh: "光环：130 范围内友军（含自身）受到的伤害降低 12%；防护光环只取最强。", en: "Aura: allies within 130, including self, take 12% less damage. Only the strongest protection aura applies." },
-    effect: { type: "aura", radius: 130, modifiers: { damageReduction: .12 } },
+    description: { zh: "光环：130 范围内友军（含自身）受到的伤害降低 25%；防护光环只取最强。", en: "Aura: allies within 130, including self, take 25% less damage. Only the strongest protection aura applies." },
+    effect: { type: "aura", radius: 130, modifiers: { damageReduction: .25 } },
   },
   veteranSteadyAim: {
     id: "veteranSteadyAim", name: { zh: "沉着瞄准", en: "Steady Aim" }, icon: "◎", pool: "specialist",
-    description: { zh: "被动：自身瞄准速度提高 30%；移动仍遵守原有瞄准限制。", en: "Passive: gain 30% aiming speed. Movement retains its normal effect on aim." },
-    effect: { type: "passive", modifiers: { aimSpeedMultiplier: 1.3 } },
+    description: { zh: "被动：自身瞄准速度提高 80%，攻击速度提高 20%；移动仍遵守原有瞄准限制。", en: "Passive: gain 80% aiming speed and 20% attack speed. Movement retains its normal effect on aim." },
+    effect: { type: "passive", modifiers: { aimSpeedMultiplier: 1.8, attackSpeedMultiplier: 1.2 } },
   },
   veteranMarch: {
     id: "veteranMarch", name: { zh: "行军领队", en: "March Leader" }, icon: "»", pool: "specialist",
-    description: { zh: "光环：160 范围内友军（含自身）移动速度提高 10%；同类光环不叠加。", en: "Aura: allies within 160, including self, gain 10% movement speed. Identical auras do not stack." },
-    effect: { type: "aura", radius: 160, modifiers: { moveSpeedMultiplier: 1.1 } },
+    description: { zh: "光环：160 范围内友军（含自身）移动速度提高 25%；同类光环不叠加。", en: "Aura: allies within 160, including self, gain 25% movement speed. Identical auras do not stack." },
+    effect: { type: "aura", radius: 160, modifiers: { moveSpeedMultiplier: 1.25 } },
   },
   veteranHealingWave: {
     id: "veteranHealingWave", name: { zh: "群体恢复", en: "Restoring Wave" }, icon: "✚", pool: "specialist",
-    description: { zh: "主动／自动施放：恢复 180 范围内至多 5 名友军各 30 点生命，优先伤者；冷却 24 秒。不作用于机械单位。", en: "Active / autocast: heal up to 5 allies within 180 for 30 health each, prioritizing wounded units. Cooldown: 24 seconds. Does not affect mechanical units." },
-    effect: { type: "active", action: "heal", targets: { unitClasses: ["nonMechanical"] }, radius: 180, maxTargets: 5, cooldown: seconds(24), healAmount: 30 },
+    description: { zh: "主动／自动施放：恢复 180 范围内至多 5 名友军各 90 点生命，优先伤者；冷却 18 秒。不作用于机械单位。", en: "Active / autocast: heal up to 5 allies within 180 for 90 health each, prioritizing wounded units. Cooldown: 18 seconds. Does not affect mechanical units." },
+    effect: { type: "active", action: "heal", targets: { unitClasses: ["nonMechanical"] }, radius: 180, maxTargets: 5, cooldown: seconds(18), healAmount: 90 },
   },
   veteranInnerFire: {
     id: "veteranInnerFire", name: { zh: "心灵之火", en: "Inner Fire" }, icon: "✦", pool: "specialist",
-    description: { zh: "主动／自动施放：180 范围内至多 5 名友军受到的伤害降低 20%，持续 6 秒；冷却 24 秒。短时防护只取最强。", en: "Active / autocast: up to 5 allies within 180 take 20% less damage for 6 seconds. Cooldown: 24 seconds. Only the strongest temporary ward applies." },
-    effect: { type: "active", action: "buff", radius: 180, maxTargets: 5, cooldown: seconds(24), duration: seconds(6), modifiers: { damageReduction: .2 } },
+    description: { zh: "主动／自动施放：180 范围内至多 5 名友军受到的伤害降低 35%，持续 8 秒；冷却 24 秒。短时防护只取最强。", en: "Active / autocast: up to 5 allies within 180 take 35% less damage for 8 seconds. Cooldown: 24 seconds. Only the strongest temporary ward applies." },
+    effect: { type: "active", action: "buff", radius: 180, maxTargets: 5, cooldown: seconds(24), duration: seconds(8), modifiers: { damageReduction: .35 } },
   },
   veteranRenewal: {
     id: "veteranRenewal", name: { zh: "休养庇护", en: "Renewing Presence" }, icon: "❋", pool: "specialist",
-    description: { zh: "光环：150 范围内友军（含自身）每秒恢复 1.2 点生命；同类光环不叠加，不作用于机械单位。", en: "Aura: allies within 150, including self, restore 1.2 health per second. Identical auras do not stack. Does not affect mechanical units." },
-    effect: { type: "aura", targets: { unitClasses: ["nonMechanical"] }, radius: 150, modifiers: { regenPerSecond: 1.2 } },
+    description: { zh: "光环：150 范围内友军（含自身）每秒恢复 3 点生命；同类光环不叠加，不作用于机械单位。", en: "Aura: allies within 150, including self, restore 3 health per second. Identical auras do not stack. Does not affect mechanical units." },
+    effect: { type: "aura", targets: { unitClasses: ["nonMechanical"] }, radius: 150, modifiers: { regenPerSecond: 3 } },
   },
   veteranSiegeDrill: {
     id: "veteranSiegeDrill", name: { zh: "测距训练", en: "Rangefinding" }, icon: "⌖", pool: "specialist",
@@ -98,8 +98,8 @@ export const VETERAN_SKILLS: Record<VeteranSkillId, VeteranSkillDef> = {
   },
   veteranEndurance: {
     id: "veteranEndurance", name: { zh: "坚韧恢复", en: "Enduring Recovery" }, icon: "♥", pool: "specialist",
-    description: { zh: "被动：非机械单位自身每秒恢复 3 点生命。", en: "Passive: non-mechanical units restore 3 health per second." },
-    effect: { type: "passive", targets: { unitClasses: ["nonMechanical"] }, modifiers: { regenPerSecond: 3 } },
+    description: { zh: "被动：非机械单位自身每秒恢复 6 点生命。", en: "Passive: non-mechanical units restore 6 health per second." },
+    effect: { type: "passive", targets: { unitClasses: ["nonMechanical"] }, modifiers: { regenPerSecond: 6 } },
   },
 };
 
