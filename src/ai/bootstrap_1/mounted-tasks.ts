@@ -71,30 +71,34 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
   // Health gates a new sortie; an injured rider keeps its current fight until recovery takes command.
   let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id));
-  const raid = active.find(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3);
-  if (raid) {
+  for (const raid of active.filter(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3)) {
     const lead = byId.get(raid.unitIds[0]!)!;
     const recruits = riders.filter(unit => sameGround(snapshot.map, lead, unit)).slice(0, 3 - raid.unitIds.length);
     raid.unitIds.push(...recruits.map(unit => unit.id));
     riders = riders.filter(unit => !recruits.includes(unit));
   }
   if (!riders.length) return active;
-  const lead = riders[0]!;
-  const hall = nearestByRoute(snapshot.map, snapshot.buildings
-    .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
-    .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders))), lead, 'land');
-  const camps = neutralCamps(snapshot).filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
-      && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
-    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange));
-  const camp = nearestByRoute(snapshot.map, camps.map(camp => ({ ...camp.center, camp })), lead, 'land')?.camp;
-  // A lone scout raids an exposed line when it is closer than the next camp.
-  if (hall && (riders.length >= 2 || !camp
-    || walkingDistance(snapshot.map, lead, hall, 'land')! < walkingDistance(snapshot.map, lead, camp.center, 'land')!)) {
-    active.push({ unitIds: riders.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
-    return active;
+  const campLocations = neutralCamps(snapshot);
+  while (riders.length) {
+    const lead = riders[0]!;
+    const local = riders.filter(unit => sameGround(snapshot.map, lead, unit));
+    riders = riders.filter(unit => !local.includes(unit));
+    const hall = nearestByRoute(snapshot.map, snapshot.buildings
+      .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
+      .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders))), lead, 'land');
+    const camps = campLocations.filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
+        && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
+      && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange));
+    const camp = nearestByRoute(snapshot.map, camps.map(camp => ({ ...camp.center, camp })), lead, 'land')?.camp;
+    // A lone scout raids an exposed line when it is closer than the next camp.
+    if (hall && (local.length >= 2 || !camp
+      || walkingDistance(snapshot.map, lead, hall, 'land')! < walkingDistance(snapshot.map, lead, camp.center, 'land')!)) {
+      active.push({ unitIds: local.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
+      continue;
+    }
+    if (!camp) continue;
+    active.push({ unitIds: [lead.id], objective: { kind: 'camp', ids: camp.creeps.map(unit => unit.id) } });
   }
-  if (!camp) return active;
-  active.push({ unitIds: [lead.id], objective: { kind: 'camp', ids: camp.creeps.map(unit => unit.id) } });
   return active;
 }
 
