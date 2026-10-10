@@ -226,6 +226,8 @@ function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: U
 // twelve fell having killed 829 gold's worth, where twelve left to their own blows lost 563 and killed every enemy (the V9
 // exam's S1, against V8's ember).
 function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
+  // The shared policies join by range; reach and arrived-camp exceptions belong to the hybrid policies.
+  if (!isV5HybridPolicy(options)) return distance(fighter, target) <= focusFireJoinRange(fighter);
   if (canReach(snapshot.map, fighter, target) && v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options)) return true;
   if (isV5HybridPolicy(options) && (!canReach(snapshot.map, fighter, target) || (fighter.attackRange <= 100 && distance(fighter, target) > fighter.attackRange + fighter.radius + target.radius))) return false;
   if (distance(fighter, target) <= focusFireJoinRange(fighter)) return true;
@@ -247,7 +249,7 @@ function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: U
     if (bucket) bucket.push(fighter);
     else cells.set(key, [fighter]);
   }
-  const counterFocusers = fighters.filter((fighter) => v5ArrivedMercenaryCounterFocuser(snapshot, owner, fighter, options));
+  const counterFocusers = isV5HybridPolicy(options) ? fighters.filter((fighter) => v5ArrivedMercenaryCounterFocuser(snapshot, owner, fighter, options)) : [];
   return (target: Unit, test?: (fighter: Unit) => boolean) => {
     const cx = Math.floor(target.x / cell);
     const cy = Math.floor(target.y / cell);

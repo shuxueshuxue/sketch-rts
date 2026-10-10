@@ -39,6 +39,32 @@ const formation = [[-80, -50], [0, -80], [80, -50], [-80, 50], [0, 80], [80, 50]
 const room = { ...createRoom({ id: "veteran-continuation", host: { id: "host", name: "Host" }, mapId: "bareDuel" }), status: "inMatch" as const };
 
 describe("veteran progression in the shared simulation", () => {
+  it("preserves empty-frame stats and removes a departed aura before returning to empty frames", () => {
+    const game = scene();
+    const follower = game.spawnUnit("player", "footman", 850, 800);
+    follower.hp = .2;
+    stepGame(game);
+    const firstEmpty = game.veteranFrame;
+    expect(firstEmpty?.size).toBe(0);
+    stepGame(game);
+    expect(game.veteranFrame?.size).toBe(0);
+    expect(game.veteranFrame).not.toBe(firstEmpty);
+    expect([follower.hp, follower.speed, follower.maxHp]).toEqual([.2, UNIT_DEFS.footman.speed, UNIT_DEFS.footman.hp]);
+
+    const leader = game.spawnUnit("player", "raider", 800, 800);
+    learn(game, leader, "veteranMarch");
+    stepGame(game);
+    expect(follower.speed).toBe(UNIT_DEFS.footman.speed * 1.25);
+    expect(game.veteranFrame?.size).toBeGreaterThan(0);
+    leader.hp = 0;
+    stepGame(game);
+    expect(game.veteranFrame?.size).toBe(0);
+    expect([follower.hp, follower.speed, follower.maxHp]).toEqual([.2, UNIT_DEFS.footman.speed, UNIT_DEFS.footman.hp]);
+    stepGame(game);
+    expect(follower.speed).toBe(UNIT_DEFS.footman.speed);
+    expect(follower.hp).toBe(.2);
+  });
+
   it("keeps identical weapons at every star while increasing health and offers a stable third-star choice", () => {
     const scenario = {
       replaceDefaultUnits: true,

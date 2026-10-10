@@ -3361,7 +3361,16 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
 
   if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
 
-  const mainBreakIn = mainBuildingBreakInCommand(snapshot, owner, soldiers, enemyArmy, options);
+  let cachedPressure: Building | undefined;
+  let pressureEvaluated = false;
+  const getPressuredBuilding = () => {
+    if (!pressureEvaluated) {
+      cachedPressure = mostPressuredAlliedBuilding(snapshot, owner, options);
+      pressureEvaluated = true;
+    }
+    return cachedPressure;
+  };
+  const mainBreakIn = mainBuildingBreakInCommand(snapshot, owner, soldiers, enemyArmy, options, getPressuredBuilding);
   if (mainBreakIn) return mainBreakIn;
   const focus = mainDefenseFocusCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (focus) return focus;
@@ -3382,7 +3391,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     }
   }
 
-  const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
+  const pressuredBuilding = getPressuredBuilding();
   if (pressuredBuilding && soldiers.length >= 3) {
     const localEnemies = enemyCombatUnitsNear(snapshot, owner, pressuredBuilding, 620, options.teams);
     const isMainPressure = pressuredBuilding.owner === owner && distance(pressuredBuilding, mainBase(snapshot, owner)) <= 500;
@@ -3796,19 +3805,33 @@ function opponentHasPresence(snapshot: GameSnapshot, owner: PlayerId, opponent: 
 function mostPressuredAlliedBuilding(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): Building | undefined {
   const candidates = alliedBuildings(snapshot, owner, options).filter((building) => building.complete);
   if (candidates.length === 0) return undefined;
-  const pressures = new Map<string, number>();
+  const pressureSlots = new Map<string, number>();
+  const pressures: number[] = [];
+  const candidateSlots = candidates.map((building) => {
+    let slot = pressureSlots.get(building.id);
+    if (slot === undefined) {
+      slot = pressures.length;
+      pressureSlots.set(building.id, slot);
+      pressures.push(0);
+    }
+    return slot;
+  });
   const pressureRangeSq = 620 * 620;
   for (const unit of enemyUnits(snapshot, owner, options.teams)) {
-    for (const building of candidates) {
-      if (distanceSquared(unit, building) < pressureRangeSq) pressures.set(building.id, (pressures.get(building.id) ?? 0) + 1);
+    const targetId = unitOrderTargetId(unit);
+    for (let index = 0; index < candidates.length; index += 1) {
+      const building = candidates[index]!;
+      const slot = candidateSlots[index]!;
+      if (distanceSquared(unit, building) < pressureRangeSq) pressures[slot] = pressures[slot]! + 1;
       // @@@targeted-building-pressure - Ranged sieges can kill tech before five bodies stand near the building; an active target is pressure too.
-      if (unitTargetsBuilding(unit, building) && distance(unit, building) <= unit.attackRange + 180) pressures.set(building.id, (pressures.get(building.id) ?? 0) + 2);
+      if (targetId === building.id && distance(unit, building) <= unit.attackRange + 180) pressures[slot] = pressures[slot]! + 2;
     }
   }
 
   let best: { building: Building; pressure: number } | undefined;
-  for (const building of candidates) {
-    const pressure = pressures.get(building.id) ?? 0;
+  for (let index = 0; index < candidates.length; index += 1) {
+    const building = candidates[index]!;
+    const pressure = pressures[candidateSlots[index]!]!;
     if (pressure < 5 && !(pressure >= 2 && building.hp < building.maxHp * 0.75)) continue;
     if (!best || pressuredBuildingBeats(owner, building, pressure, best.building, best.pressure)) best = { building, pressure };
   }
@@ -3895,11 +3918,11 @@ function mainDefenseFocusCommand(snapshot: GameSnapshot, owner: PlayerId, soldie
   return attackers.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
-function mainBuildingBreakInCommand(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
+function mainBuildingBreakInCommand(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions, getPressuredBuilding: () => Building | undefined): GameCommand | undefined {
   if (options.version !== "v2") return undefined;
   if (opponentPlayerIds(snapshot, owner, options).length !== 1) return undefined;
   const main = mainBase(snapshot, owner);
-  const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
+  const pressuredBuilding = getPressuredBuilding();
   if (!pressuredBuilding || pressuredBuilding.owner !== owner || distance(pressuredBuilding, main) > 620) return undefined;
   if (pressuredBuilding.kind !== "farm") return undefined;
   const targeters = enemyArmy.filter((unit) => targetPressuresAlliedBuilding(snapshot, owner, unit, options) && distance(unit, pressuredBuilding) <= unit.attackRange + 220);

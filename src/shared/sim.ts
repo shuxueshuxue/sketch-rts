@@ -743,7 +743,7 @@ export function stepGame(game: Game) {
   updateMercenaryCamps(game);
   if (game.shops) restockShops(game.shops);
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
-  game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
+  game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230, game.unitSpatialByTeam);
   game.shipReachPadding = shipReachPadding(game.units);
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
     game.buildingSpatial = createSpatialIndex(game.buildings, 420);
@@ -992,6 +992,7 @@ function migrateSnapshotRates(game: Game): void {
 }
 
 function invalidateGameRuntimeCaches(game: Game): void {
+  invalidateSeparationFrame(game);
   delete game.veteranFrame;
   delete game.veteranAutocastFrame;
   delete game.boardingHolds;
@@ -1147,6 +1148,8 @@ function refreshVeteranFrameAfterCommandSpawn(game: Game) {
 function refreshVeteranFrame(game: Game) {
   const previous = game.veteranFrame;
   game.veteranFrame = buildVeteranFrame(game, veteranNearby(game));
+  // No current or departed projection can change any unit's derived stats.
+  if (!previous?.size && game.veteranFrame.size === 0) return;
   for (const unit of game.units) {
     if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
       const hp = unit.hp;
@@ -1557,7 +1560,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
     const target = findTarget(game, order.targetId);
     if (target && target.hp > 0 && automaticTargetAllowed(game.units,unit.owner,target) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target, game.units)) {
       const chosen = automaticCombatTarget(game, unit, target);
-      unit.order = { ...order, targetId: chosen.id };
+      if (chosen.id !== order.targetId) unit.order = { ...order, targetId: chosen.id };
       attackMoveTowardTarget(game, unit, chosen);
       return;
     }
@@ -1621,7 +1624,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
   if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
     if(!automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
     target = automaticCombatTarget(game, unit, target);
-    unit.order = { ...order, targetId: target.id };
+    if (target.id !== order.targetId) unit.order = { ...order, targetId: target.id };
   }
   const gap = targetGap(unit, target);
   const ship = Boolean(shipProfile(unit));
@@ -3705,6 +3708,7 @@ function removeExpiredUnits(game: Game) {
   dropItemsFromDeadUnits(game, expiredUnits);
   const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
   game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
+  invalidateSeparationFrame(game);
   updateSupplyState(game);
 }
 
@@ -3729,7 +3733,10 @@ function removeDead(game: Game) {
       kind: unit.kind, owner: unit.owner, x: unit.x, y: unit.y, radius: unit.radius,
       diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}) });
   }
-  if(deadUnits.length)game.units = game.units.filter((unit) => unit.hp > 0);
+  if(deadUnits.length) {
+    game.units = game.units.filter((unit) => unit.hp > 0);
+    invalidateSeparationFrame(game);
+  }
   if(deadBuildings.length)game.buildings = game.buildings.filter((building) => building.hp > 0);
   // A rock pile or gate broken is gone, and its way open (see @@@obstacle).
   if (game.obstacles?.some((obstacle) => obstacle.hp <= 0)) game.obstacles = game.obstacles.filter((obstacle) => obstacle.hp > 0);
@@ -3843,6 +3850,7 @@ export function removeUnit(game: Game, unitId: string) {
   if (!unit) return;
   dropItemsFromDeadUnits(game, [unit]);
   game.units = game.units.filter((candidate) => candidate.id !== unitId);
+  invalidateSeparationFrame(game);
   game.entityById?.delete(unitId);
   if (unit.veteranSkill) {
     game.unitSpatial = createSpatialIndex(game.units, 320);
@@ -3974,54 +3982,108 @@ function slideUnits(game: Game) {
   }
 }
 
-type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number };
-const separationFrames = new WeakMap<Game, { buckets: Map<number, SeparationBucket>; pool: SeparationBucket[] }>();
+type SeparationBucket = { x: number; y: number; units: (Unit | undefined)[]; count: number; cachedCount: number };
+type SeparationFrame = {
+  buckets: Map<number, SeparationBucket>;
+  pool: SeparationBucket[];
+  members: Unit[];
+  cellX: number[];
+  cellY: number[];
+  memberBuckets: SeparationBucket[];
+  memberSlots: number[];
+  // Flattened bucket pairs preserve the original map and neighbor traversal.
+  pairs: SeparationBucket[];
+  valid: boolean;
+};
+const separationFrames = new WeakMap<Game, SeparationFrame>();
+
+function clearSeparationMembership(frame: SeparationFrame) {
+  for (const bucket of frame.buckets.values()) {
+    for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
+    bucket.count = 0;
+    bucket.cachedCount = 0;
+  }
+  frame.buckets.clear();
+  frame.members.length = frame.cellX.length = frame.cellY.length = 0;
+  frame.memberBuckets.length = frame.memberSlots.length = frame.pairs.length = 0;
+  frame.valid = false;
+}
+
+function invalidateSeparationFrame(game: Game) {
+  const frame = separationFrames.get(game);
+  if (frame) clearSeparationMembership(frame);
+}
+
+function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number): boolean {
+  if (!frame.valid) return false;
+  let member = 0;
+  for (const unit of game.units) {
+    // Orders, cabin state and unit kind can change without replacing the array.
+    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+    if (frame.members[member] !== unit || !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
+      || !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) return false;
+    member += 1;
+  }
+  return member === frame.members.length;
+}
 
 function separateUnits(game: Game) {
   const cellSize = 80;
   let frame = separationFrames.get(game);
   if (!frame) {
-    frame = { buckets: new Map(), pool: [] };
+    frame = { buckets: new Map(), pool: [], members: [], cellX: [], cellY: [], memberBuckets: [], memberSlots: [], pairs: [], valid: false };
     separationFrames.set(game, frame);
   }
   const buckets = frame.buckets;
-  // Reinsert in this frame's unit order; a retained key must not retain last
-  // frame's collision order when bodies move or the simulation is restored.
-  buckets.clear();
-  let used = 0;
   const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
-  // Hull contact is constrained by advanceShip's swept collision check.
-  // Land separation must never relocate a ship sideways after navigation.
-  for (const unit of game.units) {
-    // Mining workers already pass through every body; exclude them once rather than testing every nearby pair.
-    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
-    const x = Math.floor(unit.x / cellSize);
-    const y = Math.floor(unit.y / cellSize);
-    const key = numericBucketKey(x, y);
-    let bucket = buckets.get(key);
-    if (bucket) bucket.units[bucket.count++] = unit;
-    else {
-      bucket = frame.pool[used++];
-      if (bucket) {
-        bucket.x = x; bucket.y = y; bucket.units[0] = unit; bucket.count = 1;
-      } else {
-        bucket = { x, y, units: [unit], count: 1 };
-        frame.pool.push(bucket);
+  if (separationMembershipMatches(game, frame, cellSize)) {
+    for (let i = 0; i < frame.members.length; i += 1) {
+      frame.memberBuckets[i]!.units[frame.memberSlots[i]!] = frame.members[i]!;
+    }
+    for (const bucket of buckets.values()) bucket.count = bucket.cachedCount;
+  } else {
+    // Cell/order changes rebuild in precisely this frame's source order. Clear
+    // the old metadata before reusing pooled buckets, never after filling them.
+    clearSeparationMembership(frame);
+    let used = 0;
+    for (const unit of game.units) {
+      // Hulls use swept navigation contact; mining workers pass through bodies.
+      if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+      const x = Math.floor(unit.x / cellSize), y = Math.floor(unit.y / cellSize);
+      const key = numericBucketKey(x, y);
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = frame.pool[used++];
+        if (bucket) {
+          bucket.x = x; bucket.y = y; bucket.count = 0;
+        } else {
+          bucket = { x, y, units: [], count: 0, cachedCount: 0 };
+          frame.pool.push(bucket);
+        }
+        buckets.set(key, bucket);
       }
-      buckets.set(key, bucket);
+      frame.members.push(unit);
+      frame.cellX.push(x); frame.cellY.push(y);
+      frame.memberBuckets.push(bucket); frame.memberSlots.push(bucket.count);
+      bucket.units[bucket.count++] = unit;
     }
-  }
-
-  for (const bucket of buckets.values()) {
-    separateUnitBuckets(game, bucket, bucket, aPoint, bPoint);
-    for (const [ox, oy] of SEPARATION_NEIGHBORS) {
-      const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
-      if (neighbor) separateUnitBuckets(game, bucket, neighbor, aPoint, bPoint);
+    for (const bucket of buckets.values()) {
+      bucket.cachedCount = bucket.count;
+      frame.pairs.push(bucket, bucket);
+      for (const [ox, oy] of SEPARATION_NEIGHBORS) {
+        const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
+        if (neighbor) frame.pairs.push(bucket, neighbor);
+      }
     }
+    // Captured cells describe positions before collision pairs move bodies.
+    frame.valid = true;
+  }
+  for (let i = 0; i < frame.pairs.length; i += 2) {
+    separateUnitBuckets(game, frame.pairs[i]!, frame.pairs[i + 1]!, aPoint, bPoint);
   }
   for (const bucket of buckets.values()) {
-    // The pool retains reusable storage, never bodies that died later in the
-    // tick or left this Game through snapshot restoration.
+    // Only bounded live membership metadata retains bodies between phases.
+    // Removal and restore hooks release it; working slots never retain bodies.
     for (let i = 0; i < bucket.count; i += 1) bucket.units[i] = undefined;
     bucket.count = 0;
   }
@@ -4136,19 +4198,46 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   return index;
 }
 
-function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number) {
+const teamSpatialMembership = new WeakMap<object, {
+  cellSize: number;
+  members: (SpatialEntity & { owner: Owner })[];
+  cellX: number[];
+  cellY: number[];
+  teams: string[];
+}>();
+
+function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
+  const cached = previous ? teamSpatialMembership.get(previous) : undefined;
+  if (cached && Object.is(cached.cellSize, cellSize) && cached.members.length === entities.length) {
+    let unchanged = true;
+    for (let i = 0; i < entities.length; i += 1) {
+      const entity = entities[i]!;
+      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize)) || cached.teams[i] !== teamKey(game, entity.owner)) {
+        unchanged = false;
+        break;
+      }
+    }
+    // Internal indexes retain live bodies. Team membership and visit order
+    // must match independently of coordinate-key aliases and mutable owners.
+    if (unchanged) return previous!;
+  }
   const indexes = new Map<string, SpatialIndex<T>>();
+  const cellX: number[] = [], cellY: number[] = [], teams: string[] = [];
   for (const entity of entities) {
     const team = teamKey(game, entity.owner);
+    teams.push(team);
     let index = indexes.get(team);
     if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
+    cellX.push(x); cellY.push(y);
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
     const key = numericBucketKey(x, y), bucket = index.buckets.get(key);
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
+  teamSpatialMembership.set(indexes, { cellSize, members: entities.slice(), cellX, cellY, teams });
   return indexes;
 }
 
@@ -4245,11 +4334,14 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
   const pace = statusPace(unit);
   if (pace === 0) return;
   if(shipProfile(unit)){sailToward(unit,{x,y,...(unit.order.type==="move" && unit.order.heading!==undefined?{heading:unit.order.heading}:{})},map,units,pace);return;}
-  const ship=unit.deck && units.find(ship=>ship.id===unit.deck!.shipId);
-  const goal=deckGoal(unit,ship || undefined,{x,y},units);
-  if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
-  if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
-  const from=groundShipFrameEmpty(units) ? undefined : {x:unit.x,y:unit.y};
+  const knownEmpty = groundShipFrameEmpty(units);
+  if (!knownEmpty || unit.deck) {
+    const ship=unit.deck && units.find(ship=>ship.id===unit.deck!.shipId);
+    const goal=deckGoal(unit,ship || undefined,{x,y},units);
+    if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
+    if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
+  }
+  const from=knownEmpty ? undefined : {x:unit.x,y:unit.y};
   if (map.terrain) {
     walkToward(unit, x, y, map, pace);
     if (from) {

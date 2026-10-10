@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createGame, removeUnit, restoreSnapshotIntoGame, snapshotGame, stepGame } from "../sim";
 import { isOpenGround } from "../terrain";
+import { boardUnit, deckPlacement } from "../decks";
+import { cabinDoor, enterCabinStep, isInCabin, leaveCabin } from "../ship-cabin";
+import { localToWorld } from "../ship-geometry";
 import type { Unit } from "../types";
 
 function scene() {
@@ -77,5 +80,102 @@ describe("unit contact separation in simulation frames", () => {
     stepGame(game);
     expect([standing.x, arriving.x]).toEqual([782, 818]);
     expect(departing.x).toBe(818);
+  });
+
+  it("reads current positions and radii when the same bodies stay in their previous cells", () => {
+    const game = scene();
+    const first = fighter(game, 820, 800), second = fighter(game, 850, 800);
+    stepGame(game);
+    expect([first.x, second.x]).toEqual([817, 853]);
+    // Both memberships remain in cell (10, 10), but contact geometry changes.
+    first.x = 830; first.radius = 12; first.hp = 17.25;
+    second.x = 850; second.radius = 28;
+    stepGame(game);
+    expect([first.x, second.x]).toEqual([820, 860]);
+    expect(first.radius).toBe(12); expect(second.radius).toBe(28);
+    expect(first.hp).toBe(17.25);
+    first.x = 832; second.x = 852;
+    stepGame(game);
+    expect([first.x, second.x]).toEqual([822, 862]);
+  });
+
+  it("rechecks mining eligibility when a worker's active order changes in place", () => {
+    const game = scene();
+    const worker = game.spawnUnit("player", "worker", 850, 800);
+    worker.effects = [{ type: "stun", remaining: 100 }];
+    const other = fighter(game, 850, 800);
+    stepGame(game);
+    const separated = [worker.x, other.x];
+    expect(other.x - worker.x).toBe(worker.radius + other.radius);
+    worker.x = other.x = 850;
+    worker.order = { type: "mine", resourceId: "not-yet-reached", phase: "toMine", timer: 0 };
+    stepGame(game);
+    expect(worker.order.type).toBe("mine");
+    expect([worker.x, other.x]).toEqual([850, 850]);
+    worker.order = { type: "idle" };
+    stepGame(game);
+    expect([worker.x, other.x]).toEqual(separated);
+  });
+
+  it("matches a fresh frame after same-ID replacement, reorder, cell crossing, deaths and expiry", () => {
+    const cached = scene(), fresh = scene();
+    for (const game of [cached, fresh]) {
+      fighter(game, 79, 800); fighter(game, 79, 800); fighter(game, 113, 800);
+    }
+    const ids = cached.units.map(unit => unit.id);
+    const advance = (mutate?: (game: ReturnType<typeof scene>) => void) => {
+      for (const game of [cached, fresh]) mutate?.(game);
+      // Public restoration removes all transient membership. The reference
+      // therefore rebuilds the original pair traversal for every comparison.
+      restoreSnapshotIntoGame(fresh, snapshotGame(fresh), fresh.nextId);
+      stepGame(cached); stepGame(fresh);
+      expect(snapshotGame(cached)).toEqual(snapshotGame(fresh));
+    };
+    advance();
+    advance(); // The first collision crossed a cell boundary itself.
+    advance(game => { game.units[1] = { ...game.units[1]!, x: 81 }; });
+    advance(game => { game.units.reverse(); for (const unit of game.units) unit.x = 81; });
+    advance(game => { game.units.find(unit => unit.id === ids[0])!.x = 160; });
+    advance(game => { game.units.find(unit => unit.id === ids[1])!.hp = 0; });
+    expect(cached.units.some(unit => unit.id === ids[1])).toBe(false);
+    advance(game => { fighter(game, 160, 800).expiresTick = game.tick + 1; });
+    expect(cached.units).toHaveLength(2);
+    advance(game => { fighter(game, 160, 800); });
+    advance(game => { restoreSnapshotIntoGame(game, snapshotGame(game), game.nextId); });
+  });
+
+  it("rechecks cabin membership and keeps hulls out of land contact after shelter and exit", () => {
+    const cached = scene(), fresh = scene();
+    const ship = cached.spawnUnit("player", "transport", 1500, 1500);
+    ship.order = { type: "hold", x: ship.x, y: ship.y };
+    const passenger = cached.spawnUnit("player", "footman", ship.x, ship.y);
+    expect(boardUnit(ship, passenger, cached.units)).toBe(true);
+    passenger.order = { type: "hold", x: passenger.x, y: passenger.y };
+    const point = deckPlacement(ship, passenger, cached.units, cabinDoor(ship), true, 2)!;
+    expect(point).toBeDefined();
+    passenger.deck = { shipId: ship.id, ...point };
+    Object.assign(passenger, localToWorld(ship, point));
+    restoreSnapshotIntoGame(fresh, snapshotGame(cached), cached.nextId);
+    const advance = () => {
+      restoreSnapshotIntoGame(fresh, snapshotGame(fresh), fresh.nextId);
+      stepGame(cached); stepGame(fresh);
+      expect(snapshotGame(cached)).toEqual(snapshotGame(fresh));
+      expect([ship.x, ship.y]).toEqual([1500, 1500]);
+    };
+    advance(); advance();
+    for (const game of [cached, fresh]) {
+      const crew = game.units.find(unit => unit.id === passenger.id)!;
+      crew.order = { type: "enterCabin", shipId: ship.id };
+      enterCabinStep(game, crew);
+      expect(isInCabin(crew)).toBe(true);
+    }
+    advance(); advance();
+    for (const game of [cached, fresh]) {
+      const crew = game.units.find(unit => unit.id === passenger.id)!;
+      expect(leaveCabin(game, crew)).toBe(true);
+      expect(isInCabin(crew)).toBe(false);
+    }
+    advance(); advance();
+    expect(passenger.deck?.shipId).toBe(ship.id);
   });
 });

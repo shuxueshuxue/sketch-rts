@@ -12,7 +12,7 @@ const RANGE_INDEX_MIN_ITEMS = 32;
 // order. A short list, a range so wide that its cells outnumber the items, or a point, range or item whose coordinates are
 // not finite get the plain test.
 export function createRangeIndex<T extends EntityPoint>(items: T[]): (point: EntityPoint, range: number) => T[] {
-  const plain = (point: EntityPoint, range: number) => items.filter((item) => distance(item, point) <= range);
+  const plain = (point: EntityPoint, range: number) => items.filter((item) => withinRange(item, point, range));
   if (items.length < RANGE_INDEX_MIN_ITEMS) return plain;
   let grid: { cells: Map<number, number[]>; offGrid: number[] } | undefined;
   return (point, range) => {
@@ -24,10 +24,10 @@ export function createRangeIndex<T extends EntityPoint>(items: T[]): (point: Ent
     const hits: number[] = [];
     for (let x = cx - span; x <= cx + span; x += 1) {
       for (let y = cy - span; y <= cy + span; y += 1) {
-        for (const index of grid.cells.get(cellKey(x, y)) ?? []) if (distance(items[index]!, point) <= range) hits.push(index);
+        for (const index of grid.cells.get(cellKey(x, y)) ?? []) if (withinRange(items[index]!, point, range)) hits.push(index);
       }
     }
-    for (const index of grid.offGrid) if (distance(items[index]!, point) <= range) hits.push(index);
+    for (const index of grid.offGrid) if (withinRange(items[index]!, point, range)) hits.push(index);
     return hits.sort((a, b) => a - b).map((index) => items[index]!);
   };
 }
@@ -54,6 +54,8 @@ function cellKey(x: number, y: number) {
   return x * 4096 + y;
 }
 
-function distance(a: EntityPoint, b: EntityPoint) {
-  return hypot2(a.x - b.x, a.y - b.y);
+function withinRange(a: EntityPoint, b: EntityPoint, range: number) {
+  const dx = a.x - b.x, dy = a.y - b.y;
+  if (Math.abs(dx) > range || Math.abs(dy) > range) return false;
+  return hypot2(dx, dy) <= range;
 }
