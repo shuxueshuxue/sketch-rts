@@ -126,7 +126,7 @@ export const mountedTasks: AiScript = {
         const choice = choices[0];
         if (choice) return [mountedMicro(snapshot, rider, choice.target, [...local, ...towers], objective.kind === 'camp' ? { kind: 'camp' } : { kind: 'raid', station: choice.point })];
         return towers.some(tower => distance(rider, tower) <= tower.attackRange)
-          ? [mountedEscape(snapshot, rider, towers, 0, undefined)] : [{ type: 'holdPosition', unitIds: [rider.id] }];
+          ? [mountedEscape(snapshot, rider, towers, 0, undefined, true)] : [{ type: 'holdPosition', unitIds: [rider.id] }];
       });
     });
   },

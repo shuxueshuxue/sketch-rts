@@ -31,7 +31,7 @@ it.each([0, 1].flatMap(level => [false, true].map(mirror => ({ level, mirror }))
     game.observer = { hit(_source, target, amount) { if (target.id === rider.id) damage += amount; } };
     for (let tick = 0; tick < 600; tick++) {
       if (tick % 15 === 0) issueCommandFrame(game, [{ playerId: 'us', scriptId: 'mountedTasks',
-        command: mountedEscape(snapshotGame(game), rider, [runner], 0, undefined) }]);
+        command: mountedEscape(snapshotGame(game), rider, [runner], 0, undefined, true) }]);
       const from = { x: rider.x, y: rider.y };
       stepGame(game);
       traveled += Math.hypot(rider.x - from.x, rider.y - from.y);
