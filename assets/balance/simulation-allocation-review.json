@@ -778,7 +778,7 @@
   "repositoryValidation": {
     "command": "SKETCH_RTS_BASE_PATH=/sketch-rts/ VITE_SKETCH_RTS_BASE_PATH=/sketch-rts/ npx vitest run src/shared/sim.test.ts --testNamePattern=\"runs a fast two-AI duel\" --maxWorkers=1 --minWorkers=1",
     "nodeVersion": "v20.20.2",
-    "originalCpuAssertions": "All three original CPU assertions passed; limits retained at 12,000ms for bareDuel and 16,000ms each for verdantCrossroads and ladder1v1. No winner, simulated tick cap or gameplay parameter was weakened.",
+    "originalCpuAssertions": "All three original CPU assertions passed; limits retained at 12,000ms for bareDuel and 16,000ms each for verdantCrossroads and ladder. No winner, simulated tick cap or gameplay parameter was weakened.",
     "validationLogSha256": "bb5c645e8fca1756b9f4f92a71cbc00940e1193a292ecc2160943dc904ffb930",
     "cases": [
       {
