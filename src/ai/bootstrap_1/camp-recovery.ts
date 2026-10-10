@@ -1,5 +1,8 @@
 import { sameGround, walkableGoal, walkDestination } from '../../shared/terrain';
-import { routeTravelTicks } from '../../shared/route-selection';
+import { nearestByRoute, routeTravelTicks } from '../../shared/route-selection';
+import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { canReceiveHealing } from '../../shared/healing';
+import { matchesUnitTarget } from '../../shared/unit-targeting';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { armedFoes } from './safe-land-route';
@@ -12,13 +15,22 @@ import { hostileDamageDisks } from './damage-footprints';
 
 function campRecoveryPatients(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const camp = options.memory.v6?.creep;
-  if (camp?.stage !== 'engage') return [];
+  if (camp === undefined) return [];
   const foes = armedFoes(snapshot, owner, options);
+  const healers = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.hp > 0
+    && UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal')
+    && foes.every(foe => distance(unit, foe) > mountedThreatReach(snapshot, foe, unit, 0)));
   return snapshot.units.filter(unit => unit.owner === owner && camp.group.includes(unit.id)
-    && unit.expiresTick === undefined && unit.hp < unit.maxHp).map(patient => ({ patient,
-      point: walkDestination(snapshot.map, patient, walkableGoal(snapshot.map, camp.staging.x, camp.staging.y)) })).filter(({ patient, point }) => {
+    && unit.expiresTick === undefined && unit.hp < unit.maxHp).map(patient => {
+      const care = canReceiveHealing(patient, snapshot) ? healers.filter(healer => UNIT_DEFS[healer.kind].abilities.some(ability =>
+        ABILITY_DEFS[ability].behavior === 'heal' && matchesUnitTarget(patient, ABILITY_DEFS[ability].targets, snapshot))) : [];
+      const healer = nearestByRoute(snapshot.map, care, patient, 'land');
+      const destination = healer === undefined ? camp.staging : healer;
+      return { patient, point: walkDestination(snapshot.map, patient,
+        walkableGoal(snapshot.map, destination.x, destination.y)) };
+    }).filter(({ patient, point }) => {
     const travel = routeTravelTicks(snapshot.map, patient, point, 'land', patient.speed);
-    // Recovery belongs to this camp only while its staging ground remains reachable.
+    // Recovery belongs to this camp only while its care destination remains reachable.
     if (travel === undefined) return false;
     const window = THINK_TICKS + travel;
     const flying = snapshot.projectiles.filter(shot => shot.targetId === patient.id && shot.remaining <= window)
@@ -36,7 +48,7 @@ export const campRecovery: AiScript = {
   claimsUnits: (snapshot, owner, options) => new Set(campRecoveryPatients(snapshot, owner, options).map(({ patient }) => patient.id)),
   run: (snapshot, owner, options): GameCommand[] => {
     const camp = options.memory.v6?.creep;
-    if (camp?.stage !== 'engage') return [];
+    if (camp === undefined) return [];
     const patients = campRecoveryPatients(snapshot, owner, options);
     if (!patients.length) return [];
     const foes = armedFoes(snapshot, owner, options);
@@ -47,8 +59,7 @@ export const campRecovery: AiScript = {
       const indirect = hostileDamageDisks(snapshot, patient, foes, THINK_TICKS)
         .some(area => distance(patient, area) <= area.radius);
       if (threats.length || indirect) {
-        const command = mountedEscape(snapshot, patient, indirect ? foes : threats, 0, point);
-        return command.type === 'move' ? { ...command, avoidCombat: true } : command;
+        return mountedEscape(snapshot, patient, indirect ? foes : threats, 0, point, true);
       }
       return distance(patient, point) <= V7_GATHERED_RANGE
         ? { type: 'holdPosition', unitIds: [patient.id] }
