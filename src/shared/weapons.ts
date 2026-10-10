@@ -1,7 +1,7 @@
 import type { WeaponDef } from "./catalog";
 import { localToWorld, shipProfile, worldToLocal } from "./ship-geometry";
 import { polygonPlanes } from "./navigation-math";
-import type { Unit } from "./types";
+import type { Building, Obstacle, Unit } from "./types";
 export type WeaponPoint = {
     x: number;
     y: number;
@@ -66,4 +66,10 @@ export function inWeaponCone(from: WeaponPoint, toward: WeaponPoint, target: Wea
 }
 export function weaponDamage(weapon: WeaponDef, damage: number, building: boolean, naval: boolean, share = 1) {
     return Math.max(1, Math.round(damage * (building ? weapon.buildingMultiplier ?? 1 : naval ? weapon.navalMultiplier ?? 1 : 1) * share));
+}
+
+/** A shot through exposed deck crew damages those crew before their hull. */
+export function crewBeforeHulls<T extends Unit | Building | Obstacle>(targets: T[]): T[] {
+    const occupied = new Set(targets.flatMap(target => "order" in target && target.deck ? [target.deck.shipId] : []));
+    return targets.filter(target => !("order" in target) || !shipProfile(target) || !occupied.has(target.id));
 }
