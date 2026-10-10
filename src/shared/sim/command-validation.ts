@@ -1,3 +1,4 @@
+import { unitControlsMercenaryCamp } from '../mercenary-camp';
 import { canReceiveHealing } from '../healing';
 import { SHIP_WEAPONS, installedWeapons } from "../ship-equipment";
 import { isMechanicalUnit, matchesUnitTarget, unitClassOf } from "../unit-targeting";
@@ -13,7 +14,7 @@ import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
-import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach, carries, passengerLandingSpot } from "../naval";
 import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
@@ -452,7 +453,7 @@ function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) 
 }
 
 function hasFriendlyUnitAtCamp(snapshot: GameSnapshot, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
-  return snapshot.units.some((unit) => unit.owner === owner && distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
+  return snapshot.units.some((unit) => unit.owner === owner && unitControlsMercenaryCamp(unit, camp));
 }
 
 function findTarget(snapshot: GameSnapshot, targetId: string) {

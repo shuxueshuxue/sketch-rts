@@ -1,6 +1,13 @@
 import type { Point } from './ship-geometry';
 import { walkingDistance, type Mover } from './terrain';
 import type { GameMap } from './types';
+import { SIM_TICKS_PER_SECOND } from './time';
+
+/** Terrain travel at a supplied constant speed; excludes body detours and ship turning. */
+export function routeTravelTicks(map: Pick<GameMap, 'terrain'>, from: Point, to: Point, mover: Mover, speed: number): number | undefined {
+  const road = walkingDistance(map, from, to, mover);
+  return road === undefined ? undefined : Math.ceil(road / speed * SIM_TICKS_PER_SECOND);
+}
 
 /** Shortest terrain route to one destination. Unreachable candidates do not compete.
  * Building detours, body clearance and sailing time belong to movement planning.
