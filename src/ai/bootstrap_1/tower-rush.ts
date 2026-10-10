@@ -45,7 +45,7 @@ function buildersFor(snapshot: GameSnapshot, owner: PlayerId, point: { x: number
   const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && !unit.deck);
   const miners = new Map<string, number>();
   for (const worker of workers) if (worker.order.type === 'mine') miners.set(worker.order.resourceId, (miners.get(worker.order.resourceId) ?? 0) + 1);
-  return workers.filter(worker => sameGround(snapshot.map, worker, point) && ['idle', 'mine'].includes(worker.order.type))
+  return workers.filter(worker => worker.carryingGold === 0 && sameGround(snapshot.map, worker, point) && ['idle', 'mine'].includes(worker.order.type))
     .sort((a, b) => distance(a, point) - distance(b, point))
     .filter(worker => {
       if (worker.order.type !== 'mine') return true;
