@@ -132,14 +132,18 @@ export function tryConsumeShipPlan(ship: Unit, slices = 8): boolean {
     if (!tryAdmitShipPlan(ship)) return false;
     frame.consumed = true;
   } else {
-    let first: Unit | undefined;
-    for (const waiting of frame.units) {
-      if (!isShipKind(waiting.kind) || !pruneRequest(waiting, frame)) continue;
-      const requested = waiting.sailing!.planningRequestedAtTick!;
-      const previous = first?.sailing?.planningRequestedAtTick;
-      if (!first || requested < previous! || requested === previous && waiting.id < first.id) first = waiting;
+    // A firing-station search can already have admitted this hull and cleared
+    // its queue age. Its route slices share that grant and the eight-unit cap.
+    if (frame.granted !== ship) {
+      let first: Unit | undefined;
+      for (const waiting of frame.units) {
+        if (!isShipKind(waiting.kind) || !pruneRequest(waiting, frame)) continue;
+        const requested = waiting.sailing!.planningRequestedAtTick!;
+        const previous = first?.sailing?.planningRequestedAtTick;
+        if (!first || requested < previous! || requested === previous && waiting.id < first.id) first = waiting;
+      }
+      if (first !== ship) return false;
     }
-    if (first !== ship) return false;
     clearRequest(ship);
   }
   frame.slices = (frame.slices ?? 0) + slices;

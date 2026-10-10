@@ -103,6 +103,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       && Math.abs(headingDifference(bearing,onward))<=Math.PI/6
       && (windPlan || Math.abs(headingDifference(other.sailing.heading,onward))<=Math.PI/6);
   };
+  const closeDepartureLeader=(other:Unit,bearing:number)=>{
+    const own=shipProfile(ship)!,companion=shipProfile(other);
+    if(!companion)return false;
+    const along=(other.x-ship.x)*detCos(bearing)+(other.y-ship.y)*detSin(bearing);
+    const across=Math.abs(-(other.x-ship.x)*detSin(bearing)+(other.y-ship.y)*detCos(bearing));
+    return along>0 && across<(own.beam+companion.beam)*.5
+      && along<(own.length+companion.length)*.5+Math.max(own.beam,companion.beam)*.5;
+  };
   const contactGoal=()=>{
     const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
     // A passing companion occupying our eventual destination is not a
@@ -143,14 +151,10 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         && Math.abs(headingDifference(bearing,other.sailing.heading))<Math.PI/12
         && Math.abs(headingDifference(bearing,Math.atan2(other.order.y-other.y,other.order.x-other.x)))<Math.PI/12
         && Math.hypot(other.order.x-other.x,other.order.y-other.y)>(shipProfile(other)?.length??length))return false;
-      const companion=shipProfile(other);
-      const along=(other.x-ship.x)*detCos(bearing)+(other.y-ship.y)*detSin(bearing);
-      const across=Math.abs(-(other.x-ship.x)*detSin(bearing)+(other.y-ship.y)*detCos(bearing));
       // A close departure needs actual maneuvering room before we can treat
       // the leader as a future empty corridor. This uses the enlarged hulls,
       // rather than assuming an arbitrary center-to-center convoy spacing.
-      if(companion && along>0 && across<(shipProfile(ship)!.beam+companion.beam)*.5
-        && along<(length+companion.length)*.5+Math.max(shipProfile(ship)!.beam,companion.beam)*.5)return true;
+      if(closeDepartureLeader(other,bearing))return true;
       // A companion already sailing the same course will have left its
       // current footprint before we reach it. Keep the sea corridor instead
       // of planning a berth maneuver around a frozen copy of its hull.
@@ -174,7 +178,9 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     if(!planned && hasShipPlanningFrame(ship) && allowCruise && !precision && !fireCourse && !aligned && !straight && (ship.order.type!=='move' || ship.order.rendezvousFor===undefined)){
       if(!motion.planningJob){
         const stopped=Math.abs(motion.speed)<=1;
-        const anchor=!stopped && previous?.points.length?futurePlanningAnchor(ship,units,point):undefined;
+        const first=previous?.points[0];
+        const prefixClear=!stopped && !!first && hullPassageClear(map,ship,start,first) && traffic(start,first);
+        const anchor=!stopped && prefixClear?futurePlanningAnchor(ship,units,point):undefined;
         // A changed or obstructed voyage must not escape into a complete
         // synchronous search just because its previous course was exact.
         // Keep a certified smooth prefix when available; otherwise hold the
@@ -208,9 +214,17 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
           const {exact:_,...onward}=forward;
           completed.points=[{...turned,exact:true},{...onward,curvature:0}];
         }
-        // An underway continuous prefix cannot lead into a new hard berth
-        // turn. Keep its current course until a live-origin replacement fits.
-        if(completed.anchor && completed.points.some(point=>point.exact||point.pivot))return false;
+        // A hard maneuver cannot splice into an underway prefix. Restart at
+        // the live pose instead of repeatedly adding anchors to that prefix.
+        if(completed.anchor && completed.points.some(point=>point.exact||point.pivot)){
+          if(previous)previous.points.length=0;
+          delete motion.route;
+          beginShipPlanningJob(ship,point,map,strategicUnits,undefined,recoveryOnly);
+          // The completed job already owns this frame's grant. Refresh the
+          // replacement's saved request tick without spending another slice.
+          tryAdmitShipPlan(ship);
+          return false;
+        }
         const first=completed.points[0];
         if(first){
           const origin=completed.anchor??start;
@@ -274,9 +288,19 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       && moved>length*.8 && !turningTack : moved>map.terrain!.cell/2;
     const enteringBerth=route?.cruise && point.intent!=='pursuit' && point.heading===undefined
       && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2 && !!contactGoal();
+    const weatherCorridorClear=()=>{
+      const first=route!.points[0]!,bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
+      const coastalVoyage=ship.order.type==='move' && ship.order.rendezvousFor===undefined
+        && !hullPassageClear(map,ship,{...start,heading:bearing},{...point,heading:bearing});
+      // Reusing a wind corridor needs the same nearby departure room as a
+      // fresh voyage. Distant underway companions still leave the coast open.
+      const liveUnits=units.filter(other=>!voyageCompanion(other,bearing)
+        || !coastalVoyage && closeDepartureLeader(other,bearing));
+      return hullPassageClear(map,ship,start,first) && reservationTraffic(ship,liveUnits)(start,first);
+    };
     const weatherOnly=!!route && windChange && !due && !enteringBerth && point.heading===undefined
       && route.cruise===true && route.intent===point.intent && route.targetId===point.targetId && route.points.length>0
-      && !route.points.some(point=>point.exact||point.pivot||point.tack);
+      && !route.points.some(point=>point.exact||point.pivot||point.tack) && weatherCorridorClear();
     const weatherManeuver=!!route && windChange && !due && !enteringBerth && point.heading===undefined
       && route.cruise===false && route.intent===point.intent && route.targetId===point.targetId && route.points.length>0
       && route.points.every(point=>point.exact||point.pivot);

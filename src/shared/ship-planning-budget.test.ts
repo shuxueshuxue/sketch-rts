@@ -20,6 +20,31 @@ function crew(ship: Unit): Unit {
 }
 
 describe('saved ship planning admission', () => {
+  it('lets an admitted firing-station hull prepare its route without losing FIFO fairness or its work cap', () => {
+    const original = [vessel('a'), vessel('b'), vessel('c')];
+    ticket(original[0]!, 5, 9); ticket(original[1]!, 6, 9); ticket(original[2]!, 7, 9);
+    const restored = JSON.parse(JSON.stringify(original)) as Unit[];
+    for (const units of [original, restored]) {
+      const [admitted, waiting] = units as [Unit, Unit, Unit];
+      beginShipPlanningFrame(units === original ? units : [...units].reverse(), 10);
+      expect(tryAdmitShipPlan(admitted)).toBe(true);
+      expect(admitted.sailing!.planningRequestedAtTick).toBeUndefined();
+      // Station admission has cleared its older ticket, while the next hull
+      // retains one. The same admitted hull still needs its route this tick.
+      expect(tryConsumeShipPlan(admitted, 2)).toBe(true);
+      expect(tryConsumeShipPlan(admitted, 2)).toBe(true);
+      expect(tryConsumeShipPlan(admitted, 4)).toBe(true);
+      expect(tryConsumeShipPlan(admitted, 1)).toBe(false);
+      expect(tryConsumeShipPlan(waiting, 2)).toBe(false);
+      expect(tryAdmitShipPlan(waiting)).toBe(false);
+      beginShipPlanningFrame(units === original ? units : [...units].reverse(), 11);
+      expect(tryAdmitShipPlan(admitted)).toBe(false);
+      expect(tryAdmitShipPlan(waiting)).toBe(true);
+      expect(tryConsumeShipPlan(waiting, 2)).toBe(true);
+    }
+    expect(restored).toEqual(JSON.parse(JSON.stringify(original)));
+  });
+
   it('separates expensive stages of one admitted hull without starving its peers', () => {
     const first=vessel('first'),second=vessel('second');
     expect(tryConsumeShipPlan(first)).toBe(true);

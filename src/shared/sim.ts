@@ -1862,7 +1862,10 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     // reaches the same island. landingSpot checks the actual hull reach and
     // the requested shore's ground component before putting anyone ashore.
     const arrived=walkEnded(game,ship,ship.order,8);
-    if(unloadCargo(game,ship)>0 || arrived || shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
+    // A deferred route can hold the departure pose without reaching the
+    // shore. Keep even an empty ship's unload order active during that wait.
+    const planning=ship.sailing?.planningJob!==undefined || ship.sailing?.planningRequestedAtTick!==undefined;
+    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
   }
 }
 
