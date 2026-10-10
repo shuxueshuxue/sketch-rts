@@ -1,4 +1,5 @@
-import { walkingDistance, sameGround } from '../../shared/terrain';
+import { sameGround } from '../../shared/terrain';
+import { routeTravelTicks } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { isEnemyOwner } from '../policy/ownership';
@@ -19,10 +20,10 @@ function campRecoveryPatients(snapshot: GameSnapshot, owner: PlayerId, options: 
   const foes = armedFoes(snapshot, owner, options);
   return snapshot.units.filter(unit => unit.owner === owner && camp.group.includes(unit.id)
     && unit.expiresTick === undefined && unit.hp < unit.maxHp).filter(patient => {
-    const route = walkingDistance(snapshot.map, patient, camp.staging, 'land');
+    const travel = routeTravelTicks(snapshot.map, patient, camp.staging, 'land', patient.speed);
     // Recovery belongs to this camp only while its staging ground remains reachable.
-    if (route === undefined) return false;
-    const window = THINK_TICKS + Math.ceil(route / patient.speed * SIM_TICKS_PER_SECOND);
+    if (travel === undefined) return false;
+    const window = THINK_TICKS + travel;
     const flying = snapshot.projectiles.filter(shot => shot.targetId === patient.id && shot.remaining <= window)
       .reduce((damage, shot) => damage + shot.damage, 0);
     const attacks = foes.reduce((damage, foe) => damage + ('order' in foe
