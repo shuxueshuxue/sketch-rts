@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs><radialGradient id="ground" cx=".48" cy=".38" r=".8"><stop stop-color="#a48b67" stop-opacity=".28"/><stop offset="1" stop-color="#101920"/></radialGradient><linearGradient id="edge" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b9a07b"/><stop offset=".48" stop-color="#655846"/><stop offset="1" stop-color="#403d34"/></linearGradient><linearGradient id="steel" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#e2e4d5"/><stop offset=".48" stop-color="#879ca4"/><stop offset="1" stop-color="#394952"/></linearGradient></defs>
+<path d="M12 3 C37 2 91 2 116 4 Q124 5 125 14 L125 114 Q125 124 114 125 L14 125 Q3 124 3 113 L3 15 Q3 5 12 3Z" fill="#11191f"/>
+<path d="M12 6 L116 6 Q122 7 122 14 L122 114 Q121 121 114 122 L14 122 Q7 121 6 113 L6 15 Q6 8 12 6Z" fill="url(#ground)" stroke="url(#edge)" stroke-width="2.2"/>
+<path d="M15 10 L43 10 M10 16 L10 42 M114 118 L89 118 M118 115 L118 90" stroke="#d6c19b" stroke-opacity=".32" stroke-width="1.2" fill="none"/>
+<g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><g stroke="#101820" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m20 95 16-8 9 4 12-6 13 5 10-7 26 13-18 8-19-2-12 6-16-7-14 2Z" fill="url(#steel)"/>
+    <path d="m35 91 13 4-6 8m16-14 6 10-7 9m22-20-8 10 8 7m8-9 13 1" fill="none" stroke="#e0e5db" stroke-width="1.6"/>
+    <path d="m51 23 29 4 6 35 13 16-3 12-21 5-32-2-12-10 4-16 12-8Z" fill="url(#steel)"/>
+    <path d="m49 28 24 4 5 31-29-3Z" fill="#77828b"/>
+    <path d="m40 64 40 0 14 15-3 8-18 4-28-2-9-8Z" fill="#8b9799"/>
+    <path d="m53 33 16 3m-18 4 18 3m-20 5 21 3m-21 4 20 3" fill="none" stroke="#d6e4df" stroke-width="1.8"/>
+    <path d="m51 24 9 9 14-2m4 5-7 11 8 8m-28 0 8-9-7-6" fill="none" stroke="#3d4f58" stroke-width="1.6"/>
+    <path d="m42 68 11 2-4 14m14-14 0 18m11-20 6 17m-41-5 8 6 26 2 15-4" fill="none" stroke="#d9e5df" stroke-width="1.8"/>
+    <path d="m43 66 2-6 12-2m19 8 6 3m-15 8 7-4m-24 8-5-3" fill="none" stroke-width="1.5"/>
+    <path d="m34 87-9-6-3-13m10 5-5-2m10 21-13 0-7 7m79-14 9-7 3-12m-4 27 8 3m-47 12-3 6m-20-10-7 8" fill="none"/>
+    <path d="m19 52 7 6-4 5-8-7Zm79-8 8 4-3 9-7-5Zm-7 14 5 2-1 5-6-2Z" fill="url(#steel)"/>
+    <path d="m27 39 6 11m67-18-5 13m-9-26 2 11" fill="none" stroke="#c8d6c7" stroke-width="1.8"/>
+  </g></g>
+</svg>
