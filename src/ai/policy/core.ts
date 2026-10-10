@@ -3267,7 +3267,7 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
     .slice(0, 5);
   if (workers.length < 2) return undefined;
   if (options.version === "v2" && mainHallNeedsDesperateWorkerFight(snapshot, owner, main, ownCombat)) {
-    const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
+    const target = sortMainDefenseTargets(enemies, main, snapshot, owner)[0];
     return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
   }
   if (shouldEvacuateV5SevereWorkersWithoutDefenseLine(snapshot, owner, options, main, ownCombat)) {
@@ -3282,7 +3282,7 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
     const point = workerEvacuationPoint(snapshot, main, averagePoint(enemies));
     return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: evacuatingWorkers.map((unit) => unit.id), x: point.x, y: point.y }, options);
   }
-  const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
+  const target = sortMainDefenseTargets(enemies, main, snapshot, owner)[0];
   return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
@@ -3358,7 +3358,6 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const soldiers = combatUnits(snapshot, owner);
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
   const movable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
-  const recallable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && attackWaveReadyUnit(snapshot, owner, unit, options));
 
   if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
 
@@ -3415,6 +3414,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   }
 
   const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
+  const recallable = outnumberedV2 ? soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && attackWaveReadyUnit(snapshot, owner, unit, options)) : [];
   const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, recallable, options);
   const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
   if (committedRecall) return committedRecall;
@@ -3727,9 +3727,10 @@ function safeStoppedRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerI
 
 function deadEconomyRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, claim: { kind: string }, options: PresetAiPolicyOptions) {
   if (claim.kind !== "retreat" || unit.hp < unit.maxHp * 0.58) return false;
+  if (!deadEconomyCloseoutReady(snapshot, owner, options, combatUnits(snapshot, owner))) return false;
   if (enemyCombatUnitsNear(snapshot, owner, unit, 520, options.teams).length > 0 || neutralUnitsNear(snapshot, unit, 420).length > 0) return false;
   // @@@dead-economy-retreat-release - Once enemy workers are gone, healthy safe retreaters should rejoin the final army before the exact rally point.
-  return deadEconomyCloseoutReady(snapshot, owner, options, combatUnits(snapshot, owner));
+  return true;
 }
 
 function committedAttackWaveOwner(snapshot: GameSnapshot, owner: PlayerId, recallable: Unit[], options: PresetAiPolicyOptions): PlayerId | undefined {
@@ -3888,7 +3889,7 @@ function mainDefenseFocusCommand(snapshot: GameSnapshot, owner: PlayerId, soldie
     .filter((unit) => distance(unit, rally) <= 360 || (distance(unit, rally) <= 660 && targetPressuresAlliedBuilding(snapshot, owner, unit, options)))
     .filter((unit) => !v5DistantHealthyMeleeApproachTarget(snapshot, owner, defenderCenter, unit, options));
   if (targets.length === 0) return undefined;
-  const target = targets.sort((a, b) => mainDefenseTargetScore(b, rally, snapshot, owner) - mainDefenseTargetScore(a, rally, snapshot, owner))[0];
+  const target = sortMainDefenseTargets(targets, rally, snapshot, owner)[0];
   if (!target) return undefined;
   const attackers = defenders.filter((unit) => canJoinMainDefenseFocus(snapshot, owner, unit, target, options));
   return attackers.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
@@ -3998,6 +3999,19 @@ function outmatchedPressurePickoffCommand(snapshot: GameSnapshot, owner: PlayerI
     .sort((a, b) => a.hp / Math.max(1, a.maxHp) - b.hp / Math.max(1, b.maxHp))[0];
   // @@@outmatched-base-pickoff - Holding rally is correct against a larger base hit, but idle defenders should still delete reachable wounded attackers.
   return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function sortMainDefenseTargets(targets: Unit[], rally: Point, snapshot: GameSnapshot, owner: PlayerId) {
+  const scores = new Map<Unit, number>();
+  const score = (unit: Unit) => {
+    let value = scores.get(unit);
+    if (value === undefined) {
+      value = mainDefenseTargetScore(unit, rally, snapshot, owner);
+      scores.set(unit, value);
+    }
+    return value;
+  };
+  return targets.sort((a, b) => score(b) - score(a));
 }
 
 function mainDefenseTargetScore(unit: Unit, rally: Point, snapshot: GameSnapshot, owner: PlayerId) {
@@ -4282,7 +4296,7 @@ function closeoutAttackWaveTarget(snapshot: GameSnapshot, owner: PlayerId, soldi
   if (deadEconomyCleanup) return deadEconomyCleanup;
   if (crippledCleanup) return crippledCleanup;
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 1.25) return undefined;
-  return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner);
+  return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, preferredOwner);
 }
 
 function shouldWaitForExpansionBeforePressure(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -4327,10 +4341,8 @@ function deadEconomyBuildingIsCleanable(snapshot: GameSnapshot, owner: PlayerId,
   return armyPower(routeDefenders) <= soldierPower * 1.1;
 }
 
-function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, soldiers: Unit[] = [], preferredOwner?: PlayerId) {
+function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, preferredOwner?: PlayerId) {
   const candidates = preferredAttackBuildings(enemyBuildings(snapshot, owner, options.teams), preferredOwner);
-  const disabledTarget = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, from, options, soldiers, preferredOwner) : undefined;
-  if (disabledTarget) return disabledTarget;
   const defendersByTeam = new Map<string, number>();
   const weakTargets = candidates.filter((building) => {
     const targetTeam = teamFor(snapshot, building.owner, options);

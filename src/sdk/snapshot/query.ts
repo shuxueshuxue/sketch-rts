@@ -91,6 +91,7 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
   const unitsByOwner = new Map<PlayerId, Unit[]>();
   const combatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const buildingsByOwner = new Map<PlayerId, Building[]>();
+  const completeBuildingsByOwner = new Map<PlayerId, Map<BuildingKind | undefined, Building[]>>();
   const hostileCombatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const viewByOwner = new Map<PlayerId, SnapshotPlayerView>();
   let unitsById: Map<string, Unit> | undefined;
@@ -173,7 +174,11 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return buildings.slice();
     },
     completeBuildingsFor(owner, kind) {
-      return this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind));
+      let byKind = completeBuildingsByOwner.get(owner);
+      if (!byKind) completeBuildingsByOwner.set(owner, (byKind = new Map()));
+      let buildings = byKind.get(kind);
+      if (!buildings) byKind.set(kind, (buildings = this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind))));
+      return buildings.slice();
     },
     neutralUnitsNear(point, range) {
       neutralUnits ??= snapshot.units.filter((unit) => unit.owner === "neutral");

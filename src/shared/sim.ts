@@ -1295,8 +1295,12 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame): Ferry | undefined 
   game.veteranAutocastFrame = {};
   let ferry: Ferry | undefined;
   const vessels=shipsIn(game.units);
-  const ordered=vessels.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units.slice();
-  for (const unit of ordered) {
+  const ordered=vessels.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units;
+  // Summoning only appends during unit updates. Capture the initial length so
+  // newly born bodies first act next tick, as with the ships-first snapshot.
+  const count = ordered.length;
+  for (let i = 0; i < count; i += 1) {
+    const unit = ordered[i]!;
     if (unit.sailing?.pursuit && !['attack', 'attackMove', 'follow'].includes(unit.order.type) && !defenses.has(unit.id)) delete unit.sailing.pursuit;
     if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
     unit.cooldown = Math.max(0, unit.cooldown - 1);
@@ -3968,9 +3972,22 @@ function slideUnits(game: Game) {
   }
 }
 
+type SeparationBucket = { x: number; y: number; units: Unit[] };
+const separationFrames = new WeakMap<Game, { buckets: Map<number, SeparationBucket>; pool: SeparationBucket[] }>();
+
 function separateUnits(game: Game) {
   const cellSize = 80;
-  const buckets = new Map<number, { x: number; y: number; units: Unit[] }>();
+  let frame = separationFrames.get(game);
+  if (!frame) {
+    frame = { buckets: new Map(), pool: [] };
+    separationFrames.set(game, frame);
+  }
+  const buckets = frame.buckets;
+  // Reinsert in this frame's unit order; a retained key must not retain last
+  // frame's collision order when bodies move or the simulation is restored.
+  buckets.clear();
+  let used = 0;
+  const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
   // Hull contact is constrained by advanceShip's swept collision check.
   // Land separation must never relocate a ship sideways after navigation.
   for (const unit of game.units) {
@@ -3979,17 +3996,31 @@ function separateUnits(game: Game) {
     const x = Math.floor(unit.x / cellSize);
     const y = Math.floor(unit.y / cellSize);
     const key = numericBucketKey(x, y);
-    const bucket = buckets.get(key);
+    let bucket = buckets.get(key);
     if (bucket) bucket.units.push(unit);
-    else buckets.set(key, { x, y, units: [unit] });
+    else {
+      bucket = frame.pool[used++];
+      if (bucket) {
+        bucket.x = x; bucket.y = y; bucket.units.push(unit);
+      } else {
+        bucket = { x, y, units: [unit] };
+        frame.pool.push(bucket);
+      }
+      buckets.set(key, bucket);
+    }
   }
 
   for (const bucket of buckets.values()) {
-    separateUnitBuckets(game, bucket.units, bucket.units);
+    separateUnitBuckets(game, bucket.units, bucket.units, aPoint, bPoint);
     for (const [ox, oy] of SEPARATION_NEIGHBORS) {
       const neighbor = buckets.get(numericBucketKey(bucket.x + ox, bucket.y + oy));
-      if (neighbor) separateUnitBuckets(game, bucket.units, neighbor.units);
+      if (neighbor) separateUnitBuckets(game, bucket.units, neighbor.units, aPoint, bPoint);
     }
+  }
+  for (const bucket of buckets.values()) {
+    // The pool retains reusable storage, never bodies that died later in the
+    // tick or left this Game through snapshot restoration.
+    bucket.units.length = 0;
   }
 }
 
@@ -4000,12 +4031,18 @@ const SEPARATION_NEIGHBORS = [
   [0, 1],
 ] as const;
 
-function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[]) {
+function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[], aPoint: SpatialEntity, bPoint: SpatialEntity) {
   const sameBucket = aUnits === bUnits;
   for (let i = 0; i < aUnits.length; i += 1) {
     const start = sameBucket ? i + 1 : 0;
     for (let j = start; j < bUnits.length; j += 1) {
-      separateUnitPair(game, aUnits[i]!, bUnits[j]!);
+      const a = aUnits[i]!, b = bUnits[j]!;
+      const minDistance = a.radius + b.radius;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distanceSq = dx * dx + dy * dy;
+      if (distanceSq >= minDistance * minDistance) continue;
+      separateUnitPair(game, a, b, minDistance, dx, dy, aPoint, bPoint);
     }
   }
 }
@@ -4019,14 +4056,10 @@ function minerGhost(unit: Unit) {
 
 // Hulls are constrained by swept motion. Ground separation cannot push a body
 // underneath a reachable hull; passengers use the deck's local floor instead.
-function separateUnitPair(game: Game, a: Unit, b: Unit) {
-  const minDistance = a.radius + b.radius;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const distanceSq = dx * dx + dy * dy;
-  if (distanceSq >= minDistance * minDistance) return;
+function separateUnitPair(game: Game, a: Unit, b: Unit, minDistance: number, dx: number, dy: number, aPoint: SpatialEntity, bPoint: SpatialEntity) {
   if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
-  if (unitMover(a.kind) !== unitMover(b.kind)) return;
+  const aMover = unitMover(a.kind), bMover = unitMover(b.kind);
+  if (aMover !== bMover) return;
   const length = Math.hypot(dx, dy);
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;
@@ -4037,8 +4070,10 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
   // Neither is pushed onto ground it cannot stand on (see @@@terrain): one by a wall slides along it (see openStep).
-  const aAt = a.deck ? deckSeparationPoint(game,a,{x:ax,y:ay}) : constrainGroundShipStep(game.map,a,a,openStep(game.map, a, { x: ax, y: ay }, unitMover(a.kind)),game.units);
-  const bAt = b.deck ? deckSeparationPoint(game,b,{x:bx,y:by}) : constrainGroundShipStep(game.map,b,b,openStep(game.map, b, { x: bx, y: by }, unitMover(b.kind)),game.units);
+  aPoint.x = ax; aPoint.y = ay;
+  const aAt = a.deck ? deckSeparationPoint(game,a,aPoint) : constrainGroundShipStep(game.map,a,a,openStep(game.map, a, aPoint, aMover),game.units);
+  bPoint.x = bx; bPoint.y = by;
+  const bAt = b.deck ? deckSeparationPoint(game,b,bPoint) : constrainGroundShipStep(game.map,b,b,openStep(game.map, b, bPoint, bMover),game.units);
   a.x = aAt.x;
   a.y = aAt.y;
   b.x = bAt.x;
