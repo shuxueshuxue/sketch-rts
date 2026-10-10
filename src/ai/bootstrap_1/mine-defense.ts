@@ -141,7 +141,9 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   const army = intel.army.filter(unit => !crew.has(unit.id) && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
-  const { armyCenter, intrusion, ...world } = { ...intel, intrusion: readIntrusion(buildings(snapshot, owner), intel.enemies, true) };
+  const { armyCenter, intrusion, ...world } = { ...intel,
+    ownHalls: snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall'),
+    intrusion: readIntrusion(buildings(snapshot, owner), intel.enemies, true) };
   const main: V6Intel = { ...world, army, power: strengthOf(army) };
   if (army.length) main.armyCenter = averagePoint(army);
   const raid = uncoveredRaid(snapshot, intel, guard);
