@@ -59,8 +59,8 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     }
   }
   const aim = rider.aim ? rider.aim : rider;
-  // While the weapon cannot fire this turn, only commit to waiting until the next think.
-  const shot = rider.cooldown > THINK_TICKS ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
+  // Outside weapon range we are walking, not waiting for aim at the distant target.
+  const shot = rider.cooldown > THINK_TICKS || distance(rider, target) > rider.attackRange ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
   const horizon = THINK_TICKS + rider.cooldown;
   const margin = (point: Point, foe: Threat) => distance(point, foe) - mountedThreatReach(snapshot, foe, rider, horizon);
   // Inside a charge minimum, the shot and next think share the same narrow firing window.
@@ -108,7 +108,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const angle = destination ? Math.atan2(destination.y - rider.y, destination.x - rider.x) : Math.atan2(rider.y - danger.foe.y, rider.x - danger.foe.x);
   const step = rider.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
   const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
-  const choices = [rider, ...Array.from({ length: 16 }, (_, index) => ({
+  const choices = [rider, ...(destination && distance(rider, destination) <= step ? [destination] : []), ...Array.from({ length: 16 }, (_, index) => ({
     x: rider.x + detCos(angle + index * Math.PI / 8) * step,
     y: rider.y + detSin(angle + index * Math.PI / 8) * step,
   })).filter(point => point.x >= 0 && point.y >= 0 && point.x < snapshot.map.width && point.y < snapshot.map.height
