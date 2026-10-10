@@ -19,6 +19,7 @@ import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
 import { planBootstrapNaval } from './expedition-recovery';
+import { campRecovery } from './camp-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -82,6 +83,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
 export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
+    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
