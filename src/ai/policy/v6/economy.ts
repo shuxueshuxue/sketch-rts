@@ -454,10 +454,15 @@ function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<str
   return issueV6Construction(economy, kind, point, used, play);
 }
 
+export function availableV6ConstructionWorkers(economy: Economy, point: Point, used: Set<string>) {
+  return economy.workers.filter(worker => !used.has(worker.id)
+    && !isReservedBuilder(economy.snapshot, economy.owner, worker)
+    && sameGroundAs(economy.snapshot, worker, point));
+}
+
 /** Ordinary builder selection and SDK issuance, independent of the executor's construction schedule. */
 export function issueV6Construction(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
-  const builder = economy.workers
-    .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker) && sameGroundAs(economy.snapshot, worker, point))
+  const builder = availableV6ConstructionWorkers(economy, point, used)
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
   if (!builder) return undefined;
   used.add(builder.id);
