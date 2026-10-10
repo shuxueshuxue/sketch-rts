@@ -210,6 +210,9 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
   if (land && (!map.terrain || ships.every(ship => shipProfile(ship)!.deckHeight > passenger.radius * 2.5)))
     return false;
   const geometry = crossingGeometry(ships, passenger, map, land), { surface, floor, obstacles } = geometry;
+  // Ground routing owns an approach until the whole body fits the crossing floor.
+  if (!source && !floor.diskFits(passenger, passenger.radius + 1))
+    return false;
   let destination: Point | undefined;
   if (target) {
     if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckPlacement(target, passenger, units))

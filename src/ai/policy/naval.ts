@@ -1,6 +1,7 @@
 import { miningHallSite } from "../../shared/mining-site";
 import { GOLD_MINE_RULES } from '../../shared/mining';
-import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
+import { nearestByRoute } from '../../shared/route-selection';
+import { distanceToHull, localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import {combatCapability} from '../../shared/combat-capabilities';
 import {navalServices} from './naval-services';
 import {fleetStations} from './fleet-formation';
@@ -19,7 +20,7 @@ import { bodyMass } from "../../shared/physical-body";
 import { boardUnit } from "../../shared/decks";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
-import { canReach, carries, boardingBerth } from "../../shared/naval";
+import { BOARDING_GAP, canReach, carries, boardingBerth } from "../../shared/naval";
 import { purchasePlacement } from "../../shared/purchase";
 import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
@@ -207,7 +208,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
         if (buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && !building.complete))
             return undefined;
         const site = shoreSpot(snapshot, owner, water, options, true);
-        const hall = site && nearestByWalk(snapshot, halls, site);
+        const hall = site && nearestByRoute(snapshot.map, halls, site, 'land');
         const gun = site && nearestOf(snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && combatCapability(snapshot,unit).armed && isEnemyOwner(snapshot, owner, unit.owner, options)), site);
         const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle"));
         return hall && gun ? coastTower(snapshot, hall, gun, workers, site) : undefined;
@@ -553,7 +554,8 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         return commands;
     }
     const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
-    if (distance(boat, mission.from) > 100 && !shipPassengers(snapshot.units,boat).length && !waiting.length) {
+    const loadGround = walkableGoal(map, mission.from.x, mission.from.y);
+    if (distanceToHull(boat, loadGround) > UNIT_DEFS.worker.radius + BOARDING_GAP && !shipPassengers(snapshot.units,boat).length && !waiting.length) {
         if (needsMove(boat, mission.from))
             commands.push({ type: "move", unitIds: [boat.id], ...mission.from, avoidCombat:true });
         return commands;
@@ -566,7 +568,6 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const attached = new Set([...cargo, ...boarding].map(unit => unit.id));
     mission.crewIds = mission.crewIds.filter(id => attached.has(id));
     let room = ferryCapacity(boat) - [...cargo, ...boarding].reduce((n, unit) => n + bodyMass(unit), 0);
-    const loadGround = walkableGoal(map, mission.from.x, mission.from.y);
     const workers = own.filter(unit => !unit.deck && !attached.has(unit.id) && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle"));
     const crew: Unit[] = [];
     const workerCount = [...cargo, ...boarding].filter(unit => unit.kind === "worker").length;
@@ -761,7 +762,7 @@ function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers:
         issue: (builders) => {
             if (builders.size || workers.some(unit => unit.order.type === "build"))
                 return undefined;
-            const builder = nearestByWalk(snapshot, workers.filter((worker) => !builders.has(worker.id)), site);
+            const builder = nearestByRoute(snapshot.map, workers.filter((worker) => !builders.has(worker.id)), site, 'land');
             if (!builder)
                 return undefined;
             builders.add(builder.id);
@@ -1103,20 +1104,6 @@ function enemyShipsNear(snapshot: GameSnapshot, owner: PlayerId, options: AiPoli
 }
 function nearestWorker(snapshot: GameSnapshot, owner: PlayerId, point: Point, builders: Set<string>) {
     return nearestOf(units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle") && !builders.has(unit.id) && sameGround(snapshot.map, unit, point)), point);
-}
-// The thing with the shortest walk to the point, none that no walk reaches (see walkingDistance: one field toward the
-// point serves them all).
-function nearestByWalk<T extends Point>(snapshot: GameSnapshot, things: T[], to: Point): T | undefined {
-    let best: T | undefined;
-    let bestWalk = Infinity;
-    for (const thing of things) {
-        const walk = walkingDistance(snapshot.map, thing, to);
-        if (walk !== undefined && walk < bestWalk) {
-            best = thing;
-            bestWalk = walk;
-        }
-    }
-    return best;
 }
 function nearestOf<T extends Point>(things: T[], from: Point): T | undefined {
     let best: T | undefined;
