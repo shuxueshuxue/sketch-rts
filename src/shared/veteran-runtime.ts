@@ -209,7 +209,9 @@ export function castVeteranAbility(
     candidates.sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp) || compareIds(a, b));
     targets = candidates.slice(0, effect.maxTargets);
     const effectiveHealing = targets.reduce((sum, unit) => sum + Math.min(effect.healAmount, unit.maxHp - unit.hp), 0);
-    const emergency = targets.some(unit => unit.hp <= unit.maxHp * .4 && unit.maxHp - unit.hp >= effect.healAmount / 2);
+    // A stronger wave must still rescue fragile units whose entire health pool is below its healing amount.
+    const emergency = targets.some(unit => unit.hp <= unit.maxHp * .4
+      && unit.maxHp - unit.hp >= Math.min(effect.healAmount / 2, unit.maxHp * .25));
     if (targets.length === 0 || (automatic && effectiveHealing < effect.healAmount && !emergency)) return false;
     for (const target of targets) target.hp = Math.min(target.maxHp, target.hp + effect.healAmount);
   } else {

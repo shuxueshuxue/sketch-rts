@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from "./sim";
 import { buildingPlacementBlocker } from "./build-placement";
 import { miningHallSite } from "./mining-site";
-import { GOLD_MINE_RULES } from "./mining";
-import { createBuilding } from "./map";
+import { GOLD_MINE_RULES, prepareMiningFrame } from "./mining";
+import { createBuilding, createUnit } from "./map";
 import { MAP_POOL } from "./map-pool";
 import { groundUnder } from "./terrain";
 import { seconds } from "./time";
-import type { MapId } from "./types";
+import type { MapId, ResourceNode } from "./types";
 
 function miningGame(map: MapId, count: number) {
   const seats = MAP_POOL.find(spec => spec.id === map)?.players ?? 2;
@@ -24,6 +24,41 @@ function miningGame(map: MapId, count: number) {
 }
 
 describe("gold haul cycles", () => {
+  it("admits the longest-waiting worker first and resolves equal waits by id without changing orders", () => {
+    const mine: ResourceNode = { id: "queue-mine", kind: "goldMine", x: 0, y: 0, amount: 1000 };
+    const workers = ([["worker-a", 3], ["worker-z", 9], ["worker-b", 9]] as const).map(([id, timer]) => {
+      const worker = createUnit(id, "player", "worker", GOLD_MINE_RULES.entryRange, 0);
+      worker.order = { type: "mine", resourceId: mine.id, phase: "toMine", timer };
+      return worker;
+    });
+    const orders = workers.map(worker => structuredClone(worker.order));
+    const frame = prepareMiningFrame({ resources: [mine], units: workers, buildings: [] });
+    expect(frame.nextWorker.get(mine.id)).toBe("worker-b");
+    expect(workers.map(worker => worker.order)).toEqual(orders);
+  });
+
+  it("rebuilds resource and completed hall indexes in source order without retaining an old frame", () => {
+    const first: ResourceNode = { id: "mine-a", kind: "goldMine", x: 0, y: 0, amount: 1000 };
+    const second: ResourceNode = { ...first, id: "mine-b", x: 500 };
+    const hallA = createBuilding("hall-a", "player", "townHall", 210, 0, true);
+    const hallB = createBuilding("hall-b", "player", "townHall", 710, 0, true);
+    const unfinished = createBuilding("unfinished", "player", "townHall", 1000, 0, false);
+    const destroyed = createBuilding("destroyed", "enemy", "townHall", 1000, 500, true);
+    destroyed.hp = 0;
+    const snapshot = { resources: [second, first], units: [], buildings: [hallB, unfinished, hallA, destroyed] };
+    const before = prepareMiningFrame(snapshot);
+    expect([...before.resources.keys()]).toEqual([second.id, first.id]);
+    expect(before.resources.get(first.id)).toBe(first);
+    expect(before.townHalls.get("player")).toEqual([hallB, hallA]);
+    expect(before.townHalls.has("enemy")).toBe(false);
+    snapshot.resources = [first];
+    snapshot.buildings = [hallA];
+    const after = prepareMiningFrame(snapshot);
+    expect([...after.resources.keys()]).toEqual([first.id]);
+    expect(after.townHalls.get("player")).toEqual([hallA]);
+    expect(before.townHalls.get("player")).toEqual([hallB, hallA]);
+  });
+
   it.each(["bareDuel", ...MAP_POOL.map(map => map.id)] as const)("saturates %s at five workers through admission and travel timing", map => {
     const income = (count: number) => {
       const { game } = miningGame(map, count);

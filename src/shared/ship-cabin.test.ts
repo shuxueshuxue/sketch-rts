@@ -306,7 +306,7 @@ describe('real cabin shelter and evacuation',()=>{
   it('stops attack, autocast and outgoing veteran auras without deleting learned skills',()=>{
     const game=sea(),ship=game.spawnUnit('player','carrier',1500,1500),unit=crew(game,ship),ally=crew(game,ship,'footman');
     unit.veteranSkill='veteranCommand';
-    expect(buildVeteranFrame(game).get(ally.id)?.attackSpeedMultiplier).toBe(1.08);
+    expect(buildVeteranFrame(game).get(ally.id)?.attackSpeedMultiplier).toBe(1.35);
     shelter(game,ship,unit);ally.hp-=30;const hp=ally.hp;
     const enemy=game.spawnUnit('enemy','footman',2100,1500);
     const enemyHp=enemy.hp;strikeUnit(game,unit,enemy,80,'spell');expect(enemy.hp).toBe(enemyHp);

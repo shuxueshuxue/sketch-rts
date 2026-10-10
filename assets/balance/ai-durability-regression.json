@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "scenario": {
+    "map": "verdantCrossroads",
+    "players": [
+      "player",
+      "enemy"
+    ],
+    "aiVersion": "v2",
+    "maxTicks": 48000,
+    "ticksPerSecond": 20
+  },
+  "ablationProvenance": {
+    "captureTiming": "The original ablation driver recorded HEAD and these six input digests after each run; all six inputs are identical across all four reports. d8840b5 and 9b751ed also have identical bytes for all nine runtime inputs in the later before-fixture record; the intervening commit only updates tests.",
+    "sharedSourceInputs": {
+      "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+      "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+      "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+      "src/shared/sim.ts": "f3fec8ddecaacb9c7433c00bc3817948507e79970b3e1be009f608ac7830dc7e",
+      "src/ai/policy/core.ts": "ad045714126483b92e8d984817701695f2df880316f9641b658affd119d5728b",
+      "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910"
+    },
+    "allFourSharedInputsIdentical": true,
+    "originalDriverDigestRecorded": false,
+    "scope": "Old skills and HP overrides change in-memory numeric catalogs in the same runtime, before game creation; these are controlled ablations, not an exact checkout of the previous release."
+  },
+  "ablations": [
+    {
+      "variant": "current",
+      "recordedSourceCommit": "d8840b5cbf3df397511caf7bdb010f55b46bbeaa",
+      "overrides": {},
+      "sparkArcherHp": 85,
+      "veteranNumericSet": "new values",
+      "tick": 48000,
+      "winner": null,
+      "endedAtTick": null,
+      "final": {
+        "player": {
+          "workers": 0,
+          "army": 3,
+          "skills": {
+            "none": 3
+          },
+          "townHalls": 1,
+          "buildingCount": 18
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 8,
+          "skills": {
+            "none": 7,
+            "veteranPhalanx": 1
+          },
+          "townHalls": 2,
+          "buildingCount": 16
+        }
+      }
+    },
+    {
+      "variant": "oldSkills",
+      "recordedSourceCommit": "9b751edeeb566bb418c3244f170ece944acd8b7a",
+      "overrides": {
+        "skills": {
+          "veteranResilience": {
+            "modifiers": {
+              "damageReduction": 0.12
+            }
+          },
+          "veteranMobility": {
+            "modifiers": {
+              "moveSpeedMultiplier": 1.1
+            }
+          },
+          "veteranCommand": {
+            "modifiers": {
+              "attackSpeedMultiplier": 1.08
+            }
+          },
+          "veteranVigilance": {
+            "modifiers": {
+              "damageReduction": 0.08
+            }
+          },
+          "veteranRally": {
+            "modifiers": {
+              "attackSpeedMultiplier": 1.2
+            },
+            "duration": 120,
+            "cooldown": 480
+          },
+          "veteranPhalanx": {
+            "modifiers": {
+              "damageReduction": 0.12
+            }
+          },
+          "veteranSteadyAim": {
+            "modifiers": {
+              "aimSpeedMultiplier": 1.3
+            }
+          },
+          "veteranMarch": {
+            "modifiers": {
+              "moveSpeedMultiplier": 1.1
+            }
+          },
+          "veteranHealingWave": {
+            "healAmount": 30,
+            "cooldown": 480
+          },
+          "veteranInnerFire": {
+            "modifiers": {
+              "damageReduction": 0.2
+            },
+            "duration": 120,
+            "cooldown": 480
+          },
+          "veteranRenewal": {
+            "modifiers": {
+              "regenPerSecond": 1.2
+            }
+          },
+          "veteranEndurance": {
+            "modifiers": {
+              "regenPerSecond": 3
+            }
+          }
+        }
+      },
+      "sparkArcherHp": 85,
+      "veteranNumericSet": "previous values",
+      "tick": 48000,
+      "winner": null,
+      "endedAtTick": null,
+      "final": {
+        "player": {
+          "workers": 0,
+          "army": 3,
+          "skills": {
+            "none": 3
+          },
+          "townHalls": 1,
+          "buildingCount": 18
+        },
+        "enemy": {
+          "workers": 6,
+          "army": 7,
+          "skills": {
+            "none": 6,
+            "veteranPhalanx": 1
+          },
+          "townHalls": 2,
+          "buildingCount": 16
+        }
+      }
+    },
+    {
+      "variant": "oldHp",
+      "recordedSourceCommit": "9b751edeeb566bb418c3244f170ece944acd8b7a",
+      "overrides": {
+        "sparkArcherHp": 75
+      },
+      "sparkArcherHp": 75,
+      "veteranNumericSet": "new values",
+      "tick": 16050,
+      "winner": "player",
+      "endedAtTick": 16050,
+      "final": {
+        "player": {
+          "workers": 12,
+          "army": 21,
+          "skills": {
+            "none": 21
+          },
+          "townHalls": 3,
+          "buildingCount": 20
+        },
+        "enemy": {
+          "workers": 0,
+          "army": 0,
+          "skills": {},
+          "townHalls": 0,
+          "buildingCount": 0
+        }
+      }
+    },
+    {
+      "variant": "both",
+      "recordedSourceCommit": "9b751edeeb566bb418c3244f170ece944acd8b7a",
+      "overrides": {
+        "skills": {
+          "veteranResilience": {
+            "modifiers": {
+              "damageReduction": 0.12
+            }
+          },
+          "veteranMobility": {
+            "modifiers": {
+              "moveSpeedMultiplier": 1.1
+            }
+          },
+          "veteranCommand": {
+            "modifiers": {
+              "attackSpeedMultiplier": 1.08
+            }
+          },
+          "veteranVigilance": {
+            "modifiers": {
+              "damageReduction": 0.08
+            }
+          },
+          "veteranRally": {
+            "modifiers": {
+              "attackSpeedMultiplier": 1.2
+            },
+            "duration": 120,
+            "cooldown": 480
+          },
+          "veteranPhalanx": {
+            "modifiers": {
+              "damageReduction": 0.12
+            }
+          },
+          "veteranSteadyAim": {
+            "modifiers": {
+              "aimSpeedMultiplier": 1.3
+            }
+          },
+          "veteranMarch": {
+            "modifiers": {
+              "moveSpeedMultiplier": 1.1
+            }
+          },
+          "veteranHealingWave": {
+            "healAmount": 30,
+            "cooldown": 480
+          },
+          "veteranInnerFire": {
+            "modifiers": {
+              "damageReduction": 0.2
+            },
+            "duration": 120,
+            "cooldown": 480
+          },
+          "veteranRenewal": {
+            "modifiers": {
+              "regenPerSecond": 1.2
+            }
+          },
+          "veteranEndurance": {
+            "modifiers": {
+              "regenPerSecond": 3
+            }
+          }
+        },
+        "sparkArcherHp": 75
+      },
+      "sparkArcherHp": 75,
+      "veteranNumericSet": "previous values",
+      "tick": 16050,
+      "winner": "player",
+      "endedAtTick": 16050,
+      "final": {
+        "player": {
+          "workers": 12,
+          "army": 21,
+          "skills": {
+            "none": 21
+          },
+          "townHalls": 3,
+          "buildingCount": 20
+        },
+        "enemy": {
+          "workers": 0,
+          "army": 0,
+          "skills": {},
+          "townHalls": 0,
+          "buildingCount": 0
+        }
+      }
+    }
+  ],
+  "observedConflict": {
+    "commands": [
+      {
+        "tick": 47910,
+        "playerId": "enemy",
+        "scriptId": "skirmishPreservation",
+        "command": {
+          "type": "attackMove",
+          "unitIds": [
+            "unit-enemy-cinderRunner-12653",
+            "unit-enemy-cinderRunner-12689"
+          ],
+          "x": 3620,
+          "y": 3620
+        }
+      },
+      {
+        "tick": 47925,
+        "playerId": "enemy",
+        "scriptId": "attackWave",
+        "command": {
+          "type": "attackMove",
+          "unitIds": [
+            "unit-enemy-cinderRunner-12653",
+            "unit-enemy-cinderRunner-12689"
+          ],
+          "x": 450,
+          "y": 450
+        }
+      }
+    ],
+    "unitsAtTick48000": [
+      {
+        "id": "unit-enemy-cinderRunner-12653",
+        "kind": "cinderRunner",
+        "x": 817.65,
+        "y": 901.549,
+        "hp": 80,
+        "maxHp": 96,
+        "level": 0,
+        "order": {
+          "type": "attackMove",
+          "x": 3620,
+          "y": 3620,
+          "targetId": "unit-player-footman-11665"
+        }
+      },
+      {
+        "id": "unit-enemy-cinderRunner-12689",
+        "kind": "cinderRunner",
+        "x": 1246.405,
+        "y": 1253.973,
+        "hp": 96,
+        "maxHp": 96,
+        "level": 0,
+        "order": {
+          "type": "attackMove",
+          "x": 3620,
+          "y": 3620
+        }
+      }
+    ],
+    "cause": "V2 skirmish attackMove fallback cleared retreat ownership, letting the next attackWave reverse the same healthy units. AttackMove can also acquire and follow a fleeing enemy despite its home destination.",
+    "controlExperiment": {
+      "claimOnlyOriginalLongDuel": "passed existing 48000-tick victory and CPU assertions",
+      "singleOrderLiveEnemyRetreat": "failed: after 140 ticks front-footman was farther from home",
+      "initialDistanceToHome": 1702.9386365926403,
+      "distanceToHomeAfter140Ticks": 2123.477579361121,
+      "increase": 420.53894276848087,
+      "scope": "This earlier engine-level probe issued one retreat then an actual enemy move; the final regression also replans AI every 15 ticks."
+    }
+  },
+  "finalPolicy": {
+    "versionScope": "(requestedVersion ?? version) === v2; other same-id scripts retain their existing semantics.",
+    "ownership": "Record actual filtered V2 skirmish attackMove fallbacks as retreat claims in the runner; existing move ownership is preserved.",
+    "disengage": "Use move with avoidCombat for local enemy power > 1.5 times allied power, an already executing avoidCombat move, or enemies moving away from the local allied center. An attackMove with an active targetId remains combat, even when its destination points outward.",
+    "localGoal": "Ground disengagements propose a goal up to 600 from the local center toward safety, then project it with walkableGoal and walkDestination from an actual allied position. Projection and walking around terrain can change the resulting distance. Keep an unexpired in-progress retreat goal fixed; if danger persists after arrival, a later leg can continue the retreat.",
+    "preserved": "Wounded recovery, existing dead-opponent clean retreat, original safe regrouping conditions (within 110, idle or move, no hostile player or neutral unit within 420), selected new veteran skill values and Spark Archer 85 HP, victory limits, and CPU budgets."
+  },
+  "finalProbe": {
+    "sourceCommit": "aedd0f3bce66636c109a3bb5f85bba6a6ee16e79",
+    "provenance": {
+      "capturedBeforeImports": true,
+      "nodeVersion": "v20.20.2",
+      "driverSha256": "424368bc1f34b440c70cfd181b75e6af5206e866c884f0676896b3b0222b9c9e",
+      "regressionTestSha256": "1086ceafddeee155670eb03138696ebc081366b060e5e5fca335202b02bb1acf"
+    },
+    "sourceInputs": {
+      "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+      "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+      "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+      "src/shared/sim.ts": "f3fec8ddecaacb9c7433c00bc3817948507e79970b3e1be009f608ac7830dc7e",
+      "src/ai/policy/core.ts": "ad045714126483b92e8d984817701695f2df880316f9641b658affd119d5728b",
+      "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+      "src/ai/policy/skirmish-tactics.ts": "1b05a80942f286ac10681a22e8e6919f6d2fdc083442b03c2bf85c7b00692e3e",
+      "src/ai/policy/claims.ts": "045fdd30dab87f14370c7b024e1f822b5c5028e7842b2d77f2ccdb6055bf2e4e",
+      "src/ai/policy/script-runner.ts": "fa88a2b2bc6238b4ec57bcfc9a7fe43473c9d949a08fda52df17422dc62cf3fa"
+    },
+    "tick": 17069,
+    "winner": "player",
+    "endedAtTick": 17069,
+    "final": {
+      "player": {
+        "workers": 10,
+        "army": 21,
+        "skills": {
+          "none": 21
+        },
+        "townHalls": 2,
+        "buildingCount": 16
+      },
+      "enemy": {
+        "workers": 0,
+        "army": 0,
+        "skills": {},
+        "townHalls": 0,
+        "buildingCount": 0
+      }
+    },
+    "originalSixRuntimeInputsUnchanged": true,
+    "observerCpuMs": 10194.326,
+    "cpuMetricScope": "The instrumented diagnostic includes sampling and a damage observer; standard CPU budget validation comes from the unchanged Vitest duel assertions below."
+  },
+  "verification": {
+    "sameFinalFixtureBefore": {
+      "sourceCommit": "9b751edeeb566bb418c3244f170ece944acd8b7a",
+      "capturedBeforeTest": true,
+      "fixtureFromCommit": "aedd0f3bce66636c109a3bb5f85bba6a6ee16e79",
+      "sourceInputs": {
+        "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+        "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+        "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+        "src/shared/sim.ts": "f3fec8ddecaacb9c7433c00bc3817948507e79970b3e1be009f608ac7830dc7e",
+        "src/ai/policy/core.ts": "ad045714126483b92e8d984817701695f2df880316f9641b658affd119d5728b",
+        "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+        "src/ai/policy/skirmish-tactics.ts": "4136b1aa7901dc6a18a7424e00169269f3c82bb11524acf4f983c4f54b6c0bce",
+        "src/ai/policy/claims.ts": "62137c2dd856c3bad89063654a3914fb2ca303ccc6d7292c44c9f1ed899f0fd6",
+        "src/ai/policy/script-runner.ts": "a1c29e89de85ac4d2aa5b541068bd94450d5717668fd3a88a90e27e10882aa41"
+      },
+      "regressionTestSha256": "1086ceafddeee155670eb03138696ebc081366b060e5e5fca335202b02bb1acf",
+      "failed": 9,
+      "passed": 6,
+      "total": 15,
+      "failedCases": [
+        "remembers a real fallback as retreat rather than clearing movement ownership",
+        "keeps the retreating front out of the next wave while fresh reinforcements can advance",
+        "lets fighters rejoin after their actual fallback reaches safety, without waiting for claim expiry",
+        "actually falls back while live enemies walk away, instead of pursuing them toward their base",
+        "keeps its local goal fixed while the same threat remains during the fallback",
+        "distinguishes an outward attack-move from active target combat (engaged=false)",
+        "does not reuse an expired retreat goal through the direct planner",
+        "projects a local fallback across a water gap onto the actual units reachable shore",
+        "uses home when the local group already has less than one fallback leg to travel"
+      ]
+    },
+    "sameFinalFixtureAfter": {
+      "sourceCommit": "aedd0f3bce66636c109a3bb5f85bba6a6ee16e79",
+      "regressionTestSha256": "1086ceafddeee155670eb03138696ebc081366b060e5e5fca335202b02bb1acf",
+      "passed": 15,
+      "failed": 0,
+      "total": 15
+    },
+    "focusedPolicyGroups": {
+      "passed": 458,
+      "files": 6,
+      "regressionCasesAtThatRun": 13,
+      "note": "The two explicit outward attackMove/active-target classifier cases were added afterward; the final 15-case file also passed. No runtime behavior changed afterward; strict TS non-null assertions erase at compilation."
+    },
+    "typescriptNoEmit": "passed",
+    "originalDuelAssertions": {
+      "sourceCommit": "aedd0f3bce66636c109a3bb5f85bba6a6ee16e79",
+      "note": "Tested runtime differs from final commit only by an erased non-null assertion. Existing winner, endedAtTick, economy, combat and CPU assertions remain unchanged; these values are Vitest case wall times, not CPU measurements.",
+      "cases": [
+        {
+          "map": "bareDuel",
+          "passed": true,
+          "wallTimeMs": 8369,
+          "maxTicks": 36000,
+          "cpuBudgetMs": 12000
+        },
+        {
+          "map": "verdantCrossroads",
+          "passed": true,
+          "wallTimeMs": 5372,
+          "maxTicks": 48000,
+          "cpuBudgetMs": 16000
+        },
+        {
+          "map": "ladder",
+          "passed": true,
+          "wallTimeMs": 10023,
+          "maxTicks": 48000,
+          "cpuBudgetMs": 16000
+        }
+      ]
+    }
+  },
+  "rejectedCandidates": [
+    {
+      "policy": "unconditional full-home move",
+      "verdantCrossroads": {
+        "winnerAssertionPassed": true,
+        "cpuMs": 17980.835,
+        "cpuBudgetMs": 16000
+      },
+      "ladder": {
+        "winnerAssertionPassed": true,
+        "cpuMs": 32957.544,
+        "cpuBudgetMs": 16000
+      },
+      "instrumentedVerdantWinnerTick": 32713,
+      "reason": "Large surviving armies accumulated during long retreats. Profile self samples: moveToward 0.57%; stepGame/updateUnits/separation/GC were larger costs."
+    },
+    {
+      "policy": "unconditional bounded 600 move",
+      "bareDuel": {
+        "cpuMs": 13178.091,
+        "cpuBudgetMs": 12000
+      },
+      "verdantCrossroads": {
+        "passedOriginalAssertions": true
+      },
+      "ladder": {
+        "winnerAssertionPassed": true,
+        "cpuMs": 24070.896,
+        "cpuBudgetMs": 16000
+      },
+      "reason": "Preserve healthy counterfire rather than making every mild disadvantage disengage."
+    }
+  ],
+  "method": {
+    "diagnosticDriverAvailability": "Scratch diagnostic only; its digest is recorded for the final probe. It is not a committed repository executable.",
+    "diagnosticVariantFlags": [
+      [
+        "--variant",
+        "current"
+      ],
+      [
+        "--variant",
+        "oldSkills"
+      ],
+      [
+        "--variant",
+        "oldHp"
+      ],
+      [
+        "--variant",
+        "both"
+      ]
+    ],
+    "defaultMaxTicks": 48000,
+    "sampleEveryTicks": 1200,
+    "loop": "createGame(verdantCrossroads, aiPlayers=[player,enemy]); createAiRuntime([player,enemy]) with the default V2; issue runPresetAiRuntimeForTest commands and stepGame until a winner or the 48000-tick cap. Apply only the specified numeric overrides before creating the game.",
+    "regressionFixture": "src/ai/policy/skirmish-retreat-memory.test.ts",
+    "standardBudgetValidation": "Under Node 20: node node_modules/vitest/vitest.mjs run src/shared/sim.test.ts -t \"runs a fast two-AI duel\" --maxWorkers=1 --minWorkers=1",
+    "fixtureValidation": "Under Node 20: node node_modules/vitest/vitest.mjs run src/ai/policy/skirmish-retreat-memory.test.ts --maxWorkers=1 --minWorkers=1"
+  }
+}

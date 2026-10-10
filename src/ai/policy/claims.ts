@@ -17,6 +17,7 @@ type RecordAiMemoryOptions = {
   owner?: PlayerId;
   teams?: Partial<Record<PlayerId, string>> | undefined;
   preserveHireCampClaims?: boolean;
+  preserveSkirmishRetreatClaims?: boolean;
 };
 
 type AttackWaveCommand = Extract<GameCommand, { type: "attack" }> | Extract<GameCommand, { type: "attackMove" }>;
@@ -169,7 +170,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       }
       continue;
     }
-    if (scriptId === "skirmishPreservation" && command.type === "move") {
+    if (scriptId === "skirmishPreservation" && (command.type === "move" || options.preserveSkirmishRetreatClaims && command.type === "attackMove")) {
       for (const unitId of command.unitIds) {
         memory.unitClaims[unitId] = {
           kind: "retreat",

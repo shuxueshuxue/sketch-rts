@@ -1,0 +1,73 @@
+{
+  "retrieved_utc": "2026-10-10T04:22:18.069385+00:00",
+  "authority": "Blizzard Entertainment Classic official strategy guide",
+  "edition_scope": "Unversioned classic guide archive; footer copyright 2019. Do not present as verified current Reforged patch values.",
+  "distance_scope": "Range and Area of Effect reproduced exactly as displayed; no conversion from the guide scale to World Editor units has been verified.",
+  "attack_speed_scope": "Our requested veteranCommand +35% is project-specific tuning; this source states Endurance Aura rank 3 Attack Rate +15%.",
+  "sources": [
+    {
+      "skill": "Devotion Aura",
+      "url": "https://classic.battle.net/war3/human/units/paladin.shtml#paladin-devotion",
+      "source_sha256": "9fff4fff5d613e1092cf58399e308ad1e6f490b2a5c5df9deb07df9f29a0e57b",
+      "rank_three": {
+        "Level": "3",
+        "Duration": "Unlimited",
+        "Cooldown": "N/A",
+        "Mana Cost": "None",
+        "Range": "N/A",
+        "Area of Effect": "90",
+        "Allowed Targets": "Air, Ground, Friend, Self",
+        "Effect": "+4.5 to Armor",
+        "Hero Level Req": "5"
+      }
+    },
+    {
+      "skill": "Endurance Aura",
+      "url": "https://classic.battle.net/war3/orc/units/taurenchieftain.shtml#taurenchieftain-endurance",
+      "source_sha256": "51f4e8a32e07179054450bad6ba9872a270f4e4aa3dc521251f826069d753b5b",
+      "rank_three": {
+        "Level": "3",
+        "Duration": "N/A",
+        "Cooldown": "N/A",
+        "Mana Cost": "N/A",
+        "Range": "N/A",
+        "Area of Effect": "90",
+        "Allowed Targets": "Air, Ground, Friend, Self",
+        "Effect": "Movement Speed +30%, Attack Rate +15%",
+        "Hero Level Req": "5"
+      }
+    },
+    {
+      "skill": "Unholy Aura",
+      "url": "https://classic.battle.net/war3/undead/units/deathknight.shtml#deathknight-unholyaura",
+      "source_sha256": "7dd709197d6ab9ab155f764857f7d0b753ee3398aa89ee6682effb387f1dcf6a",
+      "rank_three": {
+        "Level": "3",
+        "Duration": "Unlimited",
+        "Cooldown": "N/A",
+        "Mana Cost": "None",
+        "Range": "N/A",
+        "Area of Effect": "90",
+        "Allowed Targets": "Air, Ground, Friend, Self",
+        "Effect": "+30% movement, +1.5 HP/sec.",
+        "Hero Level Req": "5"
+      }
+    },
+    {
+      "skill": "Healing Wave",
+      "url": "https://classic.battle.net/war3/orc/units/shadowhunter.shtml#shadowhunter-healingwave",
+      "source_sha256": "2a425c2cc3c1a918fa1e89996b0b7654722dabe8df39aef38c2848517d7a41bf",
+      "rank_three": {
+        "Level": "3",
+        "Duration": "N/A",
+        "Cooldown": "9 sec.",
+        "Mana Cost": "90",
+        "Range": "70",
+        "Area of Effect": "50",
+        "Allowed Targets": "Air, Ground, Friend, Self, Organic",
+        "Effect": "Heals 300 damage, jumps 5 times",
+        "Hero Level Req": "5"
+      }
+    }
+  ]
+}

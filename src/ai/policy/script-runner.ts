@@ -17,6 +17,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   if (!snapshot.players[owner] || snapshot.match.winner) return [];
   const policyOptions: AiPolicyContext = { ...options, memory: options.memory ?? createAiPolicyMemory() };
   const preserveHireCampClaims = isV5HybridPolicy(policyOptions) || policyOptions.version === "v5";
+  const preserveSkirmishRetreatClaims = (policyOptions.requestedVersion ?? policyOptions.version) === "v2";
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const claims = unitClaims(snapshot, owner, scripts, policyOptions);
   const commands: AiCommandEntry[] = [];
@@ -41,7 +42,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const budget = budgetAfter(reserve);
     const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
     if (scriptCommands.length > 0) {
-      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
+      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
       spent += scriptCommands.reduce((total, command) => total + purchaseCost(snapshot, owner, command), 0);
       reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
@@ -55,7 +56,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
-    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
+    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }

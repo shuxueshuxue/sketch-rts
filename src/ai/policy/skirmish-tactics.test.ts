@@ -360,6 +360,6 @@ describe("AI skirmish tactics", () => {
 
     const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "attackMove" });
+    expect(command).toMatchObject({ type: "move", avoidCombat: true });
   });
 });

@@ -1,0 +1,72 @@
+{
+  "scope": "Isolated actual weapon scenarios, matching veteran-balance.test.ts fixtures; no faction win-rate or whole-game performance claim",
+  "sourceCommit": "1d96dcd7f992e774aff37abec52e14720dc4b791",
+  "sourceState": "Commit plus uncommitted acceptance test; sourceInputs identify actual tested files",
+  "meleeWindowSeconds": 30,
+  "bowWindowSeconds": 20,
+  "ticksPerSecond": 20,
+  "sourceInputs": {
+    "src/shared/catalog.ts": "1cc6dbe4197f54079043a7da76c77032e4c065443d86cd0a67af729587255c44",
+    "src/shared/veteran-skills.ts": "ce84e1a516ff74d59685945eee78475f434490c8ba80507c11af30919f68b313",
+    "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+    "src/shared/sim.ts": "f3fec8ddecaacb9c7433c00bc3817948507e79970b3e1be009f608ac7830dc7e",
+    "src/shared/weapons.ts": "193cd5eecd5b53e1692363d4fea5b22984d4d9f8c0f70b8c45c6c7b852d213e4",
+    "src/shared/veteran-balance.test.ts": "18416231e02e3097bce57097da137c08f77967b2698bdaa8e171984bbbcc1dbc"
+  },
+  "melee": [
+    {
+      "sources": "none",
+      "hits": 28,
+      "damage": 448,
+      "intervals": [
+        22
+      ]
+    },
+    {
+      "sources": "one",
+      "hits": 38,
+      "damage": 608,
+      "intervals": [
+        16
+      ]
+    },
+    {
+      "sources": "two",
+      "hits": 38,
+      "damage": 608,
+      "intervals": [
+        16
+      ]
+    },
+    {
+      "sources": "enemy",
+      "hits": 28,
+      "damage": 448,
+      "intervals": [
+        22
+      ]
+    }
+  ],
+  "bow": [
+    {
+      "steady": false,
+      "firstShotTick": 15,
+      "launches": 13,
+      "impacts": 13,
+      "damage": 169,
+      "intervals": [
+        30
+      ]
+    },
+    {
+      "steady": true,
+      "firstShotTick": 9,
+      "launches": 16,
+      "impacts": 16,
+      "damage": 208,
+      "intervals": [
+        25
+      ]
+    }
+  ]
+}

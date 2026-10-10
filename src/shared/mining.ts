@@ -38,7 +38,8 @@ export type MiningFrame = {
 
 /** Rebuild derived indexes and release mining assignments whose orders ended. */
 export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "units" | "buildings">): MiningFrame {
-  const resources = new Map(snapshot.resources.map(resource => [resource.id, resource]));
+  const resources = new Map<string, ResourceNode>();
+  for (const resource of snapshot.resources) resources.set(resource.id, resource);
   const waiting = new Map<string, { id: string; timer: number }>();
   for (const unit of snapshot.units) {
     // A controlled worker keeps its waiting priority, but cannot hold the
@@ -47,7 +48,11 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
       const mine = resources.get(unit.order.resourceId);
       if (mine && Math.hypot(unit.x - mine.x, unit.y - mine.y) <= GOLD_MINE_RULES.entryRange) {
         const first = waiting.get(mine.id);
-        if (!first || unit.order.timer > first.timer || unit.order.timer === first.timer && unit.id < first.id) waiting.set(mine.id, { id: unit.id, timer: unit.order.timer });
+        if (!first) waiting.set(mine.id, { id: unit.id, timer: unit.order.timer });
+        else if (unit.order.timer > first.timer || unit.order.timer === first.timer && unit.id < first.id) {
+          first.id = unit.id;
+          first.timer = unit.order.timer;
+        }
       }
     }
     if (!unit.mineSlot) continue;
@@ -63,5 +68,7 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
     own.push(building);
     townHalls.set(building.owner, own);
   }
-  return { resources, nextWorker: new Map([...waiting].map(([mine, unit]) => [mine, unit.id])), townHalls };
+  const nextWorker = new Map<string, string>();
+  for (const [mine, unit] of waiting) nextWorker.set(mine, unit.id);
+  return { resources, nextWorker, townHalls };
 }
