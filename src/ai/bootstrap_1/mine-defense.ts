@@ -6,6 +6,7 @@ import { recoverBootstrapFront } from './front-recovery';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
+import { routeArrivals } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
@@ -60,9 +61,10 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
   const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
-    const nearby = pool.filter(unit => sameGround(snapshot.map, unit, hall) && distance(unit, hall) < 1300
-      && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + SIM_TICKS_PER_SECOND * walkingDistance(snapshot.map, unit, hall)! / unit.speed))
-      .sort((a, b) => distance(a, hall) - distance(b, hall));
+    const nearby = routeArrivals(snapshot.map, pool, hall, 'land')
+      .filter(({ unit, ticks }) => ticks < SIM_TICKS_PER_SECOND * 1300 / unit.speed
+        && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + ticks))
+      .map(({ unit }) => unit);
     const fighters = nearby.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
     const crew = fighters.filter(unit => unit.attackRange <= 80).slice(0, 2);
     if (attackers.some(unit => unit.expiresTick !== undefined)) {
