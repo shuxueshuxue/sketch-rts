@@ -131,6 +131,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), {
     reinforcements: "rally", expansionBasis: "halls", pursue: () => true,
     recovery: (wounded, point) => retreatV6Front(snapshot, owner, wounded, point, options),
+    gatherAssault: true,
   });
 }
 
@@ -145,10 +146,11 @@ type ArmyPlan = {
   expansionBasis: "halls" | "mines";
   pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
   recovery: (wounded: Unit[], point: Point) => GameCommand[];
+  gatherAssault: boolean;
 };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
-  const { reinforcements, expansionBasis, pursue, recovery } = plan;
+  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -175,7 +177,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     const group = attackGroup(available, front, current.group ?? []);
     if (target && canTradeBases(intel, group, target)) {
       if (!current.baseTrade) recordPlay(memory, "general:baseTrade");
-      const commands = attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? marchStrength(group), options, reinforcements, {}, isMain(intel, target));
+      const commands = attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? marchStrength(group), options, reinforcements, {}, gatherAssault && isMain(intel, target));
       memory.general!.baseTrade = true;
       return commands;
     }
@@ -204,7 +206,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   // With a single working mine, secure the requested replacement before continuing a distant assault.
   if (!miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault);
     if (continued) return continued;
   }
 
@@ -237,7 +239,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     }
   }
   if (miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault);
     if (continued) return continued;
   }
   const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
@@ -271,7 +273,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
   if (target && regrouped && ready && (maxed || (committed && (marching >= target.need || (idle && marching >= target.defended))))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : maxed && marching < target.defended ? "maxed" : "idleArmy"}`);
-    return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, reinforcements, {}, isMain(intel, target.base)));
+    return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, reinforcements, {}, gatherAssault && isMain(intel, target.base)));
   }
 
   if (isV7Policy(options)) {
@@ -292,7 +294,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   return order(snapshot, owner, memory, "hold", front, rally, options);
 }
 
-function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number): GameCommand[] | undefined {
+function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean): GameCommand[] | undefined {
   const memory = v6Memory(options), current = memory.general;
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);
@@ -311,7 +313,7 @@ function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
     const holds = strengthOf(group) * (1 + aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + aggression) < (facing + incoming) * RETREAT_LINE;
-    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, isMain(intel, target)));
+    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, gatherAssault && isMain(intel, target)));
     recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
     memory.retreatedAt = snapshot.tick;
   }

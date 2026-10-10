@@ -106,7 +106,9 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const danger = [...threats].sort((a, b) => margin(rider, a) - a.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
   const angle = destination ? Math.atan2(destination.y - rider.y, destination.x - rider.x) : Math.atan2(rider.y - danger.foe.y, rider.x - danger.foe.x);
-  const step = rider.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
+  // A fast pursuer needs a longer waypoint so arrival cannot interrupt the escape before the next think.
+  const step = Math.max(rider.speed * THINK_TICKS,
+    ...threats.map(threat => threat.speed * (THINK_TICKS + 2))) / SIM_TICKS_PER_SECOND;
   const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
   const choices = [rider, ...(destination && distance(rider, destination) <= step ? [destination] : []), ...Array.from({ length: 16 }, (_, index) => ({
     x: rider.x + detCos(angle + index * Math.PI / 8) * step,
