@@ -7,9 +7,9 @@ import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { bootstrapPolicyContext, bootstrapScripts } from './policy';
 
 const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
-  (['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ version, race, mirror }))));
+  (['grove', 'ember'] as const).flatMap(race => [false, true].flatMap(mirror => [false, true].map(offGround => ({ version, race, mirror, offGround })))));
 
-it.each(cases)('$version rotates its $race camp front before lethal focus fire (mirror=$mirror)', ({ version, race, mirror }) => {
+it.each(cases)('$version rotates its $race camp front before lethal focus fire (mirror=$mirror, water staging=$offGround)', ({ version, race, mirror, offGround }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
   let scene = sketchScene('camp-focus-preservation').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
@@ -23,10 +23,13 @@ it.each(cases)('$version rotates its $race camp front before lethal focus fire (
   const game = scene.build().createGame(), memory = createAiPolicyMemory(), sdk = new SdkCommandFrameRuntime(game);
   // This diagnostic measures camp clearing, rather than elimination of the idle opposing hall.
   game.scriptedVictory = true;
-  game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
+  const staging = { x: x(1885), y: offGround ? 1350 : 1428 };
+  const stagingCell = Math.floor(staging.y / 32) * 128 + Math.floor(staging.x / 32);
+  game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: Array.from({ length: 128 * 128 }, (_, index) =>
+    offGround && index === stagingCell ? '#' : '.').join('') };
   const army = game.units.filter(unit => unit.owner === 'us');
   memory.v6 = { creep: { center: { x: x(2222), y: 1539 }, reach: 55,
-    staging: { x: x(1885), y: 1428 }, stage: 'engage', since: 0, group: army.map(unit => unit.id) } };
+    staging, stage: 'engage', since: 0, group: army.map(unit => unit.id) } };
   sdk.issue([{ playerId: 'us', scriptId: 'camp-entry', command: { type: 'attack', unitIds: ['fighter-0'], targetId: 'mage-2' } },
     { playerId: 'us', scriptId: 'camp-entry', command: { type: 'attackMove', unitIds: army.slice(1).map(unit => unit.id), x: x(2222), y: 1539 } }], {}, { checksum: false });
   const scripts = bootstrapScripts(version).filter(script => script.phase === 'tactics');

@@ -107,7 +107,7 @@ function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldIte
     .sort((a, b) => itemCarrierScore(b, item, options) - itemCarrierScore(a, item, options))[0];
 }
 
-function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOptions) {
+export function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOptions) {
   const health = unit.hp / Math.max(1, unit.maxHp);
   const melee = unit.attackRange <= 80 ? 1 : 0;
   const ranged = unit.attackRange > 100 ? 1 : 0;
