@@ -10,6 +10,11 @@ import { projectedSupplyUsed } from '../policy/world-model';
 import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
 import { isOpponentOwner } from '../policy/ownership';
 import { recoveryPatients } from './medical-recovery';
+import { activeMiningBaseCount } from '../policy/expansion-model';
+import { enemyPowerNear } from '../policy/v6/intel';
+import { towerPointFor } from '../policy/build-layout';
+import { isBuildPlacementClear } from '../../shared/build-placement';
+import { distance } from '../policy/spatial';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -73,8 +78,22 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
     ?? issueV6Construction(economy, kind, point, used, play);
 };
 
+// A single working mine can fund a tower at its safe, cleared replacement without pulling the army off a fight.
+const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority) => {
+  const { snapshot, owner, intel, own } = economy;
+  if (activeMiningBaseCount(snapshot, owner) !== 1
+    || enemyPowerNear(intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
+    || own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange)) return [];
+  const point = towerPointFor(snapshot, owner, mine, intel.home);
+  if (!isBuildPlacementClear(snapshot, 'defenseTower', point)
+    || snapshot.units.some(unit => unit.owner === 'neutral' && unit.attackDamage > 0
+      && distance(unit, point) <= BUILDING_DEFS.defenseTower.attackRange)) return [];
+  return [{ id: `mining-cover:${mine.x}:${mine.y}`, priority, cost: BUILDING_DEFS.defenseTower.cost, save: true,
+    issue: used => economy.construct(economy, 'defenseTower', point, used, 'mining:cover') }];
+};
+
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant);
+  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant, prepareMiningCover);
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);
