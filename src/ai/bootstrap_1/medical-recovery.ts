@@ -1,7 +1,7 @@
-import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { canReceiveHealing } from '../../shared/healing';
-import { canReach } from '../../shared/naval';
+import { nearestByRoute } from '../../shared/route-selection';
 import { matchesUnitTarget } from '../../shared/unit-targeting';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
@@ -19,8 +19,11 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId, patients: readonly
   return own.flatMap(healer => {
     const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal');
     if (!ability) return [];
-    const target = patients.filter(patient => matchesUnitTarget(patient, ABILITY_DEFS[ability].targets, snapshot)
-      && canReach(snapshot.map, healer, patient)).sort((a, b) => distance(healer, a) - distance(healer, b))[0];
+    const eligible = patients.filter(patient => matchesUnitTarget(patient, ABILITY_DEFS[ability].targets, snapshot));
+    const ready = eligible.filter(patient => distance(healer, patient) <= ABILITY_DEFS[ability].range);
+    const target = ready.length > 0
+      ? ready.sort((a, b) => distance(healer, a) - distance(healer, b))[0]
+      : nearestByRoute(snapshot.map, eligible, healer, unitMover(healer.kind));
     return target ? [{ healer, target, ability }] : [];
   });
 }
