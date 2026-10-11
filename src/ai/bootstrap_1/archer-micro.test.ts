@@ -4,6 +4,9 @@ import { issueCommandFrame } from '../../sdk/commands/frame';
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planBootstrapCommands } from './policy';
+import { SUPPORT_BUILDING_HEAL, isHealingBuildingKind } from '../../shared/catalog';
+import { routeTravelTicks } from '../../shared/route-selection';
+import { THINK_TICKS } from './mounted-micro';
 
 describe('bootstrap_1 archer preservation', () => {
   it.each(['grove', 'ember'] as const)('finishes a %s pullback, receives ordinary healing and rejoins the army', race => {
@@ -15,8 +18,12 @@ describe('bootstrap_1 archer preservation', () => {
       .unit('us', shooter, 1000, 1400, { id: 'recovering', hp: 6 });
     for (let index = 0; index < 4; index++) scene.unit('us', shooter, 1800, 1000 + index * 45);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    const patient = game.units.find(unit => unit.id === 'recovering')!;
+    const post = game.buildings.find(building => isHealingBuildingKind(building.kind))!;
+    const recoveryTicks = Math.ceil(routeTravelTicks(game.map, patient, post, 'land', patient.speed)!)
+      + Math.ceil((patient.maxHp - patient.hp) / SUPPORT_BUILDING_HEAL) * post.attackCooldown + THINK_TICKS;
     let rejoined = false;
-    for (let tick = 0; tick < 600; tick++) {
+    for (let tick = 0; tick < recoveryTicks; tick++) {
       if (tick % 15 === 0) {
         const recovering = game.units.find(unit => unit.id === 'recovering')!;
         const movingHome = recovering.order.type === 'move' && memory.unitClaims.recovering?.kind === 'retreat';
@@ -24,12 +31,12 @@ describe('bootstrap_1 archer preservation', () => {
         const recalled = commands.some(entry => entry.scriptId === 'v6General'
           && 'unitIds' in entry.command && entry.command.unitIds.includes('recovering'));
         if (movingHome) expect(recalled).toBe(false);
-        if (recovering.hp >= recovering.maxHp * .36 && recalled) rejoined = true;
+        if (recovering.hp === recovering.maxHp && recalled) rejoined = true;
         issueCommandFrame(game, commands.map(entry => ({ ...entry, playerId: 'us', source: 'external-agent', plannerOrigin: 'local-command-planner' })));
       }
       stepGame(game);
     }
-    expect(game.units.find(unit => unit.id === 'recovering')!.hp).toBeGreaterThanOrEqual(27);
+    expect(patient.hp).toBe(patient.maxHp);
     expect(rejoined).toBe(true);
     expect(game.match.stats.goldSpent.us).toBe(0);
   });
