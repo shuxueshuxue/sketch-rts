@@ -72,7 +72,7 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
 export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const { recovering, unmedicated, posts } = recoveryAssignments(snapshot, owner, options);
   return new Set([...recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]), ...unmedicated.map(({ patient }) => patient.id),
-    ...posts.map(({ patient }) => patient.id)]);
+    ...posts.map(({ patient }) => patient.id), ...transportRecovery(snapshot, owner, options).ids]);
 }
 
 /** An expedition's naval ownership also owns its land recovery orders. */
