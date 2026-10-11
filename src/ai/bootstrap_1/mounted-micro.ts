@@ -1,5 +1,6 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
+import { constrainGroundShipStep } from '../../shared/ship-collisions';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
@@ -124,8 +125,12 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     && segmentWalkable(snapshot.map, rider, point)
     && innerWindow.every(({ foe, limit }) => distance(point, foe) < limit))];
   // Leave room for the following turn rather than maximizing distance into a cliff corner.
-  const exit = (point: Point) => point !== rider && segmentWalkable(snapshot.map, point,
-    { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) });
+  const exit = (point: Point) => {
+    if (point === rider) return false;
+    const to = { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) };
+    return segmentWalkable(snapshot.map, point, to)
+      && constrainGroundShipStep(snapshot.map, rider, point, to, snapshot.units) === to;
+  };
   const endpoint = (point: Point) => {
     if (!avoidCombat || point === rider || point === destination) return point;
     const gap = distance(rider, point);
@@ -139,7 +144,8 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     return { point, goal: endpoint(point), room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
       distance: destination ? distance(point, destination) : 0 };
   }).filter(({ goal }) => goal.x >= 0 && goal.y >= 0 && goal.x < snapshot.map.width && goal.y < snapshot.map.height
-    && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal));
+    && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal)
+    && (goal === rider || constrainGroundShipStep(snapshot.map, rider, rider, goal, snapshot.units) === goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
     || (avoidCombat && a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)
     || Number(b.bodyClear) - Number(a.bodyClear)
