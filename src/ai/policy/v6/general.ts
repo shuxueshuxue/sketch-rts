@@ -138,6 +138,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     chooseMine: isV9Policy(options) ? v9ExpansionMine : nextExpansionMine,
     threatWithin: (unit, point, range) => distance(unit, point) <= range,
     respondingPower,
+    withinHomeReach: (world, point) => [world.home, ...world.ownHalls].some(hall => distance(hall, point) <= V7_HOME_REACH),
     defenseTarget: (_snapshot, intel, options) => isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel),
     towerWaiting: towerWait,
     waitForTowers: (intel, defense, strength, line) => isV8Policy(options) && waitsForTowers(intel, defense, strength, line),
@@ -162,6 +163,7 @@ type ArmyPlan = {
   chooseMine: typeof nextExpansionMine;
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
   respondingPower: typeof respondingPower;
+  withinHomeReach: (intel: V6Intel, point: Point) => boolean;
   defenseTarget: (snapshot: GameSnapshot, intel: V6Intel, options: AiPolicyContext) => ArmyDefense | undefined;
   towerWaiting: typeof towerWait;
   waitForTowers: typeof waitsForTowers;
@@ -280,7 +282,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   // @@@v7-far-attack - Against two opponents a march across the map meets both armies on the way: V7 sent five ravagers at
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
-  const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
+  const farOff = isV7Policy(options) && target !== undefined && !plan.withinHomeReach(intel, target.base.hall);
   const opposing = isV7Policy(options) && target ? response(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,

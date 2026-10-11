@@ -28,6 +28,12 @@ export function routeTravelTicks(map: Pick<GameMap, 'terrain'>, from: Point, to:
   return road === undefined ? undefined : Math.ceil(road / speed * SIM_TICKS_PER_SECOND);
 }
 
+/** Reachability and road length within a distance budget; terrain pace belongs to travel time. */
+export function routeWithinDistance(map: Pick<GameMap, 'terrain'>, from: Point, to: Point, mover: Mover, range: number): boolean {
+  const road = walkingDistance(map, from, to, mover);
+  return road !== undefined && road <= range;
+}
+
 /** Reachable movers in estimated arrival order, including land pace and each mover's speed. */
 export function routeArrivals<T extends Point & { speed: number }>(map: Pick<GameMap, 'terrain'>, candidates: readonly T[], destination: Point, mover: Mover): { unit: T; ticks: number }[] {
   return candidates.flatMap(unit => {

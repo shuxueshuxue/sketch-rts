@@ -1,7 +1,6 @@
 import { strikeGap } from '../../shared/combat-geometry';
-import { routeArrivals } from '../../shared/route-selection';
+import { routeArrivals, routeWithinDistance } from '../../shared/route-selection';
 import { GOLD_MINE_RULES } from '../../shared/mining';
-import { walkingDistance } from '../../shared/terrain';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import type { Point } from './spatial';
 import type { V6BaseIntel, V6Intel } from './v6/intel';
@@ -12,8 +11,7 @@ export function groundThreatWithin(snapshot: GameSnapshot, unit: Unit, point: Po
   const gap = strikeGap(unit, point);
   if (gap <= unit.attackRange) return true;
   if (gap > range) return false;
-  const road = walkingDistance(snapshot.map, unit, point, 'land');
-  return road !== undefined && road <= range;
+  return routeWithinDistance(snapshot.map, unit, point, 'land', range);
 }
 
 /** Enemy reinforcements and counterraids both compete with the time spent marching away. */

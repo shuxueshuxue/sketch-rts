@@ -7,7 +7,7 @@ import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
-import { routeArrivals } from '../../shared/route-selection';
+import { routeArrivals, routeWithinDistance } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
@@ -18,7 +18,7 @@ import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { bootstrapExpansionMine } from './expansion-target';
 import { availableV6Army, planV6Army, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
-import { V7_GATHERED_RANGE } from '../policy/v7/creep';
+import { V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planV8Charge } from '../policy/v8/charge';
@@ -132,6 +132,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
+    withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
+      .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
     defenseTarget: coveredDefenseTarget,
     towerWaiting: holdCoveredPost,
     waitForTowers: waitsForTowers,
