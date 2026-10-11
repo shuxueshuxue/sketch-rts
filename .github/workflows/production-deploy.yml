@@ -65,6 +65,9 @@ jobs:
       - name: Test colony care, guardian coverage and ferry reuse
         run: npx vitest run src/ai/bootstrap_1/colony-recovery.test.ts src/ai/bootstrap_1/guardian-local-force.test.ts src/ai/bootstrap_1/ferry-return-summons.test.ts src/ai/bootstrap_1/ferry-departure.test.ts src/ai/bootstrap_1/landed-capital.test.ts
 
+      - name: Test free island income and actual sea roads
+        run: npx vitest run src/ai/bootstrap_1/fleet-free-mine.test.ts src/ai/policy/naval-mines.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 
