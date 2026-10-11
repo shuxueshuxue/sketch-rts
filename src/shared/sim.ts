@@ -4260,15 +4260,18 @@ function spatialBucketKey(entity: SpatialEntity, cellSize: number) {
   return numericBucketKey(Math.floor(entity.x / cellSize), Math.floor(entity.y / cellSize));
 }
 
-const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[] }>();
+const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[]; x: number[]; y: number[] }>();
 
+// Unchanged coordinates still occupy their recorded cell; changed axes are classified normally.
 function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number, previous?: SpatialIndex<T>): SpatialIndex<T> {
   const cached = previous && Object.is(previous.cellSize, cellSize) ? spatialMembership.get(previous) : undefined;
   if (cached && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize)) || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
         unchanged = false;
         break;
       }
@@ -4284,10 +4287,12 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   if (cached) spatialMembership.delete(previous!);
   const members = cached?.members ?? [];
   const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
-  members.length = cellX.length = cellY.length = 0;
+  const positionsX = cached ? cached.x : [], positionsY = cached ? cached.y : [];
+  members.length = cellX.length = cellY.length = positionsX.length = positionsY.length = 0;
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const entity of entities) {
     members.push(entity);
+    positionsX.push(entity.x); positionsY.push(entity.y);
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     cellX.push(x); cellY.push(y);
     left = Math.min(left, x); right = Math.max(right, x);
@@ -4299,7 +4304,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   }
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
-  spatialMembership.set(index, { members, cellX, cellY });
+  spatialMembership.set(index, { members, cellX, cellY, x: positionsX, y: positionsY });
   return index;
 }
 
@@ -4309,6 +4314,8 @@ const teamSpatialMembership = new WeakMap<object, {
   cellX: number[];
   cellY: number[];
   teams: string[];
+  x: number[];
+  y: number[];
 }>();
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
@@ -4317,8 +4324,10 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
-        || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize)) || cached.teams[i] !== teamKey(game, entity.owner)) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))
+        || cached.teams[i] !== teamKey(game, entity.owner)) {
         unchanged = false;
         break;
       }
@@ -4332,9 +4341,11 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   if (reusable) teamSpatialMembership.delete(previous!);
   const members = reusable?.members ?? [];
   const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
-  members.length = cellX.length = cellY.length = teams.length = 0;
+  const positionsX = reusable ? reusable.x : [], positionsY = reusable ? reusable.y : [];
+  members.length = cellX.length = cellY.length = teams.length = positionsX.length = positionsY.length = 0;
   for (const entity of entities) {
     members.push(entity);
+    positionsX.push(entity.x); positionsY.push(entity.y);
     const team = teamKey(game, entity.owner);
     teams.push(team);
     let index = indexes.get(team);
@@ -4347,7 +4358,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
-  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams });
+  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams, x: positionsX, y: positionsY });
   return indexes;
 }
 
