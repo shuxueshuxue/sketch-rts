@@ -11,6 +11,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
+import { groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
 import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
@@ -128,6 +129,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
+    threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
+    respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
