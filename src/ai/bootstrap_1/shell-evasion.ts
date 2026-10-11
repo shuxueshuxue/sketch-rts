@@ -8,6 +8,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { isEnemyOwner } from '../policy/ownership';
 import type { AiPolicyContext, AiScript } from '../policy/types';
+import { postRecoveryAssignments } from './front-recovery';
 
 const JOB_PREFIX = 'shellEvasion:';
 const CLEARANCE = 12;
@@ -50,14 +51,15 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
   options.memory.jobs = options.memory.jobs.filter(job => !job.kind.startsWith(JOB_PREFIX)
     || (hazards.some(hazard => job.kind === JOB_PREFIX + hazard.id) && soldiers.some(unit => unit.id === job.id)));
   if (hazards.length === 0) return [];
+  const recovering = new Set(postRecoveryAssignments(snapshot, owner, options).map(({ patient }) => patient.id));
   const commands: Extract<GameCommand, { type: 'move' }>[] = [];
   const destinations: { x: number; y: number; radius: number }[] = [];
   for (const unit of soldiers) {
     const job = options.memory.jobs.find(job => job.id === unit.id && job.kind.startsWith(JOB_PREFIX));
     const order = unit.order;
-    if (job && order.type === 'move' && hazards.every(hazard =>
+    if (job && !recovering.has(unit.id) && order.type === 'move' && hazards.every(hazard =>
       !overlaps(hazard, order, unit.radius))) {
-      commands.push({ type: 'move', unitIds: [unit.id], x: order.x, y: order.y });
+      commands.push({ type: 'move', unitIds: [unit.id], x: order.x, y: order.y, avoidCombat: true });
       destinations.push({ x: order.x, y: order.y, radius: unit.radius });
       continue;
     }
@@ -70,8 +72,8 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     const hazard = incoming[0];
     if (!hazard) {
       // Keep an escaped soldier clear until the hazard ends; another army script must not walk it back in.
-      if (job) commands.push({ type: 'move', unitIds: [unit.id], x: unit.order.type === 'move' ? unit.order.x : unit.x,
-        y: unit.order.type === 'move' ? unit.order.y : unit.y });
+      if (job && !recovering.has(unit.id)) commands.push({ type: 'move', unitIds: [unit.id], x: unit.order.type === 'move' ? unit.order.x : unit.x,
+        y: unit.order.type === 'move' ? unit.order.y : unit.y, avoidCombat: true });
       continue;
     }
     const reach = hazard.radius + unit.radius + CLEARANCE;
@@ -97,7 +99,7 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
       return ticks !== undefined && ticks <= hazard.remaining - 1;
     });
     if (!point) continue;
-    commands.push({ type: 'move', unitIds: [unit.id], x: point.x, y: point.y });
+    commands.push({ type: 'move', unitIds: [unit.id], x: point.x, y: point.y, avoidCombat: true });
     destinations.push({ ...point, radius: unit.radius });
     if (job) { job.kind = JOB_PREFIX + hazard.id; job.updatedTick = snapshot.tick; }
     else options.memory.jobs.push({ id: unit.id, kind: JOB_PREFIX + hazard.id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
