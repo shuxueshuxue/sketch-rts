@@ -55,7 +55,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/rider-crossing.test.ts src/ai/bootstrap_1/mounted-fleet-ownership.test.ts src/ai/bootstrap_1/transport-recovery.test.ts src/ai/bootstrap_1/expedition-available-force.test.ts
 
       - name: Test terrain travel estimates and metric cache reuse
-        run: npx vitest run src/shared/terrain-arrival.test.ts src/shared/terrain.test.ts src/shared/route-selection.test.ts
+        run: npx vitest run src/shared/terrain-arrival.test.ts src/shared/terrain.test.ts src/shared/route-selection.test.ts src/shared/ground-move-forecast.test.ts src/ai/bootstrap_1/terrain-shell-evasion.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1

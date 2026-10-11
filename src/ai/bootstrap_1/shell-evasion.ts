@@ -1,6 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import { detCos, detSin } from '../../shared/det-math';
-import { isWalkable, segmentWalkable, walkingDistance } from '../../shared/terrain';
+import { isWalkable, segmentWalkable } from '../../shared/terrain';
+import { groundMoveForecast, routeTravelTicks } from '../../shared/route-selection';
 import { boltIntersection } from '../../shared/weapons';
 import type { Point } from '../policy/spatial';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -63,12 +64,7 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     // A clear walking order can enter the visible fire before the next decision.
     const walking = (order.type === 'move' || order.type === 'attackMove' && order.targetId === undefined)
       && segmentWalkable(snapshot.map, unit, order) ? order : unit;
-    const step = (hazard: Hazard) => {
-      const budget = unit.speed * (hazard.remaining - 1) / SIM_TICKS_PER_SECOND;
-      const gap = Math.hypot(walking.x - unit.x, walking.y - unit.y);
-      const fraction = gap > budget ? budget / gap : 1;
-      return { x: unit.x + (walking.x - unit.x) * fraction, y: unit.y + (walking.y - unit.y) * fraction };
-    };
+    const step = (hazard: Hazard) => groundMoveForecast(snapshot.map, unit, walking, unit.speed, hazard.remaining - 1);
     const incoming = hazards.filter(hazard => overlaps(hazard, unit, unit.radius) || overlaps(hazard, step(hazard), unit.radius))
       .sort((a, b) => a.remaining - b.remaining);
     const hazard = incoming[0];
@@ -97,9 +93,8 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
         + destinations.reduce((total, other) => total + Math.max(0, unit.radius + other.radius + CLEARANCE - Math.hypot(point.x - other.x, point.y - other.y)) * 4, 0) }))
       .sort((a, b) => a.exposure - b.exposure || a.score - b.score);
     const point = points.find(point => {
-      const walk = segmentWalkable(snapshot.map, unit, point)
-        ? Math.hypot(point.x - unit.x, point.y - unit.y) : walkingDistance(snapshot.map, unit, point);
-      return walk !== undefined && walk <= budget;
+      const ticks = routeTravelTicks(snapshot.map, unit, point, 'land', unit.speed);
+      return ticks !== undefined && ticks <= hazard.remaining - 1;
     });
     if (!point) continue;
     commands.push({ type: 'move', unitIds: [unit.id], x: point.x, y: point.y });
