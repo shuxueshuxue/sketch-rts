@@ -1,0 +1,114 @@
+{
+  "parent": "d14d5cf44988d860bfa42b5901edb909aea6c492",
+  "cases": [
+    {
+      "name": "default dual AI",
+      "ticks": 1200,
+      "commands": 29,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "arrays": 0,
+          "indexes": 0,
+          "classifications": 23285,
+          "bucketArrays": 590,
+          "shipStartMaps": 1200,
+          "boardingSets": 1200,
+          "defenseMaps": 1200
+        },
+        "next": {
+          "arrays": 0,
+          "indexes": 0,
+          "classifications": 21569,
+          "bucketArrays": 590,
+          "shipStartMaps": 0,
+          "boardingSets": 1,
+          "defenseMaps": 0
+        }
+      }
+    },
+    {
+      "name": "battle",
+      "ticks": 300,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "arrays": 20,
+          "indexes": 21,
+          "classifications": 65932,
+          "bucketArrays": 7821,
+          "shipStartMaps": 300,
+          "boardingSets": 300,
+          "defenseMaps": 300
+        },
+        "next": {
+          "arrays": 20,
+          "indexes": 21,
+          "classifications": 50322,
+          "bucketArrays": 7821,
+          "shipStartMaps": 0,
+          "boardingSets": 1,
+          "defenseMaps": 0
+        }
+      }
+    },
+    {
+      "name": "island",
+      "ticks": 300,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "arrays": 0,
+          "indexes": 0,
+          "classifications": 18407,
+          "bucketArrays": 1315,
+          "shipStartMaps": 300,
+          "boardingSets": 0,
+          "defenseMaps": 0
+        },
+        "next": {
+          "arrays": 0,
+          "indexes": 0,
+          "classifications": 13769,
+          "bucketArrays": 1315,
+          "shipStartMaps": 300,
+          "boardingSets": 0,
+          "defenseMaps": 0
+        }
+      }
+    },
+    {
+      "name": "late actual default duel",
+      "ticks": 600,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "arrays": 22,
+          "indexes": 22,
+          "classifications": 106716,
+          "bucketArrays": 5485,
+          "shipStartMaps": 600,
+          "boardingSets": 600,
+          "defenseMaps": 600
+        },
+        "next": {
+          "arrays": 22,
+          "indexes": 22,
+          "classifications": 83284,
+          "bucketArrays": 5485,
+          "shipStartMaps": 0,
+          "boardingSets": 1,
+          "defenseMaps": 0
+        }
+      }
+    }
+  ],
+  "mode": "Four local SDK replays with complete per-tick world and nextId equality; default replay also compares commands and complete memory. Counters are not whole-duel CPU timings.",
+  "sourceBlob": "0e308f9c34629d7ad7b8c6d6d5adc6e4be480c8f",
+  "formalAllMapAcceptanceComplete": false,
+  "relatedSdkPassed": 214,
+  "buildPassed": true
+}

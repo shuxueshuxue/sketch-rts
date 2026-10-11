@@ -1,0 +1,59 @@
+{
+  "base": "e55e17db3711f53b3c262eba7429edc3de4132a4",
+  "runtimeSourceBlobs": {
+    "src/ai/policy/naval.ts": "47e4abcee7b17006cd008009b0e5d2f9af58925f2fe0db35b92820ca24c93467",
+    "src/ai/policy/naval-mines.ts": "716b0c4547be28e6e76ef01a87fa9925a498bf046ce5ca6393fbbce08680e6f5"
+  },
+  "sdk": {
+    "parentPassed": 12,
+    "parentFailed": 24,
+    "candidatePassed": 36,
+    "seaRoadCasesPassed": 12,
+    "relatedUnionPassed": 221,
+    "relatedUnionFailed": 0
+  },
+  "localObservation": {
+    "mode": "same tick 45000 solo world, complete AI memory and nextId; PR 323 public runtime plus candidate mine routing, normal rules/resources and 15-tick think; continued to 52500; final recorded sample 52200",
+    "inputSnapshotSha256": "ceff172ca3427b4487a433ae050768910f01a9d9e5cc7135107ba19b3128ef67",
+    "inputMemorySha256": "26448648632bd151aa682f9d0c92865f49766640d4763b6bcc0136eb0c559476",
+    "inputNextId": 10895,
+    "parent": {
+      "tick": 52200,
+      "completeHalls": 5,
+      "workingMines": 1,
+      "targetOre": 6000,
+      "cashGold": 415.37,
+      "cumulativeLosses": 4,
+      "cumulativeDeathsToNeutral": 4
+    },
+    "candidate": {
+      "tick": 52200,
+      "completeHalls": 6,
+      "workingMines": 2,
+      "targetOre": 5540,
+      "cashGold": 17.53,
+      "cumulativeLosses": 4,
+      "cumulativeDeathsToNeutral": 4
+    },
+    "candidateHallBuilds": [
+      {
+        "tick": 49005,
+        "command": {
+          "type": "build",
+          "unitId": "unit-p0-worker-4414",
+          "buildingKind": "townHall",
+          "x": 2288,
+          "y": 2736
+        }
+      }
+    ],
+    "extractedAdditionalOre": 460,
+    "addedLosses": 0,
+    "parentBundleSha256": "988abf79bbf54f759f21602aa3bdc3ad455e0858602ec90380710169bf8a3d9f",
+    "candidateBundleSha256": "8d77078acffbc5fc04e587fcef095111d4fac23fc0a8b910c44f6833619495d0"
+  },
+  "frozenPolicyRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "approvedFrozenHashesVerified": 54,
+  "buildPassed": true,
+  "formalAllMapAcceptanceComplete": false
+}
