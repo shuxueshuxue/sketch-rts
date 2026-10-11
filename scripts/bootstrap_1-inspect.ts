@@ -50,7 +50,7 @@ const commandPlanner: Parameters<typeof runAiGameLoop>[0]['commandPlanner'] = co
   return entries;
 };
 const result = runAiGameLoop({ ...match, game, commandPlanner }, { onStep: ({ game }) => {
-  if (game.tick % sampleTicks !== 0) return;
+  if (game.tick % sampleTicks !== 0 && !game.match.winner) return;
   const snapshot = snapshotGame(game);
   if (values.frames) writeFileSync(`${values.out}.frames/${game.tick}.json`, JSON.stringify({ snapshot, nextId: game.nextId }) + '\n');
   const row = {
