@@ -3,7 +3,7 @@
 import { storyFigure, storyCreature } from '../../client/art/story-rig';
 import { line, ellipse, polygon, leafMark, type Brush } from '../../client/art/kit';
 import { paintedPlane as plane } from '../../client/art/materials';
-import type { FigurePresentation, FigureRig } from '../../client/art/rig';
+import type { FigurePresentation, FigurePose } from '../../client/art/rig';
 import type { MotionPose } from '../../client/art/motion';
 const TEAL='#2f7d6d', REED='#b9a66a', OBSIDIAN='#2e2a2c', MAGMA='#e5652f';
 const MOSS='#6f8f5a', STEEL='#8d9897', INK='#292b29', GOLD='#b9a16c', GLOW='#f4d083';
@@ -22,7 +22,7 @@ function crown(b:Brush) {
     line(b,[[x!,-41],[x!,-43-h!*.35]],GLOW,.8);
   }
 }
-function lantern(b:Brush,rig:FigureRig,fire=false) {
+function lantern(b:Brush,rig:FigurePose,fire=false) {
   b.save(); b.translate(...rig.wrist); b.rotate(rig.angle);
   const x=0, y=-24;
   plane(b,[[x-4,y-5],[x+4,y-5],[x+4,y+3],[x-4,y+3]],fire?'#7a3625':'#b9a96d');

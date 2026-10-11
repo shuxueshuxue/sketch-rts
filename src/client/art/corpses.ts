@@ -5,7 +5,7 @@ import {UNIT_CARDS} from '../content/units';
 import {type Brush, polygon, line, ellipse} from './kit';
 import { REMAINS_MATERIAL } from './materials';
 const {ink:INK,wash:WASH,light:LIGHT,dark:DARK}=REMAINS_MATERIAL;
-import { equipmentForKind, solveFigureRig } from './rig';
+import { equipmentForKind, sampleFigurePose } from './rig';
 import { figures } from './appearance';
 import { IDLE_FRAME } from '../unit-animation';
 import type { EquipmentKind } from './equipment';
@@ -75,7 +75,7 @@ function fallenPerson(b:Brush,kind:UnitKind,options:CorpsePresentation,wild=fals
  sketch(b,[[-9,-4],[-11,-7],[-16,-7],[-19,-4],[-17,0],[-12,1]],wild?'#94927b':LIGHT);
  limb(b,[[-5,-3],[1,0],[-1,6]],2.5);
  if(kind==='worker'&&options.headwear!==false)sketch(b,[[-24,3],[-18,1],[-14,3],[-13,5],[-21,6]],'#a29577');
- if(options.shield??(figures[kind]?solveFigureRig(figures[kind]!,IDLE_FRAME).shield:false)){
+ if(options.shield??(figures[kind]?sampleFigurePose(figures[kind]!,IDLE_FRAME).shield:false)){
   if(options.shieldStyle==='round'){ellipse(b,-3,11,7,4.5,DARK,INK);ellipse(b,-3,11,2,1.4,LIGHT,INK);}
   else {sketch(b,[[-9,8],[-4,6],[3,9],[1,15],[-6,14]],DARK);line(b,[[-7,9],[-4,12],[0,10]],LIGHT,.65);}
  }

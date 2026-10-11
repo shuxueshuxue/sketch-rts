@@ -16,7 +16,7 @@ const WORK_POSES: {lean:number;wrist:XY;tool:number}[] = [
 export interface FigurePresentation {
   weapon?: EquipmentKind; motion?: MotionFamily; shield?: boolean; shieldStyle?:'round'|'kite';
   appearance?: Partial<Figure>; cloth?: string; headwear?: boolean;
-  detail?: (b: Brush, rig: FigureRig, stage: 'body' | 'head' | 'equipment') => void;
+  detail?: (b: Brush, rig: FigurePose, stage: 'body' | 'head' | 'equipment') => void;
 }
 export function defaultEquipment(f: Figure): EquipmentKind {
   if(f.weapon)return f.weapon;
@@ -30,93 +30,118 @@ export function equipmentForKind(kind: UnitKind): EquipmentKind | undefined {
 export function equipmentFamily(weapon: EquipmentKind): MotionFamily {
   return weapon === 'pike' || weapon === 'pitchfork' || weapon === 'javelin' || weapon === 'sling' ? 'thrust' : weapon === 'bow' ? 'bow' : weapon === 'staff' || weapon === 'crozier' ? 'staff' : weapon === 'pick' ? 'work' : 'slash';
 }
-/** Fixed length two-bone chain. A target outside the annulus is clamped;
- * callers attach tools to end, never to the unconstrained requested target. */
-export function solveTwoBone(root: XY, target: XY, bend: 1 | -1 = 1, upper = 11, lower = 10.5) {
-  const dx=target[0]-root[0], dy=target[1]-root[1], distance=Math.hypot(dx,dy);
-  const length=Math.max(Math.abs(upper-lower)+.001,Math.min(upper+lower-.001,distance));
-  const ux=distance>1e-8?dx/distance:0, uy=distance>1e-8?dy/distance:1;
-  const along=(upper*upper-lower*lower+length*length)/(2*length);
-  const cross=Math.sqrt(Math.max(0,upper*upper-along*along))*bend;
-  return { joint:[root[0]+ux*along-uy*cross,root[1]+uy*along+ux*cross] as XY,
-    end:[root[0]+ux*length,root[1]+uy*length] as XY };
-}
 export function socketPoint(grip: XY, angle: number, x: number, y: number): XY {
   return [grip[0]+Math.cos(angle)*x-Math.sin(angle)*y,grip[1]+Math.sin(angle)*x+Math.cos(angle)*y];
 }
-/** Closest reachable rigid grip in the intersection of both shoulder discs.
- * Solving this before either arm preserves both bone lengths and both sockets. */
-function dualGrip(target:XY,primary:XY,secondary:XY,offset:XY):XY {
-  const r=21.49,second:XY=[secondary[0]-offset[0],secondary[1]-offset[1]];
-  const inside=(p:XY,c:XY)=>Math.hypot(p[0]-c[0],p[1]-c[1])<=r+1e-8;
-  if(inside(target,primary)&&inside(target,second))return target;
-  const on=(c:XY):XY=>{const dx=target[0]-c[0],dy=target[1]-c[1],d=Math.hypot(dx,dy)||1;return[c[0]+dx*r/d,c[1]+dy*r/d];};
-  const a=on(primary),b=on(second),candidates:XY[]=[];
-  if(inside(a,second))candidates.push(a);if(inside(b,primary))candidates.push(b);
-  if(!candidates.length){
-    const dx=second[0]-primary[0],dy=second[1]-primary[1],d=Math.hypot(dx,dy);
-    const mx=(primary[0]+second[0])/2,my=(primary[1]+second[1])/2,h=Math.sqrt(Math.max(0,r*r-d*d/4));
-    candidates.push([mx-dy/d*h,my+dx/d*h],[mx+dy/d*h,my-dx/d*h]);
-  }
-  return candidates.reduce((best,p)=>Math.hypot(p[0]-target[0],p[1]-target[1])<Math.hypot(best[0]-target[0],best[1]-target[1])?p:best);
+/** Projected joints are drawing coordinates, not fixed anatomical lengths.
+ * Each weapon owns its silhouette. The renderer consumes it without solving
+ * or correcting the artist's elbow, wrist or overlap choices. */
+type HandDrawing = { wrist: XY; elbow: XY; angle: number };
+const mix=(a:XY,b:XY,t:number):XY=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+const blend=(a:HandDrawing,b:HandDrawing,t:number):HandDrawing=>({
+ wrist:mix(a.wrist,b.wrist,t),elbow:mix(a.elbow,b.elbow,t),angle:a.angle+(b.angle-a.angle)*t,
+});
+const hand=(wrist:XY,elbow:XY,angle:number):HandDrawing=>({wrist,elbow,angle});
+
+// These are projected drawings: near-horizontal forearms can be short, and
+// rear upper arms disappear behind the breastplate. Never infer an elbow from
+// a grip distance. Contact poses are authored independently for each tool.
+function bladeDrawing(weapon:EquipmentKind,source:number,variant:number,thrust:boolean){
+ const ready=hand([12,-12],[10,-17],weapon==='axe'?.15:weapon==='pick'?.24:.32);
+ const contacts=[hand([17,-27],[10,-21],.52),hand([19,-17],[10,-18],ready.angle+1.45),hand([14,-24],[10,-20],2.65)];
+ const contact=contacts[source+1]!;
+ if(thrust){contact.wrist[0]+=3;contact.elbow[0]+=2;contact.angle-=.15;}
+ if(variant===1){contact.wrist[1]-=2;contact.angle-=.2;}
+ if(variant===2){contact.wrist[0]-=2;contact.elbow[1]+=1;contact.angle+=.12;}
+ return {ready,contact};
 }
-const lerpPoint=(a:XY,b:XY,t:number):XY=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
-// Up / level / down are deliberately authored hand placements, not a rotation
-// of one body. Long shafts stay beside the body; bows leave room for the draw arm.
-const CONTACT_HANDS:Record<'shaft'|'bow'|'staff'|'blade'|'unarmed',readonly XY[]>={
- shaft:[[9,-15],[12,-21],[8,-33]],
- bow:[[14,-34],[18,-23],[16,-12]],
- staff:[[18,-33],[25,-21],[20,-16]],
- blade:[[19,-36],[25,-21],[20,-16]],
- unarmed:[[9,-36],[22,-22],[13,-7]],
-};
-const FREE_HANDS:readonly XY[]=[[1,-41],[14,-22],[5,-7]];
-/** One solved pose is shared by limbs, grip sockets and attached equipment. */
-export function solveFigureRig(f: Figure, pose: UnitAnimationFrame, options: FigurePresentation = {}) {
-  const weapon=options.weapon??defaultEquipment(f),family=equipmentFamily(weapon);
-  const requested=options.motion;
-  const compatible=requested===family||((family==='slash'||family==='thrust')&&(requested==='slash'||requested==='thrust'));
-  const motion=sampleMotion(pose,compatible?requested:family),direction=actionDirection(pose);
-  const working=weapon==='pick'&&pose.mode==='work',work=working?WORK_POSES[pose.frame]:undefined;
-  const impact=pose.mode==='attack'?motion.reach:0,cast=pose.mode==='cast'?motion.castGlow:0;
-  const weight=pose.mode==='attack'?([1,.76,.48,.24,.08,0][pose.frame]??0):cast;
-  const shoulder:XY=[5,-23],supportShoulder:XY=[-5,-23];
-  const shaft=weapon==='pike'||weapon==='pitchfork';
-  const staff=weapon==='staff'||weapon==='crozier';
-  // Carry at the hip with the upper arm hanging from the shoulder. A high,
-  // close wrist folds a fixed-length chain into a raised elbow even at rest.
-  // Bows and two-hand shafts retain a higher supporting grip of their own.
-  const ready:XY=shaft?(f.mounted?[13,-12]:[12,-13]):weapon==='bow'?[20,-17]:weapon==='none'?[8,-3]
-    :staff?[14,-14+motion.breathe*.4]:weapon==='greatSword'||weapon==='pick'?[12,-8]:[13,-4+motion.breathe*.4];
-  const readyAngle=shaft?(f.mounted?-.2:-.95):weapon==='javelin'?.45:weapon==='bow'||staff||weapon==='none'?0:weapon==='pick'?.24:weapon==='axe'?.15:.32;
-  const category=shaft?'shaft':weapon==='bow'?'bow':staff?'staff':weapon==='none'||(weapon==='javelin'||weapon==='sling')&&pose.mode==='attack'?'unarmed':'blade';
-  const source=CONTACT_HANDS[category][direction.source+1]!;
-  // Residual aim moves the hand only a few pixels; the tool axis receives the
-  // full bounded correction. Shoulders and grounded feet never orbit the target.
-  const contact:XY=[source[0]-Math.sin(direction.correction)*2,
-    source[1]+Math.sin(direction.correction)*3-((weapon==='greatSword'||weapon==='club')&&direction.source>0?6:0)];
-  const variant=Math.abs(Math.trunc(pose.variant??0))%3;
-  const variation=pose.mode==='attack'?[0,-.13,.12][variant]!:0;
-  const aimAngle=direction.sourceAngle+direction.correction;
-  const contactAngle=(shaft||weapon==='bow'?aimAngle:aimAngle+Math.PI/2)+variation;
-  const angle=work?.tool??readyAngle+(contactAngle-readyAngle)*weight+motion.weaponAngle*(working?1:.08);
-  const requestedWrist=work?.wrist??lerpPoint(ready,contact,weight);
-  // Keep the elbow's anatomical branch through recovery; flipping the IK
-  // branch at the ready endpoint would teleport the elbow across the arm.
-  const bend=1 as const;
-  const shield=weapon!=='greatSword'&&weapon!=='bow'&&weapon!=='pick'&&(options.shield??(weapon==='sword'||shaft&&(!!f.mounted||!!f.elite)));
-  const twoHanded=weapon==='bow'||weapon==='greatSword'||weapon==='pick'||shaft&&!shield;
-  const supportX=weapon==='bow'?-3-.35*(1-motion.recoil)*9:weapon==='greatSword'||weapon==='pick'?0:-9;
-  const supportY=weapon==='greatSword'?5:weapon==='pick'?6:0;
-  const offset=socketPoint([0,0],angle,supportX,supportY);
-  const grip=twoHanded?dualGrip(requestedWrist,shoulder,supportShoulder,offset):requestedWrist;
-  const primary=solveTwoBone(shoulder,grip,bend),wrist=primary.end;
-  const free=shield?[-10,-10] as XY:lerpPoint([-8,-3],FREE_HANDS[direction.source+1]!,cast||weapon==='none'?weight:0);
-  const support=twoHanded?socketPoint(wrist,angle,supportX,supportY):solveTwoBone(supportShoulder,free,1).end;
-  const secondary=solveTwoBone(supportShoulder,support,1);
-  const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);
-  return {weapon,shieldStyle:options.shieldStyle??'kite',shield,motion,impact,cast,working,wrist,angle,
-    lean:work?.lean??motion.lean+direction.source*weight*.025,shoulder,elbow:primary.joint,support,supportShoulder,supportElbow:secondary.joint,
-    twoHanded,release,direction,primaryLayer:weight>.5&&direction.source<0?'back' as const:'front' as const};
+function shaftDrawing(mounted:boolean,source:number){
+ const ready=mounted?hand([9,-16],[7,-17],-.2):hand([8,-19],[7,-17],-.95);
+ const contact=(mounted?
+  [hand([11,-19],[7,-19],-.9),hand([12,-16],[8,-17],-.04),hand([9,-33],[7,-25],.95)]:
+  [hand([10,-18],[7,-18],-1.05),hand([13,-19],[8,-17],-.4),hand([8,-33],[5,-25],1.05)])[source+1]!;
+ return {ready,contact};
 }
-export type FigureRig = ReturnType<typeof solveFigureRig>;
+function bowDrawing(source:number){
+ return {ready:hand([18,-21],[10,-21],0),contact:[
+  hand([16,-30],[10,-25],-Math.PI/3),hand([18,-21],[10,-21],0),hand([17,-13],[10,-17],Math.PI/3),
+ ][source+1]!};
+}
+function staffDrawing(source:number,casting:boolean){
+ // A caster carries and invokes a staff; it is not a rifle pointed downrange.
+ return {ready:hand([12,-12],[10,-17],0),contact:[
+  hand([13,-20],[10,-22],.12),hand([14,-15],[10,-19],.08),hand([14,-12],[10,-17],-.12),
+ ][source+1]!,strength:casting?1:.65};
+}
+/** One authored drawing supplies both render passes and release/equipment sockets. */
+export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: FigurePresentation = {}) {
+ const weapon=options.weapon??defaultEquipment(f),family=equipmentFamily(weapon),requested=options.motion;
+ const compatible=requested===family||((family==='slash'||family==='thrust')&&(requested==='slash'||requested==='thrust'));
+ const motion=sampleMotion(pose,compatible?requested:family),direction=actionDirection(pose);
+ const working=weapon==='pick'&&pose.mode==='work',work=working?WORK_POSES[pose.frame]:undefined;
+ const impact=pose.mode==='attack'?motion.reach:0,cast=pose.mode==='cast'?motion.castGlow:0;
+ const shaft=weapon==='pike'||weapon==='pitchfork',staff=weapon==='staff'||weapon==='crozier';
+ const shield=weapon!=='greatSword'&&weapon!=='bow'&&weapon!=='pick'&&(options.shield??(weapon==='sword'||shaft&&(!!f.mounted||!!f.elite)));
+ const supported=weapon==='bow'||weapon==='greatSword'||weapon==='pick'||shaft&&!shield;
+ const variant=Math.abs(Math.trunc(pose.variant??0))%3;
+ let drawing:HandDrawing;
+ let weight=pose.mode==='attack'?motion.reach:0;
+ const source=direction.source;
+ if(staff){
+  const authored=staffDrawing(source,cast>0);weight=(cast||impact)*authored.strength;
+  drawing=blend(authored.ready,authored.contact,weight);
+  drawing.angle+=(pose.mode==='attack'?[0,-.08,.09][variant]!:0)*weight;
+ }else if(weapon==='bow'){
+  const authored=bowDrawing(source);weight=pose.mode==='attack'?([1,.76,.48,.24,.08,0][pose.frame]??0):0;
+  drawing=blend(authored.ready,authored.contact,weight);
+  drawing.angle+=direction.correction*weight;
+ }else if(shaft){
+  const authored=shaftDrawing(!!f.mounted,source);drawing=blend(authored.ready,authored.contact,weight);
+  drawing.angle+=direction.correction*weight;
+ }else if(weapon==='none'||weapon==='sling'||weapon==='javelin'){
+  const ready=hand(weapon==='none'?[8,-3]:[12,-12],[7,-14],weapon==='javelin'?.45:0);
+  const contact=[hand([13,-34],[8,-25],-.4),hand([24,-20],[13,-20],1.4),hand([17,-9],[9,-15],2.2)][source+1]!;
+  drawing=blend(ready,contact,weight);
+ }else{
+  const authored=bladeDrawing(weapon,source,variant,requested==='thrust');
+  drawing=blend(authored.ready,authored.contact,weight);
+  drawing.angle+=direction.correction*weight;
+ }
+ if(work)drawing=hand(work.wrist,[7,-22],work.tool);
+ if(cast&&shield){
+  // A shield arm stays braced. Invoke with the weapon hand instead of moving
+  // the entire shield through the face as though it were an empty palm.
+  drawing.wrist=mix(drawing.wrist,([[12,-27],[16,-21],[14,-15]] as XY[])[source+1]!,cast);
+  drawing.elbow=mix(drawing.elbow,([[8,-22],[10,-20],[9,-17]] as XY[])[source+1]!,cast);
+  drawing.angle-=.18*cast;
+ }
+ // Cast with the free hand while retaining the weapon's own carry silhouette.
+ // Staff poses additionally raise the staff; no sword-slash pose is reused.
+ const freeReady:XY=shield?[-9,-10]:staff?[-13,-12]:[-9,-8];
+ const freeElbow:XY=[-10,-15];
+ const spellHands:XY[]=[[2,-37],[16,-22],[9,-8]];
+ const spellElbows:XY[]=[[-6,-26],[-3,-20],[-7,-14]];
+ const gesture=shield?0:cast||(staff?Math.max(0,impact)*.55:0);
+ let support=mix(freeReady,spellHands[source+1]!,gesture);
+ let supportElbow=mix(freeElbow,spellElbows[source+1]!,gesture);
+ const {wrist,elbow,angle}=drawing;
+ if(supported){
+  const sx=weapon==='bow'?-3-motion.bowDraw*9:weapon==='greatSword'||weapon==='pick'?0:-9;
+  const sy=weapon==='greatSword'?5:weapon==='pick'?-4:0;
+  support=socketPoint(wrist,angle,sx,sy);
+  // Authored supporting elbows follow the contact drawing, never an IK branch.
+  const readyElbow:XY=weapon==='bow'?[-.4,-18]:shaft?[-3,-15]:[0,-16];
+  const contactElbows:XY[]=weapon==='bow'?[[-1,-26],[1,-18],[-1,-13]]:
+   shaft?[[-3,-18],[-2,-16],[-5,-25]]:[[-2,-24],[2,-17],[-2,-20]];
+  supportElbow=mix(readyElbow,contactElbows[source+1]!,weight);
+  if(cast){support=mix(support,spellHands[source+1]!,cast);supportElbow=mix(supportElbow,spellElbows[source+1]!,cast);}
+ }
+ const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);
+ return {weapon,shieldStyle:options.shieldStyle??'kite',shield,motion,impact,cast,working,wrist,angle,
+  lean:work?.lean??0,shoulder:[5,-23] as XY,elbow,support,supportShoulder:[-5,-23] as XY,supportElbow,
+  twoHanded:supported&&!cast,release,direction,
+  // Independent layering: a hidden upper arm must not hide the held weapon.
+  primaryLayer:shaft||weapon==='bow'?'front' as const:'back' as const,
+  equipmentLayer:'front' as 'front'|'back'};
+}
+export type FigurePose = ReturnType<typeof sampleFigurePose>;

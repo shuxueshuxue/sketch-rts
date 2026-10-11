@@ -11,7 +11,7 @@ import { figures, type Figure } from './appearance';
 export const hasPaintedUnit = (kind: UnitKind) => hasWarfareUnit(kind) || !!figures[kind] || hasPaintedCreature(kind);
 import { INK, STEEL, EDGE, SHADE, SKIN, HIDE, LINEN, paintedPlane as poly, segment as seg } from './materials';
 import { leg } from './body-parts';
-import { solveFigureRig, type FigurePresentation } from './rig';
+import { sampleFigurePose, type FigurePresentation } from './rig';
 import { paintEquipment } from './equipment';
 function face(b:Brush,kind:Figure,team:string,facing:number,headwear=true,clothOverride?:string){
   // A 7px face on a 47px body: no eyes or cartoon head proportions.
@@ -68,7 +68,7 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
  const base=figures[kind];if(!base)return paintCreature(b,kind,team,pose);
  const f=presentation.appearance?{...base,...presentation.appearance}:base;
   b.save();b.lineJoin='round';b.lineCap='round';
-  const rig=solveFigureRig(f,pose,presentation);
+  const rig=sampleFigurePose(f,pose,presentation);
   const {motion,impact}=rig;
   const stride=motion.stride;
   const phase=pose.mode==='walk'?pose.frame*Math.PI/4:0;
@@ -89,7 +89,7 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
     line(b,[[-8,-21],[-10,6],[-6+flutter,9]],lighter(cloth,.08),1);
   }
   paintEquipment(b,f,team,facing,rig,cloth,'back');
-  if(rig.primaryLayer==='back')presentation.detail?.(b,rig,'equipment');
+  if(rig.equipmentLayer==='back')presentation.detail?.(b,rig,'equipment');
   // Neck joins the jaw to the collar, including under the worker hat.
   poly(b,[[-2.2,-31],[2,-31],[2.5,-26],[-2.5,-26]],SKIN);
   // Pelvis, fitted torso and separate shoulder planes, rather than a trapezoid dress.
@@ -127,6 +127,6 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
   face(b,f,team,facing,presentation.headwear,presentation.cloth);
   presentation.detail?.(b,rig,'head');
   paintEquipment(b,f,team,facing,rig,cloth,'front');
-  if(rig.primaryLayer==='front')presentation.detail?.(b,rig,'equipment');
+  if(rig.equipmentLayer==='front')presentation.detail?.(b,rig,'equipment');
   b.restore();return true;
 }

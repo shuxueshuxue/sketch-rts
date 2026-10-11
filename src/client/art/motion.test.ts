@@ -6,7 +6,9 @@ describe('shared motion library', () => {
     for (let variant = 0; variant < 3; variant++) {
       const frames = Array.from({ length: 6 }, (_, frame) => sampleMotion({ mode: 'attack', frame, variant }, family));
       expect(frames[0]!.reach).toBeGreaterThan(0);
-      for (let i = 1; i < frames.length; i++) expect(frames[i]!.reach).toBeLessThanOrEqual(frames[i - 1]!.reach);
+      expect(frames.every(frame=>Number.isFinite(frame.reach))).toBe(true);
+      if(family==='slash'||family==='work'||family==='thrust')expect(frames.some(frame=>frame.reach<0)).toBe(true);
+      else for (let i = 1; i < frames.length; i++) expect(frames[i]!.reach).toBeLessThanOrEqual(frames[i - 1]!.reach);
       expect(frames[5]).toEqual(sampleMotion({ mode: 'idle', frame: 0 }, family));
     }
   });

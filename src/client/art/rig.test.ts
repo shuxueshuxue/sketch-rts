@@ -3,7 +3,7 @@ import { createCanvas } from '@napi-rs/canvas';
 import { UNIT_CARDS } from '../content/units';
 import { figures } from './appearance';
 import { paintFigure, hasPaintedUnit } from './painted-units';
-import { solveFigureRig, solveTwoBone, socketPoint, equipmentForKind, type FigurePresentation } from './rig';
+import { sampleFigurePose, socketPoint, equipmentForKind, type FigurePresentation } from './rig';
 import { appearanceKey } from './unit-appearance';
 import type { EquipmentKind } from './equipment';
 import type { UnitKind } from '../../shared/types';
@@ -15,37 +15,30 @@ const raster=(kind:UnitKind,pose:UnitAnimationFrame,presentation:FigurePresentat
  paintFigure(b as unknown as CanvasRenderingContext2D,kind,'#477b91',pose,1,presentation);
  return b.getImageData(0,0,180,160).data;
 };
-describe('anatomical constraints',()=>{
- it('carries one-hand blades with a lowered upper arm instead of a raised sideways elbow',()=>{
-  for(const weapon of ['sword','axe','club','javelin','sling'] as const)for(const mode of ['idle','walk'] as const)for(let frame=0;frame<8;frame++){
-   const rig=solveFigureRig(figures.footman!,{mode,frame},{weapon});
-   expect(rig.elbow[1]-rig.shoulder[1],`${weapon}/${mode}/${frame}`).toBeGreaterThan(9);
-   expect(Math.abs(rig.elbow[0]-rig.shoulder[0])).toBeLessThan(6);
-   expect(rig.wrist[1]).toBeGreaterThan(rig.elbow[1]);
-  }
- });
- it('extends the striking arm at level contact instead of retaining the close carry fold',()=>{
-  for(const weapon of ['sword','axe','club','staff','crozier'] as const){
-   const rig=solveFigureRig(figures.footman!,{mode:'attack',frame:0,aim:0},{weapon});
-   expect(distance(rig.shoulder,rig.wrist),weapon).toBeGreaterThan(19);
+describe('authored projected poses',()=>{
+ it('keeps authored rear arms behind the torso while held weapons remain visible',()=>{
+  for(const weapon of ['sword','axe','staff','crozier'] as const){
+   const rig=sampleFigurePose(figures.footman!,{mode:'idle',frame:0},{weapon});
+   expect(rig.primaryLayer).toBe('back');expect(rig.equipmentLayer).toBe('front');
    expect(rig.elbow[1]).toBeGreaterThan(rig.shoulder[1]);
   }
  });
- it('clamps impossible requests without stretching either segment',()=>{
-  for(const target of [[0,0],[100,0],[-100,-100],[3,12]] as [number,number][]){
-   const result=solveTwoBone([0,0],target);
-   expect(distance([0,0],result.joint)).toBeCloseTo(11,8);
-   expect(distance(result.joint,result.end)).toBeCloseTo(10.5,8);
+ it('allows projected limb shortening and retains upright staff gestures',()=>{
+  const idle=sampleFigurePose(figures.footman!,{mode:'idle',frame:0});
+  const contact=sampleFigurePose(figures.footman!,{mode:'attack',frame:0});
+  expect(distance(idle.elbow,idle.wrist)).toBeLessThan(distance(contact.elbow,contact.wrist));
+  for(const mode of ['attack','cast'] as const)for(const aim of [-6,0,6]){
+   const staff=sampleFigurePose(figures.summoner!,{mode,frame:0,aim});
+   expect(Math.abs(staff.angle)).toBeLessThan(.25);
+   expect(staff.support).not.toEqual(sampleFigurePose(figures.summoner!,{mode:'idle',frame:0}).support);
   }
  });
- it('keeps authored hands reachable and equipment support sockets on the rigid handle',()=>{
+ it('keeps authored coordinates finite and both grips attached when supporting the handle',()=>{
   for(const weapon of weapons)for(const mode of ['idle','walk','attack','cast','work'] as const)for(let frame=0;frame<(mode==='idle'||mode==='walk'?8:6);frame++)for(let variant=0;variant<3;variant++){
-   const rig=solveFigureRig(figures.footman!,{mode,frame,variant},{weapon});
-   expect(distance(rig.shoulder,rig.elbow)).toBeCloseTo(11,7);
-   expect(distance(rig.elbow,rig.wrist)).toBeCloseTo(10.5,7);
-   if(['pike','pitchfork','greatSword','pick','bow'].includes(weapon)){
-    expect(distance([-5,-23],rig.support),`${weapon}/${mode}/${frame}`).toBeLessThanOrEqual(21.501);
-    if(weapon==='greatSword'||weapon==='pick')expect(rig.support).toEqual(socketPoint(rig.wrist,rig.angle,0,weapon==='greatSword'?5:6));
+   const rig=sampleFigurePose(figures.footman!,{mode,frame,variant},{weapon});
+   expect([...rig.wrist,...rig.elbow,...rig.support,...rig.supportElbow].every(Number.isFinite)).toBe(true);
+   if(rig.twoHanded){
+    if(weapon==='greatSword'||weapon==='pick')expect(rig.support).toEqual(socketPoint(rig.wrist,rig.angle,0,weapon==='greatSword'?5:-4));
    }
   }
  });
@@ -72,7 +65,7 @@ describe('catalog composition',()=>{
  });
  it('reuses an action across compatible bodies and switches actions without changing identity',()=>{
   const pose={mode:'attack',frame:0,variant:1} as const;
-  expect(solveFigureRig(figures.footman!,pose).motion).toBe(solveFigureRig(figures.mercenary!,pose).motion);
+  expect(sampleFigurePose(figures.footman!,pose).motion).toBe(sampleFigurePose(figures.mercenary!,pose).motion);
   expect(raster('footman',pose,{motion:'slash'})).not.toEqual(raster('footman',pose,{motion:'thrust'}));
   expect(raster('footman',pose,{weapon:'sword'})).not.toEqual(raster('footman',pose,{weapon:'axe'}));
  });
@@ -82,7 +75,7 @@ describe('catalog composition',()=>{
   expect(equipmentForKind('ogreWarrior')).toBe('club');
   expect(equipmentForKind('thornSlinger')).toBe('sling');
   expect(raster('footman',{mode:'idle',frame:0},{shield:true,shieldStyle:'round'})).not.toEqual(raster('footman',{mode:'idle',frame:0}));
-  expect(solveFigureRig(figures.footman!,{mode:'idle',frame:0},{weapon:'greatSword',shield:true}).shield).toBe(false);
+  expect(sampleFigurePose(figures.footman!,{mode:'idle',frame:0},{weapon:'greatSword',shield:true}).shield).toBe(false);
  });
  it('keys every presentation choice including stable detail callbacks',()=>{
   const detail=()=>{};

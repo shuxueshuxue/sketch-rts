@@ -7,9 +7,9 @@ export type MotionFamily = 'slash' | 'thrust' | 'bow' | 'staff' | 'work' | 'crea
 export type MotionPose = Readonly<{
   stride: number; lift: number; lean: number; reach: number;
   weaponAngle: number; offhand: number; castGlow: number;
-  breathe: number; recoil: number;
+  breathe: number; recoil: number; bowDraw: number;
 }>;
-const REST: MotionPose = Object.freeze({ stride: 0, lift: 0, lean: 0, reach: 0, weaponAngle: 0, offhand: 0, castGlow: 0, breathe: 0, recoil: 0 });
+const REST: MotionPose = Object.freeze({ stride: 0, lift: 0, lean: 0, reach: 0, weaponAngle: 0, offhand: 0, castGlow: 0, breathe: 0, recoil: 0, bowDraw: .35 });
 const CONTACT = [1, .76, .48, .24, .08, 0] as const;
 const WORK_REACH = [.05, -.12, .8, 1, .45, .08] as const;
 const WORK_ANGLE = [-.35, -.7, .9, 1.2, .45, -.1] as const;
@@ -27,14 +27,16 @@ function keyPose(mode: UnitAnimationFrame['mode'], frame: number, variant: numbe
     return Object.freeze({ ...REST, stride, lift: -Math.abs(stride) * 1.3, weaponAngle: stride * .09, offhand: -stride * .06 });
   }
   if (mode === 'work') return Object.freeze({ ...REST, reach: WORK_REACH[frame]!, weaponAngle: WORK_ANGLE[frame]!, lean: [.025, -.025, .1, .14, .09, .035][frame]! });
-  const recovery = CONTACT[frame]!;
+  const recovery = mode==='attack'&&(family==='slash'||family==='work')
+    ? [1,.65,.15,-.28,-.15,0][frame]!
+    :mode==='attack'&&family==='thrust'?[1,.55,.12,-.12,-.05,0][frame]!:CONTACT[frame]!;
   if (mode === 'cast') return Object.freeze({ ...REST, reach: recovery * .45, lean: -.035 * recovery, weaponAngle: -.48 * recovery, offhand: -.3 * recovery, castGlow: recovery });
   // The simulation reports a completed hit/release. These are contact-to-ready
   // clips, never a new windup after damage has already happened. Variants alter
   // the contact plane, not release time or attack cadence.
   switch (family) {
     case 'thrust': return Object.freeze({ ...REST, reach: recovery * [1, .85, .92][variant]!, lean: recovery * .07, weaponAngle: recovery * [.06, -.12, .18][variant]!, offhand: recovery * -.08 });
-    case 'bow': return Object.freeze({ ...REST, reach: recovery * [.7, .6, .65][variant]!, lean: recovery * -.025, weaponAngle: recovery * [0, -.07, .07][variant]!, offhand: recovery * .18, recoil: recovery });
+    case 'bow': return Object.freeze({ ...REST, reach: recovery * [.7, .6, .65][variant]!, lean: recovery * -.025, weaponAngle: recovery * [0, -.07, .07][variant]!, offhand: recovery * .18, recoil: recovery, bowDraw: [0,.25,.5,.9,.6,.35][frame]! });
     case 'staff': return Object.freeze({ ...REST, reach: recovery * .75, lean: recovery * .045, weaponAngle: recovery * [.32, -.18, .12][variant]!, offhand: recovery * -.1 });
     case 'siege': return Object.freeze({ ...REST, recoil: recovery, reach: recovery });
     case 'creature': return Object.freeze({ ...REST, reach: recovery * [1, .85, .95][variant]!, lean: recovery * [.06, -.025, .035][variant]!, weaponAngle: recovery * [.18, -.16, .08][variant]! });

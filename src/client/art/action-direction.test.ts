@@ -3,13 +3,12 @@ import { createCanvas } from '@napi-rs/canvas';
 import { animationKey, finiteAim, projectActionFrame } from './action-direction';
 import { creatures, figures } from './appearance';
 import { actionDirection } from './motion';
-import { solveFigureRig, socketPoint } from './rig';
+import { sampleFigurePose, socketPoint } from './rig';
 import { paintFigure } from './painted-units';
 import { ART_ACTION_SIZE } from './raster-cache';
 import type { EquipmentKind } from './equipment';
 import type { UnitAnimationFrame } from '../unit-animation';
 const weapons:EquipmentKind[]=['none','sword','greatSword','axe','club','pike','pitchfork','bow','staff','crozier','pick','javelin','sling'];
-const distance=(a:readonly number[],b:readonly number[])=>Math.hypot(a[0]!-b[0]!,a[1]!-b[1]!);
 it('quantizes continuous targets to thirteen states and shares recovery with ready',()=>{
  const poses=new Set<UnitAnimationFrame>();
  for(let degrees=-90;degrees<=90;degrees+=.5){
@@ -28,14 +27,15 @@ it('quantizes continuous targets to thirteen states and shares recovery with rea
  expect(projectActionFrame({mode:'cast',frame:0,direction:{x:0,y:10}},1).aim).toBe(6);
  expect(projectActionFrame({mode:'attack',frame:0,direction:{x:10,y:0}},1,p=>({x:p.y,y:-p.x})).aim).toBe(-6);
 });
-it('keeps every directional two-hand pose rigid and both arms reachable',()=>{
+it('keeps directional drawings finite and supporting hands on equipment sockets',()=>{
  for(const weapon of weapons)for(const mode of ['attack','cast'] as const)for(let aim=-6;aim<=6;aim++)for(let frame=0;frame<6;frame++){
-  const rig=solveFigureRig(figures.footman!,{mode,frame,aim},{weapon});
-  expect(distance(rig.shoulder,rig.elbow)).toBeCloseTo(11,7);
-  expect(distance(rig.elbow,rig.wrist)).toBeCloseTo(10.5,7);
-  expect(distance(rig.supportShoulder,rig.supportElbow)).toBeCloseTo(11,7);
-  expect(distance(rig.supportElbow,rig.support),`${weapon}/${mode}/${aim}/${frame}`).toBeCloseTo(10.5,7);
-  if(weapon==='greatSword'||weapon==='pick')expect(rig.support).toEqual(socketPoint(rig.wrist,rig.angle,0,weapon==='greatSword'?5:6));
+  const rig=sampleFigurePose(figures.footman!,{mode,frame,aim},{weapon});
+  expect([...rig.wrist,...rig.elbow,...rig.support,...rig.supportElbow].every(Number.isFinite)).toBe(true);
+  if(rig.twoHanded){
+   const sx=weapon==='bow'?-3-rig.motion.bowDraw*9:weapon==='greatSword'||weapon==='pick'?0:-9;
+   const sy=weapon==='greatSword'?5:weapon==='pick'?-4:0;
+   expect(rig.support).toEqual(socketPoint(rig.wrist,rig.angle,sx,sy));
+  }
  }
 });
 it('all weapons fit the full action painting surface at all thirteen directions',()=>{

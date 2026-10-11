@@ -2,14 +2,14 @@ import { expect,it } from 'vitest';
 import { createCanvas } from '@napi-rs/canvas';
 import { figureReleaseSocket, resolveReleaseSocket } from './release-socket';
 import { figures } from './appearance';
-import { solveFigureRig } from './rig';
+import { sampleFigurePose } from './rig';
 import { storyFigure, storyCreature } from './story-rig';
 import { paintFigure } from './painted-units';
 import { creatureReleaseSocket } from './painted-creatures';
 
 it('transforms the exact solved socket with torso lean, body lift and mounting',()=>{
  for(const kind of ['priest','knight'] as const)for(const aim of [-6,0,6]){
-  const pose={mode:'cast' as const,frame:0,aim},rig=solveFigureRig(figures[kind]!,pose);
+  const pose={mode:'cast' as const,frame:0,aim},rig=sampleFigurePose(figures[kind]!,pose);
   const p=figureReleaseSocket(kind,pose)!;
   const x=rig.release[0]*Math.cos(rig.lean)-(rig.release[1]+4)*Math.sin(rig.lean)+rig.impact*(figures[kind]!.mounted?.65:2);
   const y=rig.release[0]*Math.sin(rig.lean)+(rig.release[1]+4)*Math.cos(rig.lean)-4+rig.motion.lift+rig.motion.breathe;

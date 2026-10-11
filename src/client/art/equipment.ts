@@ -1,10 +1,10 @@
-/** Equipment is authored around a grip at (0,0), then attached to the solved wrist. */
+/** Equipment is authored around a grip at (0,0), then attached to the authored wrist. */
 import { type Brush, type XY, line, ellipse } from './kit';
 import { INK, STEEL, EDGE, SHADE, HIDE, ITEM_MATERIAL, paintedPlane as poly, segment as seg } from './materials';
 import { darker, lighter } from './kit';
 import { arm, hand } from './body-parts';
 import type { Figure } from './appearance';
-import type { FigureRig } from './rig';
+import type { FigurePose } from './rig';
 export type EquipmentKind = 'none' | 'sling' | 'javelin' | 'club' | 'pitchfork' | 'sword' | 'greatSword' | 'axe' | 'pike' | 'bow' | 'staff' | 'crozier' | 'pick';
 export function shield(b:Brush,x:number,y:number,team:string,elite:boolean,facing:number,round=false){
   if(round){
@@ -38,9 +38,9 @@ function sword(b:Brush,wrist:XY,angle:number,axe:boolean,great=false){
   }b.restore();
 }
 
-/** Back and front passes use the same solved skeleton. Hands are painted at
+/** Back and front passes use the same authored drawing. Hands are painted at
  * sockets after the rigid tool, never positioned independently in an asset. */
-export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:FigureRig,cloth:string,layer:'back'|'front'='front'){
+export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:FigurePose,cloth:string,layer:'back'|'front'='front'){
   const {wrist}=rig,armor=!!f.armor;
   if(layer==='back'&&rig.weapon==='bow'){
     poly(b,[[-11,-26],[-7,-27],[-4,-12],[-8,-11]],HIDE);
@@ -48,6 +48,8 @@ export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:Figu
   }
   if(layer===rig.primaryLayer){
     arm(b,rig.shoulder,rig.elbow,wrist,cloth,armor,layer==='front');
+  }
+  if(layer===rig.equipmentLayer){
     paintEquipmentAsset(b,f,rig);
     hand(b,wrist);
   }
@@ -62,10 +64,10 @@ export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:Figu
 }
 
 /** One weapon geometry source for held equipment, inventory and dropped items. */
-export function paintEquipmentAsset(b:Brush,f:Pick<Figure,'mounted'|'ember'>,rig:Pick<FigureRig,'weapon'|'wrist'|'angle'|'impact'|'cast'|'motion'>){
+export function paintEquipmentAsset(b:Brush,f:Pick<Figure,'mounted'|'ember'>,rig:Pick<FigurePose,'weapon'|'wrist'|'angle'|'impact'|'cast'|'motion'>){
   const {wrist,impact,cast}=rig;
     if(rig.weapon==='bow'){
-      const pull=.35*(1-rig.motion.recoil);
+      const pull=rig.motion.bowDraw;
       b.save();b.translate(...wrist);b.rotate(rig.angle);
       b.beginPath();b.moveTo(0,-18);b.bezierCurveTo(12,-10,11,11,0,18);b.strokeStyle='#463d31';b.lineWidth=2.1;b.stroke();
       b.beginPath();b.moveTo(0,-17);b.bezierCurveTo(10,-8,10,10,0,17);b.strokeStyle='#b7a078';b.lineWidth=.8;b.stroke();

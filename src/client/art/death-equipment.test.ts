@@ -8,7 +8,7 @@ import {storyFigure} from './story-rig';
 import {drawAtlasCorpse,drawAtlasModel,clearCanvasArtCache,canvasArtCacheStats} from '../atlas-art';
 import {setScratchCanvasFactory} from './scratch-canvas';
 import type {WorldItem,Corpse} from '../../shared/types';
-import {solveFigureRig,type FigurePresentation} from './rig';
+import {sampleFigurePose,type FigurePresentation} from './rig';
 import {figures} from './appearance';
 import {IDLE_FRAME} from '../unit-animation';
 import {resolveReleaseSocket} from './release-socket';
@@ -28,7 +28,7 @@ describe('death-time equipment presentation',()=>{
   unit.hp=0;stepGame(game);
   const corpse=game.corpses!.find(c=>c.unitId===unit.id)!;
   expect(corpse).toMatchObject({equipmentCaptured:true,rightItemKind:kind,...(kind==='issuedWeapon'?{weaponKind:'archer'}:{})});
-  expect(corpseAppearanceFor(game,corpse)).toMatchObject({weapon:live.weapon,shield:solveFigureRig(figures[unit.kind]!,IDLE_FRAME,live).shield,...(live.shieldStyle?{shieldStyle:live.shieldStyle}:{})});
+  expect(corpseAppearanceFor(game,corpse)).toMatchObject({weapon:live.weapon,shield:sampleFigurePose(figures[unit.kind]!,IDLE_FRAME,live).shield,...(live.shieldStyle?{shieldStyle:live.shieldStyle}:{})});
   if(kind==='greatSword')expect(corpseAppearanceFor(game,corpse).shield).toBe(false);
   for(const prior of held){
    const expected={...prior,x:unit.x,y:unit.y};for(const key of ['carrierId','slot','shipId','holdSlot','mountId','aim'] as const)delete expected[key];

@@ -5,7 +5,7 @@ import type { UnitAnimationFrame } from '../unit-animation';
 import type { UnitModel } from '../../story/cast';
 import { unitGlyphScale } from '../glyphs';
 import { figures } from './appearance';
-import { solveFigureRig, type FigurePresentation } from './rig';
+import { sampleFigurePose, type FigurePresentation } from './rig';
 import { creatureReleaseSocket } from './painted-creatures';
 
 /** Authored coordinates before facing mirror. ground is the local foot line. */
@@ -13,7 +13,7 @@ export type ArtReleaseSocket={x:number;y:number;ground:number};
 export function figureReleaseSocket(kind:UnitKind,pose:UnitAnimationFrame,presentation:FigurePresentation={},size=1):ArtReleaseSocket|undefined {
  const base=figures[kind];if(!base)return undefined;
  const f=presentation.appearance?{...base,...presentation.appearance}:base;
- const rig=solveFigureRig(f,pose,presentation);
+ const rig=sampleFigurePose(f,pose,presentation);
  // A thrown missile leaves the palm. A spell leaves the raised tool or free
  // casting hand. Arrow sprites are tip-anchored: their tail starts by the nock.
  const socket=rig.weapon==='javelin'||rig.weapon==='sling'?rig.wrist

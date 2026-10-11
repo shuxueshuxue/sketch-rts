@@ -6,7 +6,20 @@ import { sampleMotion, actionDirection, type MotionPose } from './motion';
 import { type Brush, ellipse, line, darker, lighter } from './kit';
 
 import { creatures } from './appearance';
-import { solveTwoBone, socketPoint } from './rig';
+import { socketPoint } from './rig';
+import type { XY } from './kit';
+/** Fixed length two-bone chain. A target outside the annulus is clamped;
+ * callers attach tools to end, never to the unconstrained requested target. */
+function solveTwoBone(root: XY, target: XY, bend: 1 | -1 = 1, upper = 11, lower = 10.5) {
+  const dx=target[0]-root[0], dy=target[1]-root[1], distance=Math.hypot(dx,dy);
+  const length=Math.max(Math.abs(upper-lower)+.001,Math.min(upper+lower-.001,distance));
+  const ux=distance>1e-8?dx/distance:0, uy=distance>1e-8?dy/distance:1;
+  const along=(upper*upper-lower*lower+length*length)/(2*length);
+  const cross=Math.sqrt(Math.max(0,upper*upper-along*along))*bend;
+  return { joint:[root[0]+ux*along-uy*cross,root[1]+uy*along+ux*cross] as XY,
+    end:[root[0]+ux*length,root[1]+uy*length] as XY };
+}
+
 import { paintRigidEquipment } from './equipment';
 export const hasPaintedCreature = (kind: UnitKind) => !!creatures[kind];
 /** Remains and story projections use actual anatomy rather than card labels. */

@@ -6,7 +6,7 @@ import type { UnitPainter, UnitRemainsPainter } from '../../story/cast';
 import { IDLE_FRAME } from '../unit-animation';
 import { paintFigure } from './painted-units';
 import { paintCreature, creatureGround, creatureReleaseSocket, type CreaturePresentation } from './painted-creatures';
-import { defaultEquipment, solveFigureRig, type FigurePresentation } from './rig';
+import { defaultEquipment, sampleFigurePose, type FigurePresentation } from './rig';
 import { figures } from './appearance';
 import { paintCorpse, type CorpsePresentation } from './corpses';
 
@@ -31,7 +31,7 @@ export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size
   const remains:CorpsePresentation={
     anatomy:appearance.mounted?'mounted':'foot', size,
     weapon:presentation.weapon??defaultEquipment(appearance),
-    shield:solveFigureRig(appearance,IDLE_FRAME,presentation).shield,
+    shield:sampleFigurePose(appearance,IDLE_FRAME,presentation).shield,
     ...(presentation.headwear!==undefined?{headwear:presentation.headwear}:{}),
     robe:['priest','mage','witch'].includes(appearance.role),
     cloth:quietColor(presentation.cloth), ...presentation.remains,
@@ -45,7 +45,7 @@ export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size
   };
   return Object.assign(paint,{
     release:(pose:import('../unit-animation').UnitAnimationFrame,override:Readonly<FigurePresentation>={})=>figureReleaseSocket(kind,pose,{...presentation,...gear(override)},size),
-    remains:((b,_team,override={})=>{const equipment=gear(override);paintCorpse(b,kind,{...remains,...equipment,...(equipment.weapon!==undefined||equipment.shield!==undefined?{shield:solveFigureRig(appearance,IDLE_FRAME,{...presentation,...equipment}).shield}:{})});}) as UnitRemainsPainter,
+    remains:((b,_team,override={})=>{const equipment=gear(override);paintCorpse(b,kind,{...remains,...equipment,...(equipment.weapon!==undefined||equipment.shield!==undefined?{shield:sampleFigurePose(appearance,IDLE_FRAME,{...presentation,...equipment}).shield}:{})});}) as UnitRemainsPainter,
   });
 }
 

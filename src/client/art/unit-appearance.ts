@@ -5,7 +5,7 @@ import type { GameSnapshot, Unit, UnitKind, RaceId, Corpse } from '../../shared/
 import { UNIT_CARDS } from '../content/units';
 import type { CorpsePresentation } from './corpses';
 import { figures } from './appearance';
-import { equipmentForKind, solveFigureRig, type FigurePresentation } from './rig';
+import { equipmentForKind, sampleFigurePose, type FigurePresentation } from './rig';
 
 const DEFAULT: Readonly<FigurePresentation> = Object.freeze({});
 const EMBER_PRIEST: Readonly<FigurePresentation> = Object.freeze({ appearance:Object.freeze({ember:true}), cloth:'#a78265' });
@@ -30,7 +30,7 @@ export function corpseAppearanceFor(snapshot:Pick<GameSnapshot,'players'>,unit:P
   const source=unit.rightItemKind==='issuedWeapon'&&unit.weaponKind&&!(unit.variant&&unit.weaponKind===unit.kind)?equipmentForKind(unit.weaponKind):undefined;
   const weapon=unit.rightItemKind==='greatSword'?'greatSword':source;
   const shield=weapon==='greatSword'?false:unit.leftItemKind==='roundShield'?true:undefined;
-  const visibleShield=!unit.variant&&figures[unit.kind]&&(weapon||shield!==undefined)?solveFigureRig(figures[unit.kind]!,IDLE_FRAME,{...(weapon?{weapon}:{}),...(shield!==undefined?{shield}:{})}).shield:shield;
+  const visibleShield=!unit.variant&&figures[unit.kind]&&(weapon||shield!==undefined)?sampleFigurePose(figures[unit.kind]!,IDLE_FRAME,{...(weapon?{weapon}:{}),...(shield!==undefined?{shield}:{})}).shield:shield;
   return {...base,...(weapon?{weapon}:{}),...(visibleShield!==undefined?{shield:visibleShield,...(shield?{shieldStyle:'round' as const}:{})}:{})};
 }
 const PRESENTATIONS = new Map<string, Readonly<FigurePresentation>>();
