@@ -66,8 +66,8 @@ const lerpPoint=(a:XY,b:XY,t:number):XY=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]
 const CONTACT_HANDS:Record<'shaft'|'bow'|'staff'|'blade'|'unarmed',readonly XY[]>={
  shaft:[[9,-15],[12,-21],[8,-33]],
  bow:[[14,-34],[18,-23],[16,-12]],
- staff:[[11,-25],[17,-21],[14,-16]],
- blade:[[9,-27],[18,-21],[12,-23]],
+ staff:[[18,-33],[25,-21],[20,-16]],
+ blade:[[19,-36],[25,-21],[20,-16]],
  unarmed:[[9,-36],[22,-22],[13,-7]],
 };
 const FREE_HANDS:readonly XY[]=[[1,-41],[14,-22],[5,-7]];
@@ -83,13 +83,18 @@ export function solveFigureRig(f: Figure, pose: UnitAnimationFrame, options: Fig
   const shoulder:XY=[5,-23],supportShoulder:XY=[-5,-23];
   const shaft=weapon==='pike'||weapon==='pitchfork';
   const staff=weapon==='staff'||weapon==='crozier';
-  const ready:XY=shaft?(f.mounted?[9,-16]:[8,-19]):weapon==='bow'?[18,-21]:weapon==='none'?[8,-3]:[12,-12+motion.breathe*.4];
+  // Carry at the hip with the upper arm hanging from the shoulder. A high,
+  // close wrist folds a fixed-length chain into a raised elbow even at rest.
+  // Bows and two-hand shafts retain a higher supporting grip of their own.
+  const ready:XY=shaft?(f.mounted?[13,-12]:[12,-13]):weapon==='bow'?[20,-17]:weapon==='none'?[8,-3]
+    :staff?[14,-14+motion.breathe*.4]:weapon==='greatSword'||weapon==='pick'?[12,-8]:[13,-4+motion.breathe*.4];
   const readyAngle=shaft?(f.mounted?-.2:-.95):weapon==='javelin'?.45:weapon==='bow'||staff||weapon==='none'?0:weapon==='pick'?.24:weapon==='axe'?.15:.32;
   const category=shaft?'shaft':weapon==='bow'?'bow':staff?'staff':weapon==='none'||(weapon==='javelin'||weapon==='sling')&&pose.mode==='attack'?'unarmed':'blade';
   const source=CONTACT_HANDS[category][direction.source+1]!;
   // Residual aim moves the hand only a few pixels; the tool axis receives the
   // full bounded correction. Shoulders and grounded feet never orbit the target.
-  const contact:XY=[source[0]-Math.sin(direction.correction)*2,source[1]+Math.sin(direction.correction)*3];
+  const contact:XY=[source[0]-Math.sin(direction.correction)*2,
+    source[1]+Math.sin(direction.correction)*3-((weapon==='greatSword'||weapon==='club')&&direction.source>0?6:0)];
   const variant=Math.abs(Math.trunc(pose.variant??0))%3;
   const variation=pose.mode==='attack'?[0,-.13,.12][variant]!:0;
   const aimAngle=direction.sourceAngle+direction.correction;
@@ -98,7 +103,7 @@ export function solveFigureRig(f: Figure, pose: UnitAnimationFrame, options: Fig
   const requestedWrist=work?.wrist??lerpPoint(ready,contact,weight);
   // Keep the elbow's anatomical branch through recovery; flipping the IK
   // branch at the ready endpoint would teleport the elbow across the arm.
-  const bend=-1 as const;
+  const bend=1 as const;
   const shield=weapon!=='greatSword'&&weapon!=='bow'&&weapon!=='pick'&&(options.shield??(weapon==='sword'||shaft&&(!!f.mounted||!!f.elite)));
   const twoHanded=weapon==='bow'||weapon==='greatSword'||weapon==='pick'||shaft&&!shield;
   const supportX=weapon==='bow'?-3-.35*(1-motion.recoil)*9:weapon==='greatSword'||weapon==='pick'?0:-9;

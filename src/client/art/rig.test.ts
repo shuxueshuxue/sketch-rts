@@ -16,6 +16,21 @@ const raster=(kind:UnitKind,pose:UnitAnimationFrame,presentation:FigurePresentat
  return b.getImageData(0,0,180,160).data;
 };
 describe('anatomical constraints',()=>{
+ it('carries one-hand blades with a lowered upper arm instead of a raised sideways elbow',()=>{
+  for(const weapon of ['sword','axe','club','javelin','sling'] as const)for(const mode of ['idle','walk'] as const)for(let frame=0;frame<8;frame++){
+   const rig=solveFigureRig(figures.footman!,{mode,frame},{weapon});
+   expect(rig.elbow[1]-rig.shoulder[1],`${weapon}/${mode}/${frame}`).toBeGreaterThan(9);
+   expect(Math.abs(rig.elbow[0]-rig.shoulder[0])).toBeLessThan(6);
+   expect(rig.wrist[1]).toBeGreaterThan(rig.elbow[1]);
+  }
+ });
+ it('extends the striking arm at level contact instead of retaining the close carry fold',()=>{
+  for(const weapon of ['sword','axe','club','staff','crozier'] as const){
+   const rig=solveFigureRig(figures.footman!,{mode:'attack',frame:0,aim:0},{weapon});
+   expect(distance(rig.shoulder,rig.wrist),weapon).toBeGreaterThan(19);
+   expect(rig.elbow[1]).toBeGreaterThan(rig.shoulder[1]);
+  }
+ });
  it('clamps impossible requests without stretching either segment',()=>{
   for(const target of [[0,0],[100,0],[-100,-100],[3,12]] as [number,number][]){
    const result=solveTwoBone([0,0],target);
