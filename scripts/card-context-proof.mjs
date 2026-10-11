@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createServer} from 'vite';
 import WebSocket from 'ws';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),arg=key=>{const i=process.argv.indexOf(key);return i<0?undefined:process.argv[i+1];};
-const output=resolve(arg('--out')??'docs/art/refactor/followup/dirty-mip/world-context.json');await mkdir(dirname(output),{recursive:true});const scratch=await mkdtemp('/tmp/card-context-proof-');
+const output=resolve(arg('--out')??'docs/art/refactor/followup/card-memory/world-context.json');await mkdir(dirname(output),{recursive:true});const scratch=await mkdtemp('/tmp/card-context-proof-');
 let server,browser,socket;const errors=[];
 try{
  await writeFile(resolve(scratch,'index.html'),`<script type="module" src="/@fs${root}/scripts/card-context-fixture.ts"></script>`);
