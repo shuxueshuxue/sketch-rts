@@ -58,5 +58,12 @@
   },
   "formalAllMapAcceptanceComplete": false,
   "relatedSdkPassed": 406,
-  "buildPassed": true
+  "buildPassed": true,
+  "rebasedValidation": {
+    "base": "1c62c6fa5e91e483ce4a6fa12cb107a07eac62d7",
+    "runtimeHead": "93e67381382c20919b6cd0e73206c9afbdcf9bb6",
+    "sdkPassed": 579,
+    "sdkFailed": 0,
+    "buildPassed": true
+  }
 }
