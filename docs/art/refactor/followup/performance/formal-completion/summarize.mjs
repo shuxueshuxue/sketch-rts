@@ -1,0 +1,12 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+const root=resolve(process.argv[2]);
+const dist=values=>{const a=values.toSorted((x,y)=>x-y);return {samples:a.length,meanMs:a.reduce((x,y)=>x+y,0)/a.length,p50Ms:a[Math.floor(a.length*.5)],p95Ms:a[Math.floor(a.length*.95)],maxMs:a.at(-1),above16_7:a.filter(x=>x>16.7).length,above33_3:a.filter(x=>x>33.3).length};};
+const report={method:'Same opt-in sync-object completion hook across sources. Wall includes CPU submission, verified-completion waiting, poll calls and scheduling. Yielded intervals mix pending GPU work and event-loop scheduling; neither overhead subtraction nor GPU-duration inference is valid. Static short measurements are especially schedule-sensitive. Simulation generation is excluded. No historical gl.finish values are replaced.',scenes:{}};
+for(const scene of ['dynamic','all-units','naval']){
+ const data=JSON.parse(await readFile(resolve(root,`webgl-${scene}.json`),'utf8'));
+ if(!data.reliableCompletion||data.errors.length||data.failed.length||!data.validation.passed)throw Error('Unvalidated reliable report '+scene);
+ const times=data.cycles.map(c=>c.artTiming),samples=times.flatMap(t=>t.completion.samples);
+ report.scenes[scene]={sourceCommit:data.artSourceCommit,fixtureSha256:data.artFixtureSha256,benchmarkInputSha256:data.artBenchmarkInputSha256,cycles:times.length,completeWall:dist(times.flatMap(t=>t.gpuCompleteWallValuesMs)),cpuSubmission:dist(times.flatMap(t=>t.submissionValuesMs)),completionWait:dist(samples.map(s=>s.waitMs)),pollCalls:dist(samples.map(s=>s.pollCallMs)),yieldIntervals:dist(samples.flatMap(s=>s.yieldIntervalsMs)),frameIntervals:dist(times.flatMap(t=>t.renderer.frameIntervalsMs)),allCompletionSignals:samples.every(s=>[37146,37148].includes(s.status)),replay:times[0].replay??null,cycleReports:times.map((t,i)=>({index:i,completeWall:t.gpuCompleteWall,cpuSubmission:t.cpuSubmission,cards:t.renderer.cards,render:t.renderer.render,memory:t.renderer.memory,visible:t.renderer.visibleUnitCounts,animationModes:t.renderer.animationModes,finalArt:t.renderer.finalArt,heapAfterGc:data.cycles[i].heapAfterGc,resourcesAfter:data.cycles[i].after})),validation:data.validation};
+}
+await writeFile(resolve(root,'summary.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(Object.fromEntries(Object.entries(report.scenes).map(([s,d])=>[s,{cycles:d.cycles,wall:d.completeWall,cpu:d.cpuSubmission,signals:d.allCompletionSignals}]))));

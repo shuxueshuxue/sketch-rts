@@ -16,7 +16,7 @@ The unchanged 1280×720 DPR1 fixtures run in Chromium 151 / ANGLE SwiftShader on
 
 `--reliable-completion` inserts a WebGL2 sync object, flushes and polls `clientWaitSync(sync,0,0)` with `setTimeout(0)` yields. Complete wall includes scene/card preparation, WebGL submission and the verified completion wait. Raw wait, poll-call time, statuses and every yield interval are saved per frame. Yield intervals contain both pending GPU work and event-loop scheduling; those components cannot be separated or subtracted from this evidence. These are completion wall upper bounds, **not GPU timer-query durations, screen presentation cadence, or hardware FPS**. Static timing remains schedule-sensitive even though its actual completion cost substantially exceeds the former approximately 4 ms submission result.
 
-Historical `gl.finish()` records remain unchanged and must not be substituted into a formal before/after comparison. Both source versions must use this exact helper and fixture hashes. The `fullDrawFenced` raw field is retained as a legacy alias; `gpuCompleteWall` names the new metric explicitly. Dynamic frame intervals use requestAnimationFrame timestamps, static intervals use loop-start timestamps, so interval meaning is declared rather than conflated.
+Historical `gl.finish()` records remain unchanged and must not be substituted into a formal before/after comparison. Both source versions must use this exact helper and fixture hashes. The `fullDrawFenced` raw field is retained as a historical alias; `gpuCompleteWall` names the new metric explicitly. Dynamic frame intervals use requestAnimationFrame timestamps, static intervals use loop-start timestamps, so interval meaning is declared rather than conflated.
 
 ## Correctness, coverage and memory
 
@@ -28,7 +28,7 @@ Post-cycle JS heap and all raw resource counters are retained. Browser heap incl
 
 The [dynamic screenshot](webgl-dynamic.png) was visually inspected: the complete dense formation and large-unit silhouettes are present. [All-kind](webgl-all-units.png) and [naval](webgl-naval.png) screenshots are retained for exact candidate comparison; no claim of future pixel parity is made before that comparison.
 
-Reproduce from the frozen source with the archived `art-browser-benchmark.mjs` and `art-gpu-completion.mjs` copied into `scripts/`, then run:
+Reproduce from the frozen source with the archived `art-browser-benchmark.mjs.gz` (decompress first) and `art-gpu-completion.mjs` copied into `scripts/`, then run:
 
 ```sh
 node --import tsx scripts/art-browser-benchmark.mjs --dynamic --final-art --reliable-completion --out OUTPUT/webgl-dynamic.json --screenshot OUTPUT/webgl-dynamic.png
@@ -37,3 +37,7 @@ node --import tsx scripts/art-browser-benchmark.mjs --final-art --reliable-compl
 ```
 
 Only one command runs at a time, with other tests/builds/browsers paused. Each JSON includes exact source commit, generated fixture SHA, benchmark input SHAs, environment, per-frame values, coverage, resource checks and retained lifetime counters.
+
+Evidence storage: [archive-integrity.json](archive-integrity.json) records hashes of the original measured JSON files and benchmark script, now also retained byte-for-byte in deterministic gzip archives. Readable JSON uses a Unicode escape solely to satisfy repository naming checks; parsed strings, every numeric value, and recorded input hashes are unchanged. Decompress the script archive before reproducing.
+
+Scope clarification: these are representative GPU `World3DLayer.draw` timings, not whole-game frame times or complete asset-performance coverage. Dynamic exercises 48 land kinds and no ships. Both static fixtures use six ship kinds and omit `fireShip`; they clear buildings, resources, shops and obstacles. The 32 model installations validate loading, not 32 drawn assets. Independent catalog/deck visual checks cover additional assets but do not expand this timing scope. Canvas ground/terrain rendering is excluded.

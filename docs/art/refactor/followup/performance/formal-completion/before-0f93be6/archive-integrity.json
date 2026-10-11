@@ -1,0 +1,27 @@
+{
+  "method": "Original measured file bytes are retained in deterministic gzip archives; listed SHA-256 hashes describe decompressed original bytes. Readable JSON applies only an equivalent Unicode string escape and parses to exactly the same data. Numeric samples and input SHA claims are unchanged.",
+  "files": {
+    "art-browser-benchmark.mjs": {
+      "originalSha256": "ed682e1cc925725866bd6dc5cce0d5a0059cc3d78dce2e72964d45b676c3824b",
+      "archive": "art-browser-benchmark.mjs.gz"
+    },
+    "webgl-dynamic.json": {
+      "originalSha256": "ecd1d04015eb5a7cdb45e8d07dc527b8cc9c2b372567bb0de653ff95e7b662b4",
+      "archive": "webgl-dynamic.json.gz",
+      "readableSha256": "0e9205956ff32c1eb67f1292fdf952a45ff80a1d56d82b2ff847a6be87a4aa42",
+      "jsonSemanticEquality": true
+    },
+    "webgl-all-units.json": {
+      "originalSha256": "610582f0f93382e7ff863baeb00ef3a662308abaff77e34bd7be86b9e798afae",
+      "archive": "webgl-all-units.json.gz",
+      "readableSha256": "108cd0c65afc54c4aa3c6f58931c8e13618b277a2f94e5caf884b0816484e81b",
+      "jsonSemanticEquality": true
+    },
+    "webgl-naval.json": {
+      "originalSha256": "3cb4190e41b1d8ef89a601c71e111b03ff588757b0ce3238c7f02ee5667c5f22",
+      "archive": "webgl-naval.json.gz",
+      "readableSha256": "78be9da3a3d706c9fa2bfe266346b631047976cd29c237b89fa79a23d23c1db5",
+      "jsonSemanticEquality": true
+    }
+  }
+}

@@ -1,0 +1,54 @@
+1:44:56 PM [vite] (client) ✨ new dependencies optimized: three/addons/loaders/GLTFLoader.js
+1:44:56 PM [vite] (client) ✨ optimized dependencies changed. reloading
+ART frame 0 -4
+ART frame 0 0
+ART sample 0 0 5105 3368.5
+ART sample 0 1 4231.9000000003725 2072.5
+ART sample 0 2 5186.5 2787.4000000003725
+ART sample 0 3 3487.9000000003725 1147.300000000745
+ART frame 0 4
+ART sample 0 4 4292 1990.7000000011176
+ART sample 0 5 4013 1952.800000000745
+ART sample 0 6 3302.7000000011176 1081.9000000003725
+ART sample 0 7 4517.10000000149 2692.10000000149
+ART frame 0 8
+ART sample 0 8 3694 1878.7999999988824
+ART sample 0 9 4294.5 2783.10000000149
+ART sample 0 10 4855.700000001118 2840.4000000003725
+ART sample 0 11 4999.299999998882 2961.2999999988824
+{"artCycle":0,"artTiming":{"meanMs":4331.633333333612,"p50Ms":4294.5,"p95Ms":5186.5,"maxMs":5186.5},"modes":{"walk":8187,"cast":704,"idle":2710,"attack":387},"visible":967}
+ART frame 1 -4
+ART frame 1 0
+ART sample 1 0 4727.4000000003725 3245.800000000745
+ART sample 1 1 3808.89999999851 1956
+ART sample 1 2 5057.199999999255 2818.5999999996275
+ART sample 1 3 3430.5 1147.7999999988824
+ART frame 1 4
+ART sample 1 4 4388.0999999996275 2050.7000000011176
+ART sample 1 5 4066.2999999988824 1909.5
+ART sample 1 6 3516.5 1229.300000000745
+ART sample 1 7 4874.9000000003725 3055.199999999255
+ART frame 1 8
+ART sample 1 8 4130.699999999255 2213.5
+ART sample 1 9 4358.89999999851 2867.0999999996275
+ART sample 1 10 4863.199999999255 2871
+ART sample 1 11 4909.199999999255 2905.39999999851
+{"artCycle":1,"artTiming":{"meanMs":4344.316666666108,"p50Ms":4388.0999999996275,"p95Ms":5057.199999999255,"maxMs":5057.199999999255},"modes":{"walk":8187,"cast":704,"idle":2710,"attack":387},"visible":967}
+ART frame 2 -4
+ART frame 2 0
+ART sample 2 0 5082 3460
+ART sample 2 1 4055.300000000745 2062.300000000745
+ART sample 2 2 5230.799999998882 2951.4000000003725
+ART sample 2 3 3491.0999999996275 1183
+ART frame 2 4
+ART sample 2 4 4352.39999999851 1998.0999999996275
+ART sample 2 5 4025.5 1916.199999999255
+ART sample 2 6 3340.9000000003725 1112.4000000003725
+ART sample 2 7 4639.9000000003725 2785.300000000745
+ART frame 2 8
+ART sample 2 8 3761.2000000011176 1904.9000000003725
+ART sample 2 9 4307.700000001118 2769.800000000745
+ART sample 2 10 4907.300000000745 2898.7000000011176
+ART sample 2 11 4770.699999999255 2786.800000000745
+{"artCycle":2,"artTiming":{"meanMs":4330.400000000062,"p50Ms":4352.39999999851,"p95Ms":5230.799999998882,"maxMs":5230.799999998882},"modes":{"walk":8187,"cast":704,"idle":2710,"attack":387},"visible":967}
+{"output":"/workspace/sketch-rts/docs/art/refactor/followup/performance/formal-completion/after-e06e047/webgl-dynamic.json","passed":true,"realRenderInteractionCases":36,"modelHttpRequests":32,"modelsInstalled":{"ships/transport":1,"ships/cutter":1,"ships/warship":1,"ships/shipOfTheLine":1,"ships/carrier":1,"ships/bombardShip":1,"buildings/townHall":1,"buildings/barracks":1,"buildings/archeryRange":1,"ships/fireShip":1,"buildings/stables":1,"buildings/sanctum":1,"buildings/workshop":1,"buildings/defenseTower":1,"buildings/moonWell":1,"buildings/emberForge":1,"buildings/cinderSpire":1,"buildings/emberShrine":1,"buildings/ashenHall":1,"buildings/farm":1,"buildings/shipyard":1,"buildings/citadel":1,"buildings/camp":1,"buildings/shop":1,"buildings/well":1,"buildings/statue":1,"buildings/beacon":1,"buildings/fort-lance":1,"buildings/fort-flame":1,"buildings/fort-mortar":1,"buildings/fort-ward":1,"buildings/fort-wall":1},"markerResourcesAfter":[{"materials":{"allocated":1,"disposed":1,"live":0},"surfaceGeometry":{"allocated":1,"disposed":1,"live":0},"instanceMeshes":{"allocated":29,"disposed":29,"live":0},"instanceGeometry":{"allocated":29,"disposed":29,"live":0},"hullGeometry":{"allocated":6,"disposed":6,"live":0}},{"materials":{"allocated":1,"disposed":1,"live":0},"surfaceGeometry":{"allocated":1,"disposed":1,"live":0},"instanceMeshes":{"allocated":29,"disposed":29,"live":0},"instanceGeometry":{"allocated":29,"disposed":29,"live":0},"hullGeometry":{"allocated":6,"disposed":6,"live":0}},{"materials":{"allocated":1,"disposed":1,"live":0},"surfaceGeometry":{"allocated":1,"disposed":1,"live":0},"instanceMeshes":{"allocated":29,"disposed":29,"live":0},"instanceGeometry":{"allocated":29,"disposed":29,"live":0},"hullGeometry":{"allocated":6,"disposed":6,"live":0}}],"heapAfterGc":[43608176,44178604,44359148],"cpu":[{"static":4.684166666663562,"updated":4.2858333332308876},{"static":4.584166666663562,"updated":4.556666666750486},{"static":4.449166666669771,"updated":4.993333333389213}]}
