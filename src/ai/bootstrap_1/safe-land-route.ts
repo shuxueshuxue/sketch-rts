@@ -1,5 +1,4 @@
-import { routeClearsDisks, routeTravelTicks } from '../../shared/route-selection';
-import { walkRoute } from '../../shared/terrain';
+import { groundApproachRoute, routeClearsDisks, routeTravelTicks } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { Point } from '../policy/spatial';
@@ -16,7 +15,7 @@ export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
 export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]): number | undefined {
   const ticks = routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed);
   if (ticks === undefined) return undefined;
-  const route = walkRoute(snapshot.map, unit, goal);
+  const route = groundApproachRoute(snapshot.map, unit, goal);
   if (route === undefined) return undefined;
   const horizon = THINK_TICKS + ticks, points = [unit, ...route];
   const disks = foes.map(foe => ({ x: foe.x, y: foe.y, radius: mountedThreatReach(snapshot, foe, unit, horizon)
