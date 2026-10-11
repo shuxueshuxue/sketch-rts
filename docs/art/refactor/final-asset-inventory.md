@@ -18,7 +18,7 @@
 | 人形与骑乘 | 55 目录中的相应子集 | `appearance` 定义身体、衣装、默认装备；`rig` 解算肢体及挂点；`body-parts` 画部位；`equipment` 画刚性武器；`materials` 管表面与笔触 | 世界、肖像、装备面板使用同一身体/装备组合；实际手持装备只读映射进入外观缓存键，不借换武器改变战斗规则 |
 | 原生非人形 | 兽类、蜘蛛、巨人、鱼人、灵体等目录子集 | `painted-creatures` 的原生身体与局部链；共同接收动作和方向输入 | 保留四足、颈部/咬合、嘴部、巨人或鱼人的手臂结构；移除复制人体动作的需要，不把所有动物改成人形 |
 | 工程单位 | siegeRam、ballista、catapult、organGun | `warfare-units`、工程专用几何与既有物理发射位置 | 保留车架、炮身及武器交付方式；共享动作事件入口，原生硬点不被人形发射挂点覆盖 |
-| 默认尸体入口 | 55 目录覆盖 | `atlas-art.drawAtlasCorpse` → `corpses`；`corpseAppearanceFor` 决定阵营默认衣装 | 独立低矮折叠轮廓，非旋转活体贴图；缓存键包含角色、变体与阵营衣装 |
+| 默认尸体入口 | 55 目录覆盖 | `atlas-art.drawAtlasCorpse` → `corpses`；`corpseAppearanceFor` 消费死亡时装备及阵营事实 | 独立低矮折叠轮廓，非旋转活体贴图；缓存键包含角色、变体、阵营衣装及死亡装备；甲板遗体使用独立支撑变换与透明批次 |
 | 剧情角色与剧情遗骸 | Ashen March 23 个 authored 角色模型 | `campaigns/ashen-march/models` → `storyFigure/storyCreature`；模型附带 `remains` 与 release 回调 | 实际迁出重复身体绘制，保留角色专有冠饰、胡须、披巾、灯笼等细节；视觉体型、尺寸与遗骸依剧情模型，不误套模拟基类的身体 |
 | 规则建筑 | 14 | `building-models` 专用几何、`model-library` GLB、`model-portraits` | 保留建筑专用表达；清单、资源加载与头像资源共享，不套角色骨架 |
 | 中立建筑/固定设施 | 11 site | `SITE_MODELS`：citadel、shop、camp、well、statue、beacon 与 5 种 fort | 类型和加载名单统一至 `model-manifest`，不复制字符串类型清单 |
@@ -33,7 +33,7 @@
 | 底纸、地表、水面 | 连续地形数据 | `terrain-art` 分块、`terrain-materials`、`water-art` / WebGL water | 审查后保留既有专用系统；不是遗漏迁移，不强行作为骨架或角色贴图 |
 | 剧情道具 | 22 `CORE_SCENERY` 键 | `art/scenery` → story prop painter | 保留剧情插画及燃烧/破损状态，不误并入规则建筑目录 |
 | 物品 | 17 `ItemKind` | `items.drawPaintedItem` → 世界掉落、商店、装备栏 | 已有统一实现保留；实际穿戴/持握状态经 `unit-appearance` 组合，UI 和世界不各画一套武器 |
-| 世界与 UI 单位肖像 | 55 单位＋剧情模型；建筑/site 按相应目录 | `atlas-art`、`portrait-fit`、`model-portraits`、命令与队列 portrait | 装备和阵营衣装共用世界定义并进入缓存键；实际训练菜单、队列和选择面板已接通 |
+| 世界人物与 UI 肖像 | 世界覆盖 55 单位及剧情模型；UI 单位肖像覆盖 55 kind，建筑/site 按相应目录；没有独立剧情模型肖像入口 | `atlas-art`、`portrait-fit`、`model-portraits`、命令与队列 portrait | 装备和阵营衣装共用世界定义并进入缓存键；实际训练菜单、队列和选择面板已接通 |
 | 技能/状态图标 | 27 手绘 SVG，基线 29 减 2 | `ability-icons` manifest → 技能、状态及命令显示 | 删除 emberMend/cinderSoul 冗余图标；其他技能与状态 SVG 保留语义专用表达，不复制动作 painter |
 | 命令字形 | 12 命令键 | `command-icons.commandIconMarkup` | 保留语义 UI 小图形；与世界武器、衣料不是同一职责 |
 
@@ -55,4 +55,4 @@
 4. [生产与 AI 接口 focused 日志](validation/shared-unit-focused.log)：12 文件、132 测试通过。该范围不是全局回归。
 5. [存档/网络验证日志](validation/unit-save-net.log)与[迁移边界](save-rules-migration.md)：规则版本分离、一次性旧存档转换、拒绝跨规则回放与联机混跑。冻结 AI 副本和旧验收阈值未因资产整理而修改。
 
-局限：尸体没有生前装备快照；首见投射物时已消失的来源不能精确复原历史装备/甲板附着。旧效果缺少释放或受击事实时不猜测新效果。血迹预算饱和会淘汰最旧残留，越舷滴落裁掉，读档/回跳清空历史表现残留。与正常单位动作不同，专用船体和地形仍依其原有系统。全量测试、构建、最终提交上的联合视觉审查与独占性能结果由最终验证报告给出；本文不宣称已经全部通过或渲染性能已经提升。
+死亡清理已在掉落前捕获装备、阵营与甲板只读事实；剧情活体、遗骸和首见死亡来源的发射挂点共享其组合。见 [装备实证](final-equipment/README.md)、[甲板遗体实证](followup/deck-remains/README.md)。缺少这些事实的旧尸体不能反推历史装备/甲板；若来源仍存活但在首次观察释放事件前已经换装，现有事件不保存该次释放的完整装备快照，这个边界仍存在。旧效果缺少释放或受击事实时不猜测新效果。血迹预算饱和会淘汰最旧残留，越舷滴落裁掉，读档/回跳清空历史表现残留。与正常单位动作不同，专用船体和地形仍依其原有系统。全量测试、构建、最终提交上的联合视觉审查与独占性能结果由最终验证报告给出；本文不宣称已经全部通过或渲染性能已经提升。
