@@ -3,6 +3,7 @@ import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { recoverBootstrapFront } from './front-recovery';
+import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
@@ -16,7 +17,7 @@ import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { bootstrapExpansionMine } from './expansion-target';
-import { availableV6Army, planV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
+import { availableV6Army, planV6Army, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
@@ -131,6 +132,9 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
+    defenseTarget: coveredDefenseTarget,
+    towerWaiting: holdCoveredPost,
+    waitForTowers: waitsForTowers,
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
