@@ -4,10 +4,18 @@ import { onOwnGround, withoutShips } from "./ground";
 
 const noTeamsQueryKey = {};
 const snapshotQueryCache = new WeakMap<GameSnapshot, WeakMap<object, SnapshotQuery>>();
+const budgetWorlds = new WeakMap<GameSnapshot, GameSnapshot>();
+
+/** A gold-only view keeps the world arrays and player keys used by query methods. */
+export function withAiGoldBudget(world: GameSnapshot, owner: PlayerId, gold: number) {
+  const budget = { ...world, players: { ...world.players, [owner]: { ...world.players[owner]!, gold } } };
+  budgetWorlds.set(budget, world);
+  return budget;
+}
 // The last query handed out: a plan asks for the same snapshot's query thousands of times in a row, so it skips the maps.
 let lastQuery: { snapshot: GameSnapshot; key: object; query: SnapshotQuery } | undefined;
 
-export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<PlayerId, string>>) {
+export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<PlayerId, string>>): SnapshotQuery {
   const key = teams ?? noTeamsQueryKey;
   if (lastQuery && lastQuery.snapshot === snapshot && lastQuery.key === key) return lastQuery.query;
   let byTeams = snapshotQueryCache.get(snapshot);
@@ -17,7 +25,9 @@ export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<P
   }
   let query = byTeams.get(key);
   if (!query) {
-    query = createSnapshotQuery(snapshot, { ...(teams ? { teams } : {}), excludeIssuedWeapons:true });
+    const world = budgetWorlds.get(snapshot);
+    query = world ? { ...aiSnapshotQuery(world, teams), snapshot }
+      : createSnapshotQuery(snapshot, { ...(teams ? { teams } : {}), excludeIssuedWeapons:true });
     byTeams.set(key, query);
   }
   lastQuery = { snapshot, key, query };

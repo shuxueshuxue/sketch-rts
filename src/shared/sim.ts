@@ -4381,12 +4381,15 @@ function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: n
 function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: number, test: (unit: Unit) => boolean): Unit | undefined {
   const index = game.unitSpatial;
   if (!index) return game.units.find(unit => !isInCabin(unit) && test(unit));
-  const radius = Math.ceil(range / index.cellSize);
-  const bx = Math.floor(point.x / index.cellSize);
-  const by = Math.floor(point.y / index.cellSize);
-  for (let ox = -radius; ox <= radius; ox += 1) {
-    for (let oy = -radius; oy <= radius; oy += 1) {
-      const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
+  // Both callers reject bodies outside their physical range. Keep the same
+  // x-then-y visit order, but omit cells the range cannot reach and empty extents.
+  const size = index.cellSize;
+  const right = Math.min(index.right, Math.floor((point.x + range) / size));
+  const bottom = Math.min(index.bottom, Math.floor((point.y + range) / size));
+  const top = Math.max(index.top, Math.floor((point.y - range) / size));
+  for (let x = Math.max(index.left, Math.floor((point.x - range) / size)); x <= right; x += 1) {
+    for (let y = top; y <= bottom; y += 1) {
+      const bucket = index.buckets.get(numericBucketKey(x, y));
       if (!bucket) continue;
       for (const unit of bucket) if (!isInCabin(unit) && test(unit)) return unit;
     }
