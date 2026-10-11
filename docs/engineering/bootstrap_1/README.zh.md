@@ -4,9 +4,9 @@
 
 ## 当前记录（2026-10-11）
 
-最新公共批次为 [#310 矿线反击](./expedition-counterraid-release.zh.md) 和 [#311 道路范围](./assault-road-distance-release.zh.md)，均完成精确提交的 CI、合并和首次生产部署，随后 [#312 道路营地归属](./camp-territory-roads-release.zh.md) 也完成精确 CI 与首次生产部署，当前发布提交为 `ead6c5338c2db4b9b67bcb3fba6498436f57c5b2`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这三批新增正式胜局为零。
+最新公共批次 [#310 矿线反击](./expedition-counterraid-release.zh.md)、[#311 道路范围](./assault-road-distance-release.zh.md)、[#312 道路营地归属](./camp-territory-roads-release.zh.md)、[#313 扩张目标](./expansion-target-cap-release.zh.md) 均完成精确提交的 CI、合并和首次生产部署，当前发布提交为 `88d33bd68daf9734ac6a1d264bd5661165b70464`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这四批新增正式胜局为零。
 
-同一实际射手开局快照中，#310 保住更多工人并建立第二基地，但双方主力都全部阵亡；它是局部修复证据，不是胜率证明。无对手的完整 Grand Estuary 地形观察在 12000 tick 建出第三基地、19 名士兵和 16 名工人，零单位损失；去掉了敌方单位及建筑，因此也不是正式对阵证据。
+同一实际射手开局快照中，#310 保住更多工人并建立第二基地，但双方主力都全部阵亡；它是局部修复证据，不是胜率证明。[无对手河湾续局](./solo-expansion-observation.zh.md) 清掉全部四十野怪、零永久损失，#313 的同世界对照在 24000 tick 从五处有效矿点增至六处，下一基地仍在施工。[雇佣营与岛图观察](./global-objectives-observation.zh.md) 有实际雇佣、购物及岛矿施工，也仍有清营和登陆损失；这些不能算正式胜局或全图战略已经完成。
 
 骑射完整清营候选正在做原生 SDK 与回归检查，尚未发布。以前撤回的拥挤、出口、开火窗口组合及短窗口的误判，保存在 [试验记录](./mounted-terrain-experiments.zh.md)。全地图矩阵与未见种子验收仍未完成；下文历史胜局、历史矩阵和不同引擎的结果不能替代当前公共版本的验收。
 
