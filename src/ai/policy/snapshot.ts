@@ -26,8 +26,11 @@ export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<P
   let query = byTeams.get(key);
   if (!query) {
     const world = budgetWorlds.get(snapshot);
-    query = world ? { ...aiSnapshotQuery(world, teams), snapshot }
-      : createSnapshotQuery(snapshot, { ...(teams ? { teams } : {}), excludeIssuedWeapons:true });
+    // An identity team map has exactly the query's default owner relations.
+    // Intern it once; hot callers keep the requested key and fast last-query hit.
+    if (teams && Object.entries(teams).every(([owner, team]) => owner === team)) query = aiSnapshotQuery(snapshot);
+    else if (world) query = { ...aiSnapshotQuery(world, teams), snapshot };
+    else query = createSnapshotQuery(snapshot, { ...(teams ? { teams } : {}), excludeIssuedWeapons:true });
     byTeams.set(key, query);
   }
   lastQuery = { snapshot, key, query };
