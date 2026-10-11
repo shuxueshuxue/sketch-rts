@@ -1,6 +1,6 @@
 # allocation-only 与 alpha-mask 后续隔离验证：ready
 
-2026-10-11；仅准备脚本并通过 `node --check`，**尚未运行GL**。保留当前dirty-mip生产阶段及已通过原实验，不修改生产。执行顺序由root协调：baseline正式采样 → GPUstrict → 本微实验。
+2026-10-11；本方案先通过语法检查，后在baseline正式采样、GPUstrict结束后按root授权执行。256冒烟和含512的完整矩阵均通过，见 [null-array-memory-results.md](null-array-memory-results.md)。生产保持未修改。
 
 新fixture：`null-array-memory-fixture.js`；使用现有runner的 `--fixture` 入口，原默认scratch fixture/结果不改。
 
@@ -18,7 +18,7 @@
 
 ```sh
 node docs/art/refactor/followup/performance/scratch-mip-proof.mjs --fixture docs/art/refactor/followup/performance/null-array-memory-fixture.js --query 'sizes=256' --out docs/art/refactor/followup/performance/null-array-memory-smoke.json
-node docs/art/refactor/followup/performance/scratch-mip-proof.mjs --fixture docs/art/refactor/followup/performance/null-array-memory-fixture.js --out docs/art/refactor/followup/performance/null-array-memory-result.json
+node docs/art/refactor/followup/performance/scratch-mip-proof.mjs --fixture docs/art/refactor/followup/performance/null-array-memory-fixture.js --query 'sizes=256,320,512,640' --out docs/art/refactor/followup/performance/null-array-memory-result.json
 ```
 
 这仍不是生产内存优化：还需重组pendingRGBA生命周期、实际cache/compaction事务、全部材质/拾取引用、恢复帧卡顿及真实RSS/ArrayBuffer峰值。现阶段先验证公开API和精确拾取表达，不将后续工作混入当前dirty-mip可回退成绩。
