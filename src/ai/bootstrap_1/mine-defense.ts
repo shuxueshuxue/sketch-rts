@@ -7,7 +7,7 @@ import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
-import { routeArrivals, routeWithinDistance } from '../../shared/route-selection';
+import { nearestByRoute, routeArrivals, routeWithinDistance } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
@@ -134,6 +134,11 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
       .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
+    campOnOwnSide: (world, point) => {
+      const own = nearestByRoute(snapshot.map, [world.home, ...world.ownHalls], point, 'land')!;
+      const enemy = nearestByRoute(snapshot.map, world.enemies.flatMap(enemy => enemy.bases.map(base => base.hall)), point, 'land');
+      return enemy === undefined || walkingDistance(snapshot.map, own, point, 'land')! < walkingDistance(snapshot.map, enemy, point, 'land')!;
+    },
     defenseTarget: coveredDefenseTarget,
     towerWaiting: holdCoveredPost,
     waitForTowers: waitsForTowers,
