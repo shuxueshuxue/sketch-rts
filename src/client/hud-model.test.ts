@@ -177,3 +177,13 @@ it('inspects a foreign entity while keeping its command authority empty', () => 
   expect(buildSelectionGroups(snapshot,selected,'enemy','player')[0]?.kind).toBe('knight');
   expect(focusedSelectionEntities(snapshot,'enemy','player')).toEqual({units:[],buildings:[]});
 });
+
+import { goldReadout } from './hud-model';
+it('shows whole spendable gold without rounding up or leaking fractional balances', () => {
+  expect(goldReadout(undefined)).toBe('?');
+  expect(goldReadout(0)).toBe('0');
+  expect(goldReadout(0.99)).toBe('0');
+  expect(goldReadout(49.99)).toBe('49');
+  expect(goldReadout(50)).toBe('50');
+  expect(goldReadout(1234567.89)).toBe('1234567');
+});

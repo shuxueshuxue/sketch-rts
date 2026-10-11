@@ -1,3 +1,4 @@
+import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
@@ -376,7 +377,7 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     if (!player) throw new Error(`Unknown scenario player ${owner}`);
     if (seed.gold !== undefined) {
       if (!Number.isFinite(seed.gold) || seed.gold < 0) throw new Error(`Invalid scenario gold for ${owner}`);
-      player.gold = seed.gold;
+      player.gold = roundGold(seed.gold);
     }
     for (const [upgradeKind, level] of Object.entries(seed.upgrades ?? {}) as [UpgradeKind, number][]) {
       if (!Number.isInteger(level) || level < 0) throw new Error(`Invalid scenario ${upgradeKind} level for ${owner}`);
@@ -623,7 +624,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (index < 0) return;
     const [job] = building.queue.splice(index, 1);
     const refund=job!.paidGold ?? UNIT_DEFS[job!.unitKind].cost;
-    playerState(game, owner).gold += refund;
+    playerState(game, owner).gold = addGold(playerState(game, owner).gold, refund);
     game.match.stats.goldSpent[owner] = Math.max(0, (game.match.stats.goldSpent[owner] ?? 0) - refund);
     updateSupplyState(game);
     return;
@@ -1798,7 +1799,7 @@ function updateMineOrder(game: Game, unit: Unit) {
   }
   if (isPlayerId(unit.owner)) {
     const player = playerState(game, unit.owner);
-    player.gold += upkeepGoldIncome(unit.carryingGold, player.supplyUsed);
+    player.gold = addGold(player.gold, upkeepGoldIncome(unit.carryingGold, player.supplyUsed));
   }
   unit.carryingGold = 0;
   unit.order = resource && resource.amount > 0 ? { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 } : { type: "idle" };
@@ -3487,7 +3488,7 @@ function awardKillXp(game: Game, attacker: Unit, target: Unit) {
 function awardNeutralGoldBounty(game: Game, owner: PlayerId, target: Unit) {
   const bounty = unitRules(game, target).goldBounty ?? 0;
   if (bounty <= 0) return;
-  playerState(game, owner).gold += bounty;
+  playerState(game, owner).gold = addGold(playerState(game, owner).gold, bounty);
   addEffect(game, "goldBounty", target.x, target.y, seconds(1.2), { owner, amount: bounty });
 }
 
@@ -3588,7 +3589,7 @@ function spendGold(game: Game, owner: PlayerId, amount: number) {
 
 function spend(player: PlayerState, amount: number) {
   if (player.gold < amount) throw new Error(`Need ${amount} gold`);
-  player.gold -= amount;
+  player.gold = addGold(player.gold, -amount);
 }
 
 function playerState(game: Game, owner: PlayerId) {

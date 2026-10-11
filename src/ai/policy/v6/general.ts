@@ -1,6 +1,6 @@
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import { canCast } from "../../../shared/ability-cooldowns";
-import { HIGH_UPKEEP_SUPPLY, constructionStartHp, unitMover } from "../../../shared/catalog";
+import { constructionStartHp, unitMover } from "../../../shared/catalog";
 import { constructionWorkers } from "../../../shared/construction";
 import { walkingDistance } from "../../../shared/terrain";
 import type { V6PolicyMemory } from "../../memory";
@@ -70,6 +70,8 @@ const V8_ATTACK_MARGIN = 1.6;
 export function attackMargin(options: AiPolicyContext) {
   return isV8Policy(options) ? V8_ATTACK_MARGIN : ATTACK_MARGIN;
 }
+// Preserve the commander's existing large-army attack trigger independently of mining tax.
+const STALE_ARMY_SUPPLY = 81;
 const IDLE_TICKS = 90 * 20;
 const JOIN_RANGE = 700;
 const WORN_SHARE = 0.5;
@@ -289,11 +291,11 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
   // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
-  // defense (the idle army's test below). Held that long at high upkeep, where its gold comes in at 40% and its army grows
-  // by a soldier a minute, it goes whatever stands at the target: two such pairs stood at 83 to 101 supply from 7:21 to the
+  // defense (the idle army's test below). Held that long with a large army, it goes whatever stands at the target. The original
+  // 40%-income balance produced these stalled pairs: two such pairs stood at 83 to 101 supply from 7:21 to the
   // end, each army's middle 1600 from the other's natural (base-sides-2).
   const stale = isV9Policy(options) && current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= V9_STALE_TICKS;
-  const maxed = stale && (snapshot.players[owner]?.supplyUsed ?? 0) >= HIGH_UPKEEP_SUPPLY;
+  const maxed = stale && (snapshot.players[owner]?.supplyUsed ?? 0) >= STALE_ARMY_SUPPLY;
   const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
   if (target && regrouped && ready && (maxed || (committed && (marching >= target.need || (idle && marching >= target.defended))))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : maxed && marching < target.defended ? "maxed" : "idleArmy"}`);
