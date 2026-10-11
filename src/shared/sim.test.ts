@@ -2211,7 +2211,9 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel with no neutral camps or mercenary camps", () => {
-    const result = runTwoAiDuel("bareDuel");
+    // Continuous upkeep slows the mirror: 6 kills at 30 minutes, 12 at 40.
+    // Keep the combat assertion and the same total CPU ceiling.
+    const result = runTwoAiDuel("bareDuel", 48_000);
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 

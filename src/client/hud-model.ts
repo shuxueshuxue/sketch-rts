@@ -86,7 +86,7 @@ function selectableSelectionEntities(snapshot: GameSnapshot, selectedIds: Set<st
   ];
 }
 
-/** Show only whole, spendable gold; fractional cents remain in simulation state. */
+/** Show only whole, spendable gold; fractional gold remains in simulation state. */
 export function goldReadout(gold: number | undefined) {
   return gold === undefined ? "?" : String(Math.floor(gold));
 }

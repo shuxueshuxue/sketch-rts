@@ -41,6 +41,10 @@ describe("mining upkeep and cent settlement", () => {
     expect(miningIncomeRate(1e12)).toBeLessThan(1e-9);
     expect(upkeepGoldIncome(10, 1e12)).toBe(0);
   });
+  it("normalizes scenario starting funds to cents", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], scenario: { players: { player: { gold: 50.126 } } } });
+    expect(game.players.player.gold).toBe(50.13);
+  });
   it("rounds deliveries to cents and adds cents without accumulated floating error", () => {
     expect(upkeepGoldIncome(10, 100)).toBe(3.33);
     expect(upkeepGoldIncome(10, 55)).toBe(6.67);
@@ -88,11 +92,14 @@ describe("mining upkeep and cent settlement", () => {
   it("keeps building capacity uncapped and charges full population including queued units", () => {
     const { game, hall } = scene();
     for (let i = 0; i < 40; i++) game.buildings.push(createBuilding(`farm-${i}`, "player", "farm", 500, 500, true));
-    stepGame(game);
-    expect(game.players.player.supplyCap).toBeGreaterThan(130);
     const before = game.players.player.supplyUsed;
     issuePlayerCommand(game, "player", { type: "train", buildingId: hall.id, unitKind: "worker" });
     expect(game.players.player.supplyUsed).toBe(before + UNIT_DEFS.worker.supplyUsed);
+    expect(game.players.player.supplyCap).toBeGreaterThan(130);
+    for (let i = 0; i < 131; i++) game.spawnUnit("player", "worker", 500, 3000);
+    issuePlayerCommand(game, "player", { type: "train", buildingId: hall.id, unitKind: "worker" });
+    expect(game.players.player.supplyUsed).toBeGreaterThan(130);
+    expect(hall.queue).toHaveLength(2);
   });
   it("pays an untaxed neutral bounty at high population and retains the fractional balance", () => {
     const { game } = scene();

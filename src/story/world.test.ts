@@ -26,3 +26,16 @@ describe("story medical healing", () => {
     expect(game.effects.filter(effect => effect.type === "heal")).toHaveLength(2);
   });
 });
+
+ it("settles story gold in cents without taxing rewards or losing fractional balances", () => {
+   const game = createGame("bareDuel", { aiPlayers: [] });
+   const world = new World(game, new Stage(game, () => instant(game.tick)), {}, () => .5);
+   game.players.player.gold = 0.29;
+   game.players.player.supplyUsed = 130;
+   world.gold("player", -0.28);
+   expect(game.players.player.gold).toBe(0.01);
+   world.gold("player", 20.126);
+   expect(game.players.player.gold).toBe(20.14);
+   world.gold("player", -100);
+   expect(game.players.player.gold).toBe(0);
+ });
