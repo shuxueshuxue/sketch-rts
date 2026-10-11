@@ -1,5 +1,5 @@
 import { unitMover } from '../../shared/catalog';
-import { canEquip, freeItemSlot } from '../../shared/equipment';
+import { canEquip, freeItemSlot, itemsFor } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
 import { standsAtShop } from '../../shared/shop';
 import { walkingDistance } from '../../shared/terrain';
@@ -40,12 +40,18 @@ function shoppingAssignment(snapshot: GameSnapshot, owner: PlayerId, options: Ai
   const buyers = intel.army.filter(unit => !unit.deck && unit.expiresTick === undefined && unitMover(unit.kind) === 'land'
     && canEquip(unit) && unit.hp >= unit.maxHp * .7 && !options.memory.unitClaims[unit.id]
     && !camp?.group.includes(unit.id) && !options.memory.v6?.raid?.unitIds.includes(unit.id)
-    && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id))
+    && (unit.kind === 'horseArcher' || !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)))
     && !occupied.has(unit.id) && ['idle', 'hold', 'move', 'attackMove'].includes(unit.order.type));
   const foes = armedFoes(snapshot, owner, options);
   const towers = snapshot.buildings.filter(building => building.kind === 'defenseTower' && foes.includes(building));
   return snapshot.shops!.flatMap(shop => buyers.flatMap(unit => {
-    const purchase = shopPurchaseAt(snapshot, owner, shop, intel.army, [unit], towers);
+    // A detached rider equips its own mobility; army scrolls travel with the main formation.
+    const purchase = unit.kind === 'horseArcher'
+      ? shop.goods.some(good => good.kind === 'speedBoots' && good.stock > 0)
+        && !itemsFor(snapshot, unit).some(item => item.kind === 'speedBoots')
+        && freeItemSlot(snapshot, unit, 'speedBoots') === 'feet'
+        ? { shop, unit, kind: 'speedBoots' as const } : undefined
+      : shopPurchaseAt(snapshot, owner, shop, intel.army, [unit], towers);
     if (!purchase || !freeItemSlot(snapshot, unit, purchase.kind)) return [];
     const ticks = safeLandTravelTicks(snapshot, unit, shop, foes), home = nearestByRoute(snapshot.map, halls, unit, 'land');
     return ticks === undefined || !home ? [] : [{ ...purchase, ticks, home }];

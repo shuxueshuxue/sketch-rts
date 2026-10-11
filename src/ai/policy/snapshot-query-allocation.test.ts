@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { enemyCombatUnitsNear } from './snapshot';
+import { aiSnapshotQuery, enemyCombatUnitsNear, withAiGoldBudget } from './snapshot';
 import { enemyCombatUnitsNear as productionCombatUnitsNear } from '../policy-v2prod/snapshot';
 import { createUnit } from '../../shared/map';
 import { createGame, snapshotGame } from '../../shared/sim';
@@ -15,6 +15,50 @@ function scene() {
 }
 
 describe('snapshot query allocation reductions', () => {
+  it('shares identity team queries with default relations while retaining alliances and budget snapshots', () => {
+    const { snapshot, teams } = scene();
+    snapshot.units.push(createUnit('own', 'north', 'worker', 0, 0), createUnit('ally', 'friend', 'footman', 0, 0),
+      createUnit('enemy', 'foe', 'footman', 3, 4));
+    const identity = { north: 'north', friend: 'friend', foe: 'foe', dormant: 'dormant' };
+    const plain = aiSnapshotQuery(snapshot);
+    expect(aiSnapshotQuery(snapshot, identity)).toBe(plain);
+    expect(aiSnapshotQuery(snapshot, { ...identity })).toBe(plain);
+    expect(plain.opponentPlayerIds('north')).toEqual(['foe', 'friend']);
+    const allied = aiSnapshotQuery(snapshot, teams);
+    expect(allied).not.toBe(plain);
+    expect(allied.opponentPlayerIds('north')).toEqual(['foe']);
+    const list = plain.unitsFor('foe'); list.pop();
+    expect(aiSnapshotQuery(snapshot, identity).unitsFor('foe').map(unit => unit.id)).toEqual(['enemy']);
+    const budget = withAiGoldBudget(snapshot, 'north', 17), query = aiSnapshotQuery(budget, identity);
+    expect(query).toBe(aiSnapshotQuery(budget));
+    expect(query.snapshot).toBe(budget);
+    expect(query.snapshot.players.north!.gold).toBe(17);
+    expect(allied.playerUnits('north', 'allied').map(unit => unit.id)).toEqual(['ally']);
+  });
+  it('keeps each explicit budget view and team interpretation while sharing an immutable world', () => {
+    const { snapshot, teams } = scene();
+    snapshot.units.push(createUnit('own', 'north', 'worker', 0, 0), createUnit('ally', 'friend', 'footman', 0, 0),
+      createUnit('enemy', 'foe', 'footman', 3, 4));
+    const budget = withAiGoldBudget(snapshot, 'north', 17);
+    const later = withAiGoldBudget(budget, 'north', 3);
+    const query = aiSnapshotQuery(budget, teams), child = aiSnapshotQuery(later, teams);
+    expect(query.snapshot).toBe(budget);
+    expect(child.snapshot).toBe(later);
+    expect(query.snapshot.players.north!.gold).toBe(17);
+    expect(child.snapshot.players.north!.gold).toBe(3);
+    expect(aiSnapshotQuery(snapshot, teams).snapshot).toBe(snapshot);
+    expect(query.opponentPlayerIds('north')).toEqual(['foe']);
+    expect(aiSnapshotQuery(budget).opponentPlayerIds('north')).toEqual(['foe', 'friend']);
+    const units = query.playerUnits('north', 'enemy');
+    units.reverse(); units.pop();
+    expect(child.playerUnits('north', 'enemy').map(unit => unit.id)).toEqual(['enemy']);
+    expect(child.opponentUnitsNear('north', { x: 0, y: 0 }, 5)).toEqual(query.opponentUnitsNear('north', { x: 0, y: 0 }, 5));
+    expect(child.unitById('enemy')).toBe(snapshot.units[2]);
+    const other = scene().snapshot;
+    other.units.push(createUnit('different', 'foe', 'footman', 1, 1));
+    expect(aiSnapshotQuery(other, teams).unitById('enemy')).toBeUndefined();
+    expect(child.unitById('different')).toBeUndefined();
+  });
   it('keeps player lists fresh, isolated and ordered when opponent queries initialize the private cache first', () => {
     const { snapshot, teams } = scene();
     snapshot.units.push(createUnit('own', 'north', 'worker', 0, 0), createUnit('ally', 'friend', 'footman', 0, 0), createUnit('enemy', 'foe', 'footman', 0, 0));
