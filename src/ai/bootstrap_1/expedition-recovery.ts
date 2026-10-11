@@ -1,11 +1,11 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
-import { nearestByRoute } from '../../shared/route-selection';
+import { nearestByRoute, routeArrivals } from '../../shared/route-selection';
 import { sameGround } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import { planNavalTactics } from '../policy/naval';
+import { planNavalTacticsWithCrewOrder } from '../policy/naval';
 import { isEnemyOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
@@ -41,7 +41,8 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const commands = planNavalTactics(snapshot, owner, options);
+  const commands = planNavalTacticsWithCrewOrder(snapshot, owner, options,
+    (soldiers, shore) => routeArrivals(snapshot.map, soldiers, shore, 'land').map(({ unit }) => unit));
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
   const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
