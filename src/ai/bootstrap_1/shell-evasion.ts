@@ -9,6 +9,7 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { isEnemyOwner } from '../policy/ownership';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { postRecoveryAssignments } from './front-recovery';
+import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
 const JOB_PREFIX = 'shellEvasion:';
 const CLEARANCE = 12;
@@ -19,7 +20,7 @@ export const shellEvasion: AiScript = {
   phase: 'tactics',
   run: planShellEvasion,
   claimsUnits: (snapshot, owner, options) => new Set(planShellEvasion(snapshot, owner, options).flatMap(command =>
-    command.type === 'move' ? command.unitIds : [])),
+    command.type === 'move' || command.type === 'holdPosition' ? command.unitIds : [])),
 };
 
 type Hazard = Point & { id: string; radius: number; remaining: number; angle: number; from?: Point };
@@ -52,12 +53,15 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     || (hazards.some(hazard => job.kind === JOB_PREFIX + hazard.id) && soldiers.some(unit => unit.id === job.id)));
   if (hazards.length === 0) return [];
   const recovering = new Set(postRecoveryAssignments(snapshot, owner, options).map(({ patient }) => patient.id));
-  const commands: Extract<GameCommand, { type: 'move' }>[] = [];
+  const commands: GameCommand[] = [];
   const destinations: { x: number; y: number; radius: number }[] = [];
   for (const unit of soldiers) {
     const job = options.memory.jobs.find(job => job.id === unit.id && job.kind.startsWith(JOB_PREFIX));
     const order = unit.order;
-    if (job && !recovering.has(unit.id) && order.type === 'move' && hazards.every(hazard =>
+    const closing = job && enemies.some(enemy => Math.hypot(enemy.x - unit.x, enemy.y - unit.y)
+      <= mountedThreatReach(snapshot, enemy, unit, THINK_TICKS)
+        + ('order' in enemy ? enemy.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0));
+    if (job && !closing && !recovering.has(unit.id) && order.type === 'move' && hazards.every(hazard =>
       !overlaps(hazard, order, unit.radius))) {
       commands.push({ type: 'move', unitIds: [unit.id], x: order.x, y: order.y, avoidCombat: true });
       destinations.push({ x: order.x, y: order.y, radius: unit.radius });
@@ -72,8 +76,12 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     const hazard = incoming[0];
     if (!hazard) {
       // Keep an escaped soldier clear until the hazard ends; another army script must not walk it back in.
-      if (job && !recovering.has(unit.id)) commands.push({ type: 'move', unitIds: [unit.id], x: unit.order.type === 'move' ? unit.order.x : unit.x,
-        y: unit.order.type === 'move' ? unit.order.y : unit.y, avoidCombat: true });
+      if (job && !recovering.has(unit.id)) {
+        const command = closing ? mountedEscape(snapshot, unit, enemies, 0, undefined, true)
+          : { type: 'move' as const, unitIds: [unit.id], x: unit.order.type === 'move' ? unit.order.x : unit.x,
+            y: unit.order.type === 'move' ? unit.order.y : unit.y, avoidCombat: true };
+        commands.push(command);
+      }
       continue;
     }
     const reach = hazard.radius + unit.radius + CLEARANCE;
