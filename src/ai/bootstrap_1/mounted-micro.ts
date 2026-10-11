@@ -147,7 +147,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal)
     && (goal === rider || constrainGroundShipStep(snapshot.map, rider, rider, goal, snapshot.units) === goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
-    || (avoidCombat && a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)
+    || (a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)
     || Number(b.bodyClear) - Number(a.bodyClear)
     || (a.room > 0 ? destination ? a.distance - b.distance
       : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
