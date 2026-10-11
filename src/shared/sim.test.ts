@@ -678,7 +678,7 @@ describe("sketch RTS simulation", () => {
     expect(incomeWithEight).toBeLessThanOrEqual(incomeWithFive);
   });
 
-  it("taxes delivered mine gold through Warcraft-like upkeep brackets", () => {
+  it("settles delivered mine gold along the equivalent-mine upkeep curve", () => {
     const game = createGame();
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     const mine = game.resources.find((resource) => resource.kind === "goldMine")!;
@@ -694,12 +694,12 @@ describe("sketch RTS simulation", () => {
       stepGame(game);
     };
 
-    deliverAtSupply(50);
+    deliverAtSupply(40);
     expect(game.players.player.gold).toBe(10);
-    deliverAtSupply(51);
-    expect(game.players.player.gold).toBe(17);
-    deliverAtSupply(81);
-    expect(game.players.player.gold).toBe(21);
+    deliverAtSupply(70);
+    expect(game.players.player.gold).toBe(15);
+    deliverAtSupply(100);
+    expect(game.players.player.gold).toBe(18.33);
   });
 
   it("builds a barracks and trains soldiers", () => {

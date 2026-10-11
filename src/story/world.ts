@@ -1,3 +1,4 @@
+import { addGold } from "../shared/gold";
 import { createSquadMemory, planSquad, type SquadIntent, type SquadOptions, type SquadReport } from "../ai/squad/squad";
 import { createBuilding } from "../shared/map";
 import { canReceiveHealing } from "../shared/healing";
@@ -219,7 +220,7 @@ export class World {
   gold(owner: PlayerId, delta: number) {
     const player = this.game.players[owner];
     if (!player) throw new Error(`Unknown player ${owner}`);
-    player.gold = Math.max(0, player.gold + delta);
+    player.gold = Math.max(0, addGold(player.gold, delta));
   }
 
   grantXp(who: Who, amount: number) {

@@ -85,3 +85,8 @@ function selectableSelectionEntities(snapshot: GameSnapshot, selectedIds: Set<st
     ...snapshot.buildings.filter((building) => selectedIds.has(building.id) && (selectedIds.size === 1 || building.owner === owner)),
   ];
 }
+
+/** Show only whole, spendable gold; fractional cents remain in simulation state. */
+export function goldReadout(gold: number | undefined) {
+  return gold === undefined ? "?" : String(Math.floor(gold));
+}
