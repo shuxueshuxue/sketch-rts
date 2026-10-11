@@ -945,8 +945,18 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
  * The caller supplies walkable terrain; status, arrival tolerance and per-tick
  * boundary rounding belong to actual movement. */
 export function groundSegmentTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number {
+  return groundSegmentProgress(map, from, goal, Infinity).cost;
+}
+
+/** Continuous position on a clear segment after spending equivalent bare-ground distance. */
+export function groundSegmentAdvance(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, budget: number): Point {
+  const { fraction } = groundSegmentProgress(map, from, goal, budget);
+  return fraction === 1 ? goal : { x: from.x + (goal.x - from.x) * fraction, y: from.y + (goal.y - from.y) * fraction };
+}
+
+function groundSegmentProgress(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, budget: number) {
   const dx = goal.x - from.x, dy = goal.y - from.y, length = Math.hypot(dx, dy), terrain = map.terrain;
-  if (!terrain || length === 0) return length;
+  if (!terrain || length === 0) return { cost: Math.min(length, budget), fraction: length === 0 ? 1 : Math.min(1, budget / length) };
   const cell = terrain.cell, stepX = Math.sign(dx), stepY = Math.sign(dy);
   let col = Math.floor(from.x / cell), row = Math.floor(from.y / cell);
   if (dx < 0 && from.x === col * cell) col--;
@@ -957,12 +967,15 @@ export function groundSegmentTravelCost(map: Pick<GameMap, 'terrain'>, from: Poi
   let at = 0, cost = 0;
   while (at < 1) {
     const end = Math.min(1, nextX, nextY);
-    cost += (end - at) * length / CELL_GROUND[terrain.cells[row * terrain.cols + col]!]!.pace;
+    const pace = CELL_GROUND[terrain.cells[row * terrain.cols + col]!]!.pace;
+    const next = cost + (end - at) * length / pace;
+    if (next >= budget) return { cost: budget, fraction: at + (budget - cost) * pace / length };
+    cost = next;
     if (end === nextX) { col += stepX; nextX += spanX; }
     if (end === nextY) { row += stepY; nextY += spanY; }
     at = end;
   }
-  return cost;
+  return { cost, fraction: 1 };
 }
 
 /** Ground travel cost in equivalent bare-ground units. A clear straight segment
