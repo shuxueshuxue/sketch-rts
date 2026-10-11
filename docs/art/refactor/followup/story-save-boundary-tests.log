@@ -1,0 +1,19 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/shared/unit-save-migration.test.ts (11 tests) 27ms
+ ✓ src/shared/savegame.test.ts (7 tests) 261ms
+ ✓ src/story/director.test.ts (11 tests) 231ms
+ ✓ src/shared/replay.test.ts (4 tests) 24ms
+ ✓ src/shared/sim/canonical.test.ts (4 tests) 138ms
+
+ Test Files  5 passed (5)
+      Tests  37 passed (37)
+   Start at  12:44:07
+   Duration  1.87s (transform 1.13s, setup 0ms, collect 3.35s, tests 681ms, environment 1ms, prepare 220ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

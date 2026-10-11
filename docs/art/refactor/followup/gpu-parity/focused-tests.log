@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/world3d/painted-card-batches.test.ts (11 tests) 3975ms
+   ✓ painted card array batches > preserves the complete source and mip domain, including non-power-of-two action tiles 3790ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  12:59:44
+   Duration  4.69s (transform 108ms, setup 0ms, collect 464ms, tests 3.98s, environment 0ms, prepare 52ms)
+

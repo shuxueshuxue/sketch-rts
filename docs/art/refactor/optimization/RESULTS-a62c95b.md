@@ -1,5 +1,7 @@
 # Raster optimization: a62c95b
 
+**Timing qualification (follow-up):** the historical WebGL `gl.finish()` samples below record submission plus driver backpressure; they do not independently establish complete GPU execution. Sync-object diagnostics on frozen 9de move seconds into the completion tail. Original values are retained. See [completion and stage evidence](../followup/performance/UPLOAD-EXPERIMENTS.md). No revised formal speedup is claimed.
+
 Measured 2026-10-11 with the unchanged first-round scripts and exclusive host-load window. Source: `a62c95beea64b9f6e387fa61312ae35a02504330`. Raw output is in [after-a62c95b](after-a62c95b/); direct comparison against the first refactor is [comparison-refactor-to-a62c95b.json](comparison-refactor-to-a62c95b.json), and the same-rule original comparison is [comparison-original-to-a62c95b.json](comparison-original-to-a62c95b.json). The first-round results remain intact.
 
 The CPU scratch readback and lossless source-texel cropping substantially reduce this environment's dynamic cost and eliminate the previous fixed-snapshot long-frame pattern. **The 1000-unit dynamic target remains unmet: drawing still takes approximately 4.68 seconds per frame on SwiftShader.** This report does not cover the separate rules-2, direction or combat-ink worktree.

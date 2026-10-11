@@ -1,0 +1,38 @@
+[
+  {
+    "a": "981",
+    "b": "9de-oldstats",
+    "mirror": false,
+    "allDecisionCommandsEqual": true,
+    "allDecisionGoldEqual": true,
+    "allMercenarySamplesEqual": true,
+    "finalEqual": true
+  },
+  {
+    "a": "981",
+    "b": "9de-oldstats",
+    "mirror": true,
+    "allDecisionCommandsEqual": true,
+    "allDecisionGoldEqual": true,
+    "allMercenarySamplesEqual": true,
+    "finalEqual": true
+  },
+  {
+    "a": "9de",
+    "b": "981-newstats",
+    "mirror": false,
+    "allDecisionCommandsEqual": true,
+    "allDecisionGoldEqual": true,
+    "allMercenarySamplesEqual": true,
+    "finalEqual": true
+  },
+  {
+    "a": "9de",
+    "b": "981-newstats",
+    "mirror": true,
+    "allDecisionCommandsEqual": true,
+    "allDecisionGoldEqual": true,
+    "allMercenarySamplesEqual": true,
+    "finalEqual": true
+  }
+]

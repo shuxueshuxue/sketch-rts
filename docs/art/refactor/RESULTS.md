@@ -1,5 +1,7 @@
 # Frozen art refactor measurements
 
+**Timing qualification (follow-up):** the historical WebGL `gl.finish()` samples below record submission plus driver backpressure; they do not independently establish complete GPU execution. Sync-object diagnostics on frozen 9de move seconds into the completion tail. Original values are retained. See [completion and stage evidence](followup/performance/UPLOAD-EXPERIMENTS.md). No revised formal speedup is claimed.
+
 Measured 2026-10-11. Before: `9819046b3820c9f843f0d57beaa198e7970fd5a7`; after: `78ee99a06a6e9522bcd567f9c9ea6c941024679b`. These results precede the separately authorized unit/rule consolidation. Commands and exact sampling definitions are in [MEASUREMENT.md](MEASUREMENT.md); machine-readable comparison and all raw samples are in [comparison.json](comparison.json), [before](before/), and [after](after/).
 
 **This version does not meet the large dynamic scene performance goal.** Draw-call batching works, but dynamic card generation remains extremely expensive. The all-land-kind fixed-snapshot scene also has a reproducible new long frame. Do not describe these results as an overall performance or total-memory improvement.

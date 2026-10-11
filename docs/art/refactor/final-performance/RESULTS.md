@@ -1,5 +1,7 @@
 # Final rules-2 presentation cost
 
+**Timing qualification (follow-up):** the historical WebGL `gl.finish()` samples below record submission plus driver backpressure; they do not independently establish complete GPU execution. Sync-object diagnostics on frozen 9de move seconds into the completion tail. Original values are retained. See [completion and stage evidence](../followup/performance/UPLOAD-EXPERIMENTS.md). No revised formal speedup is claimed.
+
 WebGL production source `277e1e138576d52066280e912b7b96cb8847ad12`, measured 2026-10-11 in an exclusive load window. Complete Canvas subsequently compares benchmark-only `08af824` with cache-only production fix `7cd11ac`; the GPU path is unchanged by that fix. [summary.json](summary.json) aggregates the initial raw files; [canvas-reuse-comparison.json](canvas-reuse-comparison.json) records the complete Canvas pair. **This is an independent final-version cost record, not a speedup comparison with rules 1.** The final catalog contains 55 unit kinds / 48 land kinds; rules version is 2, with changed simulation outcomes, directional poses and connected combat/projectile presentation.
 
 The 1000-unit software-GPU scene still fails the practical performance goal: mean rendering is approximately **5.02 seconds**, not milliseconds. Resource and interaction correctness pass, but do not establish acceptable performance.
