@@ -48,14 +48,17 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   planRiderCrossing(snapshot, owner, options);
   const mines = mountedMinePlan(snapshot, options.memory);
   const ports = transportRecovery(snapshot, owner, options);
+  const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
+  const medics = new Set(recovering.map(({ healer }) => healer.id));
+  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
+  const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   const commands = planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !shipNeedsRepair(snapshot, boat),
+    troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
   });
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
-  const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
-  const medics = new Set(recovering.map(({ healer }) => healer.id));
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
   const retreat: GameCommand[] = recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
@@ -67,7 +70,6 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
   });
-  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   return [...commands.flatMap((command): GameCommand[] => {
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];
