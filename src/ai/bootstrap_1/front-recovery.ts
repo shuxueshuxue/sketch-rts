@@ -50,8 +50,12 @@ export function postRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
 export const frontRecovery: AiScript = {
   id: 'frontRecovery', phase: 'tactics',
   claimsUnits: (snapshot, owner, options) => new Set(postRecoveryAssignments(snapshot, owner, options).map(({ patient }) => patient.id)),
-  run: (snapshot, owner, options): GameCommand[] => postRecoveryAssignments(snapshot, owner, options).map(({ patient, post }) =>
+  run: (snapshot, owner, options) => postRecoveryCommands(postRecoveryAssignments(snapshot, owner, options)),
+};
+
+export function postRecoveryCommands(assignments: ReturnType<typeof postRecoveryAssignments>): GameCommand[] {
+  return assignments.map(({ patient, post }) =>
     distance(patient, post) <= post.attackRange
       ? { type: 'holdPosition', unitIds: [patient.id] }
-      : { type: 'move', unitIds: [patient.id], x: post.x, y: post.y, avoidCombat: true }),
-};
+      : { type: 'move', unitIds: [patient.id], x: post.x, y: post.y, avoidCombat: true });
+}
