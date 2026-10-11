@@ -1,5 +1,6 @@
 import { strikeGap } from '../../shared/combat-geometry';
 import { routeArrivals } from '../../shared/route-selection';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 import { walkingDistance } from '../../shared/terrain';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import type { Point } from './spatial';
@@ -15,12 +16,16 @@ export function groundThreatWithin(snapshot: GameSnapshot, unit: Unit, point: Po
   return road !== undefined && road <= range;
 }
 
-/** Compare actual movers' terrain arrival times, rather than distances from army centroids. */
+/** Enemy reinforcements and counterraids both compete with the time spent marching away. */
 export function groundRespondingPower(snapshot: GameSnapshot, intel: V6Intel, target: V6BaseIntel, front: Unit[]) {
   const arrival = routeArrivals(snapshot.map, front, target.hall, 'land').reduce((last, unit) => Math.max(last, unit.ticks), 0);
   const army = intel.enemies.flatMap(enemy => enemy.army);
   const firing = army.filter(unit => strikeGap(unit, target.hall) <= unit.attackRange);
   const responders = routeArrivals(snapshot.map, army.filter(unit => !firing.includes(unit)), target.hall, 'land')
     .filter(unit => unit.ticks <= arrival).map(unit => unit.unit);
-  return strengthOf([...firing, ...responders]);
+  const income = intel.ownHalls.filter(hall => hall.complete && snapshot.resources.some(mine =>
+    mine.amount > 0 && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
+  const counterraiders = income.flatMap(hall => routeArrivals(snapshot.map, army, hall, 'land')
+    .filter(unit => unit.ticks <= arrival).map(unit => unit.unit));
+  return strengthOf([...new Set([...firing, ...responders, ...counterraiders])]);
 }
