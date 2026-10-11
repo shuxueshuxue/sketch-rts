@@ -15,6 +15,13 @@ export interface CorpsePresentation {
   weapon?: EquipmentKind; shield?: boolean; headwear?: boolean; robe?: boolean; cloth?: string; size?: number;
   detail?: (b: Brush) => void;
 }
+const corpseDetails=new WeakMap<NonNullable<CorpsePresentation['detail']>,number>();
+let nextCorpseDetail=1;
+export function corpseAppearanceKey(p:Readonly<CorpsePresentation>={}) {
+ let detail=0;
+ if(p.detail){detail=corpseDetails.get(p.detail)??nextCorpseDetail++;corpseDetails.set(p.detail,detail);}
+ return `${p.anatomy??''}:${p.weapon??''}:${p.shield??''}:${p.headwear??''}:${p.robe??''}:${p.cloth??''}:${p.size??''}:${detail}`;
+}
 const loadout=equipmentForKind;
 const isStaff=(equipment:EquipmentKind|undefined)=>equipment==='staff'||equipment==='crozier';
 function sketch(b:Brush,p:number[][],fill:string=WASH){

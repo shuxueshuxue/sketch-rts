@@ -1,4 +1,6 @@
-import { appearanceFor, appearanceKey } from "./art/unit-appearance";
+import {ProjectileOriginTracker} from './projectile-origins';
+import { CombatPresentationTracker } from "./combat-presentation";
+import { appearanceFor, appearanceForKind, appearanceKey } from "./art/unit-appearance";
 import { goldReadout } from "./hud-model";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
@@ -95,7 +97,7 @@ import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
-import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules } from "../shared/catalog";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules, canTrainAt, trainableUnitsAt, trainingBuildingFor } from "../shared/catalog";
 import { carries, passengerLandingSpot } from "../shared/naval";
 import { SHOP_GOODS } from "../shared/shop";
 import { drawPaintedItem } from "./art/items";
@@ -242,6 +244,8 @@ let selectedIds = new Set<string>();
 const unitFacing = new UnitFacingTracker();
 const unitMotion = new UnitMotionSmoother();
 const unitAnimation = new UnitAnimationTracker();
+const combatPresentation = new CombatPresentationTracker();
+const projectileOrigins = new ProjectileOriginTracker();
 const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let focusedStatusProjection: { snapshot: GameSnapshot; tick: number; id: string; locale: 'zh' | 'en'; statuses: PresentedUnitStatus[] } | undefined;
@@ -350,7 +354,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
@@ -686,11 +690,12 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
     element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
   }
   const color=ownerInk(localPlayerId,snapshot??undefined);
-  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}`,()=>{
+  const appearance=portrait.type === "unit" ? appearanceForKind(portrait.kind,currentPlayerState()?.race) : {};
+  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}:${appearanceKey(appearance)}`,()=>{
     const brush = requireCanvasContext(icon);
     const size=icon.clientWidth||icon.width;
     const center = { x: size/2, y: size/2 };
-    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color);
+    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color, appearance);
     else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8);
     else drawAtlasBuildingPortrait(brush, portrait.kind, size, color);
   });
@@ -1483,6 +1488,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch() {
+  combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
   activeChatUnsubscribe?.();
@@ -2235,7 +2241,7 @@ function canBuild(kind: BuildingKind) {
 
 function canTrain(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return !commandMode && !openPalette && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  return !commandMode && !openPalette && Boolean(player && focusedPlayerBuildings().some((building) => building.complete && canTrainAt(player.race, building.kind, unitKind)));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
@@ -2570,11 +2576,11 @@ function closeCommandPalette() {
 function train(unitKind: TrainableUnitKind) {
   if (!syncBeforeCommandProjection()) return;
   const player = currentPlayerState();
-  if (!player || !RACE_DEFS[player.race].trainableUnits.includes(unitKind)) {
+  if (!player || !trainingBuildingFor(player.race, unitKind)) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
+  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && canTrainAt(player.race, candidate.kind, unitKind));
   if (!building) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
@@ -2783,7 +2789,8 @@ function selectedPlayerBuildings() {
 }
 
 function selectedPlayerRallyBuildings() {
-  return selectedPlayerBuildings().filter((building) => BUILDING_DEFS[building.kind].trains.length > 0);
+  const player=currentPlayerState();
+  return player ? selectedPlayerBuildings().filter((building) => trainableUnitsAt(player.race, building.kind).length > 0) : [];
 }
 
 function focusedPlayerUnits() {
@@ -3173,7 +3180,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
-  const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
+  const tooltip = unitTooltip(progress.unitKind, undefined, i18n, currentPlayerState()?.race);
   applyTooltip(button, {
     ...tooltip,
     title: `${label} · ${t("hud.cancelTraining")}`,
@@ -3313,6 +3320,8 @@ function draw() {
     facing: unitFacing,
     motion: unitMotion,
     animation: unitAnimation,
+    combat: combatPresentation,
+    projectiles:projectileOrigins,
     reducedMotion: reducedUnitMotion.matches,
     labels: worldLabels,
     selectedIds,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UnitAnimationTracker } from "./unit-animation";
+import { UnitAnimationTracker, releasePoseForEffect } from "./unit-animation";
 import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
 import { seconds } from "../shared/time";
 import type { Unit, WorldEffect } from "../shared/types";
@@ -305,4 +305,70 @@ describe('explicit story action cues', () => {
     tracker.update(snap(32, unit), 100, cues);
     expect(tracker.frame(unit, 100).mode).toBe('idle');
   });
+});
+
+describe('release-locked action direction',()=>{
+  const release=(overrides:Partial<WorldEffect>={}):WorldEffect=>({id:'release',type:'melee',x:200,y:50,fromX:100,fromY:100,toX:200,toY:50,sourceId:'soldier',actionMode:'attack',duration:16,remaining:16,...overrides});
+  it('uses the true release author and holds its target vector when the target dies or orders change',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier(),victim=soldier({id:'victim',x:200,y:50});
+    tracker.update({...snap(0,actor,victim),effects:[]},0);
+    const effect=release({unitId:victim.id});
+    tracker.update({...snap(1,actor,victim),effects:[effect]},50);
+    const direction=tracker.frame(actor,50).direction;
+    expect(direction).toEqual({x:100,y:-50});expect(tracker.frame(victim,50).mode).toBe('idle');
+    actor.order={type:'attack',targetId:'behind'};
+    tracker.update({...snap(3,actor),effects:[{...effect,remaining:14}]},150);
+    expect(tracker.frame(actor,150).direction).toBe(direction);
+    expect(tracker.frame(actor,150)).toMatchObject({mode:'attack',frame:2});
+    tracker.update({...snap(8,actor),effects:[]},400);expect(tracker.frame(actor,400).direction).toBeUndefined();
+  });
+
+  it('starts a first-observed ranged shot at its real release age, and never restarts it at projectile impact',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier();
+    tracker.update({...snap(20,actor),effects:[release({type:'projectile',duration:22,remaining:19})]},0);
+    expect(tracker.frame(actor,0)).toMatchObject({mode:'attack',frame:3,direction:{x:100,y:-50}});
+    const impact=release({type:'hit',unitId:'victim'});delete impact.actionMode;
+    tracker.update({...snap(24,actor),effects:[impact]},200);
+    expect(tracker.frame(actor,200).mode).toBe('idle');
+  });
+
+  it('prioritizes a simultaneous real cast direction over weapon fire and preserves Stage cue vectors',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier();
+    tracker.update({...snap(0,actor),effects:[release(),release({id:'heal',type:'heal',actionMode:'cast',toX:100,toY:0})]},0);
+    expect(tracker.frame(actor,0)).toMatchObject({mode:'cast',direction:{x:0,y:-100}});
+    tracker.update(snap(1,actor),50,[{unitId:actor.id,mode:'attack',tick:1,fromX:100,fromY:100,toX:0,toY:200}]);
+    expect(tracker.frame(actor,50)).toMatchObject({mode:'attack',direction:{x:-100,y:100}});
+  });
+
+  it('does not invent direction when old cooldown-only snapshots have no release coordinates',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier();tracker.update(snap(0,actor),0);
+    actor.cooldown=20;tracker.update(snap(1,actor),50);
+    expect(tracker.frame(actor,50)).toMatchObject({mode:'attack'});expect(tracker.frame(actor,50).direction).toBeUndefined();
+  });
+});
+
+describe('release chronology and elevation',()=>{
+  it('does not replace a newer cooldown trigger with an older lingering release',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier();tracker.update(snap(5,actor),0);
+    actor.cooldown=20;
+    tracker.update({...snap(8,actor),effects:[{id:'old',type:'projectile',sourceId:actor.id,actionMode:'attack',x:200,y:100,fromX:100,fromY:100,toX:200,toY:100,duration:16,remaining:12}]},150);
+    expect(tracker.frame(actor,150)).toMatchObject({mode:'attack',frame:0});
+    expect(tracker.frame(actor,150).direction).toBeUndefined();
+  });
+  it('keeps true height differences and leaves missing elevations unknown',()=>{
+    const tracker=new UnitAnimationTracker(),actor=soldier();
+    tracker.update({...snap(1,actor),effects:[{id:'up',type:'projectile',sourceId:actor.id,actionMode:'attack',x:200,y:100,fromX:100,fromY:100,toX:200,toY:100,fromHeight:0,toHeight:70,duration:16,remaining:16}]},0);
+    expect(tracker.frame(actor,0).direction).toEqual({x:100,y:0,height:70});
+    tracker.update(snap(2,actor),50,[{unitId:actor.id,mode:'cast',tick:2,fromX:100,fromY:100,toX:100,toY:100,fromHeight:5,toHeight:55}]);
+    expect(tracker.frame(actor,50).direction).toEqual({x:0,y:0,height:50});
+  });
+});
+
+
+it('shares the exact deterministic release variant and direction with projectile socket resolvers',()=>{
+  const actor=soldier(),effect:WorldEffect={id:'shot',type:'projectile',sourceId:actor.id,actionMode:'attack',actionTick:12,x:200,y:50,fromX:100,fromY:100,toX:200,toY:50,duration:20,remaining:20};
+  const tracker=new UnitAnimationTracker();tracker.update({...snap(12,actor),effects:[effect]},0);
+  expect(releasePoseForEffect(effect)).toEqual(tracker.frame(actor,0));
+  expect(releasePoseForEffect(effect)).toBe(releasePoseForEffect(effect));
+  const {actionTick:_tick,...older}=effect;expect(releasePoseForEffect(older)).toBeUndefined();
 });

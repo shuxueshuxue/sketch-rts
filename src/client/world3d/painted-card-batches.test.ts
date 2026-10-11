@@ -1,3 +1,4 @@
+import { ART_TILE_SIZE, ART_ACTION_SIZE } from '../art/raster-cache';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
@@ -87,4 +88,30 @@ describe('painted card array batches',()=>{
     }
     expect(retainedInk).toBe(sourceInk);expect(texture.image.width*texture.image.height).toBeLessThan(size*size/2);cards.dispose();
   });
+});
+
+
+it('retains mixed 128/160 domains and density identities while cropping outer action pixels at their original foot anchor',()=>{
+ const {cards}=setup();cards.begin();
+ // The identical logical key must not alias either the domain or the density.
+ cards.add('same',4,paint,matrix,'ready',17,ART_TILE_SIZE);
+ cards.add('same',4,b=>{b.fillStyle='#345';b.fillRect(68,-72,7,7);},matrix,'upward',17,ART_ACTION_SIZE);
+ cards.add('same',2,paint,matrix,'ready-low',17,ART_TILE_SIZE);
+ cards.finish();expect(cards.stats().cards).toBe(3);expect(cards.stats().rasterizations).toBe(3);
+ expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(3);
+ for(const [id,density] of [['ready',4],['upward',4],['ready-low',2]] as const){
+   const mesh=cards.objects().find(mesh=>mesh.userData.ids.includes(id))!,index=mesh.userData.ids.indexOf(id);
+   const texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture,{width,height}=texture.image;
+   const transform=new THREE.Matrix4();mesh.getMatrixAt(index,transform);
+   expect(new THREE.Vector3().setFromMatrixColumn(transform,0).length()/width).toBeCloseTo(1/density,5);
+   expect(new THREE.Vector3().setFromMatrixColumn(transform,1).length()/height).toBeCloseTo(1/(density*Math.tan(SHIP_CAMERA.tilt)),5);
+   const authored=id==='upward'?{x:71.5,y:-68.5}:{x:0,y:0};
+   const uv=new THREE.Vector3(authored.x,(17-authored.y)/Math.tan(SHIP_CAMERA.tilt),0).applyMatrix4(transform.clone().invert());
+   expect(mesh.userData.paintedHit(index,{x:uv.x+.5,y:uv.y+.5})).toBe(true);
+   const layer=mesh.geometry.getAttribute('cardLayer').getX(index);let ink=0;
+   for(let pixel=0;pixel<width*height;pixel++)if(texture.image.data![(layer*width*height+pixel)*4+3])ink++;
+   expect(ink).toBe((id==='upward'?7*7:32*48)*density*density);
+   expect(width*height).toBeLessThan(((id==='upward'?ART_ACTION_SIZE:ART_TILE_SIZE)*density)**2);
+ }
+ cards.dispose();
 });

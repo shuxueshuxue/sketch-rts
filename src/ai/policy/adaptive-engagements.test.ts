@@ -74,7 +74,7 @@ describe("situational army roles", () => {
   it("adds a golem to a caster front and wardens to an Ember support army", () => {
     for (const race of ["grove", "ember"] as const) {
       let field = scene(`screen-role-${race}`, race);
-      for (let i = 0; i < 10; i++) field = field.unit("us", race === "grove" ? "priest" : "emberAcolyte", 800 + i * 20, 800);
+      for (let i = 0; i < 10; i++) field = field.unit("us", race === "grove" ? "priest" : "priest", 800 + i * 20, 800);
       const snapshot = snapshotGame(field.build().createGame());
       expect(adaptiveArmyWants(snapshot, "us", context("v8"))).toContainEqual({ unit: race === "grove" ? "golem" : "ashWarden", count: 1, priority: race === "grove" ? 68 : 69 });
     }

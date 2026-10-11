@@ -1,3 +1,4 @@
+import { animationKey, actionPaintSize } from './art/action-direction';
 import type { UnitModel } from "../story/cast";
 import { appearanceKey } from "./art/unit-appearance";
 import type { FigurePresentation } from "./art/rig";
@@ -6,7 +7,7 @@ import { drawModelPortrait } from './model-portraits';
 import { drawFittedPortrait } from './art/portrait-fit';
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
 import { unitMover } from "../shared/catalog";
-import { paintCorpse } from "./art/corpses";
+import { paintCorpse, corpseAppearanceKey, type CorpsePresentation } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
 import { paintFigure } from "./art/painted-units";
 import { creatureShadow } from "./art/painted-creatures";
@@ -22,9 +23,9 @@ const sprites = new RasterCache();
 export const canvasArtCacheStats = () => sprites.stats();
 export const clearCanvasArtCache = () => sprites.clear();
 
-function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false) {
+function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false, tileSize=128) {
   const density = Math.max(2, Math.min(6, Math.ceil(scale * brushZoom(c) * 2)));
-  const art = sprites.get(key, density, paint);
+  const art = sprites.get(key, density, paint,tileSize);
   const width = art.canvas.width / density * scale, height = art.canvas.height / density * scale;
   if (!mirrored) {
     c.drawImage(art.canvas, point.x + art.x * scale, point.y + art.y * scale, width, height);
@@ -54,7 +55,7 @@ export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteMod
 
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME, presentation: FigurePresentation = {}) {
-    sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}:${pose.variant ?? 0}:${appearanceKey(presentation)}`, point, scale, (b) => {
+    sprite(c, `painted:${kind}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
       const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
       const feet = creatureShadow(kind);
@@ -63,7 +64,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
         ellipse(b, 1, feet?.y ?? 17, feet?.rx ?? (broad ? 24 : 10), feet?.ry ?? (broad ? 4.5 : 2.8), "#29282438");
       }
       paintFigure(b, kind, color, pose, facing, presentation);
-    }, facing === -1);
+    }, facing === -1, actionPaintSize(pose));
 
 }
 
@@ -79,14 +80,14 @@ export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:nu
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
 export function drawAtlasModel(c: Brush, key: string, model: UnitModel, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
-  sprite(c, `m:${key}:${color}:${facing}:${pose.mode}:${pose.frame}:${pose.variant ?? 0}`, point, scale, (b) => {
+  sprite(c, `m:${key}:${color}:${facing}:${animationKey(pose)}`, point, scale, (b) => {
     const shadow = model.shadow ?? "foot";
     if (shadow === "foot") ellipse(b, 2, 16, 17, 6, "#30483630");
     else if (shadow === "mounted") ellipse(b, 2, 17, 22, 5.5, "#30483630");
     else if (shadow === "beast") ellipse(b, 2, 15, 20, 5, "#30483630");
     else if (shadow === "huge") ellipse(b, 2, 18, 30, 8, "#30483638");
     model.paint(b, color, pose, facing);
-  }, facing === -1);
+  }, facing === -1, actionPaintSize(pose));
 }
 
 /** A piece of a story's scenery (see story/stage props), cached per kind and state like the units. */
@@ -132,8 +133,8 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
 }
 
 /** Remains use authored low silhouettes, including campaign-specific anatomy. */
-export function drawAtlasCorpse(c:Brush,kind:UnitKind,point:Point,scale:number,variant=0,model?:UnitModel,modelKey='',color='#77766e'){
+export function drawAtlasCorpse(c:Brush,kind:UnitKind,point:Point,scale:number,variant=0,model?:UnitModel,modelKey='',color='#77766e',presentation:Readonly<CorpsePresentation>={}){
   c.save();c.translate(point.x,point.y+7);c.rotate((variant%3-1)*.14);
-  sprite(c,`corpse:${kind}:${modelKey}:${color}`,{x:0,y:0},scale, b=>model?.remains ? model.remains(b,color) : paintCorpse(b,kind),variant%2===1);
+  sprite(c,`corpse:${kind}:${modelKey}:${color}:${corpseAppearanceKey(presentation)}`,{x:0,y:0},scale, b=>model?.remains ? model.remains(b,color) : paintCorpse(b,kind,presentation),variant%2===1);
   c.restore();
 }

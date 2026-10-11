@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, trainableUnitsAt, unitMover } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 import { activeUnitClaim } from "./claims";
@@ -74,7 +74,7 @@ export function tierBarWaitedOn(snapshot: GameSnapshot, owner: PlayerId): number
   const cap = playerState(snapshot, owner).supplyCap;
   const bars = buildings(snapshot, owner)
     .filter((building) => building.complete)
-    .flatMap((building) => BUILDING_DEFS[building.kind].trains)
+    .flatMap((building) => trainableUnitsAt(playerState(snapshot, owner).race, building.kind))
     .map(requiredSupplyCap)
     .filter((bar) => bar > cap);
   return bars.length > 0 ? Math.min(...bars) : undefined;

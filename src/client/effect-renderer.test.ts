@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createCanvas } from '@napi-rs/canvas';
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
-import type { UnitKind, WorldEffect } from "../shared/types";
+import type { GameSnapshot, PlayerState, UnitKind, WorldEffect } from "../shared/types";
+import { drawSpellOrb } from "./art/canvas-effects";
 import { renderWorldEffects } from "./effect-renderer";
 import { chargeImpactFrame, chargeTrailFrame, arrowFrame, launchPoint, projectileLook, spellOrbPalette } from "./art/effect-presentation";
 
@@ -37,9 +38,31 @@ describe("projectile looks", () => {
       expect(looks.has("orb"), race.id).toBe(true);
     }
     const [grove, ember] = (["grove", "ember"] as const).map((race) =>
-      spellOrbPalette(RACE_DEFS[race].trainableUnits.find((kind) => projectileLook(kind) === "orb")!),
+      spellOrbPalette(RACE_DEFS[race].trainableUnits.find((kind) => projectileLook(kind) === "orb")!, race),
     );
     expect(grove).not.toEqual(ember);
+  });
+
+  it("colors the same shared caster by shooter ownership in the real Canvas path",()=>{
+    const source={x:30,y:80},target={x:190,y:80};
+    const effect:WorldEffect={id:'orb',type:'projectile',x:190,y:80,fromX:30,fromY:80,toX:190,toY:80,sourceKind:'priest',owner:'caster',attackKind:'magic',duration:20,remaining:10};
+    const images:Uint8ClampedArray[]=[];
+    for(const race of ['grove','ember'] as const){
+      const player:PlayerState={race,gold:0,supplyUsed:0,supplyCap:0,upgrades:{weaponTraining:0,reinforcedPlating:0,buildingDurability:0,speedTraining:0,rangeTraining:0,leadership:0}};
+      const players:GameSnapshot['players']={caster:player,player,enemy:player,enemy2:player};
+      const canvas=createCanvas(220,140),expected=createCanvas(220,140);
+      renderWorldEffects({ctx:canvas.getContext('2d') as unknown as CanvasRenderingContext2D,effects:[effect],players,worldToScreen:point=>point,nearScreen:()=>true});
+      drawSpellOrb(expected.getContext('2d') as unknown as CanvasRenderingContext2D,launchPoint(source,target,'priest'),target,.5,spellOrbPalette('priest',race));
+      const actual=canvas.getContext('2d').getImageData(0,0,220,140).data;
+      expect(actual).toEqual(expected.getContext('2d').getImageData(0,0,220,140).data);images.push(actual);
+    }
+    expect(images[0]).not.toEqual(images[1]);
+    expect(spellOrbPalette('priest')).toEqual(spellOrbPalette('priest','grove'));
+    expect(spellOrbPalette('ashHexer')).toEqual(spellOrbPalette('priest','ember'));
+    expect(spellOrbPalette('ashHexer','grove')).toEqual(spellOrbPalette('priest','grove'));
+    const unknown={...effect};delete unknown.sourceKind;
+    const {ctx}=pointRecorder();
+    expect(()=>renderWorldEffects({ctx,effects:[unknown],worldToScreen:point=>point,nearScreen:()=>true})).not.toThrow();
   });
 
   it("flies an arrow tip from shooter to target along an arc above the straight line, pointing along its path", () => {

@@ -143,6 +143,6 @@ export function presentUnitStatuses(snapshot: GameSnapshot, unit: Unit, locale: 
     result.push({ key: `aura:${skill}`, type: 'aura', polarity: 'buff', icon: skill,
       name: definition.name[locale], description: definition.description[locale], badge: '∞', sourceIds: [source.id] });
   }
-  if (unit.expiresTick !== undefined && unit.expiresTick > snapshot.tick) result.push({ key: 'lifetime', type: 'lifetime', polarity: 'neutral', icon: snapshot.players[unit.owner]?.race === 'ember' ? 'cinderSoul' : 'summon', name: locale === 'zh' ? '召唤时限' : 'Summon lifetime', description: locale === 'zh' ? '召唤物会在倒计时结束后消失。' : 'This summon disappears when the countdown ends.', remainingTicks: unit.expiresTick - snapshot.tick, badge: statusDurationBadge(unit.expiresTick - snapshot.tick), sourceIds: [] });
+  if (unit.expiresTick !== undefined && unit.expiresTick > snapshot.tick) result.push({ key: 'lifetime', type: 'lifetime', polarity: 'neutral', icon: 'summon', name: locale === 'zh' ? '召唤时限' : 'Summon lifetime', description: locale === 'zh' ? '召唤物会在倒计时结束后消失。' : 'This summon disappears when the countdown ends.', remainingTicks: unit.expiresTick - snapshot.tick, badge: statusDurationBadge(unit.expiresTick - snapshot.tick), sourceIds: [] });
   return result.sort((a, b) => STATUS_ORDER[a.type] - STATUS_ORDER[b.type] || a.key.localeCompare(b.key));
 }

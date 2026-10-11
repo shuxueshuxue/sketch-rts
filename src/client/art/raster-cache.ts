@@ -1,5 +1,8 @@
 import { createScratchCanvas } from './scratch-canvas';
 
+export const ART_TILE_SIZE=128;
+export const ART_ACTION_SIZE=160;
+
 type Raster = { canvas: HTMLCanvasElement; x: number; y: number; density: number };
 
 /** Keep the authored resolution and anchor, but retain only painted pixels.
@@ -15,8 +18,8 @@ export class RasterCache {
   private evictions = 0;
   constructor(private budget = 12 * 1024 * 1024, private limit = 1024) {}
 
-  get(key: string, density: number, paint: (brush: CanvasRenderingContext2D) => void): Raster {
-    const id = `${key}:${density}`;
+  get(key: string, density: number, paint: (brush: CanvasRenderingContext2D) => void, tileSize:number=ART_TILE_SIZE): Raster {
+    const id = `${key}:${density}:${tileSize}`;
     const cached = this.entries.get(id);
     if (cached) {
       this.hits++;
@@ -24,13 +27,13 @@ export class RasterCache {
       return cached;
     }
     this.misses++;
-    const size = 128 * density;
+    const origin=tileSize/2,size = tileSize * density;
     const nested = this.painting;
     const source = nested ? createScratchCanvas(size, size) : this.scratch ??= createScratchCanvas(size, size);
     // Reset state as well as pixels: callers may change clips and transforms.
     source.width = source.height = size;
     const brush = source.getContext('2d', { willReadFrequently: true })!;
-    brush.scale(density, density); brush.translate(64, 64);
+    brush.scale(density, density); brush.translate(origin, origin);
     brush.lineJoin = brush.lineCap = 'round';
     this.painting = true;
     try { paint(brush); } finally { this.painting = nested; }
@@ -48,7 +51,7 @@ export class RasterCache {
     right = Math.min(size - 1, right + 2); bottom = Math.min(size - 1, bottom + 2);
     const canvas = createScratchCanvas(right - left + 1, bottom - top + 1);
     canvas.getContext('2d')!.drawImage(source, left, top, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-    const result = { canvas, x: left / density - 64, y: top / density - 64, density };
+    const result = { canvas, x: left / density - origin, y: top / density - origin, density };
     const cost = canvas.width * canvas.height;
     while (this.entries.size && (this.entries.size >= this.limit || this.pixels + cost > this.budget)) {
       const oldest = this.entries.keys().next().value!;

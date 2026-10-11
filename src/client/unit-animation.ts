@@ -1,8 +1,8 @@
 import type { UnitActionCue } from "../story/stage";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import type { GameSnapshot, Unit } from "../shared/types";
+import type { GameSnapshot, Unit, WorldEffect } from "../shared/types";
 
-export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number };
+export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number; aim?: number; direction?: Readonly<{x:number;y:number;height?:number}> };
 export const IDLE_FRAME: UnitAnimationFrame = Object.freeze({ mode: "idle", frame: 0 });
 const TICK_MS = 1000 / SIM_TICKS_PER_SECOND;
 const WALK_FRAMES = 8;
@@ -20,14 +20,16 @@ const actionFrames = {
   attack: Array.from({ length: 3 }, (_, variant) => Array.from({ length: ACTION_FRAMES }, (_, frame) => Object.freeze({ mode: "attack" as const, frame, variant }))),
 };
 
+type Action = { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number; direction?:Readonly<{x:number;y:number;height?:number}>; frames?:UnitAnimationFrame[] };
 type Track = {
   x: number; y: number; cooldown: number;
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   cueTick?: number;
+  releaseTick?: number;
   phase: number; speed: number; moving: boolean; still: boolean;
   mining?: { resourceId: string; timer: number; workTicks: number };
-  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number };
+  action?: Action;
 };
 
 /** Presentation only: observed displacement drives feet; a cooldown *increase*
@@ -46,6 +48,16 @@ export class UnitAnimationTracker {
     // Construction and repair need a real pulse. Mining instead exposes actual
     // progress in its gather timer; merely waiting at the entrance is not work.
     const work = new Map((snapshot.effects ?? []).filter(effect => effect.type === "repair" && effect.unitId && effect.remaining > 0).map(effect => [effect.unitId!, effect]));
+    const releases=new Map<string,Action>();
+    for(const effect of snapshot.effects??[]) {
+      if(!effect.sourceId||!effect.actionMode)continue;
+      const tick=effect.actionTick??snapshot.tick-Math.max(0,effect.duration-effect.remaining);
+      if(snapshot.tick-tick>SIM_TICKS_PER_SECOND)continue;
+      const previous=releases.get(effect.sourceId);
+      if(previous&&(previous.tick>tick||previous.tick===tick&&(previous.mode==='cast'||effect.actionMode!=='cast')))continue;
+      const direction=releaseDirection(effect);
+      releases.set(effect.sourceId,{mode:effect.actionMode,tick,...(effect.actionMode==='attack'?{variant:variantFor(effect.sourceId,tick)}:{}),...(direction?{direction}:{})});
+    }
     const next = new Map<string, Track>();
     for (const unit of snapshot.units) {
       const previous = continuous ? this.tracks.get(unit.id) : undefined;
@@ -62,6 +74,9 @@ export class UnitAnimationTracker {
           ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
         if (cast) action = { mode: "cast", tick: snapshot.tick };
       }
+      const release=releases.get(unit.id);
+      if(release&&(!action||release.tick>action.tick||release.tick===action.tick&&(!action.direction||release.mode==='cast'&&action.mode!=='cast')
+        ||action!==previous?.action&&release.tick===this.tick&&release.tick>(previous?.releaseTick??-1)))action=release;
       const pulse = unit.kind === "worker" && unit.order.type !== "mine" && !moving ? work.get(unit.id) : undefined;
       const gathering = unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "gather" && unit.order.timer > 0
         ? unit.order : undefined;
@@ -84,6 +99,7 @@ export class UnitAnimationTracker {
         ...(gathering ? { mining: { resourceId: gathering.resourceId, timer: gathering.timer, workTicks } } : {}),
         ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
+        ...(release||previous?.releaseTick!==undefined?{releaseTick:Math.max(release?.tick??-1,previous?.releaseTick??-1)}:{}),
         ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
       };
       next.set(unit.id, track);
@@ -100,7 +116,8 @@ export class UnitAnimationTracker {
       if (!track || cue.tick > tick || tick - cue.tick > SIM_TICKS_PER_SECOND || cue.tick <= (track.cueTick ?? -1)) continue;
       track.cueTick = cue.tick;
       if (track.still || track.action && track.action.tick > cue.tick) continue;
-      track.action = { mode: cue.mode, tick: cue.tick, ...(cue.mode === "attack" ? { variant: variantFor(cue.unitId, cue.tick) } : {}) };
+      const direction=releaseDirection(cue);
+      track.action = { mode: cue.mode, tick: cue.tick, ...(direction?{direction}:{}), ...(cue.mode === "attack" ? { variant: variantFor(cue.unitId, cue.tick) } : {}) };
     }
   }
 
@@ -113,7 +130,10 @@ export class UnitAnimationTracker {
       const progress = ((this.tick - track.action.tick + fraction) * TICK_MS) / duration;
       if (progress >= 0 && (progress < 1 || track.action.mining)) {
         const frame = Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES));
-        return track.action.mode === "attack" ? actionFrames.attack[track.action.variant ?? 0]![frame]! : actionFrames[track.action.mode][frame]!;
+        const base=track.action.mode === "attack" ? actionFrames.attack[track.action.variant ?? 0]![frame]! : actionFrames[track.action.mode][frame]!;
+        if(!track.action.direction)return base;
+        track.action.frames??=[];
+        return track.action.frames[frame]??=(Object.freeze({...base,direction:track.action.direction}));
       }
     }
     return track.moving
@@ -135,4 +155,28 @@ function variantFor(id: string, tick: number) {
   for (let i = 0; i < id.length; i++) hash = (Math.imul(hash, 31) + id.charCodeAt(i)) >>> 0;
   hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
   return (hash >>> 0) % 3;
+}
+
+
+function releaseDirection(cue:{fromX?:number;fromY?:number;toX?:number;toY?:number;fromHeight?:number;toHeight?:number;actionToX?:number;actionToY?:number}):Readonly<{x:number;y:number;height?:number}>|undefined {
+  if(!Number.isFinite(cue.fromX)||!Number.isFinite(cue.fromY)||!Number.isFinite(cue.toX)||!Number.isFinite(cue.toY))return;
+  const x=(cue.actionToX??cue.toX!)-cue.fromX!,y=(cue.actionToY??cue.toY!)-cue.fromY!;
+  const height=Number.isFinite(cue.fromHeight)&&Number.isFinite(cue.toHeight)?cue.toHeight!-cue.fromHeight!:undefined;
+  return Math.hypot(x,y,height??0)>1e-6?Object.freeze({x,y,...(height?{height}:{})}):undefined;
+}
+
+
+/** The exact contact/release pose used both by the actor and its visual weapon
+ * socket. Missing older launch metadata is deliberately not reconstructed. */
+const releasePoses=new WeakMap<WorldEffect,UnitAnimationFrame>();
+export function releasePoseForEffect(effect:WorldEffect):UnitAnimationFrame|undefined {
+  if(!effect.sourceId||!effect.actionMode||effect.actionTick===undefined)return;
+  let pose=releasePoses.get(effect);
+  if(!pose) {
+    const base=effect.actionMode==='cast'?actionFrames.cast[0]!:actionFrames.attack[variantFor(effect.sourceId,effect.actionTick)]![0]!;
+    const direction=releaseDirection(effect);
+    pose=direction?Object.freeze({...base,direction}):base;
+    releasePoses.set(effect,pose);
+  }
+  return pose;
 }

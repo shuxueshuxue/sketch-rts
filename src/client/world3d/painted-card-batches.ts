@@ -1,3 +1,4 @@
+import { ART_TILE_SIZE } from '../art/raster-cache';
 import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
@@ -56,7 +57,7 @@ export class PaintedCardBatches {
     if(oldest&&this.stats().pixels>=PIXEL_BUDGET){this.cards.delete(oldest.key);return{page:oldest.page,layer:oldest.layer};}
     return{page:this.createPage(width,height),layer:0};
   }
-  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize=128){
+  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE){
     key=`${key}:${density}:${tileSize}`;
     const card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.

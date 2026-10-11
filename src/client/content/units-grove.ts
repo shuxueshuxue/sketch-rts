@@ -51,22 +51,6 @@ export const GROVE_UNITS = {
     art: { tier: "elite", bearing: "mounted", faction: "grove" },
     paint: unitPainter("knight"),
   },
-  priest: {
-    name: { en: "Priest", zh: "牧师" },
-    description: { en: "Support caster with a targeted heal for wounded non-mechanical allies.", zh: "支援施法者，可以对受伤的非机械友军进行定点治疗。" },
-    command: { icon: "+", hotkey: "p" },
-    glyph: { silhouette: "priest-medallion", marks: ["halo", "cross", "satchel"] },
-    art: { tier: "advanced", bearing: "foot", faction: "grove" },
-    paint: unitPainter("priest"),
-  },
-  summoner: {
-    name: { en: "Summoner", zh: "召唤师" },
-    description: { en: "Caster that creates a temporary spirit at a target point.", zh: "施法者，可以在目标点召唤临时灵体。" },
-    command: { icon: "◎", hotkey: "u" },
-    glyph: { silhouette: "summoner-ring", marks: ["outerRing", "innerSigil", "spark"] },
-    art: { tier: "advanced", bearing: "foot", faction: "grove" },
-    paint: unitPainter("summoner"),
-  },
   witch: {
     name: { en: "Witch", zh: "女巫" },
     description: { en: "Debuff caster that weakens enemy damage through curse; also damages summoned targets.", zh: "减益施法者，通过诅咒削弱敌方伤害；还能直接伤害被诅咒的召唤物。" },

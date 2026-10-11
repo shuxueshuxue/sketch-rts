@@ -38,87 +38,68 @@ function sword(b:Brush,wrist:XY,angle:number,axe:boolean,great=false){
   }b.restore();
 }
 
-export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:FigureRig,cloth:string){
-  const {impact,cast,wrist}=rig; const armor=!!f.armor;
-  if(rig.weapon!=='pike'&&rig.weapon!=='pitchfork'&&rig.weapon!=='bow')arm(b,rig.shoulder,rig.elbow,wrist,cloth,armor,false);
-  if(rig.weapon==='bow'){
-    // Rear quiver, an actual drawing arm, and a string that relaxes on release.
+/** Back and front passes use the same solved skeleton. Hands are painted at
+ * sockets after the rigid tool, never positioned independently in an asset. */
+export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:FigureRig,cloth:string,layer:'back'|'front'='front'){
+  const {impact,cast,wrist}=rig,armor=!!f.armor;
+  if(layer==='back'&&rig.weapon==='bow'){
     poly(b,[[-11,-26],[-7,-27],[-4,-12],[-8,-11]],HIDE);
     for(const x of [-10,-8])line(b,[[x,-25],[x-2,-34]],'#c8bba0',.8);
-    const pull=.35*(1-rig.motion.recoil);
-    const nock=rig.support;
-    arm(b,rig.shoulder,rig.elbow,wrist,cloth,false,true);
-    arm(b,[-5,-23],[1-pull*4,-18],nock,cloth,false,true);
-    b.save();b.translate(...wrist);b.rotate(rig.angle);
-    b.beginPath();b.moveTo(0,-18);b.bezierCurveTo(12,-10,11,11,0,18);b.strokeStyle='#463d31';b.lineWidth=2.1;b.stroke();
-    b.beginPath();b.moveTo(0,-17);b.bezierCurveTo(10,-8,10,10,0,17);b.strokeStyle='#b7a078';b.lineWidth=.8;b.stroke();
-    line(b,[[0,-18],[-3-pull*9,0],[0,18]],'#c8c0a8',.6);
-    if(rig.motion.recoil<.5){line(b,[[-12,0],[12,0]],'#b9ae91',.8);poly(b,[[12,-2],[16,0],[12,2]],EDGE);}
-    b.restore();hand(b,wrist);hand(b,nock);
-  }else if(rig.weapon==='staff'||rig.weapon==='crozier'){
-    arm(b,[-5,-23],[-10,-15-cast*7],[-13+cast*4,-12-cast*15],cloth,false,true);
-    b.save();b.translate(...wrist);b.rotate(rig.angle);
-    const top:XY=[0,-23];
-    seg(b,[0,26],top,1.8,'#897151',true);
-    if(rig.weapon==='crozier'){
-      line(b,[[top[0]-4,top[1]+4],[top[0]+4,top[1]+4]],'#c0ac79',1.5);
-      poly(b,[[top[0],top[1]-3],[top[0]+2.5,top[1]+1],[top[0],top[1]+5],[top[0]-2.5,top[1]+1]],'#ded0a0');
-    }else{
-      ellipse(b,top[0],top[1],4,5,'#333b3b','#a99873');
-      ellipse(b,top[0]-.5,top[1]-1,2,3,f.ember?'#cf8b4f':'#a1beb5');
-    }
-    if(cast){
-      b.save();b.globalAlpha*=cast*.65;
-      ellipse(b,top[0],top[1],6+cast*4,7+cast*4,f.ember?'#e9a85435':'#c0d6bf35');
-      line(b,[[top[0]-6,top[1]],[top[0]+6,top[1]]],'#ede4bf',.8);
-      line(b,[[top[0],top[1]-8],[top[0],top[1]+8]],'#ede4bf',.8);b.restore();
-    }
-    b.restore();
-  }else if(rig.weapon==='pike'||rig.weapon==='pitchfork'){
-    // Rigid shaft rotates around the gripping hand; the tip and butt never
-    // move independently. A mounted lance stays couched, with a short recovery.
-    const grip=wrist;
-    const angle=rig.angle;
-    arm(b,[5,-23],[7,-17],grip,cloth,armor,true);
-    b.save();b.translate(...grip);b.rotate(angle);
-    seg(b,[-23,0],[40,0],f.mounted?2.2:1.8,'#877052',true);
-    if(rig.weapon==='pitchfork'){
-      line(b,[[36,-5],[36,5]],STEEL,1.6);
-      for(const y of [-5,0,5])line(b,[[36,y],[45,y]],EDGE,1.4);
-    }else{poly(b,[[39,-2],[48,0],[39,2],[36,0]],STEEL);line(b,[[39,-1.5],[47,0]],EDGE,.7);}
-    // Grip wrap and a modest hand guard make the attachment legible at 1x.
-    line(b,[[-3,0],[2,0]],HIDE,3);
-    if(f.mounted)poly(b,[[3,-3.5],[5,-2],[5,2],[3,3.5]],'#a49d88');
-    b.restore();hand(b,grip);
-    if(rig.shield)shield(b,-9,-10,team,!!f.elite,facing,rig.shieldStyle==='round');
-    else arm(b,[-5,-23],[-3,-15],rig.support,cloth,armor,true);
-  }else if(rig.weapon==='pick'){
-    const support=rig.support;
-    arm(b,[-5,-23],[0,-16],support,cloth,false,true);
-    b.save();b.translate(...wrist);b.rotate(rig.angle);
-    seg(b,[0,7],[0,-22],1.9,'#9a8058',true);
-    poly(b,[[-9,-18],[-4,-23],[3,-23],[10,-18],[3,-20],[-3,-20]],STEEL);b.restore();
-    poly(b,[[-6,-9],[-1,-9],[-1,-3],[-7,-2]],HIDE);
-  }else if(rig.weapon==='none'){
-    arm(b,[-5,-23],[-10,-16],[-8,-3-cast*18-impact*10],cloth,armor,true);
-    if(rig.shield)shield(b,-9,-10,team,!!f.elite,facing,rig.shieldStyle==='round');
-  }else{
-    if(rig.weapon==='sling'){
-      b.save();b.translate(...wrist);b.rotate(rig.angle);
-      line(b,[[-1,0],[-2,17],[2,17],[1,0]],'#9d8d6b',.85);
-      poly(b,[[-2,16],[2,16],[3,20],[-3,20]],HIDE);
-      if(impact<.7)ellipse(b,0,17.5,1.6,1.4,'#a5a593');b.restore();
-    }else if(rig.weapon==='javelin'){if(impact<.7)paintRigidEquipment(b,'javelin',wrist,rig.angle);}
-    else if(rig.weapon==='club')paintRigidEquipment(b,'club',wrist,rig.angle);
-    else sword(b,wrist,rig.angle,rig.weapon==='axe',rig.weapon==='greatSword');
-    if(rig.shield)shield(b,-9,-10,team,!!f.elite,facing,rig.shieldStyle==='round');
-    else if(rig.weapon==='greatSword'){
-      const support=rig.support;
-      arm(b,[-5,-23],[2,-16],support,cloth,armor,true);
-    }
-    else arm(b,[-6,-23],[-10,-15],[-9,-8],cloth,armor,true);
   }
-  if(rig.weapon!=='bow')hand(b,wrist);
+  if(layer===rig.primaryLayer){
+    arm(b,rig.shoulder,rig.elbow,wrist,cloth,armor,layer==='front');
+    if(rig.weapon==='bow'){
+      const pull=.35*(1-rig.motion.recoil);
+      b.save();b.translate(...wrist);b.rotate(rig.angle);
+      b.beginPath();b.moveTo(0,-18);b.bezierCurveTo(12,-10,11,11,0,18);b.strokeStyle='#463d31';b.lineWidth=2.1;b.stroke();
+      b.beginPath();b.moveTo(0,-17);b.bezierCurveTo(10,-8,10,10,0,17);b.strokeStyle='#b7a078';b.lineWidth=.8;b.stroke();
+      line(b,[[0,-18],[-3-pull*9,0],[0,18]],'#c8c0a8',.6);
+      if(rig.motion.recoil<.5){line(b,[[-12,0],[12,0]],'#b9ae91',.8);poly(b,[[12,-2],[16,0],[12,2]],EDGE);}
+      b.restore();
+    }else if(rig.weapon==='staff'||rig.weapon==='crozier'){
+      b.save();b.translate(...wrist);b.rotate(rig.angle);
+      const top:XY=[0,-23];seg(b,[0,26],top,1.8,'#897151',true);
+      if(rig.weapon==='crozier'){
+        line(b,[[-4,-19],[4,-19]],'#c0ac79',1.5);
+        poly(b,[[0,-26],[2.5,-22],[0,-18],[-2.5,-22]],'#ded0a0');
+      }else{
+        ellipse(b,0,-23,4,5,'#333b3b','#a99873');
+        ellipse(b,-.5,-24,2,3,f.ember?'#cf8b4f':'#a1beb5');
+      }
+      if(cast){b.save();b.globalAlpha*=cast*.65;ellipse(b,...top,6+cast*4,7+cast*4,f.ember?'#e9a85435':'#c0d6bf35');line(b,[[-6,-23],[6,-23]],'#ede4bf',.8);line(b,[[0,-31],[0,-15]],'#ede4bf',.8);b.restore();}
+      b.restore();
+    }else if(rig.weapon==='pike'||rig.weapon==='pitchfork'){
+      b.save();b.translate(...wrist);b.rotate(rig.angle);
+      seg(b,[-23,0],[40,0],f.mounted?2.2:1.8,'#877052',true);
+      if(rig.weapon==='pitchfork'){
+        line(b,[[36,-5],[36,5]],STEEL,1.6);
+        for(const y of [-5,0,5])line(b,[[36,y],[45,y]],EDGE,1.4);
+      }else{poly(b,[[39,-2],[48,0],[39,2],[36,0]],STEEL);line(b,[[39,-1.5],[47,0]],EDGE,.7);}
+      line(b,[[-3,0],[2,0]],HIDE,3);
+      if(f.mounted)poly(b,[[3,-3.5],[5,-2],[5,2],[3,3.5]],'#a49d88');
+      b.restore();
+    }else if(rig.weapon==='pick'){
+      b.save();b.translate(...wrist);b.rotate(rig.angle);
+      seg(b,[0,7],[0,-22],1.9,'#9a8058',true);
+      poly(b,[[-9,-18],[-4,-23],[3,-23],[10,-18],[3,-20],[-3,-20]],STEEL);b.restore();
+    }else if(rig.weapon==='sling'){
+      b.save();b.translate(...wrist);b.rotate(rig.angle);
+      line(b,[[-1,0],[-2,17],[2,17],[1,0]],'#9d8d6b',.85);poly(b,[[-2,16],[2,16],[3,20],[-3,20]],HIDE);
+      if(impact<.7)ellipse(b,0,17.5,1.6,1.4,'#a5a593');b.restore();
+    }else if(rig.weapon==='javelin'){
+      if(impact<.7)paintRigidEquipment(b,'javelin',wrist,rig.angle);
+    }else if(rig.weapon==='club')paintRigidEquipment(b,'club',wrist,rig.angle);
+    else if(rig.weapon!=='none')sword(b,wrist,rig.angle,rig.weapon==='axe',rig.weapon==='greatSword');
+    hand(b,wrist);
+  }
+  // The nearer support arm remains in front of the breastplate even when an
+  // upward tool passes behind it. Its wrist is still the very same rigid socket.
+  if(layer==='front'){
+    arm(b,rig.supportShoulder,rig.supportElbow,rig.support,cloth,armor,true);
+    if(rig.shield)shield(b,rig.support[0],rig.support[1],team,!!f.elite,facing,rig.shieldStyle==='round');
+    else hand(b,rig.support);
+    if(rig.weapon==='pick')poly(b,[[-6,-9],[-1,-9],[-1,-3],[-7,-2]],HIDE);
+  }
 }
 
 /** Rigid tool assets accept sockets from any compatible anatomical rig. */

@@ -1,5 +1,6 @@
 /** Extend the existing real WebGL resource benchmark without modifying production code.
  * node --import tsx scripts/art-browser-benchmark.mjs --out work/art-browser.json --screenshot work/art-browser.png
+ * Opt in to final combat/projectile trackers and coverage evidence with --final-art.
  * Six independent layer lifetimes; 12 warmup + 60 full-WebGL draws each.
  */
 import { readFile, writeFile, unlink } from 'node:fs/promises';
@@ -8,6 +9,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const scripts=dirname(fileURLToPath(import.meta.url));
 const dynamic=process.argv.includes('--dynamic');
+const finalArt=process.argv.includes('--final-art');
 const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:resolve(scripts,'..'),encoding:'utf8'}).trim();
 const allUnits=process.argv.includes('--all-units');
 const token=`.art-${process.pid}`;
@@ -56,9 +58,98 @@ if(dynamic){
  runner=runner.replace('window.runtimeReview.lastScreenshot','window.runtimeReview.dynamicScreenshot');
  runner=runner.replace('fixed 280-unit snapshot, identical selection, deterministic timestamps','1000-unit real simulation replay, all selected, deterministic 50ms tick timestamps');
 }
+// Opt-in only: the historical fixture, its sample schedule and its timed body
+// remain byte-for-byte unchanged when --final-art is absent.
+if(finalArt){
+ const importsAnchor='await resources.resources.initialize();';
+ if(!fixture.includes(importsAnchor))throw new Error('Final-art imports anchor changed');
+ fixture=fixture.replace(importsAnchor,importsAnchor+`
+const [finalCombat,finalProjectiles,finalRules,finalCatalog]=await Promise.all([
+ 'client/combat-presentation','client/projectile-origins','shared/rules-version','shared/catalog',
+].map(path=>import(/* @vite-ignore */ \`\${source}/src/\${path}.ts\`)));
+const finalCatalogCounts={
+ unitKinds:Object.keys(finalCatalog.UNIT_DEFS).length,
+ landUnitKinds:Object.values(finalCatalog.UNIT_DEFS).filter(unit=>!unit.naval).length,
+ unitRuleKinds:Object.keys(finalCatalog.UNIT_RULES).length,
+ abilityKinds:Object.keys(finalCatalog.ABILITY_DEFS).length,
+ buildingKinds:Object.keys(finalCatalog.BUILDING_DEFS).length,
+ trainableUnitKinds:finalCatalog.TRAINABLE_UNIT_KINDS.length,
+ upgradeKinds:Object.keys(finalCatalog.UPGRADE_DEFS).length,
+ raceTechTrees:Object.keys(finalCatalog.RACE_TECH_RULES).length,
+};
+`);
+ const setupAnchor='    // Fixed snapshot and deterministic timestamps.';
+ if(!fixture.includes(setupAnchor))throw new Error('Final-art measured-loop anchor changed');
+ fixture=fixture.replace(setupAnchor,`
+    if(typeof layer.combatStats!=='function')throw new Error('--final-art requires production combatStats');
+    if(typeof frame.facing.releaseFacing!=='function')throw new Error('--final-art requires release-facing support');
+    frame.combat=new finalCombat.CombatPresentationTracker();
+    frame.projectiles=new finalProjectiles.ProjectileOriginTracker();
+    // World3DLayer.draw performs the production tracker updates, including
+    // projectiles.update(snapshot,models,id=>frame.facing.releaseFacing(id)).
+    // Do not duplicate them outside the measured draw or substitute a callback.
+    const finalFrames=[],finalTotals={},finalPeaks={};
+    const finalBloodMeasured=new Set(),finalBloodWarmup=new Set(),finalBloodBorn=new Set();
+    const finalProjectileMeasured=new Set(),finalOriginsResolved=new Set();
+    let finalFirstMeasuredTick,finalHistoryStartTick,finalBloodOccurrences=0;
+    const finalRecord=(measured)=>{
+      const state=frame.snapshot;
+      finalHistoryStartTick??=state.tick;
+      if(measured)finalFirstMeasuredTick??=state.tick;
+      let bloodEligible=0,projectileEffects=0,projectileOrigins=0;
+      for(const effect of state.effects){
+        if(finalCombat.isBloodHit(effect)){
+          bloodEligible++;
+          if(measured){
+            finalBloodMeasured.add(effect.id);
+            const born=state.tick-Math.max(0,effect.duration-effect.remaining);
+            if(born>=finalFirstMeasuredTick)finalBloodBorn.add(effect.id);
+          }else finalBloodWarmup.add(effect.id);
+        }
+        if(measured&&effect.type==='projectile'){
+          projectileEffects++;finalProjectileMeasured.add(effect.id);
+          if(frame.projectiles.origin(effect,'gpu')){projectileOrigins++;finalOriginsResolved.add(effect.id);}
+        }
+      }
+      if(!measured)return;
+      // Read counters after gl.finish and after the timing sample was stored.
+      // Totals are instance-frame exposure, not unique particles/allocations.
+      const combatStats={...layer.combatStats()};
+      for(const [key,value] of Object.entries(combatStats))if(typeof value==='number'&&Number.isFinite(value)){
+        if(!['capacity','bufferBytes','limit'].includes(key))finalTotals[key]=(finalTotals[key]??0)+value;
+        finalPeaks[key]=Math.max(finalPeaks[key]??0,value);
+      }
+      finalBloodOccurrences+=bloodEligible;
+      finalFrames.push({tick:state.tick,now:frame.now,combatStats,bloodEligibleSnapshotEvents:bloodEligible,
+        projectileSnapshotEffects:projectileEffects,resolvedProjectileOrigins:projectileOrigins,
+        simulationProjectiles:state.projectiles.length,projectileCacheEntries:frame.projectiles.size});
+    };
+`+setupAnchor);
+ const sampleEnd='    }\n    const artInfo = {';
+ if(!fixture.includes(sampleEnd))throw new Error('Final-art sample-end anchor changed');
+ fixture=fixture.replace(sampleEnd,`      finalRecord(n>=0);
+    }
+    const finalEvidence={
+      enabled:true,rulesVersion:finalRules.RULES_VERSION,catalogCounts:finalCatalogCounts,
+      historyStartTick:finalHistoryStartTick,firstMeasuredTick:finalFirstMeasuredTick,
+      measuredFrames:finalFrames.length,frames:finalFrames,
+      combatStats:{frameTotals:finalTotals,framePeaks:finalPeaks,
+        totalsMeaning:'count/air/body/deck/speed are instance-frame exposure, drawCalls and overflow sum per-frame submissions/rejections. Capacity/bufferBytes/limit are peak gauges only, never allocation counts.'},
+      blood:{eligibleSnapshotOccurrences:finalBloodOccurrences,uniqueEligibleObservedInMeasuredFrames:finalBloodMeasured.size,
+        uniqueEligibleObservedInWarmup:finalBloodWarmup.size,uniqueEligibleBornInMeasuredTickWindow:finalBloodBorn.size,
+        counting:'Deduplicated by real effect id within this layer lifetime. Replay cycles observe the same events; do not sum unique counts across cycles.'},
+      projectiles:{uniqueEffectsObserved:finalProjectileMeasured.size,uniqueOriginsResolved:finalOriginsResolved.size,
+        unresolvedMeaning:'Existing launch coordinates are retained when socket metadata is unavailable; unresolved is not proof of a missing projectile.'},
+      unavailable:{javascriptAllocationBytes:null,projectileCacheBytes:null,canvasGroundPassMs:null,preWarmupHistoricalBloodResidue:null},
+      scope:'Production World3DLayer including combat/projectile tracker updates and GPU ink. Canvas terrain/ground blood pass is not timed. GPU instance counts do not establish visible fragment counts. History begins at the unchanged first warmup snapshot; older expired hit events cannot reconstruct ground residue.',
+      limits:finalCombat.COMBAT_PRESENTATION_LIMITS,
+    };
+    const artInfo = { finalArt:finalEvidence,`);
+ runner=runner.replace('const result = { artSourceCommit:', 'const result = { finalArt: true, finalArtMethod: "Opt-in production combat/projectile trackers in the unchanged static or dynamic WebGL sample loop; measured counter collection runs after fenced timing. Per-cycle renderer.finalArt reports rules/catalog, event coverage, instance exposure and explicit unavailable measurements.", artSourceCommit:');
+}
 try {
  await writeFile(fixturePath,fixture);await writeFile(runnerPath,runner);
- const child=spawn(process.execPath,['--import','tsx',runnerPath,...process.argv.slice(2).filter(value => value !== '--all-units' && value !== '--dynamic')],{stdio:'inherit',cwd:resolve(scripts,'..')});
+ const child=spawn(process.execPath,['--import','tsx',runnerPath,...process.argv.slice(2).filter(value => value !== '--all-units' && value !== '--dynamic' && value !== '--final-art')],{stdio:'inherit',cwd:resolve(scripts,'..')});
  const code=await new Promise((done,reject)=>{child.on('error',reject);child.on('exit',done);});
  if(code!==0)process.exitCode=code??1;
 }finally{await Promise.all([unlink(fixturePath).catch(()=>{}),unlink(runnerPath).catch(()=>{})]);}

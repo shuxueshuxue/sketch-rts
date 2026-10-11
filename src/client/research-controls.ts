@@ -1,5 +1,5 @@
-import { BUILDING_DEFS, RACE_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../shared/catalog";
-import type { Building, PlayerState, UpgradeKind } from "../shared/types";
+import { RACE_DEFS, canResearchAt, UPGRADE_DEFS, maxUpgradeLevel } from "../shared/catalog";
+import type { Building, PlayerState, RaceId, UpgradeKind } from "../shared/types";
 
 export type ResearchCommandButton = {
   label: string;
@@ -32,7 +32,7 @@ export function researchCommandButtonsForSelection(buildings: Building[], player
   return RESEARCH_COMMANDS.flatMap((command) => {
     if (!raceUpgrades.includes(command.upgradeKind)) return [];
     if ((player.upgrades[command.upgradeKind] ?? 0) >= maxUpgradeLevel(command.upgradeKind)) return [];
-    const building = buildings.find((candidate) => canResearchAtBuilding(candidate, command.upgradeKind));
+    const building = buildings.find((candidate) => canResearchAtBuilding(candidate, command.upgradeKind, player.race));
     return building ? [{ ...command, buildingId: building.id }] : [];
   });
 }
@@ -59,11 +59,10 @@ export function researchProgressButtonsForSelection(buildings: Building[], playe
   );
 }
 
-function canResearchAtBuilding(building: Building, upgradeKind: UpgradeKind) {
+function canResearchAtBuilding(building: Building, upgradeKind: UpgradeKind, race: RaceId) {
   return (
     building.complete &&
     building.researchQueue.every((job) => job.upgradeKind !== upgradeKind) &&
-    UPGRADE_DEFS[upgradeKind].researchBuildingKinds.includes(building.kind) &&
-    BUILDING_DEFS[building.kind].researches.includes(upgradeKind)
+    canResearchAt(race, building.kind, upgradeKind)
   );
 }

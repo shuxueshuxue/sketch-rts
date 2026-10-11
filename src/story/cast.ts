@@ -8,7 +8,10 @@ import type { Text } from "./stage";
 // same body, motion and equipment composers the game's own units use (client/art/story-rig), so a campaign's beasts and heroes sit in the same sketched
 // world. The renderer caches what it paints per team colour, as it does for every unit.
 
-export type UnitPainter = (brush: CanvasRenderingContext2D, team: string, pose?: UnitAnimationFrame, facing?: 1 | -1) => void;
+export type UnitPainter = ((brush: CanvasRenderingContext2D, team: string, pose?: UnitAnimationFrame, facing?: 1 | -1) => void) & {
+  /** Pure authored socket, before facing/outer unit scale. Present on composed story models. */
+  release?: (pose:UnitAnimationFrame)=>{x:number;y:number;ground:number}|undefined;
+};
 
 export type UnitModel = {
   paint: UnitPainter;

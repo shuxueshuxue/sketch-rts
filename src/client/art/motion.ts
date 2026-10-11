@@ -1,3 +1,4 @@
+import { finiteAim } from './action-direction';
 import type { UnitAnimationFrame } from '../unit-animation';
 
 /** A motion describes intention, not a species or equipment mesh. Rigs scale
@@ -54,3 +55,12 @@ export function sampleMotion(pose: UnitAnimationFrame, family: MotionFamily = 's
   const frames = BANK.get(family)![MODE_INDEX[pose.mode]]![Math.abs(Math.trunc(pose.variant ?? 0)) % 3]!;
   return frames[Math.max(0, Math.min(frames.length - 1, Math.trunc(pose.frame)))] ?? REST;
 }
+
+/** Three authored source planes plus at most 30 degrees of terminal correction.
+ * Sources own shoulder/hand arrangement; correction never rotates the body. */
+const DIRECTION_BANK=Array.from({length:13},(_,index)=>{
+ const bin=index-6,source=bin<=-2?-1:bin>=2?1:0;
+ const angle=bin*Math.PI/12,sourceAngle=source*Math.PI/3;
+ return Object.freeze({bin,source:source as -1|0|1,angle,sourceAngle,correction:angle-sourceAngle});
+});
+export function actionDirection(pose:UnitAnimationFrame){return DIRECTION_BANK[finiteAim(pose)+6]!;}

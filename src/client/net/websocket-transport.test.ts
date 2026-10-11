@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import { encodeNetMessage } from "../../shared/net/codec";
 import { WebSocketTransport, type WebSocketLike } from "./websocket-transport";
@@ -10,11 +11,11 @@ describe("WebSocket transport adapter", () => {
     const received: ServerNetMessage[] = [];
     transport.onMessage((message) => received.push(message));
 
-    transport.send({ type: "join", roomId: "room-1", playerId: "player" });
-    socket.emitMessage(encodeNetMessage({ type: "hello", roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }));
+    transport.send({ type: "join", rulesVersion: RULES_VERSION, roomId: "room-1", playerId: "player" });
+    socket.emitMessage(encodeNetMessage({ type: "hello", rulesVersion: RULES_VERSION, roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }));
 
-    expect(socket.sent).toEqual([JSON.stringify({ type: "join", roomId: "room-1", playerId: "player" })]);
-    expect(received).toEqual([{ type: "hello", roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }]);
+    expect(socket.sent).toEqual([JSON.stringify({ type: "join", rulesVersion: RULES_VERSION, roomId: "room-1", playerId: "player" })]);
+    expect(received).toEqual([{ type: "hello", rulesVersion: RULES_VERSION, roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }]);
   });
 
   it("notifies when the socket opens", () => {

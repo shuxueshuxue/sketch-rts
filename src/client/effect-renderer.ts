@@ -1,10 +1,11 @@
+import type {ProjectileOrigin} from './projectile-origins';
 import { drawChainLightningEffect, drawHealEffect, drawSummonEffect, drawCurseEffect, drawStormEffect, drawGuardianFieldEffect, drawExperienceBurstEffect, drawFlameBurnEffect, drawPhysicalMissile, drawArrow, drawSpellOrb, drawProjectileTrail, drawChargeTrail, drawChargeImpact, drawGoldBountyEffect } from "./art/canvas-effects";
 import { estimatedRider, riderRadius, hasEffectVector, chargeTrailFrame, chargeImpactFrame, projectileLook, launchPoint, arrowFrame, isUnitKind, TOWER_ARROW_SCALE, spellOrbPalette } from "./art/effect-presentation";
 import { drawWarfareEffect } from "./warfare-effects";
 import { SHIP_CAMERA } from "../shared/ship-geometry";
 import { drawVeteranCastEffect } from './ability-effects';
 import { shouldRenderCommandFeedback } from './command-feedback';
-import type { PlayerId, Unit, WorldEffect } from "../shared/types";
+import type { GameSnapshot, PlayerId, Unit, WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
 
@@ -17,7 +18,11 @@ type RenderWorldEffectsOptions = {
   unitPosition?: (unitId: string) => Point | undefined;
   unit?: (unitId:string)=>Unit|undefined;
   viewer?:PlayerId | undefined;
+  players?:GameSnapshot["players"];
   reducedMotion?:boolean;
+  /** The event-driven presentation tracker already draws directional charge accents. */
+  combatTrails?:boolean;
+  projectileOrigin?:(effect:WorldEffect)=>ProjectileOrigin|undefined;
 };
 
 export function renderWorldEffects(options: RenderWorldEffectsOptions) {
@@ -27,6 +32,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     if(effect.remaining<=0 || !shouldRenderCommandFeedback(effect,options.viewer))continue;
     if (drawWarfareEffect(ctx,effect,worldToScreen,nearScreen)) continue;
     if (effect.type === "chargeTrail" && hasEffectVector(effect)) {
+      if(options.combatTrails)continue;
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
       const to = worldToScreen({ x: effect.toX, y: effect.toY });
       const life = effect.remaining / effect.duration;
@@ -46,16 +52,17 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "projectile" && hasEffectVector(effect)) {
-      const from = worldToScreen({ x: effect.fromX, y: effect.fromY-(effect.fromHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
+      const origin=options.projectileOrigin?.(effect);
+      const from = worldToScreen({ x: origin?.x??effect.fromX, y: (origin?.y??effect.fromY)-(origin?.height??effect.fromHeight??0)*Math.tan(SHIP_CAMERA.tilt) });
       const to = worldToScreen({ x: effect.toX, y: effect.toY-(effect.toHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
       if (!nearScreen(to, 90) && !nearScreen(from, 90)) continue;
       const progress = 1 - effect.remaining / effect.duration;
       const look = projectileLook(effect.sourceKind,effect.attackKind);
       if (look !== "streak") {
-        const sourceKind = effect.sourceKind!;
-        const launch = launchPoint(from, to, sourceKind);
-        if (look === "arrow") drawArrow(ctx, arrowFrame(launch, to, progress, isUnitKind(sourceKind) ? 1 : TOWER_ARROW_SCALE));
-        else if (look === "orb") drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        const sourceKind = effect.sourceKind;
+        const launch = origin ? from : sourceKind ? launchPoint(from, to, sourceKind) : from;
+        if (look === "arrow") drawArrow(ctx, arrowFrame(launch, to, progress, !sourceKind || isUnitKind(sourceKind) ? 1 : TOWER_ARROW_SCALE));
+        else if (look === "orb") drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind, effect.owner ? options.players?.[effect.owner]?.race : undefined));
         else drawPhysicalMissile(ctx, launch, to, progress, look);
         continue;
       }

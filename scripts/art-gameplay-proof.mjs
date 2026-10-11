@@ -1,5 +1,5 @@
 /** Real local game UI proof, without Playwright or renderer fixtures.
- * node scripts/art-gameplay-proof.mjs [--port 34615] [--out docs/art/refactor/after]
+ * node scripts/art-gameplay-proof.mjs [--suite art|shared-units] [--port 34615] [--out docs/art/refactor/after]
  * Starts the repository dev server and a disposable Chromium profile; never contacts deployment hosts.
  */
 import { spawn } from 'node:child_process';
@@ -7,9 +7,11 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import WebSocket from 'ws';
 const argument=name=>{const i=process.argv.indexOf(name);return i<0?undefined:process.argv[i+1];};
+const suite=argument('--suite')??'art';
+if(!['art','shared-units'].includes(suite))throw new Error(`Unknown gameplay proof suite: ${suite}`);
 const port=Number(argument('--port')??34615),origin=`http://127.0.0.1:${port}`,out=resolve(argument('--out')??'docs/art/refactor/after');
 const scratch=await mkdtemp('/tmp/art-gameplay-proof-');await mkdir(out,{recursive:true});
-const evidence={origin,startedAt:new Date().toISOString(),screenshots:[],steps:[],errors:[],commands:[],harnessAdjustments:['DOM controls invoke their native click handlers atomically; map Canvas uses CDP pointer input.','Hide pointer-lock invitation overlay after match entry (same adjustment as existing room UI proofs).','Seed a local authoritative bareDuel scenario through existing reset API after completing real map/setup/start UI.']};
+const evidence={suite,origin,startedAt:new Date().toISOString(),screenshots:[],steps:[],errors:[],commands:[],harnessAdjustments:['DOM controls invoke their native click handlers atomically; map Canvas uses CDP pointer input.','Hide pointer-lock invitation overlay after match entry (same adjustment as existing room UI proofs).','Seed a local authoritative bareDuel scenario through existing reset API after completing real map/setup/start UI.']};
 let server,browser,socket,sessionId,command,read;let serverLog='';
 const delay=ms=>new Promise(done=>setTimeout(done,ms));
 async function until(run,label,timeout=45000){const end=Date.now()+timeout;let error;while(Date.now()<end){try{const result=await run();if(result)return result;}catch(e){error=e;}await delay(100);}throw new Error(`${label} timed out${error?': '+error.message:''}`);}
@@ -43,6 +45,10 @@ try{
  await screenshot('room-setup');await click('[data-start-room]');
  await until(()=>read(`document.querySelector('[data-main-menu]')?.classList.contains('hidden')&&window.__sketchRtsView?.tick!==undefined`),'real match entry');
  const started=await api(`/api/rooms/${roomId}`);must(started.status==='inMatch'&&started.mapId==='pineshade','UI did not start selected map');evidence.steps.push({step:'start-match',status:started.status,mapId:started.mapId});await screenshot('started');
+ if(suite==='shared-units'){
+  const {runSharedUnitProof}=await import('./shared-unit-gameplay-proof.mjs');
+  await runSharedUnitProof({api,origin,roomId,read,command,sessionId,click,clickAt,screenshot,until,delay,must,evidence});
+ }else{
  await api(`/api/rooms/${roomId}/pause`,{});
  const fixture={replaceDefaultUnits:true,replaceDefaultResources:true,addUnits:[{id:'art-proof-soldier',owner:'player',kind:'footman',x:1200,y:960},{id:'art-proof-priest',owner:'player',kind:'priest',x:1130,y:1030},{id:'art-proof-archer',owner:'player',kind:'archer',x:1270,y:1030}],addItems:[{id:'art-proof-sword',kind:'greatSword',carrierId:'art-proof-soldier',slot:'carry0',x:1200,y:960,cooldownRemaining:0}]};
  await api(`/api/rooms/${roomId}/reset`,{mapId:'bareDuel',options:{aiPlayers:[],scenario:fixture}});await api(`/api/rooms/${roomId}/resume`,{});
@@ -62,6 +68,7 @@ try{
  const clientEquipment=await until(()=>read(`(()=>{const item=document.querySelector('.equipment-panel [data-item-id="art-proof-sword"]'),hand=document.querySelector('.equipment-hand-name');if(!item||!hand||hand.textContent!==item.getAttribute('aria-label'))return;return{hand:hand.textContent,stats:document.querySelector('[data-equipment-stats]')?.textContent,tick:window.__sketchRtsView?.tick}})()`),'client equipment applies authoritative wield',60000);
  evidence.steps.push({step:'wield-via-equipment-ui',hands:wielded.hands,unitId:wielded.id,clientEquipment});await screenshot('equipment-after');await click('.equipment-close');await screenshot('weapon-world');
  evidence.finalView=await read('window.__sketchRtsView');evidence.passed=evidence.errors.length===0&&evidence.steps.some(step=>step.step==='move')&&evidence.steps.some(step=>step.step==='wield-via-equipment-ui');must(evidence.passed,'browser errors during gameplay proof');
+ }
 }catch(error){evidence.passed=false;evidence.failure=error.stack??String(error);if(command&&sessionId)try{await screenshot('failure');evidence.failureDom=await read('document.body.innerText');}catch{}process.exitCode=1;
 }finally{
  evidence.finishedAt=new Date().toISOString();await writeFile(resolve(out,'gameplay-proof.json'),JSON.stringify(evidence,null,2)+'\n');await writeFile(resolve(out,'gameplay-server.log'),serverLog);

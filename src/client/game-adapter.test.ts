@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import { createGame } from "../shared/sim";
 import { SimulationEngine } from "../shared/sim/engine";
@@ -38,7 +39,7 @@ describe("game adapters", () => {
     checkpointGame.players.player.gold = 8744;
     checkpointGame.units = checkpointGame.units.filter((unit) => unit.owner !== "player");
 
-    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: checkpointGame.nextId }, epoch: 0 });
+    transport.emit({ type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: checkpointGame.nextId }, epoch: 0 });
 
     expect(adapter.updateToRenderTime()).toBe(false);
     expect(adapter.currentSnapshot().players.player.gold).toBe(8744);

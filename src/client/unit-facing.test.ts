@@ -78,3 +78,21 @@ describe("unit facing", () => {
     expect(tracker.facing("a")).toBe(1);
   });
 });
+
+describe('release-facing lock',()=>{
+  const unit=(order:UnitOrder={type:'idle'})=>({id:'actor',x:100,y:100,order} as Unit);
+  it('keeps vertical recovery facing when a new order or jitter points sideways',()=>{
+    const tracker=new UnitFacingTracker();tracker.update([unit()],()=>undefined);
+    const direction={x:0,y:-200};expect(tracker.actionFacing('actor',direction)).toBe(1);
+    tracker.update([unit({type:'attack',targetId:'behind'})],()=>({x:0,y:100}));
+    expect(tracker.facing('actor')).toBe(-1);expect(tracker.actionFacing('actor',direction)).toBe(1);
+    expect(tracker.releaseFacing('actor')).toBe(1);
+    expect(tracker.actionFacing('actor',undefined)).toBe(-1);expect(tracker.releaseFacing('actor')).toBe(-1);
+  });
+  it('uses projected direction and a relative vertical deadzone',()=>{
+    const tracker=new UnitFacingTracker();tracker.update([unit()],()=>undefined);
+    expect(tracker.actionFacing('actor',{x:1,y:200})).toBe(1);
+    expect(tracker.actionFacing('actor',{x:100,y:0},p=>({x:-p.x,y:p.y}))).toBe(-1);
+    expect(nextFacing({facing:-1,anchorX:100},{x:100,y:100,order:{type:'idle'}},{x:104,y:-200}).facing).toBe(-1);
+  });
+});

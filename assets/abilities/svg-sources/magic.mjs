@@ -44,33 +44,6 @@ export const magicIcons = {
     <path d="M25 39L20 34L23 31L28 36M101 40L107 35L103 31L98 36" fill="none" stroke="#dec3fb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   `,
 
-  emberMend: `
-    <path d="M24 47C28 28 47 15 65 20C89 15 108 37 104 58C113 77 103 99 78 107C52 116 21 98 20 79C16 66 20 56 24 47Z" fill="url(#halo)"/>
-    <path d="M63 24C65 36 78 40 79 53C84 48 85 44 84 39C97 52 97 67 84 79C77 85 59 85 50 78C38 70 37 58 45 47C46 55 49 57 52 59C57 49 54 38 63 24Z" fill="url(#flame)" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M65 49C63 56 55 60 56 69C55 78 65 81 73 76C80 71 76 62 71 58C72 64 69 67 67 66C65 61 68 57 65 49Z" fill="#fff2a8" stroke="#a85c22" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M51 52C47 59 44 63 49 71M73 41C77 47 76 51 75 55M82 63C84 68 80 74 77 75" fill="none" stroke="#fff7bf" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M24 70C28 65 33 66 35 70L44 82C48 83 55 80 60 82C65 84 69 91 64 96C59 103 48 103 39 98L30 89L22 91L16 81Z" fill="url(#bronze)" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M31 69C29 73 35 80 40 84C46 89 52 88 57 89M33 81L30 78M38 89L33 85M50 96C55 98 61 96 63 93" fill="none" stroke="#50302a" stroke-width="2" stroke-linecap="round"/>
-    <path d="M103 68C98 64 94 66 92 71L84 80C80 82 73 79 69 82C65 84 61 91 66 96C72 102 84 101 91 96L100 87L109 90L114 80Z" fill="url(#bronze)" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M98 69C101 73 94 80 90 84C84 88 77 88 72 89M95 81L99 77M90 90L97 84M68 92C70 96 76 97 80 96" fill="none" stroke="#50302a" stroke-width="2" stroke-linecap="round"/>
-    <path d="M17 87L30 96L24 109L14 102ZM99 95L111 86L114 100L105 107Z" fill="url(#leather)" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M19 93L26 99M104 99L111 93M33 72C35 77 38 80 41 81M96 72C93 76 91 79 89 80" fill="none" stroke="#ffdca5" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M37 64C24 57 30 45 37 44M91 43C104 48 107 59 97 65M46 84C53 80 77 79 84 84" fill="none" stroke="#ffda6e" stroke-width="2" stroke-linecap="round"/>
-    <path d="M37 33C34 27 37 22 41 20C40 27 44 27 43 31C42 34 40 36 37 33ZM91 27C88 24 90 19 92 17C92 20 96 23 95 25C95 28 93 29 91 27Z" fill="#ffc26b" stroke="#913b32" stroke-width="1.5" stroke-linejoin="round"/>
-  `,
-
-  cinderSoul: `
-    <path d="M24 47C30 19 47 17 62 21C86 14 108 31 104 59C116 84 101 104 79 109C56 117 25 102 21 79C17 65 20 57 24 47Z" fill="url(#halo)"/>
-    <path d="M64 16C68 29 81 35 79 49C85 45 88 38 86 29C98 39 106 51 101 65C109 64 111 60 111 54C118 76 101 89 88 93C91 99 97 99 103 98C94 109 81 110 71 102C67 110 55 112 46 106C52 102 54 99 51 96C30 96 18 87 18 70C22 78 30 79 33 74C26 65 29 55 35 49C35 59 40 62 44 60C46 47 42 31 52 25C51 38 55 43 59 43C62 33 55 27 64 16Z" fill="url(#flame)" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M60 43C47 53 47 71 53 81C55 87 53 93 49 97C59 98 63 93 64 87C68 91 72 97 70 104C83 100 84 87 82 78C81 71 84 66 79 59C76 62 75 65 74 68C68 59 69 49 60 43Z" fill="#ffe199" stroke="#9f4b28" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M53 62C58 62 61 65 60 70C55 70 53 67 53 62ZM67 70C68 65 72 62 77 63C77 67 73 70 67 70Z" fill="#542a34" stroke="#101820" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M62 75C65 74 68 75 69 77C69 82 68 86 65 88C61 85 60 80 62 75Z" fill="#9c422e" stroke="#613332" stroke-width="1.4"/>
-    <path d="M59 53C55 56 54 58 54 60M69 53C71 57 71 59 72 61M57 79C58 85 57 89 55 92M74 82C76 88 76 92 74 95" fill="none" stroke="#fff8c7" stroke-width="1.6" stroke-linecap="round"/>
-    <path d="M42 70C38 76 36 79 29 81M85 78C92 79 97 75 98 70M47 42C46 50 49 53 46 60M74 31C77 38 75 42 73 45M82 97C86 101 91 103 95 103" fill="none" stroke="#ffb568" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M29 34C24 30 26 23 30 20C28 28 35 29 34 33C33 36 30 37 29 34ZM101 36C96 32 99 25 102 23C102 30 109 33 107 38C105 41 102 39 101 36ZM21 96C16 91 18 84 20 81C22 88 27 90 26 94C25 98 23 99 21 96Z" fill="#ffcf79" stroke="#a54a2f" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M43 19L41 25M89 17L91 23M110 89L105 93" fill="none" stroke="#fff0ad" stroke-width="1.8" stroke-linecap="round"/>
-  `,
-
   ashCurse: `
     <path d="M26 44C32 21 52 19 66 21C88 17 111 36 105 60C115 82 98 106 73 109C49 112 24 100 20 79C16 66 20 52 26 44Z" fill="url(#halo)"/>
     <path d="M26 92C21 77 29 57 37 52C32 66 42 69 47 65C49 50 35 41 43 30C45 44 56 42 59 34C67 18 83 20 88 27C80 24 74 32 78 39C83 45 95 46 99 60C103 72 101 83 94 91C99 92 103 90 106 86C103 105 77 111 56 108C37 106 26 104 26 92Z" fill="#453b50" stroke="#101820" stroke-width="2.5" stroke-linejoin="round"/>

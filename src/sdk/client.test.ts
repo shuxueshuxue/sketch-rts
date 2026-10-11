@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import { seconds } from "../shared/time";
 import { SketchRtsSdk } from "./client";
@@ -237,8 +238,8 @@ describe("SketchRtsSdk", () => {
   it("dogfoods room and savegame APIs through typed helpers", async () => {
     const calls: { path: string; method: string; body?: unknown }[] = [];
     const room = makeRoom("room-1");
-    const save = { schemaVersion: 1, id: "save-1", label: "opening", createdAt: "2026-05-31T00:00:00.000Z", room, snapshot: makeSnapshot(), runtime: { nextId: 1001, activePlayers: ["player", "enemy"], teams: { player: "north", enemy: "south" }, aiPlayers: ["enemy"] } };
-    const replay = { schemaVersion: 1, id: "trace-1", label: "debug", initialSave: save, frames: [], checkpoints: [] };
+    const save = { schemaVersion: 1, rulesVersion: RULES_VERSION, id: "save-1", label: "opening", createdAt: "2026-05-31T00:00:00.000Z", room, snapshot: makeSnapshot(), runtime: { nextId: 1001, activePlayers: ["player", "enemy"], teams: { player: "north", enemy: "south" }, aiPlayers: ["enemy"] } };
+    const replay = { schemaVersion: 1, rulesVersion: RULES_VERSION, id: "trace-1", label: "debug", initialSave: save, frames: [], checkpoints: [] };
     const fetcher: typeof fetch = async (input, init) => {
       const url = new URL(String(input));
       const method = init?.method ?? "GET";

@@ -27,7 +27,7 @@ import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from ".
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
-import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, canTrainAt, canResearchAt, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { isStunned, unitAbilities } from "./unit-abilities";
 import { matchesUnitTarget, NON_MECHANICAL_TARGETS, type UnitClass } from "./unit-targeting";
@@ -1224,7 +1224,7 @@ function veteranAimSpeed(game: Game, unit: Unit) {
 }
 function applyVeteranAbility(game: Game, caster: Unit, ability: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "veteran" }>, automatic: boolean) {
   return castVeteranAbility(game, caster, ability.skill, automatic,
-    (type, x, y, duration, options) => addEffect(game, type, x, y, duration, options), veteranNearby(game), game.veteranAutocastFrame);
+    (type, x, y, duration, options) => addEffect(game, type, x, y, duration, {...options,sourceId:caster.id,actionMode:"cast",fromX:caster.x,fromY:caster.y,toX:x,toY:y}), veteranNearby(game), game.veteranAutocastFrame);
 }
 
 export { unitRules };
@@ -2101,8 +2101,7 @@ function addRepairHammerEffect(game: Game, building: Building, queued = false) {
 
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
   if (!building.complete) throw new Error(`Cannot train from incomplete ${building.kind}`);
-  if (!BUILDING_DEFS[building.kind].trains.includes(unitKind)) throw new Error(`${building.kind} cannot train ${unitKind}`);
-  if (!RACE_DEFS[playerState(game, building.owner).race].trainableUnits.includes(unitKind)) throw new Error(`${playerState(game, building.owner).race} race cannot train ${unitKind}`);
+  if (!canTrainAt(playerState(game, building.owner).race, building.kind, unitKind)) throw new Error(`${building.kind} cannot train ${unitKind} for ${playerState(game, building.owner).race}`);
   const cap = requiredSupplyCap(unitKind);
   if (playerState(game, building.owner).supplyCap < cap) throw new Error(`Need a supply cap of ${cap} to train ${unitKind}`);
   if (projectedSupplyUsed(game, building.owner) + UNIT_DEFS[unitKind].supplyUsed > playerState(game, building.owner).supplyCap) {
@@ -2155,7 +2154,7 @@ function queueResearch(game: Game, building: Building, upgradeKind: UpgradeKind)
   const upgrade = UPGRADE_DEFS[upgradeKind];
   if (!upgrade) throw new Error(`Unknown upgrade ${upgradeKind}`);
   if (!RACE_DEFS[playerState(game, building.owner).race].upgrades.includes(upgradeKind)) throw new Error(`${playerState(game, building.owner).race} race cannot research ${upgradeKind}`);
-  if (!upgrade.researchBuildingKinds.includes(building.kind) || !BUILDING_DEFS[building.kind].researches.includes(upgradeKind)) {
+  if (!canResearchAt(playerState(game, building.owner).race, building.kind, upgradeKind)) {
     throw new Error(`${building.kind} cannot research ${upgradeKind}`);
   }
   const player = playerState(game, building.owner);
@@ -2488,7 +2487,7 @@ function applyHeal(game: Game, caster: Unit, ability: AbilityKind, target: Unit,
   if (!matchesUnitTarget(target, def.targets, game) || !canReceiveHealing(target, game) || distance(caster, target) > def.range) return;
   target.hp = Math.min(target.maxHp, target.hp + def.healAmount);
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, def.effectType, target.x, target.y, 36, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
+  addEffect(game, def.effectType, target.x, target.y, 36, { sourceKind: caster.kind, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: target.x, toY: target.y, toHeight: combatVisualHeight(game,target), unitId: caster.id, owner: caster.owner });
 }
 
 function syncSummonLoad(game: Game, ship: Unit, probe: Unit) {
@@ -2510,7 +2509,7 @@ function applySummon(game: Game, caster: Unit, ability: AbilityKind, x: number, 
   spirit.expiresTick = game.tick + def.summonDuration;
   spirit.order = { type: "idle" };
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, def.effectType, spirit.x, spirit.y, 50, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
+  addEffect(game, def.effectType, spirit.x, spirit.y, 50, { sourceKind: caster.kind, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: spirit.x, toY: spirit.y, toHeight: combatVisualHeight(game,spirit), unitId: caster.id, owner: caster.owner });
   return true;
 }
 
@@ -2522,7 +2521,7 @@ function applyCurse(game: Game, caster: Unit, ability: AbilityKind, target: Unit
   target.effects = target.effects.filter((effect) => effect.type !== def.statusType);
   target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(damageMultiplier !== 0.4 ? { damageMultiplier } : {}) });
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, def.effectType, target.x, target.y, 46, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
+  addEffect(game, def.effectType, target.x, target.y, 46, { sourceKind: caster.kind, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: target.x, toY: target.y, toHeight: combatVisualHeight(game,target), unitId: caster.id, owner: caster.owner });
   if (def.summonedDamage && target.expiresTick !== undefined) applyDamage(game, caster, target, def.summonedDamage, undefined, undefined, 0, DAMAGE_PROFILES.ARCANE);
 }
 
@@ -2576,7 +2575,7 @@ function updateChargeOrder(game: Game, unit: Unit) {
   if (distance(unit, target) <= unit.attackRange) {
     const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit) * def.damageMultiplier));
     applyAttackDamage(game, unit, target, damage, unit.attackRange);
-    addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id });
+    addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id, sourceId: unit.id, actionMode: "attack", fromHeight:combatVisualHeight(game,unit),toHeight:combatVisualHeight(game,target) });
     unit.cooldown = unit.attackCooldown;
     endCharge(unit, order.resume);
     return;
@@ -2646,7 +2645,7 @@ function applyStomp(game: Game, caster: Unit, ability: AbilityKind, def: Extract
   if (struck.length === 0) return false;
   for (const unit of struck) setStatus(unit, { type: "stun", remaining: def.effectDuration });
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, "stomp", caster.x, caster.y, 24, { radius: def.range, owner: caster.owner, sourceKind: caster.kind, unitId: caster.id });
+  addEffect(game, "stomp", caster.x, caster.y, 24, { radius: def.range, owner: caster.owner, sourceKind: caster.kind, unitId: caster.id, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, toX: caster.x, toY: caster.y });
   return true;
 }
 
@@ -2660,7 +2659,7 @@ function applyBloodlust(game: Game, caster: Unit, ability: AbilityKind, def: Ext
   if (!best) return false;
   setStatus(best, { type: "bloodlust", remaining: def.effectDuration });
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, "bloodlust", best.x, best.y, 30, { owner: caster.owner, sourceKind: caster.kind, unitId: caster.id });
+  addEffect(game, "bloodlust", best.x, best.y, 30, { owner: caster.owner, sourceKind: caster.kind, unitId: caster.id, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: best.x, toY: best.y, toHeight: combatVisualHeight(game,best) });
   return true;
 }
 
@@ -2673,7 +2672,7 @@ function applyWeb(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(
   if (!best) return false;
   setStatus(best, { type: "root", remaining: def.effectDuration });
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  addEffect(game, "web", best.x, best.y, def.effectDuration, { owner: caster.owner, sourceKind: caster.kind, unitId: caster.id });
+  addEffect(game, "web", best.x, best.y, def.effectDuration, { owner: caster.owner, sourceKind: caster.kind, unitId: caster.id, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: best.x, toY: best.y, toHeight: combatVisualHeight(game,best) });
   return true;
 }
 
@@ -2831,7 +2830,7 @@ function activateItem(
       unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
       unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL.duration });
     });
-    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL.duration, { radius: GUARDIAN_SCROLL.radius });
+    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL.duration, { radius: GUARDIAN_SCROLL.radius, sourceId: carrier.id, actionMode: "cast", fromX: carrier.x, fromY: carrier.y, toX: carrier.x, toY: carrier.y });
     consumeItem(game, item);
     return;
   }
@@ -2857,7 +2856,7 @@ function activateItem(
       if (!canReceiveHealing(unit, game) || distance(unit, carrier) > HEALING_SCROLL_RADIUS || areEnemyOwners(game, carrier.owner, unit.owner)) return;
       unit.hp = Math.min(unit.maxHp, unit.hp + HEALING_SCROLL_HEAL);
     });
-    addEffect(game, "heal", carrier.x, carrier.y, 30, { radius: HEALING_SCROLL_RADIUS });
+    addEffect(game, "heal", carrier.x, carrier.y, 30, { radius: HEALING_SCROLL_RADIUS, sourceId: carrier.id, actionMode: "cast", fromX: carrier.x, fromY: carrier.y, toX: carrier.x, toY: carrier.y });
     consumeItem(game, item);
     return;
   }
@@ -2870,7 +2869,7 @@ function activateItem(
     game.nextId += 1;
     tower.hp = Math.round(tower.maxHp * IVORY_TOWER_HP_SHARE);
     game.buildings.push(tower);
-    addEffect(game, "summon", at.x, at.y, 34);
+    addEffect(game, "summon", at.x, at.y, 34, {sourceId:carrier.id,actionMode:"cast",fromX:carrier.x,fromY:carrier.y,toX:at.x,toY:at.y});
     consumeItem(game, item);
   }
 }
@@ -2920,7 +2919,7 @@ function applyStormStaff(game: Game, carrier: Unit, item: WorldItem, x: number, 
     if (distance(target, { x, y }) > STORM_STAFF.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
     applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage*outgoingDamageMultiplier(game,carrier), STORM_STAFF.range, ITEM_DAMAGE_PROFILES.stormStaff);
   });
-  addEffect(game, "storm", x, y, STORM_STAFF.duration, { owner: carrier.owner, unitId: carrier.id, damage: STORM_STAFF.pulseDamage*outgoingDamageMultiplier(game,carrier), damageProfile: { ...ITEM_DAMAGE_PROFILES.stormStaff }, radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
+  addEffect(game, "storm", x, y, STORM_STAFF.duration, { sourceId: carrier.id, actionMode: "cast", fromX: carrier.x, fromY: carrier.y, toX: x, toY: y, owner: carrier.owner, unitId: carrier.id, damage: STORM_STAFF.pulseDamage*outgoingDamageMultiplier(game,carrier), damageProfile: { ...ITEM_DAMAGE_PROFILES.stormStaff }, radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
   item.cooldownRemaining = STORM_STAFF.cooldown;
 }
 
@@ -2993,7 +2992,7 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage), projectile.hullDamageShare, undefined, 0, projectile.damageProfile ?? attackDamageProfile(projectile.sourceKind ?? "defenseTower"), projectile.armorAlreadyApplied);
   if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target, projectile.sourceKind);
-  addHitEffect(game, target, taken, shooter, projectile.attackKind);
+  addHitEffect(game, target, taken, shooter, projectile.attackKind, { x: projectile.fromX, y: projectile.fromY });
   });
 }
 
@@ -3047,7 +3046,7 @@ type WeaponAbility = Extract<(typeof ABILITY_DEFS)[AbilityKind],{behavior:"weapo
 function applyWeaponAbility(game:Game,caster:Unit,ability:AbilityKind,at:{x:number;y:number},def:WeaponAbility,targetId?:string){
   caster.abilityCooldowns=withAbilityCooldown(caster,ability,def.cooldown);
   const mounted=ability==='incendiaryFlume' ? installedWeapons(game,caster).find(item=>item.kind==='flameProjector' && (item.durability ?? 1)>0 && shipGunCanAim(caster,item,at)) : undefined;
-  fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(game, caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId,mounted?{item:mounted,pose:mountedWeaponPose(caster,mounted)!}:undefined);
+  fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(game, caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId,mounted?{item:mounted,pose:mountedWeaponPose(caster,mounted)!}:undefined,"cast");
 }
 function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalFrame=true){
   let minimum=weaponRules(game,unit).weapon?.minRange;
@@ -3064,25 +3063,25 @@ function weaponOrigin(attacker: Unit | Building) {
   return pose ? pose.muzzle : { x: attacker.x, y: attacker.y };
 }
 function combatVisualHeight(game: Game, entity: {id?:string}) {
-  const unit=entity.id && game.units.find(unit=>unit.id===entity.id);
+  const unit="order" in entity ? entity as Unit : "kind" in entity ? undefined : entity.id && game.units.find(unit=>unit.id===entity.id);
   if (!unit) return 0;
   const hull=unit.deck && game.units.find(ship=>ship.id===unit.deck!.shipId);
   return hull ? (shipProfile(hull)?.deckHeight ?? 0)+18 : shipProfile(unit)?.deckHeight ?? 0;
 }
 
-function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:string},damage:number,weapon:WeaponDef,range:number,skill:{rootTicks?:number;burnTicks?:number}={},targetId=at.id, mounted?:{item:WorldItem;pose:NonNullable<ReturnType<typeof mountedWeaponPose>>;aimPoint?:{x:number;y:number}}){
+function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:string},damage:number,weapon:WeaponDef,range:number,skill:{rootTicks?:number;burnTicks?:number}={},targetId=at.id, mounted?:{item:WorldItem;pose:NonNullable<ReturnType<typeof mountedWeaponPose>>;aimPoint?:{x:number;y:number}},actionMode:"attack"|"cast"="attack"){
   const origin = mounted?.pose.muzzle ?? weaponOrigin(attacker);
   const damageProfile = weaponDamageProfile(weapon);
   const target = targetId ? findStrikeTarget(game,targetId) : undefined;
   const point = mounted?.aimPoint ?? (target ? strikePoint(origin,target) : at);
   const fromHeight=mounted?.pose.height || (isUnit(attacker) && shipWeaponPose(attacker)?.height) || combatVisualHeight(game,attacker);
   const attackKind=weapon.presentation ?? (weapon.delivery==="cone" ? "grapeshot" : weapon.delivery==="shell" ? "stone" : "bolt");
-  const visuals={attackKind,fromX:origin.x,fromY:origin.y,fromHeight,toX:point.x,toY:point.y,toHeight:combatVisualHeight(game,at),owner:attacker.owner,sourceKind:attacker.kind,unitId:attacker.id,...(mounted?{itemId:mounted.item.id}:{})};
+  const visuals={actionMode,sourceId:attacker.id,attackKind,fromX:origin.x,fromY:origin.y,fromHeight,toX:point.x,toY:point.y,toHeight:combatVisualHeight(game,at),owner:attacker.owner,sourceKind:attacker.kind,unitId:attacker.id,...(mounted?{itemId:mounted.item.id}:{})};
   if((attackKind==="cannon" || attackKind==="mortar" || attackKind==="grapeshot") && (mounted || isUnit(attacker)))addEffect(game,"muzzleFlash",origin.x,origin.y,seconds(.65),visuals);
   if(weapon.delivery==="ram"){
     const target=targetId?findStrikeTarget(game,targetId):undefined;
     if(target&&areEnemyOwners(game,attacker.owner,target.owner))hitWeapon(game,attacker,target,damage,weapon);
-    addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,owner:attacker.owner,sourceKind:attacker.kind});return;
+    addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,owner:attacker.owner,sourceKind:attacker.kind,sourceId:attacker.id,actionMode});return;
   }
   if(weapon.delivery==="cone"){
     const hits=[...game.units,...game.buildings].filter(target=>target.hp>0&&(!isUnit(target)||!isInCabin(target))&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(origin,point,target,range,weapon.coneAngle??.6));
@@ -3094,10 +3093,10 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
   game.projectiles.push(projectile);
   addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",point.x,point.y,flight,{...visuals,radius:weapon.radius??0});
 }
-function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number,impact=strikePoint(attacker,target),profile:DamageProfile=weaponDamageProfile(weapon)){
+function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number,impact=strikePoint(attacker,target),profile:DamageProfile=weaponDamageProfile(weapon),visualOrigin?:{x:number;y:number}){
   const dealt=weaponDamage(weapon,damage,!isUnit(target),isUnit(target)&&unitMover(target.kind)==="sea",share);
   const taken=applyDamage(game,attacker,target,dealt,deckHullDamageShare(game,attacker,weapon),impact,weapon.blastRadius ?? weapon.radius ?? 0,profile);if(taken===undefined)return;
-  addHitEffect(game,target,taken,attacker,weapon.presentation);
+  addHitEffect(game,target,taken,attacker,weapon.presentation,visualOrigin);
   if(rootTicks&&isUnit(target)&&target.hp>0)setStatus(target,{type:"root",remaining:rootTicks});
 }
 function impactWeapon(game:Game,projectile:Projectile){
@@ -3118,15 +3117,15 @@ function impactWeapon(game:Game,projectile:Projectile){
       const impact=impactAt(hits[0].along!);
       for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(impact,target)<=weapon.blastRadius!))) {
         const share=Math.max(.4,1-bodyGap(impact,target)/weapon.blastRadius*.6);
-        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks,impact,projectile.damageProfile);
+        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks,impact,projectile.damageProfile,from);
       }
       addEffect(game,"siegeImpact",impact.x,impact.y,seconds(.65),{radius:weapon.blastRadius,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
       return;
     }
-    hits.forEach(({target,along},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks,impactAt(along!),projectile.damageProfile));
+    hits.forEach(({target,along},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks,impactAt(along!),projectile.damageProfile,from));
   }else{
     for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(to,target)<=(weapon.radius??0)))){const gap=bodyGap(to,target);
-      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks,to,projectile.damageProfile);
+      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks,to,projectile.damageProfile,from);
     }
     addEffect(game,"siegeImpact",to.x,to.y,24,{radius:weapon.radius??0,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
     if(projectile.burnTicks)addEffect(game,"burningGround",to.x,to.y,projectile.burnTicks,{owner:projectile.owner,unitId:projectile.attackerId,damage:3,damageProfile:{...DAMAGE_PROFILES.BURNING},radius:weapon.radius??0,tickEvery:10,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
@@ -3175,6 +3174,9 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   game.nextId += 1;
   game.projectiles.push(projectile);
   addEffect(game, "projectile", target.x, target.y, flight, {
+    sourceId: attacker.id,
+    owner: attacker.owner,
+    actionMode: "attack",
     fromX: projectile.fromX,
     fromY: projectile.fromY,
     toX: projectile.toX,
@@ -3196,16 +3198,19 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > RANGED_ATTACK_RANGE_THRESHOLD ? "projectile" : "melee";
-  addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
+  addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y, fromHeight: combatVisualHeight(game,attacker), toHeight: combatVisualHeight(game,target), ...(isUnit(attacker)?{sourceId: attacker.id, actionMode: profile.origin === "spell" ? "cast" as const : "attack" as const}:{}) });
   addHitEffect(game, target, taken, attacker);
 }
 
 // The flinch of whatever was struck, carrying who it was and what it took, so the client shakes it by the share of its
 // full health the blow took, and the kind of who struck it (a weapon's blow; a spell's or a gone shooter's has none) so
 // the client can sound the blow.
-function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building, attackKind?: AttackKind) {
+function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building, attackKind?: AttackKind, visualOrigin?: {x:number;y:number}) {
   attackKind ??= striker ? isUnit(striker) && weaponRules(game,striker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD ? "melee" : innateMissile(striker.kind) : undefined;
-  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(attackKind ? {attackKind} : {}), ...(striker ? { sourceKind: striker.kind } : {}) });
+  const origin=visualOrigin??striker;
+  const deck=isUnit(target)&&target.deck;
+  const hull=deck ? game.units.find(unit=>unit.id===deck.shipId) : undefined;
+  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(attackKind ? {attackKind} : {}), ...(striker ? { sourceKind: striker.kind } : {}), ...(origin?{fromX:origin.x,fromY:origin.y}:{}), ...(deck&&hull?{targetDeck:{...deck,heading:hull.sailing?.heading??0},toHeight:combatVisualHeight(game,target)}:{}), ...(isUnit(target) ? { targetKind: target.kind, targetHpAfter: target.hp, targetMaxHp: target.maxHp, targetRadius: target.radius, targetUnitClass: unitClassOf(target, game) } : {}) });
 }
 
 function buildingTargetDamage(attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
@@ -3465,9 +3470,9 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "damageProfile" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount" | "attackKind">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "damageProfile" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount" | "attackKind" | "targetKind" | "targetHpAfter" | "targetMaxHp" | "targetRadius" | "targetUnitClass" | "targetDeck" | "sourceId" | "actionMode" | "actionToX" | "actionToY">>,
 ) {
-  game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
+  game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors, ...(vectors?.actionMode?{actionTick:game.tick}:{}) });
   game.nextId += 1;
 }
 

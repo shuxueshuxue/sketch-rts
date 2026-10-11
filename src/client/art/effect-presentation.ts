@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../../shared/catalog";
-import type { UnitKind, WorldEffect } from "../../shared/types";
+import type { RaceId, UnitKind, WorldEffect } from "../../shared/types";
+import { unitArtFaction } from "./unit-appearance";
 type Point = { x: number; y: number };
 type Rgb = { r: number; g: number; b: number };
 
@@ -66,12 +67,11 @@ const SPELL_ORB_PALETTES: Record<"grove" | "ember" | "unaligned", SpellOrbPalett
   unaligned: { glow: { r: 132, g: 112, b: 196 }, core: { r: 242, g: 236, b: 255 } },
 };
 
-/** Current catalog kinds carry race. If kinds become faction-neutral, this
- * input must be extended with the shooter owner's race at launch; equipment
- * type alone cannot determine the spell palette. */
-export function spellOrbPalette(sourceKind: WorldEffect["sourceKind"]): SpellOrbPalette {
-  const race = sourceKind && isUnitKind(sourceKind) ? UNIT_DEFS[sourceKind].race : undefined;
-  return SPELL_ORB_PALETTES[race ?? "unaligned"];
+/** Projectiles carry their shooter owner. Resolve its faction first; previews
+ * without an owner use authored art metadata, never production eligibility. */
+export function spellOrbPalette(sourceKind: WorldEffect["sourceKind"], race?: RaceId): SpellOrbPalette {
+  const faction = race ?? (sourceKind && isUnitKind(sourceKind) ? unitArtFaction(sourceKind) : undefined);
+  return SPELL_ORB_PALETTES[faction === "common" ? "grove" : faction === "grove" || faction === "ember" ? faction : "unaligned"];
 }
 
 

@@ -108,14 +108,14 @@ export const CAST = {
   pyremancer: defineUnit({
     id: "ashen/pyremancer",
     name: { zh: "焚咒师", en: "Pyremancer" },
-    rules: { base: "pyreCaller", hp: 140, attackDamage: 12, attackRange: 280, xpReward: 45, supplyUsed: 0 },
+    rules: { base: "summoner", hp: 140, attackDamage: 12, attackRange: 280, xpReward: 45, supplyUsed: 0 },
     model: { paint: art.paintPyremancer, remains: art.paintPyremancer.remains },
   }),
   oru: defineUnit({
     id: "ashen/oru",
     name: { zh: "焚咒师欧鲁", en: "Oru the Pyremancer" },
     color: "#b8401f",
-    rules: { base: "pyreCaller", hp: 1100, attackDamage: 22, attackRange: 300, radius: 20, speed: 60, xpReward: 300, supplyUsed: 0 },
+    rules: { base: "summoner", hp: 1100, attackDamage: 22, attackRange: 300, radius: 20, speed: 60, xpReward: 300, supplyUsed: 0 },
     model: { paint: art.paintOru, remains: art.paintOru.remains },
   }),
   obsidianGuard: defineUnit({

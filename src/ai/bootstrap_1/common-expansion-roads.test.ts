@@ -10,7 +10,7 @@ import { planAiOwnerCommandEntries } from '../planner-context';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ race, mirror }))))(
   'uses the same short road for $race summoner expansion and escort (mirror=$mirror)', ({ race, mirror }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller', fighter = race === 'grove' ? 'lancer' : 'ashWarden';
+    const caster = 'summoner', fighter = race === 'grove' ? 'lancer' : 'ashWarden';
     let scene = sketchScene('common-expansion-road').map('bareDuel').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', x(2400), 500, { id: 'main-hall' }).townHall('foe', x(3500), 3500)

@@ -38,7 +38,7 @@ describe('scripted power release animation', () => {
       tracker.update(game, tick * 50, cues);
       if (tick < release) expect(cues).toBeUndefined();
       if (tick === release) {
-        expect(cues).toEqual([{ unitId: caster.id, tick: release, mode: spell ? 'cast' : 'attack' }]);
+        expect(cues).toMatchObject([{ unitId: caster.id, tick: release, mode: spell ? 'cast' : 'attack', fromX: caster.x, fromY: caster.y, toX: 1200, toY: 1000 }]);
         expect(tracker.frame(caster, tick * 50)).toMatchObject({ mode: spell ? 'cast' : 'attack', frame: 0 });
         expect(game.effects.some(effect => effect.type === (spell ? 'storm' : 'projectile'))).toBe(true);
       }

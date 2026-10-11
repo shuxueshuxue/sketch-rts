@@ -3,6 +3,23 @@ import type { TrainedUnitCard } from "./cards";
 import { unitPainter } from "../art/painted-units";
 
 export const COMMON_UNITS = {
+  priest: {
+    name: { en: "Priest", zh: "牧师" },
+    description: { en: "Support caster with a targeted heal for wounded non-mechanical allies.", zh: "支援施法者，可以对受伤的非机械友军进行定点治疗。" },
+    command: { icon: "+", hotkey: "p" },
+    glyph: { silhouette: "priest-medallion", marks: ["halo", "cross", "satchel"] },
+    art: { tier: "advanced", bearing: "foot", faction: "common" },
+    paint: unitPainter("priest"),
+  },
+  summoner: {
+    name: { en: "Summoner", zh: "召唤师" },
+    description: { en: "Caster that creates a temporary spirit at a target point.", zh: "施法者，可以在目标点召唤临时灵体。" },
+    command: { icon: "◎", hotkey: "u" },
+    glyph: { silhouette: "summoner-ring", marks: ["outerRing", "innerSigil", "spark"] },
+    art: { tier: "advanced", bearing: "foot", faction: "common" },
+    paint: unitPainter("summoner"),
+  },
+
   worker: {
     name: { en: "Worker", zh: "农民" },
     description: { en: "Worker. Gathers gold, builds structures, repairs the economy, and can defend itself only in a pinch.", zh: "农民。采集金矿、建造建筑、修理经济体系，紧急时也能勉强自卫。" },

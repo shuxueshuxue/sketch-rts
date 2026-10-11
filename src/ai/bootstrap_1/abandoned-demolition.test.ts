@@ -11,8 +11,8 @@ import { strengthOf } from '../policy/v6/strength';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored => ({ race, mirrored }))))(
   '$race clears abandoned buildings within one normal summon cooldown (mirror=$mirrored)', ({ race, mirrored }) => {
     const x = (value: number) => mirrored ? 4096 - value : value;
-    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
-    const ability = race === 'grove' ? 'summon' : 'cinderSoul';
+    const kind = 'summoner';
+    const ability = race === 'grove' ? 'summon' : 'summon';
     let scene = sketchScene('unopposed-host-cleanup').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).player('other', { team: 'b' })
       .playerState('us', { gold: 0 }).townHall('us', x(500), 500).tower('us', x(2400), 2200)

@@ -11,7 +11,7 @@ describe('bootstrap cleanup reinforcements', () => {
   it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     (['grove', 'ember'] as const).map(race => ({version, race}))))(
     'replaces expired $race crew members through normal summoning in $version', ({version, race}) => {
-      const caller = race === 'grove' ? 'summoner' : 'pyreCaller';
+      const caller = 'summoner';
       const fighter = race === 'grove' ? 'footman' : 'emberRavager';
       let scene = sketchScene('expired-cleanup-crew').map('openClaims').replaceDefaults()
         .player('us', { race, team: 'a' }).player('beaten', { team: 'b' }).player('active', { team: 'b' })
@@ -25,7 +25,7 @@ describe('bootstrap cleanup reinforcements', () => {
       const game = scene.build().createGame(), memory = createAiPolicyMemory();
       const summon = () => {
         for (const caster of game.units.filter(unit => unit.owner === 'us' && unit.kind === caller)) issuePlayerCommand(game, 'us', {
-          type: 'cast', unitId: caster.id, ability: race === 'grove' ? 'summon' : 'cinderSoul', x: caster.x + 180, y: caster.y + 40,
+          type: 'cast', unitId: caster.id, ability: race === 'grove' ? 'summon' : 'summon', x: caster.x + 180, y: caster.y + 40,
         });
         for (let tick = 0; tick < 30; tick++) stepGame(game);
       };

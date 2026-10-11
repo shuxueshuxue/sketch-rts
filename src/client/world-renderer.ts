@@ -1,4 +1,9 @@
-import { appearanceFor } from "./art/unit-appearance";
+import type {ProjectileOriginTracker} from './projectile-origins';
+import { projectActionFrame, projectPaperDirection } from './art/action-direction';
+import { IDLE_FRAME } from './unit-animation';
+import { drawCombatGround, drawCombatBody, drawCombatAir } from "./art/combat-effects";
+import type { CombatPresentationTracker, CombatPresentationFrame } from "./combat-presentation";
+import { appearanceFor, corpseAppearanceFor } from "./art/unit-appearance";
 import { itemEquipped, itemsFor } from "../shared/equipment";
 import { playerColor } from '../shared/player-colors';
 import { drawCanvasShip,deckVisualHeight,drawShipFlag } from "./art/canvas-ships";
@@ -66,12 +71,15 @@ export type WorldFrame = {
   /** Terrain and annotations flank the shared GPU depth layer. Recorder/fallback
    * callers omit this and retain the complete Canvas renderer. */
   pass?: 'ground' | 'overlay';
-  actorPositions?: ReadonlyMap<string,{x:number;y:number;bodyY:number;topY:number}>;
+  actorPositions?: ReadonlyMap<string,{x:number;y:number;bodyY:number;topY:number;facing?:1|-1}>;
   physicalEffects?: ReadonlySet<WorldEffect['type']>;
+  physicalCombat?:boolean;
   /** Successfully drawn GPU ground/deck markers own their depth, not the HUD canvas. */
   depthSelection?:boolean;
   /** Optional per-match pose history. Omit for static diagrams and portraits. */
   animation?: UnitAnimationTracker;
+  combat?: CombatPresentationTracker;
+  projectiles?:ProjectileOriginTracker;
   wakes?: ShipWakeTracker;
   reducedMotion?: boolean;
   ctx: Brush;
@@ -127,6 +135,7 @@ type Painter = {
   still: boolean;
   engaged:ReadonlySet<string>;
   abilityEffects?:ReturnType<typeof battlefieldEffectFrame>;
+  combatBody?:ReadonlyMap<string,CombatPresentationFrame["body"]>;
 };
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
@@ -176,6 +185,15 @@ export function drawWorld(frame: WorldFrame) {
   }
   painter.animation?.update(snapshot, painter.now, frame.story?.unitActions);
   if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
+  frame.combat?.update(snapshot,painter.now);
+  frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
+  const combat=frame.combat?.frame(painter.now);
+  if(combat&&!frame.physicalCombat){
+    const body=new Map<string,CombatPresentationFrame["body"]>();
+    for(const mark of combat.body){const list=body.get(mark.unitId)??[];list.push(mark);body.set(mark.unitId,list);}
+    painter.combatBody=body;
+  }
+  const combatProjection={worldToScreen:(point:Point)=>worldToScreen(painter,point),nearScreen:(point:Point,pad:number)=>nearScreen(painter,point,pad)};
   ctx.save();
   ctx.scale(zoom, zoom);
   if(frame.pass!=='overlay'){
@@ -197,6 +215,7 @@ export function drawWorld(frame: WorldFrame) {
   drawObstacles(painter, snapshot.obstacles ?? []);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
+  if(combat)drawCombatGround(ctx,combat,combatProjection);
   // Persistent ground layer: weather to a faint sketch, never disappear.
   for(const corpse of snapshot.corpses ?? []){
     const point=worldToScreen(painter,corpse);
@@ -205,7 +224,7 @@ export function drawWorld(frame: WorldFrame) {
     ctx.save();ctx.globalAlpha*=.58-Math.min(1,age/8)*.18;
     let hash=0;for(const ch of corpse.id)hash=(Math.imul(hash,31)+ch.charCodeAt(0))>>>0;
     const model=corpse.variant ? frame.models?.(corpse.variant) : undefined;
-    drawAtlasCorpse(ctx,corpse.kind,point,model ? Math.max(.72,corpse.radius/18) : unitGlyphScale(corpse.radius),hash%6,model,corpse.variant,ownerInk(corpse.owner,snapshot));ctx.restore();
+    drawAtlasCorpse(ctx,corpse.kind,point,model ? Math.max(.72,corpse.radius/18) : unitGlyphScale(corpse.radius),hash%6,model,corpse.variant,ownerInk(corpse.owner,snapshot),corpseAppearanceFor(snapshot,corpse));ctx.restore();
   }
   }
   if(frame.pass==='ground'){ctx.restore();return;}
@@ -234,13 +253,26 @@ export function drawWorld(frame: WorldFrame) {
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
+  if(combat&&!frame.physicalCombat)drawCombatGround(ctx,combat,combatProjection,true);
+  if(combat&&!frame.physicalCombat)drawCombatAir(ctx,combat,combatProjection,(id,height,position)=>{
+    const unit=unitsById.get(id);if(!unit||isInCabin(unit))return null;
+    const anchor=painter.actorPositions?.get(id);
+    const at=anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter,unit);
+    const ship=unit.deck?painter.ships.get(unit.deck.shipId):undefined;
+    const model=unit.variant?painter.models?.(unit.variant):undefined;
+    const floor=model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*unitGlyphScale(unit.radius);
+    return worldToScreen(painter,{x:at.x+position.x-unit.x,y:at.y+position.y-unit.y+floor-(anchor?0:ship?deckVisualHeight(ship)+18*unitGlyphScale(unit.radius):0)-height*Math.tan(SHIP_CAMERA.tilt)});
+  },painter.reducedMotion);
   renderWorldEffects({
     ctx,
+    players:snapshot.players,
     effects: snapshot.effects.filter(effect=>!frame.physicalEffects?.has(effect.type) && !(effect.unitId && unitsById.has(effect.unitId) && isInCabin(unitsById.get(effect.unitId)!))),
     worldToScreen: (point) => worldToScreen(painter, point),
     nearScreen: (point, pad) => nearScreen(painter, point, pad),
     viewer:painter.viewer,
     reducedMotion:painter.reducedMotion,
+    combatTrails:Boolean(combat),
+    projectileOrigin:effect=>frame.projectiles?.origin(effect,frame.physicalCombat?'gpu':'canvas'),
     unit:(id)=>unitsById.get(id),
     unitPosition: (id) => {
       const unit = unitsById.get(id);
@@ -485,8 +517,13 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
-    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion ? undefined : painter.animation?.frame(unit,now));
-    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now), appearanceFor(painter.snapshot,unit));
+    const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
+    const facing=painter.facing.actionFacing(unit.id,rawPose.direction,projectPaperDirection);
+    const pose=projectActionFrame(rawPose,facing);
+    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose);
+    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
+    const blood=painter.combatBody?.get(unit.id);
+    if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??painter.facing.facing(unit.id));
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();

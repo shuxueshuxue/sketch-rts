@@ -17,7 +17,7 @@ describe("AI playbook", () => {
       productionPlan: ["emberForge", "cinderSpire", "emberForge", "cinderSpire"],
       unitsByBuilding: {
         emberForge: ["emberRavager", "cinderRunner", "ashWarden"],
-        cinderSpire: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
+        cinderSpire: ["sparkArcher", "priest", "ashHexer", "summoner"],
       },
     });
   });

@@ -1,3 +1,6 @@
+import type {UnitAnimationFrame} from '../unit-animation';
+import {animationKey,projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
@@ -28,7 +31,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 
-export type ActorPosition={x:number;y:number;bodyY:number;topY:number};
+export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
 
@@ -40,6 +43,9 @@ export class World3DLayer {
   private library=worldModels;
   private batches=new ActorBatches(this.scene);
   private selection=new SelectionMarkers(this.scene);
+  private combatInk=new CombatInk(this.scene);
+  private combatAnchors=new Map<string,CombatAnchor>();
+  combatStats(){return this.combatInk.stats();}
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
   private cards:PaintedCardBatches;
@@ -49,6 +55,11 @@ export class World3DLayer {
   private transformPosition=new THREE.Vector3();
   private transformRotation=new THREE.Quaternion();
   private transformScale=new THREE.Vector3();
+  private projectedOrigin=new THREE.Vector3();
+  private projectedDirection=new THREE.Vector3();
+  private missileRotation=new THREE.Quaternion();
+  private missileDirection=new THREE.Vector3();
+  private missileAxis=new THREE.Vector3(1,0,0);
   private entities=new Map<string,GameSnapshot['units'][number]|GameSnapshot['buildings'][number]>();
   private ships=new Map<string,Unit>();
   private shipPoses=new Map<string,Unit>();
@@ -99,7 +110,7 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.selection.clear();this.water.prepare(undefined);}
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
@@ -141,6 +152,8 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
+    frame.combat?.update(snapshot,now);
+    frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
     frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
     if(snapshot.tick!==this.lastTick){
       this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
@@ -150,8 +163,13 @@ export class World3DLayer {
     }
     const {entities,ships}=this;
     const right=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),rotation=uprightCrewRotation(this.camera);
+    this.projectedOrigin.set(0,0,0).project(this.camera);
+    const projectVector=(direction:{x:number;y:number;height?:number})=>{
+      this.projectedDirection.set(direction.x,direction.height??0,direction.y).project(this.camera).sub(this.projectedOrigin);
+      return{x:this.projectedDirection.x*frame.view.width/2,y:-this.projectedDirection.y*frame.view.height/2};
+    };
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
-    this.positions.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.selection.begin();
+    this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*site.scale});
@@ -241,9 +259,13 @@ export class World3DLayer {
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
       const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
+      const rawAnimation:UnitAnimationFrame=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
+      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction,projectVector,facing);
+      const animation=projectActionFrame(rawAnimation,facing,projectVector);
       const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
-      this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale});
+      this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing});
       if(!visible(at.x,bodyY))continue;
+      this.combatAnchors.set(unit.id,{x:at.x,y:at.y,floor:height,facing,sourceX:unit.x,sourceY:unit.y});
       const selected=frame.selectedIds?.has(unit.id)??false;
       if(unit.hp>0 && (selected || frame.hoveredId===unit.id)){
         let marker=this.pose(at.x,at.y,height+.15);
@@ -259,26 +281,37 @@ export class World3DLayer {
         const radius=(unit.bodyRadius??unit.radius)+3;
         this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
       }
-      const animation=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
       const appearance=appearanceFor(snapshot,unit);
-      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animation.mode}:${animation.frame}:${'variant' in animation?animation.variant:0}:${facing}:${density}:${appearanceKey(appearance)}:${unit.variant??''}`;
+      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animationKey(animation)}:${facing}:${density}:${appearanceKey(appearance)}:${unit.variant??''}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
       this.cards.add(key,density,ctx=>{
         ctx.scale(facing,1);
         if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing);
         else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
-      },transform,unit.id,foot);
+      },transform,unit.id,foot,actionPaintSize(animation));
     }
     for(const id of this.deckMotion.keys())if(!liveCrew.has(id))this.deckMotion.delete(id);
     for(const effect of snapshot.effects){
       if(!PHYSICAL_EFFECTS.has(effect.type))continue;
-      const shot=flightPose(effect,now-this.at);
+      const origin=frame.projectiles?.origin(effect);
+      const shot=flightPose(effect,now-this.at,origin);
       const model=shot.look==='flash'?this.flash:shot.look==='orb'?this.magic:shot.look==='fire'?this.fire:['arrow','spear','streak'].includes(shot.look)?this.bolt:this.ball;
-      const glow=shot.look==='orb'?spellOrbPalette(effect.sourceKind).glow:undefined;
+      const glow=shot.look==='orb'?spellOrbPalette(effect.sourceKind,effect.owner?snapshot.players[effect.owner]?.race:undefined).glow:undefined;
       const color=glow?`rgb(${glow.r},${glow.g},${glow.b})`:undefined;
-      if(visible(shot.x,shot.y))this.batches.add(`effect:${shot.look}:${color??''}`,model,this.pose(shot.x,shot.y,shot.height,shot.heading,shot.scale),effect.id,color);
+      if(visible(shot.x,shot.y)){
+        let x=shot.x,y=shot.y,height=shot.height,rotation:THREE.Quaternion|undefined;
+        if(origin&&model===this.bolt){
+          const cp=Math.cos(shot.pitch);this.missileDirection.set(Math.cos(shot.heading)*cp,Math.sin(shot.pitch),Math.sin(shot.heading)*cp);
+          rotation=this.missileRotation.setFromUnitVectors(this.missileAxis,this.missileDirection);
+          // ConeGeometry's authored tip is +3 on its local X axis. The visual
+          // flight path is tip-anchored just like Canvas arrowFrame.
+          x-=this.missileDirection.x*3;y-=this.missileDirection.z*3;height-=this.missileDirection.y*3;
+        }
+        this.batches.add(`effect:${shot.look}:${color??''}`,model,this.pose(x,y,height,shot.heading,shot.scale,rotation),effect.id,color);
+      }
     }
     this.batches.finish();this.cards.finish();this.selection.finish();
+    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
     renderer.render(this.scene,this.camera);
   }
@@ -304,7 +337,7 @@ export class World3DLayer {
   }
   dispose(){
     if(this.disposed)return;this.disposed=true;this.reset();
-    this.selection.dispose();
+    this.selection.dispose();this.combatInk.dispose();
     this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
     // portraits. This layer owns only instances, rigs, cards and render targets.

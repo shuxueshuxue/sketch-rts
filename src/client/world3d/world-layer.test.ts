@@ -1,3 +1,5 @@
+import {CombatPresentationTracker} from '../combat-presentation';
+import {strikeUnit} from '../../shared/sim';
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
@@ -44,6 +46,17 @@ function setup(){
   return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('draws real hit ink in GPU depth and clears it on a world reset without touching card identities',async()=>{
+    const {game,ship,frame,layer}=setup();frame.combat=new CombatPresentationTracker();
+    const crew=game.units.find(unit=>unit.deck)!;crew.hp=55;
+    strikeUnit(game,{id:'offshore-caster',owner:'enemy',x:ship.x+100,y:ship.y},crew,38,'spell');
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(layer.combatStats().count).toBeGreaterThan(0);expect(layer.combatStats().body).toBeGreaterThan(0);expect(layer.combatStats().overflow).toBe(0);
+    const ink=gpu.scene!.getObjectByName('CombatInk') as InstancedMesh;
+    expect((ink.material as ShaderMaterial).depthTest).toBe(true);expect(ink.userData.ids).toBeUndefined();
+    layer.reset();expect(layer.combatStats().count).toBe(0);expect(ink.visible).toBe(false);
+    layer.dispose();expect(layer.combatStats()).toMatchObject({disposed:true,capacity:0,count:0});expect(gpu.scene!.children).toHaveLength(0);
+  });
   it('colors the actual authored ensigns by owner, updates a captured flag and releases only owned batch materials',async()=>{
     const {game,ship,frame,layer}=setup();
     const other=game.spawnUnit('enemy','warship',1150,850);
@@ -249,14 +262,15 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(layer.positions.get(first.id)!.bodyY).toBeCloseTo(first.y-34);layer.dispose();
   });
   it('batches spell orbs by the shared caster palette and releases every owned material',async()=>{
-    const {game,frame,layer}=setup();game.effects=['priest','emberAcolyte','worker','priest'].map((sourceKind,i)=>({id:`orb:${i}`,type:'projectile' as const,x:600+i*20,y:600,remaining:5,duration:10,attackKind:'magic' as const,sourceKind:sourceKind as 'priest'|'emberAcolyte'|'worker'}));
+    const {game,frame,layer}=setup();game.players.player.race='grove';game.players.enemy.race='ember';
+    game.effects=([{sourceKind:'priest',owner:'player'},{sourceKind:'priest',owner:'enemy'},{sourceKind:'ogreMage'},{sourceKind:'priest',owner:'player'}] as const).map((source,i)=>({id:`orb:${i}`,type:'projectile' as const,x:600+i*20,y:600,remaining:5,duration:10,attackKind:'magic' as const,...source}));
     game.effects.push({id:'orb:unknown',type:'projectile',x:680,y:600,remaining:5,duration:10,attackKind:'magic'});
-    expect(spellOrbPalette(undefined)).toEqual(spellOrbPalette('worker'));
+    expect(spellOrbPalette(undefined)).toEqual(spellOrbPalette('ogreMage'));
     frame.snapshot=snapshotGame(game);const original=JSON.stringify(frame.snapshot);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
     const orbs=gpu.scene!.children.filter(object=>object instanceof InstancedMesh&&object.name==='SpellOrb') as InstancedMesh[];
     expect(orbs).toHaveLength(3);expect(orbs.reduce((n,mesh)=>n+mesh.count,0)).toBe(5);expect(new Set(orbs.map(mesh=>mesh.geometry)).size).toBe(1);
     for(const mesh of orbs){
-      const effect=frame.snapshot.effects.find(effect=>effect.id===mesh.userData.ids[0])!,glow=spellOrbPalette(effect.sourceKind).glow;
+      const effect=frame.snapshot.effects.find(effect=>effect.id===mesh.userData.ids[0])!,glow=spellOrbPalette(effect.sourceKind,effect.owner?frame.snapshot.players[effect.owner]?.race:undefined).glow;
       const expected=new MeshBasicMaterial({color:`rgb(${glow.r},${glow.g},${glow.b})`});
       expect((mesh.material as MeshBasicMaterial).color.equals(expected.color)).toBe(true);expected.dispose();
     }

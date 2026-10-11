@@ -12,7 +12,7 @@ import { bootstrapPolicyContext, bootstrapScripts } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 import { mineGuardUnitIds } from './mine-defense';
 import { miningWorkforce } from './workforce';
-import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 
 function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
@@ -26,7 +26,7 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   for (let index = 0; index < 5; index++) scene = scene
     .worker('us', 500 + index * 35, 620, { id: `main-worker-${index}` })
     .worker('us', 950 + index * 35, 2000, { id: `natural-worker-${index}` });
-  for (let index = 0; index < 6; index++) scene = scene.unit('us', 'pyreCaller', 1140 - Math.floor(index / 3) * 40,
+  for (let index = 0; index < 6; index++) scene = scene.unit('us', 'summoner', 1140 - Math.floor(index / 3) * 40,
     550 + index % 3 * 50, { id: `caller-${index}` });
   for (let index = 0; index < support; index++) scene = scene.unit('us', 'ashHexer', 1100, 700 + index * 40, { id: `support-${index}` });
   for (let index = 0; index < mineCrew; index++) scene = scene.unit('us', 'ashWarden', 620 + index * 35, 750, { id: `mine-guard-${index}` });
@@ -50,7 +50,7 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
 describe('bootstrap_1 summoner tower rush', () => {
   it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(rearTower => ({ race, rearTower }))))(
     'continues the $race assault when its mines are exhausted and rear tower=$rearTower', ({ race, rearTower }) => {
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster = 'summoner';
     let scene = sketchScene('unfunded-forward-tower').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold: 0 })
       .townHall('us', 400, 600).townHall('us', 400, 2000).townHall('foe', 2200, 600, { id: 'target' })
@@ -79,14 +79,14 @@ describe('bootstrap_1 summoner tower rush', () => {
   });
 
   it.each(['grove', 'ember'] as const)('funds a waiting %s front tower before an older unaffordable expansion', race => {
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster = 'summoner';
     let scene = sketchScene('aged-front-construction').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .playerState('us', { gold: BUILDING_DEFS.defenseTower.cost })
       .townHall('us', 400, 600).goldMine('main', 688, 600, 10000)
       .townHall('us', 900, 2000).goldMine('natural', 1188, 2000, 10000)
       .goldMine('third', 1400, 2000, 10000).townHall('foe', 2200, 600, { id: 'target' })
-      .building('us', UNIT_DEFS[caster].trainedAt!, 400, 1000).farms('us', 9, 400, 3000)
+      .building('us', trainingBuildingFor(race, caster)!, 400, 1000).farms('us', 9, 400, 3000)
       .worker('us', 1300, 1000, { id: 'builder' }).worker('us', 1320, 1040, { id: 'helper' });
     for (let index = 0; index < 5; index++) scene = scene
       .worker('us', 440, 550 + index * 20, { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } })
@@ -115,7 +115,7 @@ describe('bootstrap_1 summoner tower rush', () => {
       .worker('us', 800, 700, { id: 'builder', order: { type: 'build', buildingKind: 'farm', x: 3400, y: 1600 } });
     for (let index = 0; index < 5; index++) scene = scene.worker('us', 440, 560 + index * 20,
       { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
-    for (let index = 0; index < 4; index++) scene = scene.unit('us', 'pyreCaller', 1500, 900 + index * 40);
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', 'summoner', 1500, 900 + index * 40);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.v6 = { phase: 2, general: { mode: 'attack', target: { x: 3500, y: 1000 } } };
     const context = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
@@ -135,7 +135,7 @@ describe('bootstrap_1 summoner tower rush', () => {
         .townHall('us', 400, 400).townHall('foe', 2300, 1000, { id: 'target-hall' })
         .farms('us', 5, 400, 2200).tower('us', 1500, 1000)
         .unit('foe', 'catapult', 2050, 1000, { id: 'gun' });
-      for (let i = 0; i < 6; i++) scene = scene.unit('us', race === 'grove' ? 'summoner' : 'pyreCaller',
+      for (let i = 0; i < 6; i++) scene = scene.unit('us', 'summoner',
         1300 + i % 2 * 25, 970 + Math.floor(i / 2) * 30, { id: `caster-${i}` });
       const game = scene.build().createGame(), memory = createAiPolicyMemory();
       memory.jobs.push({ id: summonerTowerRush.id, kind: 'target-hall', createdTick: 0, updatedTick: 0 });
@@ -230,7 +230,7 @@ describe('bootstrap_1 summoner tower rush', () => {
   });
 
   it.each(['grove', 'ember'] as const)('continues a %s tower advance through clear ground to an ordinary enemy hall', race => {
-    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const kind = 'summoner';
     let scene = sketchScene('tower-advance-spacing').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' }).playerState('us', { gold: 750 })
       .townHall('us', 400, 900).townHall('foe', 2500, 700).farms('us', 8, 400, 1900)
@@ -322,7 +322,7 @@ describe('bootstrap_1 summoner tower rush', () => {
     expect(game.buildings.filter(building => building.owner === 'fa' || building.owner === 'fb')).toHaveLength(0);
     expect(forward.length).toBeGreaterThanOrEqual(2);
     expect(forward.every(id => id === 'builder' || id === 'helper')).toBe(true);
-    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller').length).toBeGreaterThanOrEqual(6);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner').length).toBeGreaterThanOrEqual(6);
     expect(game.units.filter(unit => unit.owner === 'fa' || unit.owner === 'fb')).toHaveLength(0);
     expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.x > 1200 && building.complete)).toBe(true);
   }, 15000);

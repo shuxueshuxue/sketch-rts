@@ -14,13 +14,13 @@ function defendedMine(race: 'grove' | 'ember') {
     .townHall('us', 400, 600).townHall('us', 1400, 1600).goldMine('natural', 1688, 1600, 4000)
     .townHall('foe', 3500, 3000).farms('us', 4, 400, 2200)
     .tower('us', 1500, 1600, { id: 'mine-tower' })
-    .unit('us', race === 'grove' ? 'summoner' : 'pyreCaller', 1350, 1600, { id: 'caster' });
+    .unit('us', 'summoner', 1350, 1600, { id: 'caster' });
   for (let i = 0; i < 3; i++) scene = scene.unit('foe', 'footman', 1900, 1540 + i * 60);
   for (let i = 0; i < 2; i++) scene = scene.unit('foe', 'ballista', 3000, 1500 + i * 80, { id: `battery-${i}` });
   const game = scene.build().createGame(), memory = createAiPolicyMemory();
   memory.v6 = { general: { mode: 'defend', target: { x: 1850, y: 1600 }, leash: 450 } };
   issuePlayerCommand(game, 'foe', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'foe').map(unit => unit.id) });
-  issuePlayerCommand(game, 'us', { type: 'cast', unitId: 'caster', ability: race === 'grove' ? 'summon' : 'cinderSoul', x: 1200, y: 1600 });
+  issuePlayerCommand(game, 'us', { type: 'cast', unitId: 'caster', ability: race === 'grove' ? 'summon' : 'summon', x: 1200, y: 1600 });
   stepGame(game);
   issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.kind === 'spirit').map(unit => unit.id) });
   const context = () => bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
@@ -29,7 +29,7 @@ function defendedMine(race: 'grove' | 'ember') {
 
 describe('bootstrap_1 summon host staging', () => {
   it.each(['grove', 'ember'] as const)('follows the actual %s screen ahead without averaging rear troops and fresh rear summons into it', race => {
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster = 'summoner';
     const body = race === 'grove' ? 'footman' : 'emberRavager';
     const gun = race === 'grove' ? 'ballista' : 'catapult';
     let scene = sketchScene('summoner-forward-screen').replaceDefaults()
@@ -58,7 +58,7 @@ describe('bootstrap_1 summon host staging', () => {
     }
   });
   it.each(['grove', 'ember'] as const)('marches the %s host from outside tower-rush reach and pays for its first forward tower', race => {
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster = 'summoner';
     const body = race === 'grove' ? 'footman' : 'emberRavager';
     const gun = race === 'grove' ? 'ballista' : 'catapult';
     let scene = sketchScene('summoner-march-to-construction').replaceDefaults()

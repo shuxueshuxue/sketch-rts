@@ -1,3 +1,4 @@
+import { shipProfile } from '../shared/ship-geometry';
 import type { Game } from "../shared/sim";
 import type { Unit } from "../shared/types";
 import { ensure, suspend, type Operation } from "./kernel";
@@ -57,7 +58,7 @@ export type PartyView = { members: PartyMember[]; gold?: number };
 
 /** Explicit presentation release, authored where a Power's effect happens.
  * It never alters cooldowns, orders, damage or the game checksum. */
-export type UnitActionCue = { unitId: string; mode: "attack" | "cast"; tick: number };
+export type UnitActionCue = { unitId: string; mode: "attack" | "cast"; tick: number; fromX?: number; fromY?: number; toX?: number; toY?: number; fromHeight?: number; toHeight?: number };
 
 export type StageView = {
   unitActions?: readonly UnitActionCue[];
@@ -135,9 +136,12 @@ export class Stage {
 
   /** Call at a real release/hit, after any windup. At most one recent cue per
    * living unit is retained; the next second removes even inactive casters. */
-  unitAction(unit: Unit | string, mode: UnitActionCue['mode']) {
+  unitAction(unit: Unit | string, mode: UnitActionCue['mode'], target?: {x:number;y:number;id?:string}) {
     const unitId = idOf(unit);
-    if (this.alive(unitId)) this.unitActions.set(unitId, { unitId, mode, tick: this.clock() });
+    const source=typeof unit === "string" ? this.game.units.find(actor=>actor.id===unitId) : unit;
+    const victim=target?.id?this.game.units.find(actor=>actor.id===target.id):undefined;
+    const height=(actor:Unit)=>{const hull=actor.deck&&this.game.units.find(unit=>unit.id===actor.deck!.shipId);return hull?(shipProfile(hull)?.deckHeight??0)+18:shipProfile(actor)?.deckHeight??0;};
+    if (this.alive(unitId)) this.unitActions.set(unitId, { unitId, mode, tick: this.clock(), ...(source&&target?{fromX:source.x,fromY:source.y,toX:target.x,toY:target.y,...(victim?{fromHeight:height(source),toHeight:height(victim)}:{})}:{}) });
   }
 
   // ---- Who speaks.

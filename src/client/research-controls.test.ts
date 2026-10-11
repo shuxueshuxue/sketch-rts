@@ -86,6 +86,12 @@ const emberPlayer: PlayerState = {
 };
 
 describe("research controls", () => {
+  it("uses the race/building production graph for mixed captured building selections",()=>{
+    expect(researchCommandButtonsForSelection([cinderSpire],player)).toEqual([]);
+    expect(researchCommandButtonsForSelection([sanctum],emberPlayer)).toEqual([]);
+    expect(researchCommandButtonsForSelection([cinderSpire,sanctum],player).find(command=>command.upgradeKind==='leadership')?.buildingId).toBe(sanctum.id);
+    expect(researchCommandButtonsForSelection([sanctum,cinderSpire],emberPlayer).find(command=>command.upgradeKind==='leadership')?.buildingId).toBe(cinderSpire.id);
+  });
   it("shows research buttons for an eligible selected barracks", () => {
     const commands = researchCommandButtonsForSelection([barracks], player);
 

@@ -6,6 +6,9 @@ import { createI18n, type Locale } from "../client/i18n";
 import { UnitFacingTracker } from "../client/unit-facing";
 import { UnitMotionSmoother } from "../client/unit-motion";
 import { ShipWakeTracker } from '../client/ship-wakes';
+import { CombatPresentationTracker } from "../client/combat-presentation";
+import { ProjectileOriginTracker } from "../client/projectile-origins";
+import { projectPaperDirection } from "../client/art/action-direction";
 import { UnitAnimationTracker } from "../client/unit-animation";
 import { drawWorld, trackUnitFacing, worldLabelsFor } from "../client/world-renderer";
 import { snapshotGame } from "../shared/sim";
@@ -100,6 +103,10 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
   // Charging riders glide between ticks by the frame clock, as in the client (see unit-motion).
   const motion = new UnitMotionSmoother();
   const animation = new UnitAnimationTracker();
+  const combat = new CombatPresentationTracker();
+  const projectiles = new ProjectileOriginTracker();
+  const models = story ? (variant:string)=>story.models(variant) : undefined;
+  const releaseFacing = (id:string)=>facing.releaseFacing(id);
   const wakes = new ShipWakeTracker();
   const canvas = createCanvas(options.width, options.height);
   const ctx = canvas.getContext("2d");
@@ -118,6 +125,11 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
     while (game.tick < wantedTick && !over()) {
       step();
       trackUnitFacing(facing, game);
+      const tickNow=(game.tick-firstTick)*1000/SIM_TICKS_PER_SECOND;
+      animation.update(game,tickNow,story?.view().unitActions);
+      combat.update(game,tickNow);
+      for(const unit of game.units)facing.actionFacing(unit.id,animation.frame(unit,tickNow).direction,projectPaperDirection);
+      projectiles.update(game,models,releaseFacing);
     }
     if (game.tick < wantedTick) {
       endedAtTick = game.tick;
@@ -131,6 +143,8 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       else camera.view(game, elapsed);
       motion.update(game, (index * 1000) / options.fps);
       animation.update(game, (index * 1000) / options.fps, stage?.unitActions);
+      combat.update(game, (index * 1000) / options.fps);
+      projectiles.update(game,models,releaseFacing);
       continue;
     }
     const snapshot = visibleSnapshot(snapshotGame(game), options);
@@ -147,6 +161,8 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       labels,
       motion,
       animation,
+      combat,
+      projectiles,
       wakes,
       ...(story && stage ? { story: stage, models: (variant: string) => story.models(variant), props: (kind: string) => story.props(kind), locale: options.locale ?? "zh" } : {}),
     });

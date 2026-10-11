@@ -17,7 +17,7 @@ it.each(cases)('$version heals its wounded $race soldier during $stage (mirror=$
     .player('us', { race, team: 'a' }).player('peer', { team: 'a' })
     .townHall('us', x(500), 500).townHall('peer', x(3500), 3500)
     .unit('us', race === 'grove' ? 'lancer' : 'emberRavager', x(1700), 1600, { id: 'patient', hp: 20 })
-    .unit('us', race === 'grove' ? 'priest' : 'emberAcolyte', x(1700), 1100,
+    .unit('us', 'priest', x(1700), 1100,
       { id: 'healer', order: { type: 'hold', x: x(1700), y: 1100 } })
     .unit('neutral', 'wildling', x(2300), 1600, { id: 'guard' }).build().createGame();
   game.scriptedVictory = true;

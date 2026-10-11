@@ -1,10 +1,11 @@
+import { figureReleaseSocket } from './release-socket';
 /** Campaigns author appearance and socket details, never another body/animation
  * implementation. The same composers serve portraits, Canvas and WebGL cards. */
 import type { UnitKind } from '../../shared/types';
 import type { UnitPainter } from '../../story/cast';
 import { IDLE_FRAME } from '../unit-animation';
 import { paintFigure } from './painted-units';
-import { paintCreature, creatureGround, type CreaturePresentation } from './painted-creatures';
+import { paintCreature, creatureGround, creatureReleaseSocket, type CreaturePresentation } from './painted-creatures';
 import { defaultEquipment, solveFigureRig, type FigurePresentation } from './rig';
 import { figures } from './appearance';
 import { paintCorpse, type CorpsePresentation } from './corpses';
@@ -38,7 +39,7 @@ export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size
     paintFigure(b, kind, team, pose, facing, presentation);
     b.restore();
   };
-  return Object.assign(paint,{remains:((b)=>paintCorpse(b,kind,remains)) as UnitPainter});
+  return Object.assign(paint,{release:(pose:import('../unit-animation').UnitAnimationFrame)=>figureReleaseSocket(kind,pose,presentation,size),remains:((b)=>paintCorpse(b,kind,remains)) as UnitPainter});
 }
 
 export function storyCreature(kind: UnitKind, presentation: CreatureAppearance): StoryPainter {
@@ -47,5 +48,5 @@ export function storyCreature(kind: UnitKind, presentation: CreatureAppearance):
     b.save(); b.translate(0, 17 - creatureGround(kind, presentation));
     paintCreature(b, kind, team, pose, presentation); b.restore();
   };
-  return Object.assign(paint,{remains:((b)=>paintCorpse(b,kind,remains)) as UnitPainter});
+  return Object.assign(paint,{release:(pose:import('../unit-animation').UnitAnimationFrame)=>{const socket=creatureReleaseSocket(kind,pose,presentation);return socket?{x:socket.x,y:socket.y+17-socket.ground,ground:17}:undefined;},remains:((b)=>paintCorpse(b,kind,remains)) as UnitPainter});
 }

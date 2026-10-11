@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import { decodeServerNetMessage, encodeNetMessage } from "../shared/net/codec";
 import type { CommandFrame, ServerNetMessage } from "../shared/net/types";
@@ -59,6 +60,7 @@ describe("continued room navigation preparation", () => {
     const room = host.continueSave(save.id, save, { roomId: "net-deep" });
     const hub = new RoomNetHub({ roomHost: host, commandDelayTicks: 0 }), socket = new FakeSocket();
     hub.connect(room.id, socket);
+    socket.emit(encodeNetMessage({ type: "join", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player" }));
     const ship = host.snapshot(room.id).units[0]!;
     const command = { type: "stop" as const, unitIds: [ship.id] };
     socket.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", clientSeq: 9, epoch: 0, command }));

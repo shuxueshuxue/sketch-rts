@@ -10,8 +10,8 @@ export const figures: Partial<Record<UnitKind, Figure>> = {
   horseArcher:{role:'bow',mounted:true}, raider:{role:'sword',mounted:true}, knight:{role:'pike',armor:true,elite:true,mounted:true},
   priest:{role:'priest'}, summoner:{role:'mage'}, witch:{role:'witch'},
   emberRavager:{role:'axe',armor:true,ember:true}, cinderRunner:{role:'sword',ember:true},
-  sparkArcher:{role:'bow',ember:true}, emberAcolyte:{role:'priest',ember:true},
-  ashHexer:{role:'witch',ember:true}, pyreCaller:{role:'mage',ember:true},
+  sparkArcher:{role:'bow',ember:true},
+  ashHexer:{role:'witch',ember:true},
   ashChieftain:{role:'axe',armor:true,elite:true,ember:true}, cinderRevenant:{role:'sword',armor:true,elite:true,ember:true},
   mercenary:{role:'sword',armor:true}, contractArcher:{role:'bow'}, fieldMedic:{role:'priest'},
 };

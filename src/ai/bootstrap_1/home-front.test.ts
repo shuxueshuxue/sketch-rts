@@ -7,7 +7,7 @@ import { planAiOwnerCommandEntries } from '../planner-context';
 
 describe('summon host recognizing enemy home defenders', () => {
   it.each(['grove', 'ember'] as const)('finishes the %s assault while another enemy stays behind its own hall', race => {
-    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const kind = 'summoner';
     let scene = sketchScene('outpost-near-enemy-home').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('target', { team: 'b' }).player('other', { team: 'b' })
       .playerState('us', { gold: 0 }).townHall('us', 400, 400)
@@ -18,7 +18,7 @@ describe('summon host recognizing enemy home defenders', () => {
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     issuePlayerCommand(game, 'other', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'other').map(unit => unit.id) });
     for (const caster of game.units.filter(unit => unit.owner === 'us')) issuePlayerCommand(game, 'us', {
-      type: 'cast', unitId: caster.id, ability: race === 'grove' ? 'summon' : 'cinderSoul', x: caster.x + 180, y: caster.y + 40,
+      type: 'cast', unitId: caster.id, ability: race === 'grove' ? 'summon' : 'summon', x: caster.x + 180, y: caster.y + 40,
     });
     for (let tick = 0; tick < 30; tick++) stepGame(game);
     memory.v6 = { phase: 2, general: { mode: 'attack', targetHallId: 'target-hall', target: { x: 3400, y: 3000 },

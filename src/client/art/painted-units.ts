@@ -13,7 +13,7 @@ import { INK, STEEL, EDGE, SHADE, SKIN, HIDE, LINEN, paintedPlane as poly, segme
 import { leg } from './body-parts';
 import { solveFigureRig, type FigurePresentation } from './rig';
 import { paintEquipment } from './equipment';
-function face(b:Brush,kind:Figure,team:string,facing:number,headwear=true){
+function face(b:Brush,kind:Figure,team:string,facing:number,headwear=true,clothOverride?:string){
   // A 7px face on a 47px body: no eyes or cartoon head proportions.
   poly(b,[[-3,-34],[-2,-38],[2,-38.5],[4,-35],[3.7,-30.5],[1,-28.7],[-2.7,-31]],SKIN);
   poly(b,[[1,-37],[3,-36],[4,-33],[3,-30],[.8,-29.5]],'#84634e','transparent',0);
@@ -33,7 +33,7 @@ function face(b:Brush,kind:Figure,team:string,facing:number,headwear=true){
     poly(b,[[-3.5,-35],[-3,-41],[0,-44],[3,-41],[4,-35]],kind.ember?'#9e7054':LINEN);
     line(b,[[0,-42],[0,-36]],'#ad9362',.8);
   } else {
-    const cloth=kind.role==='witch'?'#625666':darker(team,.28);
+    const cloth=clothOverride??(kind.role==='witch'?'#625666':darker(team,.28));
     poly(b,[[-5,-28],[-5,-37],[-1,-42],[3,-40],[5,-34],[3.7,-30],[2,-37],[-.5,-38],[-2.6,-35],[-2.3,-29]],cloth);
     line(b,[[-4.3,-36],[-1,-40],[2,-39]],lighter(cloth,.2),.8);
     if(kind.role==='witch') poly(b,[[-4,-40],[-2,-47],[2,-46],[1,-40]],cloth);
@@ -88,6 +88,8 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
     poly(b,[[-7,-25],[4,-25],[1,0],[-6+flutter,11],[-14+flutter,10],[-11,-7]],darker(cloth,.3));
     line(b,[[-8,-21],[-10,6],[-6+flutter,9]],lighter(cloth,.08),1);
   }
+  paintEquipment(b,f,team,facing,rig,cloth,'back');
+  if(rig.primaryLayer==='back')presentation.detail?.(b,rig,'equipment');
   // Neck joins the jaw to the collar, including under the worker hat.
   poly(b,[[-2.2,-31],[2,-31],[2.5,-26],[-2.5,-26]],SKIN);
   // Pelvis, fitted torso and separate shoulder planes, rather than a trapezoid dress.
@@ -122,10 +124,10 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
   line(b,[[-6,-10],[5,-10]],'#493f33',2.1);poly(b,[[-1,-11],[1,-11],[1,-9],[-1,-9]],'#b6a079');
   if(f.mounted)leg(b,[1,-5],[5,3],[6,12],armor,true);
   presentation.detail?.(b,rig,'body');
-  paintEquipment(b,f,team,facing,rig,cloth);
-  presentation.detail?.(b,rig,'equipment');
-  face(b,f,team,facing,presentation.headwear);
+  face(b,f,team,facing,presentation.headwear,presentation.cloth);
   presentation.detail?.(b,rig,'head');
+  paintEquipment(b,f,team,facing,rig,cloth,'front');
+  if(rig.primaryLayer==='front')presentation.detail?.(b,rig,'equipment');
   b.restore();return true;
 }
 

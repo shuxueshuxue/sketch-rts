@@ -36,14 +36,6 @@ export const EMBER_UNITS = {
     art: { tier: "basic", bearing: "foot", faction: "ember" },
     paint: unitPainter("sparkArcher"),
   },
-  emberAcolyte: {
-    name: { en: "Ember Acolyte", zh: "余烬侍僧" },
-    description: { en: "Ember support caster with a targeted heal for wounded non-mechanical allies.", zh: "余烬支援施法者，可以对受伤的非机械友军进行定点治疗。" },
-    command: { icon: "+", hotkey: "p" },
-    glyph: { silhouette: "priest-medallion", marks: ["halo", "spark", "cross"] },
-    art: { tier: "advanced", bearing: "foot", faction: "ember" },
-    paint: unitPainter("emberAcolyte"),
-  },
   ashHexer: {
     name: { en: "Ash Hexer", zh: "灰烬巫师" },
     description: { en: "Ember debuff caster that weakens enemy damage through curse.", zh: "余烬减益施法者，通过诅咒削弱敌方伤害。" },
@@ -51,14 +43,6 @@ export const EMBER_UNITS = {
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "rune"] },
     art: { tier: "advanced", bearing: "foot", faction: "ember" },
     paint: unitPainter("ashHexer"),
-  },
-  pyreCaller: {
-    name: { en: "Pyre Caller", zh: "薪火召唤者" },
-    description: { en: "Ember summoner that creates temporary spirits near the fight.", zh: "余烬召唤者，可以在战斗附近召唤临时灵体。" },
-    command: { icon: "◎", hotkey: "u" },
-    glyph: { silhouette: "summoner-ring", marks: ["outerRing", "spark", "rune"] },
-    art: { tier: "advanced", bearing: "foot", faction: "ember" },
-    paint: unitPainter("pyreCaller"),
   },
   ashChieftain: {
     name: { en: "Ash Chieftain", zh: "灰烬酋长" },
