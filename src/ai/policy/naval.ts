@@ -315,6 +315,13 @@ export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, option
 }
 /** Fleet combat and ferry ownership are independent of the map generator. */
 export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+    return planNavalTacticsWithCrewOrder(snapshot, owner, options,
+        (soldiers, _shore, boat) => soldiers.sort((a, b) => distance(a, boat) - distance(b, boat)));
+}
+
+type FerryCrewOrder = (soldiers: Unit[], shore: Point, boat: Unit) => Unit[];
+
+export function planNavalTacticsWithCrewOrder(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, orderCrew: FerryCrewOrder): GameCommand[] {
     const own = units(snapshot, owner);
     const plan = islandPlan(snapshot, owner, options);
     const assault = assaultPlan(snapshot, owner, options);
@@ -437,7 +444,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -464,7 +471,7 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
     }
     return claimed;
 }
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -587,7 +594,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Reserve payload for the expedition's engineers; geometric reservations below also leave actual floor space.
     if (mission.purpose === "settle")
         room -= 75 * Math.max(0, 2 - workerCount - crew.filter(unit => unit.kind === "worker").length);
-    const soldiers = own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast").sort((a, b) => distance(a, boat) - distance(b, boat));
+    const soldiers = orderCrew(own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
