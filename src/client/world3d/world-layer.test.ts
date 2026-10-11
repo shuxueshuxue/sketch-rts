@@ -22,14 +22,15 @@ import {beginShipBoarding,gangwayCrossingPosition,gangwaySurface,updateShipGangw
 import {createShipWebglScene} from '../../recorder/scenes/ship-webgl';
 import {snapshotGame} from '../../shared/sim';
 import {UNIT_DEFS} from '../../shared/catalog';
-import {shipProfile,localToWorld,isShipKind} from '../../shared/ship-geometry';
+import {SHIP_CAMERA,shipProfile,localToWorld,isShipKind} from '../../shared/ship-geometry';
 import {UnitFacingTracker} from '../unit-facing';
 import {UnitAnimationTracker} from '../unit-animation';
+import {unitGlyphScale} from '../glyphs';
 import {UnitMotionSmoother} from '../unit-motion';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 import type {WorldFrame} from '../world-renderer';
 import {ownerInk} from '../world-renderer';
-import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3} from 'three';
+import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3,DataArrayTexture} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
@@ -198,7 +199,20 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)if(layer.pick({x:body.x+x,y:body.y+y})?.id===crew.id)picked=true;
     expect(picked,'crew can be selected through its visible painted pixels').toBe(true);
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map);
-    expect(cards.length).toBe(1);for(const object of cards){const material=(object as InstancedMesh).material as MeshBasicMaterial;expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);expect((material.map!.image as {width:number}).width).toBe(512);}
+    expect(cards.length).toBeGreaterThan(0);
+    const painted=cards as InstancedMesh[],paintedIds=painted.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count));
+    expect(paintedIds.sort()).toEqual(game.units.filter(unit=>!isShipKind(unit.kind)&&!unit.cabin).map(unit=>unit.id).sort());
+    for(const mesh of painted){
+      const material=mesh.material as MeshBasicMaterial,texture=material.map as DataArrayTexture;
+      expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);
+      for(let i=0;i<mesh.count;i++){
+        const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
+        // Cropped rectangle dimensions may differ, but one texel still covers
+        // exactly one quarter authored unit on both card axes.
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()/texture.image.width).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()/texture.image.height).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      }
+    }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
     frame.view={...frame.view,width:1100};layer.draw(frame);expect(gpu.sizes).toBe(2);
     expect(JSON.stringify(frame.snapshot)).toBe(original);layer.dispose();
@@ -211,8 +225,27 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     frame.models=variant=>({paint:variant==='story:first'?one:two});frame.reducedMotion=true;frame.snapshot=snapshotGame(game);
     await layer.prepare(frame.snapshot,'home');layer.draw(frame);
     expect(one).toHaveBeenCalledTimes(1);expect(two).toHaveBeenCalledTimes(1);expect(one.mock.calls[0]).toEqual(expect.arrayContaining([{mode:'idle',frame:0}]));
-    expect(layer.cardStats().cards).toBe(2);const mesh=gpu.scene!.children.find(object=>object.name==='PaintedCards') as InstancedMesh;
-    for(let i=0;i<mesh.count;i++){const matrix=new Matrix4();mesh.getMatrixAt(i,matrix);expect(matrix.getMaxScaleOnAxis()).toBeCloseTo(2);}
+    expect(layer.cardStats().cards).toBe(2);
+    const meshes=gpu.scene!.children.filter(object=>object.name==='PaintedCards'&&object.visible) as InstancedMesh[];
+    expect(meshes.reduce((sum,mesh)=>sum+mesh.count,0)).toBe(2);
+    expect(meshes.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count)).sort()).toEqual([first.id,second.id].sort());
+    for(const mesh of meshes)for(let i=0;i<mesh.count;i++){
+      const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
+      const texture=(mesh.material as MeshBasicMaterial).map as DataArrayTexture,{width,height}=texture.image;
+      const right=new Vector3().setFromMatrixColumn(matrix,0).normalize(),slice=mesh.geometry.getAttribute('cardLayer').getX(i);
+      expect(new Vector3().setFromMatrixColumn(matrix,0).length()/width).toBeCloseTo(2/4,5);
+      expect(new Vector3().setFromMatrixColumn(matrix,1).length()/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      let ink=0,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(texture.image.data![(slice*width*height+y*width+x)*4+3]){
+        const world=new Vector3((x+.5)/width-.5,(y+.5)/height-.5,0).applyMatrix4(matrix);
+        const horizontal=world.clone().sub(new Vector3(unit.x,0,unit.y)).dot(right);
+        minX=Math.min(minX,horizontal);maxX=Math.max(maxX,horizontal);minY=Math.min(minY,world.y);maxY=Math.max(maxY,world.y);ink++;
+      }
+      // Every opaque source texel survives, with the same doubled rectangle
+      // and its bottom precisely at the world foot plane (pixel centers inset).
+      expect(ink).toBe(16*47*4*4);expect(minX).toBeCloseTo(-16+.25,4);expect(maxX).toBeCloseTo(16-.25,4);
+      expect(minY).toBeCloseTo(.25/Math.tan(SHIP_CAMERA.tilt),4);expect(maxY).toBeCloseTo((94-.25)/Math.tan(SHIP_CAMERA.tilt),4);
+    }
     expect(layer.positions.get(first.id)!.bodyY).toBeCloseTo(first.y-34);layer.dispose();
   });
   it('batches spell orbs by the shared caster palette and releases every owned material',async()=>{
@@ -263,13 +296,18 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map) as InstancedMesh[];
     expect(cards.reduce((sum,card)=>sum+card.count,0)).toBe(game.units.length);layer.dispose();
   });
-  it('batches 2,000 matching troops into one actor mesh instead of allocating one GPU object per unit',async()=>{
+  it('batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit',async()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(let i=0;i<2000;i++)game.spawnUnit('player','footman',400+(i%50)*14,400+Math.floor(i/50)*12);
     frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
     const begin=performance.now();layer.draw(frame);const duration=performance.now()-begin;
     const actors=gpu.scene!.children.filter(object=>object instanceof InstancedMesh) as InstancedMesh[];
-    expect(actors.filter(actor=>actor.count===2000)).toHaveLength(1);expect(layer.positions.size).toBe(2000);
+    const painted=actors.filter(actor=>actor.name==='PaintedCards'&&actor.visible);
+    expect(painted.reduce((sum,actor)=>sum+actor.count,0)).toBe(2000);
+    expect(painted.flatMap(actor=>actor.userData.ids.slice(0,actor.count)).sort()).toEqual(game.units.map(unit=>unit.id).sort());
+    // Pages group bounded pose rectangles; they are never allocated per unit.
+    expect(painted.length).toBeGreaterThan(0);expect(painted.length).toBeLessThanOrEqual(layer.cardStats().cards);
+    expect(layer.cardStats().cards).toBeLessThanOrEqual(16);expect(layer.positions.size).toBe(2000);
     console.info(`2,000 troops: ${duration.toFixed(1)} ms CPU scene preparation, ${actors.length} actor mesh; GPU timing not measured`);
     layer.dispose();
   });

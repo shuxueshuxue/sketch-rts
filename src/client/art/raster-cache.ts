@@ -29,7 +29,7 @@ export class RasterCache {
     const source = nested ? createScratchCanvas(size, size) : this.scratch ??= createScratchCanvas(size, size);
     // Reset state as well as pixels: callers may change clips and transforms.
     source.width = source.height = size;
-    const brush = source.getContext('2d')!;
+    const brush = source.getContext('2d', { willReadFrequently: true })!;
     brush.scale(density, density); brush.translate(64, 64);
     brush.lineJoin = brush.lineCap = 'round';
     this.painting = true;

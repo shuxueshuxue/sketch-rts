@@ -22,7 +22,7 @@ export async function cardGpuProof(){
   });
   const matrices=paints.map((_,i)=>new THREE.Matrix4().compose(new THREE.Vector3((i%2-.5)*105,0,(Math.floor(i/2)-.5)*120),rotation,scale));
   const previous=paints.map((paint,i)=>{
-    const source=document.createElement('canvas');source.width=source.height=512;const ctx=source.getContext('2d')!;ctx.scale(4,4);ctx.translate(64,64);paint(ctx);
+    const source=document.createElement('canvas');source.width=source.height=512;const ctx=source.getContext('2d',{willReadFrequently:true})!;ctx.scale(4,4);ctx.translate(64,64);paint(ctx);
     const texture=new THREE.CanvasTexture(source);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
     const mesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(128,128/tilt).translate(0,17/tilt,0),new THREE.MeshBasicMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,toneMapped:false}),1);mesh.setMatrixAt(0,matrices[i]!);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);return mesh;
   });
@@ -35,11 +35,22 @@ export async function cardGpuProof(){
     const before=draw();for(const mesh of previous)mesh.visible=false;
     cards.begin();paints.forEach((paint,i)=>cards.add(String(i),4,paint,matrices[i]!,String(i),17));cards.finish();
     if(pass===0){
-      const data=((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.data!;
       for(let i=0;i<previous.length;i++){
         const source=previous[i]!.material.map!.image as HTMLCanvasElement,rgba=source.getContext('2d')!.getImageData(0,0,512,512).data;
+        const mesh=cards.objects().find(item=>item.userData.ids.includes(String(i)))!,index=mesh.userData.ids.indexOf(String(i));
+        const texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture,{width,height,data}=texture.image;
+        const layer=mesh.geometry.getAttribute('cardLayer').getX(index),transform=new THREE.Matrix4();mesh.getMatrixAt(index,transform);
+        transform.premultiply(matrices[i]!.clone().invert());const at=new THREE.Vector3();
         let changedChannels=0,maximum=0,alphaChanged=0,alphaMaximum=0;
-        for(let y=0;y<512;y++)for(let x=0;x<512*4;x++){const difference=Math.abs(rgba[y*512*4+x]!-data[(i*512*512+(511-y)*512)*4+x]!);if(difference)changedChannels++;maximum=Math.max(maximum,difference);if(x%4===3){if(difference)alphaChanged++;alphaMaximum=Math.max(alphaMaximum,difference);}}
+        for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+          at.set((x+.5)/width-.5,(y+.5)/height-.5,0).applyMatrix4(transform);
+          const sx=Math.floor((at.x+64)*4),sy=Math.floor((64+17-at.y*tilt)*4);
+          for(let channel=0;channel<4;channel++){
+            const expected=sx>=0&&sx<512&&sy>=0&&sy<512?rgba[(sy*512+sx)*4+channel]!:0;
+            const difference=Math.abs(expected-data![(layer*width*height+y*width+x)*4+channel]!);
+            if(difference)changedChannels++;maximum=Math.max(maximum,difference);if(channel===3){if(difference)alphaChanged++;alphaMaximum=Math.max(alphaMaximum,difference);}
+          }
+        }
         rasterComparison.push({changedChannels,maximum,alphaChanged,alphaMaximum});
       }
     }
@@ -53,6 +64,6 @@ export async function cardGpuProof(){
   }
   const glError=renderer.getContext().getError(),image=comparisons.toDataURL('image/png');
   cards.dispose();for(const mesh of previous){mesh.dispose();mesh.geometry.dispose();mesh.material.map!.dispose();mesh.material.dispose();}floor.geometry.dispose();floor.material.dispose();sun.shadow.dispose();point.shadow.dispose();target.dispose();renderer.dispose();renderer.forceContextLoss();
-  return{report,rasterComparison,glError,image,method:'512px RGBA comparison, same source canvas drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Left=prior individual textures; right=array instances.'};
+  return{report,rasterComparison,glError,image,method:'512px source RGBA comparison, same CPU scratch drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Cropped layers reconstructed through their actual instance transforms. Left=individual full textures; right=cropped array instances. CPU/GPU scratch antialiasing differences are measured separately by art-raster-profile.'};
 }
 (window as unknown as {cardGpuProof:typeof cardGpuProof}).cardGpuProof=cardGpuProof;
