@@ -640,13 +640,18 @@ const STEP_COLS = [1, 0, -1, 0, 1, -1, -1, 1];
 const STEP_ROWS = [0, 1, 0, -1, 1, 1, -1, -1];
 
 function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: number[]): BoxField {
+  const size = box.width * box.height;
+  return growBoxInto(state, box, seeds, costs, { dist: new Int32Array(size), next: new Int32Array(size) });
+}
+
+function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>): BoxField {
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
   const origin = box.top * width + box.left;
-  const size = columns * rows;
-  const dist = new Int32Array(size).fill(UNREACHED);
-  const next = new Int32Array(size).fill(UNKNOWN);
+  const { dist, next } = arrays;
+  dist.fill(UNREACHED);
+  next.fill(UNKNOWN);
   const buckets = state.boxBuckets;
   const order = seeds.map((_, index) => index);
   if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
@@ -934,6 +939,49 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
   const cost = exactField(state, target).dist[start]!;
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
+}
+
+/** Continuous travel cost of a clear land segment, in equivalent bare-ground units.
+ * The caller supplies walkable terrain; status, arrival tolerance and per-tick
+ * boundary rounding belong to actual movement. */
+export function groundSegmentTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number {
+  const dx = goal.x - from.x, dy = goal.y - from.y, length = Math.hypot(dx, dy), terrain = map.terrain;
+  if (!terrain || length === 0) return length;
+  const cell = terrain.cell, stepX = Math.sign(dx), stepY = Math.sign(dy);
+  let col = Math.floor(from.x / cell), row = Math.floor(from.y / cell);
+  if (dx < 0 && from.x === col * cell) col--;
+  if (dy < 0 && from.y === row * cell) row--;
+  let nextX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;
+  let nextY = dy === 0 ? Infinity : ((row + Number(dy > 0)) * cell - from.y) / dy;
+  const spanX = cell / Math.abs(dx), spanY = cell / Math.abs(dy);
+  let at = 0, cost = 0;
+  while (at < 1) {
+    const end = Math.min(1, nextX, nextY);
+    cost += (end - at) * length / CELL_GROUND[terrain.cells[row * terrain.cols + col]!]!.pace;
+    if (end === nextX) { col += stepX; nextX += spanX; }
+    if (end === nextY) { row += stepY; nextY += spanY; }
+    at = end;
+  }
+  return cost;
+}
+
+/** Ground travel cost in equivalent bare-ground units. A clear straight segment
+ * uses actual terrain pace; a detour uses the steering grid's quantized weights.
+ * Excludes body detours and status effects. */
+export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return Math.hypot(from.x - goal.x, from.y - goal.y);
+  const state = runtime(terrain, 'land'), start = padAt(state, from.x, from.y), target = padAt(state, goal.x, goal.y);
+  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return groundSegmentTravelCost(map, from, goal);
+  const field = cached(state, -target - 1, () => {
+    const arrays = state.spare.pop() ?? { dist: new Int32Array(state.walk.length), next: new Int32Array(state.walk.length), used: 0 };
+    const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+    growBoxInto(state, box, [target], undefined, arrays);
+    return arrays;
+  });
+  const cost = field.dist[start]!;
+  return cost >= UNREACHED ? undefined : cost * terrain.cell / (STRAIGHT * GROUND_WEIGHT);
 }
 
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
