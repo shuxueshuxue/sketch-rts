@@ -6,7 +6,7 @@ describe('exact packed card picking',()=>{
   expect(mask).toEqual(new Uint8Array([3]));expect(cardMaskHit(mask,2,2,{x:0,y:0})).toBe(true);expect(cardMaskHit(mask,2,2,{x:1,y:0})).toBe(true);expect(cardMaskHit(mask,2,2,{x:1,y:1})).toBe(false);
   for(const uv of [undefined,{x:NaN,y:0},{x:0,y:Infinity},{x:-.001,y:.5},{x:.5,y:1.001}])expect(cardMaskHit(mask,2,2,uv)).toBe(false);
  });
- it.each([16,256,320,512,640])('matches every source pixel with x/y mirror at size %i',size=>{
+ it.each([3,16,176,256,320,512,640,704])('matches every source pixel with x/y mirror at size %i',size=>{
   const rgba=new Uint8ClampedArray(size*size*4);for(let p=0;p<size*size;p++)rgba[p*4+3]=(p*13+(p%17))%256;
   const mask=packCardPickMask(rgba,size,size);expect(mask.byteLength).toBe(Math.ceil(size*size/8));let differences=0;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++)for(const mx of [false,true])for(const my of [false,true]){
@@ -15,4 +15,11 @@ describe('exact packed card picking',()=>{
   }
   expect(differences).toBe(0);
  });
+});
+
+it('accepts already GPU-oriented recovery pixels without a second vertical flip',()=>{
+ const width=176,height=13,rgba=new Uint8ClampedArray(width*height*4),flipped=new Uint8ClampedArray(rgba.length);
+ for(let p=0;p<width*height;p++)rgba[p*4+3]=(p*29)%256;
+ for(let y=0;y<height;y++)flipped.set(rgba.subarray(y*width*4,(y+1)*width*4),(height-1-y)*width*4);
+ expect(packCardPickMask(flipped,width,height,false)).toEqual(packCardPickMask(rgba,width,height));
 });

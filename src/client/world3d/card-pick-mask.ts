@@ -1,8 +1,17 @@
 /** Exact existing CPU picking contract: base alpha >=102, not GPU filtering.
  * Store bits in the vertically flipped GPU layer coordinate system. */
-export function packCardPickMask(rgba:Uint8ClampedArray,width:number,height:number){
+export function packCardPickMask(rgba:Uint8ClampedArray,width:number,height:number,flipY=true){
  const mask=new Uint8Array(Math.ceil(width*height/8));
- for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(rgba[(y*width+x)*4+3]!>=102){const pixel=(height-1-y)*width+x;mask[pixel>>>3]!|=1<<(pixel&7);}
+ if(width%8===0){
+  for(let y=0;y<height;y++){
+   let source=y*width*4+3,destination=(flipY?height-1-y:y)*(width/8);
+   for(let x=0;x<width;x+=8,source+=32,destination++)mask[destination]=
+    Number(rgba[source]!>=102)|(Number(rgba[source+4]!>=102)<<1)|(Number(rgba[source+8]!>=102)<<2)|(Number(rgba[source+12]!>=102)<<3)|
+    (Number(rgba[source+16]!>=102)<<4)|(Number(rgba[source+20]!>=102)<<5)|(Number(rgba[source+24]!>=102)<<6)|(Number(rgba[source+28]!>=102)<<7);
+  }
+ }else{
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(rgba[(y*width+x)*4+3]!>=102){const pixel=(flipY?height-1-y:y)*width+x;mask[pixel>>>3]!|=1<<(pixel&7);}
+ }
  return mask;
 }
 export function cardMaskHit(mask:Uint8Array,width:number,height:number,uv:{x:number;y:number}|undefined){

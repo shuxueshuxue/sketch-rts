@@ -1,3 +1,4 @@
+import {CardRasterCache} from './card-raster-cache';
 import {packCardPickMask,cardMaskHit} from './card-pick-mask';
 import {CardMipUploader,createCardArray,cardTextureBytes,type CardMipMove,type CardTextureRenderer} from './card-mip-uploader';
 import { ART_TILE_SIZE } from '../art/raster-cache';
@@ -56,6 +57,8 @@ export class PaintedCardBatches {
   private peakRetiredGpuBytes=0;
   private retiring=new Set<Page>();
   private rasterWorkWallMs=0;
+  private rasterCache=new CardRasterCache();
+  private rasterStages={paintMs:0,readbackMs:0,cacheMs:0,pickMaskMs:0,rowFlipMs:0,slotMs:0};
   constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){this.mipUploader=new CardMipUploader(anisotropy);}
   begin(){this.frame++;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=page.opacities.length=0;}}
   private createPage(width:number,height:number){
@@ -98,25 +101,39 @@ export class PaintedCardBatches {
     let card=this.cards.get(key);
     if(!card){
       const start=performance.now(),size=tileSize*density;
-      let canvas=this.canvases.get(size);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(size,canvas);}
-      const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
-      try{paint(ctx);}finally{ctx.restore();}
-      const rgba=ctx.getImageData(0,0,size,size).data;
+      const cacheStart=performance.now();let rgba=this.rasterCache.get(key);
+      this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
+      if(!rgba){
+        const paintStart=performance.now();
+        let canvas=this.canvases.get(size);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(size,canvas);}
+        const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
+        try{paint(ctx);}finally{ctx.restore();}
+        const paintedAt=performance.now();this.rasterStages.paintMs+=paintedAt-paintStart;
+        rgba=ctx.getImageData(0,0,size,size).data;const readAt=performance.now();this.rasterStages.readbackMs+=readAt-paintedAt;paintMs=readAt-paintStart;
+
+      }
       this.pendingRgbaBytes=rgba.byteLength;this.recordPeaks();
       try{
-        const painted=hasPaint(rgba),retainedSize=painted?size:16;
-        const mask=this.policy.pickable===false?new Uint8Array(0):painted?packCardPickMask(rgba,size,size):new Uint8Array(16*16/8);
+        const maskStart=performance.now(),painted=hasPaint(rgba),retainedSize=painted?size:16;
+        const mask=this.policy.pickable===false?new Uint8Array(0):painted?packCardPickMask(rgba,size,size,!fromCache):new Uint8Array(16*16/8);
         this.pendingMaskBytes=mask.byteLength;
+        const flipStart=performance.now();this.rasterStages.pickMaskMs+=flipStart-maskStart;
         // Reverse rows in place. A single reusable row replaces a second full
         // RGBA allocation; the source readback is released after this upload.
-        if(painted){
+        if(painted&&!fromCache){
           const row=size*4;if(this.rowScratch.length<row)this.rowScratch=new Uint8Array(row);
           for(let y=0;y<Math.floor(size/2);y++){
             const top=y*row,bottom=(size-1-y)*row;this.rowScratch.set(rgba.subarray(top,top+row));
             rgba.copyWithin(top,bottom,bottom+row);rgba.set(this.rowScratch.subarray(0,row),bottom);
           }
         }
+        const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
+        // Cached bytes already have GPU row orientation. Rehydration never
+        // rewrites transparent rows just to flip them a second time.
+        if(!fromCache)this.rasterCache.put(key,rgba,size,size,paintMs);
+        const slotStart=performance.now();this.rasterStages.cacheMs+=slotStart-flippedAt;
         const {page,layer}=this.slot(retainedSize,retainedSize);this.recordPeaks();
+        this.rasterStages.slotMs+=performance.now()-slotStart;
         this.rasterWorkWallMs+=performance.now()-start;
         if(!painted&&this.emptyRgba.length===0)this.emptyRgba=new Uint8Array(16*16*4);
         this.mipUploader.uploadLayer(page,layer,painted?rgba:this.emptyRgba,renderer);this.recordPeaks();
@@ -233,7 +250,7 @@ export class PaintedCardBatches {
     const bytes=(page:Page)=>cardTextureBytes(page.texture.image.width,page.texture.image.height,LAYERS);
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
-    return{pages:this.pages.length,cards:this.cards.size,pixels,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,copiedLayers:this.copiedLayers,rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
+    return{pages:this.pages.length,cards:this.cards.size,pixels,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
   private recordPeaks(){const s=this.stats();this.peakPendingRgbaBytes=Math.max(this.peakPendingRgbaBytes,s.pendingRgbaBytes);this.peakOwnedCpuBytes=Math.max(this.peakOwnedCpuBytes,s.ownedCpuBytes);this.peakOwnedGpuBytes=Math.max(this.peakOwnedGpuBytes,s.ownedGpuBytes);this.peakRetiredGpuBytes=Math.max(this.peakRetiredGpuBytes,s.retiredGpuBytes);}
   private remove(page:Page){
@@ -241,7 +258,8 @@ export class PaintedCardBatches {
     if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();}page.geometry.dispose();page.texture.dispose();page.material.dispose();page.depth.dispose();page.distance.dispose();this.pages.splice(this.pages.indexOf(page),1);
     const {width,height}=page.texture.image;if(!this.pages.some(other=>other.texture.image.width===width&&other.texture.image.height===height))this.mipUploader.releaseSize(width,height);
   }
-  dispose(){for(const page of [...this.pages])this.remove(page);this.retiring.clear();for(const canvas of this.canvases.values())canvas.width=canvas.height=1;this.canvases.clear();this.pending.length=0;this.pendingRgbaBytes=this.pendingMaskBytes=this.maskBytes=0;this.rowScratch=new Uint8Array(0);this.emptyRgba=new Uint8Array(0);this.mipUploader.dispose();this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}
+  dispose(){
+    this.rasterCache.clear();for(const page of [...this.pages])this.remove(page);this.retiring.clear();for(const canvas of this.canvases.values())canvas.width=canvas.height=1;this.canvases.clear();this.pending.length=0;this.pendingRgbaBytes=this.pendingMaskBytes=this.maskBytes=0;this.rowScratch=new Uint8Array(0);this.emptyRgba=new Uint8Array(0);this.mipUploader.dispose();this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}
 
 }
 

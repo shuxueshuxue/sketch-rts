@@ -170,3 +170,13 @@ it.each(['paint','upload'] as const)('releases transient data and request closur
  renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('recovered',2,paint,matrix,'one',17);cards.finish(renderer);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);
  const canvases=[...(cards as unknown as {canvases:Map<number,HTMLCanvasElement>}).canvases.values()];cards.dispose();expect(canvases.every(canvas=>canvas.width===1&&canvas.height===1)).toBe(true);expect(cards.stats()).toMatchObject({ownedCpuBytes:0,canvasBackingBytes:0,pages:0});
 });
+
+it('recovers evicted GPU poses from exact compressed pixels without invoking their painters again',()=>{
+ const {cards}=setup(),painter=vi.fn(paint);
+ for(let cycle=0;cycle<2;cycle++)for(let pose=0;pose<70;pose++){
+  cards.begin();cards.add(`recover:${pose}`,4,painter,matrix,'unit',17);cards.finish(renderer);
+  expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);
+ }
+ expect(painter).toHaveBeenCalledTimes(70);expect(cards.stats().rasterCache.hits).toBeGreaterThan(0);
+ cards.dispose();expect(cards.stats().rasterCache.ownedBytes).toBe(0);expect(cards.stats().ownedCpuBytes).toBe(0);
+});
