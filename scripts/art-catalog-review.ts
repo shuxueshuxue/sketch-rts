@@ -28,7 +28,7 @@ sheet('units',units,(c,k)=>drawAtlasUnit(c,k as UnitKind,{x:0,y:0},1.6,'#65908c'
 sheet('corpses',units,(c,k)=>drawAtlasCorpse(c,k as UnitKind,{x:0,y:0},1.6));
 sheet('buildings',buildings,(c,k)=>drawAtlasBuilding(c,k as BuildingKind,{x:0,y:0},70,'#65908c'),6,210,180);
 sheet('unit-portraits',units,(c,k)=>drawAtlasUnitPortrait(c,k as UnitKind,-48,-55,96,'#65908c'));
-sheet('building-portraits',buildings,(c,k)=>drawAtlasBuildingPortrait(c,k as BuildingKind,100,'#65908c'));
+sheet('building-portraits',buildings,(c,k)=>{c.translate(-50,-50);drawAtlasBuildingPortrait(c,k as BuildingKind,100,'#65908c');});
 sheet('items',items,(c,k)=>drawPaintedItem(c,k as ItemKind,{x:0,y:-10},68));
 for(const mode of ['idle','walk','attack','cast','work'] as const){
  const keys=units.flatMap(kind=>Array.from({length:6},(_,frame)=>`${kind}:${frame}`));
