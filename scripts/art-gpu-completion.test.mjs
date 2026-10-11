@@ -1,0 +1,7 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {waitForArtGpuCompletion} from './art-gpu-completion.mjs';
+function fixture(statuses){let clock=0,deleted=0,flushed=0;const gl={SYNC_GPU_COMMANDS_COMPLETE:1,ALREADY_SIGNALED:2,CONDITION_SATISFIED:3,WAIT_FAILED:4,fenceSync:()=>({}),flush:()=>flushed++,clientWaitSync:(_s,flags,timeout)=>{assert.equal(flags,0);assert.equal(timeout,0);clock+=.5;return statuses.shift()??5;},isContextLost:()=>false,deleteSync:()=>deleted++};return {gl,options:{now:()=>clock,yieldTurn:async()=>{clock+=4;},timeoutMs:8},state:()=>({deleted,flushed})};}
+test('records scheduling separately, requires signaled completion, deletes sync',async()=>{const f=fixture([5,5,3]);const r=await waitForArtGpuCompletion(f.gl,f.options);assert.equal(r.waitMs,9.5);assert.equal(r.polls,3);assert.equal(r.pollCallMs,1.5);assert.deepEqual(r.yieldIntervalsMs,[4,4]);assert.equal(r.yieldedWallMs,8);assert.deepEqual(f.state(),{deleted:1,flushed:1});});
+test('failed and timed-out waits never masquerade as completed samples',async()=>{for(const states of [[4],[]]){const f=fixture(states);await assert.rejects(waitForArtGpuCompletion(f.gl,f.options),/failed|timed out/);assert.equal(f.state().deleted,1);}});
+test('immediate signal does not yield; browser source remains self-contained',async()=>{const browserFunction=Function('return ('+waitForArtGpuCompletion.toString()+')')();const f=fixture([2]);const r=await browserFunction(f.gl,f.options);assert.equal(r.polls,1);assert.deepEqual(r.yieldIntervalsMs,[]);});

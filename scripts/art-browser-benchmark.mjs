@@ -1,14 +1,18 @@
 /** Extend the existing real WebGL resource benchmark without modifying production code.
  * node --import tsx scripts/art-browser-benchmark.mjs --out work/art-browser.json --screenshot work/art-browser.png
+ * Use --reliable-completion for verified GPU completion (includes scheduling cost).
  * Opt in to final combat/projectile trackers and coverage evidence with --final-art.
  * Six independent layer lifetimes; 12 warmup + 60 full-WebGL draws each.
  */
+import { createHash } from 'node:crypto';
+import { waitForArtGpuCompletion } from './art-gpu-completion.mjs';
 import { readFile, writeFile, unlink } from 'node:fs/promises';
 import { spawn, execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const scripts=dirname(fileURLToPath(import.meta.url));
 const dynamic=process.argv.includes('--dynamic');
+const reliableCompletion=process.argv.includes('--reliable-completion');
 const finalArt=process.argv.includes('--final-art');
 const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:resolve(scripts,'..'),encoding:'utf8'}).trim();
 const allUnits=process.argv.includes('--all-units');
@@ -147,9 +151,25 @@ const finalCatalogCounts={
     const artInfo = { finalArt:finalEvidence,`);
  runner=runner.replace('const result = { artSourceCommit:', 'const result = { finalArt: true, finalArtMethod: "Opt-in production combat/projectile trackers in the unchanged static or dynamic WebGL sample loop; measured counter collection runs after fenced timing. Per-cycle renderer.finalArt reports rules/catalog, event coverage, instance exposure and explicit unavailable measurements.", artSourceCommit:');
 }
+// Opt-in completion verification. Historical timed loops remain unchanged otherwise.
+if(reliableCompletion){
+ const replaceRequired=(from,to)=>{if(!fixture.includes(from))throw new Error('Reliable completion anchor changed: '+from);fixture=fixture.replace(from,to);};
+ fixture=waitForArtGpuCompletion.toString()+'\n'+fixture;
+ replaceRequired('const artSamples = [],','const artCompletionSamples = []; let artLoopPrevious; const artSamples = [],');
+ replaceRequired('      const at = performance.now();', '      const artLoopStart=performance.now();'+(dynamic?'':'if(n>0&&artLoopPrevious!==undefined)artFrameIntervals.push(artLoopStart-artLoopPrevious);artLoopPrevious=artLoopStart;')+'\n      const at = performance.now();');
+ replaceRequired('const submitted = performance.now(); gl.finish();','const submitted = performance.now(); const artCompletion=await waitForArtGpuCompletion(gl);');
+ replaceRequired('if (n >= 0) { artSubmitSamples.push','if (n >= 0) { artCompletionSamples.push(artCompletion); artSubmitSamples.push');
+ replaceRequired('artTiming: { fullDrawFenced:', 'artTiming: { completion: { method:"fenceSync+flush+clientWaitSync(0) with setTimeout(0) polling", wait:summarize(artCompletionSamples.map(s=>s.waitMs)), waitValuesMs:artCompletionSamples.map(s=>s.waitMs), samples:artCompletionSamples, totalMeaning:"submission plus verified-completion wall upper bound, including poll and scheduling costs; not GPU duration or display cadence", schedulingMeaning:"pollCallMs measures JS clientWaitSync calls; yieldedWallMs/yieldIntervalsMs include BOTH pending GPU work and event-loop scheduling, which cannot be separated here; not overhead-subtracted. Small static durations are not precise GPU timing." }, gpuCompleteWall:summarize(artSamples), gpuCompleteWallValuesMs:artSamples, fullDrawFenced:');
+ runner=runner.replace('const result = {', 'const result = { reliableCompletion: true,');
+ runner=runner.replace('gl.finish fences software GPU completion. FullDrawFenced includes CPU scene updates, WebGL submission and SwiftShader completion. CpuSubmission excludes finish.', 'fenceSync+flush+asynchronous clientWaitSync verifies completion per frame. FullDrawFenced is a legacy field alias for GPU-complete wall upper bound, including scheduler/poll cost; CPU submission excludes the wait. Small static samples do not establish precise GPU durations.');
+}
+const sha256=value=>createHash('sha256').update(value).digest('hex');
+const artInputs={};
+for(const name of ['art-browser-benchmark.mjs','art-gpu-completion.mjs','browser-runtime-fixture.js','browser-runtime-benchmark.mjs',...(dynamic?['art-dynamic-fixture.js']:[])])artInputs[name]=sha256(await readFile(resolve(scripts,name)));
+runner=runner.replace('const result = {',`const result = { artFixtureSha256: ${JSON.stringify(sha256(fixture))}, artBenchmarkInputSha256: ${JSON.stringify(artInputs)},`);
 try {
  await writeFile(fixturePath,fixture);await writeFile(runnerPath,runner);
- const child=spawn(process.execPath,['--import','tsx',runnerPath,...process.argv.slice(2).filter(value => value !== '--all-units' && value !== '--dynamic' && value !== '--final-art')],{stdio:'inherit',cwd:resolve(scripts,'..')});
+ const child=spawn(process.execPath,['--import','tsx',runnerPath,...process.argv.slice(2).filter(value => value !== '--all-units' && value !== '--dynamic' && value !== '--final-art' && value !== '--reliable-completion')],{stdio:'inherit',cwd:resolve(scripts,'..')});
  const code=await new Promise((done,reject)=>{child.on('error',reject);child.on('exit',done);});
  if(code!==0)process.exitCode=code??1;
 }finally{await Promise.all([unlink(fixturePath).catch(()=>{}),unlink(runnerPath).catch(()=>{})]);}
