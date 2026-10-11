@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 
 export async function runSharedUnitProof(h) {
- const {api,origin,roomId,read,command,sessionId,click,clickAt,screenshot,until,delay,must,evidence}=h;
+ const {api,origin,roomId,read,command,sessionId,click,clickAt,screenshot,until,delay,must,evidence,reload}=h;
  const kinds=['priest','summoner'],keys={priest:'P',summoner:'U'},names={priest:/Priest|牧师/,summoner:/Summoner|召唤师/};
  const oldKinds=['emberAcolyte','pyreCaller'];
  const catalog=await api('/api/catalog');
@@ -50,8 +50,8 @@ export async function runSharedUnitProof(h) {
   const units=kinds.map((kind,i)=>({id:`${race}-${kind}-display`,owner:'player',kind,x:placement[0].x-70+i*140,y:placement[0].y+170}));
   await api(`/api/rooms/${roomId}/reset`,{mapId:'bareDuel',options:{...baseOptions,scenario:{...baseOptions.scenario,addUnits:units,addBuildings:buildings}}});
   await api(`/api/rooms/${roomId}/resume`,{});
-  await command('Page.reload',{},sessionId);
-  await until(()=>read(`window.__sketchRtsView?.unitIds.includes(${JSON.stringify(units[0].id)})&&document.querySelector('[data-main-menu]')?.classList.contains('hidden')`),`${race} client synchronization`);
+  await reload();
+  await until(()=>read(`window.__sketchRtsView?.unitIds.includes(${JSON.stringify(units[0].id)})&&document.querySelector('[data-main-menu]')?.classList.contains('hidden')&&!!document.querySelector('[data-minimap-frame]')`),`${race} client synchronization`);
   await read(`(()=>{const gate=document.querySelector('[data-pointer-lock-gate]');if(gate){gate.classList.add('hidden');gate.style.pointerEvents='none';}})()`);
   const start=await snap();must(start.players.player.race===race,`server did not apply ${race}`);
   const proof={race,producer,initialGold:start.players.player.gold,placement,startedTick:start.tick,menu:[],training:[],rejections:[],portraits:{}};

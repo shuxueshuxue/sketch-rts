@@ -1,0 +1,184 @@
+{
+  "suite": "shared-units",
+  "origin": "http://127.0.0.1:34615",
+  "startedAt": "2026-10-11T14:21:50.702Z",
+  "screenshots": [
+    "gameplay-map-selection.png",
+    "gameplay-room-setup.png",
+    "gameplay-started.png",
+    "gameplay-failure.png"
+  ],
+  "steps": [
+    {
+      "step": "select-map",
+      "state": {
+        "url": "http://127.0.0.1:34615/?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "selected": "pineshade"
+      }
+    },
+    {
+      "step": "start-match",
+      "status": "inMatch",
+      "mapId": "pineshade"
+    }
+  ],
+  "errors": [],
+  "commands": [],
+  "harnessAdjustments": [
+    "DOM controls invoke their native click handlers atomically; map Canvas uses CDP pointer input.",
+    "Hide pointer-lock invitation overlay after match entry (same adjustment as existing room UI proofs).",
+    "Seed a local authoritative bareDuel scenario through existing reset API after completing real map/setup/start UI.",
+    "Shared-unit suite seeds ordinary complete buildings and 10 farms on legal open ground; initial gold is the server default with the existing reset API; training runs at the normal simulation tick rate."
+  ],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "roomId": "room-1249dde5-ff1f-4fcb-9a12-0d06b7eaa70c",
+  "sharedUnits": {
+    "catalog": [
+      "worker",
+      "footman",
+      "archer",
+      "horseArcher",
+      "raider",
+      "lancer",
+      "ashWarden",
+      "emberRavager",
+      "cinderRunner",
+      "sparkArcher",
+      "ashHexer",
+      "knight",
+      "priest",
+      "summoner",
+      "witch",
+      "golem",
+      "ashChieftain",
+      "cinderRevenant",
+      "spirit",
+      "mercenary",
+      "contractArcher",
+      "fieldMedic",
+      "wildling",
+      "mossGnawer",
+      "thornSlinger",
+      "barkMender",
+      "stonebackBrute",
+      "gladeWitch",
+      "transport",
+      "warship",
+      "shipOfTheLine",
+      "cutter",
+      "bombardShip",
+      "fireShip",
+      "carrier",
+      "siegeRam",
+      "ballista",
+      "catapult",
+      "organGun",
+      "ancientStag",
+      "murlocPeon",
+      "murlocHunter",
+      "tidePriest",
+      "deepSnapper",
+      "rubbleGolem",
+      "rockGolem",
+      "graniteGolem",
+      "ogreWarrior",
+      "ogreMage",
+      "ogreLord",
+      "spiderling",
+      "venomSpider",
+      "spiderQueen",
+      "dragonWhelp",
+      "redDragon"
+    ],
+    "byRace": {
+      "grove": {
+        "race": "grove",
+        "producer": "sanctum",
+        "initialGold": 500,
+        "placement": [
+          {
+            "x": 1488,
+            "y": 1424,
+            "kind": "sanctum"
+          },
+          {
+            "x": 2256,
+            "y": 1488,
+            "kind": "sanctum"
+          },
+          {
+            "x": 1360,
+            "y": 2512,
+            "kind": "cinderSpire"
+          },
+          {
+            "x": 1216,
+            "y": 1408,
+            "kind": "farm"
+          },
+          {
+            "x": 1408,
+            "y": 1152,
+            "kind": "farm"
+          },
+          {
+            "x": 1344,
+            "y": 1664,
+            "kind": "farm"
+          },
+          {
+            "x": 1664,
+            "y": 1216,
+            "kind": "farm"
+          },
+          {
+            "x": 1152,
+            "y": 1088,
+            "kind": "farm"
+          },
+          {
+            "x": 1728,
+            "y": 1536,
+            "kind": "farm"
+          },
+          {
+            "x": 1984,
+            "y": 1600,
+            "kind": "farm"
+          },
+          {
+            "x": 960,
+            "y": 1920,
+            "kind": "farm"
+          },
+          {
+            "x": 896,
+            "y": 896,
+            "kind": "farm"
+          },
+          {
+            "x": 1216,
+            "y": 704,
+            "kind": "farm"
+          }
+        ],
+        "startedTick": 6,
+        "menu": [],
+        "training": [],
+        "rejections": [],
+        "portraits": {}
+      }
+    },
+    "artworkHashes": {}
+  },
+  "passed": false,
+  "failure": "Error: TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.\n    at <anonymous>:1:136\n    at <anonymous>:1:386\n    at read (file:///workspace/sketch-rts/scripts/art-gameplay-proof.mjs:34:166)\n    at async focus (file:///workspace/sketch-rts/scripts/shared-unit-gameplay-proof.mjs:19:12)\n    at async runSharedUnitProof (file:///workspace/sketch-rts/scripts/shared-unit-gameplay-proof.mjs:60:4)\n    at async file:///workspace/sketch-rts/scripts/art-gameplay-proof.mjs:50:3",
+  "failureDom": "SKETCH RTS\nPlay\nRooms\nSettings\n⟳\nThe Fleet\nLoading Home scene\n\n16 B / 16 B · 1/1 files\n\nLoading the current home scene\n\nResource sizes and timings",
+  "finishedAt": "2026-10-11T14:22:17.217Z"
+}

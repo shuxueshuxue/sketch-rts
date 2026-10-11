@@ -20,6 +20,11 @@ async function api(path,body){const response=await fetch(origin+path,body===unde
 async function screenshot(name){const {data}=await command('Page.captureScreenshot',{format:'png'},sessionId);const file=`gameplay-${name}.png`;await writeFile(resolve(out,file),Buffer.from(data,'base64'));evidence.screenshots.push(file);}
 async function clickAt(x,y,button='left'){await command('Input.dispatchMouseEvent',{type:'mouseMoved',x,y},sessionId);await command('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button,buttons:button==='right'?2:1,clickCount:1},sessionId);await delay(60);await command('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button,clickCount:1},sessionId);}
 async function click(selector){console.log('UI click',selector);await until(()=>read(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el||el.disabled)return false;const r=el.getBoundingClientRect();if(!r.width||!r.height)return false;el.click();return true})()`),`click ${selector}`);}
+async function reload(){
+ const previous=await read('performance.timeOrigin');
+ await command('Page.reload',{},sessionId);
+ await until(()=>read(`performance.timeOrigin!==${previous}&&document.readyState==='complete'`),'new document after reload');
+}
 try{
  server=spawn(process.execPath,['--import','tsx','src/server/index.ts'],{cwd:process.cwd(),env:{...process.env,HOST:'127.0.0.1',PORT:String(port)},stdio:['ignore','pipe','pipe']});server.stdout.on('data',chunk=>serverLog+=chunk);server.stderr.on('data',chunk=>serverLog+=chunk);
  await until(async()=>{const response=await fetch(origin+'/api/catalog');return response.ok;},'local dev server');
@@ -47,12 +52,12 @@ try{
  const started=await api(`/api/rooms/${roomId}`);must(started.status==='inMatch'&&started.mapId==='pineshade','UI did not start selected map');evidence.steps.push({step:'start-match',status:started.status,mapId:started.mapId});await screenshot('started');
  if(suite==='shared-units'){
   const {runSharedUnitProof}=await import('./shared-unit-gameplay-proof.mjs');
-  await runSharedUnitProof({api,origin,roomId,read,command,sessionId,click,clickAt,screenshot,until,delay,must,evidence});
+  await runSharedUnitProof({api,origin,roomId,read,command,sessionId,click,clickAt,screenshot,until,delay,must,evidence,reload});
  }else{
  await api(`/api/rooms/${roomId}/pause`,{});
  const fixture={replaceDefaultUnits:true,replaceDefaultResources:true,addUnits:[{id:'art-proof-soldier',owner:'player',kind:'footman',x:1200,y:960},{id:'art-proof-priest',owner:'player',kind:'priest',x:1130,y:1030},{id:'art-proof-archer',owner:'player',kind:'archer',x:1270,y:1030}],addItems:[{id:'art-proof-sword',kind:'greatSword',carrierId:'art-proof-soldier',slot:'carry0',x:1200,y:960,cooldownRemaining:0}]};
  await api(`/api/rooms/${roomId}/reset`,{mapId:'bareDuel',options:{aiPlayers:[],scenario:fixture}});await api(`/api/rooms/${roomId}/resume`,{});
- await command('Page.reload',{},sessionId);await until(()=>read(`window.__sketchRtsView?.unitIds.includes('art-proof-soldier')&&document.querySelector('[data-main-menu]')?.classList.contains('hidden')`),'fixture synchronized');
+ await reload();await until(()=>read(`window.__sketchRtsView?.unitIds.includes('art-proof-soldier')&&document.querySelector('[data-main-menu]')?.classList.contains('hidden')&&!!document.querySelector('[data-minimap-frame]')`),'fixture synchronized');
  await read(`(()=>{const gate=document.querySelector('[data-pointer-lock-gate]');if(gate){gate.classList.add('hidden');gate.style.pointerEvents='none';}})()`);
  const snapshot=await api(`/api/rooms/${roomId}/snapshot`),soldier=snapshot.units.find(unit=>unit.id==='art-proof-soldier');
  const navigate=await read(`(()=>{const frame=document.querySelector('[data-minimap-frame]'),canvas=document.querySelector('.game-canvas'),t=new DOMMatrixReadOnly(getComputedStyle(frame).transform),r=canvas.getBoundingClientRect();return{minimap:{x:r.x+t.m41+parseFloat(frame.style.width)*${soldier.x/snapshot.map.width},y:r.y+t.m42+parseFloat(frame.style.height)*${soldier.y/snapshot.map.height}},center:{x:r.x+r.width/2,y:r.y+r.height/2}}})()`);

@@ -31,7 +31,7 @@ WebGL 的 `PaintedCardBatches` 保持原绘制密度和完整源域，包括 320
 
 死亡装备和甲板事实属于模拟输出中的只读表现数据：在原掉落流程前复制，不影响伤害、掉落、寻路或命令。`deck-remains` 将不可变甲板局部坐标映射到当前显示船位；Canvas 置于船甲板绘制顺序，GPU 复用同一卡片类的透明、深度测试、无深度写入策略。船位、年龄和透明度不加入遗骸图像缓存键。故事角色的专属造型仍由作者定义，穿戴装备经相同入口覆盖。
 
-整页 mipmap 重建已被定位为动态软件 GPU 的主要瓶颈。`e06e047` 已接入逐脏层 GPU 生成：有限尺寸的单层 scratch 生成完整 mip 链，再通过公开 renderer API 逐级复制到纹理数组。完整源域、过滤和画质不变；严格画面对照与真实上下文恢复/重置/释放已通过。[第一阶段同环境实测](followup/performance/formal-completion/STAGE1-RESULTS.md)的动态 GPU 世界路径完成墙钟下降约 55%，静态近持平，船场景略慢；这不是完整游戏帧或硬件 GPU 帧率。密集更新整页的隔离实验存在退步，不能将稀疏更新收益推广到所有场景。最后 CPU 存储改造的正式对照另行记录。详见 [生产接入与质量证据](followup/dirty-mip/README.md)、[性能归因与实验](followup/performance/UPLOAD-EXPERIMENTS.md)。
+整页 mipmap 重建已被定位为动态软件 GPU 的主要瓶颈。`e06e047` 已接入逐脏层 GPU 生成：有限尺寸的单层 scratch 生成完整 mip 链，再通过公开 renderer API 逐级复制到纹理数组。完整源域、过滤和画质不变；严格画面对照与真实上下文恢复/重置/释放已通过。[第一阶段同环境实测](followup/performance/formal-completion/STAGE1-RESULTS.md)的动态 GPU 世界路径完成墙钟下降约 55%，静态近持平，船场景略慢；这不是完整游戏帧或硬件 GPU 帧率。密集更新整页的隔离实验存在退步，不能将稀疏更新收益推广到所有场景。最终 CPU 存储改造的[正式对照](followup/performance/formal-completion/FINAL-RESULTS.md)已完成：动态完成墙钟相对完整画质基线下降 58.48%，静态总体持平；指定缓存 CPU 存储降至 28.22 MB，GPU 数组尺寸不变。详见 [生产接入与质量证据](followup/dirty-mip/README.md)、[性能归因与实验](followup/performance/UPLOAD-EXPERIMENTS.md)。
 
 ## 验证原则
 
