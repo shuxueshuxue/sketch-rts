@@ -58,7 +58,7 @@ jobs:
         run: npx vitest run src/shared/terrain-arrival.test.ts src/shared/terrain.test.ts src/shared/route-selection.test.ts src/shared/ground-move-forecast.test.ts src/ai/bootstrap_1/terrain-shell-evasion.test.ts
 
       - name: Test covered army posts and mining defense
-        run: npx vitest run src/ai/bootstrap_1/assault-road-distance.test.ts src/ai/bootstrap_1/expedition-counterraid.test.ts src/ai/bootstrap_1/covered-defense.test.ts src/ai/bootstrap_1/defensive-route.test.ts src/ai/bootstrap_1/working-base-defense.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
+        run: npx vitest run src/ai/bootstrap_1/camp-territory-roads.test.ts src/ai/bootstrap_1/assault-road-distance.test.ts src/ai/bootstrap_1/expedition-counterraid.test.ts src/ai/bootstrap_1/covered-defense.test.ts src/ai/bootstrap_1/defensive-route.test.ts src/ai/bootstrap_1/working-base-defense.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
