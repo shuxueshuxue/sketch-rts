@@ -136,6 +136,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     startCamp: startV7Creep,
     campTerritory: 'home',
     chooseMine: isV9Policy(options) ? v9ExpansionMine : nextExpansionMine,
+    threatWithin: (unit, point, range) => distance(unit, point) <= range,
+    respondingPower,
   });
 }
 
@@ -155,10 +157,12 @@ type ArmyPlan = {
   startCamp: typeof startV7Creep;
   campTerritory: 'home' | 'ground';
   chooseMine: typeof nextExpansionMine;
+  threatWithin: (unit: Unit, point: Point, range: number) => boolean;
+  respondingPower: typeof respondingPower;
 };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
-  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp, campTerritory, chooseMine } = plan;
+  const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp, campTerritory, chooseMine, threatWithin, respondingPower: response } = plan;
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -214,7 +218,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   // With a single working mine, secure the requested replacement before continuing a distant assault.
   if (!miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, threatWithin);
     if (continued) return continued;
   }
 
@@ -247,7 +251,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     }
   }
   if (miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, threatWithin);
     if (continued) return continued;
   }
   const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
@@ -256,7 +260,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     return order(snapshot, owner, memory, "creep", front, natural, options);
   }
 
-  const target = attackTarget(intel, attackMargin(options));
+  const target = attackTarget(intel, attackMargin(options), threatWithin);
   const idle = current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= IDLE_TICKS;
   const marching = marchStrength(available) * (1 + profile.aggression);
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
@@ -269,7 +273,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
   const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
-  const opposing = isV7Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
+  const opposing = isV7Policy(options) && target ? response(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
   // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
@@ -303,7 +307,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   return order(snapshot, owner, memory, "hold", front, rally, options);
 }
 
-function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean): GameCommand[] | undefined {
+function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean, within: ArmyPlan['threatWithin']): GameCommand[] | undefined {
   const memory = v6Memory(options), current = memory.general;
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);
@@ -316,7 +320,8 @@ function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const group = attackGroup(available, front, current.group ?? []);
     const marching = group.filter((unit) => front.includes(unit));
     const center = marching.length > 0 ? averagePoint(marching) : undefined;
-    const facing = center ? enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
+    const facing = center ? intel.enemies.reduce((total, enemy) => total + strengthOf(enemy.army.filter(unit => within(unit, center, LOCAL_RANGE))), 0)
+      + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
     const gaps = center ? enemyGaps(intel, center) : {};
     const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
@@ -540,7 +545,7 @@ function toward(from: Point, to: Point, length: number): Point {
   return gap < 1 ? from : { x: from.x + ((to.x - from.x) / gap) * Math.min(length, gap), y: from.y + ((to.y - from.y) / gap) * Math.min(length, gap) };
 }
 
-function attackTarget(intel: V6Intel, margin: number): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
+function attackTarget(intel: V6Intel, margin: number, within: ArmyPlan['threatWithin']): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
   const choices = intel.enemies.flatMap((enemy) => {
     const main = mainHall(enemy);
     return targetBases(enemy, intel).map((base) => {
@@ -550,8 +555,8 @@ function attackTarget(intel: V6Intel, margin: number): { base: V6BaseIntel; need
       const defenders = intel.enemies.reduce(
         (total, other) =>
           total +
-          strengthOf(other.army.filter((unit) => distance(unit, base.hall) <= LOCAL_RANGE)) +
-          (expansion ? 0 : strengthOf(other.army.filter((unit) => distance(unit, base.hall) > LOCAL_RANGE && distance(unit, base.hall) <= TARGET_REGION)) * FAR_DEFENDER_SHARE),
+          strengthOf(other.army.filter((unit) => within(unit, base.hall, LOCAL_RANGE))) +
+          (expansion ? 0 : strengthOf(other.army.filter((unit) => !within(unit, base.hall, LOCAL_RANGE) && within(unit, base.hall, TARGET_REGION))) * FAR_DEFENDER_SHARE),
         0,
       );
       const why = enemy.power < 2 ? "beaten" : expansion ? "expansion" : enemy.state === "creeping" || enemy.state === "away" ? "armyAway" : "stronger";
