@@ -11,7 +11,11 @@ import {createServer} from 'vite';
 import WebSocket from 'ws';
 const directory=dirname(fileURLToPath(import.meta.url)),root=resolve(directory,'../../../../..'),arg=key=>{const i=process.argv.indexOf(key);return i<0?undefined:process.argv[i+1];};
 const output=resolve(arg('--out')??resolve(directory,'scratch-mip-result.json'));await mkdir(dirname(output),{recursive:true});const scratch=await mkdtemp('/tmp/scratch-mip-proof-');
-const errors=[],fixture=resolve(directory,'scratch-mip-fixture.js'),metadata={commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),fixtureSha256:createHash('sha256').update(await readFile(fixture)).digest('hex'),query:arg('--query')??'',startedAt:new Date().toISOString()};let server,browser,socket;
+const errors=[],fixture=arg('--fixture')?resolve(arg('--fixture')):resolve(directory,'scratch-mip-fixture.js'),metadata={commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),fixtureSha256:createHash('sha256').update(await readFile(fixture)).digest('hex'),query:arg('--query')??'',startedAt:new Date().toISOString()};let server,browser,socket;
+if(arg('--fixture')){
+ metadata.productionSourceSha256={};
+ for(const path of ['src/client/world3d/card-mip-uploader.ts','src/client/world3d/painted-card-batches.ts','src/client/world3d/world-layer.ts'])metadata.productionSourceSha256[path]=createHash('sha256').update(await readFile(resolve(root,path))).digest('hex');
+}
 try{
  await writeFile(resolve(scratch,'index.html'),`<script type="module" src="/@fs${fixture}"></script>`);
  server=await createServer({configFile:false,root:scratch,server:{host:'127.0.0.1',port:0,hmr:false,fs:{allow:[root,scratch]}}});await server.listen();

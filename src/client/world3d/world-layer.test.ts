@@ -10,6 +10,7 @@ vi.mock('three',async importOriginal=>{
   return{...actual,WebGLRenderer:class{
     shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};toneMapping=0;toneMappingExposure=1;
     setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
+    initTexture(){}copyTextureToTexture(){}getRenderTarget(){return null;}getActiveCubeFace(){return 0;}getActiveMipmapLevel(){return 0;}setRenderTarget(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
   }};
 });
@@ -43,9 +44,21 @@ function setup(){
   setScratchCanvasFactory((w,h)=>createCanvas(w,h) as unknown as HTMLCanvasElement);
   const {game,ship}=createShipWebglScene();
   const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{mercenaryStock:()=>'',unitKind:()=>''}};
-  return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
+  const canvas=new EventTarget() as HTMLCanvasElement;
+  return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('retains context listeners across reset and removes them on final disposal',async()=>{
+    const {frame,layer,canvas}=setup(),remove=vi.spyOn(canvas,'removeEventListener');
+    await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const before=layer.cardStats().mipLayerUpdates;
+    const lost=new Event('webglcontextlost',{cancelable:true});canvas.dispatchEvent(lost);expect(lost.defaultPrevented).toBe(true);
+    layer.draw(frame);expect(layer.cardStats().mipLayerUpdates).toBe(before);
+    canvas.dispatchEvent(new Event('webglcontextrestored'));layer.draw(frame);expect(layer.cardStats().mipLayerUpdates).toBeGreaterThan(before);
+    layer.reset();expect(remove).not.toHaveBeenCalled();layer.draw(frame);
+    canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));canvas.dispatchEvent(new Event('webglcontextrestored'));layer.draw(frame);
+    layer.dispose();expect(remove.mock.calls.map(call=>call[0])).toEqual(['webglcontextlost','webglcontextrestored']);
+  });
   it('draws real hit ink in GPU depth and clears it on a world reset without touching card identities',async()=>{
     const {game,ship,frame,layer}=setup();frame.combat=new CombatPresentationTracker();
     const crew=game.units.find(unit=>unit.deck)!;crew.hp=55;
@@ -370,7 +383,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
     expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
     layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();
-    const second=World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext);
+    const second=World3DLayer.create(new EventTarget() as HTMLCanvasElement,{} as WebGL2RenderingContext);
     await second.prepare(frame.snapshot,'home');second.draw(frame);expect(second.positions.size).toBeGreaterThan(0);second.dispose();
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.removeEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.removeEventListener('dispose',sharedDispose);}});
   });

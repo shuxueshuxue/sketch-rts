@@ -19,7 +19,7 @@ describe('painted card array batches',()=>{
     cards.finish();const [mesh]=cards.objects();expect(cards.objects()).toHaveLength(1);expect(mesh!.count).toBe(16);
     expect(cards.stats()).toMatchObject({pages:1,cards:16,rasterizations:16,pixels:512*512*16});
     const texture=(mesh!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
-    expect(texture.image).toMatchObject({width:512,height:512,depth:16});expect(texture.generateMipmaps).toBe(true);expect(texture.anisotropy).toBe(8);
+    expect(texture.image).toMatchObject({width:512,height:512,depth:16});expect(texture.generateMipmaps).toBe(false);expect(texture.mipmaps).toHaveLength(10);expect(texture.anisotropy).toBe(8);
     expect(mesh!.customDepthMaterial!.alphaTest).toBe(.4);expect(mesh!.customDistanceMaterial!.alphaTest).toBe(.4);
     const transform=new THREE.Matrix4();mesh!.getMatrixAt(12,transform);expect(transform.elements[13]).toBe(0);expect(mesh!.geometry.getAttribute('cardRect').getY(12)).toBeCloseTo((-64+12)/Math.tan(SHIP_CAMERA.tilt),5);
     expect(mesh!.userData.ids[12]).toBe('unit:12');expect(mesh!.geometry.getAttribute('cardLayer').getX(12)).toBe(12);cards.dispose();
@@ -136,4 +136,15 @@ it('isolates translucent remains policy and varies instance opacity without repa
  cards.begin();cards.add('remains',2,painter,matrix,'one',0,128,.4);cards.finish();expect(painter).toHaveBeenCalledTimes(1);expect(mesh.geometry.getAttribute('cardOpacity').getX(0)).toBeCloseTo(.4);
  const resources=[material,material.map!,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
  cards.dispose();expect(scene.children).toHaveLength(0);for(const release of resources)expect(release).toHaveBeenCalledTimes(1);
+});
+
+it('rebuilds occupied GPU layers after context loss without repainting or replacing CPU pixels',()=>{
+ const {cards}=setup(),painter=vi.fn(paint),renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn()};
+ cards.begin();cards.add('kept',2,painter,matrix,'one',17);cards.finish();cards.upload(renderer);
+ const mesh=cards.objects()[0]!,before=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture,data=before.image.data,disposed=vi.spyOn(before,'dispose');
+ cards.invalidateGPU();const after=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
+ expect(after).not.toBe(before);expect(after.image.data).toBe(data);expect(disposed).toHaveBeenCalledTimes(1);expect(painter).toHaveBeenCalledTimes(1);
+ expect((mesh.customDepthMaterial as THREE.MeshDepthMaterial).map).toBe(after);expect((mesh.customDistanceMaterial as THREE.MeshDistanceMaterial).map).toBe(after);
+ const copies=renderer.copyTextureToTexture.mock.calls.length;cards.upload(renderer);expect(renderer.copyTextureToTexture.mock.calls.length-copies).toBe(9);
+ expect(cards.stats()).toMatchObject({mipInitializedPages:2,mipLayerUpdates:2,rasterizations:1});cards.dispose();expect(cards.stats().scratchTextures).toBe(0);
 });

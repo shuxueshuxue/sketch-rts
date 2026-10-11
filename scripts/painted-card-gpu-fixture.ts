@@ -34,7 +34,7 @@ export async function cardGpuProof(){
     if(params.get('extent')==='full'){const half=domains[i]!.tile/2,pixel=1/domains[i]!.density;ctx.fillStyle='rgba(0,0,0,.004)';for(const x of [-half,half-pixel])for(const y of [-half,half-pixel])ctx.fillRect(x,y,pixel,pixel);}
   });
   const matrices=paints.map((_,i)=>new THREE.Matrix4().compose(new THREE.Vector3((i%2-.5)*105,0,(Math.floor(i/2)-.5)*120),rotation,params.get('domains')==='mixed'&&i%2?new THREE.Vector3(-1,1,1):scale));
-  function setFilter(texture:THREE.Texture){if(filter!=='mip'){texture.generateMipmaps=false;texture.minFilter=texture.magFilter=filter==='nearest'?THREE.NearestFilter:THREE.LinearFilter;texture.needsUpdate=true;}}
+  function setFilter(texture:THREE.Texture){if(filter!=='mip'){const value=filter==='nearest'?THREE.NearestFilter:THREE.LinearFilter;if(texture.minFilter!==value||texture.magFilter!==value){texture.generateMipmaps=false;texture.minFilter=texture.magFilter=value;texture.needsUpdate=true;}}}
   const previous=paints.map((paint,i)=>{
     const {tile,density,foot}=domains[i]!,pixels=tile*density;
     const source=document.createElement('canvas');source.width=source.height=pixels;const ctx=source.getContext('2d',{willReadFrequently:true})!;ctx.scale(density,density);ctx.translate(tile/2,tile/2);paint(ctx);
@@ -50,7 +50,7 @@ export async function cardGpuProof(){
     sun.visible=pass===0;point.visible=pass===1;
     for(const mesh of previous)mesh.visible=true;for(const mesh of cards.objects())mesh.visible=false;
     const before=draw();for(const mesh of previous)mesh.visible=false;const empty=draw();let referenceVisiblePixels=0;for(let p=0;p<before.length;p+=4)if(before[p]!==empty[p]||before[p+1]!==empty[p+1]||before[p+2]!==empty[p+2])referenceVisiblePixels++;
-    cards.begin();paints.forEach((paint,i)=>cards.add(String(i),domains[i]!.density,paint,matrices[i]!,String(i),domains[i]!.foot,domains[i]!.tile));cards.finish();for(const mesh of cards.objects())setFilter(mesh.material.map!);
+    cards.begin();paints.forEach((paint,i)=>cards.add(String(i),domains[i]!.density,paint,matrices[i]!,String(i),domains[i]!.foot,domains[i]!.tile));cards.finish();for(const mesh of cards.objects())setFilter(mesh.material.map!);cards.upload(renderer);
     if(pass===0){
       for(let i=0;i<previous.length;i++){
         const source=previous[i]!.userData.source as HTMLCanvasElement,sourceSize=source.width,rgba=source.getContext('2d')!.getImageData(0,0,sourceSize,sourceSize).data;

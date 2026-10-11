@@ -1,3 +1,4 @@
+import {CardMipUploader,createCardArray,type CardTextureRenderer} from './card-mip-uploader';
 import { ART_TILE_SIZE } from '../art/raster-cache';
 import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
@@ -5,7 +6,7 @@ import {SHIP_CAMERA} from '../../shared/ship-geometry';
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
 type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number};
 type Card={key:string;page:Page;layer:number;used:number;tileSize:number};
-type Page={texture:THREE.DataArrayTexture;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];used:number};
+type Page={texture:THREE.DataArrayTexture;dirty:Set<number>;uploaded:boolean;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];used:number};
 
 /** Each layer has its own full-resolution mip chain: unlike a packed atlas,
  * filtering cannot borrow another pose's pixels. Stock cutout materials retain
@@ -42,16 +43,16 @@ export class PaintedCardBatches {
   private raySphere=new THREE.Sphere();
   private rayHits:THREE.Intersection[]=[];
   private canvases=new Map<number,HTMLCanvasElement>();
-  constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){}
+  private mipUploader:CardMipUploader;
+  constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){this.mipUploader=new CardMipUploader(anisotropy);}
   begin(){this.frame++;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=page.opacities.length=0;}}
   private createPage(width:number,height:number){
-    const texture=new THREE.DataArrayTexture(new Uint8Array(width*height*4*LAYERS),width,height,LAYERS);
-    texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;texture.anisotropy=this.anisotropy;
+    const texture=createCardArray(new Uint8Array(width*height*4*LAYERS),width,height,LAYERS,this.anisotropy);
     const material=new THREE.MeshBasicMaterial({map:texture,alphaTest:this.policy.alphaTest??.4,side:THREE.DoubleSide,toneMapped:false,transparent:this.policy.transparent??false,depthWrite:this.policy.depthWrite??true,depthTest:true});
     const depth=new THREE.MeshDepthMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,depthPacking:THREE.RGBADepthPacking});
     const distance=new THREE.MeshDistanceMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide});
     for(const item of [material,depth,distance])configure(item,this.policy.transparent??false);
-    const page:Page={texture,cards:new Array(LAYERS),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],used:this.frame};
+    const page:Page={texture,dirty:new Set(),uploaded:false,cards:new Array(LAYERS),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],used:this.frame};
     this.pages.push(page);return page;
   }
   private slot(width:number,height:number){
@@ -96,7 +97,7 @@ export class PaintedCardBatches {
       // subtracting interpolated UVs in the fragment shader at cutout edges.
       pixels.fill(0,base,base+retainedSize*retainedSize*4);
       if(retainedSize===size)for(let y=0;y<size;y++)pixels.set(rgba.subarray(y*row,(y+1)*row),base+(size-1-y)*row);
-      page.texture.addLayerUpdate(layer);page.texture.needsUpdate=true;this.rasterizations++;
+      page.dirty.add(layer);this.rasterizations++;
       card={key,page,layer,used:this.frame,tileSize};page.cards[layer]=card;this.cards.set(key,card);
     }
     this.instance(card,matrix,id,foot,opacity);
@@ -119,7 +120,7 @@ export class PaintedCardBatches {
         const page=destination!,card={...old,page,layer,used:this.frame};
         const bytes=width*height*4,source=old.page.texture.image.data as Uint8Array;
         (page.texture.image.data as Uint8Array).set(source.subarray(old.layer*bytes,(old.layer+1)*bytes),layer*bytes);
-        page.texture.addLayerUpdate(layer);page.texture.needsUpdate=true;page.cards[layer]=card;this.cards.set(card.key,card);moved.set(old,card);this.copiedLayers++;
+        page.dirty.add(layer);page.cards[layer]=card;this.cards.set(card.key,card);moved.set(old,card);this.copiedLayers++;
       }
       for(const old of pages){
         for(let i=0;i<old.entries.length;i++){
@@ -166,6 +167,20 @@ export class PaintedCardBatches {
       page.geometry.boundingSphere??=new THREE.Sphere();page.geometry.boundingSphere.center.set(0,0,0);page.geometry.boundingSphere.radius=radius;mesh.computeBoundingSphere();
     }
   }
+  /** finish() is CPU preparation only. Call upload immediately before rendering
+   * color or shadow passes; no instance may sample an uninitialized mip chain. */
+  upload(renderer:CardTextureRenderer){this.mipUploader.upload(this.pages,renderer);}
+  /** Called during context loss, before the renderer restores its state. CPU
+   * base/picking data survives; fresh wrappers avoid stale Three GPU ownership. */
+  invalidateGPU(){
+    this.mipUploader.dispose();
+    for(const page of this.pages){
+      const old=page.texture,{width,height,depth,data}=old.image;old.dispose();
+      page.texture=createCardArray(data as Uint8Array,width,height,depth,this.anisotropy);page.uploaded=false;page.dirty.clear();
+      for(let layer=0;layer<page.cards.length;layer++)if(page.cards[layer])page.dirty.add(layer);
+      for(const material of [page.material,page.depth,page.distance]){material.map=page.texture;material.needsUpdate=true;}
+    }
+  }
   private raycast(page:Page,raycaster:THREE.Raycaster,intersections:THREE.Intersection[]){
     if(this.policy.pickable===false)return;
     const mesh=page.mesh!;if(!mesh.boundingSphere)mesh.computeBoundingSphere();
@@ -192,9 +207,9 @@ export class PaintedCardBatches {
   // Texture storage estimates only (not total process/GPU memory). GPU mip
   // allocation uses a complete chain; scratch canvases and instance buffers
   // are separately owned and released by dispose().
-  stats(){const pixels=this.pages.reduce((n,page)=>n+page.texture.image.width*page.texture.image.height*LAYERS,0);return{pages:this.pages.length,cards:this.cards.size,pixels,cpuBytes:pixels*4,gpuBytes:Math.ceil(pixels*4*4/3),rasterizations:this.rasterizations,copiedLayers:this.copiedLayers};}
-  private remove(page:Page){for(const card of page.cards)if(card&&this.cards.get(card.key)===card)this.cards.delete(card.key);if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();}page.geometry.dispose();page.texture.dispose();page.material.dispose();page.depth.dispose();page.distance.dispose();this.pages.splice(this.pages.indexOf(page),1);}
-  dispose(){for(const page of [...this.pages])this.remove(page);this.canvases.clear();this.pending.length=0;this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}
+  stats(){const pixels=this.pages.reduce((n,page)=>n+page.texture.image.width*page.texture.image.height*LAYERS,0);return{pages:this.pages.length,cards:this.cards.size,pixels,cpuBytes:pixels*4,gpuBytes:Math.ceil(pixels*4*4/3),rasterizations:this.rasterizations,copiedLayers:this.copiedLayers,...this.mipUploader.stats()};}
+  private remove(page:Page){for(const card of page.cards)if(card&&this.cards.get(card.key)===card)this.cards.delete(card.key);if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();}page.geometry.dispose();page.texture.dispose();page.material.dispose();page.depth.dispose();page.distance.dispose();this.pages.splice(this.pages.indexOf(page),1);const {width,height}=page.texture.image;if(!this.pages.some(other=>other.texture.image.width===width&&other.texture.image.height===height))this.mipUploader.releaseSize(width,height);}
+  dispose(){for(const page of [...this.pages])this.remove(page);this.canvases.clear();this.pending.length=0;this.mipUploader.dispose();this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}
 }
 
 /** Full authored domains preserve the original mip grid and terminal mip

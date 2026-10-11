@@ -87,6 +87,10 @@ export class World3DLayer {
   private viewport='';
   private view:WorldFrame['view']|undefined;
   private disposed=false;
+  private contextLost=false;
+  private eventCanvas:HTMLCanvasElement|undefined;
+  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();};
+  private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   private shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.24}));
   private ball=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshStandardMaterial({color:'#414945',roughness:1}));
@@ -109,11 +113,39 @@ export class World3DLayer {
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.bias=-.0004;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun,this.sun.target);this.shadow.rotation.x=-Math.PI/2;this.shadow.receiveShadow=true;this.scene.add(this.shadow);
   }
+  /** Detach the old renderer's public dispose listeners while its context is
+   * lost. Otherwise later reset/dispose attempts to delete pre-loss VAOs and
+   * buffers in the restored context. Scene meshes own their resource views;
+   * global decoded model templates are never traversed or disposed here. CPU
+   * geometry/texture data remains available for normal restoration uploads. */
+  private releaseContextResources(){
+    const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();
+    this.scene.traverse(object=>{
+      if(object instanceof THREE.Mesh){
+        object.dispose();geometries.add(object.geometry);
+        for(const material of Array.isArray(object.material)?object.material:[object.material])materials.add(material);
+        if(object.customDepthMaterial)materials.add(object.customDepthMaterial);
+        if(object.customDistanceMaterial)materials.add(object.customDistanceMaterial);
+      }
+      if(object instanceof THREE.DirectionalLight||object instanceof THREE.PointLight||object instanceof THREE.SpotLight){object.shadow.dispose();object.shadow.map=object.shadow.mapPass=null;}
+    });
+    for(const material of materials){
+      for(const value of Object.values(material))if(value instanceof THREE.Texture)textures.add(value);
+      if(material instanceof THREE.ShaderMaterial)for(const uniform of Object.values(material.uniforms)){
+        const values=Array.isArray(uniform.value)?uniform.value:[uniform.value];for(const value of values)if(value instanceof THREE.Texture)textures.add(value);
+      }
+      material.dispose();
+    }
+    for(const geometry of geometries)geometry.dispose();
+    for(const texture of textures)texture.dispose();
+  }
   static create(canvas:HTMLCanvasElement,context:WebGL2RenderingContext){
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
-    return new World3DLayer(renderer);
+    const layer=new World3DLayer(renderer);layer.eventCanvas=canvas;
+    canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
+    return layer;
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
@@ -133,7 +165,7 @@ export class World3DLayer {
     return{x:track.fromX+(track.x-track.fromX)*t,y:track.fromY+(track.y-track.fromY)*t};
   }
   draw(frame:WorldFrame){
-    const renderer=this.renderer;if(this.disposed||!renderer)return;
+    const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
     this.frame++;this.transformCount=0;this.view=frame.view;
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
     // Commands can replace a snapshot without advancing its tick (for example
@@ -336,6 +368,7 @@ export class World3DLayer {
     this.batches.finish();this.cards.finish();this.remainsCards.finish();this.selection.finish();
     if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
+    this.cards.upload(renderer);this.remainsCards.upload(renderer);
     renderer.render(this.scene,this.camera);
   }
   pick(point:{x:number;y:number}){if(!this.view)return undefined;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(point.x/this.view.width*2-1,1-point.y/this.view.height*2),this.camera);
@@ -359,7 +392,8 @@ export class World3DLayer {
     }else this.selection.ellipse(this.pose(body.x,body.y,.15),body.radius+3,(body.radius+3)*.55,color,selected);
   }
   dispose(){
-    if(this.disposed)return;this.disposed=true;this.reset();
+    if(this.disposed)return;this.disposed=true;
+    this.eventCanvas?.removeEventListener('webglcontextlost',this.onContextLost);this.eventCanvas?.removeEventListener('webglcontextrestored',this.onContextRestored);this.eventCanvas=undefined;this.reset();
     this.selection.dispose();this.combatInk.dispose();
     this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
