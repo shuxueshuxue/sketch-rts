@@ -12,6 +12,7 @@ vi.mock('three',async importOriginal=>{
   }};
 });
 import {World3DLayer} from './world-layer';
+import {spellOrbPalette} from '../art/effect-presentation';
 import {worldModels} from './model-library';
 import {projectWorld} from './projection';
 import {createRoom,roomToGameSetup} from '../../shared/rooms';
@@ -197,10 +198,37 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)if(layer.pick({x:body.x+x,y:body.y+y})?.id===crew.id)picked=true;
     expect(picked,'crew can be selected through its visible painted pixels').toBe(true);
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map);
-    expect(cards.length).toBe(2);for(const object of cards){const material=(object as InstancedMesh).material as MeshBasicMaterial;expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);expect((material.map!.image as {width:number}).width).toBe(512);}
+    expect(cards.length).toBe(1);for(const object of cards){const material=(object as InstancedMesh).material as MeshBasicMaterial;expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);expect((material.map!.image as {width:number}).width).toBe(512);}
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
     frame.view={...frame.view,width:1100};layer.draw(frame);expect(gpu.sizes).toBe(2);
     expect(JSON.stringify(frame.snapshot)).toBe(original);layer.dispose();
+  });
+  it('uses story painters and variant cache identity with the same uncapped scale and foot anchor as Canvas',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.buildings=[];
+    const first=game.spawnUnit('player','footman',600,600),second=game.spawnUnit('player','footman',700,600);
+    first.variant='story:first';second.variant='story:second';first.radius=second.radius=36;
+    const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillRect(-8,-30,16,47);},one=vi.fn(paint),two=vi.fn(paint);
+    frame.models=variant=>({paint:variant==='story:first'?one:two});frame.reducedMotion=true;frame.snapshot=snapshotGame(game);
+    await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(one).toHaveBeenCalledTimes(1);expect(two).toHaveBeenCalledTimes(1);expect(one.mock.calls[0]).toEqual(expect.arrayContaining([{mode:'idle',frame:0}]));
+    expect(layer.cardStats().cards).toBe(2);const mesh=gpu.scene!.children.find(object=>object.name==='PaintedCards') as InstancedMesh;
+    for(let i=0;i<mesh.count;i++){const matrix=new Matrix4();mesh.getMatrixAt(i,matrix);expect(matrix.getMaxScaleOnAxis()).toBeCloseTo(2);}
+    expect(layer.positions.get(first.id)!.bodyY).toBeCloseTo(first.y-34);layer.dispose();
+  });
+  it('batches spell orbs by the shared caster palette and releases every owned material',async()=>{
+    const {game,frame,layer}=setup();game.effects=['priest','emberAcolyte','worker','priest'].map((sourceKind,i)=>({id:`orb:${i}`,type:'projectile' as const,x:600+i*20,y:600,remaining:5,duration:10,attackKind:'magic' as const,sourceKind:sourceKind as 'priest'|'emberAcolyte'|'worker'}));
+    game.effects.push({id:'orb:unknown',type:'projectile',x:680,y:600,remaining:5,duration:10,attackKind:'magic'});
+    expect(spellOrbPalette(undefined)).toEqual(spellOrbPalette('worker'));
+    frame.snapshot=snapshotGame(game);const original=JSON.stringify(frame.snapshot);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const orbs=gpu.scene!.children.filter(object=>object instanceof InstancedMesh&&object.name==='SpellOrb') as InstancedMesh[];
+    expect(orbs).toHaveLength(3);expect(orbs.reduce((n,mesh)=>n+mesh.count,0)).toBe(5);expect(new Set(orbs.map(mesh=>mesh.geometry)).size).toBe(1);
+    for(const mesh of orbs){
+      const effect=frame.snapshot.effects.find(effect=>effect.id===mesh.userData.ids[0])!,glow=spellOrbPalette(effect.sourceKind).glow;
+      const expected=new MeshBasicMaterial({color:`rgb(${glow.r},${glow.g},${glow.b})`});
+      expect((mesh.material as MeshBasicMaterial).color.equals(expected.color)).toBe(true);expected.dispose();
+    }
+    const releases=orbs.map(mesh=>vi.spyOn(mesh.material as MeshBasicMaterial,'dispose'));expect(JSON.stringify(frame.snapshot)).toBe(original);
+    layer.dispose();for(const release of releases)expect(release).toHaveBeenCalledTimes(1);
   });
   it('clears visual picking and deck projection when switching worlds before the next draw',async()=>{
     const {frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
@@ -260,7 +288,8 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.addEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.addEventListener('dispose',sharedDispose);}});
     const scene=gpu.scene!;layer.dispose();layer.dispose();
     expect(scene.children).toHaveLength(0);expect(sharedDispose).not.toHaveBeenCalled();
-    for(const key of ['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
+    expect(layer.cardStats()).toMatchObject({pages:0,cards:0,pixels:0});
+    for(const key of ['positions','templates','bounds','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
     expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
     expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
     layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();

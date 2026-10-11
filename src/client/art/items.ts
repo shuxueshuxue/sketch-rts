@@ -2,13 +2,14 @@
 import type { ItemKind } from '../../shared/types';
 import { type Brush, type Point, polygon, ellipse, line } from './kit';
 
-const INK = '#303738', PAPER = '#d9c9a7', GOLD = '#b7a274', STEEL = '#a8b3ad', LEATHER = '#80644c';
+import { ITEM_MATERIAL } from './materials';
+const {ink:INK,paper:PAPER,gold:GOLD,steel:STEEL,leather:LEATHER}=ITEM_MATERIAL;
 export function drawPaintedItem(b: Brush, kind: ItemKind, point: Point, size = 32, ground = false) {
   b.save(); b.translate(point.x,point.y); b.scale(size/40,size/40);
   b.lineJoin='round'; b.lineCap='round';
   if (ground) ellipse(b,2,15,15,4,'#222a3040');
   const plane=(p:number[][],fill:string)=>polygon(b,p,fill,INK,.9);
-  const edge=(p:number[][],fill=GOLD,width=1)=>line(b,p,fill,width);
+  const edge=(p:number[][],fill:string=GOLD,width=1)=>line(b,p,fill,width);
   switch(kind) {
     case 'shipCannon': case 'shipMortar': case 'flameProjector':
       plane([[-15,5],[12,5],[15,11],[-13,11]],LEATHER);ellipse(b,-8,12,5,5,INK,GOLD);ellipse(b,8,12,5,5,INK,GOLD);plane([[-14,-7],[13,-9],[18,-6],[18,0],[13,3],[-14,3]],STEEL);ellipse(b,16,-3,4,6,INK,STEEL);edge([[-10,-5],[10,-7]],'#d0d4c6',2);break;

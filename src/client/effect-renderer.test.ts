@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { createCanvas } from '@napi-rs/canvas';
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import type { UnitKind, WorldEffect } from "../shared/types";
-import { arrowFrame, chargeImpactFrame, chargeTrailFrame, launchPoint, projectileLook, renderWorldEffects, spellOrbPalette } from "./effect-renderer";
+import { renderWorldEffects } from "./effect-renderer";
+import { chargeImpactFrame, chargeTrailFrame, arrowFrame, launchPoint, projectileLook, spellOrbPalette } from "./art/effect-presentation";
 
 it('leaves actual construction and repair strokes to the worker pose without drawing a floating tool',()=>{
   const ctx=new Proxy({}, {get:()=>{throw new Error('A work pulse must not draw an overlay');}}) as CanvasRenderingContext2D;

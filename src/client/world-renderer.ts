@@ -1,4 +1,5 @@
-import { itemEquipped } from "../shared/equipment";
+import { appearanceFor } from "./art/unit-appearance";
+import { itemEquipped, itemsFor } from "../shared/equipment";
 import { playerColor } from '../shared/player-colors';
 import { drawCanvasShip,deckVisualHeight,drawShipFlag } from "./art/canvas-ships";
 import { isInCabin } from '../shared/ship-cabin';
@@ -10,7 +11,8 @@ import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
-import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
+import { renderWorldEffects } from "./effect-renderer";
+import { drawScorchedUnitFlames } from "./art/canvas-effects";
 import { battlefieldEffectFrame, drawUnitStatusEffects } from './ability-effects';
 import { footprintSquare } from "./footprint-view";
 import { creatureShadow } from "./art/painted-creatures";
@@ -172,7 +174,7 @@ export function drawWorld(frame: WorldFrame) {
       if (surface) gangways.set(source.id, surface);
     }
   }
-  painter.animation?.update(snapshot, painter.now);
+  painter.animation?.update(snapshot, painter.now, frame.story?.unitActions);
   if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
@@ -202,7 +204,8 @@ export function drawWorld(frame: WorldFrame) {
     const age=Math.max(0,snapshot.tick-corpse.diedAtTick)/SIM_TICKS_PER_SECOND;
     ctx.save();ctx.globalAlpha*=.58-Math.min(1,age/8)*.18;
     let hash=0;for(const ch of corpse.id)hash=(Math.imul(hash,31)+ch.charCodeAt(0))>>>0;
-    drawAtlasCorpse(ctx,corpse.kind,point,unitGlyphScale(corpse.radius),hash%6);ctx.restore();
+    const model=corpse.variant ? frame.models?.(corpse.variant) : undefined;
+    drawAtlasCorpse(ctx,corpse.kind,point,model ? Math.max(.72,corpse.radius/18) : unitGlyphScale(corpse.radius),hash%6,model,corpse.variant,ownerInk(corpse.owner,snapshot));ctx.restore();
   }
   }
   if(frame.pass==='ground'){ctx.restore();return;}
@@ -482,8 +485,8 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
-    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
-    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now));
+    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion ? undefined : painter.animation?.frame(unit,now));
+    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now), appearanceFor(painter.snapshot,unit));
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();
@@ -515,7 +518,7 @@ function drawnPosition(painter: Painter, unit: Unit): Point {
   const bridge = gangwayCrewVisualPose(unit, painter.ships, painter.gangways);
   if (bridge) return bridge;
   if (unit.deck) {
-    const ship = painter.snapshot.units.find(ship => ship.id === unit.deck!.shipId);
+    const ship = painter.ships.get(unit.deck.shipId);
     if (ship) {
       const parent = painter.motion ? painter.motion.position(ship, painter.now) : ship;
       const heading = painter.motion?.heading(ship,painter.now) ?? ship.sailing?.heading ?? 0, c = Math.cos(heading), s = Math.sin(heading);
@@ -526,7 +529,7 @@ function drawnPosition(painter: Painter, unit: Unit): Point {
 }
 
 function hasCarriedItem(snapshot: GameSnapshot, unit: Unit, kind: WorldItem["kind"]) {
-  return snapshot.items.some((item) => item.kind === kind && item.carrierId === unit.id && itemEquipped(snapshot,unit,item));
+  return itemsFor(snapshot,unit).some((item) => item.kind === kind && itemEquipped(snapshot,unit,item));
 }
 
 function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: number) {

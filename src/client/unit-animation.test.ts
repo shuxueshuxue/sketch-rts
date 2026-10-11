@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { IDLE_FRAME, UnitAnimationTracker } from "./unit-animation";
+import { UnitAnimationTracker } from "./unit-animation";
 import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
 import { seconds } from "../shared/time";
 import type { Unit, WorldEffect } from "../shared/types";
@@ -21,9 +21,9 @@ describe("unit pose history", () => {
     const tracker=new UnitAnimationTracker(),unit=soldier({deck:{shipId:'boat',x:18,y:-5}});
     tracker.update(snap(1,unit),0);
     unit.x+=3;unit.y+=2;tracker.update(snap(2,unit),50);
-    expect(tracker.frame(unit,75)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit,75)).toMatchObject({ mode: "idle" });
     unit.x+=2;unit.y-=1;tracker.update(snap(3,unit),100);
-    expect(tracker.frame(unit,125)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit,125)).toMatchObject({ mode: "idle" });
     unit.deck!.x+=2;tracker.update(snap(4,unit),150);
     expect(tracker.frame(unit,175).mode).toBe('walk');
   });
@@ -33,12 +33,12 @@ describe("unit pose history", () => {
     const unit = soldier({ order: { type: "attack", targetId: "foe" } });
     tracker.update(snap(1, unit), 0);
     tracker.update(snap(2, unit), 50);
-    expect(tracker.frame(unit, 75)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 75)).toMatchObject({ mode: "idle" });
     const moved = soldier({ x: 104, order: unit.order });
     tracker.update(snap(3, moved), 100);
     expect(tracker.frame(moved, 125).mode).toBe("walk");
     tracker.update(snap(4, moved), 150);
-    expect(tracker.frame(moved, 175)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(moved, 175)).toMatchObject({ mode: "idle" });
   });
 
   it("starts a strike on a weapon cooldown rise, including hold-position fire, and does not restart it", () => {
@@ -47,13 +47,13 @@ describe("unit pose history", () => {
     tracker.update(snap(0, unit), 0);
     const struck = soldier({ ...unit, cooldown: 20 });
     tracker.update(snap(1, struck), 50);
-    expect(tracker.frame(struck, 50)).toEqual({ mode: "attack", frame: 0 });
+    expect(tracker.frame(struck, 50)).toMatchObject({ mode: "attack", frame: 0 });
     tracker.update(snap(1, struck), 75);
     expect(tracker.frame(struck, 90).mode).toBe("attack");
     tracker.update(snap(4, soldier({ ...unit, cooldown: 17 })), 200);
-    expect(tracker.frame(unit, 200)).toEqual({ mode: "attack", frame: 3 });
+    expect(tracker.frame(unit, 200)).toMatchObject({ mode: "attack", frame: 3 });
     tracker.update(snap(8, soldier({ ...unit, cooldown: 13 })), 400);
-    expect(tracker.frame(unit, 400)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 400)).toMatchObject({ mode: "idle" });
   });
 
   it("separates spell cooldowns from weapon fire and prioritizes a simultaneous cast", () => {
@@ -73,8 +73,8 @@ describe("unit pose history", () => {
     const knight = soldier({ id: "knight", kind: "knight" });
     tracker.update(snap(0, worker, knight), 0);
     tracker.update(snap(1, { ...worker, cooldown: 12 }, { ...knight, abilityCooldowns: { charge: 100 } }), 50);
-    expect(tracker.frame(worker, 60)).toEqual(IDLE_FRAME);
-    expect(tracker.frame(knight, 60)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 60)).toMatchObject({ mode: "idle" });
+    expect(tracker.frame(knight, 60)).toMatchObject({ mode: "idle" });
   });
 
   it.each(["repairUnit", "repairShip"] as const)("shows %s as work only when a repair pulse occurs", type => {
@@ -83,7 +83,7 @@ describe("unit pose history", () => {
     tracker.update(snap(0, worker), 0);
     const repairing = { ...worker, cooldown: 12 };
     tracker.update(snap(1, repairing), 50);
-    expect(tracker.frame(repairing, 60)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(repairing, 60)).toMatchObject({ mode: "idle" });
     tracker.update({ ...snap(2, repairing), effects: [work(repairing)] }, 100);
     expect(tracker.frame(repairing, 110).mode).toBe("work");
   });
@@ -97,7 +97,7 @@ describe("unit pose history", () => {
     expect(tracker.frame(worker, 300)).toEqual({mode:'work', frame:2});
     expect(tracker.frame(worker, 350)).toEqual(tracker.frame(worker, 10_000));
     tracker.update({...snap(24, worker), effects:[]}, 700);
-    expect(tracker.frame(worker, 700)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 700)).toMatchObject({ mode: "idle" });
   });
 
   it("shows real mining work throughout a gather cycle and walks home with the gold", () => {
@@ -140,10 +140,10 @@ describe("unit pose history", () => {
     tracker.update(snap(0, worker), 0);
     worker.order = { type: "mine", resourceId: "gold", phase: "toMine", timer: 2 };
     tracker.update({ ...snap(1, worker), effects: [work(worker)] }, 50);
-    expect(tracker.frame(worker, 50)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 50)).toMatchObject({ mode: "idle" });
     worker.order = { type: "mine", resourceId: "gold", phase: "gather", timer: 64 };
     tracker.update(snap(2, worker), 100);
-    expect(tracker.frame(worker, 100)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 100)).toMatchObject({ mode: "idle" });
     for (let tick = 3; tick <= 14; tick++) {
       worker.order.timer--;
       tracker.update(snap(tick, worker), tick * 50);
@@ -153,20 +153,20 @@ describe("unit pose history", () => {
     tracker.update(snap(14, worker), 100_000);
     expect(tracker.frame(worker, 100_000)).toEqual({ mode: "work", frame: 5 });
     tracker.update(snap(15, worker), 100_050);
-    expect(tracker.frame(worker, 100_050)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 100_050)).toMatchObject({ mode: "idle" });
     worker.order.timer--;
     worker.effects = [{ type: "stun", remaining: 4 }];
     tracker.update(snap(16, worker), 100_100);
-    expect(tracker.frame(worker, 100_100)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 100_100)).toMatchObject({ mode: "idle" });
     worker.effects = [];
     worker.pushX = 10;
     worker.order.timer--;
     tracker.update(snap(17, worker), 100_150);
-    expect(tracker.frame(worker, 100_150)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 100_150)).toMatchObject({ mode: "idle" });
     worker.pushX = undefined;
     worker.order = { type: "mine", resourceId: "another-mine", phase: "gather", timer: 20 };
     tracker.update(snap(18, worker), 100_200);
-    expect(tracker.frame(worker, 100_200)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(worker, 100_200)).toMatchObject({ mode: "idle" });
   });
 
   it("animates an idle deck engineer repairing, but cancels work on walking or stun", () => {
@@ -182,7 +182,7 @@ describe("unit pose history", () => {
     expect(tracker.frame(walking, 100).mode).toBe('walk');
     const stunned = {...walking, effects:[{type:'stun' as const,remaining:4}]};
     tracker.update({...snap(4, stunned), effects:[work(stunned, 10)]}, 150);
-    expect(tracker.frame(stunned, 150)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(stunned, 150)).toMatchObject({ mode: "idle" });
   });
 
   it("freezes on stalled snapshots and derives poses independently of wall-clock origin", () => {
@@ -201,13 +201,13 @@ describe("unit pose history", () => {
     tracker.update(snap(10, unit), 0);
     tracker.update(snap(11, soldier({ cooldown: 20 })), 50);
     tracker.update(snap(0, unit), 100);
-    expect(tracker.frame(unit, 100)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 100)).toMatchObject({ mode: "idle" });
     tracker.update(snap(1, soldier({ x: 1000 })), 150);
-    expect(tracker.frame(unit, 150)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 150)).toMatchObject({ mode: "idle" });
     tracker.update(snap(20, soldier({ x: 1010, cooldown: 20 })), 200);
-    expect(tracker.frame(unit, 200)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 200)).toMatchObject({ mode: "idle" });
     tracker.update(snap(21), 250);
-    expect(tracker.frame(unit, 250)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 250)).toMatchObject({ mode: "idle" });
   });
 
   it("does not march during knockback or animate a stunned unit", () => {
@@ -215,9 +215,48 @@ describe("unit pose history", () => {
     const unit = soldier();
     tracker.update(snap(0, unit), 0);
     tracker.update(snap(1, soldier({ x: 110, pushX: 10 })), 50);
-    expect(tracker.frame(unit, 50)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 50)).toMatchObject({ mode: "idle" });
     tracker.update(snap(2, soldier({ x: 112, cooldown: 20, effects: [{ type: "stun", remaining: 5 }] })), 100);
-    expect(tracker.frame(unit, 100)).toEqual(IDLE_FRAME);
+    expect(tracker.frame(unit, 100)).toMatchObject({ mode: "idle" });
+  });
+
+  it("selects reproducible attack variants independently of wall clock and idle sampling", () => {
+    const a = new UnitAnimationTracker(), b = new UnitAnimationTracker();
+    const unit = soldier(), variants = new Set<number>();
+    for (let tick = 0; tick < 60; tick++) {
+      const next = { ...unit, cooldown: tick % 2 ? 20 : 0 };
+      a.update(snap(tick, next), tick * 50);
+      b.update(snap(tick, next), 10_000 + tick * 50);
+      // Extra renders cannot consume a simulation or presentation RNG stream.
+      a.frame(next, tick * 50 + 20);
+      if (tick % 2) {
+        const pose = a.frame(next, tick * 50);
+        expect(pose).toEqual(b.frame(next, 10_000 + tick * 50));
+        expect(pose.frame).toBe(0);
+        variants.add(pose.variant!);
+      }
+    }
+    expect([...variants].sort()).toEqual([0, 1, 2]);
+  });
+
+  it("breathes through eight snapshot-driven idle poses and freezes during pause", () => {
+    const tracker = new UnitAnimationTracker(), unit = soldier(), frames = new Set<number>();
+    for (let tick = 0; tick < 60; tick++) {
+      tracker.update(snap(tick, unit), tick * 50);
+      const pose = tracker.frame(unit, tick * 50);
+      expect(pose.mode).toBe("idle");
+      frames.add(pose.frame);
+      expect(pose).toBe(tracker.frame(unit, tick * 50));
+    }
+    expect([...frames].sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(tracker.frame(unit, 3050)).toEqual(tracker.frame(unit, 100_000));
+  });
+
+  it("keeps feet still under vertical-only knockback", () => {
+    const tracker = new UnitAnimationTracker(), unit = soldier();
+    tracker.update(snap(0, unit), 0);
+    tracker.update(snap(1, { ...unit, y: 110, pushY: 10 }), 50);
+    expect(tracker.frame(unit, 50)).toEqual({ mode: "idle", frame: 0 });
   });
 
   it("never mutates a simulation snapshot", () => {
@@ -230,5 +269,40 @@ describe("unit pose history", () => {
     unit.abilityCooldowns!.heal = 240;
     tracker.update(snap(1, unit), 50);
     expect(tracker.frame(unit, 50).mode).toBe("cast");
+  });
+});
+
+describe('explicit story action cues', () => {
+  it('accepts a same-tick release and ages duplicate or late-observed cues without replaying them', () => {
+    const tracker = new UnitAnimationTracker(), unit = soldier();
+    const cues = [{ unitId: unit.id, mode: 'cast' as const, tick: 10 }];
+    tracker.update(snap(10, unit), 100);
+    tracker.update(snap(10, unit), 110, cues);
+    expect(tracker.frame(unit, 110)).toEqual({ mode: 'cast', frame: 0 });
+    tracker.update(snap(13, unit), 250, cues);
+    expect(tracker.frame(unit, 250)).toEqual({ mode: 'cast', frame: 1 });
+    tracker.update(snap(13, unit), 10000, cues);
+    expect(tracker.frame(unit, 10000)).toEqual({ mode: 'cast', frame: 2 });
+    expect(tracker.frame(unit, 20000)).toEqual(tracker.frame(unit, 10000));
+    const fresh = new UnitAnimationTracker();
+    fresh.update(snap(13, unit), 0, cues);
+    expect(fresh.frame(unit, 0)).toEqual({ mode: 'cast', frame: 1 });
+    tracker.update(snap(21, unit), 10010, cues);
+    expect(tracker.frame(unit, 10010).mode).toBe('idle');
+  });
+
+  it('ignores invalid releases and consumes stunned releases so they do not play after recovery', () => {
+    const tracker = new UnitAnimationTracker(), unit = soldier();
+    tracker.update(snap(30, unit), 0, [
+      { unitId: unit.id, mode: 'cast', tick: 0 },
+      { unitId: unit.id, mode: 'cast', tick: 31 },
+      { unitId: 'absent', mode: 'cast', tick: 30 },
+    ]);
+    expect(tracker.frame(unit, 0).mode).toBe('idle');
+    const cues = [{ unitId: unit.id, mode: 'cast' as const, tick: 31 }];
+    tracker.update(snap(31, soldier({ effects: [{ type: 'stun', remaining: 1 }] })), 50, cues);
+    expect(tracker.frame(unit, 50).mode).toBe('idle');
+    tracker.update(snap(32, unit), 100, cues);
+    expect(tracker.frame(unit, 100).mode).toBe('idle');
   });
 });

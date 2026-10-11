@@ -59,6 +59,7 @@ export const piercingShot = (level: Level): Power<Unit> =>
       world.stage.bark(caster, { zh: "穿云！", en: "Through!" }, { span: seconds(1.2) });
       yield* wait(seconds(0.4));
       if (!world.alive(target)) return;
+      world.stage.unitAction(caster, "attack");
       world.effect("projectile", target, seconds(0.4), { fromX: caster.x, fromY: caster.y - 20, toX: target.x, toY: target.y, sourceKind: "archer" });
       yield* wait(seconds(0.3));
       world.strike(caster, target, 55 + level() * 9, "spell");
@@ -75,6 +76,7 @@ export const volley = (level: Level): Power<Point> =>
     *cast(caster, at, world) {
       world.stage.bark(caster, { zh: "放箭——！", en: "Loose!" }, { span: seconds(1.2) });
       for (let wave = 0; wave < 3; wave += 1) {
+        world.stage.unitAction(caster, "attack");
         for (let arrow = 0; arrow < 6; arrow += 1) {
           const spot = ring(at, 110, arrow + wave * 6, 18);
           world.effect("projectile", spot, seconds(0.5), { fromX: caster.x, fromY: caster.y - 20, toX: spot.x, toY: spot.y, sourceKind: "archer" });
@@ -96,6 +98,7 @@ export const wardensRally = (level: Level): Power<Unit[]> =>
     },
     *cast(caster, allies, world) {
       world.stage.bark(caster, { zh: "守望者，站稳！", en: "Wardens, hold!" });
+      world.stage.unitAction(caster, "cast");
       world.effect("guardianField", caster, seconds(1.4), { radius: 280 });
       for (const ally of allies) {
         world.heal(ally, 40 + level() * 6);
@@ -116,6 +119,7 @@ export const shieldWall = (): Power<true> =>
     aim: (caster, world) => (world.foesOf(caster, 150).length >= 3 || caster.hp < caster.maxHp * 0.45 ? true : undefined),
     *cast(caster, _target, world) {
       world.stage.bark(caster, { zh: "盾墙！", en: "Shields!" }, { tone: "shout", span: seconds(1.4) });
+      world.stage.unitAction(caster, "cast");
       world.afflict(caster, "guardian", seconds(2.6));
       world.effect("guardianField", caster, seconds(2.6), { radius: 60 });
       yield* wait(seconds(0.2));
@@ -130,6 +134,7 @@ export const stomp = (level: Level): Power<true> =>
     aim: (caster, world) => (world.foesOf(caster, 110).length >= 2 ? true : undefined),
     *cast(caster, _target, world) {
       yield* wait(seconds(0.3));
+      world.stage.unitAction(caster, "attack");
       world.stage.quake(3, seconds(0.4));
       world.effect("chargeImpact", caster, seconds(0.6), { fromX: caster.x - 40, fromY: caster.y, toX: caster.x, toY: caster.y, owner: caster.owner });
       for (const foe of world.foesOf(caster, 130)) world.strike(caster, foe, 36 + level() * 5, "melee");
@@ -147,6 +152,7 @@ export const taunt = (): Power<Unit[]> =>
     },
     *cast(caster, foes, world) {
       world.stage.bark(caster, { zh: "冲我来，小崽子们！", en: "Come on then, whelps!" }, { tone: "shout" });
+      world.stage.unitAction(caster, "cast");
       world.attack(foes.filter((foe) => world.alive(foe)), caster);
       yield* wait(seconds(0.2));
     },
@@ -174,6 +180,7 @@ export const thornSnare = (): Power<Unit> =>
           const unit = world.unit(target);
           if (unit && unit.speed === 0) unit.speed = speed;
         });
+        world.stage.unitAction(caster, "cast");
         target.speed = 0;
         world.strike(caster, target, 20, "spell");
         yield* wait(seconds(3.5));
@@ -193,6 +200,7 @@ export const mendingRain = (level: Level): Power<Point> =>
     *cast(caster, at, world) {
       world.stage.bark(caster, { zh: "雨来了，别乱跑。", en: "Rain's coming. Stand in it." });
       for (let pulse = 0; pulse < 5; pulse += 1) {
+        world.stage.unitAction(caster, "cast");
         world.effect("heal", at, seconds(1), { radius: 220 });
         for (const ally of [caster, ...world.alliesOf(caster, 220, at)]) world.heal(ally, 14 + level() * 3, { effect: pulse === 0 });
         yield* wait(seconds(1));
@@ -209,6 +217,7 @@ export const fireFlask = (level: Level): Power<Point> =>
     cooldown: seconds(12),
     aim: (caster, world) => knot(world, caster, 300, 100, 2),
     *cast(caster, at, world) {
+      world.stage.unitAction(caster, "cast");
       world.effect("projectile", at, seconds(0.5), { fromX: caster.x, fromY: caster.y - 16, toX: at.x, toY: at.y, sourceKind: "pyreCaller" });
       yield* wait(seconds(0.5));
       burnArea(world, caster, at, 100, 30 + level() * 5);
@@ -229,6 +238,7 @@ export const shadowstep = (level: Level): Power<Unit> =>
       const behind = toward(target, { x: target.x + (target.x - caster.x), y: target.y + (target.y - caster.y) }, 36);
       caster.x = behind.x;
       caster.y = behind.y;
+      world.stage.unitAction(caster, "attack");
       world.strike(caster, target, caster.attackDamage * 2.5 + level() * 4, "melee");
       world.attack([caster], target);
       yield* wait(seconds(0.2));
@@ -246,6 +256,7 @@ export const fireRain = (options: { radius: number; damage: number; windUp: numb
     *cast(caster, at, world) {
       const source = { id: caster.id, owner: caster.owner as string, x: caster.x, y: caster.y };
       yield* telegraph(world, at, options.radius, options.windUp);
+      world.stage.unitAction(caster, "cast");
       burnArea(world, source, at, options.radius, options.damage);
     },
   });
@@ -259,6 +270,7 @@ export const cleave = (): Power<true> =>
     *cast(caster, _target, world) {
       world.stage.bark(caster, { zh: "都给我烧！", en: "Burn, all of you!" }, { tone: "shout", span: seconds(1.3) });
       yield* wait(seconds(0.35));
+      world.stage.unitAction(caster, "attack");
       world.effect("chargeImpact", caster, seconds(0.5), { fromX: caster.x - 30, fromY: caster.y, toX: caster.x + 30, toY: caster.y, owner: caster.owner });
       for (const foe of world.foesOf(caster, 105)) {
         world.strike(caster, foe, 34, "melee");
@@ -277,6 +289,7 @@ export const houndCall = (count: number, cooldown = 24): Power<true> =>
       world.stage.bark(caster, { zh: "吃吧，我的孩子们。", en: "Feed, my children." }, { tone: "whisper" });
       world.effect("summon", caster, seconds(1.2));
       yield* wait(seconds(0.6));
+      world.stage.unitAction(caster, "cast");
       const hounds = world.spawnGroup(CAST.cinderHound, caster.owner, { x: caster.x + 40, y: caster.y + 20 }, count, { spread: 50 });
       world.attackMove(hounds, world.foesOf(caster, 600)[0] ?? caster);
     },
@@ -291,6 +304,7 @@ export const magmaSlam = (): Power<true> =>
     *cast(caster, _target, world) {
       const at = { x: caster.x, y: caster.y };
       yield* telegraph(world, at, 190, 1.8);
+      world.stage.unitAction(caster, "attack");
       world.stage.quake(9, seconds(0.8));
       world.effect("chargeImpact", at, seconds(0.8), { fromX: at.x, fromY: at.y - 60, toX: at.x, toY: at.y, owner: caster.owner });
       burnArea(world, caster, at, 190, 95);
@@ -304,6 +318,7 @@ export const emberBrood = (): Power<true> =>
     cooldown: seconds(22),
     aim: (caster, world) => (world.foesOf(caster, 600).length > 0 ? true : undefined),
     *cast(caster, _target, world) {
+      world.stage.unitAction(caster, "cast");
       world.stage.quake(4, seconds(0.5));
       for (const [index, spot] of Array.from({ length: 3 }, (_, i) => ring(caster, 90, i, 3)).entries()) {
         world.effect("summon", spot, seconds(1));
@@ -324,6 +339,7 @@ export const flameWave = (): Power<Unit> =>
       const at = toward(caster, target, 120);
       world.stage.bark(caster, { zh: "跪下！", en: "Kneel!" }, { tone: "shout", span: seconds(1.2) });
       yield* telegraph(world, at, 130, 1.1);
+      world.stage.unitAction(caster, "cast");
       burnArea(world, caster, at, 130, 70);
     },
   });
@@ -335,6 +351,7 @@ export function* eruption(world: World, source: Unit, center: Point, spread: num
     const at = ring(center, spread, Math.floor(world.roll() * 97), 97);
     yield* spawn(function* bolt(): Operation<void> {
       yield* telegraph(world, at, 90, 1.3);
+      world.stage.unitAction(source, "cast");
       burnArea(world, origin, at, 90, damage);
     }, "eruption:bolt");
     yield* wait(seconds(0.35));

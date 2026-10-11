@@ -1,10 +1,10 @@
+import { ITEM_DEFS } from "./equipment";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
 import { isMapId, isMapIdea } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
 import { ROOM_AI_VERSIONS, ROOM_TEAMS, type CreateRoomInput, type SlotPatch, type RoomSeatSetup } from "./rooms";
 import type { BuildingKind, GameSetupOptions, GeneratedLayoutOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
-const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge", "speedBoots", "regenRing", "healingScroll", "ivoryTower"] satisfies ItemKind[];
 
 export type CreateRoomRequest = Omit<CreateRoomInput, "id"> & { id?: string };
 export type MapUpdateRequest = { mapId: MapId };
@@ -349,7 +349,7 @@ function isUnitKind(value: unknown): value is UnitKind {
 }
 
 function isItemKind(value: unknown): value is ItemKind {
-  return typeof value === "string" && (ITEM_KINDS as readonly string[]).includes(value);
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(ITEM_DEFS, value);
 }
 
 function isBuildableBuilding(value: unknown): value is BuildingKind {

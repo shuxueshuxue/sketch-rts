@@ -1,3 +1,4 @@
+import { appearanceFor, appearanceKey } from "./art/unit-appearance";
 import { modelArtRevision } from "./model-portraits";
 import {paintPortrait} from './portrait-cache';
 import { formatMass } from "./format-mass";
@@ -510,7 +511,7 @@ export class EquipmentPanel {
                 token.title=labelKind(crew.kind,this.i18n()); token.setAttribute('aria-label',this.text('调整船员位置：','Move crew: ')+token.title);
                 token.setAttribute('aria-pressed',String(crew.id===this.unitId));
                 const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
-                drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');token.append(portrait);
+                drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394',appearanceFor(this.snapshot!,crew));token.append(portrait);
                 const position=(event:PointerEvent)=>{const box=scene.getBoundingClientRect();return projection.unproject({x:(event.clientX-box.left)/box.width*projection.width,y:(event.clientY-box.top)/box.height*projection.height});};
                 let origin:{x:number;y:number}|undefined, offset={x:0,y:0};
                 const destination=(event:PointerEvent)=>{const latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id),raw=position(event);return latestShip && latestCrew ? projectDeckPoint(latestShip,latestCrew,{x:raw.x+offset.x,y:raw.y+offset.y},this.snapshot!.units) : undefined;};
@@ -545,7 +546,7 @@ export class EquipmentPanel {
                     button.title=`${labelKind(crew.kind,this.i18n())} · ${cabinStatus(crew,this.i18n().locale==='zh')} · ${this.text('舱容占用','Cabin space')} ${cabinSpaceRequired(snapshot,crew)}`;
                     button.setAttribute('aria-label',button.title);
                     const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
-                    drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');button.append(portrait);
+                    drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394',appearanceFor(this.snapshot!,crew));button.append(portrait);
                     button.addEventListener('click',()=>{this.unitId=crew.id;this.activePane='character';this.render();});roster.append(button);
                 }
                 vessel.append(cabin);
@@ -566,7 +567,7 @@ export class EquipmentPanel {
         const current = units.find(unit => unit.id === selected), index = units.findIndex(unit => unit.id === selected);
         if (current && canEquip(current)) {
             const portrait = document.createElement('canvas'); portrait.width = portrait.height = 80;
-            drawAtlasUnitPortrait(portrait.getContext('2d')!, current.kind, 0, 0, 80, '#80988e'); context.append(portrait);
+            drawAtlasUnitPortrait(portrait.getContext('2d')!, current.kind, 0, 0, 80, '#80988e',appearanceFor(this.snapshot!,current)); context.append(portrait);
         }
         const name = document.createElement('div'), caption = document.createElement('small'), title = document.createElement('strong');
         caption.textContent = label; title.textContent = current ? `${labelKind(current.kind, this.i18n())} · ${String(index + 1).padStart(2, '0')}` : this.text('未选择', 'Not selected');
@@ -580,7 +581,7 @@ export class EquipmentPanel {
     }
     private updateValues(unit: Unit | undefined, ship: Unit | undefined) {
         const figure=this.root.querySelector<HTMLCanvasElement>('.equipment-figure');
-        if(figure && unit)paintPortrait(figure,`figure:${unit.kind}`,canvas=>drawAtlasUnitFigure(canvas.getContext('2d')!,unit.kind,canvas.clientWidth||canvas.width,canvas.clientHeight||canvas.height,'#819b82'));
+        if(figure && unit)paintPortrait(figure,`figure:${unit.kind}:${appearanceKey(appearanceFor(this.snapshot!,unit))}`,canvas=>drawAtlasUnitFigure(canvas.getContext('2d')!,unit.kind,canvas.clientWidth||canvas.width,canvas.clientHeight||canvas.height,'#819b82',appearanceFor(this.snapshot!,unit)));
         const scene=this.root.querySelector<HTMLElement>('.equipment-deck-scene');
         if(scene && ship){
             const frame=scene.parentElement!,width=Math.min(frame.clientWidth,frame.clientHeight*200/340);

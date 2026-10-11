@@ -1,10 +1,8 @@
 import type { UnitModel } from '../../story/cast';
 import { polygon, line, ellipse, type Brush } from './kit';
 import type { UnitKind } from '../../shared/types';
-import { unitMover } from '../../shared/catalog';
 import { IDLE_FRAME, type UnitAnimationFrame } from '../unit-animation';
-import { withUnitPose } from './pose';
-import { poseOf } from './pose';
+import { sampleMotion } from './motion';
 const ink = '#252f34', wood = '#77634c', metal = '#7d9298', ivory = '#d9d0b6';
 function plate(b: Brush, p: number[][], color: string) { polygon(b, p, color, ink, .8); line(b, p.slice(0, 2), '#e3d4ad88', .7); }
 function ship(id: string): UnitModel {
@@ -64,11 +62,10 @@ function ship(id: string): UnitModel {
             if(lineShip)b.restore();
         } };
 }
-function siege(id: string): UnitModel {
-    return { shadow: 'beast', paint(b, team) {
-            const pose = poseOf(b);
-            const recoil = pose.mode === 'attack' ? ([0, -3, -5, -2, 0, 0][pose.frame] ?? 0) : 0;
-            b.translate(recoil, 0);
+function paintSiege(b: Brush, team: string, id: string, pose: UnitAnimationFrame) {
+            const motion = sampleMotion(pose, 'siege');
+            b.save();
+            b.translate(-motion.recoil * 5, 0);
             ellipse(b, 0, 18, 30, 6, '#252c3033');
             for (const x of [-21, 20]) {
                 ellipse(b, x, 12, 7, 10, '#343432');
@@ -107,17 +104,23 @@ function siege(id: string): UnitModel {
                     line(b, [[-12, i * 4 - 13], [34, i * 4 - 25]], metal, 1);
                 }
             plate(b, [[-21, 0], [-11, -3], [-11, 7], [-21, 9]], team);
-        } };
+            b.restore();
 }
-export function warfarePainter(id: string) { return (id === 'ram' || id === 'mortar' || id === 'ballista' || id === 'organ' ? siege(id) : ship(id)).paint; }
+const shipPainters = new Map<string, UnitModel['paint']>();
+const isSiege = (id: string) => id === 'ram' || id === 'mortar' || id === 'ballista' || id === 'organ';
+export function warfarePainter(id: string): UnitModel['paint'] {
+  if(isSiege(id))return (b,team)=>paintSiege(b,team,id,IDLE_FRAME);
+  let painter=shipPainters.get(id);
+  if(!painter){painter=ship(id).paint;shipPainters.set(id,painter);}
+  return painter;
+}
 const MODEL_IDS: Partial<Record<UnitKind, string>> = { transport: "transport", warship: "frigate", shipOfTheLine: "lineShip", cutter: "cutter", bombardShip: "bombard", fireShip: "fireship", carrier: "carrier", siegeRam: "ram", ballista: "ballista", catapult: "mortar", organGun: "organ" };
 export const hasWarfareUnit = (kind: UnitKind) => MODEL_IDS[kind] !== undefined;
 export function paintWarfareUnit(b: Brush, kind: UnitKind, team: string, pose: UnitAnimationFrame) {
     const id = MODEL_IDS[kind];
     if (!id)
         return false;
-    // Sailing ships have no walking bounce; land siege engines keep their wheel motion.
-    const sailingPose = unitMover(kind) === 'sea' && pose.mode === 'walk' ? IDLE_FRAME : pose;
-    withUnitPose(b, sailingPose, () => warfarePainter(id)(b, team));
+    if(isSiege(id))paintSiege(b,team,id,pose);
+    else warfarePainter(id)(b,team);
     return true;
 }

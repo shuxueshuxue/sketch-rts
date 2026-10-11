@@ -55,7 +55,12 @@ export type PartyMember = {
 };
 export type PartyView = { members: PartyMember[]; gold?: number };
 
+/** Explicit presentation release, authored where a Power's effect happens.
+ * It never alters cooldowns, orders, damage or the game checksum. */
+export type UnitActionCue = { unitId: string; mode: "attack" | "cast"; tick: number };
+
 export type StageView = {
+  unitActions?: readonly UnitActionCue[];
   tick: number;
   lines: LineView[];
   narration?: TimedText;
@@ -79,6 +84,7 @@ export type StageView = {
 
 // What of the stage outlives a chapter and is kept with a checkpoint: who is who, and how the screen is framed.
 export type StageMemory = {
+  unitActions?: UnitActionCue[];
   cards: [string, SpeakerCard][];
   props: PropView[];
   chapter?: string;
@@ -103,6 +109,7 @@ const NOTICE_SPAN = seconds(4);
 
 export class Stage {
   private seq = 1;
+  private readonly unitActions = new Map<string, UnitActionCue>();
   private readonly speaking = new Map<string, Active>();
   private readonly queues = new Map<string, Pending[]>();
   private readonly cards = new Map<string, SpeakerCard>();
@@ -125,6 +132,13 @@ export class Stage {
   levels?: (unitId: string) => number | undefined;
 
   constructor(private readonly game: Game, private readonly clock: () => Instant) {}
+
+  /** Call at a real release/hit, after any windup. At most one recent cue per
+   * living unit is retained; the next second removes even inactive casters. */
+  unitAction(unit: Unit | string, mode: UnitActionCue['mode']) {
+    const unitId = idOf(unit);
+    if (this.alive(unitId)) this.unitActions.set(unitId, { unitId, mode, tick: this.clock() });
+  }
 
   // ---- Who speaks.
 
@@ -377,10 +391,12 @@ export class Stage {
   }
 
   memory(): StageMemory {
-    return { cards: [...this.cards], props: [...this.props.values()].map((prop) => ({ ...prop })), ...(this.chapter !== undefined ? { chapter: this.chapter } : {}), letterbox: { ...this.letterbox }, fade: { ...this.fade }, camera: this.camera };
+    return { unitActions: [...this.unitActions.values()].map(cue => ({ ...cue })), cards: [...this.cards], props: [...this.props.values()].map((prop) => ({ ...prop })), ...(this.chapter !== undefined ? { chapter: this.chapter } : {}), letterbox: { ...this.letterbox }, fade: { ...this.fade }, camera: this.camera };
   }
 
   restore(memory: StageMemory) {
+    this.unitActions.clear();
+    for (const cue of memory.unitActions ?? []) this.unitActions.set(cue.unitId, { ...cue });
     this.cards.clear();
     for (const [unitId, card] of memory.cards) this.cards.set(unitId, card);
     this.props.clear();
@@ -395,6 +411,7 @@ export class Stage {
   // Once a tick: lines end and the next begin, the answered choice closes, the old words fade from the lists.
   tick() {
     const now = this.clock();
+    for (const [unitId, cue] of this.unitActions) if (now - cue.tick > seconds(1) || !this.alive(unitId)) this.unitActions.delete(unitId);
     for (const [speakerId, active] of [...this.speaking]) {
       if (active.view.end > now && this.alive(speakerId)) continue;
       this.speaking.delete(speakerId);
@@ -427,6 +444,7 @@ export class Stage {
     const party = this.partyView?.();
     return {
       tick,
+      ...(this.unitActions.size ? { unitActions: [...this.unitActions.values()].map(cue => ({ ...cue })) } : {}),
       lines: [...this.speaking.values()].map((active) => ({ ...active.view })),
       ...(this.narration ? { narration: { ...this.narration } } : {}),
       ...(this.titleCard ? { title: { ...this.titleCard } } : {}),

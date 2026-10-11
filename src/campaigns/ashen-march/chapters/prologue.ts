@@ -51,6 +51,7 @@ export const prologue: Chapter<Vars> = {
     yield* cutscene(story, function* () {
       yield* stage.framing({ mode: "point", x: PLACES.fenwatch.x + 170, y: PLACES.fenwatch.y, zoom: 1.35 });
       for (const [index, line] of ["第一箭。", "第二箭。", ""].entries()) {
+        stage.unitAction(lynn, "attack");
         world.effect("projectile", butt, seconds(0.5), { fromX: lynn.x, fromY: lynn.y - 20, toX: butt.x + (index - 1) * 3, toY: butt.y - 18, sourceKind: "archer" });
         yield* beat(0.55);
         world.effect("hit", { x: butt.x, y: butt.y - 18 }, seconds(0.5));

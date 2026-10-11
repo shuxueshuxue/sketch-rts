@@ -1,6 +1,6 @@
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { SHIP_CAMERA } from '../../shared/ship-geometry';
-import { projectileLook } from '../effect-renderer';
+import { projectileLook } from '../art/effect-presentation';
 import type { WorldEffect } from '../../shared/types';
 
 /** Interpolate within the latest simulation step, never beyond an unconfirmed

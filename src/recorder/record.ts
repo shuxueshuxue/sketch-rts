@@ -130,7 +130,7 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       if (storyCamera && stage) storyCamera.view(game, stage, elapsed);
       else camera.view(game, elapsed);
       motion.update(game, (index * 1000) / options.fps);
-      animation.update(game, (index * 1000) / options.fps);
+      animation.update(game, (index * 1000) / options.fps, stage?.unitActions);
       continue;
     }
     const snapshot = visibleSnapshot(snapshotGame(game), options);

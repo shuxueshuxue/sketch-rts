@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearCanvasArtCache } from "./atlas-art";
 import { setScratchCanvasFactory } from "./art/scratch-canvas";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
@@ -32,6 +33,9 @@ function recordingContext() {
     createLinearGradient: gradient,
     createRadialGradient: gradient,
     measureText: () => ({ width: 0 }),
+    // This recorder checks draw order/transforms, not raster bounds. An opaque
+    // scratch surface retains the full tile; real crop pixels have their own test.
+    getImageData: (_x:number,_y:number,width:number,height:number) => ({data:new Uint8ClampedArray(width*height*4).fill(255)}),
   };
   const state: Record<string, unknown> = { globalAlpha: 1, strokeStyle: "#000", fillStyle: "#000", lineWidth: 1, font: "10px sans-serif", textAlign: "start", lineCap: "butt", lineJoin: "miter", shadowBlur: 0, shadowColor: "transparent" };
   const ctx = new Proxy(state, {
@@ -134,7 +138,7 @@ describe("world renderer", () => {
     const strokes = rendered.calls.filter(call => call.name === 'stroke').map(call => call.ink);
     expect(strokes).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.enemy]));
   });
-  beforeEach(() => setScratchCanvasFactory(fakeCanvas));
+  beforeEach(() => { clearCanvasArtCache(); setScratchCanvasFactory(fakeCanvas); });
   afterEach(() => setScratchCanvasFactory(undefined));
 
   it('draws the physical gangway polygon in the Canvas fallback and removes it when the hulls separate', () => {

@@ -1,7 +1,8 @@
+import type { UnitActionCue } from "../story/stage";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, Unit } from "../shared/types";
 
-export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number };
+export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number };
 export const IDLE_FRAME: UnitAnimationFrame = Object.freeze({ mode: "idle", frame: 0 });
 const TICK_MS = 1000 / SIM_TICKS_PER_SECOND;
 const WALK_FRAMES = 8;
@@ -9,14 +10,24 @@ const ACTION_FRAMES = 6;
 const ATTACK_MS = 300;
 const CAST_MS = 500;
 const MINING_STROKE_TICKS = 13;
+// Finite display states are shared by every unit and renderer. No per-frame
+// object allocation, and the variant participates in sprite cache identity.
+const idleFrames = Array.from({ length: WALK_FRAMES }, (_, frame) => Object.freeze({ mode: "idle" as const, frame }));
+const walkFrames = Array.from({ length: WALK_FRAMES }, (_, frame) => Object.freeze({ mode: "walk" as const, frame }));
+const actionFrames = {
+  cast: Array.from({ length: ACTION_FRAMES }, (_, frame) => Object.freeze({ mode: "cast" as const, frame })),
+  work: Array.from({ length: ACTION_FRAMES }, (_, frame) => Object.freeze({ mode: "work" as const, frame })),
+  attack: Array.from({ length: 3 }, (_, variant) => Array.from({ length: ACTION_FRAMES }, (_, frame) => Object.freeze({ mode: "attack" as const, frame, variant }))),
+};
 
 type Track = {
   x: number; y: number; cooldown: number;
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
-  phase: number; speed: number; moving: boolean;
+  cueTick?: number;
+  phase: number; speed: number; moving: boolean; still: boolean;
   mining?: { resourceId: string; timer: number; workTicks: number };
-  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true };
+  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number };
 };
 
 /** Presentation only: observed displacement drives feet; a cooldown *increase*
@@ -28,8 +39,8 @@ export class UnitAnimationTracker {
   private tick: number | undefined;
   private receivedAt = 0;
 
-  update(snapshot: Pick<GameSnapshot, "tick" | "units"> & Partial<Pick<GameSnapshot, "effects">>, now: number) {
-    if (snapshot.tick === this.tick) return;
+  update(snapshot: Pick<GameSnapshot, "tick" | "units"> & Partial<Pick<GameSnapshot, "effects">>, now: number, cues: readonly UnitActionCue[] = []) {
+    if (snapshot.tick === this.tick) { this.applyCues(cues, snapshot.tick); return; }
     const gap = this.tick === undefined ? 0 : snapshot.tick - this.tick;
     const continuous = gap > 0 && gap <= 10;
     // Construction and repair need a real pulse. Mining instead exposes actual
@@ -42,11 +53,11 @@ export class UnitAnimationTracker {
         ? unit.deck?.shipId===previous.deck?.shipId ? Math.hypot(unit.deck!.x-previous.deck!.x,unit.deck!.y-previous.deck!.y) : 0
         : Math.hypot(unit.x - previous.x, unit.y - previous.y);
       // Teleports and forced slides are not walking. Charge still has a gallop.
-      const moving = Boolean(previous && distance / gap > 0.25 && distance / gap < 32 && unit.pushX === undefined);
+      const moving = Boolean(previous && distance / gap > 0.25 && distance / gap < 32 && unit.pushX === undefined && unit.pushY === undefined);
       const phase = (previous?.phase ?? phaseFor(unit.id)) + (moving ? distance / 28 : 0);
       let action = previous?.action;
       if (previous) {
-        if (unit.cooldown > previous.cooldown && unit.order.type !== "repair" && unit.order.type !== "repairUnit" && unit.order.type !== "repairShip") action = { mode: "attack", tick: snapshot.tick };
+        if (unit.cooldown > previous.cooldown && unit.order.type !== "repair" && unit.order.type !== "repairUnit" && unit.order.type !== "repairShip") action = { mode: "attack", tick: snapshot.tick, variant: variantFor(unit.id, snapshot.tick) };
         const cast = Object.entries(unit.abilityCooldowns ?? {}).some(([ability, ticks]) =>
           ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
         if (cast) action = { mode: "cast", tick: snapshot.tick };
@@ -69,29 +80,45 @@ export class UnitAnimationTracker {
         abilities: { ...unit.abilityCooldowns }, phase: phase % 1,
         speed: moving ? distance / gap / 28 : 0,
         moving: moving && !unit.effects.some((effect) => effect.type === "stun"),
+        still: unit.hp <= 0 || unit.pushX !== undefined || unit.pushY !== undefined || unit.effects.some(effect => effect.type === "stun"),
         ...(gathering ? { mining: { resourceId: gathering.resourceId, timer: gathering.timer, workTicks } } : {}),
         ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
+        ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
       };
       next.set(unit.id, track);
     }
     this.tracks = next;
     this.tick = snapshot.tick;
     this.receivedAt = now;
+    this.applyCues(cues, snapshot.tick);
+  }
+
+  private applyCues(cues: readonly UnitActionCue[], tick: number) {
+    for (const cue of cues) {
+      const track = this.tracks.get(cue.unitId);
+      if (!track || cue.tick > tick || tick - cue.tick > SIM_TICKS_PER_SECOND || cue.tick <= (track.cueTick ?? -1)) continue;
+      track.cueTick = cue.tick;
+      if (track.still || track.action && track.action.tick > cue.tick) continue;
+      track.action = { mode: cue.mode, tick: cue.tick, ...(cue.mode === "attack" ? { variant: variantFor(cue.unitId, cue.tick) } : {}) };
+    }
   }
 
   frame(unit: Pick<Unit, "id">, now: number): UnitAnimationFrame {
     const track = this.tracks.get(unit.id);
-    if (!track || this.tick === undefined) return IDLE_FRAME;
+    if (!track || this.tick === undefined || track.still) return IDLE_FRAME;
     const fraction = Math.max(0, Math.min(1, (now - this.receivedAt) / TICK_MS));
     if (track.action) {
       const duration = track.action.durationMs ?? (track.action.mode === "cast" ? CAST_MS : ATTACK_MS);
       const progress = ((this.tick - track.action.tick + fraction) * TICK_MS) / duration;
-      if (progress >= 0 && (progress < 1 || track.action.mining)) return { mode: track.action.mode, frame: Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES)) };
+      if (progress >= 0 && (progress < 1 || track.action.mining)) {
+        const frame = Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES));
+        return track.action.mode === "attack" ? actionFrames.attack[track.action.variant ?? 0]![frame]! : actionFrames[track.action.mode][frame]!;
+      }
     }
     return track.moving
-      ? { mode: "walk", frame: Math.floor(((track.phase + track.speed * fraction) % 1) * WALK_FRAMES) }
-      : IDLE_FRAME;
+      ? walkFrames[Math.floor(((track.phase + track.speed * fraction) % 1) * WALK_FRAMES)]!
+      : idleFrames[Math.floor(((this.tick + fraction) / (SIM_TICKS_PER_SECOND * 3) + phaseFor(unit.id)) % 1 * WALK_FRAMES)]!;
   }
 }
 
@@ -99,4 +126,13 @@ function phaseFor(id: string) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (Math.imul(hash, 31) + id.charCodeAt(i)) >>> 0;
   return (hash % WALK_FRAMES) / WALK_FRAMES;
+}
+
+/** Stateless presentation choice: independent of RNG, render frequency and
+ * tracker lifetime. Replaying the same hit produces the same contact pose. */
+function variantFor(id: string, tick: number) {
+  let hash = tick >>> 0;
+  for (let i = 0; i < id.length; i++) hash = (Math.imul(hash, 31) + id.charCodeAt(i)) >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
+  return (hash >>> 0) % 3;
 }

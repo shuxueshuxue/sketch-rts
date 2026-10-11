@@ -1,3 +1,4 @@
+import { appearanceFor, appearanceKey } from "./art/unit-appearance";
 import { goldReadout } from "./hud-model";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
@@ -3015,7 +3016,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       owner === localPlayerId && !isInCabin(entity) && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
       sailingStatus(entity), cabinStatus(entity,i18n.locale==='zh'),
     ].filter(Boolean).join(" · ") : "",
-    art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}:${selectionAppearanceKey(focused)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
     ...((entity && 'order' in entity) ? { statuses: focusedHudStatuses(entity) } : {}),
   };
@@ -3023,7 +3024,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
     return {
       key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
-      art:{ key:`${group.kind}:${ownerInk(owner??localPlayerId,snapshot??undefined)}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      art:{ key:`${group.kind}:${ownerInk(owner??localPlayerId,snapshot??undefined)}:${selectionAppearanceKey(group)}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
       activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
       decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
     };
@@ -3035,7 +3036,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind)+(isInCabin(passenger)?i18n.locale==='zh'?' · 舱内':' · Cabin':''), actionLabel: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
-      art: { key: `${passenger.kind}:${ownerInk(passenger.owner,snapshot??undefined)}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner,snapshot??undefined)) },
+      art: { key: `${passenger.kind}:${ownerInk(passenger.owner,snapshot??undefined)}:${appearanceKey(appearanceFor(snapshot!,passenger))}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner,snapshot??undefined), appearanceFor(snapshot!,passenger)) },
       activate: () => {if(isInCabin(passenger)){selectedIds=new Set([passenger.id]);focusedSelectionId=passenger.id;openPalette=undefined;updateHud();}else unloadPassenger(transport.id, passenger.id);},
       decorate: (button: HTMLButtonElement) => {button.dataset.inCabin=String(isInCabin(passenger));applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [isInCabin(passenger)?i18n.locale==='zh'?'点击选中船员，可返回甲板。':'Select this crew member to return to deck.':t("hud.unloadPassengerHint")] });},
     })),
@@ -3112,12 +3113,20 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
   return buildingTooltip(group.kind, undefined, i18n, building ? snapshot?.players[building.owner]?.race : undefined);
 }
 
+function selectionAppearanceKey(group: SelectionGroup) {
+  const unit = group.entityType === 'unit' && snapshot?.units.find(unit => unit.id === group.ids[0]);
+  return unit && snapshot ? appearanceKey(appearanceFor(snapshot,unit)) : '';
+}
+
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
   const color = ownerInk(owner ?? localPlayerId,snapshot??undefined);
-  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color);
+  if (group.entityType === "unit") {
+    const unit = snapshot?.units.find(unit => unit.id === group.ids[0]);
+    drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color, unit && snapshot ? appearanceFor(snapshot,unit) : {});
+  }
   else drawAtlasBuildingPortrait(mini, group.kind, canvas.clientWidth, color);
 }
 
