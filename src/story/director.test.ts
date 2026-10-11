@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createGame } from "../shared/sim";
 import { CHECKSUM_VERSION, checksumGame } from "../shared/sim/checksum";
+import { RULES_VERSION } from "../shared/rules-version";
+import type { Corpse } from "../shared/types";
 import { defineUnit, enlist } from "./cast";
 import { Director, type PlayerControls } from "./director";
 import { race, spawn, type Operation } from "./kernel";
@@ -111,6 +113,7 @@ describe("director", () => {
     const save = director.save();
     expect(save.checkpoint.label).toBe("second");
     expect(save.inputs.length).toBeGreaterThan(0);
+    expect(save.rulesVersion).toBe(RULES_VERSION);
     const loaded = Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, JSON.parse(JSON.stringify(save)));
     expect(loaded.tick).toBe(director.tick);
     expect(checksumGame(loaded.game)).toBe(checksumGame(director.game));
@@ -136,9 +139,48 @@ describe("director", () => {
     const olderGame = { ...director.game };delete olderGame.corpses;
     const versionTwo = { ...save, checksumVersion: 2, checksum: checksumGame(olderGame) };
     expect(Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, versionTwo).tick).toBe(director.tick);
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...versionTwo, checksum: "00000000" })).toThrow(/does not replay/);
     // A save from before checksum versions (version 1) carries none.
     const { checksumVersion: _version, ...older } = save;
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, older)).toThrow(`checksum version 1; this build checks version ${CHECKSUM_VERSION}`);
+  });
+
+  it.each([undefined, 1, 3])("rejects rules version %s before invoking story replay even with a valid checksum", rulesVersion => {
+    const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale });
+    director.begin();
+    const save = director.save();
+    if (rulesVersion === undefined) delete save.rulesVersion;
+    else save.rulesVersion = rulesVersion;
+    const story = vi.fn(tale);
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story }, save)).toThrow(/Cross-version simulation is not supported/);
+    expect(story).not.toHaveBeenCalled();
+  });
+
+  it("validates a rules-2 version-17 save in full while retaining new replay-generated death facts", () => {
+    const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale, pilot, seed: 7 });
+    director.begin();
+    advanceUntil(director, () => (director.game.corpses?.length ?? 0) >= 5);
+    const save = director.save();
+    expect(save.checkpoint.label).toBe("second");
+    const legacyCorpse = (corpse: Corpse): Corpse => {
+      const legacy = { ...corpse };
+      delete legacy.equipmentCaptured;
+      delete legacy.rightItemKind;
+      delete legacy.weaponKind;
+      delete legacy.leftItemKind;
+      delete legacy.ownerRace;
+      delete legacy.deck;
+      return legacy;
+    };
+    const legacy = { ...save, checksumVersion: 17, checksum: checksumGame({ ...director.game, corpses: director.game.corpses!.map(legacyCorpse) }) };
+    legacy.checkpoint.game.snapshot.corpses = legacy.checkpoint.game.snapshot.corpses!.map(legacyCorpse);
+    const loaded = Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, legacy);
+    expect(loaded.tick).toBe(save.tick);
+    expect(loaded.game.corpses).toHaveLength(5);
+    expect(loaded.game.corpses!.some(corpse => corpse.equipmentCaptured)).toBe(true);
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...legacy, checksum: "00000000" })).toThrow(/does not replay/);
+    legacy.checkpoint.game.snapshot.corpses![0]!.x += 1;
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, legacy)).toThrow(/does not replay/);
   });
 
   it("offers every event to a waiting script in turn, so a loop on `on` misses none", () => {

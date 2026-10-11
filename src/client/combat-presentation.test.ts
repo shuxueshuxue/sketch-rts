@@ -220,3 +220,19 @@ it('shares one sampled combat frame across render passes but invalidates it on a
   expect(tracker.frame(0)).toBe(frame);expect(tracker.frame(0).droplets[0]!.height).not.toBe(height);
   tracker.reset();expect(tracker.frame(0).droplets).toHaveLength(0);
 });
+
+
+it('shows actual hits appended in the same tick once without advancing existing particle time',()=>{
+ const {game,target,attacker}=scene();target.hp=20;
+ const tracker=new CombatPresentationTracker();tracker.update(game,0);
+ strikeUnit(game,attacker,target,5,'melee');
+ const first=game.effects.find(effect=>effect.type==='hit')!;
+ // The first wound is too light; the next hit crosses the exact post-hit threshold.
+ expect(isBloodHit(first)).toBe(false);tracker.update(game,0);expect(tracker.frame(0).droplets).toHaveLength(0);
+ strikeUnit(game,attacker,target,8,'melee');tracker.update(game,0);
+ const drops=tracker.frame(0).droplets.map(drop=>({...drop}));expect(drops.length).toBeGreaterThan(0);
+ tracker.update(game,0);expect(tracker.frame(0).droplets).toEqual(drops);
+ game.tick++;for(const effect of game.effects)effect.remaining--;
+ tracker.update(game,50);expect(tracker.frame(50).droplets).toHaveLength(drops.length);
+ expect(tracker.frame(50).droplets[0]!.height).not.toBe(drops[0]!.height);
+});

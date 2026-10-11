@@ -66,7 +66,7 @@ describe('catalog composition',()=>{
   expect(equipmentForKind('ogreMage')).toBe('staff');
   expect(equipmentForKind('ogreWarrior')).toBe('club');
   expect(equipmentForKind('thornSlinger')).toBe('sling');
-  expect(raster('footman',{mode:'idle',frame:0},{shield:true})).not.toEqual(raster('footman',{mode:'idle',frame:0}));
+  expect(raster('footman',{mode:'idle',frame:0},{shield:true,shieldStyle:'round'})).not.toEqual(raster('footman',{mode:'idle',frame:0}));
   expect(solveFigureRig(figures.footman!,{mode:'idle',frame:0},{weapon:'greatSword',shield:true}).shield).toBe(false);
  });
  it('keys every presentation choice including stable detail callbacks',()=>{

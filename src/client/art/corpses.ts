@@ -12,7 +12,7 @@ import type { EquipmentKind } from './equipment';
 import { creatureAnatomy } from './painted-creatures';
 export interface CorpsePresentation {
   anatomy?: 'foot' | 'mounted' | 'beast' | 'construct' | 'wood' | 'spirit' | 'vessel';
-  weapon?: EquipmentKind; shield?: boolean; headwear?: boolean; robe?: boolean; cloth?: string; size?: number;
+  weapon?: EquipmentKind; shield?: boolean; shieldStyle?:'round'|'kite'; headwear?: boolean; robe?: boolean; cloth?: string; size?: number;
   detail?: (b: Brush) => void;
 }
 const corpseDetails=new WeakMap<NonNullable<CorpsePresentation['detail']>,number>();
@@ -20,7 +20,7 @@ let nextCorpseDetail=1;
 export function corpseAppearanceKey(p:Readonly<CorpsePresentation>={}) {
  let detail=0;
  if(p.detail){detail=corpseDetails.get(p.detail)??nextCorpseDetail++;corpseDetails.set(p.detail,detail);}
- return `${p.anatomy??''}:${p.weapon??''}:${p.shield??''}:${p.headwear??''}:${p.robe??''}:${p.cloth??''}:${p.size??''}:${detail}`;
+ return `${p.anatomy??''}:${p.weapon??''}:${p.shieldStyle??''}:${p.shield??''}:${p.headwear??''}:${p.robe??''}:${p.cloth??''}:${p.size??''}:${detail}`;
 }
 const loadout=equipmentForKind;
 const isStaff=(equipment:EquipmentKind|undefined)=>equipment==='staff'||equipment==='crozier';
@@ -53,6 +53,9 @@ function weapon(b:Brush,equipment:EquipmentKind|undefined){
   line(b,[[5,13],[28,8]],INK,2.4);sketch(b,[[21,4],[30,2],[34,9],[23,12]],DARK);
  }else if(equipment==='pick'){
   line(b,[[5,12],[26,7]],INK,1.6);sketch(b,[[22,3],[27,5],[30,11],[25,7]],DARK);
+ }else if(equipment==='greatSword'){
+  line(b,[[1,14],[13,11]],INK,2);line(b,[[10,8],[13,16]],INK,1.4);
+  sketch(b,[[13,10],[35,4],[40,5],[36,8],[14,13]],LIGHT);
  }else{
   const axe=equipment==='axe';
   line(b,[[6,13],[26,10]],INK,1.5);
@@ -62,7 +65,7 @@ function weapon(b:Brush,equipment:EquipmentKind|undefined){
 }
 function fallenPerson(b:Brush,kind:UnitKind,options:CorpsePresentation,wild=false){
  const equipment=options.weapon??loadout(kind);
- const robe=options.robe??isStaff(equipment),heavy=kind.startsWith('ogre');
+ const robe=options.robe??isStaff(loadout(kind)),heavy=kind.startsWith('ogre');
  b.save();if(heavy)b.scale(1.2,1.15);
  // Head remains attached to shoulder; the far arm folds underneath the body.
  limb(b,[[-6,-2],[-13,1],[-17,6]],2.7);
@@ -73,8 +76,8 @@ function fallenPerson(b:Brush,kind:UnitKind,options:CorpsePresentation,wild=fals
  limb(b,[[-5,-3],[1,0],[-1,6]],2.5);
  if(kind==='worker'&&options.headwear!==false)sketch(b,[[-24,3],[-18,1],[-14,3],[-13,5],[-21,6]],'#a29577');
  if(options.shield??(figures[kind]?solveFigureRig(figures[kind]!,IDLE_FRAME).shield:false)){
-  sketch(b,[[-9,8],[-4,6],[3,9],[1,15],[-6,14]],DARK);
-  line(b,[[-7,9],[-4,12],[0,10]],LIGHT,.65);
+  if(options.shieldStyle==='round'){ellipse(b,-3,11,7,4.5,DARK,INK);ellipse(b,-3,11,2,1.4,LIGHT,INK);}
+  else {sketch(b,[[-9,8],[-4,6],[3,9],[1,15],[-6,14]],DARK);line(b,[[-7,9],[-4,12],[0,10]],LIGHT,.65);}
  }
  if(wild&&kind.startsWith('murloc'))sketch(b,[[9,1],[23,-4],[19,2],[13,5]],DARK);
  if(wild&&kind==='wildling')for(const x of [-7,-1,5])line(b,[[x,-5],[x-3,-10]],INK,1);

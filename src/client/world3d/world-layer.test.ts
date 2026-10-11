@@ -201,6 +201,29 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(const material of opaque)expect(material.opacity).toBe(1);
     layer.dispose();
   });
+  it('keeps deck remains in a separate depth-tested transparent batch while the hull moves',async()=>{
+    const {ship,frame,layer}=setup();delete frame.motion;
+    const corpse={id:'deck-remains-proof',unitId:'dead-crew',kind:'footman' as const,owner:ship.owner,x:ship.x,y:ship.y,radius:18,diedAtTick:0,deck:{shipId:ship.id,x:12,y:18}};
+    frame.snapshot.corpses=[corpse];
+    await layer.prepare(frame.snapshot,'match');layer.draw(frame);
+    const remains=()=>gpu.scene!.children.find(object=>object instanceof InstancedMesh && object.visible && object.userData.ids?.includes(corpse.id)) as InstancedMesh|undefined;
+    const mesh=remains()!;expect(mesh).toBeDefined();
+    const material=mesh.material as MeshBasicMaterial;
+    expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});
+    expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBe(-1);
+    expect(layer.positions.has(corpse.id)).toBe(false);
+    const matrix=new Matrix4();mesh.getMatrixAt(mesh.userData.ids.indexOf(corpse.id),matrix);
+    expect(matrix.elements[1]).toBeCloseTo(0);expect(matrix.elements[5]).toBeCloseTo(0);
+    expect(matrix.elements[13]).toBeCloseTo(shipProfile(ship)!.deckHeight+.12);
+    const rasterized=layer.remainsStats().rasterizations;
+    const live=frame.snapshot.units.find(unit=>unit.id===ship.id)!;
+    live.x+=40;live.sailing!.heading+=Math.PI/2;frame.snapshot.tick+=200;frame.now+=10000;
+    layer.draw(frame);expect(remains()).toBeDefined();expect(layer.remainsStats().rasterizations).toBe(rasterized);
+    frame.snapshot.units=[];frame.snapshot.tick++;
+    layer.draw(frame);expect(remains()).toBeUndefined();
+    layer.dispose();expect(layer.remainsStats()).toMatchObject({pages:0,cards:0,pixels:0});
+  });
+
   it('uses actual model geometry, painted alpha picking and deck coordinate inversion without mutating simulation',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
     const original=JSON.stringify(frame.snapshot);layer.draw(frame);
@@ -220,10 +243,11 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
       expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);
       for(let i=0;i<mesh.count;i++){
         const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
-        // Cropped rectangle dimensions may differ, but one texel still covers
-        // exactly one quarter authored unit on both card axes.
-        expect(new Vector3().setFromMatrixColumn(matrix,0).length()/texture.image.width).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
-        expect(new Vector3().setFromMatrixColumn(matrix,1).length()/texture.image.height).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+        // The shader expands cardRect before applying the instance matrix;
+        // one texel still covers a quarter authored unit on both axes.
+        const rect=mesh.geometry.getAttribute('cardRect');
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/texture.image.width).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/texture.image.height).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
       }
     }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
@@ -246,11 +270,12 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
       const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
       const texture=(mesh.material as MeshBasicMaterial).map as DataArrayTexture,{width,height}=texture.image;
       const right=new Vector3().setFromMatrixColumn(matrix,0).normalize(),slice=mesh.geometry.getAttribute('cardLayer').getX(i);
-      expect(new Vector3().setFromMatrixColumn(matrix,0).length()/width).toBeCloseTo(2/4,5);
-      expect(new Vector3().setFromMatrixColumn(matrix,1).length()/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      const rect=mesh.geometry.getAttribute('cardRect');
+      expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/4,5);
+      expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
       let ink=0,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
       for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(texture.image.data![(slice*width*height+y*width+x)*4+3]){
-        const world=new Vector3((x+.5)/width-.5,(y+.5)/height-.5,0).applyMatrix4(matrix);
+        const world=new Vector3(rect.getX(i)+(x+.5)/width*(rect.getZ(i)-rect.getX(i)),rect.getY(i)+(y+.5)/height*(rect.getW(i)-rect.getY(i)),0).applyMatrix4(matrix);
         const horizontal=world.clone().sub(new Vector3(unit.x,0,unit.y)).dot(right);
         minX=Math.min(minX,horizontal);maxX=Math.max(maxX,horizontal);minY=Math.min(minY,world.y);maxY=Math.max(maxY,world.y);ink++;
       }

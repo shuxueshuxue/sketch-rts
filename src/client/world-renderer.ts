@@ -1,3 +1,4 @@
+import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from './deck-remains';
 import type {ProjectileOriginTracker} from './projectile-origins';
 import { projectActionFrame, projectPaperDirection } from './art/action-direction';
 import { IDLE_FRAME } from './unit-animation';
@@ -218,13 +219,12 @@ export function drawWorld(frame: WorldFrame) {
   if(combat)drawCombatGround(ctx,combat,combatProjection);
   // Persistent ground layer: weather to a faint sketch, never disappear.
   for(const corpse of snapshot.corpses ?? []){
+    if(corpse.deck)continue;
     const point=worldToScreen(painter,corpse);
     if(!nearScreen(painter,point,90))continue;
-    const age=Math.max(0,snapshot.tick-corpse.diedAtTick)/SIM_TICKS_PER_SECOND;
-    ctx.save();ctx.globalAlpha*=.58-Math.min(1,age/8)*.18;
-    let hash=0;for(const ch of corpse.id)hash=(Math.imul(hash,31)+ch.charCodeAt(0))>>>0;
+    ctx.save();ctx.globalAlpha*=remainsOpacity(snapshot.tick,corpse.diedAtTick);
     const model=corpse.variant ? frame.models?.(corpse.variant) : undefined;
-    drawAtlasCorpse(ctx,corpse.kind,point,model ? Math.max(.72,corpse.radius/18) : unitGlyphScale(corpse.radius),hash%6,model,corpse.variant,ownerInk(corpse.owner,snapshot),corpseAppearanceFor(snapshot,corpse));ctx.restore();
+    drawAtlasCorpse(ctx,corpse.kind,point,model ? Math.max(.72,corpse.radius/18) : unitGlyphScale(corpse.radius),remainsVariant(corpse.id),model,corpse.variant,ownerInk(corpse.owner,snapshot),corpseAppearanceFor(snapshot,corpse));ctx.restore();
   }
   }
   if(frame.pass==='ground'){ctx.restore();return;}
@@ -469,6 +469,17 @@ function drawShipGroup(painter:Painter,ship:Unit) {
   // All deck rings precede every passenger, so one person's marker cannot
   // cover a previously drawn neighbour. The deck itself remains underneath.
   drawCanvasShip(painter.ctx,ship,point,painter.snapshot.items,()=>{
+    const at=drawnPosition(painter,ship);
+    for(const corpse of deckRemainsByShip(painter.snapshot.corpses).get(ship.id) ?? []){
+      const pose=deckRemainsPose(corpse,ship,{...at,heading:ship.sailing?.heading??0});
+      if(!pose)continue;
+      const center=worldToScreen(painter,{x:pose.x,y:pose.y-deckVisualHeight(ship)});
+      const model=corpse.variant?painter.models?.(corpse.variant):undefined;
+      painter.ctx.save();painter.ctx.translate(center.x,center.y);painter.ctx.rotate(pose.heading);
+      painter.ctx.globalAlpha*=remainsOpacity(painter.snapshot.tick,corpse.diedAtTick);
+      drawAtlasCorpse(painter.ctx,corpse.kind,{x:0,y:0},model?Math.max(.72,corpse.radius/18):unitGlyphScale(corpse.radius),remainsVariant(corpse.id),model,corpse.variant,ownerInk(corpse.owner,painter.snapshot),corpseAppearanceFor(painter.snapshot,corpse));
+      painter.ctx.restore();
+    }
     for(const passenger of crew)drawUnitSelectionMarker(painter,passenger);
   });
   drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner, painter.snapshot));
@@ -520,7 +531,7 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
     const facing=painter.facing.actionFacing(unit.id,rawPose.direction,projectPaperDirection);
     const pose=projectActionFrame(rawPose,facing);
-    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose);
+    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
     else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
     const blood=painter.combatBody?.get(unit.id);
     if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??painter.facing.facing(unit.id));

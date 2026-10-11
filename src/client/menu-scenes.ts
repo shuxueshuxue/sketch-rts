@@ -10,6 +10,8 @@ import { paintBuildingModel } from "./art/building-models";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
+import { CombatPresentationTracker } from "./combat-presentation";
+import { ProjectileOriginTracker } from "./projectile-origins";
 import { drawWorld, trackUnitFacing, type WorldLabels,type WorldFrame } from "./world-renderer";
 import { boardUnit, deckPlacement, projectDeckPoint, syncDecks } from '../shared/decks';
 import { localToWorld, shipProfile } from '../shared/ship-geometry';
@@ -309,6 +311,8 @@ export class MenuBackdrop {
   private facing = new UnitFacingTracker();
   private motion = new UnitMotionSmoother();
   private animation = new UnitAnimationTracker();
+  private combat = new CombatPresentationTracker();
+  private projectiles = new ProjectileOriginTracker();
   private started = 0;
   private clock: number | undefined;
   private carry = 0;
@@ -368,6 +372,8 @@ export class MenuBackdrop {
       facing: this.facing,
       motion: this.motion,
       animation: this.animation,
+      combat: this.combat,
+      projectiles: this.projectiles,
       reducedMotion,
       labels: this.labels,
       still: true,
@@ -402,6 +408,8 @@ export class MenuBackdrop {
     this.facing = new UnitFacingTracker();
     this.motion = new UnitMotionSmoother();
     this.animation = new UnitAnimationTracker();
+    this.combat.reset();
+    this.projectiles.reset();
     this.started = now;
     this.clock = now;
     this.carry = 0;

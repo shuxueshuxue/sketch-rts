@@ -30,7 +30,7 @@ export type ReleaseSocketInput={kind:UnitKind;pose:UnitAnimationFrame;radius:num
  * undefined, retaining the muzzle/deck hardpoint already captured in their event. */
 export function resolveReleaseSocket(input:ReleaseSocketInput):ArtReleaseSocket|undefined {
  const {kind,pose,radius,presentation,model}=input;
- const local=model?.paint.release?model.paint.release(pose):figureReleaseSocket(kind,pose,presentation)??creatureReleaseSocket(kind,pose);
+ const local=model?.paint.release?model.paint.release(pose,presentation):figureReleaseSocket(kind,pose,presentation)??creatureReleaseSocket(kind,pose);
  if(!local)return undefined;
  const scale=model?Math.max(.72,radius/18):unitGlyphScale(radius);
  return {x:local.x*scale,y:local.y*scale,ground:local.ground*scale};

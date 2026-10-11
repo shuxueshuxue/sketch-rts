@@ -79,14 +79,14 @@ export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:nu
 }
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
-export function drawAtlasModel(c: Brush, key: string, model: UnitModel, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
-  sprite(c, `m:${key}:${color}:${facing}:${animationKey(pose)}`, point, scale, (b) => {
+export function drawAtlasModel(c: Brush, key: string, model: UnitModel, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME,presentation:FigurePresentation={}) {
+  sprite(c, `m:${key}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`, point, scale, (b) => {
     const shadow = model.shadow ?? "foot";
     if (shadow === "foot") ellipse(b, 2, 16, 17, 6, "#30483630");
     else if (shadow === "mounted") ellipse(b, 2, 17, 22, 5.5, "#30483630");
     else if (shadow === "beast") ellipse(b, 2, 15, 20, 5, "#30483630");
     else if (shadow === "huge") ellipse(b, 2, 18, 30, 8, "#30483638");
-    model.paint(b, color, pose, facing);
+    model.paint(b, color, pose, facing,presentation);
   }, facing === -1, actionPaintSize(pose));
 }
 
@@ -135,6 +135,6 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
 /** Remains use authored low silhouettes, including campaign-specific anatomy. */
 export function drawAtlasCorpse(c:Brush,kind:UnitKind,point:Point,scale:number,variant=0,model?:UnitModel,modelKey='',color='#77766e',presentation:Readonly<CorpsePresentation>={}){
   c.save();c.translate(point.x,point.y+7);c.rotate((variant%3-1)*.14);
-  sprite(c,`corpse:${kind}:${modelKey}:${color}:${corpseAppearanceKey(presentation)}`,{x:0,y:0},scale, b=>model?.remains ? model.remains(b,color) : paintCorpse(b,kind,presentation),variant%2===1);
+  sprite(c,`corpse:${kind}:${modelKey}:${color}:${corpseAppearanceKey(presentation)}`,{x:0,y:0},scale, b=>model?.remains ? model.remains(b,color,presentation) : paintCorpse(b,kind,presentation),variant%2===1);
   c.restore();
 }

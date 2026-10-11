@@ -8,7 +8,7 @@ import {setScratchCanvasFactory} from './scratch-canvas';
 import type {CastMember} from '../../story/cast';
 import type { UnitPainter } from '../../story/cast';
 import { paintFenWolf,paintFenWolfAlpha,paintCinderHound,paintColossus,paintColossusBroken,paintElder,paintAshe,paintVillagerWoman } from '../../campaigns/ashen-march/models';
-function pixels(paint:UnitPainter){
+function pixels(paint:(brush:CanvasRenderingContext2D,team:string)=>void){
   const c=createCanvas(160,100),b=c.getContext('2d');b.translate(80,40);
   const before=b.getTransform();paint(b as unknown as CanvasRenderingContext2D,'#386d61');expect(b.getTransform()).toEqual(before);
   const data=b.getImageData(0,0,160,100).data;let top=100,bottom=0;

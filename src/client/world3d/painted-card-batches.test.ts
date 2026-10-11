@@ -17,11 +17,11 @@ describe('painted card array batches',()=>{
     const {cards}=setup();cards.begin();
     for(let i=0;i<16;i++)cards.add(`pose:${i}`,4,paint,matrix,`unit:${i}`,i);
     cards.finish();const [mesh]=cards.objects();expect(cards.objects()).toHaveLength(1);expect(mesh!.count).toBe(16);
-    expect(cards.stats()).toMatchObject({pages:1,cards:16,rasterizations:16,pixels:256*256*16});
+    expect(cards.stats()).toMatchObject({pages:1,cards:16,rasterizations:16,pixels:512*512*16});
     const texture=(mesh!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
-    expect(texture.image).toMatchObject({width:256,height:256,depth:16});expect(texture.generateMipmaps).toBe(true);expect(texture.anisotropy).toBe(8);
+    expect(texture.image).toMatchObject({width:512,height:512,depth:16});expect(texture.generateMipmaps).toBe(true);expect(texture.anisotropy).toBe(8);
     expect(mesh!.customDepthMaterial!.alphaTest).toBe(.4);expect(mesh!.customDistanceMaterial!.alphaTest).toBe(.4);
-    const transform=new THREE.Matrix4();mesh!.getMatrixAt(12,transform);expect(transform.elements[13]).toBeCloseTo((12-6)/Math.tan(SHIP_CAMERA.tilt),5);
+    const transform=new THREE.Matrix4();mesh!.getMatrixAt(12,transform);expect(transform.elements[13]).toBe(0);expect(mesh!.geometry.getAttribute('cardRect').getY(12)).toBeCloseTo((-64+12)/Math.tan(SHIP_CAMERA.tilt),5);
     expect(mesh!.userData.ids[12]).toBe('unit:12');expect(mesh!.geometry.getAttribute('cardLayer').getX(12)).toBe(12);cards.dispose();
   });
   it('uses the exact layer RGBA for alpha picking without an extra mask allocation',()=>{
@@ -31,7 +31,7 @@ describe('painted card array batches',()=>{
     const empty=cards.objects().find(item=>item.userData.ids.includes('second'))!;expect(empty.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);
     expect(mesh.userData.paintedHit(0,{x:0,y:0})).toBe(false);
     const hits=new THREE.Raycaster(new THREE.Vector3(0,17/Math.tan(SHIP_CAMERA.tilt),300),new THREE.Vector3(0,0,-1)).intersectObject(mesh);
-    expect(hits.length).toBeGreaterThan(0);expect(hits[0]!.uv!.y).toBeCloseTo(.5625);cards.dispose();
+    expect(hits.length).toBeGreaterThan(0);expect(hits[0]!.uv!.y).toBeCloseTo(.5);cards.dispose();
   });
   it('does not rerasterize a warm card and releases page textures, geometry and shadow materials',()=>{
     const {cards,scene}=setup(),painter=vi.fn(paint);cards.begin();cards.add('pose',4,painter,matrix,'one',17);cards.finish();
@@ -70,28 +70,27 @@ describe('painted card array batches',()=>{
     expect(cards.objects().reduce((n,mesh)=>n+mesh.count,0)).toBe(50);expect(cards.stats().cards).toBe(50);
     cards.begin();cards.add('49',4,fullPaint,matrix,'49',17);cards.finish();expect(cards.stats().pixels).toBeLessThanOrEqual(12*1024*1024);cards.dispose();
   });
-  it('preserves every source texel and its world position while trimming transparent padding',()=>{
+  it('preserves the complete source and mip domain, including non-power-of-two action tiles',()=>{
     const {cards}=setup(),density=4,foot=23,size=640;
     const painter=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#634b87';ctx.fillRect(-7,-68,11,84);ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,-31,4,6);};
     const source=createCanvas(size,size),ctx=source.getContext('2d');ctx.scale(density,density);ctx.translate(80,80);painter(ctx as unknown as CanvasRenderingContext2D);
     const rgba=ctx.getImageData(0,0,size,size).data;
     cards.begin();cards.add('extended',density,painter,matrix,'one',foot,160);cards.finish();
     const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
-    const transform=new THREE.Matrix4();mesh.getMatrixAt(0,transform);const point=new THREE.Vector3();let sourceInk=0,retainedInk=0;
+    let sourceInk=0,retainedInk=0;
     for(let p=3;p<rgba.length;p+=4)if(rgba[p])sourceInk++;
     for(let y=0;y<texture.image.height;y++)for(let x=0;x<texture.image.width;x++){
-      point.set((x+.5)/texture.image.width-.5,(y+.5)/texture.image.height-.5,0).applyMatrix4(transform);
-      const sx=Math.floor((point.x+80)*density),sy=Math.floor((foot-point.y*Math.tan(SHIP_CAMERA.tilt)+80)*density);
+      const sx=x,sy=size-1-y;
       const actual=Array.from(texture.image.data!.slice((y*texture.image.width+x)*4,(y*texture.image.width+x+1)*4));
       const expected=sx>=0&&sx<size&&sy>=0&&sy<size?Array.from(rgba.slice((sy*size+sx)*4,(sy*size+sx+1)*4)):[0,0,0,0];
       expect(actual).toEqual(expected);if(actual[3])retainedInk++;
     }
-    expect(retainedInk).toBe(sourceInk);expect(texture.image.width*texture.image.height).toBeLessThan(size*size/2);cards.dispose();
+    expect(retainedInk).toBe(sourceInk);expect(texture.image.width*texture.image.height).toBe(size*size);cards.dispose();
   });
 });
 
 
-it('retains mixed 128/160 domains and density identities while cropping outer action pixels at their original foot anchor',()=>{
+it('retains mixed 128/160 domains and density identities at their original foot anchor and full mip extent',()=>{
  const {cards}=setup();cards.begin();
  // The identical logical key must not alias either the domain or the density.
  cards.add('same',4,paint,matrix,'ready',17,ART_TILE_SIZE);
@@ -103,15 +102,38 @@ it('retains mixed 128/160 domains and density identities while cropping outer ac
    const mesh=cards.objects().find(mesh=>mesh.userData.ids.includes(id))!,index=mesh.userData.ids.indexOf(id);
    const texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture,{width,height}=texture.image;
    const transform=new THREE.Matrix4();mesh.getMatrixAt(index,transform);
-   expect(new THREE.Vector3().setFromMatrixColumn(transform,0).length()/width).toBeCloseTo(1/density,5);
-   expect(new THREE.Vector3().setFromMatrixColumn(transform,1).length()/height).toBeCloseTo(1/(density*Math.tan(SHIP_CAMERA.tilt)),5);
+   expect(transform.equals(matrix)).toBe(true);
+   const tile=id==='upward'?ART_ACTION_SIZE:ART_TILE_SIZE;
+   expect(width/tile).toBe(density);expect(height/tile).toBe(density);
+   const rect=mesh.geometry.getAttribute('cardRect');expect(rect.getX(index)).toBe(-tile/2);expect(rect.getZ(index)).toBe(tile/2);
    const authored=id==='upward'?{x:71.5,y:-68.5}:{x:0,y:0};
-   const uv=new THREE.Vector3(authored.x,(17-authored.y)/Math.tan(SHIP_CAMERA.tilt),0).applyMatrix4(transform.clone().invert());
-   expect(mesh.userData.paintedHit(index,{x:uv.x+.5,y:uv.y+.5})).toBe(true);
+   expect(mesh.userData.paintedHit(index,{x:authored.x/tile+.5,y:.5-authored.y/tile})).toBe(true);
    const layer=mesh.geometry.getAttribute('cardLayer').getX(index);let ink=0;
    for(let pixel=0;pixel<width*height;pixel++)if(texture.image.data![(layer*width*height+pixel)*4+3])ink++;
    expect(ink).toBe((id==='upward'?7*7:32*48)*density*density);
-   expect(width*height).toBeLessThan(((id==='upward'?ART_ACTION_SIZE:ART_TILE_SIZE)*density)**2);
+   expect(width*height).toBe(((id==='upward'?ART_ACTION_SIZE:ART_TILE_SIZE)*density)**2);
  }
  cards.dispose();
+});
+
+ it('raycasts the authored full quad through mirrored transforms but rejects transparent or out-of-domain UVs',()=>{
+  const {cards,scene}=setup(),mirror=new THREE.Matrix4().makeScale(-1,1,1).setPosition(80,0,0);
+  cards.begin();cards.add('edge',4,b=>{b.fillStyle='#234';b.fillRect(40,-40,8,8);},mirror,'mirror',17,160);cards.finish();scene.updateMatrixWorld(true);
+  const mesh=cards.objects()[0]!,y=(17+36)/Math.tan(SHIP_CAMERA.tilt),hits=new THREE.Raycaster(new THREE.Vector3(36,y,300),new THREE.Vector3(0,0,-1)).intersectObject(mesh);
+  expect(hits).toHaveLength(1);expect(hits[0]!.instanceId).toBe(0);expect(mesh.userData.paintedHit(0,hits[0]!.uv)).toBe(true);
+  expect(mesh.userData.paintedHit(0,{x:0,y:0})).toBe(false);expect(mesh.userData.paintedHit(0,{x:-.1,y:.5})).toBe(false);
+  expect(mesh.boundingSphere!.radius).toBeGreaterThan(80);cards.dispose();
+ });
+
+it('isolates translucent remains policy and varies instance opacity without repainting or picking',()=>{
+ vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
+ const scene=new THREE.Scene(),cards=new PaintedCardBatches(scene,8,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1}),painter=vi.fn(paint);
+ cards.begin();cards.add('remains',2,painter,matrix,'one',0,128,.58);cards.finish();scene.updateMatrixWorld(true);
+ const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial;
+ expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBe(-1);
+ expect(mesh.geometry.getAttribute('cardOpacity').getX(0)).toBeCloseTo(.58);expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);
+ expect(new THREE.Raycaster(new THREE.Vector3(0,0,300),new THREE.Vector3(0,0,-1)).intersectObject(mesh)).toHaveLength(0);
+ cards.begin();cards.add('remains',2,painter,matrix,'one',0,128,.4);cards.finish();expect(painter).toHaveBeenCalledTimes(1);expect(mesh.geometry.getAttribute('cardOpacity').getX(0)).toBeCloseTo(.4);
+ const resources=[material,material.map!,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
+ cards.dispose();expect(scene.children).toHaveLength(0);for(const release of resources)expect(release).toHaveBeenCalledTimes(1);
 });

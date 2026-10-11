@@ -3,14 +3,15 @@ import {renderWorldEffects} from './effect-renderer';
 import {drawArrow} from './art/canvas-effects';
 import {arrowFrame} from './art/effect-presentation';
 import {describe,it,expect} from 'vitest';
-import {createGame,snapshotGame,issuePlayerCommand} from '../shared/sim';
+import {createGame,snapshotGame,issuePlayerCommand,stepGame} from '../shared/sim';
 import {ProjectileOriginTracker} from './projectile-origins';
 import {flightPose} from './world3d/flight-pose';
 import type {WorldEffect} from '../shared/types';
 import {releasePoseForEffect} from './unit-animation';
 import {resolveReleaseSocket} from './art/release-socket';
 import {projectActionFrame} from './art/action-direction';
-import {SHIP_CAMERA} from '../shared/ship-geometry';
+import {SHIP_CAMERA,shipProfile} from '../shared/ship-geometry';
+import {boardUnit} from '../shared/decks';
 function setup(){
  const game=createGame('bareDuel',{aiPlayers:[]});const archer=game.spawnUnit('player','archer',500,500);
  const shot:WorldEffect={id:'locked-shot',type:'projectile',sourceId:archer.id,sourceKind:'archer',actionMode:'attack',actionTick:0,attackKind:'arrow',x:700,y:440,fromX:500,fromY:500,toX:700,toY:440,fromHeight:0,toHeight:0,duration:20,remaining:20};
@@ -54,5 +55,44 @@ describe('locked visual projectile sockets',()=>{
  it('preserves native engineering hardpoints and does not guess poses from old incomplete events',()=>{
   const {game,shot,tracker}=setup();const incomplete={...shot,id:'incomplete'};delete incomplete.actionTick;game.effects=[incomplete,{...shot,id:'native',type:'shellFlight',sourceKind:'warship'}];
   tracker.update(snapshotGame(game));expect(tracker.origin(game.effects[0]!)).toBeUndefined();expect(tracker.origin(game.effects[1]!)).toBeUndefined();
+ });
+});
+
+
+describe('first-observed shots after shooter death',()=>{
+ it('uses the real wielded bow captured before death, then freezes the origin despite later corpse changes',()=>{
+  const {game,shot}=setup();game.scriptedVictory=true;
+  const source=game.spawnUnit('player','footman',500,500);
+  const bow={id:'borrowed-bow',kind:'issuedWeapon' as const,weaponKind:'archer' as const,x:source.x,y:source.y,cooldownRemaining:0};game.items.push(bow);
+  issuePlayerCommand(game,'player',{type:'pickupItem',unitId:source.id,itemId:bow.id});
+  issuePlayerCommand(game,'player',{type:'wieldItem',unitId:source.id,itemId:bow.id,hand:'right'});
+  Object.assign(shot,{sourceId:source.id,sourceKind:source.kind});
+  const live=new ProjectileOriginTracker();live.update(snapshotGame(game));const expected=live.origin(shot)!;
+  source.hp=0;stepGame(game);
+  const corpse=game.corpses!.find(body=>body.unitId===source.id)!;
+  expect(corpse).toMatchObject({equipmentCaptured:true,rightItemKind:'issuedWeapon',weaponKind:'archer'});
+  const firstSeen=new ProjectileOriginTracker();firstSeen.update(snapshotGame(game));
+  expect(firstSeen.origin(shot)).toEqual(expected);const locked=firstSeen.origin(shot);
+  corpse.weaponKind='worker';corpse.x+=500;game.tick++;
+  firstSeen.update(snapshotGame(game));expect(firstSeen.origin(shot)).toBe(locked);
+ });
+ it('uses a dead crew member deck fact with the original release elevation, never the moved hull',()=>{
+  const {game,archer,shot}=setup();game.scriptedVictory=true;
+  const ship=game.spawnUnit('player','transport',500,500);expect(boardUnit(ship,archer,game.units)).toBe(true);
+  Object.assign(shot,{fromX:archer.x,fromY:archer.y,fromHeight:shipProfile(ship)!.deckHeight+18});
+  const live=new ProjectileOriginTracker();live.update(snapshotGame(game));
+  const gpu=live.origin(shot)!,canvas=live.origin(shot,'canvas')!;
+  archer.hp=0;stepGame(game);expect(game.corpses!.find(body=>body.unitId===archer.id)!.deck).toBeDefined();
+  ship.x+=300;ship.y-=200;
+  const firstSeen=new ProjectileOriginTracker();firstSeen.update(snapshotGame(game));
+  expect(firstSeen.origin(shot)).toEqual(gpu);expect(firstSeen.origin(shot,'canvas')).toEqual(canvas);
+ });
+ it('keeps older ground corpse defaults and leaves an elevated corpse without deck facts at its hardpoint',()=>{
+  const {game,archer,shot}=setup();game.scriptedVictory=true;const live=new ProjectileOriginTracker();live.update(snapshotGame(game));
+  const expected=live.origin(shot);archer.hp=0;stepGame(game);
+  const corpse=game.corpses!.find(body=>body.unitId===archer.id)!;
+  delete corpse.equipmentCaptured;delete corpse.rightItemKind;delete corpse.weaponKind;delete corpse.leftItemKind;delete corpse.ownerRace;delete corpse.deck;
+  const firstSeen=new ProjectileOriginTracker();firstSeen.update(snapshotGame(game));expect(firstSeen.origin(shot)).toEqual(expected);
+  shot.fromHeight=62;const elevated=new ProjectileOriginTracker();elevated.update(snapshotGame(game));expect(elevated.origin(shot)).toBeUndefined();
  });
 });

@@ -3,21 +3,29 @@ import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
-type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number};
-type Card={key:string;page:Page;layer:number;used:number;x:number;y:number;width:number;height:number};
-type Page={texture:THREE.DataArrayTexture;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];used:number};
+type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number};
+type Card={key:string;page:Page;layer:number;used:number;tileSize:number};
+type Page={texture:THREE.DataArrayTexture;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];used:number};
 
 /** Each layer has its own full-resolution mip chain: unlike a packed atlas,
  * filtering cannot borrow another pose's pixels. Stock cutout materials retain
  * Three's color handling, depth and shadow passes. */
 export function patchCardShader(shader:{vertexShader:string;fragmentShader:string}){
-  shader.vertexShader='attribute float cardLayer;\nvarying float vCardLayer;\n'+shader.vertexShader;
-  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCardLayer = cardLayer;');
+  shader.vertexShader='attribute float cardLayer;\nattribute vec4 cardRect;\nvarying float vCardLayer;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCardLayer = cardLayer;\ntransformed.xy = mix(cardRect.xy, cardRect.zw, uv);');
   shader.fragmentShader='precision highp sampler2DArray;\nvarying float vCardLayer;\n'+shader.fragmentShader;
   shader.fragmentShader=shader.fragmentShader.replace('#include <map_pars_fragment>','uniform highp sampler2DArray map;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','diffuseColor *= texture(map, vec3(vMapUv, vCardLayer));');
 }
-function configure(material:THREE.Material){material.onBeforeCompile=patchCardShader;material.customProgramCacheKey=()=> 'painted-card-array-v1';}
+function configure(material:THREE.Material,opacity=false){
+ material.onBeforeCompile=shader=>{patchCardShader(shader);if(opacity){
+  shader.vertexShader='attribute float cardOpacity;\nvarying float vCardOpacity;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('vCardLayer = cardLayer;','vCardLayer = cardLayer;\nvCardOpacity = cardOpacity;');
+  shader.fragmentShader='varying float vCardOpacity;\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a *= vCardOpacity;\n#include <alphatest_fragment>');
+ }};material.customProgramCacheKey=()=>`painted-card-array-v3:${opacity}`;
+}
+export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;castShadow?:boolean;pickable?:boolean;renderOrder?:number};
 
 /** Renderer-owned card cache and batches. Animation/color/facing vary per
  * instance, not per draw call. No canvas, GPU texture or material per soldier. */
@@ -30,17 +38,20 @@ export class PaintedCardBatches {
   private copiedLayers=0;
   private matrix=new THREE.Matrix4();
   private offset=new THREE.Matrix4();
+  private rayProbe=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+  private raySphere=new THREE.Sphere();
+  private rayHits:THREE.Intersection[]=[];
   private canvases=new Map<number,HTMLCanvasElement>();
-  constructor(private scene:THREE.Scene,private anisotropy:number){}
-  begin(){this.frame++;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=0;}}
+  constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){}
+  begin(){this.frame++;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=page.opacities.length=0;}}
   private createPage(width:number,height:number){
     const texture=new THREE.DataArrayTexture(new Uint8Array(width*height*4*LAYERS),width,height,LAYERS);
     texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;texture.anisotropy=this.anisotropy;
-    const material=new THREE.MeshBasicMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,toneMapped:false});
+    const material=new THREE.MeshBasicMaterial({map:texture,alphaTest:this.policy.alphaTest??.4,side:THREE.DoubleSide,toneMapped:false,transparent:this.policy.transparent??false,depthWrite:this.policy.depthWrite??true,depthTest:true});
     const depth=new THREE.MeshDepthMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,depthPacking:THREE.RGBADepthPacking});
     const distance=new THREE.MeshDistanceMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide});
-    for(const item of [material,depth,distance])configure(item);
-    const page:Page={texture,cards:new Array(LAYERS),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],used:this.frame};
+    for(const item of [material,depth,distance])configure(item,this.policy.transparent??false);
+    const page:Page={texture,cards:new Array(LAYERS),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],used:this.frame};
     this.pages.push(page);return page;
   }
   private slot(width:number,height:number){
@@ -57,20 +68,20 @@ export class PaintedCardBatches {
     if(oldest&&this.stats().pixels>=PIXEL_BUDGET){this.cards.delete(oldest.key);return{page:oldest.page,layer:oldest.layer};}
     return{page:this.createPage(width,height),layer:0};
   }
-  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE){
+  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1){
     key=`${key}:${density}:${tileSize}`;
     const card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.
     // Otherwise one early cache miss can evict a later visible pose, cascading
     // into a full rerasterization of an army larger than the soft budget.
-    if(card){this.instance(card,matrix,id,foot);return;}
-    this.pending.push({key,density,paint,matrix,id,foot,tileSize});
+    if(card){this.instance(card,matrix,id,foot,opacity);return;}
+    this.pending.push({key,density,paint,matrix,id,foot,tileSize,opacity});
   }
-  private instance(card:Card,matrix:THREE.Matrix4,id:string,foot:number){
+  private instance(card:Card,matrix:THREE.Matrix4,id:string,foot:number,opacity:number){
     card.used=card.page.used=this.frame;
-    const page=card.page;page.ids.push(id);page.entries.push(card);page.matrices.push(matrix);page.feet.push(foot);
+    const page=card.page;page.ids.push(id);page.entries.push(card);page.matrices.push(matrix);page.feet.push(foot);page.opacities.push(Math.max(0,Math.min(1,opacity)));
   }
-  private raster({key,density,paint,matrix,id,foot,tileSize}:Request){
+  private raster({key,density,paint,matrix,id,foot,tileSize,opacity}:Request){
     let card=this.cards.get(key);
     if(!card){
       const size=tileSize*density;
@@ -79,20 +90,16 @@ export class PaintedCardBatches {
       // This RGBA buffer is also the precise picking mask; do not allocate a
       // second per-pose alpha image or retain the rasterization canvas.
       const rgba=ctx.getImageData(0,0,size,size).data;
-      const bounds=cardBounds(rgba,size),{page,layer}=this.slot(bounds.width,bounds.height);
-      const pixels=page.texture.image.data as Uint8Array,base=layer*bounds.width*bounds.height*4,row=bounds.width*4;
+      const retainedSize=hasPaint(rgba)?size:16,{page,layer}=this.slot(retainedSize,retainedSize);
+      const pixels=page.texture.image.data as Uint8Array,base=layer*retainedSize*retainedSize*4,row=retainedSize*4;
       // Match CanvasTexture's UNPACK_FLIP_Y at upload time, rather than
       // subtracting interpolated UVs in the fragment shader at cutout edges.
-      pixels.fill(0,base,base+bounds.width*bounds.height*4);
-      const copiedWidth=Math.min(bounds.width,size-bounds.left),copiedHeight=Math.min(bounds.height,size-bounds.top);
-      for(let y=0;y<copiedHeight;y++){
-        const source=((bounds.top+y)*size+bounds.left)*4;
-        pixels.set(rgba.subarray(source,source+copiedWidth*4),base+(bounds.height-1-y)*row);
-      }
+      pixels.fill(0,base,base+retainedSize*retainedSize*4);
+      if(retainedSize===size)for(let y=0;y<size;y++)pixels.set(rgba.subarray(y*row,(y+1)*row),base+(size-1-y)*row);
       page.texture.addLayerUpdate(layer);page.texture.needsUpdate=true;this.rasterizations++;
-      card={key,page,layer,used:this.frame,x:(bounds.left+bounds.width/2)/density-tileSize/2,y:(bounds.top+bounds.height/2)/density-tileSize/2,width:bounds.width/density,height:bounds.height/density};page.cards[layer]=card;this.cards.set(key,card);
+      card={key,page,layer,used:this.frame,tileSize};page.cards[layer]=card;this.cards.set(key,card);
     }
-    this.instance(card,matrix,id,foot);
+    this.instance(card,matrix,id,foot,opacity);
   }
   private compact(){
     if(this.stats().pixels<=PIXEL_BUDGET)return;
@@ -117,7 +124,7 @@ export class PaintedCardBatches {
       for(const old of pages){
         for(let i=0;i<old.entries.length;i++){
           const card=moved.get(old.entries[i]!)!;const page=card.page;
-          page.ids.push(old.ids[i]!);page.entries.push(card);page.matrices.push(old.matrices[i]!);page.feet.push(old.feet[i]!);
+          page.ids.push(old.ids[i]!);page.entries.push(card);page.matrices.push(old.matrices[i]!);page.feet.push(old.feet[i]!);page.opacities.push(old.opacities[i]!);
         }
         this.remove(old);
       }
@@ -132,25 +139,53 @@ export class PaintedCardBatches {
       if(count>page.capacity){
         if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();page.geometry.dispose();}
         page.capacity=2**Math.ceil(Math.log2(count));
+        if(this.policy.transparent)page.geometry.setAttribute('cardOpacity',new THREE.InstancedBufferAttribute(new Float32Array(page.capacity),1).setUsage(THREE.DynamicDrawUsage));
+        page.geometry.setAttribute('cardRect',new THREE.InstancedBufferAttribute(new Float32Array(page.capacity*4),4).setUsage(THREE.DynamicDrawUsage));
         page.geometry.setAttribute('cardLayer',new THREE.InstancedBufferAttribute(new Float32Array(page.capacity),1).setUsage(THREE.DynamicDrawUsage));
         const mesh=page.mesh=new THREE.InstancedMesh(page.geometry,page.material,page.capacity);
-        mesh.name='PaintedCards';mesh.castShadow=true;mesh.receiveShadow=true;mesh.customDepthMaterial=page.depth;mesh.customDistanceMaterial=page.distance;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        mesh.name='PaintedCards';mesh.castShadow=this.policy.castShadow??true;mesh.renderOrder=this.policy.renderOrder??0;mesh.receiveShadow=true;mesh.customDepthMaterial=page.depth;mesh.customDistanceMaterial=page.distance;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        mesh.raycast=(raycaster,intersections)=>this.raycast(page,raycaster,intersections);
         mesh.userData.ids=page.ids;mesh.userData.paintedHit=(index:number,uv?:{x:number;y:number})=>this.hit(page,index,uv);
         this.scene.add(mesh);
       }
-      const mesh=page.mesh!,layers=page.geometry.getAttribute('cardLayer');mesh.count=count;mesh.visible=true;
+      const mesh=page.mesh!,layers=page.geometry.getAttribute('cardLayer'),rects=page.geometry.getAttribute('cardRect');let radius=0;mesh.count=count;mesh.visible=true;
       for(let i=0;i<count;i++){
         const card=page.entries[i]!;
-        this.offset.makeScale(card.width,card.height/TILT,1).setPosition(card.x,(page.feet[i]!-card.y)/TILT,0);
-        mesh.setMatrixAt(i,this.matrix.copy(page.matrices[i]!).multiply(this.offset));
-        layers.setX(i,page.entries[i]!.layer);
+        // Match the original PlaneGeometry(...).translate(...), including its
+        // float32 vertex rounding. Cropping vertices changes rasterizer sample
+        // interpolation at alpha-cutout edges even with identical source RGBA.
+        const half=card.tileSize/2,foot=page.feet[i]!;
+        const low=Math.fround(Math.fround(-half/TILT)+foot/TILT),high=Math.fround(Math.fround(half/TILT)+foot/TILT);
+        rects.setXYZW(i,-half,low,half,high);
+        radius=Math.max(radius,Math.hypot(half,low),Math.hypot(half,high));
+        mesh.setMatrixAt(i,page.matrices[i]!);
+        layers.setX(i,page.entries[i]!.layer);if(this.policy.transparent)page.geometry.getAttribute('cardOpacity').setX(i,page.opacities[i]!);
       }
-      layers.needsUpdate=mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
+      if(this.policy.transparent)page.geometry.getAttribute('cardOpacity').needsUpdate=true;
+      rects.needsUpdate=layers.needsUpdate=mesh.instanceMatrix.needsUpdate=true;
+      page.geometry.boundingSphere??=new THREE.Sphere();page.geometry.boundingSphere.center.set(0,0,0);page.geometry.boundingSphere.radius=radius;mesh.computeBoundingSphere();
+    }
+  }
+  private raycast(page:Page,raycaster:THREE.Raycaster,intersections:THREE.Intersection[]){
+    if(this.policy.pickable===false)return;
+    const mesh=page.mesh!;if(!mesh.boundingSphere)mesh.computeBoundingSphere();
+    if(!raycaster.ray.intersectsSphere(this.raySphere.copy(mesh.boundingSphere!).applyMatrix4(mesh.matrixWorld)))return;
+    // GPU cardRect expands the canonical unit quad. Raycast the same authored
+    // plane, then let paintedHit sample the identical source alpha texel.
+    for(let i=0;i<mesh.count;i++){
+      const card=page.entries[i]!,half=card.tileSize/2,foot=page.feet[i]!;
+      const low=Math.fround(Math.fround(-half/TILT)+foot/TILT),high=Math.fround(Math.fround(half/TILT)+foot/TILT);
+      this.offset.makeScale(card.tileSize,high-low,1).setPosition(0,(high+low)/2,0);
+      mesh.getMatrixAt(i,this.matrix);this.rayProbe.matrixWorld.copy(mesh.matrixWorld).multiply(this.matrix).multiply(this.offset);
+      this.rayHits.length=0;this.rayProbe.raycast(raycaster,this.rayHits);
+      for(const hit of this.rayHits){hit.instanceId=i;hit.object=mesh;intersections.push(hit);}
     }
   }
   private hit(page:Page,index:number,uv?:{x:number;y:number}){
-    const card=page.entries[index];if(!card||!uv)return false;
-    const {width,height}=page.texture.image,x=Math.min(width-1,Math.max(0,Math.floor(uv.x*width))),y=Math.min(height-1,Math.max(0,Math.floor(uv.y*height)));
+    const card=page.entries[index];if(this.policy.pickable===false||!card||!uv)return false;
+    const {width,height}=page.texture.image;
+    if(uv.x<0||uv.y<0||uv.x>1||uv.y>1)return false;
+    const x=Math.min(width-1,Math.floor(uv.x*width)),y=Math.min(height-1,Math.floor(uv.y*height));
     return page.texture.image.data![(card.layer*width*height+y*width+x)*4+3]!>=102;
   }
   objects(){return this.pages.flatMap(page=>page.mesh?.visible?[page.mesh]:[]);}
@@ -159,19 +194,14 @@ export class PaintedCardBatches {
   // are separately owned and released by dispose().
   stats(){const pixels=this.pages.reduce((n,page)=>n+page.texture.image.width*page.texture.image.height*LAYERS,0);return{pages:this.pages.length,cards:this.cards.size,pixels,cpuBytes:pixels*4,gpuBytes:Math.ceil(pixels*4*4/3),rasterizations:this.rasterizations,copiedLayers:this.copiedLayers};}
   private remove(page:Page){for(const card of page.cards)if(card&&this.cards.get(card.key)===card)this.cards.delete(card.key);if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();}page.geometry.dispose();page.texture.dispose();page.material.dispose();page.depth.dispose();page.distance.dispose();this.pages.splice(this.pages.indexOf(page),1);}
-  dispose(){for(const page of [...this.pages])this.remove(page);this.canvases.clear();this.pending.length=0;}
+  dispose(){for(const page of [...this.pages])this.remove(page);this.canvases.clear();this.pending.length=0;this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}
 }
 
-/** Remove transparent padding, never rescale painted texels. Eight clear texels
- * and an eight-texel aligned origin preserve the useful cutout/mipmap border.
- * Rectangular power-of-two buckets keep array pages shareable across poses. */
-function cardBounds(rgba:Uint8ClampedArray,size:number){
-  let left=size,top=size,right=-1,bottom=-1;
-  for(let y=0;y<size;y++)for(let x=0;x<size;x++)if(rgba[(y*size+x)*4+3]){
-    if(x<left)left=x;if(x>right)right=x;if(y<top)top=y;if(y>bottom)bottom=y;
-  }
-  if(right<left)return{left:0,top:0,width:16,height:16};
-  left=Math.max(0,Math.floor((left-8)/8)*8);top=Math.max(0,Math.floor((top-8)/8)*8);
-  right=Math.min(size-1,right+8);bottom=Math.min(size-1,bottom+8);
-  return{left,top,width:2**Math.ceil(Math.log2(right-left+1)),height:2**Math.ceil(Math.log2(bottom-top+1))};
+/** Full authored domains preserve the original mip grid and terminal mip
+ * levels, including non-power-of-two action tiles. Transparent padding is not
+ * safe to trim merely because base RGBA restoration is exact. Empty cards have
+ * no visible mip at any distance and can share the minimum allocation. */
+function hasPaint(rgba:Uint8ClampedArray){
+  for(let i=3;i<rgba.length;i+=4)if(rgba[i])return true;
+  return false;
 }

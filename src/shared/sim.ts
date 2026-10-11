@@ -19,7 +19,7 @@ import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
-import { ITEM_DEFS, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
@@ -966,7 +966,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       ...(projectile.weapon ? { weapon: { ...projectile.weapon, ...(projectile.weapon.damageProfile ? { damageProfile: { ...projectile.weapon.damageProfile } } : {}) } } : {}),
     })),
     effects: game.effects.map(effect => ({ ...effect, ...(effect.damageProfile ? { damageProfile: { ...effect.damageProfile } } : {}) })),
-    ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse })) } : {}),
+    ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse, ...(corpse.deck?{deck:{...corpse.deck}}:{}) })) } : {}),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
     ...(game.obstacles ? { obstacles: game.obstacles.map((obstacle) => ({ ...obstacle, along: { ...obstacle.along } })) } : {}),
@@ -3787,6 +3787,18 @@ function removeDead(game: Game) {
   if(wrecks.size)for(const passenger of game.units)if(passenger.deck && wrecks.has(passenger.deck.shipId) && passenger.hp>0){passenger.hp=0;deadUnits.push(passenger);}
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
+  // Capture only primitive presentation facts before the original drop path
+  // clears carrierId. These records never feed combat or inventory decisions.
+  const deathAppearance = new Map(deadUnits.map(unit => {
+    const right=activeItem(game,unit,'right'),left=activeItem(game,unit,'left');
+    return [unit.id, {
+      equipmentCaptured:true as const,
+      ...(unit.deck?{deck:{...unit.deck}}:{}),
+      ...(right?.kind==='greatSword'?{rightItemKind:'greatSword' as const}:right?.kind==='issuedWeapon'?{rightItemKind:'issuedWeapon' as const,...(right.weaponKind?{weaponKind:right.weaponKind}:{})}:{}),
+      ...(left?.kind==='roundShield'?{leftItemKind:'roundShield' as const}:{}),
+      ...(game.players[unit.owner]?.race?{ownerRace:game.players[unit.owner]!.race}:{}),
+    }] as const;
+  }));
   dropItemsFromDeadUnits(game, deadUnits);
   // Only actual field deaths create remains. Boarding, scripted exits and
   // summon expiry do not; passengers stay aboard the wreck. IDs do not consume
@@ -3794,7 +3806,7 @@ function removeDead(game: Game) {
   for (const unit of deadUnits) if (!(unit.deck && wrecks.has(unit.deck.shipId))) {
     (game.corpses ??= []).push({ id: `corpse-${unit.id}-${game.tick}`, unitId: unit.id,
       kind: unit.kind, owner: unit.owner, x: unit.x, y: unit.y, radius: unit.radius,
-      diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}) });
+      diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}), ...deathAppearance.get(unit.id) });
   }
   if(deadUnits.length) {
     game.units = game.units.filter((unit) => unit.hp > 0);

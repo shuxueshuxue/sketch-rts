@@ -631,6 +631,13 @@ export type Corpse = {
   radius: number;
   diedAtTick: number;
   variant?: string;
+  /** Death-time presentation facts, captured before held items are dropped. */
+  equipmentCaptured?: true;
+  rightItemKind?: 'issuedWeapon' | 'greatSword';
+  weaponKind?: UnitKind;
+  leftItemKind?: 'roundShield';
+  ownerRace?: RaceId;
+  deck?: {shipId:string;x:number;y:number};
 };
 
 export type GameSnapshot = {

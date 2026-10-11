@@ -20,13 +20,14 @@ const actionFrames = {
   attack: Array.from({ length: 3 }, (_, variant) => Array.from({ length: ACTION_FRAMES }, (_, frame) => Object.freeze({ mode: "attack" as const, frame, variant }))),
 };
 
-type Action = { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number; direction?:Readonly<{x:number;y:number;height?:number}>; frames?:UnitAnimationFrame[] };
+type Action = { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number; releaseId?: string; direction?:Readonly<{x:number;y:number;height?:number}>; frames?:UnitAnimationFrame[] };
 type Track = {
   x: number; y: number; cooldown: number;
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   cueTick?: number;
   releaseTick?: number;
+  releaseId?: string;
   phase: number; speed: number; moving: boolean; still: boolean;
   mining?: { resourceId: string; timer: number; workTicks: number };
   action?: Action;
@@ -40,9 +41,14 @@ export class UnitAnimationTracker {
   private tracks = new Map<string, Track>();
   private tick: number | undefined;
   private receivedAt = 0;
+  private releaseEffects: readonly WorldEffect[] | undefined;
+  private releaseEffectCount = -1;
 
   update(snapshot: Pick<GameSnapshot, "tick" | "units"> & Partial<Pick<GameSnapshot, "effects">>, now: number, cues: readonly UnitActionCue[] = []) {
-    if (snapshot.tick === this.tick) { this.applyCues(cues, snapshot.tick); return; }
+    const sameTick = snapshot.tick === this.tick;
+    if (sameTick && snapshot.effects === this.releaseEffects && (snapshot.effects?.length ?? 0) === this.releaseEffectCount) { this.applyCues(cues, snapshot.tick); return; }
+    this.releaseEffects = snapshot.effects;
+    this.releaseEffectCount = snapshot.effects?.length ?? 0;
     const gap = this.tick === undefined ? 0 : snapshot.tick - this.tick;
     const continuous = gap > 0 && gap <= 10;
     // Construction and repair need a real pulse. Mining instead exposes actual
@@ -54,9 +60,24 @@ export class UnitAnimationTracker {
       const tick=effect.actionTick??snapshot.tick-Math.max(0,effect.duration-effect.remaining);
       if(snapshot.tick-tick>SIM_TICKS_PER_SECOND)continue;
       const previous=releases.get(effect.sourceId);
-      if(previous&&(previous.tick>tick||previous.tick===tick&&(previous.mode==='cast'||effect.actionMode!=='cast')))continue;
+      if(previous&&(previous.tick>tick||previous.tick===tick&&previous.mode==='cast'&&effect.actionMode!=='cast'))continue;
       const direction=releaseDirection(effect);
-      releases.set(effect.sourceId,{mode:effect.actionMode,tick,...(effect.actionMode==='attack'?{variant:variantFor(effect.sourceId,tick)}:{}),...(direction?{direction}:{})});
+      releases.set(effect.sourceId,{mode:effect.actionMode,tick,releaseId:effect.id,...(effect.actionMode==='attack'?{variant:variantFor(effect.sourceId,tick)}:{}),...(direction?{direction}:{})});
+    }
+    if (sameTick) {
+      // Commands and story strikes can append releases between two draws of the
+      // same simulation tick. Consume them without advancing gait or the clock.
+      for (const unit of snapshot.units) {
+        const track=this.tracks.get(unit.id),release=releases.get(unit.id);
+        if(!track||!release||track.releaseId===release.releaseId||release.tick<(track.releaseTick??-1))continue;
+        track.releaseTick=release.tick;track.releaseId=release.releaseId!;
+        // The command may already have raised these cooldowns. Record that
+        // observation so the next tick does not invent a second release.
+        track.cooldown=unit.cooldown;track.abilities={...unit.abilityCooldowns};
+        if(track.still||unit.hp<=0||unit.effects.some(effect=>effect.type==='stun')||track.action&&track.action.tick>release.tick)continue;
+        track.action=release;
+      }
+      this.applyCues(cues,snapshot.tick);return;
     }
     const next = new Map<string, Track>();
     for (const unit of snapshot.units) {
@@ -100,6 +121,7 @@ export class UnitAnimationTracker {
         ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
         ...(release||previous?.releaseTick!==undefined?{releaseTick:Math.max(release?.tick??-1,previous?.releaseTick??-1)}:{}),
+        ...(release?.releaseId??previous?.releaseId?{releaseId:release?.releaseId??previous!.releaseId!}:{}),
         ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
       };
       next.set(unit.id, track);

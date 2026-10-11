@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { UnitAnimationTracker, releasePoseForEffect } from "./unit-animation";
-import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
+import { createGame, issuePlayerCommand, stepGame, strikeUnit } from "../shared/sim";
+import { UnitFacingTracker } from "./unit-facing";
 import { seconds } from "../shared/time";
 import type { Unit, WorldEffect } from "../shared/types";
 
@@ -371,4 +372,35 @@ it('shares the exact deterministic release variant and direction with projectile
   expect(releasePoseForEffect(effect)).toEqual(tracker.frame(actor,0));
   expect(releasePoseForEffect(effect)).toBe(releasePoseForEffect(effect));
   const {actionTick:_tick,...older}=effect;expect(releasePoseForEffect(older)).toBeUndefined();
+});
+
+
+describe('releases appended between draws of one tick',()=>{
+  it('consumes real strikes immediately, keeps the newest vector, and does not replay on the next tick',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.effects=[];
+    const actor=game.spawnUnit('player','footman',1000,1000),right=game.spawnUnit('enemy','footman',1030,1000),left=game.spawnUnit('enemy','footman',970,980);
+    const tracker=new UnitAnimationTracker(),facing=new UnitFacingTracker();tracker.update(game,0);facing.update(game.units,()=>undefined);
+    strikeUnit(game,actor,right,1,'melee');actor.cooldown=20;
+    tracker.update(game,0);expect(tracker.frame(actor,0)).toMatchObject({mode:'attack',frame:0,direction:{x:30,y:0}});
+    expect(facing.actionFacing(actor.id,tracker.frame(actor,0).direction)).toBe(1);
+    strikeUnit(game,actor,left,1,'melee');tracker.update(game,0);
+    const pose=tracker.frame(actor,0);expect(pose.direction).toEqual({x:-30,y:-20});
+    expect(facing.actionFacing(actor.id,pose.direction)).toBe(-1);expect(facing.releaseFacing(actor.id)).toBe(-1);
+    tracker.update(game,0);expect(tracker.frame(actor,0)).toBe(pose);
+    game.tick++;actor.cooldown--;for(const effect of game.effects)effect.remaining--;
+    tracker.update(game,50);expect(tracker.frame(actor,50)).toMatchObject({mode:'attack',frame:1});
+    expect(tracker.frame(actor,50).direction).toBe(pose.direction);
+  });
+  it('lets a same-tick cast supersede a strike and keeps Stage cues authoritative',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),effects:WorldEffect[]=[];
+    const state={...snap(3,actor),effects};tracker.update(state,0);
+    effects.push({id:'swing',type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:3,x:150,y:100,fromX:100,fromY:100,toX:150,toY:100,duration:16,remaining:16});
+    tracker.update(state,0);
+    effects.push({...effects[0]!,id:'cast',type:'heal',actionMode:'cast',toX:100,toY:50});actor.abilityCooldowns={heal:240};
+    tracker.update(state,0);expect(tracker.frame(actor,0)).toMatchObject({mode:'cast',direction:{x:0,y:-50}});
+    const cues=[{unitId:actor.id,mode:'cast' as const,tick:3,fromX:100,fromY:100,toX:100,toY:200}];
+    tracker.update(state,0,cues);const pose=tracker.frame(actor,0);expect(pose.direction).toEqual({x:0,y:100});
+    tracker.update(state,0,cues);expect(tracker.frame(actor,0)).toBe(pose);
+    tracker.update({...state,tick:4},50,cues);expect(tracker.frame(actor,50)).toBe(pose);
+  });
 });

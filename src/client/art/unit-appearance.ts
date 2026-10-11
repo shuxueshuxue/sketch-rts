@@ -1,10 +1,11 @@
+import { IDLE_FRAME } from '../unit-animation';
 /** Reads existing equipment state; never changes combat rules or simulation data. */
 import { activeItem } from '../../shared/equipment';
-import type { GameSnapshot, Unit, UnitKind, RaceId } from '../../shared/types';
+import type { GameSnapshot, Unit, UnitKind, RaceId, Corpse } from '../../shared/types';
 import { UNIT_CARDS } from '../content/units';
 import type { CorpsePresentation } from './corpses';
 import { figures } from './appearance';
-import { equipmentForKind, type FigurePresentation } from './rig';
+import { equipmentForKind, solveFigureRig, type FigurePresentation } from './rig';
 
 const DEFAULT: Readonly<FigurePresentation> = Object.freeze({});
 const EMBER_PRIEST: Readonly<FigurePresentation> = Object.freeze({ appearance:Object.freeze({ember:true}), cloth:'#a78265' });
@@ -19,23 +20,32 @@ export function appearanceForKind(kind:UnitKind,race?:RaceId):Readonly<FigurePre
   if(race!=='ember')return DEFAULT;
   return kind==='priest'?EMBER_PRIEST:kind==='summoner'?EMBER_SUMMONER:DEFAULT;
 }
-/** A corpse retains owner identity without inventing a historical equipment snapshot. */
-export function corpseAppearanceFor(snapshot:Pick<GameSnapshot,'players'>,unit:Pick<Unit,'kind'|'owner'>):Readonly<CorpsePresentation> {
-  return (unit.kind==='priest'||unit.kind==='summoner')&&snapshot.players[unit.owner]?.race==='ember'?EMBER_REMAINS:DEFAULT_REMAINS;
+/** Historical records without equipment facts keep their original defaults. */
+export function corpseAppearanceFor(snapshot:Pick<GameSnapshot,'players'>,unit:Pick<Corpse,'kind'|'owner'> & Partial<Pick<Corpse,'equipmentCaptured'|'rightItemKind'|'weaponKind'|'leftItemKind'|'ownerRace'>> & {variant?:string|undefined}):Readonly<CorpsePresentation> {
+  const race=unit.ownerRace??snapshot.players[unit.owner]?.race;
+  const base=(unit.kind==='priest'||unit.kind==='summoner')&&race==='ember'?EMBER_REMAINS:DEFAULT_REMAINS;
+  if(!unit.equipmentCaptured||(!figures[unit.kind]&&!unit.variant))return base;
+  // A campaign's issued base kit is its authored costume, not a request to
+  // replace its bespoke weapon with the simulation base unit's default.
+  const source=unit.rightItemKind==='issuedWeapon'&&unit.weaponKind&&!(unit.variant&&unit.weaponKind===unit.kind)?equipmentForKind(unit.weaponKind):undefined;
+  const weapon=unit.rightItemKind==='greatSword'?'greatSword':source;
+  const shield=weapon==='greatSword'?false:unit.leftItemKind==='roundShield'?true:undefined;
+  const visibleShield=!unit.variant&&figures[unit.kind]&&(weapon||shield!==undefined)?solveFigureRig(figures[unit.kind]!,IDLE_FRAME,{...(weapon?{weapon}:{}),...(shield!==undefined?{shield}:{})}).shield:shield;
+  return {...base,...(weapon?{weapon}:{}),...(visibleShield!==undefined?{shield:visibleShield,...(shield?{shieldStyle:'round' as const}:{})}:{})};
 }
 const PRESENTATIONS = new Map<string, Readonly<FigurePresentation>>();
 export function appearanceFor(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pick<GameSnapshot,'players'>>, unit: Unit): Readonly<FigurePresentation> {
-  if (!figures[unit.kind]) return DEFAULT;
+  if (!figures[unit.kind]&&!unit.variant) return DEFAULT;
   const base=appearanceForKind(unit.kind,snapshot.players?.[unit.owner]?.race);
   const right = activeItem(snapshot, unit, 'right');
   const left = activeItem(snapshot, unit, 'left');
-  const source = right?.kind === 'issuedWeapon' && right.weaponKind ? equipmentForKind(right.weaponKind) : undefined;
+  const source = right?.kind === 'issuedWeapon' && right.weaponKind && !(unit.variant&&right.weaponKind===unit.kind) ? equipmentForKind(right.weaponKind) : undefined;
   const weapon = right?.kind === 'greatSword' ? 'greatSword' : source;
   const shield = weapon === 'greatSword' ? false : left?.kind === 'roundShield' ? true : undefined;
   if (!weapon && shield === undefined) return base;
   const key = `${unit.kind}:${base===DEFAULT?'base':'ember'}:${weapon ?? ''}:${shield ?? ''}`;
   let result = PRESENTATIONS.get(key);
-  if (!result) { result = Object.freeze({ ...base, ...(weapon ? { weapon } : {}), ...(shield !== undefined ? { shield } : {}) }); PRESENTATIONS.set(key, result); }
+  if (!result) { result = Object.freeze({ ...base, ...(weapon ? { weapon } : {}), ...(shield !== undefined ? { shield,...(shield?{shieldStyle:'round' as const}:{}) } : {}) }); PRESENTATIONS.set(key, result); }
   return result;
 }
 const DETAIL_IDS = new WeakMap<NonNullable<FigurePresentation['detail']>,number>();
@@ -44,5 +54,5 @@ export function appearanceKey(presentation: Readonly<FigurePresentation> = DEFAU
   const appearance=presentation.appearance;
   let detail=0;
   if(presentation.detail){detail=DETAIL_IDS.get(presentation.detail)??nextDetailId++;DETAIL_IDS.set(presentation.detail,detail);}
-  return `${presentation.weapon??''}:${presentation.shield===undefined?'':Number(presentation.shield)}:${presentation.motion??''}:${presentation.cloth??''}:${presentation.headwear??''}:${appearance?.role??''}:${appearance?.weapon??''}:${appearance?.armor??''}:${appearance?.elite??''}:${appearance?.mounted??''}:${appearance?.ember??''}:${detail}`;
+  return `${presentation.weapon??''}:${presentation.shieldStyle??''}:${presentation.shield===undefined?'':Number(presentation.shield)}:${presentation.motion??''}:${presentation.cloth??''}:${presentation.headwear??''}:${appearance?.role??''}:${appearance?.weapon??''}:${appearance?.armor??''}:${appearance?.elite??''}:${appearance?.mounted??''}:${appearance?.ember??''}:${detail}`;
 }

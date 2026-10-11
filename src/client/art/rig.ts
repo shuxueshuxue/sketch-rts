@@ -14,7 +14,7 @@ const WORK_POSES: {lean:number;wrist:XY;tool:number}[] = [
 
 /** Presentation overrides are deliberately absent from simulation Unit state. */
 export interface FigurePresentation {
-  weapon?: EquipmentKind; motion?: MotionFamily; shield?: boolean;
+  weapon?: EquipmentKind; motion?: MotionFamily; shield?: boolean; shieldStyle?:'round'|'kite';
   appearance?: Partial<Figure>; cloth?: string; headwear?: boolean;
   detail?: (b: Brush, rig: FigureRig, stage: 'body' | 'head' | 'equipment') => void;
 }
@@ -110,7 +110,7 @@ export function solveFigureRig(f: Figure, pose: UnitAnimationFrame, options: Fig
   const support=twoHanded?socketPoint(wrist,angle,supportX,supportY):solveTwoBone(supportShoulder,free,1).end;
   const secondary=solveTwoBone(supportShoulder,support,1);
   const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);
-  return {weapon,shieldStyle:options.shield===true?'round':'kite',shield,motion,impact,cast,working,wrist,angle,
+  return {weapon,shieldStyle:options.shieldStyle??'kite',shield,motion,impact,cast,working,wrist,angle,
     lean:work?.lean??motion.lean+direction.source*weight*.025,shoulder,elbow:primary.joint,support,supportShoulder,supportElbow:secondary.joint,
     twoHanded,release,direction,primaryLayer:weight>.5&&direction.source<0?'back' as const:'front' as const};
 }

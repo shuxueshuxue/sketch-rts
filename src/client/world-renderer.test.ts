@@ -138,6 +138,27 @@ describe("world renderer", () => {
     const strokes = rendered.calls.filter(call => call.name === 'stroke').map(call => call.ink);
     expect(strokes).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.enemy]));
   });
+  it('draws deck remains only in the ship group and reuses art while support moves and weather changes',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.buildings=[];game.items=[];game.resources=[];game.mercenaryCamps=[];game.shops=[];game.obstacles=[];game.map={...game.map,landmarks:[]};
+    const ship=game.spawnUnit('player','warship',300,300);
+    game.corpses=[{id:'deck-art-proof',unitId:'dead',kind:'footman',owner:'player',x:300,y:300,radius:18,diedAtTick:0,variant:'deck-art-proof',deck:{shipId:ship.id,x:10,y:20}}];
+    const remains=vi.fn((ctx:CanvasRenderingContext2D)=>ctx.fillRect(-8,-3,16,6));
+    const models=()=>({paint:()=>{},remains});
+    const snapshot=snapshotGame(game);
+    drawWorld(frame(snapshot,{pass:'ground',models}));
+    expect(remains).not.toHaveBeenCalled();
+    const first=frame(snapshot,{models});drawWorld(first);
+    expect(remains).toHaveBeenCalledTimes(1);
+    const live=snapshot.units[0]!;live.x+=50;live.sailing!.heading=Math.PI/2;snapshot.tick+=200;
+    const moved=frame(snapshot,{models});drawWorld(moved);
+    expect(remains).toHaveBeenCalledTimes(1);
+    expect(moved.calls.some(call=>call.name==='rotate'&&call.args[0]===Math.PI/2)).toBe(true);
+    snapshot.units=[];
+    const sunk=frame(snapshot,{models});drawWorld(sunk);
+    expect(spriteDraws(sunk.calls)).toHaveLength(0);
+    expect(remains).toHaveBeenCalledTimes(1);
+  });
+
   beforeEach(() => { clearCanvasArtCache(); setScratchCanvasFactory(fakeCanvas); });
   afterEach(() => setScratchCanvasFactory(undefined));
 

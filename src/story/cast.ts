@@ -1,3 +1,5 @@
+import type { FigurePresentation } from '../client/art/rig';
+import type { CorpsePresentation } from '../client/art/corpses';
 import type { UnitAnimationFrame } from "../client/unit-animation";
 import { resolveVariant, type UnitVariantDef, type UnitVariantStats } from "../shared/catalog";
 import type { Game } from "../shared/sim";
@@ -8,15 +10,17 @@ import type { Text } from "./stage";
 // same body, motion and equipment composers the game's own units use (client/art/story-rig), so a campaign's beasts and heroes sit in the same sketched
 // world. The renderer caches what it paints per team colour, as it does for every unit.
 
-export type UnitPainter = ((brush: CanvasRenderingContext2D, team: string, pose?: UnitAnimationFrame, facing?: 1 | -1) => void) & {
+export type UnitPainter = ((brush: CanvasRenderingContext2D, team: string, pose?: UnitAnimationFrame, facing?: 1 | -1, presentation?:Readonly<FigurePresentation>) => void) & {
   /** Pure authored socket, before facing/outer unit scale. Present on composed story models. */
-  release?: (pose:UnitAnimationFrame)=>{x:number;y:number;ground:number}|undefined;
+  release?: (pose:UnitAnimationFrame,presentation?:Readonly<FigurePresentation>)=>{x:number;y:number;ground:number}|undefined;
 };
+
+export type UnitRemainsPainter = (brush:CanvasRenderingContext2D,team:string,presentation?:Readonly<CorpsePresentation>)=>void;
 
 export type UnitModel = {
   paint: UnitPainter;
   // Low ground-level remains, composed from the same authored anatomy/loadout.
-  remains?: UnitPainter;
+  remains?: UnitRemainsPainter;
   // The shadow under it: a walker's, a rider's, a beast's, or a giant's.
   shadow?: "foot" | "mounted" | "beast" | "huge" | "none";
 };

@@ -33,6 +33,8 @@ export function isBloodHit(effect:WorldEffect):boolean {
 export class CombatPresentationTracker {
   private tick:number|undefined;
   private receivedAt=0;
+  private effects: readonly WorldEffect[] | undefined;
+  private effectCount=-1;
   private frameNow:number|undefined;
   private overflowThrough=-1;
   private scratch={x:0,y:0};
@@ -45,16 +47,18 @@ export class CombatPresentationTracker {
   private output:CombatPresentationFrame={droplets:[],ground:[],body:[],speedLines:[]};
 
   reset() {
-    this.tick=undefined;this.receivedAt=0;this.frameNow=undefined;this.overflowThrough=-1;this.bursts.length=0;this.residue.length=0;this.seen.clear();this.positions.clear();this.units.clear();this.lines.length=0;
+    this.tick=undefined;this.effects=undefined;this.effectCount=-1;this.receivedAt=0;this.frameNow=undefined;this.overflowThrough=-1;this.bursts.length=0;this.residue.length=0;this.seen.clear();this.positions.clear();this.units.clear();this.lines.length=0;
     this.output.droplets.length=0;this.output.ground.length=0;this.output.body.length=0;this.output.speedLines.length=0;
   }
 
   update(snapshot:Snapshot,now:number) {
     if(this.tick!==undefined && snapshot.tick<this.tick)this.reset();
-    if(snapshot.tick===this.tick)return;
+    const sameTick=snapshot.tick===this.tick;
+    if(sameTick&&snapshot.effects===this.effects&&snapshot.effects.length===this.effectCount)return;
+    this.effects=snapshot.effects;this.effectCount=snapshot.effects.length;
     this.frameNow=undefined;
     const gap=this.tick===undefined?0:snapshot.tick-this.tick;
-    this.tick=snapshot.tick;this.receivedAt=now;
+    this.tick=snapshot.tick;if(!sameTick)this.receivedAt=now;
     this.units.clear();for(const unit of snapshot.units)this.units.set(unit.id,unit);
     this.bursts=this.bursts.filter(burst=>(snapshot.tick-burst.tick)/SIM_TICKS_PER_SECOND<LIFE);
     this.residue=this.residue.filter(burst=>(snapshot.tick-burst.tick)/SIM_TICKS_PER_SECOND<LIFE);
@@ -72,6 +76,9 @@ export class CombatPresentationTracker {
       }
       if(this.seen.size>COMBAT_PRESENTATION_LIMITS.seenEvents) { this.seen.delete(this.seen.keys().next().value!);this.overflowThrough=snapshot.tick; }
     }
+    // A hit can arrive between draws of the same tick. Consume it without
+    // treating an unchanged position as a new motion observation.
+    if(sameTick)return;
     this.lines.length=0;
     const next=new Map<string,Position>();
     for(const unit of snapshot.units) {
