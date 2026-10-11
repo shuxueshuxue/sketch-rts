@@ -1,4 +1,4 @@
-import {test} from 'node:test';
+import {test} from 'vitest';
 import assert from 'node:assert/strict';
 import {waitForArtGpuCompletion} from './art-gpu-completion.mjs';
 function fixture(statuses){let clock=0,deleted=0,flushed=0;const gl={SYNC_GPU_COMMANDS_COMPLETE:1,ALREADY_SIGNALED:2,CONDITION_SATISFIED:3,WAIT_FAILED:4,fenceSync:()=>({}),flush:()=>flushed++,clientWaitSync:(_s,flags,timeout)=>{assert.equal(flags,0);assert.equal(timeout,0);clock+=.5;return statuses.shift()??5;},isContextLost:()=>false,deleteSync:()=>deleted++};return {gl,options:{now:()=>clock,yieldTurn:async()=>{clock+=4;},timeoutMs:8},state:()=>({deleted,flushed})};}

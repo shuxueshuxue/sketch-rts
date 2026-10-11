@@ -35,8 +35,8 @@ export function checksumGameForVersion(game: Game, version: number): string {
     delete checkedGame.corpses;
   } else if (version === 17) {
     if (game.corpses) checkedGame.corpses = game.corpses.map(corpse => {
-      const { equipmentCaptured, rightItemKind, weaponKind, leftItemKind, ownerRace, deck, ...legacy } = corpse;
-      return legacy;
+      const { equipmentCaptured, rightItemKind, weaponKind, leftItemKind, ownerRace, deck, ...prior } = corpse;
+      return prior;
     });
   } else {
     throw new Error(`Unsupported checksum version ${version}`);

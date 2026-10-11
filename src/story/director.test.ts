@@ -162,25 +162,25 @@ describe("director", () => {
     advanceUntil(director, () => (director.game.corpses?.length ?? 0) >= 5);
     const save = director.save();
     expect(save.checkpoint.label).toBe("second");
-    const legacyCorpse = (corpse: Corpse): Corpse => {
-      const legacy = { ...corpse };
-      delete legacy.equipmentCaptured;
-      delete legacy.rightItemKind;
-      delete legacy.weaponKind;
-      delete legacy.leftItemKind;
-      delete legacy.ownerRace;
-      delete legacy.deck;
-      return legacy;
+    const priorCorpse = (corpse: Corpse): Corpse => {
+      const prior = { ...corpse };
+      delete prior.equipmentCaptured;
+      delete prior.rightItemKind;
+      delete prior.weaponKind;
+      delete prior.leftItemKind;
+      delete prior.ownerRace;
+      delete prior.deck;
+      return prior;
     };
-    const legacy = { ...save, checksumVersion: 17, checksum: checksumGame({ ...director.game, corpses: director.game.corpses!.map(legacyCorpse) }) };
-    legacy.checkpoint.game.snapshot.corpses = legacy.checkpoint.game.snapshot.corpses!.map(legacyCorpse);
-    const loaded = Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, legacy);
+    const prior = { ...save, checksumVersion: 17, checksum: checksumGame({ ...director.game, corpses: director.game.corpses!.map(priorCorpse) }) };
+    prior.checkpoint.game.snapshot.corpses = prior.checkpoint.game.snapshot.corpses!.map(priorCorpse);
+    const loaded = Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, prior);
     expect(loaded.tick).toBe(save.tick);
     expect(loaded.game.corpses).toHaveLength(5);
     expect(loaded.game.corpses!.some(corpse => corpse.equipmentCaptured)).toBe(true);
-    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...legacy, checksum: "00000000" })).toThrow(/does not replay/);
-    legacy.checkpoint.game.snapshot.corpses![0]!.x += 1;
-    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, legacy)).toThrow(/does not replay/);
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...prior, checksum: "00000000" })).toThrow(/does not replay/);
+    prior.checkpoint.game.snapshot.corpses![0]!.x += 1;
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, prior)).toThrow(/does not replay/);
   });
 
   it("offers every event to a waiting script in turn, so a loop on `on` misses none", () => {

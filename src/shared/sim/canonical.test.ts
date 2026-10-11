@@ -58,13 +58,13 @@ describe("canonical game state", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const corpse = { id: "corpse", unitId: "fallen", kind: "knight" as const, owner: "p1", x: 100, y: 200, radius: 18, diedAtTick: 4 };
     game.corpses = [corpse];
-    const legacy = checksumGame(game);
+    const prior = checksumGame(game);
     game.corpses = [{ ...corpse, equipmentCaptured: true, rightItemKind: "greatSword", weaponKind: "footman", leftItemKind: "roundShield", ownerRace: "ember", deck: { shipId: "ship", x: 2, y: 3 } }];
-    expect(checksumGame(game)).not.toBe(legacy);
-    expect(checksumGameForVersion(game, 17)).toBe(legacy);
+    expect(checksumGame(game)).not.toBe(prior);
+    expect(checksumGameForVersion(game, 17)).toBe(prior);
     expect(game.corpses[0]!.rightItemKind).toBe("greatSword");
     game.corpses[0]!.x += 1;
-    expect(checksumGameForVersion(game, 17)).not.toBe(legacy);
+    expect(checksumGameForVersion(game, 17)).not.toBe(prior);
     expect(() => checksumGameForVersion(game, 16)).toThrow(/Unsupported checksum version 16/);
   });
 });
