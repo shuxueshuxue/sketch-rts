@@ -1,0 +1,22 @@
+{
+  "base": "62b0e5ca3d4656fea566eb810bc1a219b51cef2d",
+  "shellEvasionSha256": "2c797ac81b25c873655b66e38272399d9f3a825530b057773d29ba053087d0ab",
+  "sdk": {
+    "parentPassed": 12,
+    "parentFailed": 12,
+    "candidatePassed": 24,
+    "candidateFailed": 0,
+    "relatedUnionPassed": 249,
+    "relatedUnionFailed": 0
+  },
+  "buildPassed": true,
+  "localObservation": {
+    "mode": "same tick 11400 native pineshade world, full three-player AI memory and nextId; one v9_archer versus two approved frozen v8, normal rules/resources/15-tick think; 600-tick continuation",
+    "parentRiderDamage": 78,
+    "candidateRiderDamage": 0,
+    "candidateRiderLastDecisionHp": 109,
+    "parentBundleSha256": "5a702dcb6ae0bda355413a36aba4c64066da81556a688c66f73869915cd3a9d8",
+    "candidateBundleSha256": "0f40058f9e9138fee2ab25919155fe15c349f2d663c4500998896a8cb22e56d1"
+  },
+  "formalAllMapAcceptanceComplete": false
+}

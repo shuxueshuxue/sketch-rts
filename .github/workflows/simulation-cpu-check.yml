@@ -40,5 +40,8 @@ jobs:
       - name: Test free island income and actual sea roads
         run: npx vitest run src/ai/bootstrap_1/fleet-free-mine.test.ts src/ai/policy/naval-mines.test.ts
 
+      - name: Test continued area escape under pursuit
+        run: npx vitest run src/ai/bootstrap_1/area-pursuit.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
