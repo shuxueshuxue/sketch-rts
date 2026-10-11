@@ -128,6 +128,10 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
         if (dock && "placement" in purchasePlacement(snapshot,owner,dock,outfit.kind,outfit.shipId)) return {id:'naval:gun',cost:SHIP_WEAPONS[outfit.kind].cost,issue:()=>({type:'buyShipEquipment',buildingId:dock.id,item:outfit.kind,recipientId:outfit.shipId})};
     }
+    const plan = islandPlan(snapshot, owner, options, eligible);
+    // Landed builders establish the paid beachhead before older colonies recruit more garrison.
+    const capital = settlementHallWant(snapshot, owner, plan);
+    if (capital) return capital;
     const foothold = footholdWant(snapshot, owner);
     if (foothold)
         return { ...foothold, closeout: true };
@@ -137,7 +141,6 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
         return undefined;
-    const plan = islandPlan(snapshot, owner, options, eligible);
     const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
     if (!water)
         return undefined;
@@ -185,12 +188,11 @@ function footholdWant(snapshot: GameSnapshot, owner: PlayerId): NavalWant | unde
     }
     return undefined;
 }
-// The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+function settlementHallWant(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan | undefined): NavalWant | undefined {
     if (plan && !islandHallOf(snapshot, owner, plan) && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300)) {
-        const builder = units(snapshot, owner).filter(unit => unit.kind === "worker" && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine))
-            .sort((a, b) => distance(a, plan.mine) - distance(b, plan.mine))[0];
-        const site = builder && hallSite(snapshot, plan.mine);
+        const site = hallSite(snapshot, plan.mine);
+        const builder = site && nearestByRoute(snapshot.map, units(snapshot, owner).filter(unit => unit.kind === "worker"
+            && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine)), site, 'land');
         if (builder && site)
             return { id: "naval:islandHall", cost: BUILDING_DEFS.townHall.cost, issue: used => {
                     if (used.has(builder.id) || builder.order.type === 'build')
@@ -199,6 +201,13 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
                     return { type: "build", unitId: builder.id, buildingKind: "townHall", ...site };
                 } };
     }
+    return undefined;
+}
+
+// The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+    const capital = settlementHallWant(snapshot, owner, plan);
+    if (capital) return capital;
     const engineers = units(snapshot, owner).filter(unit => unit.kind === "worker");
     if ((plan || assault) && engineers.length < 6) {
         const hall = halls.find(hall => hall.complete && !hall.queue.length);
