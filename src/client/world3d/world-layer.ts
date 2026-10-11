@@ -365,10 +365,9 @@ export class World3DLayer {
         this.batches.add(`effect:${shot.look}:${color??''}`,model,this.pose(x,y,height,shot.heading,shot.scale,rotation),effect.id,color);
       }
     }
-    this.batches.finish();this.cards.finish();this.remainsCards.finish();this.selection.finish();
+    this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
     if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
-    this.cards.upload(renderer);this.remainsCards.upload(renderer);
     renderer.render(this.scene,this.camera);
   }
   pick(point:{x:number;y:number}){if(!this.view)return undefined;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(point.x/this.view.width*2-1,1-point.y/this.view.height*2),this.camera);

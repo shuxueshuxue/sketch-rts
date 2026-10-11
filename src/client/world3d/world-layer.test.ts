@@ -282,12 +282,12 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(const mesh of meshes)for(let i=0;i<mesh.count;i++){
       const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
       const texture=(mesh.material as MeshBasicMaterial).map as DataArrayTexture,{width,height}=texture.image;
-      const right=new Vector3().setFromMatrixColumn(matrix,0).normalize(),slice=mesh.geometry.getAttribute('cardLayer').getX(i);
+      const right=new Vector3().setFromMatrixColumn(matrix,0).normalize();
       const rect=mesh.geometry.getAttribute('cardRect');
       expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/4,5);
       expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
       let ink=0,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-      for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(texture.image.data![(slice*width*height+y*width+x)*4+3]){
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(mesh.userData.paintedHit(i,{x:(x+.5)/width,y:(y+.5)/height})){
         const world=new Vector3(rect.getX(i)+(x+.5)/width*(rect.getZ(i)-rect.getX(i)),rect.getY(i)+(y+.5)/height*(rect.getW(i)-rect.getY(i)),0).applyMatrix4(matrix);
         const horizontal=world.clone().sub(new Vector3(unit.x,0,unit.y)).dot(right);
         minX=Math.min(minX,horizontal);maxX=Math.max(maxX,horizontal);minY=Math.min(minY,world.y);maxY=Math.max(maxY,world.y);ink++;

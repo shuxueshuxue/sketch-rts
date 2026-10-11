@@ -1,6 +1,7 @@
 /** Controlled GPU equivalence proof: identical authored pixels through the old
  * CanvasTexture path and the new array path, including both shadow materials. */
 import * as THREE from 'three';
+import {paintFigure} from '../src/client/art/painted-units';
 import {PaintedCardBatches} from '../src/client/world3d/painted-card-batches';
 import {SHIP_CAMERA} from '../src/shared/ship-geometry';
 
@@ -25,6 +26,7 @@ export async function cardGpuProof(){
   const rotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),.15),scale=new THREE.Vector3(1,1,1);
   const domains=Array.from({length:4},(_,i)=>params.get('domains')==='mixed'?{tile:i%2?160:128,density:i<2?4:2,foot:[17,23,-3,30][i]!}:{tile:128,density:4,foot:17});
   const paints=Array.from({length:4},(_,i)=>(ctx:CanvasRenderingContext2D)=>{
+    if(params.get('art')==='real'){paintFigure(ctx,['footman','priest','archer','worker'][i] as 'footman'|'priest'|'archer'|'worker',['#9d532a','#345db6','#4c825d','#e3c183'][i]!,{mode:i===1?'cast':'attack',frame:0,aim:i===2?-3:0},i%2?-1:1);return;}
     ctx.fillStyle=['#9d532a','#345db6','#4c825d','#e3c183'][i]!;ctx.beginPath();ctx.moveTo(-22,16);ctx.lineTo(-18,-42);ctx.lineTo(18,-35);ctx.lineTo(27,8);ctx.closePath();ctx.fill();
     ctx.strokeStyle='#252c25';ctx.lineWidth=2.25;ctx.stroke();ctx.fillStyle='#eac093';ctx.beginPath();ctx.arc(5,-44,10,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='rgba(40,55,60,.43)';ctx.fillRect(-35,-25,62,5);ctx.fillStyle='#252c25';ctx.fillRect(-18,12,8,5);ctx.fillRect(14,9,8,8);
@@ -35,6 +37,10 @@ export async function cardGpuProof(){
   });
   const matrices=paints.map((_,i)=>new THREE.Matrix4().compose(new THREE.Vector3((i%2-.5)*105,0,(Math.floor(i/2)-.5)*120),rotation,params.get('domains')==='mixed'&&i%2?new THREE.Vector3(-1,1,1):scale));
   function setFilter(texture:THREE.Texture){if(filter!=='mip'){const value=filter==='nearest'?THREE.NearestFilter:THREE.LinearFilter;if(texture.minFilter!==value||texture.magFilter!==value){texture.generateMipmaps=false;texture.minFilter=texture.magFilter=value;texture.needsUpdate=true;}}}
+  // Diagnostic filters are fixed before allocation, never toggled after GPU
+  // copies (a changed texture-cache key could otherwise allocate empty storage).
+  const initializeTexture=renderer.initTexture.bind(renderer);
+  renderer.initTexture=texture=>{if(texture instanceof THREE.DataArrayTexture)setFilter(texture);initializeTexture(texture);};
   const previous=paints.map((paint,i)=>{
     const {tile,density,foot}=domains[i]!,pixels=tile*density;
     const source=document.createElement('canvas');source.width=source.height=pixels;const ctx=source.getContext('2d',{willReadFrequently:true})!;ctx.scale(density,density);ctx.translate(tile/2,tile/2);paint(ctx);
@@ -46,29 +52,28 @@ export async function cardGpuProof(){
   const cards=new PaintedCardBatches(scene,Math.min(anisotropy,renderer.capabilities.getMaxAnisotropy()));
   function draw(){renderer.setRenderTarget(target);renderer.render(scene,camera);const pixels=new Uint8Array(size*size*4);renderer.readRenderTargetPixels(target,0,0,size,size,pixels);return pixels;}
   const report=[],rasterComparison:{changedChannels:number;maximum:number;alphaChanged:number;alphaMaximum:number}[]=[];const comparisons=document.createElement('canvas');comparisons.width=size*3;comparisons.height=size*2;const out=comparisons.getContext('2d')!;
+  const checkedSources=new Set<number>();
+  const oraclePaint=(i:number)=>(ctx:CanvasRenderingContext2D)=>{
+      paints[i]!(ctx);if(checkedSources.has(i))return;checkedSources.add(i);
+      // One-shot source oracle lives only in this fixture. Production retains
+      // neither Canvas readbacks nor a CPU page. GPU images below remain strict.
+      const source=previous[i]!.userData.source as HTMLCanvasElement,size=source.width;
+      const expected=source.getContext('2d')!.getImageData(0,0,size,size).data,actual=ctx.getImageData(0,0,size,size).data;
+      let changedChannels=0,maximum=0,alphaChanged=0,alphaMaximum=0;
+      for(let p=0;p<actual.length;p++){const d=Math.abs(actual[p]!-expected[p]!);if(d)changedChannels++;maximum=Math.max(maximum,d);if(p%4===3){if(d)alphaChanged++;alphaMaximum=Math.max(alphaMaximum,d);}}
+      rasterComparison.push({changedChannels,maximum,alphaChanged,alphaMaximum});
+
+  };
+  const compact=params.get('compact')==='mixed',keys=compact?[0,16,32,64]:[0,1,2,3];
+  if(compact){
+    if(params.get('domains')==='mixed')throw Error('Compaction proof requires one shared source domain');
+    cards.begin();for(let i=0;i<64;i++)cards.add(String(i),4,oraclePaint(Math.floor(i/16)),matrices[i%4]!,`warm:${i}`,17,128);cards.finish(renderer);
+  }
   for(let pass=0;pass<2;pass++){
     sun.visible=pass===0;point.visible=pass===1;
     for(const mesh of previous)mesh.visible=true;for(const mesh of cards.objects())mesh.visible=false;
     const before=draw();for(const mesh of previous)mesh.visible=false;const empty=draw();let referenceVisiblePixels=0;for(let p=0;p<before.length;p+=4)if(before[p]!==empty[p]||before[p+1]!==empty[p+1]||before[p+2]!==empty[p+2])referenceVisiblePixels++;
-    cards.begin();paints.forEach((paint,i)=>cards.add(String(i),domains[i]!.density,paint,matrices[i]!,String(i),domains[i]!.foot,domains[i]!.tile));cards.finish();for(const mesh of cards.objects())setFilter(mesh.material.map!);cards.upload(renderer);
-    if(pass===0){
-      for(let i=0;i<previous.length;i++){
-        const source=previous[i]!.userData.source as HTMLCanvasElement,sourceSize=source.width,rgba=source.getContext('2d')!.getImageData(0,0,sourceSize,sourceSize).data;
-        const mesh=cards.objects().find(item=>item.userData.ids.includes(String(i)))!,index=mesh.userData.ids.indexOf(String(i));
-        const texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture,{width,height,data}=texture.image;
-        const layer=mesh.geometry.getAttribute('cardLayer').getX(index);
-        let changedChannels=0,maximum=0,alphaChanged=0,alphaMaximum=0;
-        for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-          const sx=x,sy=sourceSize-1-y;
-          for(let channel=0;channel<4;channel++){
-            const expected=sx>=0&&sx<sourceSize&&sy>=0&&sy<sourceSize?rgba[(sy*sourceSize+sx)*4+channel]!:0;
-            const difference=Math.abs(expected-data![(layer*width*height+y*width+x)*4+channel]!);
-            if(difference)changedChannels++;maximum=Math.max(maximum,difference);if(channel===3){if(difference)alphaChanged++;alphaMaximum=Math.max(alphaMaximum,difference);}
-          }
-        }
-        rasterComparison.push({changedChannels,maximum,alphaChanged,alphaMaximum});
-      }
-    }
+    cards.begin();paints.forEach((_,i)=>cards.add(String(keys[i]),domains[i]!.density,oraclePaint(i),matrices[i]!,String(i),domains[i]!.foot,domains[i]!.tile));cards.finish(renderer);
     const after=draw();let candidateVisiblePixels=0;for(let p=0;p<after.length;p+=4)if(after[p]!==empty[p]||after[p+1]!==empty[p+1]||after[p+2]!==empty[p+2])candidateVisiblePixels++;let maximum=0,sum=0,changedPixels=0;const largest:{x:number;y:number;difference:number;before:number[];after:number[]}[]=[];
     for(let i=0;i<before.length;i+=4){let changed=false;for(let c=0;c<4;c++){const diff=Math.abs(before[i+c]!-after[i+c]!);maximum=Math.max(maximum,diff);sum+=diff;changed ||= diff!==0;}if(changed){changedPixels++;const difference=Math.max(...Array.from(before.subarray(i,i+4),(value,c)=>Math.abs(value-after[i+c]!)));largest.push({x:(i/4)%size,y:size-1-Math.floor(i/4/size),difference,before:Array.from(before.subarray(i,i+4)),after:Array.from(after.subarray(i,i+4))});}}largest.sort((a,b)=>b.difference-a.difference);
     report.push({pass:pass===0?'directional-depth':'point-distance',referenceVisiblePixels,candidateVisiblePixels,maxChannelDifference:maximum,meanChannelDifference:sum/before.length,changedPixels,totalPixels:size*size,largest:largest.slice(0,12)});
@@ -80,7 +85,9 @@ export async function cardGpuProof(){
   }
   const programs=(renderer.info.programs??[]).map(program=>({runnable:program.diagnostics?.runnable??true}));
   const glError=renderer.getContext().getError(),image=comparisons.toDataURL('image/png');
+  const cardStats=cards.stats();
+  const arrayCpuBaseNull=cards.objects().every(mesh=>((mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.data===null);
   cards.dispose();for(const mesh of previous){mesh.dispose();mesh.geometry.dispose();mesh.material.map!.dispose();mesh.material.dispose();mesh.customDepthMaterial?.dispose();mesh.customDistanceMaterial?.dispose();}floor.geometry.dispose();floor.material.dispose();sun.shadow.dispose();point.shadow.dispose();target.dispose();renderer.dispose();renderer.forceContextLoss();
-  return{programs,settings:{reference,filter,shadows,anisotropy,domains,extent:'full-source',sentinel:params.get('extent')==='full',zoom:Number(params.get('zoom')??1)},renderInfo:renderer.info.render,report,rasterComparison,glError,image,method:'Full source RGBA comparison, same CPU scratch drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Full source domains include all original mip levels, including NPOT320/640. Columns=full reference, full-source array, difference amplified 8x. Diagnostic settings are explicit; shadow-off still requires visible actors. Each draw rebinds the multisample target after readback. CPU/GPU scratch antialiasing differences are measured separately by art-raster-profile.'};
+  return{programs,settings:{art:params.get('art')??'diagnostic',compact,reference,filter,shadows,anisotropy,domains,extent:'full-source',sentinel:params.get('extent')==='full',zoom:Number(params.get('zoom')??1)},renderInfo:renderer.info.render,report,rasterComparison,arrayCpuBaseNull,cardStats,glError,image,method:'One-shot pre-upload source RGBA comparison plus strict GPU images, no persistent array CPU data, same CPU scratch drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Full source domains include all original mip levels, including NPOT320/640. Columns=full reference, full-source array, difference amplified 8x. Diagnostic settings are explicit; shadow-off still requires visible actors. Each draw rebinds the multisample target after readback. CPU/GPU scratch antialiasing differences are measured separately by art-raster-profile.'};
 }
 (window as unknown as {cardGpuProof:typeof cardGpuProof}).cardGpuProof=cardGpuProof;

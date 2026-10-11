@@ -14,7 +14,7 @@ const output=resolve(arg('--out')??resolve(directory,'scratch-mip-result.json'))
 const errors=[],fixture=arg('--fixture')?resolve(arg('--fixture')):resolve(directory,'scratch-mip-fixture.js'),metadata={commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),fixtureSha256:createHash('sha256').update(await readFile(fixture)).digest('hex'),query:arg('--query')??'',startedAt:new Date().toISOString()};let server,browser,socket;
 if(arg('--fixture')){
  metadata.productionSourceSha256={};
- for(const path of ['src/client/world3d/card-mip-uploader.ts','src/client/world3d/painted-card-batches.ts','src/client/world3d/world-layer.ts'])metadata.productionSourceSha256[path]=createHash('sha256').update(await readFile(resolve(root,path))).digest('hex');
+ for(const path of ['src/client/world3d/card-pick-mask.ts','src/client/world3d/card-mip-uploader.ts','src/client/world3d/painted-card-batches.ts','src/client/world3d/world-layer.ts'])metadata.productionSourceSha256[path]=createHash('sha256').update(await readFile(resolve(root,path))).digest('hex');
 }
 try{
  await writeFile(resolve(scratch,'index.html'),`<script type="module" src="/@fs${fixture}"></script>`);
