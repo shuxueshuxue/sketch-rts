@@ -201,6 +201,9 @@ const nativeUnitSpawners = new WeakMap<Game, Game["spawnUnit"]>();
 const NAVAL_FRAME = 1;
 const CARGO_FRAME = 2;
 const EMPTY_VETERAN_FRAME = 4;
+// These private empty task views are only read by the simulation's ship passes.
+const EMPTY_SHIP_STARTS = new Map<string, { x: number; y: number; heading: number }>();
+const EMPTY_SHIP_DEFENSES: ShipDefenseFrame = new Map();
 
 function navalFrameFlags(game: Game): number {
   // Native births and automatic star gains never assign a learned skill.
@@ -799,7 +802,7 @@ export function stepGame(game: Game) {
   if (navalFrame) updateDockRepairs(game);
   updateTowerAttacks(game);
   const vessels = shipsIn(game.units);
-  const starts = new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  const starts = vessels.length ? new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }])) : EMPTY_SHIP_STARTS;
   // The empty collision frame still clears prior hull impacts and binds ground
   // movement to this tick's no-hull geometry.
   beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
@@ -824,8 +827,8 @@ export function stepGame(game: Game) {
       updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
     }
   } else {
-    game.boardingHolds = new Set();
-    defenses = new Map();
+    if (!game.boardingHolds || game.boardingHolds.size) game.boardingHolds = new Set();
+    defenses = EMPTY_SHIP_DEFENSES;
   }
   const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
   const ferry = updateUnits(game,defenses,navalFrame,emptyVeteranFrame);
@@ -4276,6 +4279,7 @@ const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX:
 // Unchanged coordinates still occupy their recorded cell; changed axes are classified normally.
 function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number, previous?: SpatialIndex<T>): SpatialIndex<T> {
   const cached = previous && Object.is(previous.cellSize, cellSize) ? spatialMembership.get(previous) : undefined;
+  let prefix = 0;
   if (cached && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
@@ -4287,6 +4291,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
         break;
       }
       cached.x[i] = entity.x; cached.y[i] = entity.y;
+      prefix = i + 1;
     }
     // Buckets hold live entity references. Within a cell, narrow-phase range
     // checks still read current coordinates; membership and visit order match.
@@ -4300,13 +4305,13 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   const members = cached?.members ?? [];
   const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
   const positionsX = cached ? cached.x : [], positionsY = cached ? cached.y : [];
-  members.length = cellX.length = cellY.length = positionsX.length = positionsY.length = 0;
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
-  for (const entity of entities) {
-    members.push(entity);
-    positionsX.push(entity.x); positionsY.push(entity.y);
-    const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
-    cellX.push(x); cellY.push(y);
+  for (let i = 0; i < entities.length; i += 1) {
+    const entity = entities[i]!;
+    const x = i < prefix ? cellX[i]! : Math.floor(entity.x / cellSize);
+    const y = i < prefix ? cellY[i]! : Math.floor(entity.y / cellSize);
+    members[i] = entity; positionsX[i] = entity.x; positionsY[i] = entity.y;
+    cellX[i] = x; cellY[i] = y;
     left = Math.min(left, x); right = Math.max(right, x);
     top = Math.min(top, y); bottom = Math.max(bottom, y);
     const key = numericBucketKey(x, y);
@@ -4314,6 +4319,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (bucket) bucket.push(entity);
     else buckets.set(key, [entity]);
   }
+  members.length = cellX.length = cellY.length = positionsX.length = positionsY.length = entities.length;
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
   spatialMembership.set(index, { members, cellX, cellY, x: positionsX, y: positionsY });
@@ -4332,6 +4338,7 @@ const teamSpatialMembership = new WeakMap<object, {
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
   const cached = previous ? teamSpatialMembership.get(previous) : undefined;
+  let prefix = 0;
   if (cached && Object.is(cached.cellSize, cellSize) && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
@@ -4344,6 +4351,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
         break;
       }
       cached.x[i] = entity.x; cached.y[i] = entity.y;
+      prefix = i + 1;
     }
     // Internal indexes retain live bodies. Team membership and visit order
     // must match independently of coordinate-key aliases and mutable owners.
@@ -4355,22 +4363,23 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   const members = reusable?.members ?? [];
   const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
   const positionsX = reusable ? reusable.x : [], positionsY = reusable ? reusable.y : [];
-  members.length = cellX.length = cellY.length = teams.length = positionsX.length = positionsY.length = 0;
-  for (const entity of entities) {
-    members.push(entity);
-    positionsX.push(entity.x); positionsY.push(entity.y);
-    const team = teamKey(game, entity.owner);
-    teams.push(team);
+  for (let i = 0; i < entities.length; i += 1) {
+    const entity = entities[i]!;
+    const team = i < prefix ? teams[i]! : teamKey(game, entity.owner);
+    members[i] = entity; positionsX[i] = entity.x; positionsY[i] = entity.y;
+    teams[i] = team;
     let index = indexes.get(team);
     if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
-    const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
-    cellX.push(x); cellY.push(y);
+    const x = i < prefix ? cellX[i]! : Math.floor(entity.x / cellSize);
+    const y = i < prefix ? cellY[i]! : Math.floor(entity.y / cellSize);
+    cellX[i] = x; cellY[i] = y;
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
     const key = numericBucketKey(x, y), bucket = index.buckets.get(key);
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
+  members.length = cellX.length = cellY.length = teams.length = positionsX.length = positionsY.length = entities.length;
   teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams, x: positionsX, y: positionsY });
   return indexes;
 }
