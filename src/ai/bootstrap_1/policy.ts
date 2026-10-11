@@ -23,6 +23,7 @@ import { expeditionRecoveryUnitIds, planBootstrapNaval } from './expedition-reco
 import { navalUnitIds } from '../policy/naval';
 import { mercenaryControl } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
+import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
@@ -89,7 +90,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
-    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, script];
+    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
