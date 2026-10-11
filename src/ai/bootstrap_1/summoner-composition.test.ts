@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as mining from '../../shared/mining';
+
+afterEach(() => vi.restoreAllMocks());
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { UNIT_DEFS } from '../../shared/catalog';
@@ -25,6 +28,9 @@ describe('summon host support against artillery', () => {
       { order: { type: 'mine', resourceId: i < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
     for (let i = 0; i < 10; i++) scene = scene.unit('us', caller, x(800 + i % 5 * 35), 1000 + Math.floor(i / 5) * 35);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    // This scene has only our miners. Observe real deliveries and their settlement-time
+    // population, including changes caused by recruits and summons during the step.
+    const deliveries = vi.spyOn(mining, 'upkeepGoldIncome');
     memory.v6 = { phase: 2 };
     let spells = 0;
     const recruits: string[] = [];
@@ -46,6 +52,15 @@ describe('summon host support against artillery', () => {
     expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(4 * UNIT_DEFS[screen].cost);
     const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
     const carried = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
-    expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500 + mined);
+    const delivered = deliveries.mock.calls.reduce((total, [gold]) => total + gold, 0);
+    // Keep both conservation checks exact: ore first, then spendable integer cents.
+    expect(delivered + carried).toBe(mined);
+    expect(deliveries.mock.calls.some(([, supply]) => supply > 40)).toBe(true);
+    expect(new Set(deliveries.mock.calls.map(([, supply]) => supply)).size).toBeGreaterThan(1);
+    const creditedCents = deliveries.mock.calls.reduce((total, [gold, supply]) =>
+      total + Math.round(gold * 100 * (supply <= 40 ? 1 : 30 / (supply - 10))), 0);
+    expect(creditedCents).toBeLessThan(delivered * 100);
+    expect(Math.round(game.players.us!.gold * 100) + Math.round(game.match.stats.goldSpent.us! * 100))
+      .toBe(50000 + creditedCents);
   });
 });
