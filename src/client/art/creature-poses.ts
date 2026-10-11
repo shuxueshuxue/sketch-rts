@@ -33,6 +33,6 @@ export function creatureDrawing(shape:Shape,weapon:EquipmentKind|undefined,frame
  else if(shape==='stone'||shape==='wood')release=casting?free:hand;
  else if(shape==='spider')release=[23+dx*7,3+dy*9];
  else if(shape==='spirit')release=[12+dx*12,-26+dy*16];
- return{motion,strike,casting,action,dx,dy,hand,elbow,free,angle,headX,headY,mouth,bob,release,walk:motion.stride,variant,aim};
+ return{motion,strike,casting,action,dx,dy,hand,elbow,free,angle,headX,headY,mouth,bob,release,walk:motion.stride,stepLift:frame.mode==='walk'?Math.cos(frame.frame*Math.PI/4):0,variant,aim};
 }
 export type CreatureDrawing=ReturnType<typeof creatureDrawing>;

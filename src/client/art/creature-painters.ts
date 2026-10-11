@@ -55,8 +55,8 @@ function stoneBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color,granite=l.kind==='graniteGolem',rubble=l.kind==='rubbleGolem';
  // Weight sits on broad, offset blocks; the shoulders are not machine hinges.
  for(const side of [-1,1]){
-  const x=side*11,s=p.walk*side*3;
-  stone(b,x,7,13,19,darker(c,.12));stone(b,x+s,19,17,9,c);
+  const x=side*11,s=p.walk*side*3,lift=Math.max(0,p.stepLift*side)*3;
+  stone(b,x,7,13,19,darker(c,.12));stone(b,x+s,19-lift,17,9,c);
  }
  b.translate(0,p.bob);
  const far:XY=p.casting?p.free:[-26+p.strike*3,-1+p.dy*4];
@@ -87,8 +87,9 @@ function woodBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color;
  for(const side of [-1,1]){
   const x=side*11+p.walk*side*2;
+  b.save();b.translate(0,-Math.max(0,p.stepLift*side)*3);
   mass(b,[[side*7,-4],[x-5,9],[x-9,20],[x-5,23],[x+1,18],[x+7,22],[x+10,20],[x+3,9],[side*12,-5]],darker(c,.1));
-  line(b,[[side*9,0],[x,13],[x-3,20]],'#b09c76',.8);
+  line(b,[[side*9,0],[x,13],[x-3,20]],'#b09c76',.8);b.restore();
  }
  b.translate(0,p.bob);
  const far:XY=p.casting?p.free:[-28+p.strike*5,5];
@@ -111,9 +112,9 @@ function woodBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
 function ogreBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color;
  for(const side of [-1,1]){
-  const x=side*11,s=p.walk*side*4;
-  flesh(b,[side*9,-2],[x,10],[x+s,20],10,darker(c,.12));
-  mass(b,[[x+s-6,17],[x+s+4,17],[x+s+8,22],[x+s-6,23]],'#5a5147');
+  const x=side*11,s=p.walk*side*4,lift=Math.max(0,p.stepLift*side)*4;
+  flesh(b,[side*9,-2],[x,10-lift*.4],[x+s,20-lift],10,darker(c,.12));
+  mass(b,[[x+s-6,17-lift],[x+s+4,17-lift],[x+s+8,22-lift],[x+s-6,23-lift]],'#5a5147');
  }
  b.translate(0,p.bob);
  flesh(b,[-15,-25],[-23,-13],p.free,12,darker(c,.12));fist(b,p.free,darker(c,.06));
@@ -146,9 +147,10 @@ function ogreBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
 }
 function fishBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color;
- flesh(b,[-5,0],[-13,8],[-16-p.walk*3,16],6,darker(c,.15));
- flesh(b,[7,0],[16,7],[20+p.walk*3,15],6,c);
- for(const x of [-16-p.walk*3,20+p.walk*3])mass(b,[[x-3,13],[x+2,14],[x+7,17],[x+1,17],[x-4,18]],c);
+ const farLift=Math.max(0,-p.stepLift)*3,nearLift=Math.max(0,p.stepLift)*3;
+ flesh(b,[-5,0],[-13,8-farLift*.4],[-16-p.walk*3,16-farLift],6,darker(c,.15));
+ flesh(b,[7,0],[16,7-nearLift*.4],[20+p.walk*3,15-nearLift],6,c);
+ for(const [x,lift] of [[-16-p.walk*3,farLift],[20+p.walk*3,nearLift]] as const)mass(b,[[x-3,13-lift],[x+2,14-lift],[x+7,17-lift],[x+1,17-lift],[x-4,18-lift]],c);
  b.translate(0,p.bob);
  // Fin and narrow tail establish the amphibious crouch before the torso.
  mass(b,[[-10,-17],[-19,-32],[-16,-9],[-24,-1],[-9,3]],darker(c,.24));
@@ -168,11 +170,12 @@ function fishBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  else if(l.weapon==='javelin')for(const y of [-12,-8,-4])line(b,[[-9,y],[-4,y-2]],'#b6b491',.65);
 }
 function beastLeg(b:Brush,x:number,front:boolean,near:boolean,c:string,p:CreatureDrawing,slender=false){
- const stride=p.walk*(front?1:-1)*(near?1:-1)*4;
- const knee:XY=[x+(front?2:-5)+stride*.5,slender?6:8];
- const foot:XY=[x+stride+(front?2:-2),18];
+ const phase=(front?1:-1)*(near?1:-1),stride=p.walk*phase*4;
+ const lift=Math.max(0,p.stepLift*phase)*(slender?3:4);
+ const knee:XY=[x+(front?2:-5)+stride*.5,(slender?6:8)-lift*.4];
+ const foot:XY=[x+stride+(front?2:-2),18-lift];
  flesh(b,[x,slender?-10:-2],knee,foot,slender?3.4:front?4:6,near?c:darker(c,.2));
- mass(b,[[foot[0]-2,15],[foot[0]+2,15],[foot[0]+5,18],[foot[0]-3,18]],slender?'#48483e':darker(c,.12));
+ mass(b,[[foot[0]-2,foot[1]-3],[foot[0]+2,foot[1]-3],[foot[0]+5,foot[1]],[foot[0]-3,foot[1]]],slender?'#48483e':darker(c,.12));
 }
 function houndBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color,moss=l.kind==='mossGnawer';
@@ -219,7 +222,7 @@ function stagBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
 }
 function turtleBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color;
- for(const side of [-1,1])flesh(b,[side*16,0],[side*24,4],[side*30+p.walk*2,13],6,darker(c,.18));
+ for(const side of [-1,1])flesh(b,[side*16,0],[side*24,4],[side*30+p.walk*side*2,13-Math.max(0,p.stepLift*side)*2],6,darker(c,.18));
  b.translate(0,p.bob);
  mass(b,[[-24,0],[-30,-11,-20,-26,-4,-27],[12,-29,27,-18,27,-4],[24,5,4,9,-16,5],[-24,4,-26,2,-24,0]],'#626d59');
  mass(b,[[-26,-2],[-22,-13,-12,-21,-1,-23],[11,-24,23,-14,24,-4],[16,-4,4,2,-9,3],[-17,3,-24,2,-26,-2]],'#7c8167');
@@ -234,15 +237,16 @@ function turtleBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  line(b,[[x+3,y+6],[x+14,y+4]],INK,.8);ellipse(b,x+6,y,.9,.8,'#c2b284');
  stroke(b,[[-24,2],[-33,5,-37,10,-42,12]],c,3);
  b.translate(0,-p.bob);
- for(const side of [-1,1]){const x=side*17,foot:XY=[side*31-p.walk*3,18];flesh(b,[x,0],[side*26,7],foot,7,c);for(const i of [-1,0,1])line(b,[[foot[0]+i*2,15],[foot[0]+i*3+3,18]],BONE,.85);}
+ for(const side of [-1,1]){const x=side*17,foot:XY=[side*31-p.walk*side*3,18-Math.max(0,-p.stepLift*side)*2];flesh(b,[x,0],[side*26,7],foot,7,c);for(const i of [-1,0,1])line(b,[[foot[0]+i*2,foot[1]-3],[foot[0]+i*3+3,foot[1]]],BONE,.85);}
  b.translate(0,p.bob);
 }
 function spiderBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color,queen=l.crown;
  for(const near of [false,true])for(let i=0;i<4;i++){
-  const step=p.walk*(i%2?1:-1)*(near?1:-1)*2;
+  const phase=(i%2?1:-1)*(near?1:-1),step=p.walk*phase*2;
+  const lift=Math.max(0,p.stepLift*phase)*2.3;
   const root:XY=[-8+i*5,-3+i],knee:XY=[[-34,-23,18,31][i]!+(near?0:5),[-14,-9,-7,-13][i]!+(near?0:-3)];
-  const tip:XY=[[-45,-31,27,46][i]!+(near?0:5)+step,near?18:14];
+  const tip:XY=[[-45,-31,27,46][i]!+(near?0:5)+step,(near?18:14)-lift];
   flesh(b,root,[(root[0]+knee[0])/2,(root[1]+knee[1])/2],knee,2.4,near?c:darker(c,.22));
   flesh(b,knee,[(knee[0]+tip[0])/2,(knee[1]+tip[1])/2],tip,1.5,near?c:darker(c,.22));
  }
@@ -296,7 +300,7 @@ function dragonBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  for(const [sx,sy] of [[-15,-16],[-5,-18],[7,-17],[18,-10],[p.headX-4,p.headY-3]])for(let i=0;i<3;i++)stroke(b,[[sx!+i*2,sy!],[sx!+i*2+1,sy!+2],[sx!+i*2+3,sy!+1]],darker(c,.24),.55);
  dragonWing(b,-1,-16,Math.max(0,p.strike)*6-p.walk*2,true);
  b.translate(0,-p.bob);beastLeg(b,-11,false,true,c,p);beastLeg(b,17,true,true,c,p);
- for(const x of [-13-p.walk*4,19+p.walk*4])for(const i of [-1,0,1])line(b,[[x+i*1.5,16],[x+i*2+3,18]],BONE,.7);
+ for(const side of [-1,1]){const x=side<0?-13-p.walk*4:19+p.walk*4,lift=Math.max(0,p.stepLift*side)*4;for(const i of [-1,0,1])line(b,[[x+i*1.5,16-lift],[x+i*2+3,18-lift]],BONE,.7);}
  b.translate(0,p.bob);
 }
 function spiritBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
