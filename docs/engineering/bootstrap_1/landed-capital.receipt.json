@@ -1,0 +1,69 @@
+{
+  "parent": "bbbf700cca20fc700b8717915be374dd799308ca",
+  "mode": "local solo replay from the same tick 33000 world and full AI memory, normal resources/rules and 15-tick think interval; composed with PR 321 b0b9519 runtime",
+  "sdk": {
+    "parentPassed": 0,
+    "parentFailed": 36,
+    "nextPassed": 36,
+    "nextFailed": 0
+  },
+  "ordinaryStates": 63,
+  "ordinaryCommands": 167,
+  "completeMemoryIdentical": true,
+  "parentObservation": {
+    "buildCommands": [
+      {
+        "tick": 36720,
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Economy",
+        "command": {
+          "type": "build",
+          "unitId": "unit-p0-worker-1",
+          "buildingKind": "townHall",
+          "x": 8208,
+          "y": 7120
+        }
+      }
+    ],
+    "finalTick": 39000,
+    "halls": 5,
+    "completeHalls": 5,
+    "workingMines": 3,
+    "targetOre": 5810,
+    "cumulativePermanentAndTemporaryLosses": 4
+  },
+  "nextObservation": {
+    "buildCommands": [
+      {
+        "tick": 35580,
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Economy",
+        "command": {
+          "type": "build",
+          "unitId": "unit-p0-worker-4414",
+          "buildingKind": "townHall",
+          "x": 8208,
+          "y": 7120
+        }
+      }
+    ],
+    "finalTick": 39000,
+    "halls": 5,
+    "completeHalls": 5,
+    "workingMines": 3,
+    "targetOre": 5420,
+    "cumulativePermanentAndTemporaryLosses": 4
+  },
+  "formalAllMapAcceptanceComplete": false,
+  "relatedSdkPassed": 406,
+  "buildPassed": true,
+  "rebasedValidation": {
+    "base": "1c62c6fa5e91e483ce4a6fa12cb107a07eac62d7",
+    "runtimeHead": "93e67381382c20919b6cd0e73206c9afbdcf9bb6",
+    "sdkPassed": 579,
+    "sdkFailed": 0,
+    "buildPassed": true
+  }
+}

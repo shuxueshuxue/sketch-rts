@@ -1,0 +1,92 @@
+{
+  "parent": "480980403ba1a1089e0b62beab661e5e14ff293f",
+  "cases": [
+    {
+      "name": "default dual AI",
+      "ticks": 1200,
+      "commands": 29,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "classifications": 3844,
+          "cabinChecks": 13398,
+          "shipChecks": 13398
+        },
+        "next": {
+          "classifications": 566,
+          "cabinChecks": 0,
+          "shipChecks": 0
+        }
+      }
+    },
+    {
+      "name": "battle",
+      "ticks": 300,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "classifications": 23085,
+          "cabinChecks": 19989,
+          "shipChecks": 19989
+        },
+        "next": {
+          "classifications": 14605,
+          "cabinChecks": 0,
+          "shipChecks": 0
+        }
+      }
+    },
+    {
+      "name": "island",
+      "ticks": 300,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "classifications": 42192,
+          "cabinChecks": 26197,
+          "shipChecks": 26197
+        },
+        "next": {
+          "classifications": 1541,
+          "cabinChecks": 26197,
+          "shipChecks": 26197
+        }
+      }
+    },
+    {
+      "name": "late actual default duel",
+      "ticks": 1200,
+      "commands": 0,
+      "commandsMemoriesAndEveryWorldIdentical": true,
+      "work": {
+        "parent": {
+          "classifications": 111065,
+          "cabinChecks": 55638,
+          "shipChecks": 55638
+        },
+        "next": {
+          "classifications": 45919,
+          "cabinChecks": 0,
+          "shipChecks": 0
+        }
+      }
+    }
+  ],
+  "mode": "Local SDK replays with full per-tick world and nextId equality; default replay also compares complete AI memory and commands. Work counts are not full-duel CPU timings.",
+  "priorExactHeadCi": {
+    "run": 38158605669,
+    "head": "480980403ba1a1089e0b62beab661e5e14ff293f",
+    "attempt": 1,
+    "conclusion": "failure",
+    "bareCpuMs": 14186.959,
+    "bareBudgetMs": 12000,
+    "ladderCpuMs": 17225.228,
+    "ladderBudgetMs": 16000
+  },
+  "formalAllMapAcceptanceComplete": false,
+  "relatedSdkPassed": 614,
+  "buildPassed": true,
+  "sourceBlob": "8ffa3ba04acc95b8393a7538001866f3f170e0c8"
+}
