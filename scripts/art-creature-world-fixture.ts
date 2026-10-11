@@ -19,7 +19,16 @@ export async function combatEffectsProof(){
  const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=860;document.body.append(canvas);
  const presentation=new WorldPresentation(canvas),animation=new UnitAnimationTracker();
  const frame:WorldFrame={ctx:canvas.getContext('2d')!,snapshot:snapshotGame(game),view:{x:330,y:260,width:1280,height:860,zoom:1.05},now:0,facing:new UnitFacingTracker(),animation,labels:{mercenaryStock:()=>'',unitKind:k=>k},viewer:'player'};
- const preparationStart=performance.now();await presentation.prepare(frame.snapshot,'home');const prepareMs=performance.now()-preparationStart;
+ // The asynchronous completion fence yields to the compositor. Preserve the
+ // proof buffer explicitly; the production default buffer may be cleared there.
+ const getContext=HTMLCanvasElement.prototype.getContext;
+ HTMLCanvasElement.prototype.getContext=function(type:string,options?:Record<string,unknown>){
+  return getContext.call(this,type,type==='webgl2'?{...options,preserveDrawingBuffer:true}:options);
+ } as typeof getContext;
+ const preparationStart=performance.now();
+ try{await presentation.prepare(frame.snapshot,'home');}finally{HTMLCanvasElement.prototype.getContext=getContext;}
+ const prepareMs=performance.now()-preparationStart;
+ if(!document.querySelector<HTMLCanvasElement>('.world-actors')!.getContext('webgl2')!.getContextAttributes()?.preserveDrawingBuffer)throw new Error('Proof capture requires a preserved GPU buffer');
  const rasterCounts=new Map<string,number>();
  const cards=(presentation as unknown as {layer:{cards:{raster:(request:{key:string;paint:(b:CanvasRenderingContext2D)=>void},...rest:unknown[])=>void}}}).layer.cards;
  const trace:string[]=[],sizes:Record<string,number>={};
@@ -45,6 +54,6 @@ export async function combatEffectsProof(){
  const glError=document.querySelector<HTMLCanvasElement>('.world-actors')?.getContext('webgl2')?.getError()??-1;
  const cardStats=(presentation as unknown as {layer:World3DLayer}).layer.cardStats();
  const distributions=Object.fromEntries((['simulationMs','renderSubmitMs','glFinishMs','gpuWaitMs','renderCompleteMs','frameMs'] as const).map(key=>{const values=timings.map(t=>t[key]).sort((a,b)=>a-b);return[key,{mean:values.reduce((a,b)=>a+b,0)/values.length,p50:values[Math.floor(values.length*.5)],p95:values[Math.floor(values.length*.95)],max:values.at(-1),over50ms:values.filter(v=>v>50).length}];}));
- presentation.dispose();canvas.remove();return{frames,kinds,rasterTrace:{requests:trace,sizes},rasterReuse:{unique:rasterCounts.size,total:[...rasterCounts.values()].reduce((a,b)=>a+b,0),repeated:[...rasterCounts.values()].filter(n=>n>1).length,max:Math.max(...rasterCounts.values())},prepareMs,timings,distributions,cardStats,measurement:'Same 80 frames at fixed viewport. Frame includes two simulation ticks, snapshot, renderer submission, gl.finish and an asynchronous fenceSync/clientWaitSync completion check; excludes capture, PNG encoding and rAF. Fence wait includes task scheduling. Software SwiftShader, not hardware GPU FPS.',actions:Object.fromEntries([...actions].map(([k,v])=>[k,[...v]])),glError,passed:glError===0,method:'21 catalog creatures, real attack commands against paired soldiers, 160 simulation ticks. Attack/idle/walk modes are observed, not forced. Cast coverage is reviewed separately in painter sheets.'};
+ presentation.dispose();canvas.remove();return{frames,kinds,rasterTrace:{requests:trace,sizes},rasterReuse:{unique:rasterCounts.size,total:[...rasterCounts.values()].reduce((a,b)=>a+b,0),repeated:[...rasterCounts.values()].filter(n=>n>1).length,max:Math.max(...rasterCounts.values())},prepareMs,timings,distributions,cardStats,capture:'GPU preserveDrawingBuffer=true explicitly; needed for capture after asynchronous completion.',measurement:'Same 80 frames at fixed viewport. Frame includes two simulation ticks, snapshot, renderer submission, gl.finish and an asynchronous fenceSync/clientWaitSync completion check; excludes capture, PNG encoding and rAF. Fence wait includes task scheduling. Software SwiftShader, not hardware GPU FPS.',actions:Object.fromEntries([...actions].map(([k,v])=>[k,[...v]])),glError,passed:glError===0,method:'21 catalog creatures, real attack commands against paired soldiers, 160 simulation ticks. Attack/idle/walk modes are observed, not forced. Cast coverage is reviewed separately in painter sheets.'};
 }
 Object.assign(window,{combatEffectsProof});

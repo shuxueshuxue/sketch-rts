@@ -15,7 +15,7 @@ The earlier creature reports named a `gl.finish()` measurement “renderComplete
 | Completed rendering | 375.645 / 322.3 / 665.7 / 1153.7 | 385.307 / 336.9 / 736.5 / 1195.8 |
 | Frame incl. simulation | 376.509 / 322.8 / 667.2 / 1161.9 | 386.131 / 338.2 / 737.5 / 1204.5 |
 
-All **80 PNG SHA256 values match** in `fenced-before.json` / `fenced-after.json`. CPU submission improved; completed frame time did not. Cold maximum submission also did not improve. PNG/video capture and RAF pacing are excluded; GPU fence waiting includes browser task scheduling.
+**Capture defect discovered during subsequent visual review:** the original `fenced-before/after` recordings captured after an asynchronous yield without preserving the WebGL buffer. Their 80 PNG hashes match, but the actor canvas was cleared. These recordings are invalid as unit visual evidence. Rendering timings still include the submitted work; corrected preserved-buffer pairs are reported below when available. The separate thousand-unit benchmark already explicitly preserves its buffer and is unaffected. CPU submission improved; completed frame time did not. Cold maximum submission also did not improve. PNG/video capture and RAF pacing are excluded; GPU fence waiting includes browser task scheduling.
 
 Frozen 1000-unit dynamic benchmark, three independent lifetimes, 4 warmups + 12 samples each (36 samples):
 
@@ -50,3 +50,16 @@ npm run build
 For baseline, use detached `da2ec82` and copy only the two current creature proof scripts (fence and SHA reporting) into that worktree. 18 files / 185 tests passed. Context loss/restore passed, zero pixel differences, same picking, no GL errors, cache released on loss. Dynamic lifetimes disposed all resources. Build includes TypeScript checking. JSON diagnostics retain rejected policies as evidence; redundant candidate media were removed.
 
 Remaining: no completed-frame improvement demonstrated on this software GPU; hardware GPU profiling is needed before a production performance claim. Library media delivery remains separately blocked by hosted-tool HTTP 401; no public upload was attempted.
+
+## Corrected preserved-buffer pair
+
+Both worktrees use the same proof-only `preserveDrawingBuffer=true` context so yielding to the compositor cannot erase the actor canvas. Production context options are unchanged. `preserved-before.json` is da2ec82 and `preserved-after.json` is b2f74b7 (before the separate gait change). All **80 full PNG hashes match**, now with visible units, weapons and shadows. The old invalid capture media were removed; their JSON timing records remain identified above. The 1000-unit fixture always preserved its buffer.
+
+| milliseconds | baseline mean / p50 / p95 / max | optimized mean / p50 / p95 / max |
+|---|---|---|
+| simulationMs | 0.80 / 0.70 / 1.50 / 6.80 | 0.97 / 0.60 / 1.50 / 16.00 |
+| renderSubmitMs | 53.16 / 40.60 / 111.30 / 246.30 | 37.37 / 24.80 / 103.40 / 255.60 |
+| renderCompleteMs | 383.23 / 330.80 / 688.30 / 1101.20 | 358.02 / 314.20 / 695.60 / 1031.80 |
+| frameMs | 384.03 / 331.60 / 689.00 / 1108.00 | 358.99 / 314.70 / 696.60 / 1047.80 |
+
+CPU submission improves; the completed-frame difference is small in this single 80-frame software-GPU pair, with a worse p95 but lower maximum in the optimized run. This is not evidence of a hardware FPS improvement. Use the corrected pair for current media and the completed 36-sample dynamic results for the large-scene result.
