@@ -241,7 +241,7 @@ def main():
     args.out.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
     args.out.with_suffix('.md').write_text(render_markdown(report))
     with args.out.with_suffix('.minutes.csv').open('w', newline='') as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(['minute', 'metric', 'n', 'median', 'min', 'max', 'range', 'olsPerMinute', 'first', 'last', 'endpointDelta', 'observedDecreases', 'missingSamples'])
         for minute in minutes:
             for metric, entry in minute['metrics'].items():

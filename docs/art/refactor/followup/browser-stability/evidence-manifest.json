@@ -21,15 +21,16 @@
     "docs/art/refactor/followup/browser-stability/source-before.json": "b4c8364651d9426d0bf70b4d4b14c0d78aadf8a48e916bfeeaba7b83701c5010",
     "docs/art/refactor/followup/browser-stability/sustained.analysis.json": "d53c15472c3f24c4da61fe68f0e2616d709ea46af33ad06cb9060cf539c50192",
     "docs/art/refactor/followup/browser-stability/sustained.analysis.md": "ef77996f10d597c0d702298898f3ef3ab79719d05496d09bbb202c4f60f79595",
-    "docs/art/refactor/followup/browser-stability/sustained.analysis.minutes.csv": "390f8f15207a39283d70a4ec59dfd8b5dccee13a2985f48db7c2825348955d75",
+    "docs/art/refactor/followup/browser-stability/sustained.analysis.minutes.csv": "7f3407d079b85a27611aab414163a8c6b051e8c605c68e7315b11551ea2f7432",
     "docs/art/refactor/followup/browser-stability/sustained.json": "f3fe22f2700ab19d21e2f7adcda67c9f38043e66df8979614d68e919fb250a01",
     "docs/art/refactor/followup/browser-stability/sustained.log": "d50b69fb6d3c4fce911afd29d2fc71ad47668f7c5c0ba9fd3e91293a7e96a7c9",
     "docs/art/refactor/followup/browser-stability/sustained.samples.jsonl": "e190e16267b9460c127a1ef19d79f5426f20ec08bc7b9cdda450e95997d8f11c",
     "scripts/art-reset-stability-analyze.py": "dbcacc523c08c4806a0f84506383667ffafeb4c3619a514bee27ca501f40efde",
     "scripts/art-reset-stability-fixture.ts": "3adef310d8c6b5d12ff954588ebfe4108b94f9862493cf4557acdfd4710b1847",
     "scripts/art-reset-stability-proof.mjs": "0a49d5867c36910fdacb8f745927535e904641d7826417410dfc305ece3c3d5c",
-    "scripts/art-stability-analyze.py": "b237d43a5c537c81e86383b161b85256275351518c285610aa2bdf23e50ca6e7",
+    "scripts/art-stability-analyze.py": "9e554b42931a5f9afcc5174c9e9a47f2ea015e579b3f082de75763529ee0664f",
     "scripts/art-stability-fixture.ts": "5a8769a44c0ff4d9f64147daa069f0dca2b13454d151d8766cba9c6b4590481d",
     "scripts/art-stability-proof.mjs": "5dc0029c244cd4750b767c6b5416636f09f7fa4ea74ce7ee0fcee1c52c59341d"
-  }
+  },
+  "postRunAnalysisChange": "Offline CSV output now uses LF to match Git storage; runtime sources and measurements unchanged."
 }
