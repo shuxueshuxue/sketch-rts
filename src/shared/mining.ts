@@ -1,4 +1,5 @@
-import { BUILDING_DEFS, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY } from "./catalog";
+import { roundGold } from "./gold";
+import { BUILDING_DEFS } from "./catalog";
 import { snapToFootprint } from "./terrain";
 import { isStaggered } from "./push";
 import { isStunned } from "./unit-abilities";
@@ -73,12 +74,15 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
   return { resources, nextWorker, townHalls };
 }
 
-const HIGH_UPKEEP_GOLD_RATE = 0.4;
-const LOW_UPKEEP_GOLD_RATE = 0.7;
+/** Equivalent fully staffed mines needed to retain the one-mine, 40-supply income.
+ * Interpolate mine demand, not income percentages: each extra mine supports 30 supply.
+ * Below 40 supply there is no tax or subsidy. Capacity remains building-driven and uncapped.
+ */
+export function miningIncomeRate(supplyUsed: number) {
+  return supplyUsed <= 40 ? 1 : 30 / (supplyUsed - 10);
+}
 
-/** Gold credited by one actual delivery, including the current population upkeep and integer rounding. */
+/** Settle each delivery at its current population, rounded to the nearest cent. */
 export function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
-  if (supplyUsed >= HIGH_UPKEEP_SUPPLY) return Math.floor(carriedGold * HIGH_UPKEEP_GOLD_RATE);
-  if (supplyUsed >= LOW_UPKEEP_SUPPLY) return Math.floor(carriedGold * LOW_UPKEEP_GOLD_RATE);
-  return carriedGold;
+  return roundGold(carriedGold * miningIncomeRate(supplyUsed));
 }

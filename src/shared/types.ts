@@ -383,6 +383,7 @@ export type PlayerState = {
   /** Assigned once per match; saved independently of alliance display mode. */
   color?: string;
   race: RaceId;
+  /** Gold units, settled to two decimal places; UI displays whole gold. */
   gold: number;
   supplyUsed: number;
   supplyCap: number;

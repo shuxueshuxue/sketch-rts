@@ -30,5 +30,7 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Test mining upkeep, cent settlement and presentation
+        run: npx vitest run src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
