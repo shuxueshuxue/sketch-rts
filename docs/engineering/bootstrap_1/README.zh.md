@@ -4,7 +4,7 @@
 
 ## 当前记录（2026-10-11）
 
-最新公共批次为 [#310 矿线反击](./expedition-counterraid-release.zh.md) 和 [#311 道路范围](./assault-road-distance-release.zh.md)，均完成精确提交的 CI、合并和首次生产部署，当前发布提交为 `28ef4beb42fc491e27bed6b6b14886e1228f6cc2`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这两批新增正式胜局为零。
+最新公共批次为 [#310 矿线反击](./expedition-counterraid-release.zh.md) 和 [#311 道路范围](./assault-road-distance-release.zh.md)，均完成精确提交的 CI、合并和首次生产部署，随后 [#312 道路营地归属](./camp-territory-roads-release.zh.md) 也完成精确 CI 与首次生产部署，当前发布提交为 `ead6c5338c2db4b9b67bcb3fba6498436f57c5b2`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这三批新增正式胜局为零。
 
 同一实际射手开局快照中，#310 保住更多工人并建立第二基地，但双方主力都全部阵亡；它是局部修复证据，不是胜率证明。无对手的完整 Grand Estuary 地形观察在 12000 tick 建出第三基地、19 名士兵和 16 名工人，零单位损失；去掉了敌方单位及建筑，因此也不是正式对阵证据。
 
