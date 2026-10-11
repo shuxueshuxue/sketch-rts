@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as mining from '../../shared/mining';
 
-afterEach(() => vi.restoreAllMocks());
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { UNIT_DEFS } from '../../shared/catalog';
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
+
+afterEach(() => vi.restoreAllMocks());
 
 describe('summon host support against artillery', () => {
   it.each((['grove', 'ember'] as const).flatMap(race => (['catapult', 'ballista'] as const)
