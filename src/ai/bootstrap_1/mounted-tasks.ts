@@ -48,6 +48,7 @@ function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, ha
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const available = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
+    && unit.id !== options.memory.shopping?.unitId
     && !['board', 'cast', 'charge'].includes(unit.order.type)
     && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
   const byId = new Map(available.map(unit => [unit.id, unit]));
