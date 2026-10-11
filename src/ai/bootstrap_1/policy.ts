@@ -64,7 +64,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     : version === 'v9_summoner' ? (grove ? 'summoner' : 'pyreCaller') : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = UNIT_DEFS[main].trainedAt!;
   const wants: V6Want[] = [
-    { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
+    { bases: 1 + Math.floor(army.length / 5), priority: 76 },
     { building: producer, count: 2, priority: 57 },
   ];
   if (version === 'v9_knight' && army.filter(unit => unit.kind === main).length >= 4) {
