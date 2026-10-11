@@ -138,6 +138,9 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     chooseMine: isV9Policy(options) ? v9ExpansionMine : nextExpansionMine,
     threatWithin: (unit, point, range) => distance(unit, point) <= range,
     respondingPower,
+    defenseTarget: (_snapshot, intel, options) => isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel),
+    towerWaiting: towerWait,
+    waitForTowers: (intel, defense, strength, line) => isV8Policy(options) && waitsForTowers(intel, defense, strength, line),
   });
 }
 
@@ -159,7 +162,12 @@ type ArmyPlan = {
   chooseMine: typeof nextExpansionMine;
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
   respondingPower: typeof respondingPower;
+  defenseTarget: (snapshot: GameSnapshot, intel: V6Intel, options: AiPolicyContext) => ArmyDefense | undefined;
+  towerWaiting: typeof towerWait;
+  waitForTowers: typeof waitsForTowers;
 };
+
+export type ArmyDefense = Omit<NonNullable<ReturnType<typeof defendTarget>>, 'leash'> & { leash: number | undefined };
 
 export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, plan: ArmyPlan): GameCommand[] {
   const { reinforcements, expansionBasis, pursue, recovery, gatherAssault, chooseCamp, startCamp, campTerritory, chooseMine, threatWithin, respondingPower: response } = plan;
@@ -183,7 +191,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   }
   const current = memory.general;
 
-  const defense = isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel);
+  const defense = plan.defenseTarget(snapshot, intel, options);
   if (defense && isV7Policy(options) && current?.mode === "attack") {
     const target = findBase(intel, current.targetHallId);
     const group = attackGroup(available, front, current.group ?? []);
@@ -200,7 +208,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     // V7's badly wounded step back to the hall behind the line (see v7-one-voice); the rest hold it.
     const wounded = isV7Policy(options) ? front.filter((unit) => unit.hp < unit.maxHp * V7_WOUNDED_SHARE && unit.expiresTick === undefined) : [];
     const line = front.filter((unit) => !wounded.includes(unit));
-    if (isV8Policy(options) && waitsForTowers(intel, defense, strength, line)) return towerWait(snapshot, owner, memory, line, defense, options);
+    if (plan.waitForTowers(intel, defense, strength, line)) return plan.towerWaiting(snapshot, owner, memory, line, defense, options);
     // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
     if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE && pursue(defense)) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...recovery(wounded, defense.hall)];
     if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...recovery(wounded, defense.hall)];
@@ -394,7 +402,7 @@ function defendTarget(intel: V6Intel) {
   const point = averagePoint(intrusion.attackers);
   const hall = intel.ownHalls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, point) < distance(best, point) ? candidate : best), undefined) ?? intel.home;
   const inCover = intrusion.attackers.some((unit) => distance(unit, hall) <= HALL_COVER || intel.ownTowers.some((tower) => distance(tower, unit) <= tower.attackRange + TOWER_COVER));
-  return { point, field: point, threat: intrusion.threat, inCover, cover: 0, edge: FIELD_EDGE, stay: FIELD_EDGE, guard: toward(hall, point, GUARD_STEP), leash: undefined, hall };
+  return { point, field: point, threat: intrusion.threat, inCover, cover: 0, waitingPoint: point, waitingCover: 0, edge: FIELD_EDGE, stay: FIELD_EDGE, guard: toward(hall, point, GUARD_STEP), leash: undefined, hall };
 }
 
 // @@@v7-defend - With a clear edge (FIELD_EDGE) V7 marches at the attackers' middle as V6 does and destroys them there:
@@ -427,7 +435,7 @@ function v7DefendTarget(intel: V6Intel, options: AiPolicyContext) {
   const hall = halls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, attackers) < distance(best, attackers) ? candidate : best), undefined) ?? intel.home;
   const towers = intel.ownTowers.filter((tower) => distance(tower, hall) <= tower.attackRange + TOWER_COVER);
   const main = distance(hall, intel.home) < 1;
-  return { point: toward(hall, attackers, V7_DEFEND_STEP), field: attackers, threat: intrusion.threat, inCover: main, cover: towers.length * TOWER_STRENGTH, edge: V7_DEFEND_EDGE, stay: V7_DEFEND_STAY, guard: toward(intel.home, attackers, V7_DEFEND_STEP), leash: V7_DEFEND_LEASH, hall };
+  return { point: toward(hall, attackers, V7_DEFEND_STEP), field: attackers, threat: intrusion.threat, inCover: main, cover: towers.length * TOWER_STRENGTH, waitingPoint: toward(hall, attackers, -V8_TOWER_WAIT_STEP), waitingCover: towers.length * TOWER_STRENGTH, edge: V7_DEFEND_EDGE, stay: V7_DEFEND_STAY, guard: toward(intel.home, attackers, V7_DEFEND_STEP), leash: V7_DEFEND_LEASH, hall };
 }
 
 // @@@v8-in-time - What can meet V8 at a far target is the enemy army nearer that target than V8's own is: the rest arrives
@@ -453,17 +461,17 @@ const V8_TOWER_WAIT_STEP = 400;
 const V8_TOWER_WAIT_SHARE = 0.5;
 const V8_SHOOTER_SHARE = 0.6;
 
-function waitsForTowers(intel: V6Intel, defense: { cover: number; threat: number }, strength: number, line: Unit[]): boolean {
+export function waitsForTowers(intel: V6Intel, defense: { waitingCover: number; threat: number }, strength: number, line: Unit[]): boolean {
   // Shooters can answer the raid from tower coverage; the rear waiting post is for a melee line.
   if (strengthOf(line.filter(unit => unit.attackRange > SHOOTER_REACH)) >= strengthOf(line) * V8_SHOOTER_SHARE) return false;
   const attackers = intel.intrusion?.attackers ?? [];
   const total = strengthOf(attackers);
   const shooters = strengthOf(attackers.filter((unit) => unit.attackRange > SHOOTER_REACH));
-  return total > 0 && shooters >= total * V8_SHOOTER_SHARE && defense.cover >= V8_TOWER_WAIT_TOWERS * TOWER_STRENGTH && defense.threat > strength * V8_TOWER_WAIT_SHARE;
+  return total > 0 && shooters >= total * V8_SHOOTER_SHARE && defense.waitingCover >= V8_TOWER_WAIT_TOWERS * TOWER_STRENGTH && defense.threat > strength * V8_TOWER_WAIT_SHARE;
 }
 
-function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, line: Unit[], defense: { hall: Point; field: Point }, options: AiPolicyContext): GameCommand[] {
-  const point = toward(defense.hall, defense.field, -V8_TOWER_WAIT_STEP);
+function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, line: Unit[], defense: ArmyDefense, options: AiPolicyContext): GameCommand[] {
+  const point = defense.waitingPoint;
   memory.general = { mode: "guard", target: { x: point.x, y: point.y } };
   const walking = line.filter((unit) => distance(unit, point) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
   return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : [];
