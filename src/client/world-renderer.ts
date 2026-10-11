@@ -534,7 +534,7 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
     else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
     const blood=painter.combatBody?.get(unit.id);
-    if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??painter.facing.facing(unit.id));
+    if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??facing);
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();
@@ -687,7 +687,7 @@ function drawCarriedGold(ctx: Brush, x: number, y: number) {
 }
 
 function drawItemGlyph(ctx: Brush, item: WorldItem, point: Point, _now: number, _carried: boolean) {
-  drawPaintedItem(ctx, item.kind, point, 30, true);
+  drawPaintedItem(ctx, item.kind, point, 30, true,item.weaponKind);
 }
 
 function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number, width = 34) {

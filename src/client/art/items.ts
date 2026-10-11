@@ -1,10 +1,13 @@
+import {equipmentForKind} from './rig';
+import {paintEquipmentAsset} from './equipment';
+import {sampleMotion} from './motion';
 /** The same material study is used in shops, inventories and world drops. */
-import type { ItemKind } from '../../shared/types';
+import type { ItemKind, UnitKind } from '../../shared/types';
 import { type Brush, type Point, polygon, ellipse, line } from './kit';
 
 import { ITEM_MATERIAL } from './materials';
 const {ink:INK,paper:PAPER,gold:GOLD,steel:STEEL,leather:LEATHER}=ITEM_MATERIAL;
-export function drawPaintedItem(b: Brush, kind: ItemKind, point: Point, size = 32, ground = false) {
+export function drawPaintedItem(b: Brush, kind: ItemKind, point: Point, size = 32, ground = false, weaponKind?:UnitKind) {
   b.save(); b.translate(point.x,point.y); b.scale(size/40,size/40);
   b.lineJoin='round'; b.lineCap='round';
   if (ground) ellipse(b,2,15,15,4,'#222a3040');
@@ -17,8 +20,16 @@ export function drawPaintedItem(b: Brush, kind: ItemKind, point: Point, size = 3
       plane([[-9,-16],[9,-16],[17,-6],[10,1],[10,16],[-10,16],[-10,1],[-17,-6]],LEATHER);edge([[-4,-14],[-4,14],[7,14]],GOLD);edge([[-11,-4],[11,-4]],'#c3aa84',2);break;
     case 'roundShield':
       ellipse(b,0,0,16,18,LEATHER,STEEL);ellipse(b,0,0,5,5,STEEL,INK);edge([[-13,-7],[13,-7]],GOLD);edge([[-14,7],[14,7]],GOLD);break;
-    case 'greatSword': case 'issuedWeapon':
-      plane([[-3,-19],[3,-19],[3,6],[0,10],[-3,6]],STEEL);edge([[-9,8],[9,8]],GOLD,3);edge([[0,9],[0,17]],LEATHER,4);ellipse(b,0,18,2,2,GOLD);break;
+    case 'greatSword': case 'issuedWeapon': {
+      // An issued weapon names its source unit in real inventory/drop records.
+      // The generic shop preview alone has no source and uses the sword study.
+      const weapon=kind==='greatSword'?'greatSword':weaponKind?equipmentForKind(weaponKind)??'sword':'sword';
+      const shaft=weapon==='pike'||weapon==='pitchfork';
+      b.save();b.scale(.72,.72);
+      if(shaft)b.translate(0,12);else if(['sword','greatSword','axe','pick','club'].includes(weapon))b.translate(0,12);else if(weapon==='sling')b.translate(0,-10);
+      paintEquipmentAsset(b,{}, {weapon,wrist:[0,0],angle:shaft?-Math.PI/2:0,impact:0,cast:0,motion:sampleMotion({mode:'idle',frame:0})});
+      b.restore();break;
+    }
     case 'speedBoots':
       for(const [dx,dy] of [[-8,-3],[5,4]]) {
         b.save(); b.translate(dx!,dy!);

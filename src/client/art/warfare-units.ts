@@ -1,7 +1,7 @@
 import type { UnitModel } from '../../story/cast';
 import { polygon, line, ellipse, type Brush } from './kit';
 import type { UnitKind } from '../../shared/types';
-import { IDLE_FRAME, type UnitAnimationFrame } from '../unit-animation';
+import { type UnitAnimationFrame } from '../unit-animation';
 import { sampleMotion } from './motion';
 const ink = '#252f34', wood = '#77634c', metal = '#7d9298', ivory = '#d9d0b6';
 function plate(b: Brush, p: number[][], color: string) { polygon(b, p, color, ink, .8); line(b, p.slice(0, 2), '#e3d4ad88', .7); }
@@ -108,8 +108,7 @@ function paintSiege(b: Brush, team: string, id: string, pose: UnitAnimationFrame
 }
 const shipPainters = new Map<string, UnitModel['paint']>();
 const isSiege = (id: string) => id === 'ram' || id === 'mortar' || id === 'ballista' || id === 'organ';
-export function warfarePainter(id: string): UnitModel['paint'] {
-  if(isSiege(id))return (b,team)=>paintSiege(b,team,id,IDLE_FRAME);
+function shipPainter(id: string): UnitModel['paint'] {
   let painter=shipPainters.get(id);
   if(!painter){painter=ship(id).paint;shipPainters.set(id,painter);}
   return painter;
@@ -121,6 +120,6 @@ export function paintWarfareUnit(b: Brush, kind: UnitKind, team: string, pose: U
     if (!id)
         return false;
     if(isSiege(id))paintSiege(b,team,id,pose);
-    else warfarePainter(id)(b,team);
+    else shipPainter(id)(b,team);
     return true;
 }

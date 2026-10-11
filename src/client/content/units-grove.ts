@@ -1,6 +1,5 @@
 import type { TrainableUnitKind } from "../../shared/types";
 import type { TrainedUnitCard } from "./cards";
-import { unitPainter } from "../art/painted-units";
 
 export const GROVE_UNITS = {
   footman: {
@@ -9,7 +8,6 @@ export const GROVE_UNITS = {
     command: { icon: "△", hotkey: "f" },
     glyph: { silhouette: "shield-triangle", marks: ["shieldBar", "shortSword", "scar"] },
     art: { tier: "basic", bearing: "foot", faction: "grove" },
-    paint: unitPainter("footman"),
   },
   archer: {
     name: { en: "Archer", zh: "弓箭手" },
@@ -17,7 +15,6 @@ export const GROVE_UNITS = {
     command: { icon: "⋉", hotkey: "a" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "satchel"] },
     art: { tier: "basic", bearing: "foot", faction: "grove" },
-    paint: unitPainter("archer"),
   },
   horseArcher: {
     name: { en: "Horse Archer", zh: "骑射手" },
@@ -25,7 +22,6 @@ export const GROVE_UNITS = {
     command: { icon: "⋉", hotkey: "h" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "reins"] },
     art: { tier: "advanced", bearing: "mounted", faction: "grove" },
-    paint: unitPainter("horseArcher"),
   },
   raider: {
     name: { en: "Raider", zh: "掠袭者" },
@@ -33,7 +29,6 @@ export const GROVE_UNITS = {
     command: { icon: "◇", hotkey: "r" },
     glyph: { silhouette: "raider-kite", marks: ["reins", "spur", "shortSword"] },
     art: { tier: "basic", bearing: "mounted", faction: "grove" },
-    paint: unitPainter("raider"),
   },
   lancer: {
     name: { en: "Lancer", zh: "长枪兵" },
@@ -41,7 +36,6 @@ export const GROVE_UNITS = {
     command: { icon: "↗", hotkey: "l" },
     glyph: { silhouette: "lancer-pennant", marks: ["longSpear", "flag", "shieldBar"] },
     art: { tier: "basic", bearing: "foot", faction: "grove" },
-    paint: unitPainter("lancer"),
   },
   knight: {
     name: { en: "Knight", zh: "骑士" },
@@ -49,7 +43,6 @@ export const GROVE_UNITS = {
     command: { icon: "♜", hotkey: "k" },
     glyph: { silhouette: "knight-helm", marks: ["visor", "towerShield", "shortSword"] },
     art: { tier: "elite", bearing: "mounted", faction: "grove" },
-    paint: unitPainter("knight"),
   },
   witch: {
     name: { en: "Witch", zh: "女巫" },
@@ -57,7 +50,6 @@ export const GROVE_UNITS = {
     command: { icon: "☾", hotkey: "c" },
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "spark"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },
-    paint: unitPainter("witch"),
   },
   golem: {
     name: { en: "Golem", zh: "魔像" },
@@ -65,6 +57,5 @@ export const GROVE_UNITS = {
     command: { icon: "▣", hotkey: "g" },
     glyph: { silhouette: "golem-block", marks: ["rune", "blockSeams", "scar"] },
     art: { tier: "elite", bearing: "construct", faction: "grove" },
-    paint: unitPainter("golem"),
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;

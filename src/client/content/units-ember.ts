@@ -1,6 +1,5 @@
 import type { TrainableUnitKind } from "../../shared/types";
 import type { TrainedUnitCard } from "./cards";
-import { unitPainter } from "../art/painted-units";
 
 export const EMBER_UNITS = {
   ashWarden: {
@@ -9,7 +8,6 @@ export const EMBER_UNITS = {
     command: { icon: "◭", hotkey: "g" },
     glyph: { silhouette: "shield-triangle", marks: ["shieldBar", "halo", "longSpear"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
-    paint: unitPainter("ashWarden"),
   },
 
   emberRavager: {
@@ -18,7 +16,6 @@ export const EMBER_UNITS = {
     command: { icon: "◆", hotkey: "v" },
     glyph: { silhouette: "ember-bruiser", marks: ["shortSword", "spark", "scar"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
-    paint: unitPainter("emberRavager"),
   },
   cinderRunner: {
     name: { en: "Cinder Runner", zh: "余火奔袭者" },
@@ -26,7 +23,6 @@ export const EMBER_UNITS = {
     command: { icon: "◇", hotkey: "r" },
     glyph: { silhouette: "cinder-skirmisher", marks: ["tail", "spark", "shortSword"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
-    paint: unitPainter("cinderRunner"),
   },
   sparkArcher: {
     name: { en: "Spark Archer", zh: "火花弓手" },
@@ -34,7 +30,6 @@ export const EMBER_UNITS = {
     command: { icon: "⋊", hotkey: "a" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "spark"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
-    paint: unitPainter("sparkArcher"),
   },
   ashHexer: {
     name: { en: "Ash Hexer", zh: "灰烬巫师" },
@@ -42,7 +37,6 @@ export const EMBER_UNITS = {
     command: { icon: "☾", hotkey: "x" },
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "rune"] },
     art: { tier: "advanced", bearing: "foot", faction: "ember" },
-    paint: unitPainter("ashHexer"),
   },
   ashChieftain: {
     name: { en: "Ash Chieftain", zh: "灰烬酋长" },
@@ -50,7 +44,6 @@ export const EMBER_UNITS = {
     command: { icon: "♛", hotkey: "h" },
     glyph: { silhouette: "ember-bruiser", marks: ["visor", "spark", "curseSlash"] },
     art: { tier: "elite", bearing: "foot", faction: "ember" },
-    paint: unitPainter("ashChieftain"),
   },
   cinderRevenant: {
     name: { en: "Cinder Revenant", zh: "余烬复生者" },
@@ -58,6 +51,5 @@ export const EMBER_UNITS = {
     command: { icon: "✺", hotkey: "n" },
     glyph: { silhouette: "ember-bruiser", marks: ["spark", "halo", "scar"] },
     art: { tier: "elite", bearing: "foot", faction: "ember" },
-    paint: unitPainter("cinderRevenant"),
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;

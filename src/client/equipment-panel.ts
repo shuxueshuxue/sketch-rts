@@ -211,7 +211,7 @@ export class EquipmentPanel {
         const art = document.createElement('canvas');
         art.width = art.height = 80;
         const ctx = art.getContext('2d')!;
-        drawPaintedItem(ctx, item.kind, { x: 40, y: 40 }, 58);
+        drawPaintedItem(ctx, item.kind, { x: 40, y: 40 }, 58,false,item.weaponKind);
         button.append(art);
         const name = document.createElement('span');
         name.textContent = this.name(item);
@@ -238,7 +238,7 @@ export class EquipmentPanel {
                 ghost.className = 'equipment-drag-ghost';
                 const canvas = document.createElement('canvas');
                 canvas.width = canvas.height = 80;
-                drawPaintedItem(canvas.getContext('2d')!, item.kind, { x: 40, y: 40 }, 58);
+                drawPaintedItem(canvas.getContext('2d')!, item.kind, { x: 40, y: 40 }, 58,false,item.weaponKind);
                 ghost.append(canvas);
                 document.body.append(ghost);
                 drag.ghost = ghost;
@@ -387,7 +387,7 @@ export class EquipmentPanel {
         const pageCount = Math.max(1, Math.ceil(total / capacity));
         this.holdPage = Math.min(this.holdPage, pageCount - 1);
         const key = JSON.stringify([narrow, short, holdRows, this.holdPage, this.activePane, modelArtRevision(), this.i18n().locale, this.unitId, this.shipId,
-            characters.map(unit => [unit.id,unit.cabin]), ship && shipPassengers(snapshot.units,ship).map(crew=>[crew.id,crew.owner,crew.cabin]), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
+            characters.map(unit => [unit.id,unit.cabin]), ship && shipPassengers(snapshot.units,ship).map(crew=>[crew.id,crew.owner,crew.cabin]), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.kind, item.weaponKind, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
         if (key === this.fingerprint || this.dragging || this.crewDrag) { this.updateValues(unit, ship); return; }
         this.fingerprint = key;
         this.root.dataset.pane = this.activePane;

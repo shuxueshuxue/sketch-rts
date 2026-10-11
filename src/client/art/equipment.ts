@@ -41,13 +41,29 @@ function sword(b:Brush,wrist:XY,angle:number,axe:boolean,great=false){
 /** Back and front passes use the same solved skeleton. Hands are painted at
  * sockets after the rigid tool, never positioned independently in an asset. */
 export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:FigureRig,cloth:string,layer:'back'|'front'='front'){
-  const {impact,cast,wrist}=rig,armor=!!f.armor;
+  const {wrist}=rig,armor=!!f.armor;
   if(layer==='back'&&rig.weapon==='bow'){
     poly(b,[[-11,-26],[-7,-27],[-4,-12],[-8,-11]],HIDE);
     for(const x of [-10,-8])line(b,[[x,-25],[x-2,-34]],'#c8bba0',.8);
   }
   if(layer===rig.primaryLayer){
     arm(b,rig.shoulder,rig.elbow,wrist,cloth,armor,layer==='front');
+    paintEquipmentAsset(b,f,rig);
+    hand(b,wrist);
+  }
+  // The nearer support arm remains in front of the breastplate even when an
+  // upward tool passes behind it. Its wrist is still the very same rigid socket.
+  if(layer==='front'){
+    arm(b,rig.supportShoulder,rig.supportElbow,rig.support,cloth,armor,true);
+    if(rig.shield)shield(b,rig.support[0],rig.support[1],team,!!f.elite,facing,rig.shieldStyle==='round');
+    else hand(b,rig.support);
+    if(rig.weapon==='pick')poly(b,[[-6,-9],[-1,-9],[-1,-3],[-7,-2]],HIDE);
+  }
+}
+
+/** One weapon geometry source for held equipment, inventory and dropped items. */
+export function paintEquipmentAsset(b:Brush,f:Pick<Figure,'mounted'|'ember'>,rig:Pick<FigureRig,'weapon'|'wrist'|'angle'|'impact'|'cast'|'motion'>){
+  const {wrist,impact,cast}=rig;
     if(rig.weapon==='bow'){
       const pull=.35*(1-rig.motion.recoil);
       b.save();b.translate(...wrist);b.rotate(rig.angle);
@@ -90,16 +106,6 @@ export function paintEquipment(b:Brush,f:Figure,team:string,facing:1|-1,rig:Figu
       if(impact<.7)paintRigidEquipment(b,'javelin',wrist,rig.angle);
     }else if(rig.weapon==='club')paintRigidEquipment(b,'club',wrist,rig.angle);
     else if(rig.weapon!=='none')sword(b,wrist,rig.angle,rig.weapon==='axe',rig.weapon==='greatSword');
-    hand(b,wrist);
-  }
-  // The nearer support arm remains in front of the breastplate even when an
-  // upward tool passes behind it. Its wrist is still the very same rigid socket.
-  if(layer==='front'){
-    arm(b,rig.supportShoulder,rig.supportElbow,rig.support,cloth,armor,true);
-    if(rig.shield)shield(b,rig.support[0],rig.support[1],team,!!f.elite,facing,rig.shieldStyle==='round');
-    else hand(b,rig.support);
-    if(rig.weapon==='pick')poly(b,[[-6,-9],[-1,-9],[-1,-3],[-7,-2]],HIDE);
-  }
 }
 
 /** Rigid tool assets accept sockets from any compatible anatomical rig. */

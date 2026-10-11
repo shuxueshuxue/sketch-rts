@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearCanvasArtCache } from "./atlas-art";
+import * as atlasArt from "./atlas-art";
 import { setScratchCanvasFactory } from "./art/scratch-canvas";
 import { UnitFacingTracker } from "./unit-facing";
+import { CombatPresentationTracker } from "./combat-presentation";
+import { UnitAnimationTracker } from "./unit-animation";
 import { UnitMotionSmoother } from "./unit-motion";
 import { RELATION_INK } from "./relations";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
@@ -235,6 +238,31 @@ describe("world renderer", () => {
     expect(facingLeft.facing.facing("south-footman")).toBe(-1);
     expect(spriteDraws(facingLeft.calls)).toHaveLength(2);
     expect(facingLeft.calls.filter((call) => call.name === "scale" && call.args[0] === -1 && call.args[1] === 1)).toHaveLength(1);
+  });
+
+  it('mirrors attached blood with the rendered recovery pose, not a new order facing behind it',()=>{
+    const drawUnit=vi.spyOn(atlasArt,'drawAtlasUnit');
+    const snapshot=duelSnapshot({northX:300,southX:400}),actor=snapshot.units.find(unit=>unit.id==='north-footman')!;
+    actor.order={type:'attack',targetId:'south-footman'};
+    snapshot.effects=[
+      {id:'held-release',type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:snapshot.tick,x:400,y:300,fromX:300,fromY:300,toX:400,toY:300,duration:16,remaining:16},
+      {id:'held-body-mark',type:'hit',unitId:actor.id,x:300,y:300,damage:40,targetHpAfter:60,targetMaxHp:180,targetKind:'footman',targetUnitClass:'nonMechanical',duration:14,remaining:14},
+    ];
+    const facing=new UnitFacingTracker(),animation=new UnitAnimationTracker(),combat=new CombatPresentationTracker();
+    drawWorld(frame(snapshot,{facing,animation,combat}));
+    snapshot.units.find(unit=>unit.id==='south-footman')!.x=200;snapshot.tick++;
+    for(const effect of snapshot.effects)effect.remaining--;
+    drawUnit.mockClear();
+    const rendered=frame(snapshot,{facing,animation,combat,now:1050});drawWorld(rendered);
+    expect(facing.facing(actor.id)).toBe(-1);expect(facing.releaseFacing(actor.id)).toBe(1);
+    const mark=combat.frame(1050).body.find(mark=>mark.unitId===actor.id)!;
+    expect(Math.abs(mark.localX)).toBeGreaterThan(.001);
+    const ellipse=rendered.calls.find(call=>call.name==='ellipse'&&call.args[2]===mark.radius*.65&&call.args[3]===mark.radius)!;
+    // Compare with the actual atlas anchor, including native hit shake.
+    const painted=drawUnit.mock.calls.find(call=>Math.abs(call[2].x-actor.x)<25)!;
+    expect(painted).toBeDefined();expect(painted[5]).toBe(1);
+    expect(ellipse).toBeDefined();expect(ellipse.args[0]).toBeCloseTo(painted[2].x+mark.localX);
+    drawUnit.mockRestore();
   });
 
   it("leaves out units outside the view", () => {

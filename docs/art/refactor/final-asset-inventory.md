@@ -20,15 +20,15 @@
 | 工程单位 | siegeRam、ballista、catapult、organGun | `warfare-units`、工程专用几何与既有物理发射位置 | 保留车架、炮身及武器交付方式；共享动作事件入口，原生硬点不被人形发射挂点覆盖 |
 | 默认尸体入口 | 55 目录覆盖 | `atlas-art.drawAtlasCorpse` → `corpses`；`corpseAppearanceFor` 消费死亡时装备及阵营事实 | 独立低矮折叠轮廓，非旋转活体贴图；缓存键包含角色、变体、阵营衣装及死亡装备；甲板遗体使用独立支撑变换与透明批次 |
 | 剧情角色与剧情遗骸 | Ashen March 23 个 authored 角色模型 | `campaigns/ashen-march/models` → `storyFigure/storyCreature`；模型附带 `remains` 与 release 回调 | 实际迁出重复身体绘制，保留角色专有冠饰、胡须、披巾、灯笼等细节；视觉体型、尺寸与遗骸依剧情模型，不误套模拟基类的身体 |
-| 规则建筑 | 14 | `building-models` 专用几何、`model-library` GLB、`model-portraits` | 保留建筑专用表达；清单、资源加载与头像资源共享，不套角色骨架 |
+| 规则建筑 | 14 | `building-models` 专用几何、`model-library` GLB、`model-portraits` | 保留建筑专用表达；清单、资源加载与头像资源共享，不套角色骨架；删除无人调用的 content card 建筑画师 |
 | 中立建筑/固定设施 | 11 site | `SITE_MODELS`：citadel、shop、camp、well、statue、beacon 与 5 种 fort | 类型和加载名单统一至 `model-manifest`，不复制字符串类型清单 |
-| 船体、帆与甲板 | 7 船型 | GLB Hull/OwnerFlag、`sail-rig`、`crew-pose`、`canvas-ships`；既有船载武器硬点 | 保留船体、旗帆及甲板高度专用表达；乘员使用自己的组合外观与姿态，不修改炮位、瞄准、维护费或命中规则 |
+| 船体、帆与甲板 | 7 船型 | GLB Hull/OwnerFlag、`sail-rig`、`crew-pose`、`canvas-ships`；既有船载武器硬点 | 保留船体、旗帆及甲板高度专用表达；手绘船卡仅用于目录及 GLB 肖像尚未就绪时，世界 Canvas 使用物理船体画法；乘员使用自己的组合外观与姿态，不修改炮位、瞄准、维护费或命中规则 |
 | GLB 资源 | 32＝7 船＋14 建筑＋11 site | `MATCH_MODEL_KEYS` → 解码、缓存、实例、释放 | 单一资源 manifest；没有以新体系名义删除仍需展示的模型 |
 | 船载武器 | 3 种装备 | `ship-equipment.mountedWeaponPose` 提供只读炮位；既有 GLB Gun 组件 | 保留舰炮、迫击炮、火焰投射器专用表达；不替换物理武器系统 |
 | 投射物 | 7 look，另有炮口 flash | `effect-presentation` 选择外观；`canvas-effects` / `world3d/flight-pose` 分别绘制；`projectile-origins` 锁定释放位置 | 巨型 effects 绘制职责已迁出；新解算挂点接通实际 Canvas/GPU 路径；颜色按单位表现及 owner race，不再依旧召唤师名称 |
 | 世界效果/命令反馈 | 原 39 个 `WorldEffect.type`，血迹使用已有 hit 的附加事实 | `effect-renderer` 管筛选、剔除和分派；`canvas-effects`、warfare/veteran 专用模块绘制 | 实际调用路径迁移；小型命令提示和语义状态强调保留专用图形，不为统一材质牺牲可读性 |
 | 血迹与特殊移动速度线 | 客户端有界效果记录，不新增单位类型或血迹纹理变体 | `combat-presentation` → Canvas `art/combat-effects` 或 WebGL `combat-ink` | 新增真实调用，命中事实驱动；血滴、附体痕迹、地面/甲板残留与速度线分层；机械单位排除，不能影响伤害或回放决策 |
-| 地形标记 | 21，其中 13 decor | atlas 缓存 → `environment.paintLandmark` | 树、林地、山脊、道路、沟壑、遗迹及 decor 实际迁出，绘制与缓存分责 |
+| 地形标记 | 21，其中 13 decor | atlas 入口 → `environment.paintLandmark` | 树、林地、山脊、道路、沟壑、遗迹及 decor 实际迁出，绘制与缓存分责 |
 | 金矿与阻挡物 | 1 矿模型；rocks/gate 2 类型及破损状态 | `environment.paintMine/paintObstacle` | 实际迁移；保留朝向、破损、阴影和遮挡高度 |
 | 底纸、地表、水面 | 连续地形数据 | `terrain-art` 分块、`terrain-materials`、`water-art` / WebGL water | 审查后保留既有专用系统；不是遗漏迁移，不强行作为骨架或角色贴图 |
 | 剧情道具 | 22 `CORE_SCENERY` 键 | `art/scenery` → story prop painter | 保留剧情插画及燃烧/破损状态，不误并入规则建筑目录 |

@@ -130,8 +130,3 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
   if(rig.primaryLayer==='front')presentation.detail?.(b,rig,'equipment');
   b.restore();return true;
 }
-
-/** Catalog cards and story selection use the same geometry as battlefield units. */
-export const unitPainter = (kind: UnitKind) => (b: Brush, team: string) => {
-  paintFigure(b, kind, team, { mode: 'idle', frame: 0 }, 1);
-};

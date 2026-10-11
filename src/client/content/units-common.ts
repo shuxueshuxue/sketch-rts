@@ -1,6 +1,5 @@
 import type { TrainableUnitKind } from "../../shared/types";
 import type { TrainedUnitCard } from "./cards";
-import { unitPainter } from "../art/painted-units";
 
 export const COMMON_UNITS = {
   priest: {
@@ -9,7 +8,6 @@ export const COMMON_UNITS = {
     command: { icon: "+", hotkey: "p" },
     glyph: { silhouette: "priest-medallion", marks: ["halo", "cross", "satchel"] },
     art: { tier: "advanced", bearing: "foot", faction: "common" },
-    paint: unitPainter("priest"),
   },
   summoner: {
     name: { en: "Summoner", zh: "召唤师" },
@@ -17,7 +15,6 @@ export const COMMON_UNITS = {
     command: { icon: "◎", hotkey: "u" },
     glyph: { silhouette: "summoner-ring", marks: ["outerRing", "innerSigil", "spark"] },
     art: { tier: "advanced", bearing: "foot", faction: "common" },
-    paint: unitPainter("summoner"),
   },
 
   worker: {
@@ -26,7 +23,6 @@ export const COMMON_UNITS = {
     command: { icon: "⌘", hotkey: "w" },
     glyph: { silhouette: "worker-apron", marks: ["pick", "satchel", "coinSlash"] },
     art: { tier: "civilian", bearing: "foot", faction: "grove" },
-    paint: unitPainter("worker"),
   },
   // Both races' ships (see @@@ships): a hull on the water, the owner's colour on the sail.
   transport: {
@@ -35,7 +31,6 @@ export const COMMON_UNITS = {
     command: { icon: "⛴", hotkey: "t" },
     glyph: { silhouette: "transport-hull", marks: ["mast", "cargo", "flag"] },
     art: { tier: "advanced", bearing: "vessel", faction: "grove" },
-    paint: unitPainter("transport"),
   },
   warship: {
     name: { en: "Warship", zh: "战船" },
@@ -43,6 +38,5 @@ export const COMMON_UNITS = {
     command: { icon: "⚔", hotkey: "w" },
     glyph: { silhouette: "warship-hull", marks: ["mast", "cannon", "flag"] },
     art: { tier: "elite", bearing: "vessel", faction: "grove" },
-    paint: unitPainter("warship"),
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;

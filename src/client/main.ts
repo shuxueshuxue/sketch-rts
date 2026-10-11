@@ -113,7 +113,7 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, Lo
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
-type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"] };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"]; weaponKind?:Unit["kind"] };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
@@ -691,12 +691,12 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   }
   const color=ownerInk(localPlayerId,snapshot??undefined);
   const appearance=portrait.type === "unit" ? appearanceForKind(portrait.kind,currentPlayerState()?.race) : {};
-  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}:${appearanceKey(appearance)}`,()=>{
+  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${portrait.type==='item'?portrait.weaponKind??'':''}:${color}:${appearanceKey(appearance)}`,()=>{
     const brush = requireCanvasContext(icon);
     const size=icon.clientWidth||icon.width;
     const center = { x: size/2, y: size/2 };
     if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color, appearance);
-    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8);
+    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8,false,portrait.weaponKind);
     else drawAtlasBuildingPortrait(brush, portrait.kind, size, color);
   });
 }
@@ -3223,8 +3223,8 @@ function renderItemDock() {
       const liveButton = button;
       button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
       button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
-      drawCommandPortrait(button, { type:"item", kind:item.kind });
     }
+    drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
     button.dataset.carrierId = carrier.id;
     const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
     button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
