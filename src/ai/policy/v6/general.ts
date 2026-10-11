@@ -139,6 +139,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     threatWithin: (unit, point, range) => distance(unit, point) <= range,
     respondingPower,
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls].some(hall => distance(hall, point) <= V7_HOME_REACH),
+    campOnOwnSide: onOwnSide,
     defenseTarget: (_snapshot, intel, options) => isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel),
     towerWaiting: towerWait,
     waitForTowers: (intel, defense, strength, line) => isV8Policy(options) && waitsForTowers(intel, defense, strength, line),
@@ -164,6 +165,7 @@ type ArmyPlan = {
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
   respondingPower: typeof respondingPower;
   withinHomeReach: (intel: V6Intel, point: Point) => boolean;
+  campOnOwnSide: typeof onOwnSide;
   defenseTarget: (snapshot: GameSnapshot, intel: V6Intel, options: AiPolicyContext) => ArmyDefense | undefined;
   towerWaiting: typeof towerWait;
   waitForTowers: typeof waitsForTowers;
@@ -301,7 +303,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   if (isV7Policy(options)) {
     const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
     const territory = campTerritory === 'ground' ? v7Uncontested : v7NearHome;
-    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, territory.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
+    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, territory.filter((candidate) => dominant || plan.campOnOwnSide(intel, candidate.center)), options);
     if (choice) {
       startCamp(snapshot, front, choice, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
