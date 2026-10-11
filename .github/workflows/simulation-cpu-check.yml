@@ -34,5 +34,8 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/summoner-composition.test.ts src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
       - name: Test empty-frame allocation and veteran transitions
         run: npx vitest run src/shared/sim/veteran-frame-gates.test.ts src/shared/veteran-integration.test.ts src/shared/veteran-runtime.test.ts src/shared/veteran-skills.test.ts src/shared/veteran-balance.test.ts src/shared/sim/veteran-command.test.ts src/shared/sim/command-frame-runtime.test.ts src/sdk/commands/frame.test.ts src/shared/sim/grounded-frame.test.ts src/shared/sim/grounded-combat-frame.test.ts src/shared/replay.test.ts src/shared/savegame.test.ts src/shared/sim/projectile-frame.test.ts src/shared/projectile-contact.test.ts src/shared/damage-integration.test.ts src/shared/sim/spatial-index.test.ts src/shared/sim/spatial-metadata-transfer.test.ts
+      - name: Test colony care, guardian coverage and completed ferry reuse
+        run: npx vitest run src/ai/bootstrap_1/colony-recovery.test.ts src/ai/bootstrap_1/guardian-local-force.test.ts src/ai/bootstrap_1/ferry-return-summons.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1

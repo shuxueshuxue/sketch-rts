@@ -536,11 +536,11 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
     if (mission.phase === "return") {
-        if (shipPassengers(snapshot.units,boat).length) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
-        // An empty ferry can be dispatched from its actual location. Returning
-        // to a stale departure coast wastes minutes and can jam a new convoy.
+        if (shipPassengers(snapshot.units,boat).some(unit => unit.expiresTick === undefined)) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
+        // A ferry without permanent crew can be dispatched from its actual location.
+        // Returning ephemeral summons to a stale coast must not delay the next crew.
         delete ferries[boat.id];
-        return [];
+        return boat.order.type === "idle" ? [] : [{ type: "stop", unitIds: [boat.id] }];
     }
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
