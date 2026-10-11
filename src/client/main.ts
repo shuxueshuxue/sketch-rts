@@ -32,7 +32,7 @@ import "./battle-hud.css";
 import "./game-chrome.css";
 import "./game-ui.css";
 import { BattleHudSelection, type HudIdentity, type HudStatus } from "./battle-hud";
-import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
+import { clearCanvasArtCache, drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -497,7 +497,7 @@ window.addEventListener('pagehide',event=>{
   // A cached page resumes with its existing scene and connections on Back.
   if(event.persisted||applicationClosed)return;
   applicationClosed=true;routeRequest++;roomSetupSession.cancel();cancelAnimationFrame(animationFrame);clearRoomWatch();disconnectActiveMatch();deploymentRuntime.close();
-  worldPresentation.dispose();soundboard.dispose();disposeResourcePanel();
+  worldPresentation.dispose();clearCanvasArtCache();soundboard.dispose();disposeResourcePanel();
   const usedModels=[...resources.entries.keys()].some(url=>url.includes('/art/world3d/'));
   resources.dispose();snapshot=undefined;keys.clear();
   // These modules are already loaded when models were used. Startup teardown

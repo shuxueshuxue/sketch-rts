@@ -4,7 +4,7 @@ import { appearanceKey } from "./art/unit-appearance";
 import type { FigurePresentation } from "./art/rig";
 import { paintMine } from "./art/environment";
 import { drawModelPortrait } from './model-portraits';
-import { drawFittedPortrait } from './art/portrait-fit';
+import { drawFittedPortrait, clearFittedPortraits } from './art/portrait-fit';
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
 import { unitMover } from "../shared/catalog";
 import { paintCorpse, corpseAppearanceKey, type CorpsePresentation } from "./art/corpses";
@@ -21,7 +21,7 @@ import { RasterCache } from "./art/raster-cache";
 
 const sprites = new RasterCache();
 export const canvasArtCacheStats = () => sprites.stats();
-export const clearCanvasArtCache = () => sprites.clear();
+export const clearCanvasArtCache = () => {sprites.clear();clearFittedPortraits();};
 
 function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false, tileSize=128) {
   const density = Math.max(2, Math.min(6, Math.ceil(scale * brushZoom(c) * 2)));

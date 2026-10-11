@@ -6,7 +6,8 @@ import { UNIT_CARDS } from "./content/units";
 import { unitGlyphScale } from "./glyphs";
 import { UNIT_ART, UNIT_ART_TIERS, type UnitArtTier } from "./unit-art";
 import { BUILDABLE_BUILDING_KINDS, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
-import type { BuildingKind, UnitKind } from "../shared/types";
+import { appearanceForKind } from "./art/unit-appearance";
+import type { BuildingKind, UnitKind, RaceId } from "../shared/types";
 
 const TIER_LABELS: Record<UnitArtTier, string> = { civilian: "平民", basic: "初级", advanced: "进阶", elite: "精英" };
 const TIER_NOTES: Record<UnitArtTier, string> = {
@@ -22,9 +23,9 @@ const CREEP_NOTES: Record<UnitArtTier, string> = {
   elite: "营地食物 3–5 · 大型野兽与首领",
 };
 
-const GROUPS: { title: string; kinds: readonly UnitKind[]; color: string; creep?: boolean; summon?: boolean }[] = [
-  { title: "林野族 · Grove Kin", color: "#387d72", kinds: RACE_DEFS.grove.trainableUnits },
-  { title: "余烬盟约 · Ember Pact", color: "#a85644", kinds: RACE_DEFS.ember.trainableUnits },
+const GROUPS: { title: string; kinds: readonly UnitKind[]; color: string; race?: RaceId; creep?: boolean; summon?: boolean }[] = [
+  { title: "林野族 · Grove Kin", color: "#387d72", race:"grove", kinds: RACE_DEFS.grove.trainableUnits },
+  { title: "余烬盟约 · Ember Pact", color: "#a85644", race:"ember", kinds: RACE_DEFS.ember.trainableUnits },
   { title: "雇佣兵 · Hired Swords", color: "#387d72", kinds: MERCENARY_UNIT_KINDS },
   { title: "召唤物 · Summoned", color: "#387d72", summon: true, kinds: ["spirit"] },
   { title: "中立生物 · Wildlings", color: "#704a33", creep: true, kinds: (Object.keys(UNIT_CARDS) as UnitKind[]).filter((kind) => UNIT_CARDS[kind].art.faction === "wild") },
@@ -59,10 +60,10 @@ function canvasCard(label: string, sub: string, stats: string, paint: (c: Canvas
   return card;
 }
 
-function unitCard(kind: UnitKind, color: string) {
+function unitCard(kind: UnitKind, color: string, race?:RaceId) {
   return canvasCard(unitName(kind), kind, unitStats(kind), (c, w, h) => {
     // Same scale rule as the battlefield, enlarged 1.25× for the sheet.
-    drawAtlasUnit(c, kind, { x: w / 2, y: h * 0.66 }, Math.min(1.75, unitGlyphScale(UNIT_DEFS[kind].radius) * 1.25), color);
+    drawAtlasUnit(c, kind, { x: w / 2, y: h * 0.66 }, Math.min(1.75, unitGlyphScale(UNIT_DEFS[kind].radius) * 1.25), color, 1, undefined, appearanceForKind(kind,race));
   });
 }
 
@@ -90,10 +91,10 @@ function render() {
       row.className = `sheet-row tier-${tier}`;
       const label = document.createElement("div");
       label.className = "sheet-tier";
-      label.innerHTML = group.summon ? "<b>召唤</b><span>召唤师与薪火召唤者的技能产物，限时存在</span>" : `<b>${TIER_LABELS[tier]}</b><span>${(group.creep ? CREEP_NOTES : TIER_NOTES)[tier]}</span>`;
+      label.innerHTML = group.summon ? "<b>召唤</b><span>两族召唤师的技能产物，限时存在</span>" : `<b>${TIER_LABELS[tier]}</b><span>${(group.creep ? CREEP_NOTES : TIER_NOTES)[tier]}</span>`;
       const cards = document.createElement("div");
       cards.className = "sheet-cards";
-      for (const kind of group.kinds.filter((k) => UNIT_ART[k].tier === tier)) cards.append(unitCard(kind, group.color));
+      for (const kind of group.kinds.filter((k) => UNIT_ART[k].tier === tier)) cards.append(unitCard(kind, group.color, group.race));
       row.append(label, cards);
       el.append(row);
     }
