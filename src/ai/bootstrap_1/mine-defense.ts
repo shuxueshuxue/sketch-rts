@@ -126,7 +126,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   const commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
-    chooseCamp: chooseBootstrapCamp,
+    chooseCamp: (...args) => chooseBootstrapCamp(intel.home, ...args),
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),

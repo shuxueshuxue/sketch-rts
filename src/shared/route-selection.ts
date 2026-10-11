@@ -1,5 +1,5 @@
 import type { Point } from './ship-geometry';
-import { groundSegmentAdvance, groundTravelCost, walkingDistance, type Mover } from './terrain';
+import { groundSegmentAdvance, groundTravelCost, segmentWalkable, walkingDistance, walkRoute, type Mover } from './terrain';
 import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
@@ -19,6 +19,13 @@ export function groundMoveForecast(map: Pick<GameMap, 'terrain'>, from: Point, g
 export function routeClearsDisks(points: readonly Point[], disks: readonly (Point & { radius: number })[]): boolean {
   return points.slice(1).every((point, index) => disks.every(disk =>
     pointSegmentDistanceSquared(disk, points[index]!, point) > disk.radius * disk.radius));
+}
+
+/** Terrain approach geometry uses a visible straight segment before terrain roads.
+ * Building detours, body clearance and flow-field corner smoothing remain movement work. */
+export function groundApproachRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): Point[] | undefined {
+  const ground = { ...map };
+  return segmentWalkable(ground, from, goal, 'land') ? [goal] : walkRoute(ground, from, goal);
 }
 
 /** Estimated terrain travel at a supplied speed; land includes ground pace costs.

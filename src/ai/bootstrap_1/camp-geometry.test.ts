@@ -32,7 +32,7 @@ it.each(cases)('$version avoids the $race road ambush hidden behind a safe strai
   const army = snapshot.units.filter(unit => unit.owner === 'us'), camps = neutralCamps(snapshot);
   const target = camps.find(camp => camp.creeps.some(unit => unit.id === 'target'))!;
   expect(chooseV7Camp(snapshot, army, camps, [target], options)).toBeDefined();
-  expect(chooseBootstrapCamp(snapshot, army, camps, [target], options)).toBeUndefined();
+  expect(chooseBootstrapCamp({ x: x(500), y: 500 }, snapshot, army, camps, [target], options)).toBeUndefined();
   let enteredAmbush = false;
   for (let tick = 0; tick < 1800; tick++) {
     if (tick % 15 === 0) {
@@ -64,7 +64,7 @@ it.each([false, true])('chooses the farther camp with the shorter actual staging
     index % 128 === wall && Math.floor(index / 128) < 40 ? 'T' : '.').join('') };
   const snapshot = snapshotGame(game), camps = neutralCamps(snapshot), front = snapshot.units.filter(unit => unit.owner === 'us');
   const options = bootstrapPolicyContext(snapshot, 'us', 'v9_archer', { memory, teams: game.teams });
-  const old = chooseV7Camp(snapshot, front, camps, camps, options)!, next = chooseBootstrapCamp(snapshot, front, camps, camps, options)!;
+  const old = chooseV7Camp(snapshot, front, camps, camps, options)!, next = chooseBootstrapCamp({ x: x(500), y: 500 }, snapshot, front, camps, camps, options)!;
   expect(old.camp.creeps[0]!.id).toBe('near');
   expect(next.camp.creeps[0]!.id).toBe('far');
   expect(walkingDistance(game.map, front[0]!, next.staging, 'land')).toBeLessThan(walkingDistance(game.map, front[0]!, old.staging, 'land')!);
