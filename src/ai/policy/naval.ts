@@ -31,6 +31,7 @@ import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import { mineClaimedByAlly } from './mine-claims';
+import { chooseNavalMine } from './naval-mines';
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
 import { engagementTargets } from "./engagements";
@@ -531,6 +532,16 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             return [];
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
     }
+    // A loaded colony expedition can take newly available income before it sails.
+    if (mission.purpose === 'settle' && mission.phase === 'loading' && island && mission.targetId !== island.mine.id) {
+        const landing = coastOnWater(snapshot, island.mine, boat);
+        if (landing) {
+            mission.targetId = island.mine.id;
+            mission.to = landing;
+            mission.sinceTick = snapshot.tick;
+            delete mission.progress;
+        }
+    }
     const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
     // A precise berth turn moves the hull while its center stays still. Measure
     // the bow's angular travel against the same distance gate as translation.
@@ -937,18 +948,21 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         if (!mine || mine.amount <= 0 || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
             known = undefined;
     }
-    if (!known || (!known.plan && snapshot.tick - known.tick >= PLAN_RETRY)) {
+    const sailing = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === 'settle' && mission.phase === 'sailing');
+    if (!known || (!sailing && snapshot.tick - known.tick >= PLAN_RETRY)) {
         // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
         const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
-        const plan = snapshot.resources
+        const candidates = snapshot.resources
             .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
                 && !mineClaimedByAlly(snapshot, owner, mine, options))
             .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
-            .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options, true)))
-            .sort((a, b) => {
-                const guard = (mine: ResourceNode) => snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, mine) < 400).reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0);
-                return guard(a.mine) * 500 + distance(a.mine, home) - guard(b.mine) * 500 - distance(b.mine, home);
-            })[0];
+            .flatMap(entry => {
+                if (!isWalkable(map, entry.landing.x, entry.landing.y, 'sea')) return [];
+                const shore = shoreSpot(snapshot, owner, entry.landing, options, true);
+                const departure = shore && coastOnWater(snapshot, shore, entry.landing);
+                return departure ? [{ ...entry, departure }] : [];
+            });
+        const plan = chooseNavalMine(snapshot, owner, candidates, options);
         known = { tick: snapshot.tick, ...(plan ? { plan: { mineId: plan.mine.id, landing: { x: plan.landing.x, y: plan.landing.y } } } : {}) };
         memory.island = known;
     }
