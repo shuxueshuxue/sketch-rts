@@ -1,3 +1,4 @@
+import { goldReadout } from "./hud-model";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
 import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
@@ -2920,7 +2921,7 @@ function updateHud() {
     if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
   }
   const player = currentPlayerState();
-  goldLabel.textContent = String(player?.gold ?? "?");
+  goldLabel.textContent = goldReadout(player?.gold);
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
   mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
   const focusedBuildings = focusedPlayerBuildings();
