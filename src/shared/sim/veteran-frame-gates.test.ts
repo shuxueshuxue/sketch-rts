@@ -21,23 +21,21 @@ function company(game: ReturnType<typeof scene>) {
 }
 
 describe("veteran projection across native and callback frames", () => {
-  it("keeps a fresh empty projection after a native birth, then reads a skill added before the next tick", () => {
+  it("leaves the empty projection unallocated after a native birth, then reads a skill added before the next tick", () => {
     const game = scene();
     const { leader, follower } = company(game);
     const hall = createBuilding("hall", "player", "townHall", 1600, 1600, true);
     game.buildings.push(hall); game.players.player.gold = 10000; game.players.player.supplyCap = 100;
     issuePlayerCommand(game, "player", { type: "train", buildingId: hall.id, unitKind: "worker" });
     hall.queue[0]!.remaining = 1;
-    const old = game.veteranFrame;
     stepGame(game);
     expect(game.units).toHaveLength(3);
     expect(game.units.find(unit => unit.kind === "worker")?.veteranSkill).toBeUndefined();
-    expect(game.veteranFrame?.size).toBe(0);
-    expect(game.veteranFrame).not.toBe(old);
+    expect(game.veteranFrame).toBeUndefined();
     const firstEmpty = game.veteranFrame;
     stepGame(game);
-    expect(game.veteranFrame?.size).toBe(0);
-    expect(game.veteranFrame).not.toBe(firstEmpty);
+    expect(game.veteranFrame).toBeUndefined();
+    expect(game.veteranFrame).toBe(firstEmpty);
     leader.level = 3; leader.veteranSkill = "veteranMarch";
     stepGame(game);
     expect(follower.speed).toBe(UNIT_DEFS.footman.speed * 1.25);
@@ -54,10 +52,25 @@ describe("veteran projection across native and callback frames", () => {
     const projected = game.veteranFrame;
     delete leader.veteranSkill;
     stepGame(game);
-    expect(game.veteranFrame?.size).toBe(0);
+    expect(game.veteranFrame).toBeUndefined();
     expect(game.veteranFrame).not.toBe(projected);
     expect(follower.speed).toBe(UNIT_DEFS.footman.speed);
     expect(follower.hp).toBe(.2);
+  });
+
+  it("leaves native naval projections unallocated, then observes a learned shore aura", () => {
+    const game = scene();
+    const { leader, follower } = company(game);
+    const ship = game.spawnUnit("player", "transport", 1600, 1600);
+    ship.order = { type: "hold", x: ship.x, y: ship.y };
+    stepGame(game);
+    expect(game.veteranFrame).toBeUndefined();
+    expect(game.veteranAutocastFrame).toBeUndefined();
+    leader.level = 3; leader.veteranSkill = "veteranMarch";
+    stepGame(game);
+    expect(game.veteranFrame?.get(follower.id)?.moveSpeedMultiplier).toBe(1.25);
+    expect(game.veteranAutocastFrame).toBeDefined();
+    expect(follower.speed).toBe(UNIT_DEFS.footman.speed * 1.25);
   });
 
   it("includes an aura assigned by a hit callback after the entry projection", () => {
@@ -126,7 +139,7 @@ describe("veteran projection across native and callback frames", () => {
     const game = scene();
     const { leader, follower } = company(game);
     stepGame(game);
-    expect(game.veteranFrame?.size).toBe(0);
+    expect(game.veteranFrame).toBeUndefined();
     leader.level = 3; leader.veteranSkill = "veteranMarch";
     const restored = scene();
     restoreSnapshotIntoGame(restored, snapshotGame(game), game.nextId);

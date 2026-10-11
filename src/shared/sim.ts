@@ -87,8 +87,8 @@ export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
   /** Derived at tick boundaries; never serialized or used as a source of permanent stats. */
-  veteranFrame?: Map<string, VeteranUnitModifiers>;
-  veteranAutocastFrame?: VeteranAutocastFrame;
+  veteranFrame?: Map<string, VeteranUnitModifiers> | undefined;
+  veteranAutocastFrame?: VeteranAutocastFrame | undefined;
   miningFrame?: MiningFrame;
   boardingHolds?: ReadonlySet<string>;
   deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number; profile?:DamageProfile }>;
@@ -216,7 +216,7 @@ function navalFrameFlags(game: Game): number {
     if (unit.deck || unit.cabin || unit.gangway || unit.sailing || isShipKind(unit.kind)
       || order.type === "board" || order.type === "boardShip" || order.type === "unload" || order.type === "enterCabin"
       || order.type === "move" && (order.rendezvousFor || order.deckPoint || order.deckShipId)
-      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags = NAVAL_FRAME;
+      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags |= NAVAL_FRAME;
   }
   // Preserve the existing vessel view even after direct equal-length array
   // replacement. This shortcut must not change that public mutation behavior.
@@ -828,7 +828,7 @@ export function stepGame(game: Game) {
     defenses = new Map();
   }
   const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
-  const ferry = updateUnits(game,defenses,navalFrame);
+  const ferry = updateUnits(game,defenses,navalFrame,emptyVeteranFrame);
   // Summons act next tick, but their bodies participate in this tick's tail.
   // A queued boarding/unload order can also activate during the unit pass.
   if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && (navalFrameFlags(game) & NAVAL_FRAME))) navalFrame = true;
@@ -1207,11 +1207,11 @@ function refreshVeteranFrameAfterCommandSpawn(game: Game) {
 }
 function refreshVeteranFrame(game: Game, empty = false) {
   const previous = game.veteranFrame;
-  game.veteranFrame = empty ? new Map() : buildVeteranFrame(game, veteranNearby(game));
+  game.veteranFrame = empty ? undefined : buildVeteranFrame(game, veteranNearby(game));
   // No current or departed projection can change any unit's derived stats.
-  if (!previous?.size && game.veteranFrame.size === 0) return;
+  if (!previous?.size && !game.veteranFrame?.size) return;
   for (const unit of game.units) {
-    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
+    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame?.has(unit.id))) {
       const hp = unit.hp;
       applyDerivedUnitStats(game, unit);
       // Aura projection changes derived combat stats, never health (including fractions below one).
@@ -1362,8 +1362,8 @@ function updateResources(game: Game) {
 // ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
-function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean): Ferry | undefined {
-  game.veteranAutocastFrame = {};
+function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean, emptyVeteranFrame: boolean): Ferry | undefined {
+  game.veteranAutocastFrame = emptyVeteranFrame ? undefined : {};
   const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
   const vessels=navalFrame ? shipsIn(game.units) : undefined;
@@ -2970,16 +2970,20 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
 
 function updateProjectiles(game: Game) {
   if (game.projectiles.length === 0) return;
-  const pending: Projectile[] = [];
-  for (const projectile of game.projectiles) {
+  const projectiles = game.projectiles;
+  let pending: Projectile[] | undefined;
+  for (let index = 0; index < projectiles.length; index++) {
+    const projectile = projectiles[index]!;
     projectile.remaining -= 1;
     if (projectile.remaining > 0) {
-      pending.push(projectile);
+      pending?.push(projectile);
       continue;
     }
+    pending ??= projectiles.slice(0, index);
     applyProjectileImpact(game, projectile);
   }
-  game.projectiles = pending;
+  // Until the first impact, both membership and target indexes remain current.
+  if (pending) game.projectiles = pending;
 }
 
 function applyProjectileImpact(game: Game, projectile: Projectile) {
@@ -4275,6 +4279,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
     }
     // Buckets hold live entity references. Within a cell, narrow-phase range
     // checks still read current coordinates; membership and visit order match.
@@ -4331,6 +4336,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
     }
     // Internal indexes retain live bodies. Team membership and visit order
     // must match independently of coordinate-key aliases and mutable owners.

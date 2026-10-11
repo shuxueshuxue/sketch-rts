@@ -45,10 +45,10 @@ describe("veteran progression in the shared simulation", () => {
     follower.hp = .2;
     stepGame(game);
     const firstEmpty = game.veteranFrame;
-    expect(firstEmpty?.size).toBe(0);
+    expect(firstEmpty).toBeUndefined();
     stepGame(game);
-    expect(game.veteranFrame?.size).toBe(0);
-    expect(game.veteranFrame).not.toBe(firstEmpty);
+    expect(game.veteranFrame).toBeUndefined();
+    expect(game.veteranFrame).toBe(firstEmpty);
     expect([follower.hp, follower.speed, follower.maxHp]).toEqual([.2, UNIT_DEFS.footman.speed, UNIT_DEFS.footman.hp]);
 
     const leader = game.spawnUnit("player", "raider", 800, 800);
