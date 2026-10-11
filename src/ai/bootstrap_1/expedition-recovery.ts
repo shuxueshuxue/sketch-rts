@@ -1,18 +1,22 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
-import { nearestByRoute, routeArrivals } from '../../shared/route-selection';
+import { nearestByRoute } from '../../shared/route-selection';
 import { sameGround } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import { planNavalTacticsWithCrewOrder } from '../policy/naval';
+import { planNavalTacticsWithAssignments } from '../policy/naval';
+import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { isEnemyOwner } from '../policy/ownership';
+import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { planMedicalRecovery } from './medical-recovery';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 import { planSettlerBoarding } from './ferry-preparation';
+import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
+import { transportRecovery } from './transport-recovery';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -41,8 +45,14 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const commands = planNavalTacticsWithCrewOrder(snapshot, owner, options,
-    (soldiers, shore) => routeArrivals(snapshot.map, soldiers, shore, 'land').map(({ unit }) => unit));
+  planRiderCrossing(snapshot, owner, options);
+  const mines = mountedMinePlan(snapshot, options.memory);
+  const ports = transportRecovery(snapshot, owner, options);
+  const commands = planNavalTacticsWithAssignments(snapshot, owner, options, {
+    orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
+    mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
+    transportReady: boat => !shipNeedsRepair(snapshot, boat),
+  });
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
   const { recovering, foes } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
@@ -57,11 +67,11 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
   });
-  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...medics]);
+  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   return [...commands.flatMap((command): GameCommand[] => {
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];
     const unitIds = command.unitIds.filter(id => !reserved.has(id));
     return unitIds.length ? [{ ...command, unitIds }] : [];
-  }), ...retreat, ...healing];
+  }), ...retreat, ...healing, ...ports.commands];
 }

@@ -2,7 +2,8 @@ import { missingMiningWorkers } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
-import { colonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
@@ -102,7 +103,8 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 };
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap, colonyNavalWant, prepareMiningCover,
+  const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
+    (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options));
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));

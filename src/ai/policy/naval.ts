@@ -113,13 +113,16 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
 // funds; unrelated purchases preserve the colony budget.
 export const navalReservePurchase = (id: string) => ["naval:islandHall", "naval:transport", "naval:shipyard", "naval:population"].includes(id);
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
-    return planNavalWant(snapshot, owner, options, "all");
+    return planNavalWant(snapshot, owner, options, "all", () => true);
 }
 /** Land expansion belongs to the land economy; the fleet expands its established overseas colonies. */
 export function colonyNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
-    return planNavalWant(snapshot, owner, options, "colonies");
+    return planNavalWant(snapshot, owner, options, "colonies", () => true);
 }
-function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies"): NavalWant | undefined {
+export function colonyNavalWantWithMineEligibility(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
+    return planNavalWant(snapshot, owner, options, "colonies", eligible);
+}
+function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies", eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
     const outfit = outfitting(snapshot, owner, options);
     if (outfit && !outfit.itemId && playerState(snapshot, owner).gold >= SHIP_WEAPONS[outfit.kind].cost + navalBudgetReserve(snapshot, owner, options) + OUTFIT_RESERVE) {
         const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
@@ -134,7 +137,7 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
         return undefined;
-    const plan = islandPlan(snapshot, owner, options);
+    const plan = islandPlan(snapshot, owner, options, eligible);
     const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
     if (!water)
         return undefined;
@@ -315,15 +318,24 @@ export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, option
 }
 /** Fleet combat and ferry ownership are independent of the map generator. */
 export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-    return planNavalTacticsWithCrewOrder(snapshot, owner, options,
-        (soldiers, _shore, boat) => soldiers.sort((a, b) => distance(a, boat) - distance(b, boat)));
+    return planNavalTacticsWithAssignments(snapshot, owner, options, {
+        orderCrew: (soldiers, _shore, boat) => soldiers.sort((a, b) => distance(a, boat) - distance(b, boat)),
+        mineEligible: () => true, targetAvailable: () => true, transportReady: () => true,
+    });
 }
 
 type FerryCrewOrder = (soldiers: Unit[], shore: Point, boat: Unit) => Unit[];
+type NavalAssignments = {
+    orderCrew: FerryCrewOrder;
+    mineEligible: (mine: ResourceNode) => boolean;
+    targetAvailable: (target: Unit | Building) => boolean;
+    transportReady: (boat: Unit) => boolean;
+};
 
-export function planNavalTacticsWithCrewOrder(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, orderCrew: FerryCrewOrder): GameCommand[] {
+export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assignments: NavalAssignments): GameCommand[] {
+    const { orderCrew, mineEligible: eligible, targetAvailable, transportReady } = assignments;
     const own = units(snapshot, owner);
-    const plan = islandPlan(snapshot, owner, options);
+    const plan = islandPlan(snapshot, owner, options, eligible);
     const assault = assaultPlan(snapshot, owner, options);
     const outfit = outfitting(snapshot, owner, options);
     const services=navalServices(snapshot,owner,options);
@@ -334,7 +346,8 @@ export function planNavalTacticsWithCrewOrder(snapshot: GameSnapshot, owner: Pla
     // A mainland army with no fighters or expedition never uses that list.
     let combatFoes: Array<Unit | Building> | undefined;
     const foesForCombat = () => combatFoes ??= [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
-    const convoy = own.filter(unit => ferryCapacity(unit) > 0 && shipPassengers(snapshot.units,unit).length);
+    const convoy = own.filter(unit => ferryCapacity(unit) > 0 && shipPassengers(snapshot.units,unit).length
+        && navalMemory(options).ferries?.[unit.id]?.purpose !== 'creep');
     const fighters=own.filter(unit=>combatHull(unit)&&combatCapability(snapshot,unit).armed&&!services.reserved.has(unit.id)&&unit.id!==outfit?.shipId&&!navalMemory(options).ferries?.[unit.id]);
     for (const id of Object.keys(navalMemory(options).combat ?? {})) if (!fighters.some(ship => ship.id === id)) delete navalMemory(options).combat![id];
     const escortShips = fighters.filter(unit => unit.kind !== "bombardShip");
@@ -379,7 +392,7 @@ export function planNavalTacticsWithCrewOrder(snapshot: GameSnapshot, owner: Pla
             continue;
         }
         // Ordinary guns avoid tower coverage; bombard vessels counter the coast from outside it.
-        const targets = local.filter(target => ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options)))
+        const targets = local.filter(target => targetAvailable(target) && (ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options))))
             .sort((a, b) => (ship.kind === "bombardShip" ? Number("order" in a) - Number("order" in b) : Number(!("order" in a)) - Number(!("order" in b))) || distance(a, ship) - distance(b, ship));
         const boat = escorts.get(ship.id);
         const mission = boat ? navalMemory(options).ferries?.[boat.id] : undefined;
@@ -435,16 +448,16 @@ export function planNavalTacticsWithCrewOrder(snapshot: GameSnapshot, owner: Pla
             const defense = localFoes.filter(target => distance(target,point)<400).reduce((n,target)=>n+("order" in target ? effectiveCombatRating(snapshot,target) : target.attackDamage>0 ? TOWER_STRENGTH : 0),0);
             return power >= defense * 1.35;
         };
-        const mine = snapshot.resources.filter(mine => mine.amount>0 && sameGround(snapshot.map,anchor,mine)
+        const mine = snapshot.resources.filter(mine => mine.amount>0 && eligible(mine) && sameGround(snapshot.map,anchor,mine)
             && !buildings(snapshot,owner).some(hall=>hall.kind==="townHall" && distance(hall,mine)<GOLD_MINE_RULES.baseRange)
             && localFoes.some(target=>distance(target,mine)<400) && canFight(mine)).sort((a,b)=>distance(center,a)-distance(center,b))[0];
-        const target = mine ?? localFoes.filter(target => canFight(target)).sort((a,b)=>distance(center,a)-distance(center,b))[0];
+        const target = mine ?? localFoes.filter(target => targetAvailable(target) && canFight(target)).sort((a,b)=>distance(center,a)-distance(center,b))[0];
         if (!target) continue;
         const ready = troops.filter(unit=>unit.order.type!=="cast" && unit.order.type!=="attack" && (unit.order.type!=="attackMove" || distance(unit.order,target)>80));
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -471,7 +484,7 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
     }
     return claimed;
 }
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -481,6 +494,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         return [];
     if ((memory.ferryRetryUntil?.[boat.id] ?? 0) > snapshot.tick) return [];
     if (!mission) {
+        if (!ready(boat)) return [];
         const evacuation = evacuationRoute(snapshot, owner, options, boat, halls);
         const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
             && own.filter(unit => !unit.deck && unit.order.type === 'mine' && unit.order.resourceId === mine.id).length < GOLD_MINE_RULES.workstations);
@@ -733,7 +747,7 @@ function needsMove(unit: Unit, point: Point) {
     return unit.order.type !== "move" || distance(unit.order, point) > 80;
 }
 /** A nearby pond is not necessarily the sea the ferry is on. */
-function coastOnWater(snapshot: GameSnapshot, ground: Point, water: Point): Point | undefined {
+export function coastOnWater(snapshot: GameSnapshot, ground: Point, water: Point): Point | undefined {
     const map = snapshot.map;
     const nearest = walkableGoal(map, ground.x, ground.y, "sea");
     if (sameGround(map, nearest, water, "sea"))
@@ -889,7 +903,7 @@ function navalMemory(options: AiPolicyContext) {
 }
 // The nearest mine with gold left that the owner's workers cannot walk to but a ship from its own shore can reach, with
 // the water a ship lands at.
-function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): IslandPlan | undefined {
+function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): IslandPlan | undefined {
     const map = snapshot.map;
     if (!map.terrain || groundWholes(map) <= 1)
         return undefined;
@@ -910,14 +924,14 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (known?.plan) {
         const mine = snapshot.resources.find(mine => mine.id === known!.plan!.mineId);
-        if (!mine || mine.amount <= 0 || heldByUs(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
+        if (!mine || mine.amount <= 0 || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
             known = undefined;
     }
     if (!known || (!known.plan && snapshot.tick - known.tick >= PLAN_RETRY)) {
         // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
         const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
         const plan = snapshot.resources
-            .filter((mine) => mine.amount > 0 && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
+            .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
                 && !mineClaimedByAlly(snapshot, owner, mine, options))
             .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
             .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options, true)))
