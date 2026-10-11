@@ -17,6 +17,7 @@ import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro'
 import { planSettlerBoarding } from './ferry-preparation';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportRecovery } from './transport-recovery';
+import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
 
 function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
   return foes.filter(foe => sameGround(snapshot.map, patient, foe)
@@ -35,9 +36,11 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
   const landed = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land'
     && unit.kind !== 'worker' && unit.order.type !== 'board' && home && !sameGround(snapshot.map, unit, home));
   const healers = landed.filter(unit => UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal'));
+  const posts = postRecoveryAssignments(snapshot, owner, options).filter(({ patient }) => landed.includes(patient));
+  const resting = new Set(posts.map(({ patient }) => patient.id));
   const foes = landed.length ? [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
     && isEnemyOwner(snapshot, owner, foe.owner, options)) : [];
-  const unmedicated = landed.filter(unit => unit.expiresTick === undefined && unit.hp < unit.maxHp
+  const unmedicated = landed.filter(unit => !resting.has(unit.id) && unit.expiresTick === undefined && unit.hp < unit.maxHp
     && (!canReceiveHealing(unit, snapshot) || nearestByRoute(snapshot.map, healers, unit, 'land') === undefined)).flatMap(patient => {
     const threats = patientThreats(snapshot, patient, foes);
     if (!threats.length) return [];
@@ -55,7 +58,7 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
     return patient.hp < patient.maxHp * V7_WOUNDED_SHARE || patient.hp <= incomingDamage(patient, threats, window)
       || patient.order.type === 'move' && patient.order.avoidCombat ? [{ patient, threats, cover }] : [];
   });
-  const recovering = landed.filter(unit => unit.expiresTick === undefined && unit.hp < unit.maxHp
+  const recovering = landed.filter(unit => !resting.has(unit.id) && unit.expiresTick === undefined && unit.hp < unit.maxHp
     && canReceiveHealing(unit, snapshot)).flatMap(patient => {
     const healer = nearestByRoute(snapshot.map, healers, patient, 'land');
     if (!healer) return [];
@@ -63,12 +66,13 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
     const window = Math.max(THINK_TICKS, abilityCooldown(healer, ability));
     return patient.hp < patient.maxHp * V7_WOUNDED_SHARE || patient.hp <= incomingDamage(patient, foes, window) ? [{ patient, healer }] : [];
   });
-  return { recovering, unmedicated, foes };
+  return { recovering, unmedicated, foes, posts };
 }
 
 export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const { recovering, unmedicated } = recoveryAssignments(snapshot, owner, options);
-  return new Set([...recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]), ...unmedicated.map(({ patient }) => patient.id)]);
+  const { recovering, unmedicated, posts } = recoveryAssignments(snapshot, owner, options);
+  return new Set([...recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]), ...unmedicated.map(({ patient }) => patient.id),
+    ...posts.map(({ patient }) => patient.id)]);
 }
 
 /** An expedition's naval ownership also owns its land recovery orders. */
@@ -76,9 +80,10 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   planRiderCrossing(snapshot, owner, options);
   const mines = mountedMinePlan(snapshot, options.memory);
   const ports = transportRecovery(snapshot, owner, options);
-  const { recovering, unmedicated, foes } = recoveryAssignments(snapshot, owner, options);
+  const { recovering, unmedicated, foes, posts } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
-  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
+  const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
+    ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   const commands = planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
@@ -101,6 +106,6 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     if (!('unitIds' in command)) return [command];
     const unitIds = command.unitIds.filter(id => !reserved.has(id));
     return unitIds.length ? [{ ...command, unitIds }] : [];
-  }), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
+  }), ...postRecoveryCommands(posts), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
     ({ type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true })), ...healing, ...ports.commands];
 }
