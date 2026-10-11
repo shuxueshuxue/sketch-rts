@@ -202,6 +202,28 @@ describe('deck blood surface and crowded persistence',()=>{
     ship.hp=0;game.tick=42;tracker.update(game,2100);expect(tracker.frame(2100).ground).toHaveLength(0);
   });
 
+  it('keeps a disembarked survivor body mark after the original hull disappears, then expires it normally',()=>{
+    const {game,attacker,target}=scene();
+    const ship=game.spawnUnit('enemy','transport',1000,1000);
+    target.x=ship.x;target.y=ship.y;target.deck={shipId:ship.id,x:0,y:0};target.hp=20;
+    strikeUnit(game,attacker,target,9,'spell');
+    const tracker=new CombatPresentationTracker();tracker.update(game,0);
+    expect(tracker.frame(0).body).toHaveLength(1);
+    game.tick=40;game.effects=[];tracker.update(game,2000);
+    expect(tracker.frame(2000).ground.length).toBeGreaterThan(0);
+    // Snapshot facts after leaving the deck and the original ship's removal.
+    delete target.deck;target.x=1200;target.y=1100;
+    game.units=game.units.filter(unit=>unit.id!==ship.id);game.tick=41;tracker.update(game,2050);
+    const after=tracker.frame(2050);
+    expect(after.ground).toHaveLength(0);expect(after.droplets).toHaveLength(0);
+    expect(after.body).toHaveLength(1);expect(after.body[0]).toMatchObject({unitId:target.id,x:1200,y:1100});
+    const alpha=after.body[0]!.alpha;
+    game.tick=80;target.x+=25;tracker.update(game,4000);
+    expect(tracker.frame(4000).body[0]!.x).toBe(target.x);
+    expect(tracker.frame(4000).body[0]!.alpha).toBeLessThan(alpha);
+    game.tick=120;tracker.update(game,6000);expect(tracker.frame(6000).body).toHaveLength(0);
+  });
+
   it('retains landed stains when a new burst exceeds the active particle budget',()=>{
     const tracker=new CombatPresentationTracker();
     tracker.update(snapshot(0,[hit({id:'first',x:-10000})]),0);

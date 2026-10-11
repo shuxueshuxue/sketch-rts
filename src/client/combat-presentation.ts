@@ -123,6 +123,12 @@ export class CombatPresentationTracker {
       const burst=active?this.bursts[index-this.residue.length]!:this.residue[index]!;
       const age=Math.max(0,(clock-burst.tick)/SIM_TICKS_PER_SECOND);
       if(age>=LIFE)continue;
+      // The wound belongs to the surviving actor, independently of the
+      // surface on which the hit happened (they may since have disembarked).
+      const unit=this.units.get(burst.unitId);
+      if(active&&unit&&unit.hp>0&&age<BODY_LIFE) {
+        const p=burst.mark;p.x=unit.x;p.y=unit.y;p.alpha=.65*fade(age,3,BODY_LIFE);out.body.push(p);
+      }
       const hull=burst.deck?this.units.get(burst.deck.shipId):undefined;
       const profile=hull&&hull.hp>0?shipProfile(hull):undefined;
       if(burst.deck&&!profile)continue;
@@ -147,10 +153,6 @@ export class CombatPresentationTracker {
           p.alpha=.58*fade(age,5,LIFE);
           out.ground.push(p);
         }
-      }
-      const unit=this.units.get(burst.unitId);
-      if(active&&unit&&unit.hp>0&&age<BODY_LIFE) {
-        const p=burst.mark;p.x=unit.x;p.y=unit.y;p.alpha=.65*fade(age,3,BODY_LIFE);out.body.push(p);
       }
     }
     for(const line of this.lines)out.speedLines.push(line);
