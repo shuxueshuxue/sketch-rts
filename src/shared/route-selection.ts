@@ -1,5 +1,5 @@
 import type { Point } from './ship-geometry';
-import { walkingDistance, type Mover } from './terrain';
+import { groundTravelCost, walkingDistance, type Mover } from './terrain';
 import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
@@ -10,13 +10,14 @@ export function routeClearsDisks(points: readonly Point[], disks: readonly (Poin
     pointSegmentDistanceSquared(disk, points[index]!, point) > disk.radius * disk.radius));
 }
 
-/** Terrain travel at a supplied constant speed; excludes body detours and ship turning. */
+/** Estimated terrain travel at a supplied speed; land includes ground pace costs.
+ * Sea uses constant-speed road length, excluding wind, acceleration and turning. */
 export function routeTravelTicks(map: Pick<GameMap, 'terrain'>, from: Point, to: Point, mover: Mover, speed: number): number | undefined {
-  const road = walkingDistance(map, from, to, mover);
+  const road = mover === 'land' ? groundTravelCost(map, from, to) : walkingDistance(map, from, to, mover);
   return road === undefined ? undefined : Math.ceil(road / speed * SIM_TICKS_PER_SECOND);
 }
 
-/** Reachable movers in arrival order, using each mover's own speed on the terrain road. */
+/** Reachable movers in estimated arrival order, including land pace and each mover's speed. */
 export function routeArrivals<T extends Point & { speed: number }>(map: Pick<GameMap, 'terrain'>, candidates: readonly T[], destination: Point, mover: Mover): { unit: T; ticks: number }[] {
   return candidates.flatMap(unit => {
     const ticks = routeTravelTicks(map, unit, destination, mover, unit.speed);
