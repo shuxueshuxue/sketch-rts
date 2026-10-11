@@ -320,7 +320,7 @@ export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, option
 export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
     return planNavalTacticsWithAssignments(snapshot, owner, options, {
         orderCrew: (soldiers, _shore, boat) => soldiers.sort((a, b) => distance(a, boat) - distance(b, boat)),
-        mineEligible: () => true, targetAvailable: () => true, transportReady: () => true,
+        mineEligible: () => true, targetAvailable: () => true, transportReady: () => true, troopAvailable: () => true,
     });
 }
 
@@ -330,10 +330,11 @@ type NavalAssignments = {
     mineEligible: (mine: ResourceNode) => boolean;
     targetAvailable: (target: Unit | Building) => boolean;
     transportReady: (boat: Unit) => boolean;
+    troopAvailable: (unit: Unit) => boolean;
 };
 
 export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assignments: NavalAssignments): GameCommand[] {
-    const { orderCrew, mineEligible: eligible, targetAvailable, transportReady } = assignments;
+    const { orderCrew, mineEligible: eligible, targetAvailable, transportReady, troopAvailable } = assignments;
     const own = units(snapshot, owner);
     const plan = islandPlan(snapshot, owner, options, eligible);
     const assault = assaultPlan(snapshot, owner, options);
@@ -428,7 +429,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
     }
     // Landed troops clear the landing, attack enemies on their component, and protect engineers establishing a base.
     const home = buildings(snapshot, owner).find(building => building.kind === "townHall");
-    const expedition = own.filter(unit => !unit.deck && unitMover(unit.kind) === "land" && unit.kind !== "worker" && home && !sameGround(snapshot.map, unit, home) && unit.order.type !== "board");
+    const expedition = own.filter(unit => !unit.deck && unitMover(unit.kind) === "land" && unit.kind !== "worker" && home && !sameGround(snapshot.map, unit, home) && unit.order.type !== "board" && troopAvailable(unit));
     const handled = new Set<string>();
     // This query examines the whole army's current engagements. Mainland
     // armies have no landed expedition for the naval script to direct.
