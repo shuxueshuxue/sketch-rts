@@ -4,7 +4,9 @@
 
 ## 当前记录（2026-10-11）
 
-最新公共批次 [#310 矿线反击](./expedition-counterraid-release.zh.md)、[#311 道路范围](./assault-road-distance-release.zh.md)、[#312 道路营地归属](./camp-territory-roads-release.zh.md)、[#313 扩张目标](./expansion-target-cap-release.zh.md) 均完成精确提交的 CI、合并和首次生产部署，当前发布提交为 `88d33bd68daf9734ac6a1d264bd5661165b70464`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这四批新增正式胜局为零。
+最新公共批次 [#310 矿线反击](./expedition-counterraid-release.zh.md)、[#311 道路范围](./assault-road-distance-release.zh.md)、[#312 道路营地归属](./camp-territory-roads-release.zh.md)、[#313 扩张目标](./expansion-target-cap-release.zh.md) 均完成精确提交的 CI、合并和首次生产部署，随后 [#316 清营退路](./camp-return-roads-release.zh.md) 也已合并并验证首次部署，当前发布提交为 `1f2c6ac9040432d96070c490b841252c1a89df0d`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这些批次新增正式胜局为零。
+
+已同步上游 #314/#315 的连续采矿维护费和分币结算。#313 及更早经济观察保留原规则标签；#316 的同世界续局双方使用 #315 新规则。冻结旧策略仍编译完整固定源码树，没有加入旧常量兼容出口或重新冻结。
 
 同一实际射手开局快照中，#310 保住更多工人并建立第二基地，但双方主力都全部阵亡；它是局部修复证据，不是胜率证明。[无对手河湾续局](./solo-expansion-observation.zh.md) 清掉全部四十野怪、零永久损失，#313 的同世界对照在 24000 tick 从五处有效矿点增至六处，下一基地仍在施工。[雇佣营与岛图观察](./global-objectives-observation.zh.md) 有实际雇佣、购物及岛矿施工，也仍有清营和登陆损失；这些不能算正式胜局或全图战略已经完成。
 
