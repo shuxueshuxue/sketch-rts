@@ -51,6 +51,9 @@ jobs:
       - name: Test mounted shore clearance and recovery movement
         run: npx vitest run src/ai/bootstrap_1/mounted-retreat-motion.test.ts src/ai/bootstrap_1/mounted-shore-clearance.test.ts src/ai/bootstrap_1/mounted-expedition.test.ts src/ai/bootstrap_1/recovery-move-continuity.test.ts src/shared/ship-collisions.test.ts
 
+      - name: Test mounted ferry task ownership and paid transport recovery
+        run: npx vitest run src/ai/bootstrap_1/rider-crossing.test.ts src/ai/bootstrap_1/mounted-fleet-ownership.test.ts src/ai/bootstrap_1/transport-recovery.test.ts
+
       - name: Test terrain travel estimates and metric cache reuse
         run: npx vitest run src/shared/terrain-arrival.test.ts src/shared/terrain.test.ts src/shared/route-selection.test.ts
 
