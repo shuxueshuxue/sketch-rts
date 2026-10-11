@@ -1,6 +1,7 @@
 import { SHIP_CAMERA } from '../../shared/ship-geometry';
 import { ART_TILE_SIZE, ART_ACTION_SIZE } from './raster-cache';
 import type { UnitAnimationFrame } from '../unit-animation';
+import type { UnitKind } from '../../shared/types';
 import type { Facing } from '../unit-facing';
 
 export type DirectionVector = { x: number; y: number; height?:number };
@@ -36,8 +37,9 @@ export function projectActionFrame(pose: UnitAnimationFrame, facing: Facing, pro
   return result;
 }
 
-/** Only active combat gestures need the extended tool envelope. Static scenery,
- * ready poses, walking and the shared recovery endpoint retain their 128px domain. */
-export function actionPaintSize(pose:UnitAnimationFrame):128|160 {
-  return (pose.mode==='attack'||pose.mode==='cast')&&pose.frame<5?ART_ACTION_SIZE:ART_TILE_SIZE;
+/** The canvas follows the drawn envelope. Tall antlers and a long dragon tail
+ * also need padding at rest; pixels outside a foot line are not invalid. */
+export function actionPaintSize(pose:UnitAnimationFrame,kind?:UnitKind):number {
+  if(kind==='ancientStag'||kind==='redDragon'||kind==='spiderQueen'||(pose.mode==='attack'||pose.mode==='cast')&&pose.frame<5)return ART_ACTION_SIZE;
+  return ART_TILE_SIZE;
 }

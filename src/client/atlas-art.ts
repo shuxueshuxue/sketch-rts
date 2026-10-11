@@ -64,7 +64,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
         ellipse(b, 1, feet?.y ?? 17, feet?.rx ?? (broad ? 24 : 10), feet?.ry ?? (broad ? 4.5 : 2.8), "#29282438");
       }
       paintFigure(b, kind, color, pose, facing, presentation);
-    }, facing === -1, actionPaintSize(pose));
+    }, facing === -1, actionPaintSize(pose,kind));
 
 }
 
@@ -72,10 +72,10 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string, presentation: FigurePresentation = {}) {
   if(isShipKind(kind) && drawModelPortrait(c,`ships/${kind}`,x,y,size,color))return;
   const bust=UNIT_CARDS[kind].art.bearing==='foot';
-  drawFittedPortrait(c,`portrait:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},x,y,size,size,bust);
+  drawFittedPortrait(c,`portrait:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},x,y,size,size,bust,actionPaintSize(IDLE_FRAME,kind));
 }
 export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:number,color:string,presentation:FigurePresentation={}){
-  drawFittedPortrait(c,`figure:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},0,0,width,height);
+  drawFittedPortrait(c,`figure:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},0,0,width,height,false,actionPaintSize(IDLE_FRAME,kind));
 }
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
@@ -87,7 +87,7 @@ export function drawAtlasModel(c: Brush, key: string, model: UnitModel, point: P
     else if (shadow === "beast") ellipse(b, 2, 15, 20, 5, "#30483630");
     else if (shadow === "huge") ellipse(b, 2, 18, 30, 8, "#30483638");
     model.paint(b, color, pose, facing,presentation);
-  }, facing === -1, actionPaintSize(pose));
+  }, facing === -1, model.paint.paintSize?.(pose)??actionPaintSize(pose));
 }
 
 /** A piece of a story's scenery (see story/stage props), cached per kind and state like the units. */

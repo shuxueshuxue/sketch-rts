@@ -1,3 +1,4 @@
+import { actionPaintSize } from './action-direction';
 import { figureReleaseSocket } from './release-socket';
 /** Campaigns author appearance and socket details, never another body/animation
  * implementation. The same composers serve portraits, Canvas and WebGL cards. */
@@ -55,5 +56,5 @@ export function storyCreature(kind: UnitKind, presentation: CreatureAppearance):
     b.save(); b.translate(0, 17 - creatureGround(kind, presentation));
     paintCreature(b, kind, team, pose, presentation); b.restore();
   };
-  return Object.assign(paint,{release:(pose:import('../unit-animation').UnitAnimationFrame)=>{const socket=creatureReleaseSocket(kind,pose,presentation);return socket?{x:socket.x,y:socket.y+17-socket.ground,ground:17}:undefined;},remains:((b)=>paintCorpse(b,kind,remains)) as UnitRemainsPainter});
+  return Object.assign(paint,{paintSize:(pose:import('../unit-animation').UnitAnimationFrame)=>Math.max(160,actionPaintSize(pose,kind)),release:(pose:import('../unit-animation').UnitAnimationFrame)=>{const socket=creatureReleaseSocket(kind,pose,presentation);return socket?{x:socket.x,y:socket.y+17-socket.ground,ground:17}:undefined;},remains:((b)=>paintCorpse(b,kind,remains)) as UnitRemainsPainter});
 }

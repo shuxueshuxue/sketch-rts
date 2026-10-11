@@ -90,3 +90,12 @@ describe('UI portrait pixels and ownership',()=>{
   expect(fittedPortraitStats().ownedCanvasBytes).toBeGreaterThan(0);clearCanvasArtCache();expect(fittedPortraitStats().ownedCanvasBytes).toBe(0);
  });
 });
+
+it('measures tall antlers and long tails without clipping in an explicitly enlarged domain',()=>{
+ const cache=new FittedPortraitCache(),canvas=target();
+ cache.draw(canvas.getContext('2d')!,'large',b=>{b.fillStyle='#ff0000';b.fillRect(-78,-80,8,8);b.fillStyle='#0000ff';b.fillRect(68,70,8,8);},0,0,140,124,false,176);
+ const rgba=pixels(canvas);let red=0,blue=0;
+ for(let i=0;i<rgba.length;i+=4){if(rgba[i]!>200&&rgba[i+2]!<30)red++;if(rgba[i+2]!>200&&rgba[i]!<30)blue++;}
+ expect(red).toBeGreaterThan(10);expect(blue).toBeGreaterThan(10);
+ cache.clear();expect(cache.stats().ownedCanvasBytes).toBe(0);
+});

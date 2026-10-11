@@ -327,7 +327,7 @@ export class World3DLayer {
         ctx.scale(facing,1);
         if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing,appearance);
         else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
-      },transform,unit.id,foot,actionPaintSize(animation));
+      },transform,unit.id,foot,model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind));
     }
     for(const [shipId,corpses] of deckRemainsByShip(snapshot.corpses)){
       const ship=this.shipPoses.get(shipId);if(!ship||ship.hp<=0)continue;

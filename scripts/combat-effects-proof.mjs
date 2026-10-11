@@ -10,7 +10,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),arg=key=>{const
 const output=resolve(arg('--out')??'docs/art/refactor/after/combat-effects-proof.json');await mkdir(dirname(output),{recursive:true});const scratch=await mkdtemp('/tmp/combat-effects-proof-');
 let server,browser,socket;const errors=[];
 try{
- await writeFile(resolve(scratch,'index.html'),`<script type="module" src="/@fs${root}/scripts/combat-effects-fixture.ts"></script>`);
+ await writeFile(resolve(scratch,'index.html'),`<script type="module" src="/@fs${root}/${arg('--fixture')??'scripts/combat-effects-fixture.ts'}"></script>`);
  server=await createServer({configFile:false,root:scratch,publicDir:resolve(root,'public'),plugins:[{name:'proof-manifest',configureServer(server){server.middlewares.use(async(req,res,next)=>{if(!req.url?.split('?')[0]?.endsWith('/resource-manifest.json'))return next();res.setHeader('Content-Type','application/json');res.end(JSON.stringify(await resourceManifest(resolve(root,'public'))));});}}],server:{host:'127.0.0.1',port:0,hmr:false,fs:{allow:[root,scratch]}}});await server.listen();
  browser=spawn(process.env.CHROMIUM_PATH??'/usr/bin/chromium',['--headless','--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0',`--user-data-dir=${scratch}/profile`,'about:blank'],{stdio:['ignore','ignore','pipe']});
  const endpoint=await new Promise((done,reject)=>{const timeout=setTimeout(()=>reject(new Error('Chromium startup timeout')),30000);browser.once('error',reject);browser.stderr.on('data',chunk=>{const match=String(chunk).match(/DevTools listening on (ws:\/\/\S+)/);if(match){clearTimeout(timeout);done(match[1]);}});});

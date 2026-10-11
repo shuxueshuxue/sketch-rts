@@ -20,20 +20,22 @@ export class FittedPortraitCache {
     this.leased.delete(canvas);
     if(this.retired.delete(canvas))this.retire(canvas);
   }
-  draw(ctx:CanvasRenderingContext2D,key:string,paint:(ctx:CanvasRenderingContext2D)=>void,x:number,y:number,width:number,height:number,bust=false){
+  draw(ctx:CanvasRenderingContext2D,key:string,paint:(ctx:CanvasRenderingContext2D)=>void,x:number,y:number,width:number,height:number,bust=false,domain=128){
+    const workSize=domain*4;
     let art=this.cache.get(key),source:HTMLCanvasElement|undefined;
     const epoch=this.epoch;
     try{
       if(!art){
-        source=this.work.pop()??createScratchCanvas(512,512);this.lease(source);
+        const reusable=this.work.findIndex(canvas=>canvas.width===workSize);
+        source=reusable<0?createScratchCanvas(workSize,workSize):this.work.splice(reusable,1)[0]!;this.lease(source);
         const brush=source.getContext('2d')!;
         // Keep the original fresh-canvas defaults, including miter joins and
         // the alpha>8/bust measurement. Do not borrow world raster settings.
-        if(typeof brush.reset==='function')brush.reset();else source.width=512;
-        brush.translate(256,256);brush.scale(4,4);paint(brush);
-        const data=brush.getImageData(0,0,512,512).data;
-        const bounds=(limit=512)=>{let left=512,top=512,right=0,bottom=0;
-          for(let py=0;py<limit;py++)for(let px=0;px<512;px++)if(data[(py*512+px)*4+3]!>8){left=Math.min(left,px);right=Math.max(right,px);top=Math.min(top,py);bottom=Math.max(bottom,py);}
+        if(typeof brush.reset==='function')brush.reset();else source.width=workSize;
+        brush.translate(workSize/2,workSize/2);brush.scale(4,4);paint(brush);
+        const data=brush.getImageData(0,0,workSize,workSize).data;
+        const bounds=(limit=workSize)=>{let left=workSize,top=workSize,right=0,bottom=0;
+          for(let py=0;py<limit;py++)for(let px=0;px<workSize;px++)if(data[(py*workSize+px)*4+3]!>8){left=Math.min(left,px);right=Math.max(right,px);top=Math.min(top,py);bottom=Math.max(bottom,py);}
           return{x:left,y:top,width:Math.max(1,right-left+1),height:Math.max(1,bottom-top+1)};
         };
         let box=bounds();if(bust)box=bounds(Math.round(box.y+box.height*.65));

@@ -1,7 +1,7 @@
 import { createScratchCanvas } from './scratch-canvas';
 
 export const ART_TILE_SIZE=128;
-export const ART_ACTION_SIZE=160;
+export const ART_ACTION_SIZE=176;
 
 type Raster = { canvas: HTMLCanvasElement; x: number; y: number; density: number };
 

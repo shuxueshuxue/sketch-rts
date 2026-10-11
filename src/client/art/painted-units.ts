@@ -76,10 +76,10 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
   const armor=!!f.armor;
   const cloth=presentation.cloth??(f.role==='witch'?'#5d5061':f.role==='priest'?(f.ember?'#a78265':LINEN):darker(team,.13));
   if(f.mounted){mount(b,team,phase,!!f.elite,facing);b.translate(-3,-17);b.scale(.84,.84);}
-  const bob=motion.lift+motion.breathe;
+  const bob=motion.lift+motion.breathe+rig.bodyDrop;
   if(!f.mounted){
-    leg(b,[-3,-4],[-4-stride*3,5],[-5-stride*5,16-Math.max(0,stride)*2.2],armor,false);
-    leg(b,[3,-4],[5+stride*2,5],[6+stride*5,16-Math.max(0,-stride)*2.2],armor,facing===1);
+    leg(b,[-3,-4+rig.bodyDrop],[-4-stride*3,5+rig.bodyDrop*.4],[-5-stride*5,16-Math.max(0,stride)*2.2],armor,false);
+    leg(b,[3,-4+rig.bodyDrop],[5+stride*2,5+rig.bodyDrop*.4],[6+stride*5,16-Math.max(0,-stride)*2.2],armor,facing===1);
   }
   b.translate(impact*(f.mounted?.65:2),bob);
   b.translate(0,-4);b.rotate(rig.lean);b.translate(0,4); // Torso leans into the stroke while both feet stay planted.

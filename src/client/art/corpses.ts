@@ -6,7 +6,7 @@ import {type Brush, polygon, line, ellipse} from './kit';
 import { REMAINS_MATERIAL } from './materials';
 const {ink:INK,wash:WASH,light:LIGHT,dark:DARK}=REMAINS_MATERIAL;
 import { equipmentForKind, sampleFigurePose } from './rig';
-import { figures } from './appearance';
+import { creatures, figures } from './appearance';
 import { IDLE_FRAME } from '../unit-animation';
 import type { EquipmentKind } from './equipment';
 import { creatureAnatomy } from './painted-creatures';
@@ -118,16 +118,25 @@ export function paintCorpse(b:Brush,kind:UnitKind,options:CorpsePresentation={})
   line(b,[[-26,-1],[-31,3],[-35,2]],INK,1.4);
   b.save();b.translate(-5,-4);b.scale(.72,.72);fallenPerson(b,kind,options);b.restore();
  }else if(bearing==='beast'){
-  const spider=kind.toLowerCase().includes('spider'),dragon=kind.toLowerCase().includes('dragon');
+  const shape=creatures[kind]?.shape,spider=shape==='spider',dragon=shape==='dragon';
   sketch(b,[[-19,-2],[-12,-8],[4,-7],[15,-1],[11,6],[-5,8],[-17,4]],options.cloth??DARK);
   if(spider){
    for(const side of [-1,1])for(let i=0;i<4;i++)limb(b,[[-11+i*7,side*3],[-17+i*9,side*9],[-8+i*6,side*6]],1.1);
   }else{
    sketch(b,[[12,-3],[21,-5],[26,-1],[23,3],[13,4]],WASH);
    for(const x of [-12,4])limb(b,[[x,4],[x+6,10],[x+11,9]],2);
-   if(dragon){sketch(b,[[-9,-3],[-25,-15],[-6,-10],[5,-19],[9,-4]],'#95927e');line(b,[[-18,1],[-30,5],[-35,2]],INK,1.7);}
+   if(dragon){
+    // Folded fingered wing and a long taper preserve the living dragon's identity.
+    sketch(b,[[-14,-2],[-28,-17],[-22,-16],[-11,-10],[-7,-14],[0,-9],[7,-12],[12,1]],'#95927e');
+    for(const tip of [[-22,-16],[-7,-14],[7,-12]])line(b,[[-14,-2],tip],LIGHT,.6);
+    sketch(b,[[-16,3],[-29,2],[-38,6],[-48,4],[-39,9],[-26,8],[-15,6]],DARK);
+    sketch(b,[[20,-3],[18,-8],[23,-4]],LIGHT);
+   }
    if(kind==='ancientStag')for(const d of [0,4])line(b,[[20,-4],[16+d,-12],[13+d,-15],[18+d,-13],[21+d,-15]],INK,.9);
-   if(kind==='deepSnapper'||kind==='stonebackBrute')sketch(b,[[-19,-2],[-12,-9],[3,-8],[13,-2],[5,4],[-10,5]],'#9c9985');
+   if(shape==='turtle'){
+    sketch(b,[[-19,-2],[-12,-9],[3,-8],[13,-2],[5,4],[-10,5]],'#9c9985');
+    line(b,[[-12,-5],[-4,-2],[-2,3]],INK,.55);line(b,[[-4,-2],[4,-6]],INK,.55);
+   }
   }
  }else fallenPerson(b,kind,options,card.art.faction==='wild');
  options.detail?.(b);

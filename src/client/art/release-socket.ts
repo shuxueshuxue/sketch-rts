@@ -21,7 +21,7 @@ export function figureReleaseSocket(kind:UnitKind,pose:UnitAnimationFrame,presen
    :rig.release;
  const [x,y]=socket,c=Math.cos(rig.lean),s=Math.sin(rig.lean);
  let px=x*c-(y+4)*s+rig.impact*(f.mounted?.65:2);
- let py=x*s+(y+4)*c-4+rig.motion.lift+rig.motion.breathe;
+ let py=x*s+(y+4)*c-4+rig.motion.lift+rig.motion.breathe+rig.bodyDrop;
  if(f.mounted){px=-3+px*.84;py=-17+py*.84;}
  return {x:px*size,y:py*size+17*(1-size),ground:17};
 }

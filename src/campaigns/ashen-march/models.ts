@@ -4,6 +4,7 @@ import { storyFigure, storyCreature } from '../../client/art/story-rig';
 import { line, ellipse, polygon, leafMark, type Brush } from '../../client/art/kit';
 import { paintedPlane as plane } from '../../client/art/materials';
 import type { FigurePresentation, FigurePose } from '../../client/art/rig';
+import type { CreatureDrawing } from '../../client/art/creature-poses';
 import type { MotionPose } from '../../client/art/motion';
 const TEAL='#2f7d6d', REED='#b9a66a', OBSIDIAN='#2e2a2c', MAGMA='#e5652f';
 const MOSS='#6f8f5a', STEEL='#8d9897', INK='#292b29', GOLD='#b9a16c', GLOW='#f4d083';
@@ -123,10 +124,9 @@ export const paintVashka=storyFigure('ashWarden',{remains:{detail:fallenMarks('v
 export const paintGroveRider=storyFigure('knight',{remains:{detail:fallenMarks('groveRider')},cloth:'#6f805a',detail:warden});
 
 // Beast details decorate the same neck, limbs and torso used by the catalog.
-const wolfDetail=(alpha=false,ember=false)=>(b:Brush,m:MotionPose)=>{
-  const strike=m.castGlow?0:m.reach;
-  const x=strike*7,neck=-13+strike*3;
-  if(alpha) {for(let i=0;i<4;i++)plane(b,[[8-i*5,-13],[10-i*5,-21],[13-i*5,-13]],'#8b8474');line(b,[[29+x,neck-2],[33+x,neck+4]],'#8e2a1c',1);}
+const wolfDetail=(alpha=false,ember=false)=>(b:Brush,_m:MotionPose,p:CreatureDrawing)=>{
+  const x=p.headX,neck=p.headY;
+  if(alpha) {for(let i=0;i<4;i++)plane(b,[[8-i*5,-13],[10-i*5,-21],[13-i*5,-13]],'#8b8474');line(b,[[x+1,neck-3],[x+5,neck+3]],'#8e2a1c',1);}
   if(ember){for(let i=0;i<5;i++)polygon(b,[[-19+i*6,-14],[-17+i*6,-24+i%2*3],[-14+i*6,-14]],MAGMA,'#773727',.6);for(const x of [-16,-7,3])line(b,[[x,-8],[x+3,-12]],GLOW,.8);}
 };
 export const paintFenWolf=storyCreature('wildling',{color:'#8b8474',detail:wolfDetail()});
@@ -139,10 +139,10 @@ const heart=(broken=false)=>(b:Brush,_m:MotionPose)=>{
 };
 export const paintColossus=storyCreature('golem',{remains:{detail:fallenMarks('colossus')},color:'#353033',crown:false,detail:heart()});
 export const paintColossusBroken=storyCreature('golem',{remains:{detail:fallenMarks('broken')},color:'#353033',crown:false,detail:heart(true)});
-const canopy=(elder=false)=>(b:Brush,m:MotionPose)=>{
+const canopy=(elder=false)=>(b:Brush,_m:MotionPose,p:CreatureDrawing)=>{
   for(const [x,y,r] of [[-12,-46,elder?12:8],[0,-51,elder?14:10],[12,-44,elder?10:7]])ellipse(b,x!,y!,r!,r!*.7,MOSS,'#526951');
   line(b,[[-3,-35],[6,-35]],'#e8d98a',1.3);
-  for(const side of [-1,1]){const strike=m.castGlow?0:m.reach,x=side*24+strike*8,y=-1-strike*9;line(b,[[x,y],[x+side*3,y-9]],'#6f5c3f',2);leafMark(b,x+side*3,y-10,3.5,'#829755');}
+  for(const side of [-1,1]){const [x,y]=side===1?p.hand:p.casting?p.free:[-28+p.strike*5,5];line(b,[[x,y],[x+side*3,y-9]],'#6f5c3f',2);leafMark(b,x+side*3,y-10,3.5,'#829755');}
   if(elder)plane(b,[[-3,-32],[3,-32],[1,-22],[-2,-25]],'#a9b58a');
 };
 export const paintElder=storyCreature('stonebackBrute',{color:'#7c6a48',size:1,crown:false,detail:canopy(true)});

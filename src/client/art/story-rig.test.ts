@@ -36,3 +36,14 @@ describe('Ashen March articulated appearances',()=>{
     expect(new Set(images).size).toBe(painters.length);
   });
 });
+
+it('keeps story beast branches and crowns inside their declared production envelope',()=>{
+ const canvas=createCanvas(240,240),b=canvas.getContext('2d');
+ for(const [name,paint]of painters.filter(([,p])=>p.paintSize))for(const mode of ['idle','walk','attack','cast'] as const)for(const aim of [-6,0,6]){
+  const pose={mode,frame:mode==='idle'||mode==='walk'?2:0,aim},half=paint.paintSize!(pose)/2;
+  b.resetTransform();b.clearRect(0,0,240,240);b.translate(120,120);paint(b as unknown as CanvasRenderingContext2D,'#386d61',pose);
+  const rgba=b.getImageData(0,0,240,240).data;let escaped=0;
+  for(let y=0;y<240;y++)for(let x=0;x<240;x++)if(rgba[(y*240+x)*4+3]&&(Math.abs(x-120)>=half-1||Math.abs(y-120)>=half-1))escaped++;
+  expect(escaped,`${name}/${mode}/${aim}`).toBe(0);
+ }
+});

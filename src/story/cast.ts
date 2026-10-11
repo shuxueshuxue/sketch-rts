@@ -11,6 +11,8 @@ import type { Text } from "./stage";
 // world. The renderer caches what it paints per team colour, as it does for every unit.
 
 export type UnitPainter = ((brush: CanvasRenderingContext2D, team: string, pose?: UnitAnimationFrame, facing?: 1 | -1, presentation?:Readonly<FigurePresentation>) => void) & {
+  /** Authored painting envelope, including story-specific crowns and branches. */
+  paintSize?: (pose:UnitAnimationFrame)=>number;
   /** Pure authored socket, before facing/outer unit scale. Present on composed story models. */
   release?: (pose:UnitAnimationFrame,presentation?:Readonly<FigurePresentation>)=>{x:number;y:number;ground:number}|undefined;
 };

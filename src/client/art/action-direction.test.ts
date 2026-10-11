@@ -1,6 +1,6 @@
 import { expect,it } from 'vitest';
 import { createCanvas } from '@napi-rs/canvas';
-import { animationKey, finiteAim, projectActionFrame } from './action-direction';
+import { animationKey, finiteAim, projectActionFrame, actionPaintSize } from './action-direction';
 import { creatures, figures } from './appearance';
 import { actionDirection } from './motion';
 import { sampleFigurePose, socketPoint } from './rig';
@@ -61,21 +61,23 @@ it('authors different up, level and down silhouettes while every endpoint return
 it('keeps all native creature and mounted gestures inside the extended domain',()=>{
  const canvas=createCanvas(240,240),b=canvas.getContext('2d');
  const kinds=[...Object.keys(creatures),'knight','horseArcher','raider'] as import('../../shared/types').UnitKind[];
- for(const kind of kinds)for(const mode of ['attack','cast'] as const)for(let aim=-6;aim<=6;aim++){
+ for(const kind of kinds)for(const mode of ['attack','cast'] as const)for(let aim=-6;aim<=6;aim++)for(const frame of [0,2,5]){
   b.resetTransform();b.clearRect(0,0,240,240);b.translate(120,120);
-  paintFigure(b as unknown as CanvasRenderingContext2D,kind,'#477b91',{mode,frame:0,aim},1);
+  paintFigure(b as unknown as CanvasRenderingContext2D,kind,'#477b91',{mode,frame,aim},1);
   const pixels=b.getImageData(0,0,240,240).data;let escaped=0;
   for(let y=0;y<240;y++)for(let x=0;x<240;x++)if(pixels[(y*240+x)*4+3]&&(Math.abs(x-120)>=ART_ACTION_SIZE/2-1||Math.abs(y-120)>=ART_ACTION_SIZE/2-1))escaped++;
-  expect(escaped,`${kind}/${mode}/${aim}`).toBe(0);
+  expect(escaped,`${kind}/${mode}/${aim}/${frame}`).toBe(0);
  }
 });
 
-it('keeps downward long weapons above the foot plane rather than stabbing through terrain',()=>{
- const canvas=createCanvas(200,200),b=canvas.getContext('2d');
- for(const weapon of weapons)for(const mode of ['attack','cast'] as const)for(const aim of [2,3,4,5,6]){
-  b.resetTransform();b.clearRect(0,0,200,200);b.translate(100,100);
-  paintFigure(b as unknown as CanvasRenderingContext2D,'footman','#477b91',{mode,frame:0,aim},1,{weapon});
-  const pixels=b.getImageData(0,120,200,80).data;
-  expect(pixels.some((n,i)=>i%4===3&&n>16),`${weapon}/${mode}/${aim}`).toBe(false);
+it('retains the whole nonhuman ready and walking silhouettes in their production domains',()=>{
+ const canvas=createCanvas(240,240),b=canvas.getContext('2d');
+ for(const kind of Object.keys(creatures) as import('../../shared/types').UnitKind[])for(const mode of ['idle','walk'] as const)for(const frame of [0,2,4,6]){
+  const pose={mode,frame},half=actionPaintSize(pose,kind)/2;
+  b.resetTransform();b.clearRect(0,0,240,240);b.translate(120,120);
+  paintFigure(b as unknown as CanvasRenderingContext2D,kind,'#477b91',pose,1);
+  const pixels=b.getImageData(0,0,240,240).data;let escaped=0;
+  for(let y=0;y<240;y++)for(let x=0;x<240;x++)if(pixels[(y*240+x)*4+3]&&(Math.abs(x-120)>=half-1||Math.abs(y-120)>=half-1))escaped++;
+  expect(escaped,`${kind}/${mode}/${frame}`).toBe(0);
  }
 });

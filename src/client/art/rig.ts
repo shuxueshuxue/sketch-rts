@@ -58,8 +58,8 @@ function bladeDrawing(weapon:EquipmentKind,source:number,variant:number,thrust:b
 function shaftDrawing(mounted:boolean,source:number){
  const ready=mounted?hand([9,-16],[7,-17],-.2):hand([8,-19],[7,-17],-.95);
  const contact=(mounted?
-  [hand([11,-19],[7,-19],-.9),hand([12,-16],[8,-17],-.04),hand([9,-33],[7,-25],.95)]:
-  [hand([10,-18],[7,-18],-1.05),hand([13,-19],[8,-17],-.4),hand([8,-33],[5,-25],1.05)])[source+1]!;
+  [hand([18,-25],[11,-22],-Math.PI/3),hand([12,-16],[8,-17],-.04),hand([19,-15],[11,-18],Math.PI/3)]:
+  [hand([18,-25],[10,-22],-Math.PI/3),hand([13,-19],[8,-17],-.4),hand([19,-15],[10,-18],Math.PI/3)])[source+1]!;
  return {ready,contact};
 }
 function bowDrawing(source:number){
@@ -115,12 +115,17 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   drawing.elbow=mix(drawing.elbow,([[8,-22],[10,-20],[9,-17]] as XY[])[source+1]!,cast);
   drawing.angle-=.18*cast;
  }
+ const action=Math.max(0,cast||weight);
+ const lean=work?.lean??source*action*(shaft?.075:weapon==='bow'?.065:staff?.045:.04);
+ const bodyDrop=source>0?action*(shaft?1.2:.65):0;
+ // Keep the drawn shaft/arrow axis aimed while the body shifts under it.
+ if(shaft||weapon==='bow')drawing.angle-=lean;
  // Cast with the free hand while retaining the weapon's own carry silhouette.
  // Staff poses additionally raise the staff; no sword-slash pose is reused.
  const freeReady:XY=shield?[-9,-10]:staff?[-13,-12]:[-9,-8];
  const freeElbow:XY=[-10,-15];
- const spellHands:XY[]=[[2,-37],[16,-22],[9,-8]];
- const spellElbows:XY[]=[[-6,-26],[-3,-20],[-7,-14]];
+ const spellHands:XY[]=[[12,-34],[16,-22],[14,-8]];
+ const spellElbows:XY[]=[[0,-25],[-3,-20],[-1,-15]];
  const gesture=shield?0:cast||(staff?Math.max(0,impact)*.55:0);
  let support=mix(freeReady,spellHands[source+1]!,gesture);
  let supportElbow=mix(freeElbow,spellElbows[source+1]!,gesture);
@@ -132,13 +137,13 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   // Authored supporting elbows follow the contact drawing, never an IK branch.
   const readyElbow:XY=weapon==='bow'?[-.4,-18]:shaft?[-3,-15]:[0,-16];
   const contactElbows:XY[]=weapon==='bow'?[[-1,-26],[1,-18],[-1,-13]]:
-   shaft?[[-3,-18],[-2,-16],[-5,-25]]:[[-2,-24],[2,-17],[-2,-20]];
+   shaft?[[0,-20],[-2,-16],[0,-14]]:[[-2,-24],[2,-17],[-2,-20]];
   supportElbow=mix(readyElbow,contactElbows[source+1]!,weight);
   if(cast){support=mix(support,spellHands[source+1]!,cast);supportElbow=mix(supportElbow,spellElbows[source+1]!,cast);}
  }
  const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);
  return {weapon,shieldStyle:options.shieldStyle??'kite',shield,motion,impact,cast,working,wrist,angle,
-  lean:work?.lean??0,shoulder:[5,-23] as XY,elbow,support,supportShoulder:[-5,-23] as XY,supportElbow,
+  lean,bodyDrop,shoulder:[5,-23] as XY,elbow,support,supportShoulder:[-5,-23] as XY,supportElbow,
   twoHanded:supported&&!cast,release,direction,
   // Independent layering: a hidden upper arm must not hide the held weapon.
   primaryLayer:shaft||weapon==='bow'?'front' as const:'back' as const,

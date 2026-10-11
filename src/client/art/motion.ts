@@ -1,8 +1,8 @@
 import { finiteAim } from './action-direction';
 import type { UnitAnimationFrame } from '../unit-animation';
 
-/** A motion describes intention, not a species or equipment mesh. Rigs scale
- * reach to their limb lengths and constrain hand targets to a reachable chain. */
+/** A motion describes intention, not a species or equipment mesh. Anatomy painters use
+ * its timing while authoring their own silhouettes and contact poses. */
 export type MotionFamily = 'slash' | 'thrust' | 'bow' | 'staff' | 'work' | 'creature' | 'siege';
 export type MotionPose = Readonly<{
   stride: number; lift: number; lean: number; reach: number;
