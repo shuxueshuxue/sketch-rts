@@ -843,7 +843,7 @@ export function stepGame(game: Game) {
     updateCabinPassengers(game);
   }
   slideUnits(game);
-  separateUnits(game);
+  separateUnits(game, navalFrame);
   if (navalFrame) syncDecks(game.units);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
   for(const impact of drainShipCollisionImpacts(game.units)) {
@@ -4054,6 +4054,8 @@ type SeparationFrame = {
   members: Unit[];
   cellX: number[];
   cellY: number[];
+  x: number[];
+  y: number[];
   // Flattened bucket pairs preserve the original map and neighbor traversal.
   pairs: SeparationBucket[];
   valid: boolean;
@@ -4075,7 +4077,7 @@ function clearSeparationBuckets(frame: SeparationFrame) {
 
 function clearSeparationMembership(frame: SeparationFrame) {
   clearSeparationBuckets(frame);
-  frame.members.length = frame.cellX.length = frame.cellY.length = 0;
+  frame.members.length = frame.cellX.length = frame.cellY.length = frame.x.length = frame.y.length = 0;
 }
 
 function invalidateSeparationFrame(game: Game) {
@@ -4096,36 +4098,40 @@ function separationBucketSlot(frame: SeparationFrame, key: number): number {
   return slot;
 }
 
-function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number): boolean {
+function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number, navalFrame: boolean): boolean {
   frame.unchangedSource = frame.unchangedMembers = 0;
   if (!frame.valid) return false;
   let member = 0;
   for (let i = 0; i < game.units.length; i += 1) {
     const unit = game.units[i]!;
     // Orders, cabin state and unit kind can change without replacing the array.
-    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
-    if (frame.members[member] !== unit || !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
-      || !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
+    // The native grounded frame already checked every body, including births.
+    if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
+    if (frame.members[member] !== unit
+      || !Object.is(frame.x[member], unit.x) && !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
+      || !Object.is(frame.y[member], unit.y) && !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
       frame.unchangedSource = i; frame.unchangedMembers = member;
       return false;
     }
+    // Record verified within-cell movement; contacts still read live geometry.
+    frame.x[member] = unit.x; frame.y[member] = unit.y;
     member += 1;
   }
   frame.unchangedSource = game.units.length; frame.unchangedMembers = member;
   return member === frame.members.length;
 }
 
-function separateUnits(game: Game) {
+function separateUnits(game: Game, navalFrame: boolean) {
   const cellSize = 80;
   let frame = separationFrames.get(game);
   if (!frame) {
-    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false, unchangedSource: 0, unchangedMembers: 0 };
+    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], x: [], y: [], pairs: [], valid: false, unchangedSource: 0, unchangedMembers: 0 };
     separationFrames.set(game, frame);
   }
   const buckets = frame.buckets;
   const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
   const openGround = !game.map.terrain && groundShipFrameEmpty(game.units);
-  if (!separationMembershipMatches(game, frame, cellSize)) {
+  if (!separationMembershipMatches(game, frame, cellSize, navalFrame)) {
     // The verified prefix already has this frame's exact cells and source
     // order. Retain its private metadata while rebuilding bucket storage;
     // classify only the suffix starting at the first actual mismatch.
@@ -4156,6 +4162,7 @@ function separateUnits(game: Game) {
         buckets.push(bucket);
       }
       frame.members[member] = unit;
+      frame.x[member] = unit.x; frame.y[member] = unit.y;
       frame.cellX[member] = x; frame.cellY[member++] = y;
       bucket.units[bucket.count++] = unit;
     };
@@ -4163,10 +4170,10 @@ function separateUnits(game: Game) {
     for (let i = sourceStart; i < game.units.length; i += 1) {
       const unit = game.units[i]!;
       // Hulls use swept navigation contact; mining workers pass through bodies.
-      if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+      if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
       insert(unit, Math.floor(unit.x / cellSize), Math.floor(unit.y / cellSize));
     }
-    frame.members.length = frame.cellX.length = frame.cellY.length = member;
+    frame.members.length = frame.cellX.length = frame.cellY.length = frame.x.length = frame.y.length = member;
     for (const bucket of buckets) {
       frame.pairs.push(bucket, bucket);
       for (const [ox, oy] of SEPARATION_NEIGHBORS) {
