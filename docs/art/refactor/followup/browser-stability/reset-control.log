@@ -1,0 +1,8 @@
+{"sample":6,"seconds":51,"rssMiB":898.33984375,"pssMiB":591.4609375,"frames":329,"stage":"draw","cards":16,"rasterizations":64}
+{"sample":12,"seconds":111,"rssMiB":905.16796875,"pssMiB":597.7197265625,"frames":729,"stage":"draw","cards":16,"rasterizations":128}
+{"sample":18,"seconds":171,"rssMiB":919.953125,"pssMiB":612.287109375,"frames":1129,"stage":"draw","cards":16,"rasterizations":192}
+{"sample":24,"seconds":231,"rssMiB":924.54296875,"pssMiB":614.3740234375,"frames":1528,"stage":"draw","cards":16,"rasterizations":256}
+{"sample":30,"seconds":291,"rssMiB":925.5,"pssMiB":615.1943359375,"frames":1928,"stage":"draw","cards":16,"rasterizations":320}
+{"sample":36,"seconds":351,"rssMiB":877.0390625,"pssMiB":566.69921875,"frames":1995,"stage":"retained-idle","cards":16,"rasterizations":320}
+{"sample":42,"seconds":411,"rssMiB":770.83203125,"pssMiB":465.4716796875,"frames":1995,"stage":"disposed-idle"}
+{"passed":true,"samples":44,"actualWallMs":430780,"failure":"","errors":[]}

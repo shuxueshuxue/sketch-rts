@@ -1,0 +1,9 @@
+{
+  "utc": "2026-10-11T15:17:56.834443+00:00",
+  "comparedFiles": 1172,
+  "changed": [],
+  "additionalControlFiles": [
+    "scripts/art-reset-stability-fixture.ts",
+    "scripts/art-reset-stability-proof.mjs"
+  ]
+}
