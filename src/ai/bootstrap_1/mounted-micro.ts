@@ -1,11 +1,10 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { constrainGroundShipStep } from '../../shared/ship-collisions';
-import { groundSegmentTravelTicks, segmentAvoidsExpandingDisk } from '../../shared/travel-clearance';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
-import { groundUnder, isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
+import { isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { unitAbilities } from '../../shared/unit-abilities';
@@ -125,7 +124,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     && isWalkable(snapshot.map, point.x, point.y)
     && segmentWalkable(snapshot.map, rider, point)
     && innerWindow.every(({ foe, limit }) => distance(point, foe) < limit))];
-  // Leave room for the following turn, including actual hull clearance.
+  // Leave room for the following turn rather than maximizing distance into a cliff corner.
   const exit = (point: Point) => {
     if (point === rider) return false;
     const to = { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) };
@@ -142,19 +141,14 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     const margins = threats.map(threat => margin(point, threat));
     const areas = hazards.map(hazard => distance(point, hazard) - hazard.radius);
     const room = Math.min(...margins.map((gap, index) => gap - threats[index]!.speed * THINK_TICKS / SIM_TICKS_PER_SECOND), ...areas);
-    const travel = Math.max(THINK_TICKS, groundSegmentTravelTicks(snapshot.map, rider, point, rider.speed)) / SIM_TICKS_PER_SECOND;
-    const motionClear = threats.every(({ foe, range, speed }) => segmentAvoidsExpandingDisk(rider, point, { ...foe, radius: range, speed }, travel));
-    return { point, goal: endpoint(point), room, motionClear, pace: groundUnder(snapshot.map, point.x, point.y).pace,
-      bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
+    return { point, goal: endpoint(point), room, bodyClear: capsuleClearsBodies(rider, point, rider.radius, bodies), margin: Math.min(...margins, ...areas), exit: room > 0 && !destination && exit(point),
       distance: destination ? distance(point, destination) : 0 };
   }).filter(({ goal }) => goal.x >= 0 && goal.y >= 0 && goal.x < snapshot.map.width && goal.y < snapshot.map.height
     && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal)
     && (goal === rider || constrainGroundShipStep(snapshot.map, rider, rider, goal, snapshot.units) === goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
-    || Number(b.motionClear) - Number(a.motionClear)
     || (avoidCombat && a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)
     || Number(b.bodyClear) - Number(a.bodyClear)
-    || (a.room > 0 && !destination ? b.pace - a.pace : 0)
     || (a.room > 0 ? destination ? a.distance - b.distance
       : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
   return innerWindow.length > 0 && chosen.point === rider ? { type: 'holdPosition', unitIds: [rider.id] }
