@@ -1,0 +1,91 @@
+{
+  "numTotalTests": 5195,
+  "numPassedTests": 5183,
+  "numFailedTests": 12,
+  "failures": [
+    {
+      "file": "scripts/painted-sprite-bounds.test.ts",
+      "name": "painted atlas bounds fits every humanoid action and facing inside the existing atlas tile",
+      "failure": [
+        "AssertionError: lancer/attack/0/-1 is not clipped by atlas: expected 4 to be +0 // Object.is equality\n    at assertFits (/workspace/sketch-rts-units/scripts/painted-sprite-bounds.test.ts:21:49)\n    at /workspace/sketch-rts-units/scripts/painted-sprite-bounds.test.ts:45:45\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)"
+      ]
+    },
+    {
+      "file": "src/ai/policy.test.ts",
+      "name": "SDK preset AI policy v3 ember prioritizes its first spire support unit after a stable forge frontline",
+      "failure": [
+        "AssertionError: expected { type: 'train', …(2) } to match object { type: 'train', …(2) }\n    at Proxy.<anonymous> (file:///workspace/sketch-rts/node_modules/@vitest/expect/dist/index.js:1134:13)\n    at Proxy.<anonymous> (file:///workspace/sketch-rts/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///workspace/sketch-rts/node_modules/chai/index.js:1686:25)\n    at /workspace/sketch-rts-units/src/ai/policy.test.ts:10288:21\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)"
+      ]
+    },
+    {
+      "file": "src/sdk/package-boundaries.test.ts",
+      "name": "SDK package boundaries does not carry banned cleanup-era naming in source or specs",
+      "failure": [
+        "AssertionError: expected [ …(2) ] to deeply equal []\n    at /workspace/sketch-rts-units/src/sdk/package-boundaries.test.ts:49:23\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/shared/aiming.test.ts",
+      "name": "reticle aiming retains shooter health and the adjusted Spark durability without raising caster health",
+      "failure": [
+        "AssertionError: expected 90 to be 78 // Object.is equality\n    at /workspace/sketch-rts-units/src/shared/aiming.test.ts:40:33\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/shared/ship-maneuver-recovery.test.ts",
+      "name": "live exact ship maneuvers starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+      "failure": [
+        "AssertionError: expected [ { x: 6279.04768839752, …(3) }, …(1) ] to have a length of 1 but got 2\n    at Proxy.<anonymous> (file:///workspace/sketch-rts/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///workspace/sketch-rts/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///workspace/sketch-rts/node_modules/chai/index.js:1686:25)\n    at /workspace/sketch-rts-units/src/shared/ship-maneuver-recovery.test.ts:140:68\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)"
+      ]
+    },
+    {
+      "file": "src/shared/ship-voyage-quality.test.ts",
+      "name": "observable ship voyage quality brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+      "failure": [
+        "AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []\n    at /workspace/sketch-rts-units/src/shared/ship-voyage-quality.test.ts:132:76\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/shared/ship-voyage.test.ts",
+      "name": "forward voyage planning backs less than one hull length into an aligned berth without two U-turns",
+      "failure": [
+        "AssertionError: expected 0 to be greater than 0\n    at /workspace/sketch-rts-units/src/shared/ship-voyage.test.ts:90:95\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/shared/ship-voyage.test.ts",
+      "name": "forward voyage planning marks a zero-margin reference for exact control instead of smoothing through it",
+      "failure": [
+        "AssertionError: expected false to be true // Object.is equality\n    at /workspace/sketch-rts-units/src/shared/ship-voyage.test.ts:109:52\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/ai/bootstrap_1/mercenary-control.test.ts",
+      "name": "'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=false)",
+      "failure": [
+        "AssertionError: {\"gold\":19,\"paid\":320,\"travelers\":[\"scout\"],\"mercenaries\":[{\"id\":\"unit-us-mercenary-1048\",\"x\":566.3454427492306,\"y\":497.4435053025439,\"order\":{\"type\":\"idle\"}},{\"id\":\"unit-us-mercenary-1142\",\"x\":881.5049643467212,\"y\":565.2189606979882,\"order\":{\"type\":\"move\",\"x\":500,\"y\":500,\"avoidCombat\":true}}]}: expected false to be true // Object.is equality\n    at /workspace/sketch-rts-units/src/ai/bootstrap_1/mercenary-control.test.ts:71:82\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:633:57\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/ai/bootstrap_1/mercenary-control.test.ts",
+      "name": "'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=true)",
+      "failure": [
+        "AssertionError: {\"gold\":19,\"paid\":320,\"travelers\":[\"scout\"],\"mercenaries\":[{\"id\":\"unit-us-mercenary-1048\",\"x\":3528.932671554237,\"y\":503.6233306452477,\"order\":{\"type\":\"idle\"}},{\"id\":\"unit-us-mercenary-1140\",\"x\":3334.4157264642813,\"y\":659.749523949203,\"order\":{\"type\":\"move\",\"x\":3596,\"y\":500,\"avoidCombat\":true}}]}: expected false to be true // Object.is equality\n    at /workspace/sketch-rts-units/src/ai/bootstrap_1/mercenary-control.test.ts:71:82\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:633:57\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      ]
+    },
+    {
+      "file": "src/ai/policy/humanized-combat.test.ts",
+      "name": "shorter ranged weapons priest has 80% of its old basic range 240",
+      "failure": [
+        "AssertionError: expected 201.6 to be close to 192, received difference is 9.599999999999994, but expected 5e-9\n    at /workspace/sketch-rts-units/src/ai/policy/humanized-combat.test.ts:216:41\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:629:21\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)"
+      ]
+    },
+    {
+      "file": "src/ai/policy/humanized-combat.test.ts",
+      "name": "shorter ranged weapons summoner has 80% of its old basic range 260",
+      "failure": [
+        "AssertionError: expected 218.4 to be close to 208, received difference is 10.400000000000006, but expected 5e-9\n    at /workspace/sketch-rts-units/src/ai/policy/humanized-combat.test.ts:216:41\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:629:21\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///workspace/sketch-rts/node_modules/@vitest/runner/dist/index.js:1262:5)"
+      ]
+    }
+  ]
+}

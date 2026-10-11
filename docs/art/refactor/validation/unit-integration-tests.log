@@ -1,0 +1,1423 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ❯ src/ai/policy.test.ts (409 tests | 1 failed) 5264ms
+   ✓ SDK preset AI policy > uses local scripts without internal AI ownership to build train and attack 507ms
+   ✓ SDK preset AI policy > v2 does not advance a committed 1v2 wave past the nearby town hall into deep production 1638ms
+   ✓ SDK preset AI policy > v2 keeps combat production active before the first expansion bank in the 1v1 control timing 732ms
+   × SDK preset AI policy > v3 ember prioritizes its first spire support unit after a stable forge frontline 34ms
+     → expected { type: 'train', …(2) } to match object { type: 'train', …(2) }
+   ✓ SDK preset AI policy > v2 does not spend a catch-up first-expansion window on early stables 1093ms
+   ✓ SDK preset AI policy > v2 keeps moving toward its guarded natural in a 1v2 instead of bouncing home from neutral pressure 349ms
+   ✓ SDK preset AI policy > keeps expanding across third and fourth mines instead of stopping after the first expansion 456ms
+ ✓ src/ai/policy/tower-merc-policy.test.ts (38 tests) 71ms
+ ✓ src/ai/policy/v6/general.test.ts (37 tests) 140ms
+ ✓ src/server/room-net.test.ts (29 tests) 434ms
+ ✓ src/client/net/lockstep-client.test.ts (28 tests) 986ms
+   ✓ lockstep client > restores checkpoint snapshots to the same state as savegame restore 319ms
+   ✓ lockstep client > spreads an actual deep restored search across renders without consuming or changing authoritative frames 595ms
+ ✓ src/ai/policy/naval.test.ts (47 tests) 9378ms
+   ✓ shared dock outfitting > v5 completes a real island colony and puts its settlers to work 2718ms
+   ✓ shared dock outfitting > v7 completes a real island colony and puts its settlers to work 2908ms
+   ✓ shared dock outfitting > v8 completes a real island colony and puts its settlers to work 2834ms
+ ✓ src/shared/ship-cabin.test.ts (30 tests) 1798ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 626ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 519ms
+ ✓ src/ai/bootstrap_1/economy.test.ts (26 tests) 2359ms
+   ✓ bootstrap_1 production budget > buys a grove healer and recovers the wounded permanent summon screen through the full command stack 373ms
+   ✓ bootstrap_1 production budget > buys a ember healer and recovers the wounded permanent summon screen through the full command stack 408ms
+ ✓ src/server/room-host.test.ts (30 tests) 858ms
+ ✓ src/shared/ship-equipment.test.ts (30 tests) 984ms
+stdout | src/client/world3d/world-layer.test.ts > production scene CPU integration (GPU renderer mocked) > batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit
+2,000 troops: 45.8 ms CPU scene preparation, 2 actor mesh; GPU timing not measured
+
+ ✓ src/client/world3d/world-layer.test.ts (15 tests) 1055ms
+   ✓ production scene CPU integration (GPU renderer mocked) > binds water to the rendered match rather than the smaller home snapshot used for preloading 312ms
+ ✓ src/ai/policy/spell-tactics.test.ts (26 tests) 47ms
+ ✓ src/ai/bootstrap_1/tower-rush.test.ts (17 tests) 1428ms
+ ✓ src/sdk/client.test.ts (13 tests) 15ms
+ ✓ src/shared/ship-pursuit.test.ts (24 tests) 877ms
+ ✓ src/shared/ship-planning-state.test.ts (18 tests) 2989ms
+   ✓ saved incremental ship planning state > restores a compact actual island checkpoint after more than 50,000 expansions 542ms
+   ✓ saved incremental ship planning state > prepares an actual deep restored search across yields without changing saved authority 397ms
+   ✓ saved incremental ship planning state > replays an actual pending coastal job for 300 ticks through finish and moving deck crew 415ms
+   ✓ saved incremental ship planning state > replays an actual pending coastal job for 300 ticks through wind change and moving deck crew 360ms
+   ✓ saved incremental ship planning state > replays an actual pending coastal job for 300 ticks through new command and moving deck crew 347ms
+   ✓ saved incremental ship planning state > replays an actual pending coastal job for 300 ticks through nearby traffic and moving deck crew 412ms
+ ✓ src/shared/veteran-runtime.test.ts (22 tests) 16ms
+ ✓ src/shared/sim.test.ts (114 tests) 29861ms
+   ✓ sketch RTS simulation > keeps map gold mines lean enough that expansions and harassment matter 555ms
+   ✓ sketch RTS simulation > pushes enemy AI toward an attack after building an army 559ms
+   ✓ sketch RTS simulation > only sends AI attack waves into the enemy base after the enemy army and economy collapse 900ms
+   ✓ sketch RTS simulation > does not spam unfinished supply buildings while one farm is already pending 321ms
+   ✓ sketch RTS simulation > expands AI economies to open gold mines when expansions exist 309ms
+   ✓ sketch RTS simulation > runs a fast two-AI duel with no neutral camps or mercenary camps 7836ms
+   ✓ sketch RTS simulation > runs a fast two-AI duel with neutral camp clearing and mercenary combat 2583ms
+   ✓ sketch RTS simulation > runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts 6126ms
+   ✓ sketch RTS simulation > runs a fast three-AI free-for-all with a real third faction economy and winner 4825ms
+   ✓ sketch RTS simulation > runs a fast V7 1v2 allied-AI match without allied target acquisition 4903ms
+ ✓ src/sdk/benchmark.test.ts (12 tests) 667ms
+   ✓ SDK benchmark > runs serializable benchmark matches in parallel workers while preserving report order 408ms
+ ❯ src/shared/ship-voyage-quality.test.ts (54 tests | 1 failed) 11637ms
+   ✓ observable ship voyage quality > preserves mixed-convoy progress and turn quality through the real weather boundary 2327ms
+   × observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull 4410ms
+     → expected [ 'unit-player-warship-1006' ] to deeply equal []
+   ✓ observable ship voyage quality > pursues a distant crossing moving enemy without stop-start range chatter 629ms
+   ✓ observable ship voyage quality > pursues a near parallel moving enemy without stop-start range chatter 411ms
+   ✓ observable ship voyage quality > resumes wind-powered pursuit after an exact maneuver and stops safely behind a tacking leader 340ms
+ ✓ src/client/world-renderer.test.ts (17 tests) 125ms
+ ✓ src/ai/benchmark/control.test.ts (12 tests) 14ms
+ ✓ scripts/ai-playtest.test.ts (26 tests) 22007ms
+   ✓ AI playtest CLI > prints a reusable command manifest for CLI tooling and help generation 484ms
+   ✓ AI playtest CLI > generates help from the command manifest instead of a separate command list 832ms
+   ✓ AI playtest CLI > prints the persisted AI memory used by manual playtest commands 1243ms
+   ✓ AI playtest CLI > includes AI memory claims in the standard status summary 1017ms
+   ✓ AI playtest CLI > records CLI attack-move as durable attack memory 985ms
+   ✓ AI playtest CLI > inspects units with the memory claims used by manual commands 1030ms
+   ✓ AI playtest CLI > focuses only nearby attackers through a memory-backed tactical command 2168ms
+   ✓ AI playtest CLI > creates reusable combat playtest setups that can be steered with memory-backed commands 1115ms
+   ✓ AI playtest CLI > runs assisted combat playtests in combat policy mode 348ms
+   ✓ AI playtest CLI > persists per-player assisted script ids for composable CLI control 381ms
+   ✓ AI playtest CLI > prints planned AI command entries without mutating the playtest file 675ms
+   ✓ AI playtest CLI > diagnoses a fresh playtest through the reusable diagnosis primitive 370ms
+   ✓ AI playtest CLI > uses the shared AI think interval by default 381ms
+   ✓ AI playtest CLI > creates manual sessions from exact benchmark 1v2 matches 601ms
+   ✓ AI playtest CLI > creates side-swapped benchmark control sessions without duplicating preset setup 865ms
+   ✓ AI playtest CLI > creates exact side-swapped sessions from the all-map control benchmark 765ms
+   ✓ AI playtest CLI > creates exact cross-race benchmark sessions for ember versus grove replay 598ms
+   ✓ AI playtest CLI > creates exact gauntlet 1v3 sessions for assisted v2 replay 670ms
+   ✓ AI playtest CLI > creates exact V5 hybrid 1v2 benchmark sessions for assisted replay 510ms
+   ✓ AI playtest CLI > creates manual side-swapped map sessions with explicit teams 787ms
+   ✓ AI playtest CLI > persists per-player disabled benchmark behaviors for exact assisted replay 551ms
+   ✓ AI playtest CLI > lets exact control benchmark sessions use the requested worker harassment mode 718ms
+   ✓ AI playtest CLI > retreats wounded units through a memory-backed tactical command 1938ms
+   ✓ AI playtest CLI > picks up a nearby item through the reusable SDK item intent 1434ms
+   ✓ AI playtest CLI > steps until a target game second for reusable tactical checkpoints 817ms
+   ✓ AI playtest CLI > steps until a target tick without requiring a duplicate max tick flag 722ms
+ ✓ src/shared/ship-gangway-integration.test.ts (18 tests) 6895ms
+   ✓ boarding balance through real simulation commands > sails an actual approach, then spends three seconds setting up without instant capture 425ms
+   ✓ boarding balance through real simulation commands > walks infantry across the real water gap and captures only after counterdamage from the foredeck defender 599ms
+   ✓ boarding balance through real simulation commands > walks infantry across the real water gap and captures only after counterdamage from the aft port entrance defender 638ms
+   ✓ boarding balance through real simulation commands > lets explicit attack-move infantry fight across a ready bridge, then physically board 508ms
+   ✓ boarding balance through real simulation commands > replaces stale crew boarding on an immediate bridge command, while a queued bridge waits for its helm 3731ms
+ ✓ src/shared/naval.test.ts (21 tests) 2918ms
+   ✓ ships > lose to a tower on the shore, one against one 900ms
+   ✓ stable shore rendezvous and ship repair > lets a worker pay to repair a vessel at the shore without a shipyard 449ms
+ ✓ src/client/unit-animation.test.ts (27 tests) 42ms
+ ✓ src/ai/benchmark/presets.test.ts (17 tests) 3133ms
+   ✓ AI benchmark presets > runs combat lanes on a small arena where both AI versions actively fight 829ms
+   ✓ AI benchmark presets > runs the combat micro targets and reports each recipe outcome separately 1056ms
+   ✓ AI benchmark presets > runs the AI benchmark preset through SDK parallel workers 1003ms
+ ✓ src/ai/bootstrap_1/mine-defense.test.ts (19 tests) 1524ms
+   ✓ bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost 469ms
+ ✓ src/shared/veteran-integration.test.ts (15 tests) 1617ms
+   ✓ veteran progression in the shared simulation > continues mixed veteran combat identically through save restore and recorded replay on every tick 1305ms
+ ✓ src/shared/ship-course-avoidance.test.ts (29 tests) 75ms
+ ✓ src/client/tooltips.test.ts (20 tests) 19ms
+ ✓ src/ai/policy/skirmish-tactics.test.ts (16 tests) 62ms
+ ✓ src/shared/ship-steering.test.ts (29 tests) 707ms
+ ✓ src/shared/rooms.test.ts (22 tests) 23ms
+ ✓ src/ai/runtime.test.ts (16 tests) 211ms
+ ✓ src/ai/benchmark/dashboard-store.test.ts (9 tests) 3674ms
+   ✓ benchmark dashboard store > records standard AI benchmark runs and lists latest summaries first 3205ms
+   ✓ benchmark dashboard store > does not reuse a fixed timestamp seed for ordinary dashboard runs 415ms
+ ✓ src/shared/ship-fire-control.test.ts (15 tests) 1163ms
+   ✓ mounted firing headings > finds every firing interval seen by an independent dense angular sweep 1014ms
+ ✓ src/shared/damage-integration.test.ts (23 tests) 54ms
+ ❯ src/ai/policy/humanized-combat.test.ts (50 tests | 2 failed) 179ms
+   × shorter ranged weapons > priest has 80% of its old basic range 240 5ms
+     → expected 201.6 to be close to 192, received difference is 9.599999999999994, but expected 5e-9
+   × shorter ranged weapons > summoner has 80% of its old basic range 260 0ms
+     → expected 218.4 to be close to 208, received difference is 10.400000000000006, but expected 5e-9
+ ✓ src/ai/policy/expansion-model.test.ts (17 tests) 81ms
+ ✓ src/ai/policy/script-runner.test.ts (13 tests) 20ms
+ ✓ src/shared/veteran-balance.test.ts (9 tests) 189ms
+ ❯ src/shared/ship-voyage.test.ts (26 tests | 2 failed) 299ms
+   × forward voyage planning > backs less than one hull length into an aligned berth without two U-turns 16ms
+     → expected 0 to be greater than 0
+   × forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it 6ms
+     → expected false to be true // Object.is equality
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":5715,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 6568ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1060ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 3234ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 407ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 572ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 325ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 515ms
+ ✓ src/shared/sim/determinism.test.ts (18 tests) 57ms
+ ✓ src/shared/ship-queued-course.test.ts (32 tests) 1730ms
+   ✓ continuous queued ship moves > preserves each queued move while yielding to a live crossing hull 323ms
+ ✓ src/shared/ship-mounted-combat.test.ts (13 tests) 4662ms
+   ✓ mounted weapons in live sailing combat > brings a rear broadside battery into a clear firing station while forward peers are already engaged 3635ms
+ ✓ src/shared/terrain.test.ts (16 tests) 81ms
+ ✓ src/sdk/playtest.test.ts (9 tests) 50ms
+ ✓ src/client/combat-presentation.test.ts (21 tests) 61ms
+ ✓ src/shared/ship-tacking.test.ts (29 tests) 1735ms
+   ✓ wind-aware ship voyages > retries tacking after leaving a narrow channel and preserves the retry through a save 958ms
+ ✓ src/client/world3d/batches.test.ts (10 tests) 26ms
+ ✓ src/ai/policy/skirmish-retreat-memory.test.ts (15 tests) 143ms
+ ✓ src/shared/generated-map.test.ts (14 tests) 16830ms
+   ✓ generated maps > draws every idea for its seats: every start walks to every other start and every mine but an island's, over ground it can stand on 3935ms
+   ✓ generated maps > draws an idea from the seed among those that take the seats, and the open ring for seats no other idea takes 3389ms
+   ✓ generated maps > gives four players a main mine and a natural each and more mines to contest, the same from every start of a ring 1307ms
+   ✓ generated maps > puts every main on a plateau walled by its cliff, and outside it by forest or rock, but for one ramp, with room to build 452ms
+   ✓ generated maps > gives every player of two facing teams a natural of its own, nearer to it than to any other start 722ms
+   ✓ generated maps > keeps creeps out of every start's opening economy and everything on the map 760ms
+   ✓ generated maps > is the same map for the same seed and a different one for another, of both kinds for even teams 2649ms
+   ✓ generated maps > draws a map for any number of players from two to eight 482ms
+   ✓ generated maps > always plays the ladder map on a generated layout: the setup's, or the one the seed "ladder" draws 300ms
+   ✓ generated maps > puts island mines only a ship reaches, and near every start a shore for a shipyard on open water that reaches them 933ms
+   ✓ generated maps > fills every camp with a template of its colour, mostly of its ground's family, and every copy of a camp alike 743ms
+   ✓ generated maps > lays rocks and gates across shortcuts only: the hill's back ways, the middle ford, the jungle's ways in, with every start, mine and camp still reached round them 812ms
+ ✓ src/client/deployment/server-runtime.test.ts (11 tests) 231ms
+ ✓ src/shared/ship-collisions.test.ts (17 tests) 75ms
+ ✓ src/ai/game-runner.test.ts (12 tests) 1905ms
+   ✓ SDK game runner > plans mixed internal/external controllers from the same simulation frame 1074ms
+   ✓ SDK game runner > can disable worker pressure through an agent strategy parameter 708ms
+ ✓ src/shared/production-spawn.test.ts (15 tests) 101ms
+ ✓ src/shared/ship-navigation.test.ts (16 tests) 1152ms
+   ✓ full hull water navigation > continues a saved budgeted route without cruise state past its intermediate endpoint 476ms
+ ✓ src/shared/mining-waiting.test.ts (28 tests) 11062ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on sapphireArchipelago and reaches saturation with the fifth 1669ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on grandEstuary and reaches saturation with the fifth 1250ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on brokenSea and reaches saturation with the fifth 573ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on templeSpring and reaches saturation with the fifth 737ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on turtleLake and reaches saturation with the fifth 562ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on elderwood and reaches saturation with the fifth 730ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on ringwater and reaches saturation with the fifth 598ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on loneMarket and reaches saturation with the fifth 861ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on reedwater and reaches saturation with the fifth 461ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on pineshade and reaches saturation with the fifth 717ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on gullIsland and reaches saturation with the fifth 380ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on stillwater and reaches saturation with the fifth 693ms
+   ✓ mining progress and undersaturated queues > keeps 1–4 workers cycling on twoShores and reaches saturation with the fifth 871ms
+ ✓ src/shared/ship-planning-budget.test.ts (14 tests) 9ms
+ ✓ src/ai/playtest.test.ts (11 tests) 40ms
+ ✓ src/shared/boarding-control.test.ts (13 tests) 2118ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 1425ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 425ms
+ ✓ src/ai/policy/v6/economy.test.ts (15 tests) 67ms
+ ✓ src/client/effect-renderer.test.ts (13 tests) 515ms
+   ✓ projectile looks > colors the same shared caster by shooter ownership in the real Canvas path 500ms
+ ✓ src/shared/equipment.test.ts (12 tests) 59ms
+ ❯ src/shared/aiming.test.ts (19 tests | 1 failed) 61ms
+   × reticle aiming > retains shooter health and the adjusted Spark durability without raising caster health 10ms
+     → expected 90 to be 78 // Object.is equality
+ ✓ src/shared/ship-cabin-quota.test.ts (26 tests) 437ms
+ ✓ src/shared/ship-gangway.test.ts (12 tests) 429ms
+ ✓ src/shared/mechanical-healing.test.ts (12 tests) 54ms
+ ✓ src/ai/policy/v7/creep.test.ts (11 tests) 17ms
+ ✓ src/shared/unit-repair.test.ts (20 tests) 77ms
+ ✓ src/shared/push.test.ts (14 tests) 30ms
+ ✓ src/client/room-setup-session.test.ts (12 tests) 16ms
+ ✓ src/shared/sim/veteran-command.test.ts (9 tests) 63ms
+ ✓ src/ai/policy/plan-lazy-queries.test.ts (11 tests) 49ms
+ ✓ src/shared/navigation-math.test.ts (10 tests) 383ms
+ ✓ src/ai/policy/query-guard-policy.test.ts (13 tests) 35ms
+ ✓ src/ai/policy/training-choice.test.ts (15 tests) 21ms
+ ✓ src/shared/naval-combat.test.ts (12 tests) 570ms
+ ❯ src/shared/ship-maneuver-recovery.test.ts (6 tests | 1 failed) 131ms
+   × live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle 25ms
+     → expected [ { x: 6279.04768839752, …(3) }, …(1) ] to have a length of 1 but got 2
+ ✓ src/ai/policy/naval-cover.test.ts (12 tests) 376ms
+ ✓ src/shared/ship-geometry.test.ts (32 tests) 215ms
+ ✓ src/sdk/commands/intent.test.ts (9 tests) 15ms
+ ✓ src/shared/ship-physical-integration.test.ts (11 tests) 139ms
+ ✓ src/client/ability-targeting.test.ts (15 tests) 45ms
+ ✓ src/shared/ship-traffic-recovery.test.ts (8 tests) 17097ms
+   ✓ ship traffic recovery > lets a heavy stand-on ship hold its course while a crossing transport clears its bow from the occupied lane 529ms
+   ✓ ship traffic recovery > keeps a faster transport behind a slower moving heavy hull without lateral detours, collision or save divergence 524ms
+   ✓ ship traffic recovery > finishes the original island convoy after adverse wind without long astern travel or unsafe shortcuts 5067ms
+   ✓ ship traffic recovery > carries two crossing six-ship convoys through live traffic without repeated failed route searches 9115ms
+   ✓ ship traffic recovery > retains a physically blocked exact route and resumes the same waiting state through a JSON save 1742ms
+ ✓ src/client/resources.test.ts (9 tests) 690ms
+ ✓ src/client/world-presentation.test.ts (10 tests) 364ms
+ ✓ src/shared/sim/grounded-frame.test.ts (11 tests) 45ms
+ ✓ src/server/room-frame-snapshot.test.ts (5 tests) 50ms
+ ✓ src/client/relations.test.ts (18 tests) 46ms
+ ✓ src/client/command-button-state.test.ts (11 tests) 6ms
+ ✓ src/shared/player-aggro.test.ts (11 tests) 52ms
+ ✓ src/shared/mining.test.ts (26 tests) 7924ms
+   ✓ gold haul cycles > saturates sapphireArchipelago at five workers through admission and travel timing 1037ms
+   ✓ gold haul cycles > saturates grandEstuary at five workers through admission and travel timing 728ms
+   ✓ gold haul cycles > saturates brokenSea at five workers through admission and travel timing 321ms
+   ✓ gold haul cycles > saturates templeSpring at five workers through admission and travel timing 466ms
+   ✓ gold haul cycles > saturates elderwood at five workers through admission and travel timing 357ms
+   ✓ gold haul cycles > saturates ringwater at five workers through admission and travel timing 340ms
+   ✓ gold haul cycles > saturates loneMarket at five workers through admission and travel timing 396ms
+   ✓ gold haul cycles > saturates pineshade at five workers through admission and travel timing 381ms
+   ✓ gold haul cycles > saturates stillwater at five workers through admission and travel timing 443ms
+   ✓ gold haul cycles > saturates twoShores at five workers through admission and travel timing 435ms
+   ✓ gold haul cycles > leaves every formal main and expansion mine room for a legal hauling base 1306ms
+ ✓ src/shared/sim/grounded-combat-frame.test.ts (12 tests) 260ms
+ ✓ src/client/world3d/painted-card-batches.test.ts (9 tests) 900ms
+   ✓ painted card array batches > preserves every source texel and its world position while trimming transparent padding 601ms
+ ✓ src/shared/sim/wind-state.test.ts (9 tests) 353ms
+ ✓ src/shared/sailing-budget.test.ts (9 tests) 902ms
+   ✓ scheduled sailing through the simulation > follows a close aligned leader without detouring and restores its real headway 313ms
+ ✓ src/shared/ship-wind.test.ts (14 tests) 36ms
+ ✓ src/client/ability-effects.test.ts (10 tests) 94ms
+ ✓ src/sdk/snapshot-query.test.ts (4 tests) 11ms
+ ✓ src/client/selection-controls.test.ts (11 tests) 13ms
+ ✓ src/ai/policy/claims.test.ts (10 tests) 12ms
+ ✓ src/server/rest-command-boundary.test.ts (8 tests) 7656ms
+   ✓ server REST and WebSocket command ingress at / > streams pre-match room lifecycle updates at a real REST boundary 960ms
+   ✓ server REST and WebSocket command ingress at / > rejects malformed commands at both real network boundaries 997ms
+   ✓ server REST and WebSocket command ingress at / > rejects malformed room reset setup payloads through the shared room schema 922ms
+   ✓ server REST and WebSocket command ingress at / > rejects malformed save and debug replay payloads at real REST boundaries 866ms
+   ✓ server REST and WebSocket command ingress at /sketch-rts/ > streams pre-match room lifecycle updates at a real REST boundary 958ms
+   ✓ server REST and WebSocket command ingress at /sketch-rts/ > rejects malformed commands at both real network boundaries 1092ms
+   ✓ server REST and WebSocket command ingress at /sketch-rts/ > rejects malformed room reset setup payloads through the shared room schema 940ms
+   ✓ server REST and WebSocket command ingress at /sketch-rts/ > rejects malformed save and debug replay payloads at real REST boundaries 920ms
+ ✓ src/shared/purchase.test.ts (8 tests) 40ms
+ ✓ src/shared/ship-launch.test.ts (13 tests) 234ms
+stdout | src/ai/bootstrap_1/summoner-screen.test.ts > bootstrap_1 summon host staging > marches the grove host from outside tower-rush reach and pays for its first forward tower
+{"race":"grove","tick":1651,"sites":[{"type":"build","unitId":"scene-summoner-march-to-construction-us-worker-3","buildingKind":"defenseTower","x":2382.4029594312283,"y":786.2026864165238},{"type":"build","unitId":"scene-summoner-march-to-construction-us-worker-3","buildingKind":"defenseTower","x":3224.0540051439384,"y":826.9201579344667}],"forward":[{"x":2382.4029594312283,"complete":true}],"casters":[{"x":3203.780797935996,"y":803.2615383710238},{"x":3170.5372651518337,"y":796.0678058446704},{"x":3171.1221135257424,"y":860.9929804868297},{"x":3193.6234458764457,"y":835.7088525763376},{"x":3203.5589497886954,"y":871.1837436206877},{"x":3160.415679097828,"y":828.5374666527233},{"x":1365.8187752331744,"y":504.7751903912037}],"spent":760}
+
+stdout | src/ai/bootstrap_1/summoner-screen.test.ts > bootstrap_1 summon host staging > marches the ember host from outside tower-rush reach and pays for its first forward tower
+{"race":"ember","tick":1632,"sites":[{"type":"build","unitId":"scene-summoner-march-to-construction-us-worker-3","buildingKind":"defenseTower","x":2396.433557211427,"y":788.5091013574227}],"forward":[{"x":2396.433557211427,"complete":true}],"casters":[{"x":2374.6047563727348,"y":741.1376444265026},{"x":2412.8496913692616,"y":754.6489773999645},{"x":2340.508501174004,"y":757.6201132980775},{"x":2393.186605932023,"y":827.7835169052709},{"x":2357.3682156406603,"y":787.1455220963907},{"x":2405.4656477463327,"y":796.078231350297},{"x":1387.2878142505128,"y":547.8595976542053}],"spent":756}
+
+ ✓ src/ai/bootstrap_1/summoner-screen.test.ts (6 tests) 1036ms
+   ✓ bootstrap_1 summon host staging > marches the grove host from outside tower-rush reach and pays for its first forward tower 569ms
+   ✓ bootstrap_1 summon host staging > marches the ember host from outside tower-rush reach and pays for its first forward tower 352ms
+ ✓ src/story/director.test.ts (7 tests) 160ms
+ ✓ src/ai/policy/naval-services.test.ts (12 tests) 2179ms
+   ✓ physical naval service tasks > v5 sends a repair worker across decks and the shared simulation repairs the hull 602ms
+   ✓ physical naval service tasks > v7 sends a repair worker across decks and the shared simulation repairs the hull 479ms
+   ✓ physical naval service tasks > v8 sends a repair worker across decks and the shared simulation repairs the hull 397ms
+ ✓ src/shared/ship-training-cost.test.ts (22 tests) 133ms
+ ✓ src/ai/policy/mechanical-healing.test.ts (22 tests) 28ms
+ ✓ src/ai/bootstrap_1/rider-crossing.test.ts (21 tests) 6934ms
+   ✓ 'v9_archer' ferries one rider and clears the island without damage (mirror=false) 816ms
+   ✓ 'v9_archer' ferries one rider and clears the island without damage (mirror=true) 776ms
+   ✓ 'v9_summoner' ferries one rider and clears the island without damage (mirror=false) 476ms
+   ✓ 'v9_summoner' ferries one rider and clears the island without damage (mirror=true) 523ms
+   ✓ 'v9_knight' ferries one rider and clears the island without damage (mirror=false) 442ms
+   ✓ 'v9_knight' ferries one rider and clears the island without damage (mirror=true) 497ms
+   ✓ 'v9_archer' clears before dispatching settlers (mirror=false) 795ms
+   ✓ 'v9_archer' clears before dispatching settlers (mirror=true) 545ms
+   ✓ 'v9_summoner' clears before dispatching settlers (mirror=false) 578ms
+   ✓ 'v9_summoner' clears before dispatching settlers (mirror=true) 448ms
+   ✓ 'v9_knight' clears before dispatching settlers (mirror=false) 536ms
+   ✓ 'v9_knight' clears before dispatching settlers (mirror=true) 472ms
+ ✓ src/shared/warfare.test.ts (8 tests) 109ms
+ ✓ src/ai/bootstrap_1/mounted-raids.test.ts (7 tests) 992ms
+   ✓ bootstrap_1 mounted raid recruitment > lets a lone rider clear an exposed mining line and its melee pursuers without taking damage 875ms
+ ✓ src/client/unit-hover-cursor.test.ts (10 tests) 29ms
+ ✓ src/ai/ab-test.test.ts (4 tests) 327ms
+   ✓ SDK AI behavior A/B runner > runs the same scene with a v2 behavior enabled and disabled, then reports telemetry and score delta 310ms
+ ✓ src/sdk/snapshot-player-view-classification.test.ts (5 tests) 10ms
+ ✓ src/shared/sim/unit-separation.test.ts (8 tests) 36ms
+ ✓ src/shared/sim/command-frame-runtime.test.ts (13 tests) 14ms
+ ✓ src/shared/building-body.test.ts (10 tests) 101ms
+ ✓ src/ai/bootstrap_1/expansion-authority.test.ts (16 tests) 5281ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_archer'/'grove', mirror=false) 752ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_archer'/'grove', mirror=true) 558ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_archer'/'ember', mirror=false) 550ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_archer'/'ember', mirror=true) 441ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'grove', mirror=false) 395ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'grove', mirror=true) 346ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'ember', mirror=false) 343ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'ember', mirror=true) 377ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_knight'/'grove', mirror=false) 322ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_knight'/'grove', mirror=true) 325ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_knight'/'ember', mirror=false) 310ms
+   ✓ clears and mines its natural instead of a distant naval land detour ('v9_knight'/'ember', mirror=true) 322ms
+ ✓ src/client/status-presentation.test.ts (9 tests) 47ms
+ ✓ src/shared/map-objectives.test.ts (7 tests) 1387ms
+   ✓ map neutral objective layout > keeps the first expansion and the first contested economy objective as near to one 1v1 start as to the other on ladder maps 307ms
+   ✓ map neutral objective layout > keeps guarded mercenary camps inside the AI guard radius 428ms
+ ✓ src/client/cabin-controls.test.ts (7 tests) 91ms
+ ✓ src/shared/map-pool.test.ts (6 tests) 5238ms
+   ✓ map pool > keeps every map exactly as it was drawn 1660ms
+   ✓ map pool > starts a room's game on its map's own layout, at the size it names 1434ms
+   ✓ opens every resource and camp on the six/eight player maps, with useful distinct theaters 393ms
+   ✓ keeps named shores and requested diplomacy when alliances are uneven or free-for-all 1010ms
+   ✓ guards expansion gold with complete tiered camps, equally strong for every starting seat 737ms
+ ✓ src/client/world3d/model-portraits.test.ts (3 tests) 989ms
+   ✓ fits every current ship and building in UI without a second resource request or a stale sprite 571ms
+ ✓ src/ai/policy/naval-heavy-ship.test.ts (6 tests) 421ms
+ ✓ src/client/hud-model.test.ts (8 tests) 5ms
+ ✓ src/client/net/local-adapter.test.ts (10 tests) 30ms
+ ✓ src/shared/production.test.ts (12 tests) 56ms
+ ✓ src/ai/policy/adaptive-engagements.test.ts (10 tests) 75ms
+ ✓ src/client/command-feedback.integration.test.ts (4 tests) 25ms
+ ✓ src/shared/sim/command-validation.test.ts (8 tests) 36ms
+ ✓ src/shared/ship-defense.test.ts (7 tests) 1297ms
+   ✓ automatic idle fleet defense > sails an idle broadside battery to a firing station while its sheltered crew keep their task 650ms
+   ✓ automatic idle fleet defense > abandons a faster escaping quarry and returns to its original guard station 422ms
+ ✓ src/client/map-preview.test.ts (7 tests) 2042ms
+   ✓ room map preview > shares only immutable physical data across three-to-one, free-for-all and regrouped balanced alliances 591ms
+   ✓ room map preview > does not share physical maps across a changed seed, seat order, player identity or non-shore diplomacy 729ms
+ ✓ src/shared/savegame.test.ts (7 tests) 288ms
+ ✓ src/shared/charge.test.ts (9 tests) 30ms
+ ✓ src/ai/policy/build-layout.test.ts (10 tests) 16ms
+ ✓ src/client/minimap-wind.test.ts (10 tests) 36ms
+ ✓ src/shared/ship-frame-vessels.test.ts (5 tests) 54ms
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > evacuates a storm away from melee pursuit arriving from side -1
+{"side":-1,"control":74,"candidate":36}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > evacuates a storm away from melee pursuit arriving from side 1
+{"side":1,"control":74,"candidate":36}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the horseArcher out of a real storm despite repeated army orders, then returns command
+{"kind":"horseArcher","control":48,"candidate":36}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the sparkArcher out of a real storm despite repeated army orders, then returns command
+{"kind":"sparkArcher","control":48,"candidate":42}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the summoner out of a real storm despite repeated army orders, then returns command
+{"kind":"summoner","control":48,"candidate":42}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the summoner out of a real storm despite repeated army orders, then returns command
+{"kind":"summoner","control":48,"candidate":42}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the knight out of a real storm despite repeated army orders, then returns command
+{"kind":"knight","control":48,"candidate":42}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > moves the ashChieftain out of a real storm despite repeated army orders, then returns command
+{"kind":"ashChieftain","control":48,"candidate":42}
+
+stdout | src/ai/bootstrap_1/area-evasion.test.ts > bootstrap_1 sustained ground area evasion > evacuates a real spark ignition and waits outside until it expires
+{"fireControl":12,"fireCandidate":2}
+
+ ✓ src/ai/bootstrap_1/area-evasion.test.ts (10 tests) 130ms
+ ✓ src/story/kernel.test.ts (11 tests) 7ms
+ ✓ src/shared/transport-role.test.ts (6 tests) 103ms
+ ✓ src/shared/heavy-broadside.test.ts (7 tests) 289ms
+ ✓ src/shared/decks.test.ts (10 tests) 278ms
+ ✓ src/client/ship-boarding-controls.test.ts (7 tests) 58ms
+ ✓ src/ai/policy/v6/raid.test.ts (7 tests) 17ms
+ ✓ src/shared/gold-expansion-footprint.test.ts (17 tests) 2178ms
+   ✓ every pool gold mine supports an accessible hauling base > sapphireArchipelago keeps complete foundations, mineral clearances and worker access 300ms
+   ✓ every pool gold mine supports an accessible hauling base > sapphireArchipelago lets a real worker construct a mineral base after its camp is cleared 309ms
+ ✓ src/server/room-planning-restore.test.ts (3 tests) 1236ms
+   ✓ continued room navigation preparation > prepares an actual saved deep search without changing the room tick, snapshot or checksum 755ms
+   ✓ continued room navigation preparation > leaves a continued automatic room unchanged while its derived search warms over ticker turns 348ms
+ ✓ src/shared/unit-save-migration.test.ts (11 tests) 26ms
+ ✓ src/ai/bootstrap_1/mining-tower-cover.test.ts (14 tests) 1566ms
+   ✓ pays for cover, builds and mines the cleared replacement while the army holds elsewhere ('v9_archer'/'grove', mirror=false) 419ms
+ ✓ src/ai/bootstrap_1/ferry-preparation.test.ts (14 tests) 3582ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 623ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=true) 326ms
+   ✓ 'v9_archer' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 318ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 310ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=true) 328ms
+ ✓ src/ai/squad/squad.test.ts (7 tests) 39ms
+ ✓ src/ai/bootstrap_1/front-post-continuity.test.ts (28 tests) 1578ms
+ ✓ src/ai/policy/focus-fire-policy-boundaries.test.ts (25 tests) 65ms
+ ✓ src/shared/shop.test.ts (8 tests) 51ms
+ ✓ src/shared/cast-order.test.ts (7 tests) 46ms
+ ✓ src/shared/sim/veteran-frame-gates.test.ts (6 tests) 35ms
+ ✓ src/sdk/game-runner.test.ts (6 tests) 387ms
+   ✓ SDK game runner > gives a planner the current format, real obstacles and a corpse created through ordinary combat 374ms
+ ✓ src/client/sound-loading.test.ts (5 tests) 371ms
+ ✓ src/client/world3d/model-library.test.ts (6 tests) 140ms
+ ✓ src/ai/bootstrap_1/front-recovery.test.ts (36 tests) 913ms
+ ✓ src/ai/policy/v6/backline.test.ts (6 tests) 15ms
+ ✓ src/shared/damage-types.test.ts (8 tests) 6ms
+ ✓ src/shared/mining-upkeep.test.ts (16 tests) 74ms
+ ✓ src/shared/sim/wind-schedule.test.ts (6 tests) 279ms
+ ✓ src/shared/creeps.test.ts (6 tests) 37ms
+ ✓ src/shared/crew-rendezvous.test.ts (7 tests) 1716ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated player deck 565ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated enemy deck 347ms
+   ✓ right-click crew rendezvous > resumes a mid-rendezvous save deterministically 372ms
+ ✓ src/client/deployment/static-runtime.test.ts (9 tests) 32ms
+ ✓ src/ai/bootstrap_1/allied-mines.test.ts (56 tests) 3807ms
+   ✓ 'v9_archer' ferries toward the free island instead of allied 'hall' claims ('grove', mirror=false, mainland=false) 323ms
+ ✓ src/ai/bootstrap_1/battle-roads.test.ts (36 tests) 2197ms
+ ✓ src/ai/policy/training-affordability.test.ts (12 tests) 23ms
+ ✓ src/shared/room-schema.test.ts (6 tests) 8ms
+ ✓ src/client/sound-cues.test.ts (6 tests) 21ms
+ ✓ src/ai/policy/transfer-lanes.test.ts (2 tests) 1836ms
+   ✓ AI crowded shore transfers > clears a real blocked crossing using movement and completes boarding 1828ms
+ ✓ src/shared/ship-combat-quality.test.ts (25 tests) 9176ms
+   ✓ real naval engagement quality > crossing keeps its guns useful when real damage slows the target 667ms
+   ✓ real naval engagement quality > battery-crossing keeps its guns useful when real damage slows the target 1791ms
+   ✓ real naval engagement quality > aims a ready mortar during a moving interception and deals damage 590ms
+   ✓ real naval engagement quality > backs a mortar out of its dead zone without a complete hull rotation 383ms
+   ✓ real naval engagement quality > a fire ship intercepts a crossing transport and uses its projector 1000ms
+   ✓ real naval engagement quality > three ships in a sea lane establish combat instead of individually orbiting 2960ms
+ ✓ src/ai/policy/v6/closeout.test.ts (5 tests) 152ms
+ ✓ src/shared/sim/team-spatial-index.test.ts (6 tests) 27ms
+ ✓ src/shared/veteran-skills.test.ts (8 tests) 277ms
+stdout | src/shared/spark-fire.test.ts > Spark Archer ground fire > trades a little single-target damage for higher damage against stationary clustered troops
+{ kind: 'archer', clustered: false, arrows: 0, fires: 0 }
+{ kind: 'sparkArcher', clustered: false, arrows: 618, fires: 99 }
+{ kind: 'sparkArcher', clustered: true, arrows: 623, fires: 99 }
+{
+  grove: 8.055555555555555,
+  emberSolo: 7.471064814814814,
+  emberCluster: 11.939814814814815
+}
+
+ ✓ src/shared/spark-fire.test.ts (4 tests) 826ms
+   ✓ Spark Archer ground fire > trades a little single-target damage for higher damage against stationary clustered troops 756ms
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_archer' assigns an island rider when the first idle rider has no reachable camp (mirror=false)
+{"version":"v9_archer","mirror":false,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_archer' assigns an island rider when the first idle rider has no reachable camp (mirror=true)
+{"version":"v9_archer","mirror":true,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_summoner' assigns an island rider when the first idle rider has no reachable camp (mirror=false)
+{"version":"v9_summoner","mirror":false,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_summoner' assigns an island rider when the first idle rider has no reachable camp (mirror=true)
+{"version":"v9_summoner","mirror":true,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_knight' assigns an island rider when the first idle rider has no reachable camp (mirror=false)
+{"version":"v9_knight","mirror":false,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/mounted-ground-assignments.test.ts > 'v9_knight' assigns an island rider when the first idle rider has no reachable camp (mirror=true)
+{"version":"v9_knight","mirror":true,"assigned":true,"arrows":30,"damage":0,"lost":0}
+
+ ✓ src/ai/bootstrap_1/mounted-ground-assignments.test.ts (18 tests) 1978ms
+ ✓ src/ai/bootstrap_1/critical-mining-escort.test.ts (12 tests) 2497ms
+   ✓ escorts its contested replacement through construction instead of resuming a distant assault ('v9_archer'/'grove', mirror=false) 360ms
+ ✓ src/shared/obstacle.test.ts (4 tests) 3205ms
+   ✓ rocks and gates > shut their way on every pool map: a footman walks round each one while it stands, and straight past once it is gone 2840ms
+ ✓ src/shared/ship-navigation-heuristic.test.ts (4 tests) 887ms
+   ✓ reusable coastal search geometry > resumes the same coastal voyage and wind-triggered replans from a JSON save with cold geometry caches 400ms
+ ✓ src/ai/bootstrap_1/shopping.test.ts (13 tests) 1994ms
+   ✓ the full planner pays for a distant guardian scroll while running its normal economy 821ms
+ ✓ src/ai/benchmark/v5-arena.test.ts (4 tests) 10ms
+ ✓ src/shared/ship-queued-wind.test.ts (6 tests) 4856ms
+   ✓ weather changes during queued ship corners > transport keeps a usable rounded course through a favorable shift and JSON save 680ms
+   ✓ weather changes during queued ship corners > shipOfTheLine keeps a usable rounded course through a favorable shift and JSON save 834ms
+   ✓ weather changes during queued ship corners > transport finishes its finite corner, then beats along the newly upwind leg 1245ms
+   ✓ weather changes during queued ship corners > shipOfTheLine finishes its finite corner, then beats along the newly upwind leg 2051ms
+ ✓ src/ai/bootstrap_1/expansion-camp.test.ts (24 tests) 6491ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_archer'/'grove', mirror=false, attack=false) 594ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_archer'/'grove', mirror=false, attack=true) 331ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_archer'/'ember', mirror=false, attack=false) 333ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_knight'/'grove', mirror=false, attack=false) 309ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_knight'/'ember', mirror=false, attack=true) 347ms
+   ✓ clears a replacement mine after an existing hall runs dry ('v9_knight'/'ember', mirror=true, attack=false) 337ms
+ ✓ src/ai/bootstrap_1/mining-assignments.test.ts (2 tests) 200ms
+ ✓ src/ai/bootstrap_1/loot-recovery.test.ts (13 tests) 2584ms
+   ✓ 'v9_archer' deliberately retrieves books to grow and return a 'grove' veteran (mirror=false) 371ms
+ ✓ src/ai/veteran-skills.test.ts (16 tests) 76ms
+ ✓ src/shared/damage.test.ts (9 tests) 6ms
+ ✓ src/ai/bootstrap_1/mercenary-goals.test.ts (16 tests) 376ms
+ ✓ src/client/world3d/sail-rig.test.ts (4 tests) 35ms
+ ✓ src/shared/sim/snapshot-building-copy.test.ts (6 tests) 8ms
+ ✓ src/shared/replay.test.ts (4 tests) 35ms
+ ✓ src/shared/sim/spatial-index.test.ts (4 tests) 69ms
+ ✓ src/client/resource-panel.test.ts (4 tests) 8ms
+ ✓ src/ai/bootstrap_1/two-income-expansion.test.ts (12 tests) 1560ms
+ ✓ src/shared/ship-navigation-workspace.test.ts (8 tests) 223ms
+ ✓ src/ai/bootstrap_1/mining-capital.test.ts (8 tests) 886ms
+ ✓ src/shared/autocast.test.ts (7 tests) 20ms
+ ✓ src/ai/playtest-session-setup.test.ts (6 tests) 11ms
+ ✓ src/ai/planner-context.test.ts (6 tests) 15ms
+ ✓ src/client/research-controls.test.ts (7 tests) 5ms
+ ✓ src/client/art/action-direction.test.ts (6 tests) 2236ms
+   ✓ all weapons fit the full action painting surface at all thirteen directions 1129ms
+   ✓ keeps all native creature and mounted gestures inside the extended domain 595ms
+ ✓ src/shared/sim/collision-bucket-lookup.test.ts (6 tests) 63ms
+ ✓ src/ai/bootstrap_1/mine-road-arrivals.test.ts (4 tests) 237ms
+ ✓ src/shared/wind-field.test.ts (5 tests) 13ms
+ ✓ src/shared/sim/mechanical-command.test.ts (18 tests) 48ms
+ ✓ src/shared/det-math.test.ts (4 tests) 365ms
+   ✓ det-math > gives the recorded bits over 200,000 angles in [-1000, 1000) and stays within an ulp of Math 358ms
+ ✓ src/shared/environment/environment.test.ts (7 tests) 77ms
+ ✓ src/shared/sim/restore.test.ts (4 tests) 136ms
+ ✓ src/shared/combat-capabilities.test.ts (7 tests) 10ms
+ ✓ src/ai/policy/production-model.test.ts (7 tests) 12ms
+ ✓ src/shared/physical-items.test.ts (6 tests) 29ms
+ ✓ src/sdk/external-agent-room-runner.test.ts (1 test) 5ms
+ ✓ src/client/unit-facing.test.ts (11 tests) 5ms
+ ✓ src/shared/sim/automatic-attack-order-reuse.test.ts (5 tests) 18ms
+ ✓ scripts/ai-v5-vs-hybrid-benchmark.test.ts (5 tests) 2549ms
+   ✓ AI V5 versus hybrid V3 plus V4-TR benchmark CLI > prints a dry-run manifest with simultaneous V3 and V4-TR allied opponents 415ms
+   ✓ AI V5 versus hybrid V3 plus V4-TR benchmark CLI > seed-randomizes which allied opponent receives the first opposing slot 382ms
+   ✓ AI V5 versus hybrid V3 plus V4-TR benchmark CLI > samples V5 and V3 race choices independently across the match set 317ms
+   ✓ AI V5 versus hybrid V3 plus V4-TR benchmark CLI > samples V3 race independently from the allied opponent slot order 340ms
+   ✓ AI V5 versus hybrid V3 plus V4-TR benchmark CLI > records dashboard runs for standard V5 hybrid benchmark executions 1093ms
+ ✓ src/ai/policy/building-pressure.test.ts (6 tests) 18ms
+ ✓ src/ai/policy/snapshot-query-allocation.test.ts (3 tests) 26ms
+ ✓ src/ai/policy/base-defense-model.test.ts (6 tests) 9ms
+ ✓ src/client/pointer-lock.test.ts (10 tests) 6ms
+ ✓ src/shared/ship-cabin-movement-frame.test.ts (2 tests) 85ms
+ ✓ src/ai/bootstrap_1/archer-micro.test.ts (6 tests) 260ms
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts (24 tests | 2 failed) 3988ms
+   ✓ 'v9_archer' collects and rallies 'grove' mercenaries ('planner', mirror=false) 379ms
+   × 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=false) 217ms
+     → {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1048","x":566.3454427492306,"y":497.4435053025439,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1142","x":881.5049643467212,"y":565.2189606979882,"order":{"type":"move","x":500,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+   × 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=true) 200ms
+     → {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1048","x":3528.932671554237,"y":503.6233306452477,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1140","x":3334.4157264642813,"y":659.749523949203,"order":{"type":"move","x":3596,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+ ✓ src/ai/bootstrap_1/transport-recovery.test.ts (12 tests) 1332ms
+ ✓ src/client/art/rig.test.ts (8 tests) 4698ms
+   ✓ catalog composition > returns all compatible equipment to exactly the ready raster after attack and casting 4537ms
+ ✓ src/client/projectile-origins.test.ts (6 tests) 455ms
+   ✓ locked visual projectile sockets > feeds the same locked socket into Canvas without applying the old radius offset twice 445ms
+ ✓ src/shared/net/codec.test.ts (5 tests) 5ms
+ ✓ src/recorder/record.test.ts (6 tests) 1616ms
+   ✓ headless recorder > films the same pixels every time: the match is deterministic and animation runs on match time 1200ms
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_archer' does not borrow mounted force from another camp (mirror=false)
+{"version":"v9_archer","mirror":false,"enoughAvailable":false,"availableDamage":0,"assignedShots":19,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_archer' does not borrow mounted force from another camp (mirror=true)
+{"version":"v9_archer","mirror":true,"enoughAvailable":false,"availableDamage":0,"assignedShots":29,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_summoner' does not borrow mounted force from another camp (mirror=false)
+{"version":"v9_summoner","mirror":false,"enoughAvailable":false,"availableDamage":0,"assignedShots":19,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_summoner' does not borrow mounted force from another camp (mirror=true)
+{"version":"v9_summoner","mirror":true,"enoughAvailable":false,"availableDamage":0,"assignedShots":29,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_knight' does not borrow mounted force from another camp (mirror=false)
+{"version":"v9_knight","mirror":false,"enoughAvailable":false,"availableDamage":0,"assignedShots":19,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_knight' does not borrow mounted force from another camp (mirror=true)
+{"version":"v9_knight","mirror":true,"enoughAvailable":false,"availableDamage":0,"assignedShots":29,"availableMarches":0,"available":[{"id":"available-0","hp":145}],"remainingOtherGuards":2,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_archer' still clears another camp with enough available force (mirror=false)
+{"version":"v9_archer","mirror":false,"enoughAvailable":true,"availableDamage":132,"assignedShots":19,"availableMarches":13,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_archer' still clears another camp with enough available force (mirror=true)
+{"version":"v9_archer","mirror":true,"enoughAvailable":true,"availableDamage":132,"assignedShots":29,"availableMarches":10,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_summoner' still clears another camp with enough available force (mirror=false)
+{"version":"v9_summoner","mirror":false,"enoughAvailable":true,"availableDamage":132,"assignedShots":19,"availableMarches":13,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_summoner' still clears another camp with enough available force (mirror=true)
+{"version":"v9_summoner","mirror":true,"enoughAvailable":true,"availableDamage":132,"assignedShots":29,"availableMarches":10,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_knight' still clears another camp with enough available force (mirror=false)
+{"version":"v9_knight","mirror":false,"enoughAvailable":true,"availableDamage":132,"assignedShots":19,"availableMarches":13,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+stdout | src/ai/bootstrap_1/expedition-available-force.test.ts > 'v9_knight' still clears another camp with enough available force (mirror=true)
+{"version":"v9_knight","mirror":true,"enoughAvailable":true,"availableDamage":132,"assignedShots":29,"availableMarches":10,"available":[{"id":"available-0","hp":132},{"id":"available-1","hp":220},{"id":"available-2","hp":176}],"remainingOtherGuards":0,"lost":0}
+
+ ✓ src/ai/bootstrap_1/expedition-available-force.test.ts (12 tests) 1391ms
+ ✓ src/ai/bootstrap_1/island-construction-roads.test.ts (12 tests) 328ms
+ ✓ src/ai/bootstrap_1/camp-geometry.test.ts (14 tests) 1292ms
+ ✓ src/ai/benchmark/wounded-moonwell-stats.test.ts (2 tests) 18ms
+ ✓ src/shared/unit-tiers.test.ts (4 tests) 9ms
+ ✓ src/shared/naval-map-spacing.test.ts (11 tests) 1851ms
+   ✓ larger naval map spacing > sapphireArchipelago preserves its economy and gives every home a complete large-hull harbor 414ms
+ ✓ src/sdk/match-report.test.ts (3 tests) 10ms
+ ✓ src/client/unit-hover-target.test.ts (7 tests) 10ms
+ ✓ src/ai/bootstrap_1/veteran-loot.test.ts (13 tests) 1035ms
+ ✓ src/shared/unit-variants.test.ts (6 tests) 22ms
+ ✓ src/client/menu-scenes.test.ts (5 tests) 2779ms
+   ✓ menu demonstration worlds > turns the whole convoy on both return legs without hull pileups 2257ms
+ ✓ src/ai/bootstrap_1/expansion-road-threat.test.ts (14 tests) 2369ms
+   ✓ 'v9_archer' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=false) 362ms
+ ✓ src/shared/ship-motion.test.ts (8 tests) 197ms
+ ✓ scripts/ai-v3-vs-prod-v2-benchmark.test.ts (3 tests) 2527ms
+   ✓ AI V3 versus frozen production V2 benchmark CLI > prints a dry-run manifest with random V3 races and Grove-only V2-prod 413ms
+   ✓ AI V3 versus frozen production V2 benchmark CLI > prints focused match diagnostics for one V3 versus frozen V2-prod match 978ms
+   ✓ AI V3 versus frozen production V2 benchmark CLI > records dashboard runs for standard V3 benchmark executions 1135ms
+ ✓ src/ai/bootstrap_1/defensive-route.test.ts (8 tests) 1124ms
+ ✓ src/recorder/camera.test.ts (6 tests) 10ms
+ ✓ src/ai/bootstrap_1/island-workforce.test.ts (12 tests) 687ms
+ ✓ src/ai/bootstrap_1/off-axis-front.test.ts (8 tests) 1777ms
+   ✓ defeats a raid from its off-axis mining front ('v9_archer'/'grove', mirror=false) 400ms
+ ✓ src/ai/bootstrap_1/land-allied-mines.test.ts (12 tests) 1585ms
+ ✓ scripts/ai-version-benchmark.test.ts (3 tests) 3766ms
+   ✓ AI version benchmark CLI > accepts the shared benchmark flag surface in dry-run mode 488ms
+   ✓ AI version benchmark CLI > prints the formal benchmark manifest without running simulations in dry-run mode 500ms
+   ✓ AI version benchmark CLI > prints a serial/parallel runner parity proof without writing a dashboard run 2776ms
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=false, think-delay=+0)
+{"kind":"archer","mirrored":false,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=false, think-delay=7)
+{"kind":"archer","mirrored":false,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=false, think-delay=14)
+{"kind":"archer","mirrored":false,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=true, think-delay=+0)
+{"kind":"archer","mirrored":true,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=true, think-delay=7)
+{"kind":"archer","mirrored":true,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('archer', mirror=true, think-delay=14)
+{"kind":"archer","mirrored":true,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=false, think-delay=+0)
+{"kind":"sparkArcher","mirrored":false,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=false, think-delay=7)
+{"kind":"sparkArcher","mirrored":false,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=false, think-delay=14)
+{"kind":"sparkArcher","mirrored":false,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=true, think-delay=+0)
+{"kind":"sparkArcher","mirrored":true,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=true, think-delay=7)
+{"kind":"sparkArcher","mirrored":true,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('sparkArcher', mirror=true, think-delay=14)
+{"kind":"sparkArcher","mirrored":true,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=false, think-delay=+0)
+{"kind":"horseArcher","mirrored":false,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=false, think-delay=7)
+{"kind":"horseArcher","mirrored":false,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=false, think-delay=14)
+{"kind":"horseArcher","mirrored":false,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=true, think-delay=+0)
+{"kind":"horseArcher","mirrored":true,"delay":0,"old":59,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=true, think-delay=7)
+{"kind":"horseArcher","mirrored":true,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('horseArcher', mirror=true, think-delay=14)
+{"kind":"horseArcher","mirrored":true,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=false, think-delay=+0)
+{"kind":"summoner","mirrored":false,"delay":0,"old":59,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=false, think-delay=7)
+{"kind":"summoner","mirrored":false,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=false, think-delay=14)
+{"kind":"summoner","mirrored":false,"delay":14,"old":46,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=true, think-delay=+0)
+{"kind":"summoner","mirrored":true,"delay":0,"old":59,"next":46}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=true, think-delay=7)
+{"kind":"summoner","mirrored":true,"delay":7,"old":46,"next":27}
+
+stdout | src/ai/bootstrap_1/bolt-evasion.test.ts > leaves a real piercing ray before it hits ('summoner', mirror=true, think-delay=14)
+{"kind":"summoner","mirrored":true,"delay":14,"old":46,"next":46}
+
+ ✓ src/ai/bootstrap_1/bolt-evasion.test.ts (25 tests) 660ms
+ ✓ src/ai/benchmark/v7-gauntlet.test.ts (2 tests) 10ms
+ ✓ src/ai/bootstrap_1/summoner-composition.test.ts (8 tests) 3049ms
+   ✓ summon host support against artillery > pays for a lasting 'grove' front against 'catapult' while continuing to summon (mirror=false) 766ms
+   ✓ summon host support against artillery > pays for a lasting 'grove' front against 'catapult' while continuing to summon (mirror=true) 446ms
+   ✓ summon host support against artillery > pays for a lasting 'grove' front against 'ballista' while continuing to summon (mirror=false) 377ms
+   ✓ summon host support against artillery > pays for a lasting 'grove' front against 'ballista' while continuing to summon (mirror=true) 388ms
+ ✓ src/ai/policy/v6-casters.test.ts (4 tests) 472ms
+ ✓ src/ai/bootstrap_1/parallel-construction.test.ts (4 tests) 1001ms
+   ✓ unlocks 'grove' home tech while its mirrored=false colony builder is still walking 337ms
+ ✓ src/ai/benchmark/v9-gauntlet.test.ts (4 tests) 9ms
+ ✓ src/client/world3d/models.test.ts (2 tests) 117ms
+ ✓ src/client/unit-motion.test.ts (7 tests) 4ms
+ ✓ src/ai/bootstrap_1/ferry-crew-roads.test.ts (12 tests) 5559ms
+   ✓ 'v9_archer' respects road arrival and real deck fit for 'knight' (mirror=false) 1262ms
+   ✓ 'v9_archer' respects road arrival and real deck fit for 'knight' (mirror=true) 848ms
+   ✓ 'v9_summoner' respects road arrival and real deck fit for 'knight' (mirror=false) 864ms
+   ✓ 'v9_summoner' respects road arrival and real deck fit for 'knight' (mirror=true) 669ms
+   ✓ 'v9_knight' respects road arrival and real deck fit for 'knight' (mirror=false) 766ms
+   ✓ 'v9_knight' respects road arrival and real deck fit for 'knight' (mirror=true) 682ms
+ ✓ src/client/veteran-controls.test.ts (4 tests) 14ms
+ ✓ src/ai/bootstrap_1/camp-territory-roads.test.ts (12 tests) 1023ms
+ ✓ src/client/art/story-remains.test.ts (29 tests) 160ms
+ ✓ scripts/ai-v4-tr-vs-v3-benchmark.test.ts (3 tests) 1745ms
+   ✓ AI V4-TR versus V3 benchmark CLI > prints a dry-run manifest with fixed V4-TR and random V3 races 432ms
+   ✓ AI V4-TR versus V3 benchmark CLI > records dashboard runs for standard V4-TR benchmark executions 1040ms
+ ✓ src/ai/bootstrap_1/small-army-medical.test.ts (12 tests) 1825ms
+   ✓ funds recovery for an unlocked small 'v9_archer' army without a healer producer ('grove', mirror=false) 367ms
+ ✓ src/server/room-current-tick.test.ts (2 tests) 46ms
+stdout | src/shared/terrain-arrival.test.ts > ranks a longer grass route ahead of a shorter mud corridor by actual arrival (mirror=false)
+{"mirror":false,"arrivals":[{"id":"near-mud","road":384,"predicted":205,"actual":203},{"id":"far-grass","road":448,"predicted":150,"actual":148}]}
+
+stdout | src/shared/terrain-arrival.test.ts > ranks a longer grass route ahead of a shorter mud corridor by actual arrival (mirror=true)
+{"mirror":true,"arrivals":[{"id":"near-mud","road":416,"predicted":205,"actual":203},{"id":"far-grass","road":448,"predicted":150,"actual":148}]}
+
+ ✓ src/shared/terrain-arrival.test.ts (7 tests) 137ms
+ ✓ src/ai/bootstrap_1/construction-workers.test.ts (4 tests) 289ms
+ ✓ src/ai/bootstrap_1/front-post-area.test.ts (12 tests) 1389ms
+ ✓ src/ai/bootstrap_1/mounted-charge.test.ts (2 tests) 187ms
+ ✓ src/shared/sim/snapshot-unit-copy.test.ts (5 tests) 7ms
+ ✓ src/ai/policy/v5-ranged-core.test.ts (3 tests) 13ms
+ ✓ src/client/ability-icons.test.ts (4 tests) 43ms
+ ✓ src/ai/bootstrap_1/transported-workforce.test.ts (16 tests) 1143ms
+ ✓ src/ai/bootstrap_1/storm-ground-reach.test.ts (48 tests) 633ms
+ ✓ src/client/water-field.test.ts (6 tests) 73ms
+ ✓ src/client/ship-wakes.test.ts (5 tests) 36ms
+ ✓ src/ai/bootstrap_1/mounted-raid-pursuit.test.ts (2 tests) 270ms
+ ✓ src/ai/bootstrap_1/tower-mining-handoff.test.ts (4 tests) 263ms
+ ✓ src/ai/bootstrap_1/construction-handoff.test.ts (4 tests) 396ms
+ ✓ src/ai/bootstrap_1/recovery-budget.test.ts (4 tests) 1647ms
+   ✓ funds 'grove' recovery after its shared counter queue (mirror=false) 534ms
+   ✓ funds 'grove' recovery after its shared counter queue (mirror=true) 375ms
+   ✓ funds 'ember' recovery after its shared counter queue (mirror=false) 389ms
+   ✓ funds 'ember' recovery after its shared counter queue (mirror=true) 349ms
+ ✓ src/ai/bootstrap_1/assault-road-distance.test.ts (12 tests) 644ms
+ ✓ src/ai/bootstrap_1/mounted-shore-clearance.test.ts (6 tests) 3455ms
+   ✓ 'v9_archer' clears a camp beside its landing ship without damage (mirror=false) 830ms
+   ✓ 'v9_archer' clears a camp beside its landing ship without damage (mirror=true) 574ms
+   ✓ 'v9_summoner' clears a camp beside its landing ship without damage (mirror=false) 540ms
+   ✓ 'v9_summoner' clears a camp beside its landing ship without damage (mirror=true) 587ms
+   ✓ 'v9_knight' clears a camp beside its landing ship without damage (mirror=false) 418ms
+   ✓ 'v9_knight' clears a camp beside its landing ship without damage (mirror=true) 505ms
+ ✓ src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 3176ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 882ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 538ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 623ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 343ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 419ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 372ms
+ ✓ src/ai/bootstrap_1/mounted-nearby-raid.test.ts (4 tests) 689ms
+   ✓ one purchased rider raids the nearer exposed mining line before a distant camp ('footman', mirror=false) 303ms
+ ✓ src/ai/policy/range-membership-exact.test.ts (3 tests) 67ms
+ ✓ src/campaigns/ashen-march/power-animation.test.ts (4 tests) 62ms
+ ✓ src/ai/policy/item-tactics.test.ts (5 tests) 10ms
+ ✓ src/ai/bootstrap_1/medical-roads.test.ts (12 tests) 158ms
+ ✓ src/shared/construction-intent.test.ts (5 tests) 58ms
+ ✓ src/ai/benchmark/nudge.test.ts (3 tests) 6ms
+ ✓ src/shared/aiming-invalidation.test.ts (4 tests) 5ms
+ ✓ src/ai/bootstrap_1/mounted-expedition-priority.test.ts (18 tests) 482ms
+ ✓ src/ai/bootstrap_1/attack-reinforcements.test.ts (8 tests) 203ms
+ ✓ src/benchmark-dashboard/view-model.test.ts (7 tests) 10ms
+ ✓ src/ai/bootstrap_1/expedition-counterraid.test.ts (12 tests) 679ms
+ ✓ src/client/sound-packs.test.ts (5 tests) 8ms
+ ✓ src/sdk/scene.test.ts (2 tests) 17ms
+ ✓ src/ai/policy/main-defense-priority.test.ts (3 tests) 14ms
+ ✓ scripts/ai-version-gauntlet-cli.test.ts (4 tests) 1403ms
+   ✓ AI version gauntlet CLI > prints a dry-run catalog from the shared flag surface without running matches 439ms
+   ✓ AI version gauntlet CLI > filters dry-run output to one exact gauntlet match name 504ms
+   ✓ AI version gauntlet CLI > filters dry-run output to the games of one ladder slot 459ms
+ ✓ src/ai/bootstrap_1/first-recovery-purchase.test.ts (4 tests) 797ms
+   ✓ buys the first 'grove' healer before another tower consumes its ready budget (mirror=false) 304ms
+ ✓ src/client/content/cards.test.ts (6 tests) 12ms
+ ✓ src/shared/room-lifecycle.test.ts (4 tests) 8ms
+ ✓ src/ai/policy/v8/rising-strike.test.ts (4 tests) 68ms
+ ✓ src/ai/benchmark/v8-gauntlet.test.ts (2 tests) 9ms
+ ✓ src/ai/mechanical-targets.test.ts (14 tests) 62ms
+ ✓ src/ai/bootstrap_1/tower-advance-screen.test.ts (4 tests) 453ms
+ ✓ src/ai/bootstrap_1/camp-recovery.test.ts (24 tests) 2707ms
+ ✓ src/ai/bootstrap_1/combined-arms.test.ts (2 tests) 457ms
+   ✓ bootstrap_1 infantry and engineering > grove keeps its faster screen with the guns until both can fight the outpost 328ms
+ ✓ src/client/footprint-view.test.ts (3 tests) 4ms
+ ✓ src/ai/bootstrap_1/working-base-defense.test.ts (12 tests) 2546ms
+   ✓ regroups 'v9_archer' at the working hall when the birth mine is spent ('grove', mirror=false) 408ms
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'grove' 'worker' past a shell using its terrain arrival (mirror=false)
+{"kind":"worker","race":"grove","mirror":false,"flight":50,"firstMove":{"x":1555.2260384132844,"y":1491.9060946961795},"damage":0,"hp":70,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'grove' 'worker' past a shell using its terrain arrival (mirror=true)
+{"kind":"worker","race":"grove","mirror":true,"flight":50,"firstMove":{"x":2540.7739615867154,"y":1708.0939053038205},"damage":0,"hp":70,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'ember' 'worker' past a shell using its terrain arrival (mirror=false)
+{"kind":"worker","race":"ember","mirror":false,"flight":50,"firstMove":{"x":1555.2260384132844,"y":1491.9060946961795},"damage":0,"hp":70,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'ember' 'worker' past a shell using its terrain arrival (mirror=true)
+{"kind":"worker","race":"ember","mirror":true,"flight":50,"firstMove":{"x":2540.7739615867154,"y":1708.0939053038205},"damage":0,"hp":70,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'grove' 'summoner' past a shell using its terrain arrival (mirror=false)
+{"kind":"summoner","race":"grove","mirror":false,"flight":50,"firstMove":{"x":1600,"y":1481},"damage":0,"hp":95,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'grove' 'summoner' past a shell using its terrain arrival (mirror=true)
+{"kind":"summoner","race":"grove","mirror":true,"flight":50,"firstMove":{"x":2496,"y":1719},"damage":0,"hp":95,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'ember' 'summoner' past a shell using its terrain arrival (mirror=false)
+{"kind":"summoner","race":"ember","mirror":false,"flight":50,"firstMove":{"x":1600,"y":1481},"damage":0,"hp":95,"lost":0}
+
+stdout | src/ai/bootstrap_1/terrain-shell-evasion.test.ts > gets a real 'ember' 'summoner' past a shell using its terrain arrival (mirror=true)
+{"kind":"summoner","race":"ember","mirror":true,"flight":50,"firstMove":{"x":2496,"y":1719},"damage":0,"hp":95,"lost":0}
+
+ ✓ src/ai/bootstrap_1/terrain-shell-evasion.test.ts (8 tests) 188ms
+ ✓ src/ai/bootstrap_1/construction-arrivals.test.ts (12 tests) 806ms
+ ✓ src/shared/command-schema.test.ts (5 tests) 3ms
+stdout | src/ai/bootstrap_1/worker-area-evasion.test.ts > mining workers under an area attack > evacuates the grove mine and returns its real haulers after the storm
+{"race":"grove","stormControl":102,"stormCandidate":72,"controlGold":240,"candidateGold":180}
+
+ ✓ src/ai/bootstrap_1/worker-area-evasion.test.ts (2 tests) 156ms
+stdout | src/ai/bootstrap_1/worker-area-evasion.test.ts > mining workers under an area attack > evacuates the ember mine and returns its real haulers after the storm
+{"race":"ember","stormControl":102,"stormCandidate":72,"controlGold":240,"candidateGold":180}
+
+ ✓ src/ai/bootstrap_1/expansion-target-cap.test.ts (12 tests) 8452ms
+   ✓ 'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=false, free=false) 744ms
+   ✓ 'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=false, free=true) 582ms
+   ✓ 'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=true, free=false) 589ms
+   ✓ 'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=true, free=true) 486ms
+   ✓ 'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=false, free=false) 1059ms
+   ✓ 'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=false, free=true) 929ms
+   ✓ 'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=true, free=false) 861ms
+   ✓ 'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=true, free=true) 923ms
+   ✓ 'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=false, free=false) 711ms
+   ✓ 'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=false, free=true) 566ms
+   ✓ 'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=true, free=false) 490ms
+   ✓ 'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=true, free=true) 512ms
+ ✓ src/client/frontend-world-view.test.ts (3 tests) 8ms
+ ✓ src/shared/player-colors.test.ts (4 tests) 11ms
+ ✓ src/ai/bootstrap_1/mounted-items.test.ts (6 tests) 83ms
+ ✓ src/shared/heavy-units.test.ts (4 tests) 20ms
+ ✓ src/shared/camps.test.ts (5 tests) 8ms
+ ✓ src/client/sound.test.ts (4 tests) 5ms
+ ✓ src/ai/policy/mercenary-closeout.test.ts (4 tests) 21ms
+ ✓ src/ai/bootstrap_1/research-prerequisites.test.ts (16 tests) 1215ms
+ ✓ src/client/art/combat-effects.test.ts (5 tests) 7ms
+ ✓ src/client/appearance-integration.test.ts (3 tests) 138ms
+ ✓ src/ai/bootstrap_1/mounted-camp-preparation.test.ts (2 tests) 609ms
+   ✓ prepares a camp rider for the actual staff range, then returns after ordinary research (mirrored=false) 393ms
+ ✓ src/ai/bootstrap_1/common-expansion-roads.test.ts (4 tests) 1508ms
+   ✓ uses the same short road for 'grove' summoner expansion and escort (mirror=false) 568ms
+   ✓ uses the same short road for 'grove' summoner expansion and escort (mirror=true) 371ms
+   ✓ uses the same short road for 'ember' summoner expansion and escort (mirror=false) 307ms
+ ✓ src/ai/bootstrap_1/repair.test.ts (2 tests) 96ms
+ ✓ src/story/stage.test.ts (4 tests) 33ms
+ ✓ src/ai/bootstrap_1/abandoned-demolition.test.ts (4 tests) 1066ms
+   ✓ 'grove' clears abandoned buildings within one normal summon cooldown (mirror=false) 449ms
+ ✓ src/ai/bootstrap_1/covered-defense.test.ts (6 tests) 1120ms
+   ✓ 'v9_archer' holds a reachable tower post while the towers really fire (mirror=false) 431ms
+ ✓ src/client/build-placement-controls.test.ts (4 tests) 131ms
+ ✓ src/ai/policy/curse-allocation.test.ts (6 tests) 34ms
+ ✓ src/ai/bootstrap_1/weapon-targets.test.ts (24 tests) 326ms
+ ✓ src/shared/sim/command-contract.test.ts (3 tests) 38ms
+ ❯ src/sdk/package-boundaries.test.ts (7 tests | 1 failed) 1113ms
+   × SDK package boundaries > does not carry banned cleanup-era naming in source or specs 1107ms
+     → expected [ …(2) ] to deeply equal []
+ ✓ src/shared/damage-stress.test.ts (4 tests) 362ms
+   ✓ damage protection invariants > keeps 5,000 seeded mixed-protection scenarios finite, nonnegative and bounded by incoming damage 361ms
+ ✓ src/ai/bootstrap_1/expansion.test.ts (1 test) 216ms
+ ✓ src/shared/ship-navigation-potential.test.ts (4 tests) 109ms
+ ✓ src/ai/bootstrap_1/shell-evasion.test.ts (2 tests) 57ms
+ ✓ src/ai/bootstrap_1/closeout-recruits.test.ts (6 tests) 221ms
+ ✓ src/ai/policy/attack-wave-readiness.test.ts (2 tests) 12ms
+ ✓ src/shared/unit-value.test.ts (4 tests) 20ms
+ ✓ src/shared/action-presentation.test.ts (4 tests) 16ms
+ ✓ src/client/world3d/combat-ink.test.ts (3 tests) 14ms
+ ✓ src/shared/healing.test.ts (5 tests) 30ms
+ ✓ src/client/world3d/water.test.ts (3 tests) 29ms
+ ✓ src/ai/bootstrap_1/opening-front.test.ts (8 tests) 353ms
+ ✓ src/client/room-route.test.ts (6 tests) 424ms
+   ✓ address-bar routes > creates the same terrain and random races from a shared seed in different rooms 418ms
+ ✓ src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts (24 tests) 985ms
+ ✓ src/ai/bootstrap_1/marching-evasion.test.ts (84 tests) 1828ms
+ ✓ src/ai/policy/v9/shop.test.ts (5 tests) 21ms
+ ✓ src/client/item-controls.test.ts (5 tests) 22ms
+ ✓ scripts/production-revision.test.ts (1 test) 224ms
+ ✓ src/ai/bootstrap_1/mounted-guarded-line.test.ts (2 tests) 483ms
+   ✓ raids the exposed mining line instead of the closer line covered by ready knights (mirror=false) 314ms
+ ✓ src/ai/bootstrap_1/closeout.test.ts (2 tests) 172ms
+ ✓ src/ai/policy/v8-forbidden-units.test.ts (3 tests) 15ms
+ ✓ src/ai/benchmark/v6-gauntlet.test.ts (2 tests) 9ms
+ ✓ src/ai/bootstrap_1/mounted-approach.test.ts (4 tests) 527ms
+ ✓ src/ai/benchmark/expansion-claim-timeline.test.ts (2 tests) 4ms
+ ✓ src/ai/policy/spatial.test.ts (4 tests) 34ms
+ ✓ src/ai/bootstrap_1/mounted-escape-continuity.test.ts (4 tests) 265ms
+ ✓ src/shared/ship-wind-quality.test.ts (28 tests) 729ms
+ ✓ src/sdk/commands/frame.test.ts (3 tests) 13ms
+ ✓ src/ai/bootstrap_1/mounted-roads.test.ts (6 tests) 301ms
+ ✓ scripts/production-deploy.test.ts (6 tests) 4ms
+ ✓ src/ai/bootstrap_1/expedition-recovery.test.ts (12 tests) 1027ms
+ ✓ src/recorder/scenes/ship-webgl.test.ts (2 tests) 164ms
+ ❯ scripts/painted-sprite-bounds.test.ts (4 tests | 1 failed) 1017ms
+   ✓ painted atlas bounds > keeps every ship steady across sailing frames while land siege wheels still turn 484ms
+   × painted atlas bounds > fits every humanoid action and facing inside the existing atlas tile 413ms
+     → lancer/attack/0/-1 is not clipped by atlas: expected 4 to be +0 // Object.is equality
+ ✓ src/shared/hypot.test.ts (4 tests) 28ms
+ ✓ scripts/production-install.test.ts (2 tests) 94ms
+ ✓ src/client/game-adapter.test.ts (3 tests) 7ms
+ ✓ src/ai/bootstrap_1/camp-return-roads.test.ts (12 tests) 2703ms
+   ✓ 'v9_archer' includes the camp return road in its expedition (mirror=false, ambush=false) 402ms
+ ✓ src/ai/bootstrap_1/mounted-spent-charge.test.ts (2 tests) 116ms
+ ✓ src/client/world3d/crew-pose.test.ts (3 tests) 7ms
+ ✓ src/ai/bootstrap_1/mounted-prepared-shot.test.ts (2 tests) 232ms
+ ✓ src/ai/policy/v8/charge.test.ts (3 tests) 8ms
+ ✓ src/client/art/shared-caster-skins.test.ts (3 tests) 196ms
+ ✓ src/client/art/release-socket.test.ts (4 tests) 14ms
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_archer' lets a landed rider clear its island camp without damage (mirror=false)
+{"version":"v9_archer","mirror":false,"tick":23971,"riderAlive":true,"damage":0,"mountedCommands":1599,"arrows":312,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_archer' lets a landed rider clear its island camp without damage (mirror=true)
+{"version":"v9_archer","mirror":true,"tick":23779,"riderAlive":true,"damage":0,"mountedCommands":1586,"arrows":312,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_summoner' lets a landed rider clear its island camp without damage (mirror=false)
+{"version":"v9_summoner","mirror":false,"tick":23971,"riderAlive":true,"damage":0,"mountedCommands":1599,"arrows":312,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_summoner' lets a landed rider clear its island camp without damage (mirror=true)
+{"version":"v9_summoner","mirror":true,"tick":23779,"riderAlive":true,"damage":0,"mountedCommands":1586,"arrows":312,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_knight' lets a landed rider clear its island camp without damage (mirror=false)
+{"version":"v9_knight","mirror":false,"tick":23971,"riderAlive":true,"damage":0,"mountedCommands":1599,"arrows":312,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-expedition.test.ts > 'v9_knight' lets a landed rider clear its island camp without damage (mirror=true)
+{"version":"v9_knight","mirror":true,"tick":23779,"riderAlive":true,"damage":0,"mountedCommands":1586,"arrows":312,"remaining":[]}
+
+ ✓ src/ai/bootstrap_1/mounted-expedition.test.ts (6 tests) 6745ms
+   ✓ 'v9_archer' lets a landed rider clear its island camp without damage (mirror=false) 1392ms
+   ✓ 'v9_archer' lets a landed rider clear its island camp without damage (mirror=true) 1243ms
+   ✓ 'v9_summoner' lets a landed rider clear its island camp without damage (mirror=false) 1024ms
+   ✓ 'v9_summoner' lets a landed rider clear its island camp without damage (mirror=true) 1058ms
+   ✓ 'v9_knight' lets a landed rider clear its island camp without damage (mirror=false) 1009ms
+   ✓ 'v9_knight' lets a landed rider clear its island camp without damage (mirror=true) 1019ms
+ ✓ src/ai/bootstrap_1/expedition-unmedicated.test.ts (12 tests) 1086ms
+ ✓ src/ai/benchmark/gauntlet-cli.test.ts (2 tests) 5ms
+ ✓ src/shared/route-selection.test.ts (3 tests) 6ms
+ ✓ scripts/ai-control-benchmark.test.ts (3 tests) 2357ms
+   ✓ AI control benchmark CLI > prints selected side-balanced matches without running simulations in dry-run mode 434ms
+   ✓ AI control benchmark CLI > runs only the games of the ladder slots named with --maps 965ms
+   ✓ AI control benchmark CLI > prints focused match diagnostics with player benchmark metrics 954ms
+ ✓ src/ai/policy/world-model.test.ts (4 tests) 8ms
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_archer' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)
+{"version":"v9_archer","race":"grove","mirror":false,"tick":800,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_archer' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)
+{"version":"v9_archer","race":"grove","mirror":true,"tick":776,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_archer' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)
+{"version":"v9_archer","race":"ember","mirror":false,"tick":32,"hp":75,"maxHp":210}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_archer' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)
+{"version":"v9_archer","race":"ember","mirror":true,"tick":30,"hp":75,"maxHp":210}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_summoner' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)
+{"version":"v9_summoner","race":"grove","mirror":false,"tick":724,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_summoner' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)
+{"version":"v9_summoner","race":"grove","mirror":true,"tick":722,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_summoner' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)
+{"version":"v9_summoner","race":"ember","mirror":false,"tick":31,"hp":75,"maxHp":210}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_summoner' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)
+{"version":"v9_summoner","race":"ember","mirror":true,"tick":31,"hp":75,"maxHp":210}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_knight' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)
+{"version":"v9_knight","race":"grove","mirror":false,"tick":732,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_knight' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)
+{"version":"v9_knight","race":"grove","mirror":true,"tick":729,"hp":130,"maxHp":220}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_knight' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)
+{"version":"v9_knight","race":"ember","mirror":false,"tick":31,"hp":75,"maxHp":210}
+
+stdout | src/ai/bootstrap_1/mainland-medical-priority.test.ts > 'v9_knight' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)
+{"version":"v9_knight","race":"ember","mirror":true,"tick":31,"hp":75,"maxHp":210}
+
+ ✓ src/ai/bootstrap_1/mainland-medical-priority.test.ts (12 tests) 817ms
+ ✓ src/shared/ground.test.ts (3 tests) 26ms
+ ✓ src/ai/policy/naval-query-work.test.ts (2 tests) 12ms
+ ✓ src/server/deployment-command-core.test.ts (1 test) 14ms
+ ✓ src/shared/snapshot-ground.test.ts (1 test) 63ms
+ ✓ src/shared/archer-balance.test.ts (8 tests) 11ms
+ ✓ src/shared/projectile-contact.test.ts (3 tests) 200ms
+ ✓ src/shared/unit-targeting.test.ts (4 tests) 7ms
+ ✓ src/ai/policy/mechanical-repair.test.ts (12 tests) 66ms
+ ✓ src/ai/bootstrap_1/home-front.test.ts (2 tests) 335ms
+ ✓ src/client/deployment/runtime.test.ts (4 tests) 10ms
+ ✓ src/ai/bootstrap_1/crowded-retreat.test.ts (12 tests) 742ms
+ ✓ src/ai/bootstrap_1/miner-return-roads.test.ts (2 tests) 124ms
+ ✓ src/shared/grid-flood.test.ts (6 tests) 5ms
+ ✓ src/ai/policy/v6/pursuit.test.ts (2 tests) 179ms
+ ✓ src/shared/connected-decks.test.ts (2 tests) 70ms
+ ✓ src/ai/policy/player-view-delegation.test.ts (2 tests) 7ms
+ ✓ src/shared/presentation.test.ts (2 tests) 15ms
+ ✓ src/shared/ship-search-continuation.test.ts (5 tests) 451ms
+ ✓ src/client/art/raster-cache.test.ts (3 tests) 1966ms
+   ✓ cropped artwork cache > preserves every pixel and the world anchor at original density 1957ms
+ ✓ src/shared/ship-route-length-bound.test.ts (1 test) 10ms
+ ✓ src/ai/bootstrap_1/camp-assembly.test.ts (12 tests) 496ms
+ ✓ src/client/autocast-ring.test.ts (3 tests) 4ms
+ ✓ src/ai/policy/snapshot.test.ts (3 tests) 8ms
+ ✓ src/ai/policy/v9/doctrine.test.ts (4 tests) 7ms
+ ✓ src/client/terrain-texture.test.ts (4 tests) 4ms
+ ✓ src/server/room-history.test.ts (3 tests) 4ms
+ ✓ src/ai/bootstrap_1/archer-withdrawal.test.ts (4 tests) 296ms
+ ✓ src/client/charge-targeting.test.ts (3 tests) 3ms
+ ✓ src/ai/bootstrap_1/damage-footprints.test.ts (12 tests) 64ms
+ ✓ src/sdk/benchmark/manifest.test.ts (1 test) 2ms
+ ✓ src/ai/policy/v5-natural-arrival.test.ts (2 tests) 26ms
+ ✓ src/client/world3d/selection-markers.test.ts (2 tests) 10ms
+ ✓ src/shared/sim/canonical.test.ts (3 tests) 170ms
+ ✓ src/server/lockstep-room.test.ts (3 tests) 3ms
+ ✓ src/shared/witch-curse.test.ts (3 tests) 18ms
+ ✓ src/ai/bootstrap_1/tower-host-facing.test.ts (4 tests) 113ms
+ ✓ src/ai/bootstrap_1/regroup.test.ts (2 tests) 167ms
+ ✓ src/story/world.test.ts (2 tests) 6ms
+ ✓ src/campaigns/ashen-march/powers.test.ts (3 tests) 28ms
+ ✓ src/client/net/websocket-transport.test.ts (3 tests) 4ms
+ ✓ src/ai/bootstrap_1/summoner-melee-stand.test.ts (4 tests) 378ms
+ ✓ src/shared/rates.test.ts (3 tests) 263ms
+ ✓ src/shared/ability-cooldowns.test.ts (4 tests) 3ms
+ ✓ src/shared/ship-departure-turn.test.ts (2 tests) 830ms
+   ✓ a transport turns before translating into its coastal boarding berth (mirror=false) 481ms
+   ✓ a transport turns before translating into its coastal boarding berth (mirror=true) 348ms
+ ✓ src/ai/playtest-diagnosis.test.ts (2 tests) 81ms
+ ✓ src/ai/policy/v5-incoming-army.test.ts (2 tests) 23ms
+ ✓ src/shared/shore-approach.test.ts (4 tests) 458ms
+ ✓ src/benchmark-dashboard/warnings.test.ts (2 tests) 2ms
+ ✓ src/ai/bootstrap_1/camp-medical.test.ts (24 tests) 87ms
+ ✓ src/ai/policy/v5-tower-breaker.test.ts (2 tests) 20ms
+ ✓ src/ai/policy/v5-outnumbered-opening.test.ts (2 tests) 26ms
+ ✓ src/client/keybindings.test.ts (3 tests) 3ms
+ ✓ src/shared/navigation-masks.test.ts (2 tests) 2359ms
+   ✓ configuration-space ship stencils > covers intermediate hulls for every ship, heading, turn and docking maneuver at cell 32 1742ms
+   ✓ configuration-space ship stencils > covers intermediate hulls for every ship, heading, turn and docking maneuver at cell 64 617ms
+ ✓ src/ai/bootstrap_1/recovery-move-continuity.test.ts (4 tests) 151ms
+ ✓ src/shared/ship-handling.test.ts (2 tests) 4ms
+ ✓ src/campaigns/ashen-march/cast.test.ts (3 tests) 7ms
+ ✓ src/client/control-groups.test.ts (4 tests) 3ms
+ ✓ src/client/water-art.test.ts (2 tests) 207ms
+ ✓ src/ai/bootstrap_1/mounted-retreat-motion.test.ts (2 tests) 92ms
+ ✓ src/client/art/story-rig.test.ts (25 tests) 873ms
+ ✓ src/client/unit-art.test.ts (6 tests) 8ms
+ ✓ src/shared/sim/spatial-metadata-transfer.test.ts (2 tests) 11ms
+ ✓ src/client/rally-visual.test.ts (5 tests) 2ms
+ ✓ src/ai/policy/engineering.test.ts (2 tests) 83ms
+ ✓ src/ai/policy/v8/well.test.ts (2 tests) 8ms
+ ✓ src/sdk/snapshot/range-index-predicate.test.ts (3 tests) 22ms
+ ✓ src/client/virtual-ui.test.ts (3 tests) 2ms
+ ✓ scripts/hud-portrait-bounds.test.ts (2 tests) 578ms
+   ✓ HUD artwork uses transparent subjects > keeps every unit portrait visible without an opaque background 381ms
+ ✓ src/client/deployment/room-ai.test.ts (6 tests) 256ms
+ ✓ src/ai/policy/v6-no-shooters.test.ts (3 tests) 11ms
+ ✓ scripts/ai-version-gauntlet-selection.test.ts (5 tests) 4ms
+ ✓ src/client/i18n.test.ts (6 tests) 3ms
+ ✓ src/ai/policy/v9/march.test.ts (4 tests) 9ms
+ ✓ src/ai/playtest-command-manifest.test.ts (4 tests) 343ms
+   ✓ AI playtest command manifest > is importable as the same command contract printed by the CLI 340ms
+ ✓ src/ai/bootstrap_1/global-camps.test.ts (12 tests) 735ms
+ ✓ src/client/portrait-cache.test.ts (2 tests) 13ms
+stdout | src/shared/ground-move-forecast.test.ts > forecasts a real worker move including 'mixed' terrain and arrival (mirror=false)
+{"mirror":false,"profile":"mixed","forecast":{"x":78.2,"y":800},"actual":{"x":78.59999999999998,"y":800},"error":0.39999999999997726}
+
+stdout | src/shared/ground-move-forecast.test.ts > forecasts a real worker move including 'arrival' terrain and arrival (mirror=false)
+{"mirror":false,"profile":"arrival","forecast":{"x":68,"y":800},"actual":{"x":69,"y":800},"error":1}
+
+stdout | src/shared/ground-move-forecast.test.ts > forecasts a real worker move including 'mixed' terrain and arrival (mirror=true)
+{"mirror":true,"profile":"mixed","forecast":{"x":4017.8,"y":800},"actual":{"x":4017.3999999999987,"y":800},"error":0.4000000000014552}
+
+stdout | src/shared/ground-move-forecast.test.ts > forecasts a real worker move including 'arrival' terrain and arrival (mirror=true)
+{"mirror":true,"profile":"arrival","forecast":{"x":4028,"y":800},"actual":{"x":4027,"y":800},"error":1}
+
+ ✓ src/shared/ground-move-forecast.test.ts (4 tests) 76ms
+ ✓ src/ai/policy/v8/doctrine.test.ts (3 tests) 3ms
+ ✓ src/shared/corpses.test.ts (2 tests) 38ms
+ ✓ src/client/art/motion.test.ts (10 tests) 7ms
+ ✓ src/client/minimap.test.ts (4 tests) 18ms
+ ✓ src/server/room-lifecycle-equivalence.test.ts (1 test) 9ms
+ ✓ src/ai/policy/threats.test.ts (3 tests) 7ms
+ ✓ src/client/health-bars.test.ts (4 tests) 5ms
+ ✓ src/shared/sim/unit-update.test.ts (2 tests) 16ms
+ ✓ src/ai/policy/v7/discipline.test.ts (1 test) 7ms
+ ✓ src/ai/policy/spell-cooldowns.test.ts (9 tests) 13ms
+ ✓ src/ai/policy/mining.test.ts (3 tests) 45ms
+ ✓ src/client/player-colors.test.ts (1 test) 6ms
+ ✓ src/shared/combat-save-upgrade.test.ts (1 test) 5ms
+ ✓ src/server/global-session-boundary.test.ts (3 tests) 3ms
+ ✓ src/ai/policy/convoy-load.test.ts (2 tests) 72ms
+ ✓ src/ai/runtime-planning-boundary.test.ts (3 tests) 19ms
+ ✓ scripts/ai-cross-race-benchmark.test.ts (1 test) 435ms
+   ✓ AI cross-race benchmark CLI > prints selected v2 ember versus v2 grove matches without running simulations in dry-run mode 434ms
+ ✓ src/client/chat-controller.test.ts (4 tests) 3ms
+ ✓ src/shared/historical-naval-review.test.ts (9 tests) 18798ms
+   ✓ documented historical naval mechanisms through stepGame > 'chesapeake-diverging-line' 1008ms
+   ✓ documented historical naval mechanisms through stepGame > 'trafalgar-two-columns' 11237ms
+   ✓ documented historical naval mechanisms through stepGame > 'howe-cross-change-tack' 1066ms
+   ✓ documented historical naval mechanisms through stepGame > 'constitution-calm-chase' 441ms
+   ✓ documented historical naval mechanisms through stepGame > 'shannon-boarding-control' 750ms
+   ✓ documented historical naval mechanisms through stepGame > 'hermione-gangway-hatch' 3492ms
+   ✓ documented historical naval mechanisms through stepGame > continues a JSON save before a future weather command with the same final state 559ms
+ ✓ src/story/purity.test.ts (29 tests) 9ms
+ ✓ src/ai/benchmark/army-balance-stats.test.ts (1 test) 3ms
+ ✓ scripts/benchmark-cli.test.ts (2 tests) 3ms
+ ✓ src/client/net/wrapper-boundary.test.ts (2 tests) 42ms
+ ✓ src/shared/net/frame-buffer.test.ts (4 tests) 3ms
+ ✓ src/ai/bootstrap_1/workforce.test.ts (1 test) 34ms
+ ✓ src/client/edge-scroll.test.ts (3 tests) 3ms
+ ✓ scripts/ai-matrix-manifest.test.ts (3 tests) 3ms
+ ✓ src/sdk/snapshot/range-index.test.ts (1 test) 63ms
+ ✓ src/client/debug-view.test.ts (1 test) 5ms
+ ✓ src/shared/archipelago-map.test.ts (2 tests) 166ms
+ ✓ src/shared/deployment-base.test.ts (3 tests) 3ms
+ ✓ src/ai/benchmark/command-stats.test.ts (1 test) 3ms
+ ✓ src/client/world3d/projection.test.ts (1 test) 18ms
+ ✓ src/client/training-queue.test.ts (2 tests) 3ms
+ ✓ src/ai/benchmark/parity.test.ts (1 test) 732ms
+   ✓ AI benchmark runner parity > proves serial and parallel workers share setup and core results for the same formal match 731ms
+ ✓ src/ai/playtest-session-file.test.ts (1 test) 15ms
+ ✓ src/client/art/model-manifest.test.ts (2 tests) 256ms
+ ✓ src/ai/policy/ownership.test.ts (1 test) 5ms
+ ✓ src/client/room-browser-model.test.ts (1 test) 3ms
+ ✓ src/client/deck-plan-projection.test.ts (7 tests) 34ms
+ ✓ src/shared/catalog.test.ts (1 test) 2ms
+ ✓ src/client/world3d/flight-pose.test.ts (2 tests) 4ms
+ ✓ src/client/glyphs.test.ts (2 tests) 3ms
+ ✓ src/shared/chat.test.ts (2 tests) 8ms
+ ✓ src/client/art/items.test.ts (1 test) 21ms
+ ✓ src/ai/policy/commands.test.ts (1 test) 5ms
+ ✓ src/ai/policy/combat-math.test.ts (1 test) 2ms
+ ✓ src/client/i18n-coverage.test.ts (1 test) 5ms
+ ✓ src/ai/policy/tests/no-expansion-robustness.test.ts (1 test) 210ms
+ ✓ src/server/command-admission-boundary.test.ts (2 tests) 3ms
+ ✓ src/client/player-name.test.ts (2 tests) 2ms
+ ✓ src/server/ws-routes.test.ts (2 tests) 2ms
+ ✓ src/client/user-profile.test.ts (3 tests) 3ms
+ ✓ src/client/art/painted-creatures.test.ts (21 tests) 3508ms
+ ✓ src/ai/policy/playbook.test.ts (1 test) 2ms
+ ✓ src/campaigns/ashen-march/campaign.test.ts (3 tests) 12575ms
+   ✓ the Ashen March > is played through to its ending by its pilot, in more than forty minutes 5366ms
+   ✓ the Ashen March > plays the same, tick for tick, every time 2884ms
+   ✓ the Ashen March > loads a save made anywhere in the campaign to the very same game 4324ms
+ ✓ scripts/global-session-boundary.test.ts (1 test) 4ms
+ ✓ src/client/building-glyphs.test.ts (1 test) 2ms
+ ✓ src/ai/policy/telemetry.test.ts (1 test) 2ms
+ ✓ src/benchmark-dashboard/main-template.test.ts (2 tests) 3ms
+ ✓ src/server/network.test.ts (3 tests) 2ms
+ ✓ scripts/sdk-agent-driver-boundary.test.ts (1 test) 2ms
+ ✓ scripts/sdk-agent-planner-boundary.test.ts (1 test) 2ms
+ ✓ src/server/benchmark-dashboard-api.test.ts (2 tests) 2ms
+ ✓ src/client/world3d/painted-hit.test.ts (1 test) 2ms
+ ✓ src/server/room-history-boundary.test.ts (2 tests) 2ms
+ ✓ src/client/deployment/mode.test.ts (3 tests) 2ms
+ ✓ scripts/ai-version-gauntlet-runner-boundary.test.ts (1 test) 2ms
+ ✓ src/client/room-view-state.test.ts (1 test) 2ms
+ ✓ src/benchmark-dashboard/page-size.test.ts (1 test) 2ms
+ ✓ src/client/format-mass.test.ts (1 test) 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/painted-sprite-bounds.test.ts > painted atlas bounds > fits every humanoid action and facing inside the existing atlas tile
+AssertionError: lancer/attack/0/-1 is not clipped by atlas: expected 4 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 4
+
+ ❯ assertFits scripts/painted-sprite-bounds.test.ts:21:49
+     19|   }
+     20|   expect(ink,label+' is visible').toBeGreaterThan(80);
+     21|   expect(edge,label+' is not clipped by atlas').toBe(0);
+       |                                                 ^
+     22| }
+     23| describe('painted atlas bounds',()=>{
+ ❯ scripts/painted-sprite-bounds.test.ts:45:45
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/ai/policy.test.ts > SDK preset AI policy > v3 ember prioritizes its first spire support unit after a stable forge frontline
+AssertionError: expected { type: 'train', …(2) } to match object { type: 'train', …(2) }
+
+- Expected
++ Received
+
+  Object {
+-   "buildingId": "spire",
++   "buildingId": "forge",
+    "type": "train",
+-   "unitKind": "priest",
++   "unitKind": "ashWarden",
+  }
+
+ ❯ src/ai/policy.test.ts:10288:21
+    10286|     const command = planAiCommandsFromScripts(snapshotGame(game), "v3"…
+    10287| 
+    10288|     expect(command).toMatchObject({ type: "train", buildingId: "spire"…
+       |                     ^
+    10289|   });
+    10290| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/sdk/package-boundaries.test.ts > SDK package boundaries > does not carry banned cleanup-era naming in source or specs
+AssertionError: expected [ …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "src/client/unit-animation.test.ts",
++   "src/client/unit-animation.ts",
++ ]
+
+ ❯ src/sdk/package-boundaries.test.ts:49:23
+     47|       .filter((file) => bannedName.test(file) || bannedName.test(readF…
+     48| 
+     49|     expect(offenders).toEqual([]);
+       |                       ^
+     50|   });
+     51| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/shared/aiming.test.ts > reticle aiming > retains shooter health and the adjusted Spark durability without raising caster health
+AssertionError: expected 90 to be 78 // Object.is equality
+
+- Expected
++ Received
+
+- 78
++ 90
+
+ ❯ src/shared/aiming.test.ts:40:33
+     39|     expect(UNIT_DEFS.priest.hp).toBe(90);
+     40|   });
+     41|   it("spends distance / reticle speed before the first shot, then keep…
+       |                           ^
+     42|     const game = battle(), unit = game.units[0]!;
+     43|     run(game, aimTicks(unit.kind) - 1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/shared/ship-maneuver-recovery.test.ts > live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle
+AssertionError: expected [ { x: 6279.04768839752, …(3) }, …(1) ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/shared/ship-maneuver-recovery.test.ts:140:68
+    138|     const origin={x:ship.x,y:ship.y,heading:motion.heading};
+    139|     const reference=planVoyageRoute(game.map,ship,goal,shipTraffic(shi…
+    140|     expect(reference.partial).toBe(false);expect(reference.points).toH…
+       |                                                                    ^
+    141|     expect(reference.points[0]!.exact).toBe(true);
+    142|     const turned={...origin,heading:reference.points[0]!.heading};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  src/shared/ship-voyage-quality.test.ts > observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull
+AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "unit-player-warship-1006",
++ ]
+
+ ❯ src/shared/ship-voyage-quality.test.ts:132:76
+    130|       }
+    131|     }
+    132|     expect(fleet.filter(ship => !fired.has(ship.id)).map(ship => ship.…
+       |                                                                            ^
+    133|   });
+    134| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  src/shared/ship-voyage.test.ts > forward voyage planning > backs less than one hull length into an aligned berth without two U-turns
+AssertionError: expected 0 to be greater than 0
+ ❯ src/shared/ship-voyage.test.ts:90:95
+     88|     const cruise=planVoyageRoute(map,ship,{x:goal.x,y:goal.y});
+     89|     const first=cruise.points[0]!;
+     90|     expect((first.x-ship.x)*Math.cos(first.heading)+(first.y-ship.y)*M…
+       |                                                                                               ^
+     91|   });
+     92| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  src/shared/ship-voyage.test.ts > forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/shared/ship-voyage.test.ts:109:52
+    107|     const route=planVoyageRoute(map,ship,goal,(a,b)=>a.y<=ship.y+1e-7 …
+    108|     expect(route.points.at(-1)).toMatchObject(goal);
+    109|     expect(route.points.every(point=>point.exact)).toBe(true);
+       |                                                    ^
+    110|     expectSwept(map,ship,route.points);
+    111|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  src/ai/bootstrap_1/mercenary-control.test.ts > 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=false)
+AssertionError: {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1048","x":566.3454427492306,"y":497.4435053025439,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1142","x":881.5049643467212,"y":565.2189606979882,"order":{"type":"move","x":500,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts:71:82
+     69|   expect(original.every(unit => game.units.includes(unit)), diagnostic…
+     70|   expect(mercenaries.every(unit =>
+     71|     Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE), d…
+       |                                                                                  ^
+     72|   const camp = game.mercenaryCamps[0]!;
+     73|   expect(game.units.filter(unit => travelers.has(unit.id)).every(unit …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  src/ai/bootstrap_1/mercenary-control.test.ts > 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=true)
+AssertionError: {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1048","x":3528.932671554237,"y":503.6233306452477,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1140","x":3334.4157264642813,"y":659.749523949203,"order":{"type":"move","x":3596,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts:71:82
+     69|   expect(original.every(unit => game.units.includes(unit)), diagnostic…
+     70|   expect(mercenaries.every(unit =>
+     71|     Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE), d…
+       |                                                                                  ^
+     72|   const camp = game.mercenaryCamps[0]!;
+     73|   expect(game.units.filter(unit => travelers.has(unit.id)).every(unit …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+ FAIL  src/ai/policy/humanized-combat.test.ts > shorter ranged weapons > priest has 80% of its old basic range 240
+AssertionError: expected 201.6 to be close to 192, received difference is 9.599999999999994, but expected 5e-9
+ ❯ src/ai/policy/humanized-combat.test.ts:216:41
+    214|     ["ogreMage", 200], ["dragonWhelp", 180], ["redDragon", 220],
+    215|   ] as const)("%s has 80%% of its old basic range", (kind, previous) =…
+    216|     expect(UNIT_DEFS[kind].attackRange).toBeCloseTo(previous * 0.8, 8);
+       |                                         ^
+    217|   });
+    218|   it("shortens ranged weapon skills while keeping melee, support spell…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+
+ FAIL  src/ai/policy/humanized-combat.test.ts > shorter ranged weapons > summoner has 80% of its old basic range 260
+AssertionError: expected 218.4 to be close to 208, received difference is 10.400000000000006, but expected 5e-9
+ ❯ src/ai/policy/humanized-combat.test.ts:216:41
+    214|     ["ogreMage", 200], ["dragonWhelp", 180], ["redDragon", 220],
+    215|   ] as const)("%s has 80%% of its old basic range", (kind, previous) =…
+    216|     expect(UNIT_DEFS[kind].attackRange).toBeCloseTo(previous * 0.8, 8);
+       |                                         ^
+    217|   });
+    218|   it("shortens ranged weapon skills while keeping melee, support spell…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+
+ Test Files  9 failed | 528 passed (537)
+      Tests  12 failed | 5183 passed (5195)
+   Start at  11:59:06
+   Duration  228.50s (transform 9.65s, setup 0ms, collect 123.16s, tests 470.29s, environment 86ms, prepare 25.03s)
+
+JSON report written to /workspace/sketch-rts-units/docs/art/refactor/validation/unit-integration-tests.json
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
