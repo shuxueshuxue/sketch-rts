@@ -4,7 +4,9 @@
 
 ## 当前记录（2026-10-11）
 
-最新公共批次 [#310 矿线反击](./expedition-counterraid-release.zh.md)、[#311 道路范围](./assault-road-distance-release.zh.md)、[#312 道路营地归属](./camp-territory-roads-release.zh.md)、[#313 扩张目标](./expansion-target-cap-release.zh.md) 均完成精确提交的 CI、合并和首次生产部署，随后 [#316 清营退路](./camp-return-roads-release.zh.md) 与 [#317 岛矿前排退路](./island-front-roads-release.zh.md) 也已合并并验证部署，当前发布提交为 `7de2bac7863ce619269a9697299e369d42f0a78d`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这些批次新增正式胜局为零。
+最新公共批次 [#310 矿线反击](./expedition-counterraid-release.zh.md)、[#311 道路范围](./assault-road-distance-release.zh.md)、[#312 道路营地归属](./camp-territory-roads-release.zh.md)、[#313 扩张目标](./expansion-target-cap-release.zh.md) 均完成精确提交的 CI、合并和首次生产部署，随后 [#316 清营退路](./camp-return-roads-release.zh.md) 与 [#317 岛矿前排退路](./island-front-roads-release.zh.md) 也已合并并验证部署，随后 [#320 施工护送](./expansion-construction-release.zh.md) 首次 CI 与生产部署通过，当前发布提交为 `4df34db4007e435dc7268085ecc7868de85cefd8`。道路长度、地形行军时间、实际移动推进与物理射程分别使用共享度量，具体语义和限制见 [道路范围说明](./assault-road-distance.zh.md)。这些批次新增正式胜局为零。
+
+#318 治疗站交接与 #319 满血归队测试此前在默认 v2 CPU 门槛阻塞，现已随 #320 的精确提交完成部署，门槛没有放宽。详见 [施工护送实验及发布阻塞记录](./expansion-construction-experiments.zh.md)。第三基地护送候选在同一真实 1v2 中盘保住基地并安排五名工人采矿，自身累计阵亡仍为十，已随 #320 发布，但不是正式胜局。
 
 已同步上游 #314/#315 的连续采矿维护费和分币结算。#313 及更早经济观察保留原规则标签；#316 的同世界续局双方使用 #315 新规则。冻结旧策略仍编译完整固定源码树，没有加入旧常量兼容出口或重新冻结。
 
