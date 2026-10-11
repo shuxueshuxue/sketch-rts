@@ -56,7 +56,7 @@ it.each(cases.flatMap(test => [false, true].map(ally => ({ ...test, ally }))))(
     expect(memory.naval!.ferries!.ferry).toMatchObject({ targetId: expected, phase: 'sailing' });
     const sail = commands.filter(command => command.type === 'unload' && command.unitIds.includes(boat.id));
     expect(sail).toHaveLength(1);
-    issueCommandFrame(game, sail.map(command => ({ playerId: 'us', command })));
+    issueCommandFrame(game, sail.map(command => ({ playerId: 'us', scriptId: 'naval', command })));
     for (let tick = 0; tick < 600; tick++) stepGame(game);
     expect(Math.hypot(boat.x - start.x, boat.y - start.y)).toBeGreaterThan(100);
     expect(boat.hp).toBe(boat.maxHp);
