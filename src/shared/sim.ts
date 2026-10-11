@@ -87,8 +87,8 @@ export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
   /** Derived at tick boundaries; never serialized or used as a source of permanent stats. */
-  veteranFrame?: Map<string, VeteranUnitModifiers>;
-  veteranAutocastFrame?: VeteranAutocastFrame;
+  veteranFrame?: Map<string, VeteranUnitModifiers> | undefined;
+  veteranAutocastFrame?: VeteranAutocastFrame | undefined;
   miningFrame?: MiningFrame;
   boardingHolds?: ReadonlySet<string>;
   deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number; profile?:DamageProfile }>;
@@ -216,7 +216,7 @@ function navalFrameFlags(game: Game): number {
     if (unit.deck || unit.cabin || unit.gangway || unit.sailing || isShipKind(unit.kind)
       || order.type === "board" || order.type === "boardShip" || order.type === "unload" || order.type === "enterCabin"
       || order.type === "move" && (order.rendezvousFor || order.deckPoint || order.deckShipId)
-      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags = NAVAL_FRAME;
+      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags |= NAVAL_FRAME;
   }
   // Preserve the existing vessel view even after direct equal-length array
   // replacement. This shortcut must not change that public mutation behavior.
@@ -828,7 +828,7 @@ export function stepGame(game: Game) {
     defenses = new Map();
   }
   const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
-  const ferry = updateUnits(game,defenses,navalFrame);
+  const ferry = updateUnits(game,defenses,navalFrame,emptyVeteranFrame);
   // Summons act next tick, but their bodies participate in this tick's tail.
   // A queued boarding/unload order can also activate during the unit pass.
   if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && (navalFrameFlags(game) & NAVAL_FRAME))) navalFrame = true;
@@ -1207,11 +1207,11 @@ function refreshVeteranFrameAfterCommandSpawn(game: Game) {
 }
 function refreshVeteranFrame(game: Game, empty = false) {
   const previous = game.veteranFrame;
-  game.veteranFrame = empty ? new Map() : buildVeteranFrame(game, veteranNearby(game));
+  game.veteranFrame = empty ? undefined : buildVeteranFrame(game, veteranNearby(game));
   // No current or departed projection can change any unit's derived stats.
-  if (!previous?.size && game.veteranFrame.size === 0) return;
+  if (!previous?.size && !game.veteranFrame?.size) return;
   for (const unit of game.units) {
-    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
+    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame?.has(unit.id))) {
       const hp = unit.hp;
       applyDerivedUnitStats(game, unit);
       // Aura projection changes derived combat stats, never health (including fractions below one).
@@ -1362,8 +1362,8 @@ function updateResources(game: Game) {
 // ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
-function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean): Ferry | undefined {
-  game.veteranAutocastFrame = {};
+function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean, emptyVeteranFrame: boolean): Ferry | undefined {
+  game.veteranAutocastFrame = emptyVeteranFrame ? undefined : {};
   const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
   const vessels=navalFrame ? shipsIn(game.units) : undefined;
@@ -2970,16 +2970,20 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
 
 function updateProjectiles(game: Game) {
   if (game.projectiles.length === 0) return;
-  const pending: Projectile[] = [];
-  for (const projectile of game.projectiles) {
+  const projectiles = game.projectiles;
+  let pending: Projectile[] | undefined;
+  for (let index = 0; index < projectiles.length; index++) {
+    const projectile = projectiles[index]!;
     projectile.remaining -= 1;
     if (projectile.remaining > 0) {
-      pending.push(projectile);
+      pending?.push(projectile);
       continue;
     }
+    pending ??= projectiles.slice(0, index);
     applyProjectileImpact(game, projectile);
   }
-  game.projectiles = pending;
+  // Until the first impact, both membership and target indexes remain current.
+  if (pending) game.projectiles = pending;
 }
 
 function applyProjectileImpact(game: Game, projectile: Projectile) {
@@ -4260,18 +4264,22 @@ function spatialBucketKey(entity: SpatialEntity, cellSize: number) {
   return numericBucketKey(Math.floor(entity.x / cellSize), Math.floor(entity.y / cellSize));
 }
 
-const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[] }>();
+const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[]; x: number[]; y: number[] }>();
 
+// Unchanged coordinates still occupy their recorded cell; changed axes are classified normally.
 function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number, previous?: SpatialIndex<T>): SpatialIndex<T> {
   const cached = previous && Object.is(previous.cellSize, cellSize) ? spatialMembership.get(previous) : undefined;
   if (cached && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize)) || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
     }
     // Buckets hold live entity references. Within a cell, narrow-phase range
     // checks still read current coordinates; membership and visit order match.
@@ -4284,10 +4292,12 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   if (cached) spatialMembership.delete(previous!);
   const members = cached?.members ?? [];
   const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
-  members.length = cellX.length = cellY.length = 0;
+  const positionsX = cached ? cached.x : [], positionsY = cached ? cached.y : [];
+  members.length = cellX.length = cellY.length = positionsX.length = positionsY.length = 0;
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const entity of entities) {
     members.push(entity);
+    positionsX.push(entity.x); positionsY.push(entity.y);
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     cellX.push(x); cellY.push(y);
     left = Math.min(left, x); right = Math.max(right, x);
@@ -4299,7 +4309,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   }
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
-  spatialMembership.set(index, { members, cellX, cellY });
+  spatialMembership.set(index, { members, cellX, cellY, x: positionsX, y: positionsY });
   return index;
 }
 
@@ -4309,6 +4319,8 @@ const teamSpatialMembership = new WeakMap<object, {
   cellX: number[];
   cellY: number[];
   teams: string[];
+  x: number[];
+  y: number[];
 }>();
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
@@ -4317,11 +4329,14 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
-        || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize)) || cached.teams[i] !== teamKey(game, entity.owner)) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))
+        || cached.teams[i] !== teamKey(game, entity.owner)) {
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
     }
     // Internal indexes retain live bodies. Team membership and visit order
     // must match independently of coordinate-key aliases and mutable owners.
@@ -4332,9 +4347,11 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   if (reusable) teamSpatialMembership.delete(previous!);
   const members = reusable?.members ?? [];
   const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
-  members.length = cellX.length = cellY.length = teams.length = 0;
+  const positionsX = reusable ? reusable.x : [], positionsY = reusable ? reusable.y : [];
+  members.length = cellX.length = cellY.length = teams.length = positionsX.length = positionsY.length = 0;
   for (const entity of entities) {
     members.push(entity);
+    positionsX.push(entity.x); positionsY.push(entity.y);
     const team = teamKey(game, entity.owner);
     teams.push(team);
     let index = indexes.get(team);
@@ -4347,7 +4364,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
-  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams });
+  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams, x: positionsX, y: positionsY });
   return indexes;
 }
 
@@ -4370,12 +4387,15 @@ function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: n
 function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: number, test: (unit: Unit) => boolean): Unit | undefined {
   const index = game.unitSpatial;
   if (!index) return game.units.find(unit => !isInCabin(unit) && test(unit));
-  const radius = Math.ceil(range / index.cellSize);
-  const bx = Math.floor(point.x / index.cellSize);
-  const by = Math.floor(point.y / index.cellSize);
-  for (let ox = -radius; ox <= radius; ox += 1) {
-    for (let oy = -radius; oy <= radius; oy += 1) {
-      const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
+  // Both callers reject bodies outside their physical range. Keep the same
+  // x-then-y visit order, but omit cells the range cannot reach and empty extents.
+  const size = index.cellSize;
+  const right = Math.min(index.right, Math.floor((point.x + range) / size));
+  const bottom = Math.min(index.bottom, Math.floor((point.y + range) / size));
+  const top = Math.max(index.top, Math.floor((point.y - range) / size));
+  for (let x = Math.max(index.left, Math.floor((point.x - range) / size)); x <= right; x += 1) {
+    for (let y = top; y <= bottom; y += 1) {
+      const bucket = index.buckets.get(numericBucketKey(x, y));
       if (!bucket) continue;
       for (const unit of bucket) if (!isInCabin(unit) && test(unit)) return unit;
     }

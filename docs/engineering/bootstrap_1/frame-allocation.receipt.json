@@ -1,0 +1,216 @@
+{
+  "allocation": {
+    "parent": "b0b951987a89d2a2097cf53b3de3ac2e2ef9cddb",
+    "cases": [
+      {
+        "name": "default dual AI",
+        "ticks": 1200,
+        "commands": 29,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "allocations": {
+          "parent": {
+            "emptyMaps": 2400,
+            "fullFrames": 0,
+            "autocast": 1200,
+            "sets": 2628
+          },
+          "next": {
+            "emptyMaps": 0,
+            "fullFrames": 0,
+            "autocast": 0,
+            "sets": 0
+          }
+        }
+      },
+      {
+        "name": "battle",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "allocations": {
+          "parent": {
+            "emptyMaps": 600,
+            "fullFrames": 0,
+            "autocast": 300,
+            "sets": 600
+          },
+          "next": {
+            "emptyMaps": 0,
+            "fullFrames": 0,
+            "autocast": 0,
+            "sets": 0
+          }
+        }
+      },
+      {
+        "name": "island",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "allocations": {
+          "parent": {
+            "emptyMaps": 0,
+            "fullFrames": 600,
+            "autocast": 300,
+            "sets": 600
+          },
+          "next": {
+            "emptyMaps": 0,
+            "fullFrames": 0,
+            "autocast": 0,
+            "sets": 0
+          }
+        }
+      }
+    ]
+  },
+  "projectiles": {
+    "parent": "b0b951987a89d2a2097cf53b3de3ac2e2ef9cddb",
+    "cases": [
+      {
+        "name": "default dual AI",
+        "ticks": 1200,
+        "commands": 29,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 0,
+            "indexes": 0
+          },
+          "next": {
+            "arrays": 0,
+            "indexes": 0
+          }
+        }
+      },
+      {
+        "name": "battle",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 137,
+            "indexes": 137
+          },
+          "next": {
+            "arrays": 20,
+            "indexes": 21
+          }
+        }
+      },
+      {
+        "name": "island",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 0,
+            "indexes": 0
+          },
+          "next": {
+            "arrays": 0,
+            "indexes": 0
+          }
+        }
+      },
+      {
+        "name": "late actual default duel",
+        "ticks": 600,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 161,
+            "indexes": 156
+          },
+          "next": {
+            "arrays": 22,
+            "indexes": 22
+          }
+        }
+      }
+    ]
+  },
+  "relatedSdkPassed": 173,
+  "buildPassed": true,
+  "formalAcceptanceComplete": false,
+  "currentCoordinates": {
+    "parent": "b0b951987a89d2a2097cf53b3de3ac2e2ef9cddb",
+    "cases": [
+      {
+        "name": "default dual AI",
+        "ticks": 1200,
+        "commands": 29,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 0,
+            "indexes": 0,
+            "classifications": 39584
+          },
+          "next": {
+            "arrays": 0,
+            "indexes": 0,
+            "classifications": 23285
+          }
+        }
+      },
+      {
+        "name": "battle",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 137,
+            "indexes": 137,
+            "classifications": 79888
+          },
+          "next": {
+            "arrays": 20,
+            "indexes": 21,
+            "classifications": 65932
+          }
+        }
+      },
+      {
+        "name": "island",
+        "ticks": 300,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 0,
+            "indexes": 0,
+            "classifications": 41739
+          },
+          "next": {
+            "arrays": 0,
+            "indexes": 0,
+            "classifications": 18407
+          }
+        }
+      },
+      {
+        "name": "late actual default duel",
+        "ticks": 600,
+        "commands": 0,
+        "commandsMemoriesAndEveryWorldIdentical": true,
+        "work": {
+          "parent": {
+            "arrays": 161,
+            "indexes": 156,
+            "classifications": 132248
+          },
+          "next": {
+            "arrays": 22,
+            "indexes": 22,
+            "classifications": 106716
+          }
+        }
+      }
+    ]
+  }
+}

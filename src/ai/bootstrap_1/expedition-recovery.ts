@@ -43,7 +43,9 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
     if (!threats.length) return [];
     const danger = [...threats].sort((a, b) => distance(patient, a) - mountedThreatReach(snapshot, a, patient, THINK_TICKS)
       - (distance(patient, b) - mountedThreatReach(snapshot, b, patient, THINK_TICKS)))[0]!;
-    const covers = landed.filter(unit => unit.id !== patient.id && unit.hp / unit.maxHp > patient.hp / patient.maxHp).map(unit => {
+    // Finish the retreat instead of chasing a new point behind a moving protector.
+    const covers = patient.order.type === 'move' && patient.order.avoidCombat ? [{ x: patient.order.x, y: patient.order.y }]
+      : landed.filter(unit => unit.id !== patient.id && unit.hp / unit.maxHp > patient.hp / patient.maxHp).map(unit => {
       const angle = Math.atan2(unit.y - danger.y, unit.x - danger.x), reach = mountedThreatReach(snapshot, danger, patient, THINK_TICKS);
       return { x: unit.x + Math.cos(angle) * reach, y: unit.y + Math.sin(angle) * reach };
     });
