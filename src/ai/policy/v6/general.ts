@@ -183,10 +183,12 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const front = available.filter((unit) => !isBacklineKind(unit) && unit.attackDamage > 0);
   const strength = strengthOf(available);
   const miningFirst = expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
+  const constructing = expansionBasis === 'mines' && snapshot.buildings.some(building => building.owner === owner
+    && building.kind === 'townHall' && !building.complete);
   // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
   // and at home under its towers while the armies closing on it outweigh it (see v9-fall-back).
   const outweighed = isV9Policy(options) && intel.enemies.filter((enemy) => enemy.state === "pushing").reduce((total, enemy) => total + enemy.power, 0) > strength * V9_FALL_BACK_SHARE;
-  const escort = (isV9Policy(options) || miningFirst && isV7Policy(options)) && !outweighed
+  const escort = (isV9Policy(options) || (miningFirst || constructing) && isV7Policy(options)) && !outweighed
     ? expansionEscortPoint(snapshot, owner, intel, options, expansionBasis, chooseMine) : undefined;
   const rally = isV9Policy(options) && !outweighed ? (escort ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
   if (front.length === 0) {
@@ -221,8 +223,8 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...recovery(wounded, intel.home)];
   }
-  // Securing a cleared replacement includes its ordinary foundation; a distant attack cannot take that escort away.
-  if (miningFirst && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
+  // Keep the screen at a rising expansion; another camp must not take it away before the hall can stand.
+  if ((miningFirst || constructing) && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
 
   // @@@v9-pursue - Intruders V9 has beaten are chased while they run, with the field edge it defends with, until they are
   // back by their own halls: V7's five summoners, their footmen dead, walked home from V9's natural and sent their spirits
