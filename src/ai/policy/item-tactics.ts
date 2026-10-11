@@ -2,6 +2,7 @@ import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
 import { canReceiveHealing } from "../../shared/healing";
 import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
 import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH } from "../../shared/shop";
+import { GUARDIAN_SCROLL } from "../../shared/item-rules";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { legalBuildPointNear } from "./build-layout";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
@@ -25,12 +26,18 @@ export function planItemCommandsWithStormPoint(snapshot: GameSnapshot, owner: Pl
   const commands: GameCommand[] = [];
   const ownUnits = units(snapshot, owner);
   const ownCombat = ownUnits.filter((unit) => unit.kind !== "worker");
+  const guardianCoverage = new Set<string>();
 
   for (const item of carriedItemsFor(snapshot, owner).filter((candidate) => candidate.cooldownRemaining === 0)) {
     const carrier = ownUnits.find((unit) => unit.id === item.carrierId);
     if (!carrier) continue;
-    const command = itemUseCommand(snapshot, owner, carrier, item, options, stormPoint);
-    if (command) commands.push(command);
+    const command = itemUseCommand(snapshot, owner, carrier, item, options, stormPoint, guardianCoverage);
+    if (command) {
+      commands.push(command);
+      if (item.kind === "guardianScroll") for (const unit of ownCombat) {
+        if (distance(unit, carrier) <= GUARDIAN_SCROLL.radius) guardianCoverage.add(unit.id);
+      }
+    }
   }
 
   const assignedPickupCarrierIds = new Set<string>();
@@ -50,7 +57,7 @@ function nearestStormTarget(snapshot: GameSnapshot, owner: PlayerId, carrier: Un
   return nearestEntity(real.length ? real : targets, carrier);
 }
 
-function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions, stormPoint: StormPointSelector): GameCommand | undefined {
+function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions, stormPoint: StormPointSelector, guardianCoverage: ReadonlySet<string>): GameCommand | undefined {
   if (item.kind === "experienceBook") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options);
   // A healing scroll is read when the hurt friends round its carrier lack at least what it heals four of them for.
   if (item.kind === "healingScroll") {
@@ -80,11 +87,15 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
     const contactEnemies = hostileUnitsNear(snapshot, owner, carrier, GUARDIAN_SCROLL_CONTACT_RANGE, options.teams);
     // @@@guardian-precast - Outnumbered ranged fights are decided before melee contact; advantage armies should not get a free early snowball shield.
     const threatEnemies = hostileUnitsNear(snapshot, owner, carrier, GUARDIAN_SCROLL_THREAT_RANGE, options.teams);
-    const outnumbered = combatUnits(snapshot, owner).length < hostileUnitsNear(snapshot, owner, carrier, 900, options.teams).length;
+    // Distant detachments cannot cover this local ranged exchange.
+    const nearbyArmy = combatUnits(snapshot, owner).filter(unit => distance(unit, carrier) <= 900);
+    const outnumbered = nearbyArmy.length < hostileUnitsNear(snapshot, owner, carrier, 900, options.teams).length;
     const backlineCarrier = carrier.attackRange > 100;
     const contactFight = contactEnemies.length >= 3;
     const rangedBurstWindow = backlineCarrier && outnumbered && threatEnemies.length >= 3;
-    return allies.length >= 4 && (contactFight || rangedBurstWindow) ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
+    const uncovered = allies.filter(unit => !guardianCoverage.has(unit.id)
+      && !unit.effects.some(effect => effect.type === "guardian" && effect.remaining > 0));
+    return uncovered.length >= 4 && (contactFight || rangedBurstWindow) ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
   if (item.kind === "stormStaff") {
     const point = stormPoint(snapshot, owner, carrier, options);

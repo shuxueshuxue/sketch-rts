@@ -1,13 +1,16 @@
-import { DOCK_REPAIR } from '../../shared/catalog';
+import { DOCK_REPAIR, unitMover } from '../../shared/catalog';
+import { BOARDING_GAP } from '../../shared/naval';
 import { nearestByRoute } from '../../shared/route-selection';
+import { distanceToHull } from '../../shared/ship-geometry';
 import { nearestShipPose } from '../../shared/ship-navigation';
 import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { isTransportKind } from '../../shared/transport-role';
-import { walkableGoal } from '../../shared/terrain';
+import { walkableGoal, walkDestination } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { navalServices } from '../policy/naval-services';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
+import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 
 /** Finish the current crossing, then repair at a reachable port before taking another payload. */
 export function transportRecovery(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -32,6 +35,31 @@ export function transportRecovery(snapshot: GameSnapshot, owner: PlayerId, optio
     ids.add(boat.id);
     if (boat.order.type !== 'move' || distance(boat.order, berth) > 80)
       commands.push({ type: 'move', unitIds: [boat.id], x: berth.x, y: berth.y, avoidCombat: true });
+  }
+  if (!ids.size) return { ids, commands };
+  const recoveringBoats = snapshot.units.filter(unit => ids.has(unit.id));
+  const halls = snapshot.buildings.filter(hall => hall.owner === owner && hall.kind === 'townHall' && hall.complete);
+  const foes = armedFoes(snapshot, owner, options);
+  // Landed troops remain physical bodies. Clear idle, healthy bystanders before
+  // the ferry's swept hull leaves; do not interrupt mining, combat or recovery.
+  for (const unit of snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.kind !== 'worker'
+    && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined && unit.hp === unit.maxHp
+    && (unit.order.type === 'idle' || unit.order.type === 'move' && unit.order.avoidCombat)
+    && !options.memory.mounted?.some(job => job.unitIds.includes(unit.id)))) {
+    const boat = recoveringBoats.find(boat => distanceToHull(boat, unit) <= unit.radius + BOARDING_GAP);
+    if (!boat) continue;
+    if (unit.order.type === 'move' && distanceToHull(boat, unit.order) > unit.radius + BOARDING_GAP) {
+      ids.add(unit.id);
+      continue;
+    }
+    const haven = halls.map(hall => walkDestination(snapshot.map, unit, hall)).filter(point =>
+      distanceToHull(boat, point) > unit.radius + BOARDING_GAP).flatMap(point => {
+      const ticks = safeLandTravelTicks(snapshot, unit, point, foes);
+      return ticks === undefined ? [] : [{ point, ticks }];
+    }).sort((a, b) => a.ticks - b.ticks)[0];
+    if (!haven) continue;
+    ids.add(unit.id);
+    commands.push({ type: 'move', unitIds: [unit.id], ...haven.point, avoidCombat: true });
   }
   return { ids, commands };
 }
