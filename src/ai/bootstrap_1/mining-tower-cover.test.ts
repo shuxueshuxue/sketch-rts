@@ -39,7 +39,7 @@ function replacementScene(race: 'grove' | 'ember', mirrored: boolean) {
 
 it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'ember'] as const)
   .flatMap(race => [false, true].map(mirrored => ({ version, race, mirrored }))))) (
-  'pays for cover, builds and mines the cleared replacement while the army holds elsewhere ($version/$race, mirror=$mirrored)', ({ version, race, mirrored }) => {
+  'builds and mines the unoccupied replacement directly while the army holds elsewhere ($version/$race, mirror=$mirrored)', ({ version, race, mirrored }) => {
     const { game, memory, x } = replacementScene(race, mirrored);
     let returned = false, damage = 0;
     const replacementLoads = new Set<string>();
@@ -64,8 +64,8 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
     expect(game.units.filter(unit => unit.id.startsWith('screen-'))).toHaveLength(4);
     expect(damage).toBe(0);
     expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete
-      && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(true);
-    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.townHall.cost);
+      && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(false);
+    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(BUILDING_DEFS.townHall.cost);
     expect(game.match.winner).toBeNull();
     const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
     const carried = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
@@ -90,6 +90,6 @@ it.each(['covered', 'two-incomes', 'no-income', 'guarded', 'occupied', 'rising']
     setBuildingBodies(game.map, game.buildings);
     const snapshot = snapshotGame(game);
     const options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
-    expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('mining-cover:'))).toBe(condition === 'two-incomes');
+    expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('mining-cover:'))).toBe(false);
     if (condition === 'covered') expect(rankBootstrapGoals(snapshot, 'us', options).some(goal => goal.id.startsWith('bases:'))).toBe(true);
   });
