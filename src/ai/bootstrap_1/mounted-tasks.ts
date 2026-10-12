@@ -1,5 +1,5 @@
 import { detCos, detSin } from '../../shared/det-math';
-import { isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
+import { isOpenGround, isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { retreatLandTravelTicks } from './safe-land-route';
@@ -8,7 +8,7 @@ import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../
 import { isOpponentOwner } from '../policy/ownership';
 import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { neutralCamps } from '../policy/v7/creep';
+import { neutralCamps, type Camp } from '../policy/v7/creep';
 import { THINK_TICKS, mountedEscape, mountedMicro, mountedTargetOrder, mountedThreatReach } from './mounted-micro';
 
 const THREAT_RANGE = 750;
@@ -19,7 +19,7 @@ function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers:
     ...Array.from({ length: 16 }, (_, index) => index * Math.PI / 8)];
   const points = angles.map(angle => ({ x: worker.x + detCos(angle) * (rider.attackRange - 10), y: worker.y + detSin(angle) * (rider.attackRange - 10) }))
     .filter(point => point.x >= 0 && point.y >= 0 && point.x < snapshot.map.width && point.y < snapshot.map.height
-      && isWalkable(snapshot.map, point.x, point.y) && sameGround(snapshot.map, rider, point)
+      && isOpenGround(snapshot.map, point.x, point.y) && sameGround(snapshot.map, rider, point)
       && towers.every(tower => distance(point, tower) > tower.attackRange + rider.radius)
       && defenders.every(foe => {
         const gap = distance(point, foe);
@@ -48,6 +48,21 @@ function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, ha
     y: mine.y + (hall.y - mine.y) * GOLD_MINE_RULES.entryRange / gap };
   return isWalkable(snapshot.map, entry.x, entry.y) && sameGround(snapshot.map, worker, entry)
     && firingPoint(snapshot, rider, entry, towers, defenders) !== undefined;
+}
+
+/** Prospective scouts and live raids use the same exposed line and admitted station. */
+export function nextMountedRaid(snapshot: GameSnapshot, owner: PlayerId, rider: Unit,
+  towers: readonly Building[], defenders: readonly Unit[], options: AiPolicyContext) {
+  return nearestByRoute(snapshot.map, snapshot.buildings
+      .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
+      .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, rider, worker) && exposedMiningLine(snapshot, rider, worker, hall, towers, defenders))), rider, 'land');
+}
+
+/** Recruitment and live assignments use the same next profitable camp and actual road ordering. */
+export function nextMountedCamp(snapshot: GameSnapshot, rider: Unit, camps: readonly Camp[], occupied: ReadonlySet<string>) {
+  const choices = camps.filter(camp => !camp.creeps.some(creep => occupied.has(creep.id)) && sameGround(snapshot.map, rider, camp.center)
+    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange));
+  return nearestByRoute(snapshot.map, choices.map(camp => ({ ...camp.center, camp })), rider, 'land')?.camp;
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -87,13 +102,9 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   while (riders.length) {
     const lead = riders[0]!;
     const local = riders.filter(unit => sameGround(snapshot.map, lead, unit));
-    const hall = nearestByRoute(snapshot.map, snapshot.buildings
-      .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
-      .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders))), lead, 'land');
-    const camps = campLocations.filter(camp => !active.some(assignment => assignment.objective.kind === 'camp'
-        && assignment.objective.ids.some(id => camp.creeps.some(unit => unit.id === id))) && sameGround(snapshot.map, lead, camp.center)
-      && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange));
-    const camp = nearestByRoute(snapshot.map, camps.map(camp => ({ ...camp.center, camp })), lead, 'land')?.camp;
+    const hall = nextMountedRaid(snapshot, owner, lead, towers, defenders, options);
+    const occupied = new Set(active.flatMap(task => task.objective.kind === 'camp' ? task.objective.ids : []));
+    const camp = nextMountedCamp(snapshot, lead, campLocations, occupied);
     // A lone scout raids an exposed line when it is closer than the next camp.
     if (hall && (local.length >= 2 || !camp
       || walkingDistance(snapshot.map, lead, hall, 'land')! < walkingDistance(snapshot.map, lead, camp.center, 'land')!)) {
