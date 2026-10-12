@@ -1,5 +1,6 @@
 import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
 import { walkRoute, walkingDistance } from "../../../shared/terrain";
+import { routePrefix } from "../../../shared/route-selection";
 import type { GameSnapshot, PlayerId } from "../../../shared/types";
 import { BUILDING_DEFS } from "../../../shared/catalog";
 import type { Building } from "../../../shared/types";
@@ -40,15 +41,14 @@ export function v9FrontPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6I
   // Walk out from the selected hall itself. Projecting an off-axis hall onto the main's route left its mine undefended.
   const route = walkRoute(snapshot.map, anchor, target, 1);
   if (!route || route.length === 0) return anchor;
-  let ideal = 0;
-  for (let walked = distance(anchor, route[0]!); ideal < route.length - 1 && walked < FRONT_STEP; ideal += 1) walked += distance(route[ideal]!, route[ideal + 1]!);
+  const front = routePrefix(anchor, route, FRONT_STEP);
   const creeps = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.attackDamage > 0);
   const clear = (point: Point) => creeps.every((creep) => distance(creep, point) >= CREEP_CLEARANCE && distance({ x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }, point) >= CREEP_CLEARANCE);
-  for (let offset = 0; offset < route.length; offset += 1) {
-    for (const index of [ideal - offset, ideal + offset]) {
-      const point = route[index];
-      if (point && clear(point)) return point;
-    }
+  // A blocked front withdraws toward its hall; it never advances beyond the
+  // prescribed road distance merely to find an endpoint clear of camps.
+  for (let index = front.length - 1; index >= 0; index -= 1) {
+    const point = front[index]!;
+    if (clear(point)) return point;
   }
   return anchor;
 }
@@ -67,10 +67,8 @@ export function v9ChokeTowerPoint(snapshot: GameSnapshot, intel: V6Intel, hall: 
   const target = enemyHalls.reduce((best, candidate) => (distance(candidate, hall) < distance(best, hall) ? candidate : best));
   const route = walkRoute(snapshot.map, hall, target, 1);
   if (!route || route.length === 0) return undefined;
-  let index = 0;
-  for (let walked = distance(hall, route[0]!); index < route.length - 1 && walked < CHOKE_STEP; index += 1) walked += distance(route[index]!, route[index + 1]!);
-  while (index > 0 && distance(route[index]!, hall) > CHOKE_REACH) index -= 1;
-  const point = legalBuildPointNear(snapshot, "defenseTower", route[index]!);
+  const front = routePrefix(hall, route, CHOKE_STEP);
+  const point = legalBuildPointNear(snapshot, "defenseTower", front[front.length - 1]!);
   const creeps = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.attackDamage > 0);
   if (distance(point, hall) > CHOKE_REACH + 60 || creeps.some((creep) => distance(creep, point) <= CAMP_CLEARANCE)) return undefined;
   return point;
