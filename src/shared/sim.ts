@@ -1367,6 +1367,7 @@ type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
 function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean, emptyVeteranFrame: boolean): Ferry | undefined {
   game.veteranAutocastFrame = emptyVeteranFrame ? undefined : {};
+  const autocastFrame = game.tick % AUTOCAST_EVERY_TICKS === 0;
   const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
   const vessels=navalFrame ? shipsIn(game.units) : undefined;
@@ -1399,7 +1400,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
       if (navalUnitFrame && autoRepairDeckShip(game, unit)) continue;
-      autocastStep(game, unit);
+      if (autocastFrame) autocastStep(game, unit);
     }
     switch (unit.order.type) {
       case "charge":
@@ -2612,7 +2613,7 @@ const SUMMON_STEP = 60;
 const CHARGE_IMPACT_TICKS = 12;
 
 function autocastStep(game: Game, unit: Unit) {
-  if (game.tick % AUTOCAST_EVERY_TICKS !== 0 || !AUTOCAST_ORDERS.has(unit.order.type)) return;
+  if (!AUTOCAST_ORDERS.has(unit.order.type)) return;
   for (const ability of unitAbilities(unit)) {
     if (abilityCooldown(unit, ability) > 0 || !autocastEnabled(unit, ability)) continue;
     const def = ABILITY_DEFS[ability];
