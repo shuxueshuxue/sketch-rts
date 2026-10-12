@@ -1,0 +1,24 @@
+{
+  "number": 352,
+  "url": "https://github.com/shuxueshuxue/sketch-rts/pull/352",
+  "head": "d510af013f1db00fa19d15c9b2db93c508d61a07",
+  "base": "94bb72ee95f4ad37b5698d80240c91853c8b19f7",
+  "ciRuns": [
+    {
+      "id": 38312588704,
+      "name": "Simulation CPU Check",
+      "head_sha": "d510af013f1db00fa19d15c9b2db93c508d61a07",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38312588704"
+    }
+  ],
+  "merge": "ed6ee2b94ab03f01558424df148471823ab68327",
+  "productionObservation": {
+    "runId": 38313021360,
+    "lastObservedStatus": "in_progress",
+    "lastObservedConclusion": null,
+    "blockingObservation": "GitHub API subsequently returned HTTP 401; saved GH_TOKEN binding is false and runtime secrets are empty. Final five publishing steps and release tag are not yet verified."
+  }
+}
