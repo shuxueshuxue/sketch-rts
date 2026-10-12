@@ -8,7 +8,8 @@ import { stormPoint } from './storm-point';
 import { neutralUnitsNear } from '../policy/snapshot';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
-import { armedFoes, safeLandTravelTicks } from './safe-land-route';
+import { armedFoes, retreatLandRoad, retreatLandTravelTicks } from './safe-land-route';
+import { distance } from '../policy/spatial';
 
 function liveLootTask(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const task = options.memory.loot;
@@ -17,13 +18,14 @@ function liveLootTask(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const home = snapshot.buildings.find(candidate => candidate.id === task.homeId && candidate.owner === owner && candidate.complete);
   const item = snapshot.items.find(candidate => candidate.id === task.itemId);
   const collected = !item || !!item.carrierId || !!item.shipId;
+  if (collected) task.returning = true;
   // Death, a lost base, boarding or injury hands the unit back to its ordinary commander.
   if (!unit || !home || unit.deck || unit.hp < unit.maxHp
-    || collected && unit.order.type !== 'pickupItem' && walkingDistance(snapshot.map, unit, home, 'land')! <= V7_GATHERED_RANGE) {
+    || task.returning && unit.order.type !== 'pickupItem' && walkingDistance(snapshot.map, unit, home, 'land')! <= V7_GATHERED_RANGE) {
     delete options.memory.loot;
     return undefined;
   }
-  return { task, unit, home };
+  return { task, unit, home, item };
 }
 
 function lootAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -44,7 +46,7 @@ function lootAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
     if (score <= 0) return [];
     const home = nearestByRoute(snapshot.map, halls, unit, 'land');
     if (!home) return [];
-    const ticks = safeLandTravelTicks(snapshot, unit, item, foes);
+    const ticks = retreatLandTravelTicks(snapshot, unit, item, foes);
     const veteran = item.kind === 'experienceBook' ? unit.level : 0;
     return ticks === undefined ? [] : [{ unit, item, home, ticks, score, veteran }];
   })).sort((a, b) => b.veteran - a.veteran || b.score - a.score || a.ticks - b.ticks || a.unit.id.localeCompare(b.unit.id)).slice(0, 1);
@@ -66,9 +68,22 @@ export function planLootItemCommands(snapshot: GameSnapshot, owner: PlayerId, op
 export const lootRecovery: AiScript = {
   id: 'lootRecovery', phase: 'tactics', claimsUnits: lootRecoveryUnitIds,
   run: (snapshot, owner, options): GameCommand[] => {
-    if (liveLootTask(snapshot, owner, options)) return [];
+    const active = liveLootTask(snapshot, owner, options);
+    if (active) {
+      const { task, unit, home, item } = active, foes = armedFoes(snapshot, owner, options);
+      if (!task.returning && retreatLandTravelTicks(snapshot, unit, item!, foes) === undefined) task.returning = true;
+      if (!task.returning) return [];
+      const road = retreatLandRoad(snapshot, unit, home, foes);
+      if (road === undefined || distance(road.points[road.points.length - 1]!, home) > V7_GATHERED_RANGE) {
+        // A contested return ends the errand and hands the fighter back to its army.
+        delete options.memory.loot;
+        return [{ type: 'holdPosition', unitIds: [unit.id] }];
+      }
+      return unit.order.type === 'move' && unit.order.avoidCombat && unit.order.x === home.x && unit.order.y === home.y ? []
+        : [{ type: 'move', unitIds: [unit.id], x: home.x, y: home.y, avoidCombat: true }];
+    }
     return lootAssignments(snapshot, owner, options).flatMap(({ unit, item, home }) => {
-      options.memory.loot = { unitId: unit.id, itemId: item.id, homeId: home.id };
+      options.memory.loot = { unitId: unit.id, itemId: item.id, homeId: home.id, returning: false };
       return [{ type: 'pickupItem', unitId: unit.id, itemId: item.id },
         { type: 'move', unitIds: [unit.id], x: home.x, y: home.y, avoidCombat: true, queued: true }];
     });

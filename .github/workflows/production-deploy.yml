@@ -85,6 +85,9 @@ jobs:
       - name: Verify assault camp detours and closed roads
         run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts
 
+      - name: Verify loot couriers recheck roads and preserve veteran return
+        run: npx vitest run src/ai/bootstrap_1/loot-trip-reassessment.test.ts src/ai/bootstrap_1/loot-recovery.test.ts src/ai/bootstrap_1/recovery-road-coverage.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 
