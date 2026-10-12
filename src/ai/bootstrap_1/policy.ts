@@ -17,6 +17,7 @@ import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 import { planBootstrapCasterScreen } from './caster-screen';
 import { planSummonerScreen } from './summoner-screen';
+import { mountedRecruitment } from './mounted-recruitment';
 import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
@@ -61,7 +62,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
       && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === trainingBuildingFor(snapshot.players[owner]!.race, healer))))
     ? [{ unit: healer, count: Math.min(2, Math.max(1, Math.floor(army.length / 5))), priority: 65 }] : [];
-  if (army.length < 10) return medical;
+  const mounted = mountedRecruitment(snapshot, owner, options);
+  if (army.length < 10) return [...medical, ...mounted];
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
@@ -83,7 +85,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
       || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
-  wants.push(...medical);
+  wants.push(...medical, ...mounted);
   return wants;
 }
 
