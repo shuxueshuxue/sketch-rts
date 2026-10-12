@@ -88,7 +88,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/mounted-expedition.test.ts --testNamePattern=v9_knight
 
       - name: Verify mobile patients and existing care ownership
-        run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts
+        run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts src/ai/bootstrap_1/front-post-continuity.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
