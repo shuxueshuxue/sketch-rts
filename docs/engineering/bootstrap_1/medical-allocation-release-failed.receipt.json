@@ -10,7 +10,13 @@
   "detail": "Wounded self-healers lost their immediate heal to an earlier resting movement claim after generic heal ownership was removed. Original hp > 20 + SUPPORT_BUILDING_HEAL assertions retained.",
   "notRetried": true,
   "productionLatestAfterFailure": "336288916ae0a231122a8f7e7ec7c253d559f926",
-  "repair": "in progress",
+  "repair": {
+    "pr": 350,
+    "revision": "ce1d3152c8c609531df4445916480d8be78a34b0",
+    "production": 38300736871,
+    "conclusion": "success",
+    "proof": "healer-order-priority-release.receipt.json"
+  },
   "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
   "fullAcceptance": "pending"
 }
