@@ -9,7 +9,7 @@ import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { opponentPlayerIds } from "./ownership";
 import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } from "./snapshot";
-import { averagePoint, clamp, distance, nearestEntity, withinRangeOf, type Point } from "./spatial";
+import { averagePoint, clamp, distance, nearestEntity, withinRange, withinRangeOf, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV6Policy } from "./versions";
@@ -44,7 +44,7 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
       continue;
     }
     if (unit.hp >= unit.maxHp * 0.36) continue;
-    const nearbyEnemies = enemies.filter((enemy) => distance(enemy, unit) <= 380);
+    const nearbyEnemies = enemies.filter((enemy) => withinRange(enemy, unit, 380));
     if (nearbyEnemies.length === 0) continue;
     if (unit.attackRange > 100) {
       const pull = pullbackPoint(unit, retreatPoint, 0.36);
@@ -194,7 +194,7 @@ function veteranCoreRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ow
   return ownCombat
     .filter((unit) => unit.hp < unit.maxHp * veteranRecoveryHpRatio(unit, options))
     .filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove")
-    .filter((unit) => enemies.some((enemy) => distance(enemy, unit) <= 560))
+    .filter((unit) => enemies.some((enemy) => withinRange(enemy, unit, 560)))
     .flatMap((unit) => {
       const recoveryPoint = woundedRecoveryPoint(snapshot, owner, unit, retreatPoint);
       if (distance(unit, recoveryPoint) <= 110) return [];
@@ -206,7 +206,7 @@ function veteranCoreRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ow
 function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
   if (options.version !== "v2" || options.policyMode !== "combat") return [];
   return ownCombat
-    .filter((unit) => unit.hp / Math.max(1, unit.maxHp) <= 0.42 && enemies.some((enemy) => distance(enemy, unit) <= 520))
+    .filter((unit) => unit.hp / Math.max(1, unit.maxHp) <= 0.42 && enemies.some((enemy) => withinRange(enemy, unit, 520)))
     .filter((unit) => unit.attackRange > 100 || unit.hp < unit.maxHp * 0.36)
     .map((unit) => {
       const pull = pullbackPoint(unit, retreatPoint, 0.36);
@@ -216,7 +216,7 @@ function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, o
 
 function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: Unit[], ownBase: Point): Point {
   if (owner === "neutral") return ownBase;
-  const nearMainNeutrals = enemies.filter((unit) => unit.owner === "neutral" && distance(unit, ownBase) <= 900);
+  const nearMainNeutrals = enemies.filter((unit) => unit.owner === "neutral" && withinRange(unit, ownBase, 900));
   if (nearMainNeutrals.length === 0) return ownBase;
   const pressure = averagePoint(nearMainNeutrals);
   const dx = ownBase.x - pressure.x;
@@ -239,7 +239,7 @@ const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "emberAcolyte", 
 function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
   const threat = enemies
-    .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN)
+    .filter((enemy) => enemy.attackRange <= 80 && withinRange(enemy, unit, enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN))
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!threat) return undefined;
   const profile = aimingProfile(UNIT_DEFS[unit.kind]);
@@ -269,7 +269,7 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
   if (isV5HybridPolicy(options)) return v5StutterStepCommand(snapshot, owner, unit, enemies, safePoint, options);
   if (options.version !== "v2" || unit.attackRange <= 100 || unit.hp >= unit.maxHp * 0.82) return undefined;
   const closeMelee = enemies
-    .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= Math.max(75, enemy.attackRange + enemy.radius + unit.radius))
+    .filter((enemy) => enemy.attackRange <= 80 && withinRange(enemy, unit, Math.max(75, enemy.attackRange + enemy.radius + unit.radius)))
     .filter((enemy) => unit.hp / Math.max(1, unit.maxHp) < enemy.hp / Math.max(1, enemy.maxHp))
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!closeMelee) return undefined;

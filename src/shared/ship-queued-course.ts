@@ -107,7 +107,7 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
     ship.order = ship.orderQueue!.shift()!;
     route.goalX = next.x; route.goalY = next.y;
     delete route.queuedX; delete route.queuedY; delete route.queuedPassed;
-    delete ship.arrivedAt;
+    ship.arrivedAt = undefined;
     if (!route.windTried) motion.route = undefined;
   }
   return true;

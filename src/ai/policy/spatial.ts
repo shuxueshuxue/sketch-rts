@@ -2,8 +2,13 @@ import { hypot2 } from "../../shared/hypot";
 
 export type Point = { x: number; y: number };
 
-export function nearestEntity<T extends Point>(entities: T[], from: Point): T | undefined {
-  return entities.sort((a, b) => distance(a, from) - distance(b, from))[0];
+export function nearestEntity<T extends Point>(entities: readonly T[], from: Point): T | undefined {
+  let nearest: T | undefined, gap = Infinity;
+  entities.forEach(entity => {
+    const next = distance(entity, from);
+    if (nearest === undefined || next < gap) { nearest = entity; gap = next; }
+  });
+  return nearest;
 }
 
 export function nearestEntities<T extends Point>(entities: T[], from: Point): T[] {
@@ -61,7 +66,7 @@ export function withinRangeOf<T extends Point>(items: T[], range: number): (poin
   };
 }
 
-function withinRange(a: Point, b: Point, range: number) {
+export function withinRange(a: Point, b: Point, range: number) {
   const dx = a.x - b.x, dy = a.y - b.y;
   if (Math.abs(dx) > range || Math.abs(dy) > range) return false;
   return hypot2(dx, dy) <= range;

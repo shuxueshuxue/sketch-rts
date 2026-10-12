@@ -1,0 +1,67 @@
+{
+  "parent": "978450b171c0d0ba73ad34eb6d9f9fe5ba4a2048",
+  "mode": "One real late default-duel checkpoint with ordinary v2 controllers: 600 exact command/world/memory comparisons; 3 warmups and 3000-tick ABBA CPU measurements; native victory; not full-duel acceptance",
+  "rows": [
+    {
+      "label": "parent",
+      "cpuMs": 1690.743,
+      "hash": "15920fe7",
+      "nextId": 4540
+    },
+    {
+      "label": "next",
+      "cpuMs": 1313.043,
+      "hash": "15920fe7",
+      "nextId": 4540
+    },
+    {
+      "label": "next",
+      "cpuMs": 1265.57,
+      "hash": "15920fe7",
+      "nextId": 4540
+    },
+    {
+      "label": "parent",
+      "cpuMs": 1266.32,
+      "hash": "15920fe7",
+      "nextId": 4540
+    }
+  ],
+  "radialCallProbe": {
+    "parent": "978450b171c0d0ba73ad34eb6d9f9fe5ba4a2048",
+    "mode": "Diagnostic instrumentation of shared AI radial-distance calls only; not a CPU measurement. Same actual native checkpoint and ordinary v2 controller; all final worlds and memories equal.",
+    "rows": [
+      {
+        "label": "parent",
+        "radialCalls": 396923,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "next",
+        "radialCalls": 361159,
+        "hash": "15920fe7",
+        "nextId": 4540
+      }
+    ]
+  },
+  "runtimeDiff": {
+    "files": 2,
+    "additions": 8,
+    "deletions": 8
+  },
+  "sourceHashes": {
+    "src/ai/policy/spatial.ts": "24fe3e799c7bd0db45798962a42a73dd147c1a7707e69c51b67862e30a1a5fda",
+    "src/ai/policy/skirmish-tactics.ts": "a9b478fb441919757ac5c9c2b1bab032ad6165242e09048c408389c3cfd9e445"
+  },
+  "functionalChecks": {
+    "passed": 110,
+    "failed": 0
+  },
+  "fullAcceptanceComplete": false,
+  "build": {
+    "node": "20.20.2",
+    "exitCode": 0,
+    "log": "bootstrap_1-range-predicate-build.log"
+  }
+}

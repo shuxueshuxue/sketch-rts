@@ -34,8 +34,12 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
   memory.v6 = { phase: 3 };
   const original = game.units.filter(unit => unit.owner === 'us'), travelers = new Set<string>();
   expect(game.players.us!.gold).toBe(500);
-  let paid = 0;
-  for (let tick = 0; tick < 2400; tick++) {
+  let paid = 0, lastHireTick = 0;
+  // Purchase timing also includes ordinary economy priorities. Once the
+  // opening ends, each paid recruit still gets the same bounded return window.
+  for (let tick = 0; tick < 2400 + lastHireTick; tick++) {
+    if (tick >= 2400 && game.units.filter(unit => unit.owner === 'us' && unit.kind === 'mercenary').every(unit =>
+      Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE)) break;
     if (tick % 15 === 0) {
       const snapshot = snapshotGame(game);
       const options = bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams });
@@ -47,7 +51,7 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
           return command ? [{ scriptId: 'v6Economy', command }] : [];
         }), ...mercenaryControl.run(snapshot, 'us', options).map(command => ({ scriptId: mercenaryControl.id, command }))];
       for (const entry of entries) {
-        if (entry.command.type === 'hire') paid += 160;
+        if (entry.command.type === 'hire') { paid += 160; lastHireTick = tick; }
         if (entry.scriptId === 'mercenaryControl' && entry.command.type === 'move'
           && entry.command.x === x(2200) && entry.command.y === 700) entry.command.unitIds.forEach(id => travelers.add(id));
       }
