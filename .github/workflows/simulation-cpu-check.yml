@@ -67,7 +67,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/front-exposure.test.ts src/ai/policy/v6/general.test.ts src/ai/bootstrap_1/battle-roads.test.ts src/ai/bootstrap_1/covered-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
 
       - name: Verify recruitment intents and shared producer budgets
-        run: npx vitest run src/ai/bootstrap_1/recruitment-intent.test.ts src/ai/policy/v6/economy.test.ts src/ai/bootstrap_1/economy.test.ts
+        run: npx vitest run src/ai/bootstrap_1/recruitment-intent.test.ts src/ai/policy/v6/economy.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/bootstrap_1/shopping.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
