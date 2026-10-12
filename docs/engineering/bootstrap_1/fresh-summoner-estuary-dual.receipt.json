@@ -1,0 +1,103 @@
+{
+  "task": "bootstrap_1",
+  "mode": "one fresh native full-match observation of the pre-intent intermediate recovery-road candidate; no controller swaps; not final-head acceptance",
+  "parentHead": "2203fbdc412e3ce0af189541fa0a7bdbaa4b060f",
+  "runtimeSources": {
+    "parent": "2203fbdc412e3ce0af189541fa0a7bdbaa4b060f",
+    "files": {
+      "src/shared/route-selection.ts": "4d686e3c6a5a99ca546d4def49caa90d27d81643a302bb6f963d75f92c96be75",
+      "src/ai/bootstrap_1/safe-land-route.ts": "1804d091181219d464a576296851de6a6e5c2cded49da347d80ba52db1e106e8",
+      "src/ai/bootstrap_1/front-recovery.ts": "ba9629f22cc002fc7707234c2abcdcfa9f8b4e0a074609efdbd0375b298c25b9"
+    },
+    "runtimeSha256": "104ded69ac3f55bb2e5b2d084687622540ee6c9eae45daa7b9218789cd8e5d29"
+  },
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "match": {
+    "name": "grandEstuary/v9_summoner/v5+v8/grove/0",
+    "mapId": "grandEstuary",
+    "subject": "v9_summoner",
+    "side": 0,
+    "seed": "bootstrap_1-development",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_summoner",
+        "versionLabel": "v9_summoner",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v5",
+        "versionLabel": "v5",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "result": {
+    "tick": 37282,
+    "winner": "p0"
+  },
+  "final": {
+    "tick": 37282,
+    "winner": "p0",
+    "players": {
+      "p0": {
+        "gold": 700.55,
+        "supply": 73,
+        "cap": 90,
+        "halls": 6,
+        "workers": 22,
+        "permanentArmy": 22,
+        "mounted": [],
+        "losses": 247,
+        "creepKills": 6
+      },
+      "p1": {
+        "gold": 12.74,
+        "supply": 0,
+        "cap": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0,
+        "mounted": [],
+        "losses": 71,
+        "creepKills": 7
+      },
+      "p2": {
+        "gold": 32.68,
+        "supply": 0,
+        "cap": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0,
+        "mounted": [],
+        "losses": 54,
+        "creepKills": 2
+      }
+    }
+  },
+  "completedHalls": 6,
+  "normalThinkInterval": 15,
+  "artifacts": {
+    "/tmp/bootstrap_1-summoner-estuary-dual-fresh-observation.json": "b65e970cffcabfe23c0a539d2d29b08c492849645dac8ad0f2c9f94de52cb6f9",
+    "/tmp/bootstrap_1-recovery-road-next-runtime.mjs": "104ded69ac3f55bb2e5b2d084687622540ee6c9eae45daa7b9218789cd8e5d29"
+  },
+  "limits": [
+    "Development seed, one race and one side on one map.",
+    "247 total unit losses include the summoned host; do not interpret that as permanent soldier losses.",
+    "Final intent handling was added after this observation.",
+    "Formal 1620-case and held-out acceptance remain incomplete."
+  ]
+}
