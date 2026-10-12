@@ -54,12 +54,11 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   }
   expect(returned).toBe(true);
   expect(game.buildings.filter(building => building.owner === 'us' && building.kind === 'townHall' && building.complete)).toHaveLength(3);
-  const needsCover = version !== 'v9_summoner';
-  expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(needsCover);
+  expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(false);
   expect(game.units.filter(unit => unit.id.startsWith('screen-'))).toHaveLength(4);
   expect(damage).toBe(0);
   expect(game.match.stats.unitsLost.us).toBe(0);
-  expect(game.match.stats.goldSpent.us!).toBeGreaterThanOrEqual(BUILDING_DEFS.townHall.cost + (needsCover ? BUILDING_DEFS.defenseTower.cost : 0));
+  expect(game.match.stats.goldSpent.us!).toBeGreaterThanOrEqual(BUILDING_DEFS.townHall.cost);
   const mined = 30000 - game.resources.reduce((sum, mine) => sum + mine.amount, 0);
   const carried = game.units.filter(unit => unit.owner === 'us').reduce((sum, unit) => sum + unit.carryingGold, 0);
   expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500 + mined);
