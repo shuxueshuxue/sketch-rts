@@ -1,0 +1,112 @@
+{
+  "base": "94bb72ee95f4ad37b5698d80240c91853c8b19f7",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/expedition-recovery.ts": "611a57dc3f5659a82343369b6d402d6d0bd49a769af0d40b0f96573b642941de",
+    "src/ai/bootstrap_1/archer-micro.ts": "145fb4f19c738f846170887b3b4d339c9828b9170f074d4d2a5e95756731b3a2"
+  },
+  "sdk": {
+    "passed": 419,
+    "failed": 0,
+    "sha256": "c3bd2bcf409ce1ab9d5d6ee9d43f3003c3b5bb2cce86b84bc595f37e80a8c2fc",
+    "newCases": 12,
+    "scope": "28 selected SDK files, including imported parameterized suites; all original island-clearance assertions and deadlines unchanged."
+  },
+  "parentShooterControl": {
+    "passed": 0,
+    "failed": 6,
+    "sha256": "35d30cef4c3ca08da6c66c10b03a9036dda63d705dee9f7ade41b095dda95aea"
+  },
+  "build": {
+    "exitCode": 0,
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "logSha256": "11e47bae4efcc2da2b653f15ddeb121b8c0040b276bc36ca88bff711893fd1a1"
+  },
+  "nativeWindows": [
+    {
+      "from": 12000,
+      "requestedTo": 16000,
+      "sha256": "0947d06ac582acedf6752ca1da8a78996376a67e8aa96f9f5340b02c50d6074d",
+      "commandSha256": "2ee2b85c52d8b01c14f2cd5bddabb766d2637b25d6f51d41411d561c7cabf951",
+      "results": [
+        {
+          "label": "parent",
+          "tick": 16000,
+          "winner": null,
+          "newPermanentDeaths": 23,
+          "deathKinds": {
+            "archer": 5,
+            "horseArcher": 2,
+            "lancer": 3,
+            "mercenary": 2,
+            "priest": 2,
+            "worker": 9
+          },
+          "workers": 20,
+          "permanentArmy": 12,
+          "halls": 3,
+          "bankedGold": 145.45
+        },
+        {
+          "label": "next",
+          "tick": 16000,
+          "winner": null,
+          "newPermanentDeaths": 5,
+          "deathKinds": {
+            "lancer": 2,
+            "mercenary": 2,
+            "priest": 1
+          },
+          "workers": 21,
+          "permanentArmy": 20,
+          "halls": 4,
+          "bankedGold": 64.93
+        }
+      ],
+      "scope": "Candidate introduced at tick 12000; same world, IDs and all three controller memories. Subsequent candidate continuations unchanged. Development victory only; not a fixed-opening win or formal acceptance."
+    },
+    {
+      "from": 16000,
+      "requestedTo": 24000,
+      "sha256": "d6ee57f60864eb775973c0fd0a31142db4bbb991026836c06ff924dcaa663499",
+      "commandSha256": "ca04a1f113a10c6e067992a44fec5ed314c1f7a4d00bc12764e985dea15851b1",
+      "results": [
+        {
+          "label": "next",
+          "tick": 24000,
+          "winner": null,
+          "newPermanentDeaths": 6,
+          "deathKinds": {
+            "worker": 6
+          },
+          "workers": 21,
+          "permanentArmy": 32,
+          "halls": 4,
+          "bankedGold": 427.02
+        }
+      ],
+      "scope": "Candidate introduced at tick 12000; same world, IDs and all three controller memories. Subsequent candidate continuations unchanged. Development victory only; not a fixed-opening win or formal acceptance."
+    },
+    {
+      "from": 24000,
+      "requestedTo": 48000,
+      "sha256": "c78df5ffff7c2c9dffe9f534adb514be856a0ae7e99e23ed650810d9b7e08513",
+      "commandSha256": "0f79f7bf921d9007c7a7dfec13f99d2dc7a7be51cc89143c18b5bf1e38649094",
+      "results": [
+        {
+          "label": "next",
+          "tick": 29221,
+          "winner": "p0",
+          "newPermanentDeaths": 0,
+          "deathKinds": {},
+          "workers": 21,
+          "permanentArmy": 36,
+          "halls": 6,
+          "bankedGold": 360.15
+        }
+      ],
+      "scope": "Candidate introduced at tick 12000; same world, IDs and all three controller memories. Subsequent candidate continuations unchanged. Development victory only; not a fixed-opening win or formal acceptance."
+    }
+  ]
+}

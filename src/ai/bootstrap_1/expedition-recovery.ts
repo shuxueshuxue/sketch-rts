@@ -1,10 +1,12 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
-import { nearestByRoute, routeTravelTicks } from '../../shared/route-selection';
+import { groundSteeringRoute, nearestByRoute, routePrefix, routeTravelTicks } from '../../shared/route-selection';
 import { sameGround } from '../../shared/terrain';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
+import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { planNavalTacticsWithAssignments } from '../policy/naval';
 import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { isEnemyOwner } from '../policy/ownership';
@@ -77,7 +79,18 @@ export function patientRendezvousCommands(snapshot: GameSnapshot,
   recovering: ReturnType<typeof landRecoveryAssignments>['recovering'], foes: readonly (Unit | Building)[], medics: ReadonlySet<string>): GameCommand[] {
   return recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
     const threats = patientThreats(snapshot, patient, foes);
-    if (threats.length) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+    if (threats.length) {
+      const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal')!;
+      if (distance(patient, healer) <= ABILITY_DEFS[ability].range) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+      // Transit follows the actual care road; a short endpoint leaves the front's objective intact after healing.
+      const road = groundSteeringRoute(snapshot.map, patient, healer);
+      const prefix = routePrefix(patient, road.slice(1), patient.speed * THINK_TICKS / SIM_TICKS_PER_SECOND + MOVE_ORDER_ARRIVAL_RANGE);
+      const point = prefix[prefix.length - 1]!;
+      const blockers = foes.filter((foe): foe is Unit => 'order' in foe && !foe.deck && unitMover(foe.kind) === 'land')
+        .map(foe => ({ x: foe.x, y: foe.y, radius: foe.radius + (foe.attackRange <= 100 ? foe.attackRange : 0) }));
+      if (!capsuleClearsBodies(patient, point, patient.radius, blockers)) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+      return { type: 'move', unitIds: [patient.id], x: point.x, y: point.y, avoidCombat: true };
+    }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
   });
 }
@@ -105,6 +118,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
   });
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
+
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
   const retreat = patientRendezvousCommands(snapshot, recovering, foes, medics);
