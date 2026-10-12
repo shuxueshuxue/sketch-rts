@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { UnitAnimationTracker, releasePoseForEffect } from "./unit-animation";
 import { createGame, issuePlayerCommand, stepGame, strikeUnit } from "../shared/sim";
 import { UnitFacingTracker } from "./unit-facing";
+import { projectActionFrame } from './art/action-direction';
 import { seconds } from "../shared/time";
 import type { Unit, WorldEffect } from "../shared/types";
 
@@ -18,6 +19,21 @@ const work = (worker: Unit, remaining = 13): WorldEffect => ({
 });
 
 describe("unit pose history", () => {
+  it('keeps real hold-position counterattacks facing their victim through recovery and idle',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.scriptedVictory=true;
+    game.units=[];game.buildings=[];game.resources=[];game.obstacles=[];
+    const actor=game.spawnUnit('player','footman',600,600),target=game.spawnUnit('enemy','footman',560,600);
+    actor.order={type:'hold',x:actor.x,y:actor.y};target.order={type:'hold',x:target.x,y:target.y};
+    const animation=new UnitAnimationTracker(),facing=new UnitFacingTracker();let releases=0;
+    for(let tick=0;tick<100;tick++){
+      animation.update(game,tick*50);facing.update(game.units,id=>game.units.find(u=>u.id===id));
+      const raw=animation.frame(actor,tick*50),side=facing.actionFacing(actor.id,raw.direction);
+      if(raw.mode==='attack'&&raw.frame===0){releases++;expect(projectActionFrame(raw,side).aim??0).toBe(0);}
+      if(releases)expect(side).toBe(-1);
+      stepGame(game);
+    }
+    expect(releases).toBeGreaterThanOrEqual(3);
+  });
   it("keeps carried crew idle while their ship translates and turns, but animates real deck walking",()=>{
     const tracker=new UnitAnimationTracker(),unit=soldier({deck:{shipId:'boat',x:18,y:-5}});
     tracker.update(snap(1,unit),0);

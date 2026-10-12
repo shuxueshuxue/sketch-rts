@@ -16,6 +16,15 @@ const raster=(kind:UnitKind,pose:UnitAnimationFrame,presentation:FigurePresentat
  return b.getImageData(0,0,180,160).data;
 };
 describe('authored projected poses',()=>{
+ it('keeps a thrust on its target plane during contact and initial retraction for every variant',()=>{
+  for(const kind of ['lancer','knight'] as const)for(const aim of [-4,0,4])for(let variant=0;variant<3;variant++){
+   const expected=aim===0?-.04:aim*Math.PI/12;
+   for(const frame of [0,1]){
+    const pose=sampleFigurePose(figures[kind]!,{mode:'attack',frame,aim,variant});
+    expect(pose.angle+pose.lean).toBeCloseTo(expected,8);
+   }
+  }
+ });
  it('sends the upward spear grip forward and carries the downward grip below the shoulder',()=>{
   for(const kind of ['lancer','knight'] as const)for(let variant=0;variant<3;variant++){
    const ready=sampleFigurePose(figures[kind]!,{mode:'idle',frame:0});

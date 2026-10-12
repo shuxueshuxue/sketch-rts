@@ -24,7 +24,7 @@ try{
  const proof=result.result.value;
  for(let i=0;i<proof.frames.length;i++)await writeFile(resolve(scratch,`frame-${String(i).padStart(3,'0')}.png`),Buffer.from(proof.frames[i].split(',')[1],'base64'));
  for(const index of [5,12,30,47,55,65,79])await writeFile(output.replace(/\.json$/,`-${index}.png`),Buffer.from(proof.frames[index].split(',')[1],'base64'));
- execFileSync('ffmpeg',['-y','-loglevel','error','-framerate','10','-i',resolve(scratch,'frame-%03d.png'),'-c:v','libx264','-pix_fmt','yuv420p',output.replace(/\.json$/,'.mp4')]);
+ execFileSync('ffmpeg',['-y','-loglevel','error','-framerate',String(proof.fps??10),'-i',resolve(scratch,'frame-%03d.png'),'-c:v','libx264','-pix_fmt','yuv420p',output.replace(/\.json$/,'.mp4')]);
  proof.framePngSha256=proof.frames.map(frame=>createHash('sha256').update(Buffer.from(frame.split(',')[1],'base64')).digest('hex'));
  delete proof.frames;
  const evidence={...proof,errors,passed:errors.length===0&&proof.passed,browser:await command('Browser.getVersion')};await writeFile(output,JSON.stringify(evidence,null,2)+'\n');console.log(JSON.stringify(evidence));if(!evidence.passed)process.exitCode=1;

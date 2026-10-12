@@ -61,7 +61,13 @@ export class UnitFacingTracker {
     if(old?.direction===direction)return old.facing;
     const vector=projectVector(direction);
     const facing=Math.abs(vector.x)>=Math.max(1,Math.abs(vector.y)*.08)?(vector.x<0?-1:1):old?.facing??fallback??this.beforeUpdate.get(unitId)?.facing??this.facing(unitId);
-    this.actions.set(unitId,{direction,facing});return facing;
+    this.actions.set(unitId,{direction,facing});
+    // A real release is also a turn. Hold/idle orders have no target to update
+    // the resting side, so a temporary action-only mirror would snap back after
+    // every counterattack. Later movement or a new target can still turn it.
+    const state=this.states.get(unitId);
+    if(state)this.states.set(unitId,{...state,facing});
+    return facing;
   }
 
   /** Read the latched release side without changing the current action lock. */

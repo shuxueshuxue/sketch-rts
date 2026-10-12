@@ -59,7 +59,7 @@ function shaftDrawing(mounted:boolean,source:number){
  const ready=mounted?hand([9,-16],[7,-17],-.2):hand([8,-19],[7,-17],-.95);
  const contact=(mounted?
   [hand([18,-25],[11,-22],-Math.PI/3),hand([12,-16],[8,-17],-.04),hand([19,-15],[11,-18],Math.PI/3)]:
-  [hand([18,-25],[10,-22],-Math.PI/3),hand([13,-19],[8,-17],-.4),hand([19,-15],[10,-18],Math.PI/3)])[source+1]!;
+  [hand([18,-25],[10,-22],-Math.PI/3),hand([13,-19],[8,-17],-.04),hand([19,-15],[10,-18],Math.PI/3)])[source+1]!;
  return {ready,contact};
 }
 function bowDrawing(source:number){
@@ -97,7 +97,11 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   drawing.angle+=direction.correction*weight;
  }else if(shaft){
   const authored=shaftDrawing(!!f.mounted,source);drawing=blend(authored.ready,authored.contact,weight);
-  drawing.angle+=direction.correction*weight;
+  // Retract along the strike before raising the spear back to its carry pose.
+  // Reusing reach for rotation erased a down-thrust after just one sample and
+  // let short-reach variants miss the requested attack plane even at contact.
+  const turn=pose.mode==='attack'?([1,1,.82,.46,.16,0][pose.frame]??0):0;
+  drawing.angle=authored.ready.angle+(authored.contact.angle+direction.correction-authored.ready.angle)*turn;
  }else if(weapon==='none'||weapon==='sling'||weapon==='javelin'){
   const ready=hand(weapon==='none'?[8,-3]:[12,-12],[7,-14],weapon==='javelin'?.45:0);
   const contact=[hand([13,-34],[8,-25],-.4),hand([24,-20],[13,-20],1.4),hand([17,-9],[9,-15],2.2)][source+1]!;
