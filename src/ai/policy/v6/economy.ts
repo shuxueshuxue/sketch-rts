@@ -390,9 +390,12 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
   const current = playerState(economy.snapshot, economy.owner).upgrades[kind] ?? 0;
   const next = UPGRADE_DEFS[kind].levels[current];
   if (current >= level || !next || economy.own.some((building) => building.researchQueue.some((job) => job.upgradeKind === kind))) return [];
-  const lab = economy.own.find((building) => building.complete && building.researchQueue.length === 0 && canResearchAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
+  const lab = economy.own.filter((building) => building.complete && canResearchAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind))
+    .sort((a, b) => a.researchQueue.length - b.researchQueue.length)[0];
   if (!lab) return [];
-  return [goal(`upgrade:${kind}`, priority, next.cost, true, () => research(economy, lab, kind))];
+  const ready = lab.researchQueue.length === 0;
+  // A wanted upgrade keeps its age while another technology occupies the lab.
+  return [goal(`upgrade:${kind}`, priority, next.cost, ready, () => ready ? research(economy, lab, kind) : undefined)];
 }
 
 // Gold piling up while every producer is busy buys another producer of whatever the phase still waits on most (AMAI's
