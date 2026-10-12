@@ -4,13 +4,13 @@
     "src/shared/route-selection.ts": "d452f0b30ba75336154dc6cb07da349ab12297deac7f8e00289fb017a7bece17",
     "src/ai/policy/v9/front.ts": "99a05f60d3beab955cd390d286c05ac2d94379efa679ec7ae2d12856ca43352e",
     "src/shared/sim.ts": "c63192d18d62049668cb6d76c71f7d1f3cd52009534394da24f5350c604c13e8",
-    "src/ai/policy/spatial.ts": "24fe3e799c7bd0db45798962a42a73dd147c1a7707e69c51b67862e30a1a5fda",
+    "src/ai/policy/spatial.ts": "eea7d9f4e1ffc64acd36a89a0699f15a45c9004a55925f4fd73d3c5ce988b364",
     "src/ai/policy/skirmish-tactics.ts": "a9b478fb441919757ac5c9c2b1bab032ad6165242e09048c408389c3cfd9e445"
   },
   "runtimeDiff": {
     "files": 5,
-    "additions": 49,
-    "deletions": 22
+    "additions": 56,
+    "deletions": 24
   },
   "functionalChecks": {
     "passed": 263,
@@ -19,7 +19,7 @@
   "build": {
     "node": "20.20.2",
     "exitCode": 0,
-    "log": "bootstrap_1-bounded-front-final-build.log"
+    "log": "bootstrap_1-nearest-front-build.log"
   },
   "newSdkParent": {
     "passed": 0,
@@ -136,5 +136,68 @@
         "nextId": 4540
       }
     ]
+  },
+  "nearestQueryCost": {
+    "parent": "b883fbb50dbfd7c4305aa3e3ab9dd2263ae8c470",
+    "mode": "One nearest-unit query on an actual saved 63-unit world; exact point reads count radial evaluations, no CPU timing, diagnostic getters absent from runtime code",
+    "rows": [
+      {
+        "label": "parent",
+        "items": 63,
+        "radialCalls": 592,
+        "nearestId": "unit-player-lancer-1503",
+        "inputOrderPreserved": false
+      },
+      {
+        "label": "next",
+        "items": 63,
+        "radialCalls": 63,
+        "nearestId": "unit-player-lancer-1503",
+        "inputOrderPreserved": true
+      }
+    ]
+  },
+  "nearestQueryCpu": {
+    "parent": "b883fbb50dbfd7c4305aa3e3ab9dd2263ae8c470",
+    "mode": "One real late default-duel checkpoint with ordinary v2 controllers: 600 exact command/world/memory comparisons; 3 warmups and 3000-tick ABBA CPU measurements; native victory; not full-duel acceptance",
+    "rows": [
+      {
+        "label": "parent",
+        "cpuMs": 1466.917,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "next",
+        "cpuMs": 1150.3,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "next",
+        "cpuMs": 1179.176,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "parent",
+        "cpuMs": 1294.416,
+        "hash": "15920fe7",
+        "nextId": 4540
+      }
+    ]
+  },
+  "fullAiChecksBeforeDeadlineCorrection": {
+    "passed": 2645,
+    "failed": 2,
+    "failures": "The same pre-existing Ember archer mercenary purchase-window cutoff, unchanged diagnostics; original behavior completes the paid return afterward."
+  },
+  "sourceWindowReport": "bootstrap_1-front-road-nearest-window.json",
+  "sourceWindowIdenticalToPriorFinal": true,
+  "finalAiChecks": {
+    "uniqueAssertions": 2647,
+    "passed": 2647,
+    "failed": 0,
+    "method": "2645 passed in the broad unchanged-runtime AI suite; the same 24 mercenary assertions were separately checked after correcting only their purchase-relative observation window."
   }
 }
