@@ -1,0 +1,170 @@
+{
+  "base": "3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/assault-camp-roads.ts": "b82c63cd52f8ce68e76f2b1f2601d114829e454c24393e51f4c3347d4ca7c478",
+    "src/ai/bootstrap_1/mine-defense.ts": "4a5d3e8704ebd6d860e2e7880b94bcd7f01e8b5c3db0a6911881dc592e9a3303",
+    "src/ai/policy/v6/general.ts": "6e543375474d9e34b581748bfb865f75ea85a24d5e4817ffcb810344ba7f22a9"
+  },
+  "sdk": {
+    "uniquePassed": 219,
+    "failed": 0,
+    "reportSha256": "1235c570fb4d7953d8de9ae06b5521dac5f25590ec480dc34363f130e92516bb",
+    "suites": [
+      {
+        "file": "src/ai/bootstrap_1/assault-camp-blocked.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "src/ai/bootstrap_1/assault-camp-roads.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/assault-cohesion.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "src/ai/bootstrap_1/assault-road-distance.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/attack-reinforcements.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-recruit-road.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/caster-melee-micro.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/covered-defense.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-recovery.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "src/ai/bootstrap_1/loot-trip-reassessment.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/policy/v6/general.test.ts",
+        "passed": 37
+      }
+    ]
+  },
+  "plannerWork": {
+    "frames": 12,
+    "routeEvaluationsBefore": 8,
+    "routeEvaluationsAfter": 5,
+    "identicalCommandsAndMemory": true,
+    "reportSha256": "66d28b9a5b134fedf9d1114ef7e243a39c1d3c43f33342a897c3566cf44781c5",
+    "scope": "Controlled ordinary assembled frames; no claim about total frame time.",
+    "script": "docs/engineering/bootstrap_1/assault-work-diagnosis.mts",
+    "base": "3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e"
+  },
+  "causalWindow": {
+    "from": 6000,
+    "to": 7200,
+    "beforeDeaths": [
+      {
+        "tick": 6192,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "unit-p2-lancer-1083"
+      }
+    ],
+    "afterDeaths": [],
+    "reportSha256": "4634fa5e860231e471a072e0f176ef7b1c3a0a4fa4f97891a0ffa59e346a4afa",
+    "candidatePhaseInitialization": "Existing courier acquisition inferred explicitly from its observed pickupItem command; frozen memories unchanged."
+  },
+  "freshMatch": {
+    "match": "pineshade/v9_knight/v8+v8/grove/0",
+    "candidateRevision": "uncommitted assault-cohesion candidate on 3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e",
+    "engineRevision": "3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "summary": {
+      "tick": 26136,
+      "winner": "p1",
+      "owners": {
+        "p0": {
+          "gold": 52.81,
+          "pop": 0,
+          "halls": 0,
+          "workers": 0,
+          "permanentArmy": 0
+        },
+        "p1": {
+          "gold": 71.69,
+          "pop": 47,
+          "halls": 3,
+          "workers": 11,
+          "permanentArmy": 16
+        },
+        "p2": {
+          "gold": 93.11,
+          "pop": 36,
+          "halls": 3,
+          "workers": 11,
+          "permanentArmy": 10
+        }
+      },
+      "subjectPermanentDeaths": 76
+    },
+    "checksum": "71ae49c1",
+    "firstLosses": [
+      {
+        "tick": 9006,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1290",
+        "source": "unit-p1-emberRavager-1095"
+      },
+      {
+        "tick": 10889,
+        "kind": "knight",
+        "id": "unit-p0-knight-3559",
+        "source": "unit-p2-knight-4123"
+      },
+      {
+        "tick": 10947,
+        "kind": "raider",
+        "id": "unit-p0-raider-2166",
+        "source": "unit-p2-lancer-2942"
+      },
+      {
+        "tick": 12398,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1819",
+        "source": "unit-p1-ashHexer-6073"
+      },
+      {
+        "tick": 12454,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "unit-p2-priest-1822"
+      }
+    ],
+    "reportSha256": "2b97826b3beb337d67c6d0af0bb3c3429caf8b4b514b3d0d4db8633bb587cc7c",
+    "acceptedWin": false
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "25a91ff460cd77e24fd21a66e1d04f17f014ccd02cc1c33939fd6223bef8437a"
+  },
+  "parentControl": {
+    "revision": "3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e",
+    "passed": 4,
+    "failed": 4,
+    "reportSha256": "c9e5ddc6060ca2a82985a8ef6574645df499791e7acdc5b74e4365c23c7c51c8"
+  }
+}
