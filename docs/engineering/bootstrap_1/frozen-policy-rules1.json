@@ -1,0 +1,135 @@
+{
+  "name": "bootstrap_1",
+  "revision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "versions": [
+    "v5",
+    "v7",
+    "v8"
+  ],
+  "files": {
+    "src/ai/memory.ts": "41c071713572b75b0f584a0c5d7a5c52a3d81c1d20f0cc09590da9f1cddc1463",
+    "src/ai/policy/adaptive-army.ts": "620e36491a435f798c7e2c57bdb20051dff26089af6cd6181bfd78df310769a7",
+    "src/ai/policy/ally-support.ts": "d1e7b6539cbbef4d65ae1687e3e558ae7f62a2d013deae2603b8ec340147a9a2",
+    "src/ai/policy/base-defense-model.ts": "cc1c30e60a4ff9941f69889dffc3bec15013f94231f1528147268eed3b54b4fc",
+    "src/ai/policy/base-pressure.ts": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3",
+    "src/ai/policy/battlefield.ts": "4772eadda29f9929ecf847bc39bf541b42e4840a8c0a9337dc80eaf9d3d5cbb2",
+    "src/ai/policy/build-layout.ts": "aebf550c3dee47167d055ac2f1b766cde48b153edde39819474e6aefebdaf52c",
+    "src/ai/policy/claims.ts": "62137c2dd856c3bad89063654a3914fb2ca303ccc6d7292c44c9f1ed899f0fd6",
+    "src/ai/policy/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+    "src/ai/policy/combat-readiness.ts": "b461e9c7d64650729326f36ab8ba18c6679a157f4a346e1a6687ec8fff3d6def",
+    "src/ai/policy/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+    "src/ai/policy/convoy-load.ts": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
+    "src/ai/policy/engagements.ts": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
+    "src/ai/policy/engineering.ts": "a7121ba514d831251942d2861bc31d8e5d26c0f3c39ccd69a8a7b60e6f4f5f44",
+    "src/ai/policy/expansion-model.ts": "33e5402cec184fe5818e7c26fa910707f3136e078c1601666e58d1659c06acbf",
+    "src/ai/policy/fleet-formation.ts": "fbf0a792e244caefcb4c71dfdf8b9b91d797f728b2d11ccda9799fed10ec2cbd",
+    "src/ai/policy/ground.ts": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
+    "src/ai/policy/item-tactics.ts": "802f87029bde71a66eaa68e06d85fb59412004ed5b6af38fbce4768ae55d5561",
+    "src/ai/policy/naval-services.ts": "dbac0b25ba8f92d653c79ee4fcd34e24d3bb348bd02548e50480ef604fceb049",
+    "src/ai/policy/naval.ts": "6ef108a4c04a92ac1ea2dc66f080bed8f981b44400a538c7e3e7911f4682ea6a",
+    "src/ai/policy/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+    "src/ai/policy/playbook.ts": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
+    "src/ai/policy/production-model.ts": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
+    "src/ai/policy/script-runner.ts": "e043a3ab93331b257ee05ce4500f06d2d2ac2c6030b24060397837d8ecf2fdfe",
+    "src/ai/policy/skirmish-tactics.ts": "18bac002c82b0be48176911e9156166905666bcc39670f628a1e4d10a2aece8b",
+    "src/ai/policy/snapshot.ts": "6c6812342517475f972432d8d76f1186d35378fbc1687844d780abfffcb483d1",
+    "src/ai/policy/spatial.ts": "c965c841c33dbb5a9497ac981acefb188c189707035c32a02070a8feca1d597e",
+    "src/ai/policy/spell-tactics.ts": "f1f45e0ec1eef59efbebfc52dcd76e6b4ee0e55d0cebd77246802a29ec54650e",
+    "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+    "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+    "src/ai/policy/training-choice.ts": "d261a5ae40ec5fc886f4499421b90bdd947df2d309ba0b4dc7ec9a0c62dbb5b4",
+    "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
+    "src/ai/policy/v6/backline.ts": "f5145498df749370d13c9bd64caf9a30f4767069ac9c5a96321a0fa618d382be",
+    "src/ai/policy/v6/closeout.ts": "0937ce8a696c4cc5882667996e7f79598edd221b31c73f3d69411b3f97e08589",
+    "src/ai/policy/v6/doctrine.ts": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
+    "src/ai/policy/v6/general.ts": "fa534a8a63385178baac864a62951955e81471a4b112fe375bc7ef13cec783f4",
+    "src/ai/policy/v6/intel.ts": "dbaaee2cc9d1e6cfdd8a2ba587eb3b38edb005c1de5d9a6f7744156b6e491565",
+    "src/ai/policy/v6/memory.ts": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
+    "src/ai/policy/v6/raid.ts": "4924a2b64cfa5a5e71b971a29c5bd18282b69ce7799338c9f8ded76a34bb38ec",
+    "src/ai/policy/v6/rng.ts": "b2fbac706071c48c9476b5968330affaffb7cdaa1c0d0415ff4db4f579b7bd62",
+    "src/ai/policy/v6/strength.ts": "bd474f113ea57894a442ae846f727432e70e3d63da9f9e86eeb837f281999823",
+    "src/ai/policy/v7/creep.ts": "af898254479cd6c257d8b54fc3166181d33c4f7c58f9e9d9eb5b6e9d8c2b3f3d",
+    "src/ai/policy/v7/discipline.ts": "9132b684e9fb71ce3aebdf58521c3aacd8690eb7c7a320bc2dd6e47544f1a910",
+    "src/ai/policy/v8/charge.ts": "30cae3cfb8564a4db0c78b1006d8766fe2d607a0ad3eae43b7884384b4305cfc",
+    "src/ai/policy/v8/doctrine.ts": "94fc1aff9dd33707cf5c111c19bcd6cff4e06d623a1ea43a7e0d71587b7c6f02",
+    "src/ai/policy/v8/well.ts": "838a57c8cd61e3e8f8d6dcacfe0a06b2eff1b1ede47f714418097e4ccc651a34",
+    "src/ai/policy/v9/doctrine.ts": "c0ae229e6b37adc7bbb04961e64b5e1c6dc1f52cc4675ebaecee48401596a0c1",
+    "src/ai/policy/v9/front.ts": "e7a68e91f8e9f3c9612fcc5b864300f3c989c6b774aeb9e14adf772a20bc1e29",
+    "src/ai/policy/v9/march.ts": "14b175e155aa1f3f0235f23b1375e2c327aeb7e2b1f13fa9be30a18993fcab1e",
+    "src/ai/policy/v9/shop.ts": "2f70ecb414e73fecba362fbd611d897174fb0c5ea32080f37f0e23d8e02a6192",
+    "src/ai/policy/versions.ts": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
+    "src/ai/policy/veterancy.ts": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
+    "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+    "src/shared/healing.ts": "0def3d6869dbd7674e57a13e14e258582887162746493a250f9104d578217df1"
+  },
+  "integrationFiles": [
+    "src/ai/policy/core.ts",
+    "src/ai/policy/types.ts",
+    "src/ai/policy/v6/select.ts",
+    "src/ai/policy/v6/economy.ts"
+  ],
+  "integrationRule": "New doctrine injection and version registration only after the documented shared mining correction. Old-version command and simulation digests must remain identical within the newly frozen engine.",
+  "approvedCorrections": [
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "before": "893bc31bb7d638b514b3dda4c86a12cdb1fba07861422470a6abe3ac23050168",
+      "after": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
+      "reason": "User approved correcting Ember workshop golem selection to catapult, then refreezing; all other historical choices remain unchanged."
+    },
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "before": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
+      "after": "d261a5ae40ec5fc886f4499421b90bdd947df2d309ba0b4dc7ec9a0c62dbb5b4",
+      "reason": "Completes the user-authorized workshop faction correction: Grove chooses its tier-two ballista before tier-three golem unlocks; the shared catalog previously chose an Ember siege ram."
+    },
+    {
+      "revision": "58cac102b5bc04578e76533a89df18c27efe3082",
+      "reason": "User requested physical worker hauling, a Warcraft III style minimum town hall distance and corresponding AI changes. Re-freeze the shared mining radius and surplus-worker allocation under the new simulation, preserving unit choices and tactical tables.",
+      "files": [
+        {
+          "path": "src/ai/policy/base-defense-model.ts",
+          "before": "aaf5418dae673927165d3656d84f8b3f7588a6b929af281fb9fba36a75c7a4f9",
+          "after": "cc1c30e60a4ff9941f69889dffc3bec15013f94231f1528147268eed3b54b4fc"
+        },
+        {
+          "path": "src/ai/policy/base-pressure.ts",
+          "before": "45970ee3c810edfea9f2d1ceaf72eb67877488b340b787e325132e8774760f78",
+          "after": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3"
+        },
+        {
+          "path": "src/ai/policy/build-layout.ts",
+          "before": "8d92400eef5b57506e87b8ef30e4181eee1b8118b2f79888625b49d5b541b2c4",
+          "after": "aebf550c3dee47167d055ac2f1b766cde48b153edde39819474e6aefebdaf52c"
+        },
+        {
+          "path": "src/ai/policy/claims.ts",
+          "before": "c0a979c5f201d4b3344c604ed4d29749aa0202d4a6c745bc4c94fbca796b0fa1",
+          "after": "62137c2dd856c3bad89063654a3914fb2ca303ccc6d7292c44c9f1ed899f0fd6"
+        },
+        {
+          "path": "src/ai/policy/expansion-model.ts",
+          "before": "61535189a48ec26cfc91805cac1a39a0cdeefc437e8f60b19c95ddaacbc9483d",
+          "after": "33e5402cec184fe5818e7c26fa910707f3136e078c1601666e58d1659c06acbf"
+        },
+        {
+          "path": "src/ai/policy/naval.ts",
+          "before": "a9aa240a64509a7c76861e9222417c6352452054d413e9b8d1db665d229d9dd7",
+          "after": "6ef108a4c04a92ac1ea2dc66f080bed8f981b44400a538c7e3e7911f4682ea6a"
+        }
+      ],
+      "integrationFiles": [
+        "src/ai/policy/core.ts"
+      ]
+    },
+    {
+      "revision": "dba796cfc152379adad9988a1314f94ffc736137",
+      "path": "src/shared/healing.ts",
+      "before": "90bcce838a45ed1ec8ab8a63c7bfcf56a0cfda425153e575dff29046427c2d80",
+      "after": "0def3d6869dbd7674e57a13e14e258582887162746493a250f9104d578217df1",
+      "reason": "User approved the reviewed one-function land mechanical medical eligibility correction and refreeze. All archived AI strategy files remain byte-identical to 58cac10; no command filtering or compatibility layer."
+    }
+  ],
+  "initialRevision": "1518a8529cd85c31e46864e18dc8f26dbd1693ed",
+  "engineRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "policySourceRevision": "58cac102b5bc04578e76533a89df18c27efe3082"
+}

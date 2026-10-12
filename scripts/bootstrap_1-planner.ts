@@ -18,7 +18,7 @@ type HistoricalModules = Pick<typeof import('../src/ai/planner-context'), 'planA
   & Pick<typeof import('../src/shared/terrain'), 'setBuildingBodies' | 'isOpenGround'>;
 let modules: Promise<HistoricalModules> | undefined;
 
-/** The acceptance opponents execute their original source tree, independent of later live AI changes. */
+/** The acceptance opponents execute their frozen source tree, independent of later live AI changes. */
 export function frozenPolicyRoot(): string {
   if (root) return root;
   root = mkdtempSync(join(tmpdir(), 'bootstrap_1-frozen-'));

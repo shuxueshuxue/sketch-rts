@@ -22,4 +22,4 @@ const results = versions.flatMap((version, index) => (['grove', 'ember'] as cons
   return result;
 }));
 deepStrictEqual(results,JSON.parse(readFileSync('docs/engineering/bootstrap_1/frozen-traces.json','utf8')));
-console.log(`Frozen v5/v7/v8 command streams and simulation digests unchanged on their original engine ${frozenPolicyManifest.revision}.`);
+console.log(`Frozen v5/v7/v8 command streams and simulation digests unchanged within their frozen rules engine ${frozenPolicyManifest.revision}.`);

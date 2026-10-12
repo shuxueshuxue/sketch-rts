@@ -1,0 +1,345 @@
+--- a/src/ai/policy/core.ts
++++ b/src/ai/policy/core.ts
+@@ -138,7 +138,7 @@
+ const V5_SHOOTER_UPGRADE_STEP = 3;
+ const OUTNUMBERED_MIN_ENEMY_FIGHTERS = 5;
+ const OUTNUMBERED_OPENING_END_TICK = 300 * 20;
+-const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
++const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest"]);
+ 
+ const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
+ 
+@@ -2111,7 +2111,7 @@
+   if (army.length < 5) return false;
+   if (!army.some((unit) => unit.kind === "sparkArcher")) return false;
+   // @@@ember-support-milestone - Once Ember has a frontline and first spark, the first acolyte unlocks its race kit instead of adding another melee body.
+-  return !army.some((unit) => unit.kind === "emberAcolyte");
++  return !army.some((unit) => unit.kind === "priest");
+ }
+ 
+ function shouldPrioritizeAffordableHeavyTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+--- a/src/ai/policy/playbook.ts
++++ b/src/ai/policy/playbook.ts
+@@ -22,7 +22,7 @@
+   productionPlan: ["emberForge", "cinderSpire", "emberForge", "cinderSpire"],
+   unitsByBuilding: {
+     emberForge: ["emberRavager", "cinderRunner", "ashWarden"],
+-    cinderSpire: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
++    cinderSpire: ["sparkArcher", "priest", "ashHexer", "summoner"],
+   },
+ };
+ 
+--- a/src/ai/policy/skirmish-tactics.ts
++++ b/src/ai/policy/skirmish-tactics.ts
+@@ -199,7 +199,7 @@
+ const STUTTER_MIN_STEP = 30;
+ const STUTTER_MAX_STEP = 160;
+ const STUTTER_THREAT_MARGIN = 60;
+-const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "emberAcolyte", "fieldMedic"]);
++const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "fieldMedic"]);
+ 
+ function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
+   if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
+--- a/src/ai/policy/spell-tactics.ts
++++ b/src/ai/policy/spell-tactics.ts
+@@ -77,7 +77,7 @@
+ }
+ 
+ function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+-  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(canReceiveHealing);
++  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(unit => canReceiveHealing(unit, snapshot));
+ }
+ 
+ function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions) {
+--- a/src/ai/policy/training-choice.ts
++++ b/src/ai/policy/training-choice.ts
+@@ -1,4 +1,4 @@
+-import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
++import { UNIT_DEFS, trainableUnitsAt } from "../../shared/catalog";
+ import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
+ import { isOpponentOwner } from "./ownership";
+ import { distance } from "./spatial";
+@@ -13,7 +13,7 @@
+ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
+   const choice = preferredTrainingChoice(snapshot, owner, building, options);
+   if (!choice || tierUnlocked(snapshot, owner, choice)) return choice;
+-  return BUILDING_DEFS[building.kind].trains.find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
++  return trainableUnitsAt(playerState(snapshot, owner).race, building.kind).find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
+ }
+ 
+ function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions): TrainableUnitKind | undefined {
+@@ -75,10 +75,10 @@
+   if (building.kind === "cinderSpire") {
+     if (army.length < 6) return "sparkArcher";
+     const count = (kind: TrainableUnitKind) => army.filter(unit => unit.kind === kind).length;
+-    if (count("emberAcolyte") < 1) return "emberAcolyte";
++    if (count("priest") < 1) return "priest";
+     if (army.length >= 8 && count("sparkArcher") >= army.length * .6) {
+       if (count("ashHexer") < 1) return "ashHexer";
+-      if (count("pyreCaller") < 1) return "pyreCaller";
++      if (count("summoner") < 1) return "summoner";
+     }
+     return "sparkArcher";
+   }
+@@ -100,20 +100,20 @@
+ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): TrainableUnitKind {
+   const army = combatUnits(snapshot, owner);
+   const sparkArchers = army.filter((unit) => unit.kind === "sparkArcher").length;
+-  const acolytes = army.filter((unit) => unit.kind === "emberAcolyte").length;
++  const acolytes = army.filter((unit) => unit.kind === "priest").length;
+   const hexers = army.filter((unit) => unit.kind === "ashHexer").length;
+-  const callers = army.filter((unit) => unit.kind === "pyreCaller").length;
++  const callers = army.filter((unit) => unit.kind === "summoner").length;
+   const supportTarget = options.version === "v2" && army.length >= 8 ? 2 : 1;
+-  if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
++  if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "priest";
+   if (sparkArchers < 1) return "sparkArcher";
+-  if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
+-  if (acolytes < 1) return "emberAcolyte";
++  if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "priest";
++  if (acolytes < 1) return "priest";
+   if (hexers < 1) return "ashHexer";
+-  if (callers < 1) return "pyreCaller";
+-  if (options.version === "v2" && callers < supportTarget) return "pyreCaller";
++  if (callers < 1) return "summoner";
++  if (options.version === "v2" && callers < supportTarget) return "summoner";
+   if (options.version === "v2" && hexers < supportTarget) return "ashHexer";
+   if (sparkArchers < army.length / 3) return "sparkArcher";
+-  return "emberAcolyte";
++  return "priest";
+ }
+ 
+ function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+@@ -125,7 +125,7 @@
+ 
+ export function shouldPrioritizeWoundedPriestTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}) {
+   if (options.version !== "v2") return false;
+-  const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "emberAcolyte" || unit.kind === "fieldMedic").length;
++  const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "fieldMedic").length;
+   if (healers >= 2) return false;
+   return combatUnits(snapshot, owner).filter((unit) => unit.kind !== "priest" && unit.kind !== "fieldMedic" && unit.hp < unit.maxHp * 0.62).length >= 3;
+ }
+--- a/src/ai/policy/types.ts
++++ b/src/ai/policy/types.ts
+@@ -1,7 +1,7 @@
+-import type { GameCommand, GameSnapshot, AiScriptVersion, PlayerId } from "../../shared/types";
++import type { GameCommand, GameSnapshot, AiScriptVersion as CurrentAiScriptVersion, BootstrapAiVersion, PlayerId } from "../../shared/types";
+ import type { AiPolicyMemory } from "../memory";
+ 
+-export type { AiScriptVersion } from "../../shared/types";
++export type AiScriptVersion = Exclude<CurrentAiScriptVersion, BootstrapAiVersion>;
+ 
+ export type AiBehaviorId = "workerHarassment" | "earlyHarassment" | "skirmishPreservation" | "expansionRegroup" | "economicCatchUp";
+ 
+--- a/src/ai/policy/v6/backline.ts
++++ b/src/ai/policy/v6/backline.ts
+@@ -33,7 +33,7 @@
+ // casters keep a short step behind the front, inside the shooters' and towers' reach along with it.
+ const V8_SCREEN_DEPTH = 110;
+ 
+-const BACKLINE_KINDS = new Set(["summoner", "pyreCaller", "priest", "witch", "emberAcolyte", "ashHexer", "fieldMedic"]);
++const BACKLINE_KINDS = new Set(["summoner", "priest", "witch", "ashHexer", "fieldMedic"]);
+ 
+ export function isBacklineKind(unit: Unit) {
+   return BACKLINE_KINDS.has(unit.kind);
+--- a/src/ai/policy/v6/doctrine.ts
++++ b/src/ai/policy/v6/doctrine.ts
+@@ -175,17 +175,17 @@
+     phases: [
+       {
+         wants: [
+-          { unit: "pyreCaller", count: 4, priority: 65 },
+-          { bases: 2, priority: 60 },
+-          { unit: "pyreCaller", count: 8, priority: 50 },
+-        ],
+-        advanceShare: 0.75,
+-        advanceSupply: 30,
+-      },
+-      {
+-        wants: [
+-          { bases: 2, priority: 66 },
+-          { unit: "pyreCaller", count: 14, priority: 56 },
++          { unit: "summoner", count: 4, priority: 65 },
++          { bases: 2, priority: 60 },
++          { unit: "summoner", count: 8, priority: 50 },
++        ],
++        advanceShare: 0.75,
++        advanceSupply: 30,
++      },
++      {
++        wants: [
++          { bases: 2, priority: 66 },
++          { unit: "summoner", count: 14, priority: 56 },
+           { building: "cinderSpire", count: 2, priority: 54 },
+           { bases: 3, priority: 45 },
+         ],
+@@ -194,7 +194,7 @@
+       },
+       {
+         wants: [
+-          { unit: "pyreCaller", count: 44, priority: 52 },
++          { unit: "summoner", count: 44, priority: 52 },
+           { bases: 3, priority: 50 },
+           { towers: "outposts", count: 1, priority: 44 },
+           { bases: 4, priority: 35 },
+@@ -214,17 +214,17 @@
+     phases: [
+       {
+         wants: [
+-          { unit: "pyreCaller", count: 4, priority: 65 },
+-          { bases: 2, priority: 60 },
+-          { unit: "pyreCaller", count: 8, priority: 50 },
+-        ],
+-        advanceShare: 0.75,
+-        advanceSupply: 30,
+-      },
+-      {
+-        wants: [
+-          { bases: 2, priority: 66 },
+-          { unit: "pyreCaller", count: 14, priority: 56 },
++          { unit: "summoner", count: 4, priority: 65 },
++          { bases: 2, priority: 60 },
++          { unit: "summoner", count: 8, priority: 50 },
++        ],
++        advanceShare: 0.75,
++        advanceSupply: 30,
++      },
++      {
++        wants: [
++          { bases: 2, priority: 66 },
++          { unit: "summoner", count: 14, priority: 56 },
+           { unit: "cinderRunner", count: 4, priority: 54 },
+           { building: "cinderSpire", count: 2, priority: 52 },
+           { upgrade: "speedTraining", level: 1, priority: 50 },
+@@ -235,7 +235,7 @@
+       },
+       {
+         wants: [
+-          { unit: "pyreCaller", count: 44, priority: 52 },
++          { unit: "summoner", count: 44, priority: 52 },
+           { unit: "cinderRunner", count: 5, priority: 50 },
+           { bases: 3, priority: 50 },
+           { towers: "outposts", count: 1, priority: 44 },
+--- a/src/ai/policy/v6/economy.ts
++++ b/src/ai/policy/v6/economy.ts
+@@ -2,7 +2,7 @@
+ import {seconds,SIM_TICKS_PER_SECOND} from '../../../shared/time';
+ import { adaptiveArmyWants } from "../adaptive-army";
+ import { isBuildPlacementClear } from "../../../shared/build-placement";
+-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
++import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, canResearchAt, canTrainAt, requiredSupplyCap, trainingBuildingFor } from "../../../shared/catalog";
+ import { detCos, detSin } from "../../../shared/det-math";
+ import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../../shared/types";
+ import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build-layout";
+@@ -264,7 +264,7 @@
+ function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
+   if (missing <= 0) return [];
+   if (!tierUnlocked(economy.snapshot, economy.owner, kind)) return lockedUnitGoals(economy, kind, missing, priority, claimed);
+-  const makers = economy.own.filter((building) => BUILDING_DEFS[building.kind].trains.includes(kind));
++  const makers = economy.own.filter((building) => canTrainAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
+   if (makers.length === 0) {
+     const maker = producerFor(economy, kind);
+     return maker ? buildingGoal(economy, maker, priority + PREREQUISITE_BONUS) : [];
+@@ -300,7 +300,7 @@
+ 
+ function producerFor(economy: Economy, kind: TrainableUnitKind): BuildingKind | undefined {
+   const race = playerState(economy.snapshot, economy.owner).race;
+-  return RACE_DEFS[race].buildableBuildings.find((building) => BUILDING_DEFS[building].trains.includes(kind));
++  return trainingBuildingFor(race, kind);
+ }
+ 
+ function buildingGoal(economy: Economy, kind: BuildingKind, priority: number): Goal[] {
+@@ -371,7 +371,7 @@
+   const current = playerState(economy.snapshot, economy.owner).upgrades[kind] ?? 0;
+   const next = UPGRADE_DEFS[kind].levels[current];
+   if (current >= level || !next || economy.own.some((building) => building.researchQueue.some((job) => job.upgradeKind === kind))) return [];
+-  const lab = economy.own.find((building) => building.complete && building.researchQueue.length === 0 && BUILDING_DEFS[building.kind].researches.includes(kind));
++  const lab = economy.own.find((building) => building.complete && building.researchQueue.length === 0 && canResearchAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
+   if (!lab) return [];
+   return [goal(`upgrade:${kind}`, priority, next.cost, true, () => research(economy, lab, kind))];
+ }
+--- a/src/ai/policy/v6/general.ts
++++ b/src/ai/policy/v6/general.ts
+@@ -1,6 +1,6 @@
+ import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
+ import { canCast } from "../../../shared/ability-cooldowns";
+-import { HIGH_UPKEEP_SUPPLY } from "../../../shared/catalog";
++const HIGH_UPKEEP_SUPPLY = 81; // Original frozen attack threshold; independent of the current income curve.
+ import type { V6PolicyMemory } from "../../memory";
+ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
+ import { resolveAiCommandIntent } from "../commands";
+@@ -583,7 +583,7 @@
+ }
+ 
+ function isSummoner(unit: Unit) {
+-  return unit.kind === "summoner" || unit.kind === "pyreCaller";
++  return unit.kind === "summoner";
+ }
+ 
+ function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
+--- a/src/ai/policy/v6/strength.ts
++++ b/src/ai/policy/v6/strength.ts
+@@ -13,7 +13,7 @@
+ // that is one footman, and it costs 125; its reach over the shooters' 399 is worth a little more. The first version
+ // counted 2.5 and marched V6 into fights "its towers would win" that its towers never reached.
+ export const TOWER_STRENGTH = 1.3;
+-const CASTER_STRENGTH: Partial<Record<Unit["kind"], number>> = { summoner: 0.6, pyreCaller: 0.6, priest: 0.8, emberAcolyte: 0.8, fieldMedic: 0.9, witch: 0.9, ashHexer: 0.9 };
++const CASTER_STRENGTH: Partial<Record<Unit["kind"], number>> = { summoner: 0.6, priest: 0.8, fieldMedic: 0.9, witch: 0.9, ashHexer: 0.9 };
+ const FOOTMAN_RATING = Math.sqrt(UNIT_DEFS.footman.hp * (UNIT_DEFS.footman.attackDamage / (UNIT_DEFS.footman.attackCooldown / SIM_TICKS_PER_SECOND)));
+ 
+ // A fighter's worth by its own hit points and damage (a footman is 1), whatever it cost; casters as in unitStrength. What a
+@@ -47,7 +47,7 @@
+ 
+ // A fresh spirit, at full health: what a summoner puts back on the field every forty seconds.
+ export const SPIRIT_STRENGTH = Math.sqrt(UNIT_DEFS.spirit.hp * (UNIT_DEFS.spirit.attackDamage / (UNIT_DEFS.spirit.attackCooldown / SIM_TICKS_PER_SECOND))) / FOOTMAN_RATING;
+-const SPIRIT_CASTERS = new Set<Unit["kind"]>(["summoner", "pyreCaller"]);
++const SPIRIT_CASTERS = new Set<Unit["kind"]>(["summoner"]);
+ // A summoner that recasts whenever it can keeps duration / cooldown spirits up on average (60s / 40s: one and a half).
+ const SUMMON = ABILITY_DEFS.summon;
+ const SPIRITS_PER_CASTER = SUMMON.behavior === "summon" ? SUMMON.summonDuration / SUMMON.cooldown : 1;
+--- a/src/ai/policy/v8/doctrine.ts
++++ b/src/ai/policy/v8/doctrine.ts
+@@ -100,7 +100,7 @@
+     phases: [
+       {
+         wants: [
+-          { unit: "emberAcolyte", count: 2, priority: 65 },
++          { unit: "priest", count: 2, priority: 65 },
+           MAIN_TOWERS,
+           { bases: 2, priority: 60 },
+           NATURAL_TOWER,
+@@ -115,7 +115,7 @@
+           { bases: 2, priority: 66 },
+           { unit: "ashChieftain", count: 6, priority: 61 },
+           { unit: "emberRavager", count: 10, priority: 58 },
+-          { unit: "emberAcolyte", count: 3, priority: 56 },
++          { unit: "priest", count: 3, priority: 56 },
+           { unit: "ashHexer", count: 3, priority: 55 },
+           { building: "emberForge", count: 2, priority: 52 },
+           { upgrade: "reinforcedPlating", level: 1, priority: 51 },
+@@ -129,7 +129,7 @@
+           { unit: "emberRavager", count: 16, priority: 55 },
+           { unit: "ashChieftain", count: 10, priority: 57 },
+           { unit: "cinderRevenant", count: 6, priority: 54 },
+-          { unit: "emberAcolyte", count: 4, priority: 53 },
++          { unit: "priest", count: 4, priority: 53 },
+           { unit: "ashHexer", count: 4, priority: 53 },
+           { upgrade: "weaponTraining", level: 2, priority: 51 },
+           { upgrade: "reinforcedPlating", level: 2, priority: 50 },
+--- a/src/ai/policy/world-model.ts
++++ b/src/ai/policy/world-model.ts
+@@ -1,4 +1,4 @@
+-import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
++import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, trainableUnitsAt, unitMover } from "../../shared/catalog";
+ import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
+ import type { AiPolicyMemory } from "../memory";
+ import { activeUnitClaim } from "./claims";
+@@ -74,7 +74,7 @@
+   const cap = playerState(snapshot, owner).supplyCap;
+   const bars = buildings(snapshot, owner)
+     .filter((building) => building.complete)
+-    .flatMap((building) => BUILDING_DEFS[building.kind].trains)
++    .flatMap((building) => trainableUnitsAt(playerState(snapshot, owner).race, building.kind))
+     .map(requiredSupplyCap)
+     .filter((bar) => bar > cap);
+   return bars.length > 0 ? Math.min(...bars) : undefined;

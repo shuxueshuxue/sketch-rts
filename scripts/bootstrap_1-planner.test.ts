@@ -4,6 +4,7 @@ import { issueCommandFrame } from '../src/sdk/commands/frame';
 import { snapshotGame, stepGame } from '../src/shared/sim';
 import { UNIT_DEFS } from '../src/shared/catalog';
 import { xpStarThresholds } from '../src/shared/unit-value';
+import { createAiPolicyMemory } from '../src/ai/memory';
 import { createAiMemoryProvider } from '../src/ai/planner-context';
 import { createBootstrapCommandPlanner, frozenPolicyModules } from './bootstrap_1-planner';
 import { createGame } from '../src/shared/sim';
@@ -38,7 +39,7 @@ describe('bootstrap_1 historical opponents on the current engine', () => {
       const game = sketchScene('frozen-medical-targets').replaceDefaults()
         .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
         .townHall('us', 400, 400).townHall('foe', 2600, 2500).farms('us', 5, 400, 1600)
-        .unit('us', race === 'grove' ? 'priest' : 'emberAcolyte', 900, 800, { id: 'healer' })
+        .unit('us', 'priest', 900, 800, { id: 'healer' })
         .unit('us', race === 'grove' ? 'ballista' : 'catapult', 1020, 800, { id: 'mechanical', hp: 10 })
         .unit('us', race === 'grove' ? 'footman' : 'emberRavager', 1000, 850, { id: 'fighter', hp: 40 })
         .build().createGame();
@@ -53,6 +54,54 @@ describe('bootstrap_1 historical opponents on the current engine', () => {
       expect(game.units.find(unit => unit.id === 'mechanical')!.hp).toBe(10);
     }
   }, 15000);
+  it.each((['v5', 'v7', 'v8'] as const).flatMap(version =>
+    (['grove', 'ember'] as const).map(race => ({ version, race }))))(
+    '$version trains its archived caster needs through the rules 2 $race producer', async ({ version, race }) => {
+      let scene = sketchScene('frozen-rules2-production').map('bareDuel').replaceDefaults()
+        .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+        .townHall('us', 600, 600).townHall('foe', 3500, 3500).goldMine('home', 900, 600, 12000)
+        .building('us', race === 'grove' ? 'barracks' : 'emberForge', 800, 1000)
+        .building('us', race === 'grove' ? 'archeryRange' : 'cinderSpire', 600, 1000)
+        .building('us', race === 'grove' ? 'sanctum' : 'ashenHall', 1000, 1200)
+        .farms('us', 7, 400, 1800);
+      for (let index = 0; index < 3; index++) scene = scene.worker('us', 850 + index * 20, 650,
+        { order: { type: 'mine', resourceId: 'home', phase: 'toMine', timer: 0 } });
+      for (let index = 0; index < 4; index++) scene = scene.unit('us', race === 'grove' ? 'footman' : 'ashWarden', 1100 + index * 50, 800);
+      for (let index = 0; index < 6; index++) scene = scene.unit('us', race === 'grove' ? 'archer' : 'sparkArcher', 1200 + index * 50, 900);
+      const game = scene.build().createGame(), memory = createAiPolicyMemory();
+      memory.v6 = { phase: 1, doctrine: { profileId: 'steady',
+        strategyId: version === 'v8' ? (race === 'grove' ? 'grove-cavalry-line' : 'ember-ravager-line')
+          : (race === 'grove' ? 'grove-spirit-host' : 'ember-pyre-host'), decidedTick: 0 } };
+      const historical = await frozenPolicyModules();
+      const entries = historical.planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version, scriptIds: [version === 'v5' ? 'training' : 'v6Economy'], memory }, { teams: game.teams });
+      const caster = entries.filter(entry => entry.command.type === 'train'
+        && (entry.command.unitKind === 'priest' || entry.command.unitKind === 'summoner'));
+      expect(caster).toHaveLength(1);
+      issueCommandFrame(game, entries);
+      const producer = game.buildings.find(building => building.id === (caster[0]!.command as { buildingId: string }).buildingId)!;
+      expect(producer.kind).toBe(race === 'grove' ? 'sanctum' : 'cinderSpire');
+      expect(producer.queue).toHaveLength(1);
+      stepGame(game);
+    });
+
+  it.each((['v5', 'v7', 'v8'] as const).flatMap(version =>
+    (['grove', 'ember'] as const).map(race => ({ version, race }))))(
+    '$version executes the shared $race summoning ability through the real SDK', async ({ version, race }) => {
+      const game = sketchScene('frozen-rules2-summon').map('bareDuel').replaceDefaults()
+        .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+        .townHall('us', 400, 400).townHall('foe', 2600, 2500)
+        .unit('us', 'summoner', 900, 800, { id: 'caster' })
+        .unit('foe', 'footman', 1050, 800).build().createGame();
+      const historical = await frozenPolicyModules();
+      const commands = historical.planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version, scriptIds: ['abilities'], memory: createAiPolicyMemory() }, { teams: game.teams });
+      expect(commands.some(entry => entry.command.type === 'cast' && entry.command.ability === 'summon')).toBe(true);
+      issueCommandFrame(game, commands);
+      stepGame(game);
+      expect(game.units.some(unit => unit.owner === 'us' && unit.kind === 'spirit')).toBe(true);
+    });
+
   it('runs the actual match worker with two independently frozen opponents on the current SDK', async () => {
     const match = bootstrapMatches('worker-command-smoke', ['pineshade'], 30).find(match => match.subject === 'v9_summoner'
       && match.agents.p1!.version === 'v7' && match.agents.p2?.version === 'v7')!;
