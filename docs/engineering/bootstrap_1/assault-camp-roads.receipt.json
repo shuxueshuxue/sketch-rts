@@ -1,0 +1,130 @@
+{
+  "base": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "rulesVersion": 2,
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/assault-camp-roads.ts": "524882aafd86415ba60c3e33cd8ff511f6d467d6074a1ff94f77592f90948e56",
+    "src/ai/bootstrap_1/mine-defense.ts": "c89c8b90c92fd5879c598abaf3dc5e77710b454dcb6cfb9b25a0ea825d7dfdfd",
+    "src/ai/policy/v9/march.ts": "1980f2ad2ce7240bffa84fccf9a6cb11811db80da3fd913c46bf6ac057f92931"
+  },
+  "sdk": {
+    "uniquePassed": 150,
+    "failed": 0,
+    "suites": [
+      {
+        "file": "src/ai/bootstrap_1/assault-camp-roads.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/assault-road-distance.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/attack-reinforcements.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-assembly.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-recruit-road.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/caster-melee-micro.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/covered-defense.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "src/ai/bootstrap_1/defensive-route.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-recovery.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "src/ai/policy/v9/march.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "src/ai/bootstrap_1/assault-camp-blocked.test.ts",
+        "passed": 4
+      }
+    ],
+    "bootstrap_1-assault-camp-roads-related-sdk.json": {
+      "sha256": "1f588751b5a5f7c9e3b15d4cb1213ac5293c7b994a08ccac59786be793832c0e"
+    },
+    "bootstrap_1-assault-camp-blocked-sdk.json": {
+      "sha256": "cfb769de5fa96110f3555292d54503f6ee3f2216b9af672bb2073ceed1a45610"
+    }
+  },
+  "parentControl": {
+    "revision": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+    "passed": 12,
+    "failed": 12,
+    "failedAllCliffCases": true,
+    "reportSha256": "5ddb7fed43e2c00ba3338e252ef4dc8e6ca5e56d5f00c6153ecc259de9fca881"
+  },
+  "causalWindow": {
+    "sourceSha256": "f4275d8c8278ed44b033638c28d4a7c2e65d046e8c5ef6cfa9e4f5b9f50f9336",
+    "from": 6000,
+    "to": 7200,
+    "match": "pineshade/v9_knight/v8+v8/grove/0",
+    "engineRevision": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeDeaths": [
+      {
+        "tick": 6135,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1290",
+        "source": "creep-gen-3-2"
+      },
+      {
+        "tick": 6274,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "creep-gen-3-2"
+      },
+      {
+        "tick": 6446,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1102",
+        "source": "unit-p2-lancer-1100"
+      },
+      {
+        "tick": 6797,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1093",
+        "source": "creep-gen-3-1"
+      }
+    ],
+    "afterDeaths": [
+      {
+        "tick": 6192,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "unit-p2-lancer-1083"
+      },
+      {
+        "tick": 6423,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1102",
+        "source": "unit-p2-lancer-1083"
+      }
+    ],
+    "detourCommands": 3,
+    "beforeArmy": 5,
+    "afterArmy": 6
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "e307e233d9ed8b8cf0671022de18e19aff6d8e897f255392cdb06db83253b7c5"
+  }
+}

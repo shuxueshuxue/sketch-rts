@@ -2,6 +2,7 @@ import { mercenaryControlUnitIds } from './mercenary-control';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
+import { routeAssaultCampCommands } from './assault-camp-roads';
 import { recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
@@ -155,7 +156,10 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     if (walking.length) commands.push(resolveAiCommandIntent(snapshot, owner,
       { type: 'move', unitIds: walking.map(unit => unit.id), ...creep.staging }, options));
   }
-  return commands;
+  const general = options.memory.v6?.general;
+  return general?.mode === 'attack' && general.stage !== 'gather'
+    && !intel.army.some(unit => general.group!.includes(unit.id) && (unit.kind === 'ballista' || unit.kind === 'catapult'))
+    ? routeAssaultCampCommands(snapshot, commands, general.group!, general.target!) : commands;
 }
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
