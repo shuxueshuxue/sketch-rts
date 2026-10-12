@@ -1,0 +1,90 @@
+{
+  "base": "b1e469362cd838d9668f30fad9d5f4b7e7122d2d",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/economy.ts": "5d83ef8fbe1adfe229b408e5e0fa970c71127e29c93c118490e37180d0f12ed9"
+  },
+  "runtimeDiff": {
+    "files": 1,
+    "changedConditions": 1
+  },
+  "sdk": {
+    "passed": 113,
+    "failed": 0,
+    "reportSha256": "4cbb61ec210c472371b31a0a8545ac593a577f15deff65d51c51cddc589f43ae",
+    "suites": [
+      {
+        "file": "economy.test.ts",
+        "passed": 26
+      },
+      {
+        "file": "first-recovery-purchase.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "recovery-budget.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "recruitment-intent.test.ts",
+        "passed": 16
+      },
+      {
+        "file": "research-funding.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "research-intent.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "research-prerequisites.test.ts",
+        "passed": 16
+      },
+      {
+        "file": "tech-first-medic.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "economy.test.ts",
+        "passed": 15
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "b1e469362cd838d9668f30fad9d5f4b7e7122d2d",
+    "passed": 16,
+    "failed": 12,
+    "reportSha256": "e22fb0a7c51f889418a7ab1108f3e00cd1f5c417d8a90467875890648b30beac",
+    "detail": "Twelve idle controls and four first-medic controls pass; twelve busy-producer research scenarios delay funding by 165/180 native ticks."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "a68a39eaa79049c0a0d3f0030a3c09d1dfb7ddec441ec0b19999e57d66528c81"
+  },
+  "nativeWindow": {
+    "from": 6000,
+    "to": 12000,
+    "beforeDeaths": 5,
+    "afterDeaths": 5,
+    "beforeUpgrades": {
+      "weaponTraining": 1,
+      "reinforcedPlating": 1
+    },
+    "afterUpgrades": {
+      "weaponTraining": 1,
+      "reinforcedPlating": 1
+    },
+    "reportSha256": "9c8f9c9d6ee6929ab800ce1523fe911c4b28fbf1cc3a626fb0de775442ae5899",
+    "scope": "All three controller memories unchanged; parent reused from prior identical baseline continuation. No combat or victory improvement claim."
+  },
+  "withdrawnPrototype": {
+    "scope": "Remove blanket wave reserve entirely",
+    "beforeDeaths": 5,
+    "afterDeaths": 13,
+    "reportSha256": "3b65822d8c377e0cecbdb092ec6e1bd57eba911ea48d33d54997f069990b4f68",
+    "published": false
+  }
+}
