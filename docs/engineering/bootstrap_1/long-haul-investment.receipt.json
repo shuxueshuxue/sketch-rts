@@ -1,0 +1,63 @@
+{
+  "base": "336288916ae0a231122a8f7e7ec7c253d559f926",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/long-haul-investment.ts": "d8a2e3f611c93f318b970418f23495a6102117711f7af7b53a5afff92523e482",
+    "src/ai/bootstrap_1/workforce.ts": "791087e61e0dd79ecd3ba4eeeed0a02b205e61a0c80a1c1abb0f65c6e2071f56"
+  },
+  "sdk": {
+    "passed": 266,
+    "failed": 0,
+    "sha256": "fa890ba59a1450f566af8cda150b353f2339705d027fdaa5ca29a1dd95ff2f74",
+    "newCases": 60
+  },
+  "parentControl": {
+    "passed": 0,
+    "failed": 12,
+    "sha256": "bacbafe9e30f570cf86ec6c2e552a4b6dd2b527d7e1b47403763fbfd97edc58f",
+    "scope": "Exact twelve positive SDK scenario bodies; module-specific rejection controls excluded from parent harness because the new module does not exist there. Initial whole-file import failure is not counted as a scenario failure."
+  },
+  "nativeWindow": {
+    "from": 30000,
+    "to": 48000,
+    "sha256": "1ddd5b39643c139b5440c06f8b0b0edf835c3fcf37122f8288ec2bd4ab106c25",
+    "results": [
+      {
+        "label": "parent",
+        "deaths": 0,
+        "firstReplacementOrderTick": 44295,
+        "completeHalls": 3,
+        "workers": 6,
+        "knights": 3,
+        "permanentArmy": 8,
+        "bankedGold": 124.27,
+        "carriedGold": 0,
+        "goldSpent": 14792,
+        "winner": null
+      },
+      {
+        "label": "next",
+        "deaths": 0,
+        "firstReplacementOrderTick": 41670,
+        "completeHalls": 4,
+        "workers": 11,
+        "knights": 5,
+        "permanentArmy": 10,
+        "bankedGold": 28.27,
+        "carriedGold": 20,
+        "goldSpent": 16208,
+        "winner": null
+      }
+    ],
+    "replacementOrderAdvanceTicks": 2625,
+    "replacementOrderAdvanceSeconds": 131.25,
+    "scope": "Same world, IDs and all three controller memories; current native rules and unchanged opponents. No permanent deaths in either continuation; no winner. Not a fresh campaign or formal acceptance."
+  },
+  "build": {
+    "exitCode": 0,
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "logSha256": "dd2251ecfcec19c5b610c1f071eb63129f735eb74d167279fbc8abdbe66a0ab5",
+    "sourceBase": "336288916ae0a231122a8f7e7ec7c253d559f926"
+  }
+}
