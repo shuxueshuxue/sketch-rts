@@ -131,7 +131,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
     && own.some(building => canTrainAt(player.race, building.kind, healer) && (building.queue.length > 0 || recovering)
       && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
-  // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
+  // Fund the next recruitment wave before adding production infrastructure.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete).reduce((total, building) => total
       + Math.max(0, ...trainableUnitsAt(player.race, building.kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
@@ -151,7 +151,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
         if (productionReserve === 0) return [];
       }
     }
-    if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id.startsWith('upgrade:') || goal.id === 'engineering:workshop') {
+    if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id === 'engineering:workshop') {
       productionReserve = Math.max(productionReserve, waveReserve);
     }
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
