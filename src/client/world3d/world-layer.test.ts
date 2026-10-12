@@ -1,3 +1,5 @@
+import {CombatPresentationTracker} from '../combat-presentation';
+import {strikeUnit} from '../../shared/sim';
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
@@ -8,10 +10,12 @@ vi.mock('three',async importOriginal=>{
   return{...actual,WebGLRenderer:class{
     shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};toneMapping=0;toneMappingExposure=1;
     setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
+    initTexture(){}copyTextureToTexture(){}getRenderTarget(){return null;}getActiveCubeFace(){return 0;}getActiveMipmapLevel(){return 0;}setRenderTarget(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
   }};
 });
 import {World3DLayer} from './world-layer';
+import {spellOrbPalette} from '../art/effect-presentation';
 import {worldModels} from './model-library';
 import {projectWorld} from './projection';
 import {createRoom,roomToGameSetup} from '../../shared/rooms';
@@ -21,14 +25,15 @@ import {beginShipBoarding,gangwayCrossingPosition,gangwaySurface,updateShipGangw
 import {createShipWebglScene} from '../../recorder/scenes/ship-webgl';
 import {snapshotGame} from '../../shared/sim';
 import {UNIT_DEFS} from '../../shared/catalog';
-import {shipProfile,localToWorld,isShipKind} from '../../shared/ship-geometry';
+import {SHIP_CAMERA,shipProfile,localToWorld,isShipKind} from '../../shared/ship-geometry';
 import {UnitFacingTracker} from '../unit-facing';
 import {UnitAnimationTracker} from '../unit-animation';
+import {unitGlyphScale} from '../glyphs';
 import {UnitMotionSmoother} from '../unit-motion';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 import type {WorldFrame} from '../world-renderer';
 import {ownerInk} from '../world-renderer';
-import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3} from 'three';
+import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3,DataArrayTexture} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
@@ -39,9 +44,32 @@ function setup(){
   setScratchCanvasFactory((w,h)=>createCanvas(w,h) as unknown as HTMLCanvasElement);
   const {game,ship}=createShipWebglScene();
   const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{mercenaryStock:()=>'',unitKind:()=>''}};
-  return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
+  const canvas=new EventTarget() as HTMLCanvasElement;
+  return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('retains context listeners across reset and removes them on final disposal',async()=>{
+    const {frame,layer,canvas}=setup(),remove=vi.spyOn(canvas,'removeEventListener');
+    await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const before=layer.cardStats().mipLayerUpdates;
+    const lost=new Event('webglcontextlost',{cancelable:true});canvas.dispatchEvent(lost);expect(lost.defaultPrevented).toBe(true);
+    layer.draw(frame);expect(layer.cardStats().mipLayerUpdates).toBe(before);
+    canvas.dispatchEvent(new Event('webglcontextrestored'));layer.draw(frame);expect(layer.cardStats().mipLayerUpdates).toBeGreaterThan(before);
+    layer.reset();expect(remove).not.toHaveBeenCalled();layer.draw(frame);
+    canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));canvas.dispatchEvent(new Event('webglcontextrestored'));layer.draw(frame);
+    layer.dispose();expect(remove.mock.calls.map(call=>call[0])).toEqual(['webglcontextlost','webglcontextrestored']);
+  });
+  it('draws real hit ink in GPU depth and clears it on a world reset without touching card identities',async()=>{
+    const {game,ship,frame,layer}=setup();frame.combat=new CombatPresentationTracker();
+    const crew=game.units.find(unit=>unit.deck)!;crew.hp=55;
+    strikeUnit(game,{id:'offshore-caster',owner:'enemy',x:ship.x+100,y:ship.y},crew,38,'spell');
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(layer.combatStats().count).toBeGreaterThan(0);expect(layer.combatStats().body).toBeGreaterThan(0);expect(layer.combatStats().overflow).toBe(0);
+    const ink=gpu.scene!.getObjectByName('CombatInk') as InstancedMesh;
+    expect((ink.material as ShaderMaterial).depthTest).toBe(true);expect(ink.userData.ids).toBeUndefined();
+    layer.reset();expect(layer.combatStats().count).toBe(0);expect(ink.visible).toBe(false);
+    layer.dispose();expect(layer.combatStats()).toMatchObject({disposed:true,capacity:0,count:0});expect(gpu.scene!.children).toHaveLength(0);
+  });
   it('colors the actual authored ensigns by owner, updates a captured flag and releases only owned batch materials',async()=>{
     const {game,ship,frame,layer}=setup();
     const other=game.spawnUnit('enemy','warship',1150,850);
@@ -186,6 +214,29 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(const material of opaque)expect(material.opacity).toBe(1);
     layer.dispose();
   });
+  it('keeps deck remains in a separate depth-tested transparent batch while the hull moves',async()=>{
+    const {ship,frame,layer}=setup();delete frame.motion;
+    const corpse={id:'deck-remains-proof',unitId:'dead-crew',kind:'footman' as const,owner:ship.owner,x:ship.x,y:ship.y,radius:18,diedAtTick:0,deck:{shipId:ship.id,x:12,y:18}};
+    frame.snapshot.corpses=[corpse];
+    await layer.prepare(frame.snapshot,'match');layer.draw(frame);
+    const remains=()=>gpu.scene!.children.find(object=>object instanceof InstancedMesh && object.visible && object.userData.ids?.includes(corpse.id)) as InstancedMesh|undefined;
+    const mesh=remains()!;expect(mesh).toBeDefined();
+    const material=mesh.material as MeshBasicMaterial;
+    expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});
+    expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBe(-1);
+    expect(layer.positions.has(corpse.id)).toBe(false);
+    const matrix=new Matrix4();mesh.getMatrixAt(mesh.userData.ids.indexOf(corpse.id),matrix);
+    expect(matrix.elements[1]).toBeCloseTo(0);expect(matrix.elements[5]).toBeCloseTo(0);
+    expect(matrix.elements[13]).toBeCloseTo(shipProfile(ship)!.deckHeight+.12);
+    const rasterized=layer.remainsStats().rasterizations;
+    const live=frame.snapshot.units.find(unit=>unit.id===ship.id)!;
+    live.x+=40;live.sailing!.heading+=Math.PI/2;frame.snapshot.tick+=200;frame.now+=10000;
+    layer.draw(frame);expect(remains()).toBeDefined();expect(layer.remainsStats().rasterizations).toBe(rasterized);
+    frame.snapshot.units=[];frame.snapshot.tick++;
+    layer.draw(frame);expect(remains()).toBeUndefined();
+    layer.dispose();expect(layer.remainsStats()).toMatchObject({pages:0,cards:0,pixels:0});
+  });
+
   it('uses actual model geometry, painted alpha picking and deck coordinate inversion without mutating simulation',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
     const original=JSON.stringify(frame.snapshot);layer.draw(frame);
@@ -197,10 +248,72 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)if(layer.pick({x:body.x+x,y:body.y+y})?.id===crew.id)picked=true;
     expect(picked,'crew can be selected through its visible painted pixels').toBe(true);
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map);
-    expect(cards.length).toBe(2);for(const object of cards){const material=(object as InstancedMesh).material as MeshBasicMaterial;expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);expect((material.map!.image as {width:number}).width).toBe(512);}
+    expect(cards.length).toBeGreaterThan(0);
+    const painted=cards as InstancedMesh[],paintedIds=painted.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count));
+    expect(paintedIds.sort()).toEqual(game.units.filter(unit=>!isShipKind(unit.kind)&&!unit.cabin).map(unit=>unit.id).sort());
+    for(const mesh of painted){
+      const material=mesh.material as MeshBasicMaterial,texture=material.map as DataArrayTexture;
+      expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);
+      for(let i=0;i<mesh.count;i++){
+        const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
+        // The shader expands cardRect before applying the instance matrix;
+        // one texel still covers a quarter authored unit on both axes.
+        const rect=mesh.geometry.getAttribute('cardRect');
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/texture.image.width).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/texture.image.height).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      }
+    }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
     frame.view={...frame.view,width:1100};layer.draw(frame);expect(gpu.sizes).toBe(2);
     expect(JSON.stringify(frame.snapshot)).toBe(original);layer.dispose();
+  });
+  it('uses story painters and variant cache identity with the same uncapped scale and foot anchor as Canvas',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.buildings=[];
+    const first=game.spawnUnit('player','footman',600,600),second=game.spawnUnit('player','footman',700,600);
+    first.variant='story:first';second.variant='story:second';first.radius=second.radius=36;
+    const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillRect(-8,-30,16,47);},one=vi.fn(paint),two=vi.fn(paint);
+    frame.models=variant=>({paint:variant==='story:first'?one:two});frame.reducedMotion=true;frame.snapshot=snapshotGame(game);
+    await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(one).toHaveBeenCalledTimes(1);expect(two).toHaveBeenCalledTimes(1);expect(one.mock.calls[0]).toEqual(expect.arrayContaining([{mode:'idle',frame:0}]));
+    expect(layer.cardStats().cards).toBe(2);
+    const meshes=gpu.scene!.children.filter(object=>object.name==='PaintedCards'&&object.visible) as InstancedMesh[];
+    expect(meshes.reduce((sum,mesh)=>sum+mesh.count,0)).toBe(2);
+    expect(meshes.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count)).sort()).toEqual([first.id,second.id].sort());
+    for(const mesh of meshes)for(let i=0;i<mesh.count;i++){
+      const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
+      const texture=(mesh.material as MeshBasicMaterial).map as DataArrayTexture,{width,height}=texture.image;
+      const right=new Vector3().setFromMatrixColumn(matrix,0).normalize();
+      const rect=mesh.geometry.getAttribute('cardRect');
+      expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/4,5);
+      expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      let ink=0,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(mesh.userData.paintedHit(i,{x:(x+.5)/width,y:(y+.5)/height})){
+        const world=new Vector3(rect.getX(i)+(x+.5)/width*(rect.getZ(i)-rect.getX(i)),rect.getY(i)+(y+.5)/height*(rect.getW(i)-rect.getY(i)),0).applyMatrix4(matrix);
+        const horizontal=world.clone().sub(new Vector3(unit.x,0,unit.y)).dot(right);
+        minX=Math.min(minX,horizontal);maxX=Math.max(maxX,horizontal);minY=Math.min(minY,world.y);maxY=Math.max(maxY,world.y);ink++;
+      }
+      // Every opaque source texel survives, with the same doubled rectangle
+      // and its bottom precisely at the world foot plane (pixel centers inset).
+      expect(ink).toBe(16*47*4*4);expect(minX).toBeCloseTo(-16+.25,4);expect(maxX).toBeCloseTo(16-.25,4);
+      expect(minY).toBeCloseTo(.25/Math.tan(SHIP_CAMERA.tilt),4);expect(maxY).toBeCloseTo((94-.25)/Math.tan(SHIP_CAMERA.tilt),4);
+    }
+    expect(layer.positions.get(first.id)!.bodyY).toBeCloseTo(first.y-34);layer.dispose();
+  });
+  it('batches spell orbs by the shared caster palette and releases every owned material',async()=>{
+    const {game,frame,layer}=setup();game.players.player.race='grove';game.players.enemy.race='ember';
+    game.effects=([{sourceKind:'priest',owner:'player'},{sourceKind:'priest',owner:'enemy'},{sourceKind:'ogreMage'},{sourceKind:'priest',owner:'player'}] as const).map((source,i)=>({id:`orb:${i}`,type:'projectile' as const,x:600+i*20,y:600,remaining:5,duration:10,attackKind:'magic' as const,...source}));
+    game.effects.push({id:'orb:unknown',type:'projectile',x:680,y:600,remaining:5,duration:10,attackKind:'magic'});
+    expect(spellOrbPalette(undefined)).toEqual(spellOrbPalette('ogreMage'));
+    frame.snapshot=snapshotGame(game);const original=JSON.stringify(frame.snapshot);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const orbs=gpu.scene!.children.filter(object=>object instanceof InstancedMesh&&object.name==='SpellOrb') as InstancedMesh[];
+    expect(orbs).toHaveLength(3);expect(orbs.reduce((n,mesh)=>n+mesh.count,0)).toBe(5);expect(new Set(orbs.map(mesh=>mesh.geometry)).size).toBe(1);
+    for(const mesh of orbs){
+      const effect=frame.snapshot.effects.find(effect=>effect.id===mesh.userData.ids[0])!,glow=spellOrbPalette(effect.sourceKind,effect.owner?frame.snapshot.players[effect.owner]?.race:undefined).glow;
+      const expected=new MeshBasicMaterial({color:`rgb(${glow.r},${glow.g},${glow.b})`});
+      expect((mesh.material as MeshBasicMaterial).color.equals(expected.color)).toBe(true);expected.dispose();
+    }
+    const releases=orbs.map(mesh=>vi.spyOn(mesh.material as MeshBasicMaterial,'dispose'));expect(JSON.stringify(frame.snapshot)).toBe(original);
+    layer.dispose();for(const release of releases)expect(release).toHaveBeenCalledTimes(1);
   });
   it('clears visual picking and deck projection when switching worlds before the next draw',async()=>{
     const {frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
@@ -235,13 +348,18 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map) as InstancedMesh[];
     expect(cards.reduce((sum,card)=>sum+card.count,0)).toBe(game.units.length);layer.dispose();
   });
-  it('batches 2,000 matching troops into one actor mesh instead of allocating one GPU object per unit',async()=>{
+  it('batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit',async()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(let i=0;i<2000;i++)game.spawnUnit('player','footman',400+(i%50)*14,400+Math.floor(i/50)*12);
     frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
     const begin=performance.now();layer.draw(frame);const duration=performance.now()-begin;
     const actors=gpu.scene!.children.filter(object=>object instanceof InstancedMesh) as InstancedMesh[];
-    expect(actors.filter(actor=>actor.count===2000)).toHaveLength(1);expect(layer.positions.size).toBe(2000);
+    const painted=actors.filter(actor=>actor.name==='PaintedCards'&&actor.visible);
+    expect(painted.reduce((sum,actor)=>sum+actor.count,0)).toBe(2000);
+    expect(painted.flatMap(actor=>actor.userData.ids.slice(0,actor.count)).sort()).toEqual(game.units.map(unit=>unit.id).sort());
+    // Pages group bounded pose rectangles; they are never allocated per unit.
+    expect(painted.length).toBeGreaterThan(0);expect(painted.length).toBeLessThanOrEqual(layer.cardStats().cards);
+    expect(layer.cardStats().cards).toBeLessThanOrEqual(16);expect(layer.positions.size).toBe(2000);
     console.info(`2,000 troops: ${duration.toFixed(1)} ms CPU scene preparation, ${actors.length} actor mesh; GPU timing not measured`);
     layer.dispose();
   });
@@ -260,11 +378,12 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.addEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.addEventListener('dispose',sharedDispose);}});
     const scene=gpu.scene!;layer.dispose();layer.dispose();
     expect(scene.children).toHaveLength(0);expect(sharedDispose).not.toHaveBeenCalled();
-    for(const key of ['positions','templates','bounds','cards','cardGeometry','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
+    expect(layer.cardStats()).toMatchObject({pages:0,cards:0,pixels:0});
+    for(const key of ['positions','templates','bounds','rigModels','rigPoses','deckMotion','entities','ships','shipPoses','gangwaySurfaces','recoil'])expect(((layer as unknown as Record<string,unknown>)[key] as Map<string,unknown>).size,key).toBe(0);
     expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
     expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
     layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();
-    const second=World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext);
+    const second=World3DLayer.create(new EventTarget() as HTMLCanvasElement,{} as WebGL2RenderingContext);
     await second.prepare(frame.snapshot,'home');second.draw(frame);expect(second.positions.size).toBeGreaterThan(0);second.dispose();
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.removeEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.removeEventListener('dispose',sharedDispose);}});
   });

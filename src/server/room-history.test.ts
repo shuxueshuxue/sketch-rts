@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_ROOM_FRAME_HISTORY_LIMIT, RoomHistoryLog } from "./room-history";
 import type { CheckpointFrame, CommandFrame } from "../shared/net/types";
@@ -50,6 +51,7 @@ function frame(tick: number): CommandFrame {
 function saveAt(tick: number): SaveGameRecord {
   return {
     schemaVersion: SAVEGAME_SCHEMA_VERSION,
+    rulesVersion: RULES_VERSION,
     id: "save-history",
     createdAt: "2026-06-07T00:00:00.000Z",
     room: { id: "room-sync", status: "inMatch" } as SaveGameRecord["room"],

@@ -13,7 +13,7 @@ import { combatCapability } from "../../../shared/combat-capabilities";
 // that is one footman, and it costs 125; its reach over the shooters' 399 is worth a little more. The first version
 // counted 2.5 and marched V6 into fights "its towers would win" that its towers never reached.
 export const TOWER_STRENGTH = 1.3;
-const CASTER_STRENGTH: Partial<Record<Unit["kind"], number>> = { summoner: 0.6, pyreCaller: 0.6, priest: 0.8, emberAcolyte: 0.8, fieldMedic: 0.9, witch: 0.9, ashHexer: 0.9 };
+const CASTER_STRENGTH: Partial<Record<Unit["kind"], number>> = { summoner: 0.6, priest: 0.8, fieldMedic: 0.9, witch: 0.9, ashHexer: 0.9 };
 const FOOTMAN_RATING = Math.sqrt(UNIT_DEFS.footman.hp * (UNIT_DEFS.footman.attackDamage / (UNIT_DEFS.footman.attackCooldown / SIM_TICKS_PER_SECOND)));
 
 // A fighter's worth by its own hit points and damage (a footman is 1), whatever it cost; casters as in unitStrength. What a
@@ -47,7 +47,7 @@ export function unitStrength(unit: Unit) {
 
 // A fresh spirit, at full health: what a summoner puts back on the field every forty seconds.
 export const SPIRIT_STRENGTH = Math.sqrt(UNIT_DEFS.spirit.hp * (UNIT_DEFS.spirit.attackDamage / (UNIT_DEFS.spirit.attackCooldown / SIM_TICKS_PER_SECOND))) / FOOTMAN_RATING;
-const SPIRIT_CASTERS = new Set<Unit["kind"]>(["summoner", "pyreCaller"]);
+const SPIRIT_CASTERS = new Set<Unit["kind"]>(["summoner"]);
 // A summoner that recasts whenever it can keeps duration / cooldown spirits up on average (60s / 40s: one and a half).
 const SUMMON = ABILITY_DEFS.summon;
 const SPIRITS_PER_CASTER = SUMMON.behavior === "summon" ? SUMMON.summonDuration / SUMMON.cooldown : 1;

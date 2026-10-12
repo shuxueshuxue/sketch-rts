@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it, vi } from 'vitest';
 import { decodeServerNetMessage, encodeNetMessage } from '../shared/net/codec';
 import type { ServerNetMessage } from '../shared/net/types';
@@ -46,7 +47,7 @@ describe('live room scalar tick reads', () => {
     try {
       const hub = new RoomNetHub({ roomHost: host, commandDelayTicks: 2 }), socket = new Socket();
       hub.connect(room.id, socket);
-      socket.emit(encodeNetMessage({ type: 'join', roomId: room.id, playerId: 'player' }));
+      socket.emit(encodeNetMessage({ type: 'join', rulesVersion: RULES_VERSION, roomId: room.id, playerId: 'player' }));
       const command = { type: 'move' as const, unitIds: [worker.id], x: worker.x + 80, y: worker.y };
       socket.emit(encodeNetMessage({ type: 'command', roomId: room.id, playerId: 'player', epoch: 0, clientSeq: 7, command }));
       hub.tickRoom(room.id); hub.tickRoom(room.id); hub.tickRoom(room.id);

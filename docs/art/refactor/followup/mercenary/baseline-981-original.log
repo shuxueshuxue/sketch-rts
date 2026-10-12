@@ -1,0 +1,63 @@
+
+ RUN  v2.1.9 /tmp/sketch-art-baseline
+
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts (24 tests | 2 failed) 4343ms
+   ✓ 'v9_archer' collects and rallies 'grove' mercenaries ('planner', mirror=false) 521ms
+   ✓ 'v9_archer' collects and rallies 'grove' mercenaries ('planner', mirror=true) 368ms
+   × 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=false) 251ms
+     → {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1049","x":566.3454427492306,"y":497.4435053025439,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1140","x":772.9914235413476,"y":541.8563524985509,"order":{"type":"move","x":500,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+   × 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=true) 212ms
+     → {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1049","x":3528.9558832125426,"y":503.60161609407567,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1138","x":3433.9035885517446,"y":626.9800462967289,"order":{"type":"move","x":3596,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+   ✓ 'v9_summoner' collects and rallies 'grove' mercenaries ('planner', mirror=false) 316ms
+   ✓ 'v9_summoner' collects and rallies 'grove' mercenaries ('planner', mirror=true) 346ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/bootstrap_1/mercenary-control.test.ts > 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=false)
+AssertionError: {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1049","x":566.3454427492306,"y":497.4435053025439,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1140","x":772.9914235413476,"y":541.8563524985509,"order":{"type":"move","x":500,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts:71:82
+     69|   expect(original.every(unit => game.units.includes(unit)), diagnostic…
+     70|   expect(mercenaries.every(unit =>
+     71|     Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE), d…
+       |                                                                                  ^
+     72|   const camp = game.mercenaryCamps[0]!;
+     73|   expect(game.units.filter(unit => travelers.has(unit.id)).every(unit …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/ai/bootstrap_1/mercenary-control.test.ts > 'v9_archer' collects and rallies 'ember' mercenaries ('planner', mirror=true)
+AssertionError: {"gold":19,"paid":320,"travelers":["scout"],"mercenaries":[{"id":"unit-us-mercenary-1049","x":3528.9558832125426,"y":503.60161609407567,"order":{"type":"idle"}},{"id":"unit-us-mercenary-1138","x":3433.9035885517446,"y":626.9800462967289,"order":{"type":"move","x":3596,"y":500,"avoidCombat":true}}]}: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/ai/bootstrap_1/mercenary-control.test.ts:71:82
+     69|   expect(original.every(unit => game.units.includes(unit)), diagnostic…
+     70|   expect(mercenaries.every(unit =>
+     71|     Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE), d…
+       |                                                                                  ^
+     72|   const camp = game.mercenaryCamps[0]!;
+     73|   expect(game.units.filter(unit => travelers.has(unit.id)).every(unit …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 22 passed (24)
+   Start at  12:35:19
+   Duration  8.13s (transform 2.62s, setup 0ms, collect 3.47s, tests 4.34s, environment 0ms, prepare 75ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

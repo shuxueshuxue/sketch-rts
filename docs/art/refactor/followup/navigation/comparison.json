@@ -1,0 +1,62 @@
+{
+  "baselineExitCode": 1,
+  "currentExitCode": 1,
+  "baselineFailed": 4,
+  "currentFailed": 4,
+  "addedFailureNames": [],
+  "removedFailureNames": [],
+  "failures": [
+    {
+      "name": "live exact ship maneuvers starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+      "baseline": {
+        "file": "/tmp/sketch-art-baseline/src/shared/ship-maneuver-recovery.test.ts",
+        "message": "AssertionError: expected [ { x: 6279.04768839752, …(3) }, …(1) ] to have a length of 1 but got 2"
+      },
+      "current": {
+        "file": "/workspace/sketch-rts/src/shared/ship-maneuver-recovery.test.ts",
+        "message": "AssertionError: expected [ { x: 6279.04768839752, …(3) }, …(1) ] to have a length of 1 but got 2"
+      },
+      "sameFirstAssertionMessage": true,
+      "classification": "reproduces_on_frozen_baseline"
+    },
+    {
+      "name": "observable ship voyage quality brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+      "baseline": {
+        "file": "/tmp/sketch-art-baseline/src/shared/ship-voyage-quality.test.ts",
+        "message": "AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []"
+      },
+      "current": {
+        "file": "/workspace/sketch-rts/src/shared/ship-voyage-quality.test.ts",
+        "message": "AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []"
+      },
+      "sameFirstAssertionMessage": true,
+      "classification": "reproduces_on_frozen_baseline"
+    },
+    {
+      "name": "forward voyage planning backs less than one hull length into an aligned berth without two U-turns",
+      "baseline": {
+        "file": "/tmp/sketch-art-baseline/src/shared/ship-voyage.test.ts",
+        "message": "AssertionError: expected 0 to be greater than 0"
+      },
+      "current": {
+        "file": "/workspace/sketch-rts/src/shared/ship-voyage.test.ts",
+        "message": "AssertionError: expected 0 to be greater than 0"
+      },
+      "sameFirstAssertionMessage": true,
+      "classification": "reproduces_on_frozen_baseline"
+    },
+    {
+      "name": "forward voyage planning marks a zero-margin reference for exact control instead of smoothing through it",
+      "baseline": {
+        "file": "/tmp/sketch-art-baseline/src/shared/ship-voyage.test.ts",
+        "message": "AssertionError: expected false to be true // Object.is equality"
+      },
+      "current": {
+        "file": "/workspace/sketch-rts/src/shared/ship-voyage.test.ts",
+        "message": "AssertionError: expected false to be true // Object.is equality"
+      },
+      "sameFirstAssertionMessage": true,
+      "classification": "reproduces_on_frozen_baseline"
+    }
+  ]
+}

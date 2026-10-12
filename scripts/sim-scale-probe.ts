@@ -21,7 +21,7 @@ type Bucket = { steps: number; units: number; stepMs: number; planMs: Record<str
 
 const LINE_UNITS: Record<string, UnitKind[]> = {
   grove: ["footman", "archer", "lancer", "ashWarden", "knight", "priest"],
-  ember: ["emberRavager", "cinderRunner", "sparkArcher", "ashChieftain", "cinderRevenant", "emberAcolyte"],
+  ember: ["emberRavager", "cinderRunner", "sparkArcher", "ashChieftain", "cinderRevenant", "priest"],
 };
 
 const args = process.argv.slice(2);

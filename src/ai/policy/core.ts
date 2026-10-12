@@ -8,7 +8,7 @@ import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
 import { battlefieldUnitIds, planBattlefieldCommands } from "./battlefield";
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { BUILDING_DEFS, canResearchAt, trainableUnitsAt, MAX_UPGRADE_LEVEL, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { canReceiveHealing } from "../../shared/healing";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -148,7 +148,7 @@ const V5_SHOOTER_UPGRADE_BASE = 4;
 const V5_SHOOTER_UPGRADE_STEP = 3;
 const OUTNUMBERED_MIN_ENEMY_FIGHTERS = 5;
 const OUTNUMBERED_OPENING_END_TICK = 300 * 20;
-const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
+const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest"]);
 
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
 
@@ -1113,6 +1113,8 @@ function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgrade
 }
 
 function upgradeAvailable(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
+  const race = playerState(snapshot, owner).race;
+  if (!UPGRADE_DEFS[upgradeKind].researchBuildingKinds.some(building => canResearchAt(race, building, upgradeKind))) return false;
   if (upgradeLevel(snapshot, owner, upgradeKind) >= UPGRADE_DEFS[upgradeKind].levels.length) return false;
   return !buildings(snapshot, owner).some((building) => building.researchQueue.some((job) => job.upgradeKind === upgradeKind));
 }
@@ -1126,13 +1128,12 @@ function nextUpgradeLevelDef(snapshot: GameSnapshot, owner: PlayerId, upgradeKin
 }
 
 function researchBuilding(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
-  const upgrade = UPGRADE_DEFS[upgradeKind];
+  const race = playerState(snapshot, owner).race;
   return buildings(snapshot, owner).find(
     (building) =>
       building.complete &&
-      upgrade.researchBuildingKinds.includes(building.kind) &&
       building.researchQueue.length === 0 &&
-      BUILDING_DEFS[building.kind].researches.includes(upgradeKind),
+      canResearchAt(race, building.kind, upgradeKind),
   );
 }
 
@@ -1779,7 +1780,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   // the empty result. Keep those scans for a budget that can buy a unit.
   if (player.gold < MIN_TRAINING_COST) return [];
   if (!buildings(snapshot, owner).some(building => building.complete && building.queue.length === 0
-    && BUILDING_DEFS[building.kind].trains.some(kind => UNIT_DEFS[kind].cost <= player.gold))) return [];
+    && trainableUnitsAt(player.race, building.kind).some(kind => UNIT_DEFS[kind].cost <= player.gold))) return [];
   const initialSupply = projectedSupplyUsed(snapshot, owner);
   if (initialSupply + MIN_TRAINING_SUPPLY > player.supplyCap) return [];
   const workerCount = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck).length;
@@ -2132,7 +2133,7 @@ function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: P
   if (army.length < 5) return false;
   if (!army.some((unit) => unit.kind === "sparkArcher")) return false;
   // @@@ember-support-milestone - Once Ember has a frontline and first spark, the first acolyte unlocks its race kit instead of adding another melee body.
-  return !army.some((unit) => unit.kind === "emberAcolyte");
+  return !army.some((unit) => unit.kind === "priest");
 }
 
 function shouldPrioritizeAffordableHeavyTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {

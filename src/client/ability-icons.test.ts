@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { loadImage } from "@napi-rs/canvas";
 import { describe, expect, it } from "vitest";
@@ -23,7 +23,9 @@ describe("hand-authored vector ability resources", () => {
       icons: { id: AbilityIconId; file: string; width: number; height: number; bytes: number; sha256: string }[];
     };
     expect(manifest.icons.map(icon => icon.id).sort()).toEqual(Object.keys(ABILITY_ICON_FILES).sort());
-    expect(manifest.output.count).toBe(29);
+    expect(manifest.output.count).toBe(27);
+    const files=await readdir(fileURLToPath(new URL("../../public/art/abilities", import.meta.url)));
+    expect(files.filter(file=>file.endsWith('.svg')).sort()).toEqual(Object.values(ABILITY_ICON_FILES).sort());
     expect(manifest.formatVersion).toBe(2);
     expect(manifest.authoredWith).toContain("hand-authored SVG");
     expect(manifest.output.format).toBe("svg");

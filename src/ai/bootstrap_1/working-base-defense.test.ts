@@ -12,7 +12,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 it.each(cases)('regroups $version at the working hall when the birth mine is spent ($race, mirror=$mirrored)', ({ version, race, mirrored }) => {
   const x = (value: number) => mirrored ? 4096 - value : value;
   const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
-  const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+  const healer = 'priest';
   let scene = sketchScene('defend-income-after-birth-mine-empty').map('openClaims').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500, { id: 'birth-hall' }).goldMine('spent', x(788), 500, 0)

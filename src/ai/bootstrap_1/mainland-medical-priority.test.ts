@@ -10,7 +10,7 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ version, race, mirror })))))(
   '$version gives an existing mainland $race healer ownership of critical recovery (mirror=$mirror)', ({ version, race, mirror }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
-  const patientKind = race === 'grove' ? 'knight' : 'ashChieftain', healerKind = race === 'grove' ? 'priest' : 'emberAcolyte';
+  const patientKind = race === 'grove' ? 'knight' : 'ashChieftain', healerKind = 'priest';
   let scene = sketchScene('mainland-medical-priority').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500).townHall('foe', x(3500), 3500)
@@ -25,7 +25,7 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   const patient = game.units.find(unit => unit.id === 'patient')!;
   const first = planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version, memory, policyMode: 'combat' }, { teams: game.teams });
   expect(first.filter(entry => entry.scriptId === 'medicalRecovery')).toEqual([
-    { playerId: 'us', scriptId: 'medicalRecovery', command: { type: 'cast', unitId: 'healer', ability: race === 'grove' ? 'heal' : 'emberMend', targetId: patient.id } },
+    { playerId: 'us', scriptId: 'medicalRecovery', command: { type: 'cast', unitId: 'healer', ability: race === 'grove' ? 'heal' : 'heal', targetId: patient.id } },
   ]);
   expect(first.some(entry => entry.scriptId === 'v6Backline' && 'unitIds' in entry.command && entry.command.unitIds.includes('healer'))).toBe(false);
   issueCommandFrame(game, first);

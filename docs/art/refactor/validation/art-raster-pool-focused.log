@@ -1,0 +1,18 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/client/appearance-integration.test.ts (3 tests) 208ms
+ ✓ src/client/art/raster-cache.test.ts (10 tests) 2250ms
+   ✓ cropped artwork cache > preserves every pixel and the world anchor at original density 2195ms
+ ✓ src/client/art/shared-caster-skins.test.ts (3 tests) 284ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  12:20:17
+   Duration  3.10s (transform 1.63s, setup 0ms, collect 5.71s, tests 2.74s, environment 1ms, prepare 196ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

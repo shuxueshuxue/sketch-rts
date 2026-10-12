@@ -13,7 +13,7 @@ import { unitAttackDamageProfile } from "../shared/damage";
 import { unitClassOf, type UnitClass } from "../shared/unit-targeting";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "../shared/item-rules";
 import { BOOTS_SPEED, RING_REGEN_PER_SECOND, HEALING_SCROLL_RADIUS, HEALING_SCROLL_HEAL, IVORY_TOWER_REACH, SHOP_GOODS } from "../shared/shop";
-import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, trainingBuildingFor, trainableUnitsAt, canResearchAt, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
 import { aimingProfile } from "../shared/aiming";
 import { unitRegenPerSecond } from "../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
@@ -38,8 +38,9 @@ type I18n = ReturnType<typeof createI18n>;
 
 const DEFAULT_I18N = createI18n("en");
 
-export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
+export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, race?: RaceId): GameplayTooltip {
   const stats = UNIT_DEFS[kind];
+  const building = race ? trainingBuildingFor(race, kind) : undefined;
   return {
     title: labelKind(kind, i18n),
     body: TRAINED_UNIT_CARDS[kind].description[i18n.locale],
@@ -61,7 +62,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       ...(stats.weapon?.buildingMultiplier ? [i18n.locale === "zh" ? `对建筑伤害 ×${stats.weapon.buildingMultiplier}` : `Structure damage ×${stats.weapon.buildingMultiplier}`] : []),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
     ],
-    requirements: [...(stats.tier ? [tierRequirement(stats.tier, requiredSupplyCap(kind), i18n)] : []), ...(stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [])],
+    requirements: [...(building ? [localized(i18n.locale, `训练建筑：${labelKind(building, i18n)}`, `Trained at: ${labelKind(building, i18n)}`)] : []), ...(stats.tier ? [tierRequirement(stats.tier, requiredSupplyCap(kind), i18n)] : []), ...(stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [])],
     ...(aimingProfile(stats) ? { notes: [localized(i18n.locale, "先瞄准再射击；超过上次瞄准或射击站位的位移容错后重置准心，换目标可沿用准心位置。", "Aim before firing. Moving beyond the tolerance from the last aim or shot resets the reticle; switching targets can reuse its position.")] } : {}),
     hotkey: formatHotkey(hotkey),
   };
@@ -221,8 +222,8 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
 export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, race?: RaceId): GameplayTooltip {
   const def = BUILDING_DEFS[kind];
   const production = [
-    ...def.trains.filter(unitKind => !race || !UNIT_DEFS[unitKind].race || UNIT_DEFS[unitKind].race === race).map((unitKind) => labelKind(unitKind, i18n)),
-    ...def.researches.map((upgradeKind) => labelKind(upgradeKind, i18n)),
+    ...(race ? trainableUnitsAt(race, kind) : def.trains).map((unitKind) => labelKind(unitKind, i18n)),
+    ...def.researches.filter(upgradeKind => !race || canResearchAt(race, kind, upgradeKind)).map((upgradeKind) => labelKind(upgradeKind, i18n)),
   ];
   return {
     title: labelKind(kind, i18n),
@@ -431,8 +432,6 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     heal: [],
     summon: ["Target a point; a far one is walked to first."],
     curse: ["Target an enemy unit."],
-    emberMend: [],
-    cinderSoul: ["Target a point; a far one is walked to first."],
     ashCurse: ["Target an enemy unit."],
     charge: ["Target an enemy unit at least {min} away; a farther one is ridden up to first."],
     stomp: ["Cast by a granite golem on its own."],
@@ -447,8 +446,6 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     heal: [],
     summon: ["目标是一个点位，远了会先走过去。"],
     curse: ["目标必须是敌方单位。"],
-    emberMend: [],
-    cinderSoul: ["目标是一个点位，远了会先走过去。"],
     ashCurse: ["目标必须是敌方单位。"],
     charge: ["目标是至少 {min} 外的敌方单位，更远的会先骑过去再冲。"],
     stomp: ["花岗岩魔像自己施放。"],

@@ -6,10 +6,21 @@ import {defaultRigPortrait} from './sail-rig';
 type Face={points:number[];depth:number;ink:string;team:boolean;light:number};
 let geometry=new WeakMap<THREE.Object3D,{id:number;faces:Face[]}>(),serial=0;
 const images=new Map<string,HTMLCanvasElement>();
+const borrowed=new Map<HTMLCanvasElement,number>(),retired=new Set<HTMLCanvasElement>();
+function retire(canvas:HTMLCanvasElement){if(borrowed.has(canvas))retired.add(canvas);else canvas.width=canvas.height=1;}
+function retain(canvas:HTMLCanvasElement){borrowed.set(canvas,(borrowed.get(canvas)??0)+1);}
+function release(canvas:HTMLCanvasElement){const n=borrowed.get(canvas)??0;if(n>1){borrowed.set(canvas,n-1);return;}borrowed.delete(canvas);if(retired.delete(canvas))retire(canvas);}
+export function modelPortraitStats(){
+ const retained=new Set(images.values()),owned=new Set([...retained,...borrowed.keys(),...retired]);
+ const bytes=(canvases:Iterable<HTMLCanvasElement>)=>{let n=0;for(const canvas of canvases)n+=canvas.width*canvas.height*4;return n;};
+ return{entries:images.size,cacheBytes:bytes(retained),borrowedCanvases:borrowed.size,borrowedBytes:bytes(borrowed.keys()),retiredCanvases:retired.size,retiredBytes:bytes(retired),ownedCanvasBytes:bytes(owned)};
+}
 const sun=new THREE.Vector3(-.6,1,.6).normalize();
 
 /** Small, cached UI projections of the loaded GLB. This needs neither another
  * WebGL context nor a GPU readback and remains usable after context loss. */
+/** Borrowed for immediate consumption only, until the next call/clear.
+ * Production consumers use drawModelPortrait, which pins nested draws. */
 export function currentModelPortrait(key:string,color:string){
   const model=worldModels.portraitModel(key);if(!model)return undefined;
   let projectedModel=geometry.get(model);
@@ -45,13 +56,16 @@ export function currentModelPortrait(key:string,color:string){
   // Projection data follows the decoded object, so an explicit model reload
   // cannot reuse old geometry and releasing models also releases their faces.
   const id=`${projectedModel.id}:${color}`,cached=images.get(id);if(cached)return cached;
-  const canvas=createScratchCanvas(256,256),ctx=canvas.getContext('2d')!;
+  const canvas=createScratchCanvas(256,256);
+  try{
+  const ctx=canvas.getContext('2d')!;
   const team=new THREE.Color(color),teamInks=new Map<number,string>();
   for(const face of projectedModel.faces){const p=face.points;let ink=face.ink;
     if(face.team){ink=teamInks.get(face.light)??`#${team.clone().multiplyScalar(face.light).getHexString(THREE.SRGBColorSpace)}`;teamInks.set(face.light,ink);}
     ctx.fillStyle=ink;ctx.beginPath();ctx.moveTo(p[0]!,p[1]!);ctx.lineTo(p[2]!,p[3]!);ctx.lineTo(p[4]!,p[5]!);ctx.closePath();ctx.fill();
   }
-  if(images.size>=64)images.delete(images.keys().next().value!);images.set(id,canvas);return canvas;
+  if(images.size>=64){const oldest=images.keys().next().value!;const old=images.get(oldest)!;images.delete(oldest);retire(old);}images.set(id,canvas);return canvas;
+  }catch(error){retire(canvas);throw error;}
 }
-export function activateModelPortraits(){installModelPortraits(currentModelPortrait);}
-export function clearModelPortraits(){geometry=new WeakMap();images.clear();installModelPortraits(undefined);}
+export function activateModelPortraits(){installModelPortraits(Object.assign(currentModelPortrait,{retain,release}));}
+export function clearModelPortraits(){geometry=new WeakMap();for(const canvas of images.values())retire(canvas);images.clear();installModelPortraits(undefined);}

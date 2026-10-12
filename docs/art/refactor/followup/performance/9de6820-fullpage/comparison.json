@@ -1,0 +1,45 @@
+{
+  "allInputAndFinalPixelsEqual": true,
+  "before": {
+    "fenced": {
+      "meanMs": 5130.183333333116,
+      "p50Ms": 5409.699999999255,
+      "p95Ms": 5797.199999999255,
+      "maxMs": 5797.199999999255
+    },
+    "means": {
+      "dirtyLayers": 248,
+      "dirtyPages": 45.666666666666664,
+      "texSubImage3DCalls": 248,
+      "uploadBytes": 162998954.66666666,
+      "texSubImage3DMs": 4440.991666667163,
+      "requestedLayerUploadBytes": null,
+      "generateMipmapMs": 0.03333333320915699,
+      "rendererMs": 4447.066666666418,
+      "readbackMs": 488.5416666707024
+    }
+  },
+  "fullPage": {
+    "fenced": {
+      "meanMs": 5037.133333333302,
+      "p50Ms": 5296.699999999255,
+      "p95Ms": 5728.4000000003725,
+      "maxMs": 5728.4000000003725
+    },
+    "means": {
+      "dirtyLayers": 248,
+      "dirtyPages": 45.666666666666664,
+      "texSubImage3DCalls": 45.666666666666664,
+      "uploadBytes": 473781589.3333333,
+      "texSubImage3DMs": 4362.091666664618,
+      "requestedLayerUploadBytes": 162998954.66666666,
+      "generateMipmapMs": 0.12500000077610215,
+      "rendererMs": 4369.275000000062,
+      "readbackMs": 471.0666666692123
+    }
+  },
+  "interpretation": "Calls reduced but bytes increased; overall remains about 5s. This does not support full-page upload as material optimization.",
+  "notes": [
+    "Original profile did not record requestedLayerUploadBytes separately; actual original layer uploads establish that value (162998954.67 bytes/frame)."
+  ]
+}

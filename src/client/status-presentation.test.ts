@@ -17,6 +17,12 @@ function advance(game: ReturnType<typeof scene>, ticks: number) { for (let i = 0
 function statuses(game: ReturnType<typeof scene>, unit: Unit) { return presentUnitStatuses(snapshotGame(game), unit); }
 
 describe('focused unit status presentation', () => {
+  it('uses the shared summon ability icon for both factions',()=>{
+    for(const race of ['grove','ember'] as const){
+      const game=scene();game.players.player.race=race;const spirit=game.spawnUnit('player','spirit',800,800);spirit.expiresTick=game.tick+60;
+      expect(statuses(game,spirit).find(status=>status.type==='lifetime')).toMatchObject({icon:'summon',remainingTicks:60});
+    }
+  });
   it('follows a real veteran cast until expiry while leaving its longer cooldown in the command card', () => {
     const game = scene(), caster = game.spawnUnit('player', 'footman', 800, 800), target = game.spawnUnit('player', 'archer', 850, 800);
     caster.level = 3; caster.veteranSkillChoices = ['veteranRally', 'veteranMobility', 'veteranResilience'];

@@ -1,0 +1,93 @@
+{
+  "checks": {
+    "replay": true,
+    "visible": true,
+    "modes": true,
+    "cards": true,
+    "finalArt": true,
+    "decodedRGBA": true
+  },
+  "allChecks": true,
+  "fullCompletionWall": {
+    "meanMs": 5917.0583333329605,
+    "p50Ms": 5937.5999999996275,
+    "p95Ms": 6549.4000000003725,
+    "maxMs": 6549.4000000003725
+  },
+  "cpuSubmission": {
+    "meanMs": 694.8250000001863,
+    "p50Ms": 673.9000000003725,
+    "p95Ms": 951.8000000007451,
+    "maxMs": 951.8000000007451
+  },
+  "means": {
+    "readPixelMs": 5216.191666666574,
+    "trueGpuTailPolls": 3.3333333333333335,
+    "paintMs": 48.65833333025997,
+    "readbackMs": 464.7333333411564,
+    "boundsMs": 98.65833332839732,
+    "copyMs": 21.41666666340704,
+    "rendererMs": 38.74166666669771,
+    "texSubImage3DMs": 32.96666666694606,
+    "uploadBytes": 162998954.66666666,
+    "dirtyPages": 45.666666666666664,
+    "dirtyLayers": 248,
+    "generateMipmapMs": 0.07500000018626451,
+    "trueGpuTailMs": 5.774999999906868,
+    "textureInitSubmissionMs": null,
+    "textureInitTailMs": null,
+    "drawSubmissionMs": null,
+    "drawTailMs": null
+  },
+  "completionStatuses": [
+    {
+      "tick": 20,
+      "single": 37148
+    },
+    {
+      "tick": 21,
+      "single": 37148
+    },
+    {
+      "tick": 22,
+      "single": 37148
+    },
+    {
+      "tick": 23,
+      "single": 37148
+    },
+    {
+      "tick": 24,
+      "single": 37148
+    },
+    {
+      "tick": 25,
+      "single": 37148
+    },
+    {
+      "tick": 26,
+      "single": 37148
+    },
+    {
+      "tick": 27,
+      "single": 37148
+    },
+    {
+      "tick": 28,
+      "single": 37148
+    },
+    {
+      "tick": 29,
+      "single": 37148
+    },
+    {
+      "tick": 30,
+      "single": 37148
+    },
+    {
+      "tick": 31,
+      "single": 37148
+    }
+  ],
+  "note": "Asynchronous wait is a GPU-completion wall upper bound including scheduling overhead, not GPU duration. Instrumentation/CDP and deliberate serialization affect these diagnostic timings."
+}

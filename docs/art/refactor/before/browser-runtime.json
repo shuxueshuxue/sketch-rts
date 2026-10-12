@@ -1,0 +1,6221 @@
+{
+  "renderer": "Chromium SwiftShader",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "node": "v24.19.0",
+  "units": 280,
+  "ships": 24,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "sourceSha256": {
+    "scripts/browser-runtime-fixture.js": "826d58d2975324394824de1b1d46a69718584e2676ae9c8c1eef5ebc10e76bd8",
+    "scripts/browser-runtime-benchmark.mjs": "8be5794eccac97ad15d7a262e7386975f43d5d85e8440036bb365d13660b70d4",
+    "src/client/world3d/world-layer.ts": "94a0f7ceab09b9cedf498c06288e8a427a79c5345e2f22e2f2934ac89f2447fd",
+    "src/client/world3d/selection-markers.ts": "5fee0c25157f1ab13f3d6bc534eaaeb1da8ee9b9df39db96811fd1de8d32fd49",
+    "src/client/world3d/model-library.ts": "572bedeeb489af6ad8080f47a1e580cbb1398451f62d01b8ca91dc3557505b0a",
+    "src/client/world3d/model-portraits.ts": "0ecf433c697cca7402d1e352596e40513e73d7fcb876587ab266ae439622f445",
+    "src/client/resources.ts": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97",
+    "src/client/main.ts": "331f069b31bc73137270fa5fe345dcac35cfecb5aa4159bf42d4f78b52494f83",
+    "src/client/unit-hover-target.ts": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6"
+  },
+  "method": "Six cycles; ten real-WebGL hover-only cases per cycle for own/ally/enemy ground troops, deck crew and hulls plus sloped bridge crew, with per-instance position/color/height/stroke checks; real full-selection draws before/after CPU samples. 120 fixed-snapshot full-selection and 120 fresh-tick alternating-selection CPU draws per cycle; renderer.render disabled only during CPU timing, excluding GPU work. All disposed layer references retained intentionally to verify explicit release; GC requested through CDP. Teardown follows main.ts layer, request/decode, portrait and shared-model ordering. CPU samples are not device FPS.",
+  "errors": [],
+  "failed": [],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/warship.glb?v=593513fec359",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/transport.glb?v=716c2f1e694b",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/citadel.glb?v=665de87b71da",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+      "status": 200
+    }
+  ],
+  "cycles": [
+    {
+      "index": 0,
+      "homeMs": 105.10000000000582,
+      "matchMs": 61,
+      "staticCpu": {
+        "meanMs": 2.8416666666665455,
+        "p50Ms": 2.3000000000029104,
+        "p95Ms": 5.69999999999709,
+        "maxMs": 15.80000000000291
+      },
+      "updatedCpu": {
+        "meanMs": 3.380833333332824,
+        "p50Ms": 2.6999999999970896,
+        "p95Ms": 6.19999999999709,
+        "maxMs": 16.60000000000582
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 15462808,
+        "totalSize": 16539648,
+        "embedderHeapUsedSize": 772712,
+        "backingStorageSize": 13495781
+      }
+    },
+    {
+      "index": 1,
+      "homeMs": 0.19999999999708962,
+      "matchMs": 0,
+      "staticCpu": {
+        "meanMs": 2.574166666666497,
+        "p50Ms": 2.3999999999941792,
+        "p95Ms": 3.8999999999941792,
+        "maxMs": 7.19999999999709
+      },
+      "updatedCpu": {
+        "meanMs": 3.199999999999879,
+        "p50Ms": 2.7999999999883585,
+        "p95Ms": 6.2000000000116415,
+        "maxMs": 11
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 15713272,
+        "totalSize": 17063936,
+        "embedderHeapUsedSize": 651768,
+        "backingStorageSize": 13507633
+      }
+    },
+    {
+      "index": 2,
+      "homeMs": 0.19999999999708962,
+      "matchMs": 0,
+      "staticCpu": {
+        "meanMs": 2.913333333333503,
+        "p50Ms": 2.6000000000058208,
+        "p95Ms": 4.600000000005821,
+        "maxMs": 6.19999999999709
+      },
+      "updatedCpu": {
+        "meanMs": 3.5341666666669576,
+        "p50Ms": 3,
+        "p95Ms": 6.399999999994179,
+        "maxMs": 25.10000000000582
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 15946944,
+        "totalSize": 17850368,
+        "embedderHeapUsedSize": 694744,
+        "backingStorageSize": 13519485
+      }
+    },
+    {
+      "index": 3,
+      "homeMs": 0.3000000000029104,
+      "matchMs": 0,
+      "staticCpu": {
+        "meanMs": 2.4599999999998543,
+        "p50Ms": 2.3000000000029104,
+        "p95Ms": 3.3999999999941792,
+        "maxMs": 4.69999999999709
+      },
+      "updatedCpu": {
+        "meanMs": 3.2316666666669334,
+        "p50Ms": 2.8999999999941792,
+        "p95Ms": 4.900000000008731,
+        "maxMs": 10.799999999988358
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 16085164,
+        "totalSize": 16801792,
+        "embedderHeapUsedSize": 666952,
+        "backingStorageSize": 13531337
+      }
+    },
+    {
+      "index": 4,
+      "homeMs": 0,
+      "matchMs": 0.09999999999126885,
+      "staticCpu": {
+        "meanMs": 2.7116666666667393,
+        "p50Ms": 2.5,
+        "p95Ms": 3.8000000000029104,
+        "maxMs": 5.5
+      },
+      "updatedCpu": {
+        "meanMs": 3.0583333333323632,
+        "p50Ms": 2.8000000000029104,
+        "p95Ms": 4.5,
+        "maxMs": 7.900000000008731
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 16231300,
+        "totalSize": 17326080,
+        "embedderHeapUsedSize": 721128,
+        "backingStorageSize": 13543189
+      }
+    },
+    {
+      "index": 5,
+      "homeMs": 0.10000000000582077,
+      "matchMs": 0,
+      "staticCpu": {
+        "meanMs": 2.4108333333333576,
+        "p50Ms": 2.3000000000029104,
+        "p95Ms": 3.599999999991269,
+        "maxMs": 4.2999999999883585
+      },
+      "updatedCpu": {
+        "meanMs": 3.074999999999515,
+        "p50Ms": 2.8000000000029104,
+        "p95Ms": 4.80000000000291,
+        "maxMs": 6.69999999999709
+      },
+      "before": {
+        "owned": {
+          "positions": 280,
+          "templates": 14,
+          "bounds": 0,
+          "cards": 24,
+          "cardGeometry": 1,
+          "rigModels": 6,
+          "rigPoses": 24,
+          "deckMotion": 88,
+          "entities": 280,
+          "ships": 24,
+          "shipPoses": 24,
+          "gangwaySurfaces": 1,
+          "recoil": 0,
+          "actorBatches": 72,
+          "actorGeometries": 9,
+          "actorTextures": 24,
+          "selectionBatches": 7,
+          "selectionHulls": 6
+        },
+        "selection": {
+          "instances": 280,
+          "capacity": 280,
+          "batches": {
+            "hull:shipOfTheLine": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:warship": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:transport": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:cutter": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:carrier": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "hull:bombardShip": {
+              "instances": 4,
+              "capacity": 4,
+              "visible": true
+            },
+            "surface": {
+              "instances": 256,
+              "capacity": 256,
+              "visible": true
+            }
+          },
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": false
+        },
+        "transforms": 609,
+        "sceneChildren": 64,
+        "renderer": {
+          "memory": {
+            "geometries": 18,
+            "textures": 29
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "after": {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "renderer": {
+          "memory": {
+            "geometries": 0,
+            "textures": 1
+          },
+          "render": {
+            "frame": 12,
+            "calls": 89,
+            "triangles": 62892,
+            "points": 0,
+            "lines": 0
+          }
+        },
+        "sharedModels": 32,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      "interactionProofs": [
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "player",
+            "id": "unit-player-priest-1018",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "ally",
+            "id": "unit-ally-footman-1121",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "ground",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1122",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "player",
+            "id": "unit-player-worker-1001",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "ally",
+            "id": "unit-ally-worker-1006",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "deck",
+            "owner": "enemy",
+            "id": "unit-enemy-archer-1012",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "player",
+            "id": "unit-player-shipOfTheLine-1000",
+            "role": "own",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "ally",
+            "id": "unit-ally-warship-1005",
+            "role": "ally",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "hull",
+            "owner": "enemy",
+            "id": "unit-enemy-transport-1010",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 18,
+          "actualInstances": 19,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ],
+          "hover": {
+            "zone": "bridge",
+            "owner": "enemy",
+            "id": "unit-enemy-worker-1011",
+            "role": "enemy",
+            "selected": false
+          }
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        },
+        {
+          "selected": 280,
+          "actualInstances": 280,
+          "roles": [
+            "ally",
+            "enemy",
+            "own"
+          ],
+          "zones": [
+            "bridge",
+            "deck",
+            "ground",
+            "hull"
+          ]
+        }
+      ],
+      "markerResourcesBefore": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 0,
+          "live": 1
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 20,
+          "live": 7
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 0,
+          "live": 6
+        }
+      },
+      "markerResourcesAfter": {
+        "materials": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "surfaceGeometry": {
+          "allocated": 1,
+          "disposed": 1,
+          "live": 0
+        },
+        "instanceMeshes": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "instanceGeometry": {
+          "allocated": 27,
+          "disposed": 27,
+          "live": 0
+        },
+        "hullGeometry": {
+          "allocated": 6,
+          "disposed": 6,
+          "live": 0
+        }
+      },
+      "glError": 0,
+      "contextLost": true,
+      "resources": {
+        "entries": 33,
+        "requests": 0,
+        "decodedImages": 0,
+        "retainedRawBytes": 0,
+        "owned": {
+          "entries": 33,
+          "requests": 0,
+          "images": 0,
+          "decodedImages": 0,
+          "retainedBytes": 0,
+          "assetsByPath": 70,
+          "sizesByUrl": 70,
+          "assetsByStage": 1,
+          "controllers": 0,
+          "listeners": 0
+        },
+        "cacheStats": {
+          "requests": 0,
+          "images": 0,
+          "retainedBytes": 0,
+          "active": 0,
+          "queued": 0
+        },
+        "home": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            }
+          ],
+          "loaded": 3964344,
+          "total": 3964344,
+          "unknown": false,
+          "reused": 0,
+          "ready": 6,
+          "failed": 0
+        },
+        "match": {
+          "entries": [
+            {
+              "url": "/art/world3d/ships/shipOfTheLine.glb?v=02a62b049206",
+              "label": "ships/shipOfTheLine",
+              "phases": {},
+              "expected": 1260384,
+              "loaded": 1260384,
+              "state": "ready",
+              "elapsed": 60
+            },
+            {
+              "url": "/art/world3d/ships/warship.glb?v=593513fec359",
+              "label": "ships/warship",
+              "phases": {},
+              "expected": 555060,
+              "loaded": 555060,
+              "state": "ready",
+              "elapsed": 79.10000000000582
+            },
+            {
+              "url": "/art/world3d/ships/transport.glb?v=716c2f1e694b",
+              "label": "ships/transport",
+              "phases": {},
+              "expected": 455380,
+              "loaded": 455380,
+              "state": "ready",
+              "elapsed": 83.59999999999127
+            },
+            {
+              "url": "/art/world3d/ships/cutter.glb?v=7213f3328c5f",
+              "label": "ships/cutter",
+              "phases": {},
+              "expected": 461504,
+              "loaded": 461504,
+              "state": "ready",
+              "elapsed": 87.80000000000291
+            },
+            {
+              "url": "/art/world3d/ships/carrier.glb?v=2c5fd2f064a0",
+              "label": "ships/carrier",
+              "phases": {},
+              "expected": 784844,
+              "loaded": 784844,
+              "state": "ready",
+              "elapsed": 36
+            },
+            {
+              "url": "/art/world3d/ships/bombardShip.glb?v=ebec01416545",
+              "label": "ships/bombardShip",
+              "phases": {},
+              "expected": 447172,
+              "loaded": 447172,
+              "state": "ready",
+              "elapsed": 22.89999999999418
+            },
+            {
+              "url": "/art/world3d/ships/fireShip.glb?v=ca88041be6fb",
+              "label": "ships/fireShip",
+              "phases": {},
+              "expected": 454028,
+              "loaded": 454028,
+              "state": "ready",
+              "elapsed": 14.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/townHall.glb?v=93ee5f135484",
+              "label": "buildings/townHall",
+              "phases": {},
+              "expected": 25264,
+              "loaded": 25264,
+              "state": "ready",
+              "elapsed": 8.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/barracks.glb?v=b994d2e4aa6c",
+              "label": "buildings/barracks",
+              "phases": {},
+              "expected": 23768,
+              "loaded": 23768,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/archeryRange.glb?v=d1e536c9eee8",
+              "label": "buildings/archeryRange",
+              "phases": {},
+              "expected": 18996,
+              "loaded": 18996,
+              "state": "ready",
+              "elapsed": 11.19999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/stables.glb?v=ab29e7663c88",
+              "label": "buildings/stables",
+              "phases": {},
+              "expected": 23848,
+              "loaded": 23848,
+              "state": "ready",
+              "elapsed": 9.900000000008731
+            },
+            {
+              "url": "/art/world3d/buildings/sanctum.glb?v=401d9f11098c",
+              "label": "buildings/sanctum",
+              "phases": {},
+              "expected": 16052,
+              "loaded": 16052,
+              "state": "ready",
+              "elapsed": 10.200000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/workshop.glb?v=bfe13f0096c8",
+              "label": "buildings/workshop",
+              "phases": {},
+              "expected": 19380,
+              "loaded": 19380,
+              "state": "ready",
+              "elapsed": 9.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/defenseTower.glb?v=060ebcaa0463",
+              "label": "buildings/defenseTower",
+              "phases": {},
+              "expected": 10352,
+              "loaded": 10352,
+              "state": "ready",
+              "elapsed": 8.80000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/moonWell.glb?v=622e155445f4",
+              "label": "buildings/moonWell",
+              "phases": {},
+              "expected": 14156,
+              "loaded": 14156,
+              "state": "ready",
+              "elapsed": 9
+            },
+            {
+              "url": "/art/world3d/buildings/emberForge.glb?v=8d21f18651c5",
+              "label": "buildings/emberForge",
+              "phases": {},
+              "expected": 17264,
+              "loaded": 17264,
+              "state": "ready",
+              "elapsed": 8.10000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/cinderSpire.glb?v=70ef1db6d272",
+              "label": "buildings/cinderSpire",
+              "phases": {},
+              "expected": 10016,
+              "loaded": 10016,
+              "state": "ready",
+              "elapsed": 9.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/emberShrine.glb?v=987d5deca4da",
+              "label": "buildings/emberShrine",
+              "phases": {},
+              "expected": 9704,
+              "loaded": 9704,
+              "state": "ready",
+              "elapsed": 8.099999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/ashenHall.glb?v=48f9e7392440",
+              "label": "buildings/ashenHall",
+              "phases": {},
+              "expected": 19088,
+              "loaded": 19088,
+              "state": "ready",
+              "elapsed": 6.2000000000116415
+            },
+            {
+              "url": "/art/world3d/buildings/farm.glb?v=3182c8b01aa6",
+              "label": "buildings/farm",
+              "phases": {},
+              "expected": 17828,
+              "loaded": 17828,
+              "state": "ready",
+              "elapsed": 8.700000000011642
+            },
+            {
+              "url": "/art/world3d/buildings/shipyard.glb?v=ec7205378f9a",
+              "label": "buildings/shipyard",
+              "phases": {},
+              "expected": 60616,
+              "loaded": 60616,
+              "state": "ready",
+              "elapsed": 10.30000000000291
+            },
+            {
+              "url": "/art/world3d/buildings/citadel.glb?v=665de87b71da",
+              "label": "buildings/citadel",
+              "phases": {},
+              "expected": 45096,
+              "loaded": 45096,
+              "state": "ready",
+              "elapsed": 10.599999999991269
+            },
+            {
+              "url": "/art/world3d/buildings/shop.glb?v=7c1cf86b08b3",
+              "label": "buildings/shop",
+              "phases": {},
+              "expected": 25892,
+              "loaded": 25892,
+              "state": "ready",
+              "elapsed": 9.5
+            },
+            {
+              "url": "/art/world3d/buildings/camp.glb?v=a375f3a7a03a",
+              "label": "buildings/camp",
+              "phases": {},
+              "expected": 13272,
+              "loaded": 13272,
+              "state": "ready",
+              "elapsed": 8.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/well.glb?v=ab47bd9431e5",
+              "label": "buildings/well",
+              "phases": {},
+              "expected": 14016,
+              "loaded": 14016,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/statue.glb?v=8b95a8c21b19",
+              "label": "buildings/statue",
+              "phases": {},
+              "expected": 8760,
+              "loaded": 8760,
+              "state": "ready",
+              "elapsed": 7.899999999994179
+            },
+            {
+              "url": "/art/world3d/buildings/beacon.glb?v=3fdff226a8f1",
+              "label": "buildings/beacon",
+              "phases": {},
+              "expected": 10356,
+              "loaded": 10356,
+              "state": "ready",
+              "elapsed": 7.69999999999709
+            },
+            {
+              "url": "/art/world3d/buildings/fort-lance.glb?v=d80e39b20674",
+              "label": "buildings/fort-lance",
+              "phases": {},
+              "expected": 13120,
+              "loaded": 13120,
+              "state": "ready",
+              "elapsed": 7.100000000005821
+            },
+            {
+              "url": "/art/world3d/buildings/fort-flame.glb?v=700f907f4efb",
+              "label": "buildings/fort-flame",
+              "phases": {},
+              "expected": 14560,
+              "loaded": 14560,
+              "state": "ready",
+              "elapsed": 7
+            },
+            {
+              "url": "/art/world3d/buildings/fort-mortar.glb?v=66d3e6c42d2b",
+              "label": "buildings/fort-mortar",
+              "phases": {},
+              "expected": 16028,
+              "loaded": 16028,
+              "state": "ready",
+              "elapsed": 8.60000000000582
+            },
+            {
+              "url": "/art/world3d/buildings/fort-ward.glb?v=5c65535e2915",
+              "label": "buildings/fort-ward",
+              "phases": {},
+              "expected": 13872,
+              "loaded": 13872,
+              "state": "ready",
+              "elapsed": 8.39999999999418
+            },
+            {
+              "url": "/art/world3d/buildings/fort-wall.glb?v=9e049cef168a",
+              "label": "buildings/fort-wall",
+              "phases": {},
+              "expected": 8232,
+              "loaded": 8232,
+              "state": "ready",
+              "elapsed": 6.600000000005821
+            }
+          ],
+          "loaded": 4887908,
+          "total": 4887908,
+          "unknown": false,
+          "reused": 3964344,
+          "ready": 32,
+          "failed": 0
+        }
+      },
+      "heapAfterGc": {
+        "usedSize": 16383344,
+        "totalSize": 17850368,
+        "embedderHeapUsedSize": 682568,
+        "backingStorageSize": 13855756
+      }
+    }
+  ],
+  "teardown": {
+    "expectedModels": [
+      "buildings/archeryRange",
+      "buildings/ashenHall",
+      "buildings/barracks",
+      "buildings/beacon",
+      "buildings/camp",
+      "buildings/cinderSpire",
+      "buildings/citadel",
+      "buildings/defenseTower",
+      "buildings/emberForge",
+      "buildings/emberShrine",
+      "buildings/farm",
+      "buildings/fort-flame",
+      "buildings/fort-lance",
+      "buildings/fort-mortar",
+      "buildings/fort-wall",
+      "buildings/fort-ward",
+      "buildings/moonWell",
+      "buildings/sanctum",
+      "buildings/shipyard",
+      "buildings/shop",
+      "buildings/stables",
+      "buildings/statue",
+      "buildings/townHall",
+      "buildings/well",
+      "buildings/workshop",
+      "ships/bombardShip",
+      "ships/carrier",
+      "ships/cutter",
+      "ships/fireShip",
+      "ships/shipOfTheLine",
+      "ships/transport",
+      "ships/warship"
+    ],
+    "installedModels": {
+      "ships/shipOfTheLine": 1,
+      "ships/warship": 1,
+      "ships/transport": 1,
+      "ships/cutter": 1,
+      "ships/carrier": 1,
+      "ships/bombardShip": 1,
+      "buildings/townHall": 1,
+      "buildings/barracks": 1,
+      "buildings/archeryRange": 1,
+      "ships/fireShip": 1,
+      "buildings/stables": 1,
+      "buildings/sanctum": 1,
+      "buildings/workshop": 1,
+      "buildings/defenseTower": 1,
+      "buildings/moonWell": 1,
+      "buildings/emberForge": 1,
+      "buildings/cinderSpire": 1,
+      "buildings/emberShrine": 1,
+      "buildings/ashenHall": 1,
+      "buildings/farm": 1,
+      "buildings/shipyard": 1,
+      "buildings/citadel": 1,
+      "buildings/shop": 1,
+      "buildings/camp": 1,
+      "buildings/well": 1,
+      "buildings/statue": 1,
+      "buildings/beacon": 1,
+      "buildings/fort-lance": 1,
+      "buildings/fort-flame": 1,
+      "buildings/fort-mortar": 1,
+      "buildings/fort-ward": 1,
+      "buildings/fort-wall": 1
+    },
+    "sharedBefore": {
+      "models": 32,
+      "pending": 0,
+      "parts": 32
+    },
+    "sharedAfter": {
+      "models": 0,
+      "pending": 0,
+      "parts": 0
+    },
+    "portraitProviderCleared": true,
+    "resources": {
+      "entries": 0,
+      "requests": 0,
+      "decodedImages": 0,
+      "retainedRawBytes": 0,
+      "owned": {
+        "entries": 0,
+        "requests": 0,
+        "images": 0,
+        "decodedImages": 0,
+        "retainedBytes": 0,
+        "assetsByPath": 0,
+        "sizesByUrl": 0,
+        "assetsByStage": 0,
+        "controllers": 0,
+        "listeners": 0
+      },
+      "cacheStats": {
+        "requests": 0,
+        "images": 0,
+        "retainedBytes": 0,
+        "active": 0,
+        "queued": 0
+      },
+      "home": {
+        "entries": [],
+        "loaded": 0,
+        "total": 0,
+        "unknown": false,
+        "reused": 0,
+        "ready": 0,
+        "failed": 0
+      },
+      "match": {
+        "entries": [],
+        "loaded": 0,
+        "total": 0,
+        "unknown": false,
+        "reused": 0,
+        "ready": 0,
+        "failed": 0
+      }
+    },
+    "retainedDisposedLayers": 6,
+    "ownedMaps": [
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      },
+      {
+        "owned": {
+          "positions": 0,
+          "templates": 0,
+          "bounds": 0,
+          "cards": 0,
+          "cardGeometry": 0,
+          "rigModels": 0,
+          "rigPoses": 0,
+          "deckMotion": 0,
+          "entities": 0,
+          "ships": 0,
+          "shipPoses": 0,
+          "gangwaySurfaces": 0,
+          "recoil": 0,
+          "actorBatches": 0,
+          "actorGeometries": 0,
+          "actorTextures": 0,
+          "selectionBatches": 0,
+          "selectionHulls": 0
+        },
+        "selection": {
+          "instances": 0,
+          "capacity": 0,
+          "batches": {},
+          "depthTest": true,
+          "depthWrite": false,
+          "disposed": true
+        },
+        "transforms": 0,
+        "sceneChildren": 0,
+        "sharedModels": 0,
+        "installedModels": {
+          "ships/shipOfTheLine": 1,
+          "ships/warship": 1,
+          "ships/transport": 1,
+          "ships/cutter": 1,
+          "ships/carrier": 1,
+          "ships/bombardShip": 1,
+          "buildings/townHall": 1,
+          "buildings/barracks": 1,
+          "buildings/archeryRange": 1,
+          "ships/fireShip": 1,
+          "buildings/stables": 1,
+          "buildings/sanctum": 1,
+          "buildings/workshop": 1,
+          "buildings/defenseTower": 1,
+          "buildings/moonWell": 1,
+          "buildings/emberForge": 1,
+          "buildings/cinderSpire": 1,
+          "buildings/emberShrine": 1,
+          "buildings/ashenHall": 1,
+          "buildings/farm": 1,
+          "buildings/shipyard": 1,
+          "buildings/citadel": 1,
+          "buildings/shop": 1,
+          "buildings/camp": 1,
+          "buildings/well": 1,
+          "buildings/statue": 1,
+          "buildings/beacon": 1,
+          "buildings/fort-lance": 1,
+          "buildings/fort-flame": 1,
+          "buildings/fort-mortar": 1,
+          "buildings/fort-ward": 1,
+          "buildings/fort-wall": 1
+        }
+      }
+    ]
+  },
+  "heapAfterTeardown": {
+    "usedSize": 13321760,
+    "totalSize": 14442496,
+    "embedderHeapUsedSize": 636256,
+    "backingStorageSize": 9795509
+  },
+  "validation": {
+    "passed": true,
+    "violations": [],
+    "expectedModelCount": 32,
+    "modelHttpCounts": {
+      "ships/shipOfTheLine": 1,
+      "ships/warship": 1,
+      "ships/transport": 1,
+      "ships/cutter": 1,
+      "ships/carrier": 1,
+      "ships/bombardShip": 1,
+      "ships/fireShip": 1,
+      "buildings/townHall": 1,
+      "buildings/barracks": 1,
+      "buildings/archeryRange": 1,
+      "buildings/stables": 1,
+      "buildings/sanctum": 1,
+      "buildings/workshop": 1,
+      "buildings/defenseTower": 1,
+      "buildings/moonWell": 1,
+      "buildings/emberForge": 1,
+      "buildings/cinderSpire": 1,
+      "buildings/emberShrine": 1,
+      "buildings/ashenHall": 1,
+      "buildings/farm": 1,
+      "buildings/shipyard": 1,
+      "buildings/citadel": 1,
+      "buildings/shop": 1,
+      "buildings/camp": 1,
+      "buildings/well": 1,
+      "buildings/statue": 1,
+      "buildings/beacon": 1,
+      "buildings/fort-lance": 1,
+      "buildings/fort-flame": 1,
+      "buildings/fort-mortar": 1,
+      "buildings/fort-ward": 1,
+      "buildings/fort-wall": 1
+    }
+  }
+}

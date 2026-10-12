@@ -1,0 +1,5995 @@
+{
+  "trace": [
+    {
+      "tick": 0,
+      "gold": 500,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "economy",
+          "command": {
+            "type": "mine",
+            "unitIds": [
+              "scene-mercenary-expedition-rally-us-worker-1"
+            ],
+            "resourceId": "main"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "build",
+            "unitId": "scene-mercenary-expedition-rally-us-worker-3",
+            "buildingKind": "emberForge",
+            "x": 3476,
+            "y": 428
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "train",
+            "buildingId": "scene-mercenary-expedition-rally-us-cinderSpire-1",
+            "unitKind": "emberAcolyte"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "mercenaryControl",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "scout"
+            ],
+            "x": 1896,
+            "y": 700,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 15,
+      "gold": 205,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "economy",
+          "command": {
+            "type": "mine",
+            "unitIds": [
+              "scene-mercenary-expedition-rally-us-worker-2",
+              "scene-mercenary-expedition-rally-us-worker-4",
+              "scene-mercenary-expedition-rally-us-worker-5",
+              "scene-mercenary-expedition-rally-us-worker-6"
+            ],
+            "resourceId": "main"
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 160,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 30,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 145,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 45,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 130,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 115,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 75,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 100,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 90,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 85,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 105,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 70,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 120,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 55,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 135,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 40,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 150,
+      "gold": 205,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 25,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 165,
+      "gold": 215,
+      "entries": [],
+      "mercenaries": [],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1001",
+              "unitKind": "emberAcolyte",
+              "remaining": 10,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "bornAt": 175,
+      "unit": {
+        "id": "unit-us-emberAcolyte-1006",
+        "owner": "us",
+        "kind": "emberAcolyte",
+        "x": 3665.9152468109887,
+        "y": 834.4375868503495,
+        "homeX": 3664,
+        "homeY": 832,
+        "hp": 78,
+        "maxHp": 78,
+        "speed": 62,
+        "attackDamage": 6,
+        "attackRange": 192,
+        "attackCooldown": 36,
+        "cooldown": 0,
+        "radius": 16,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 3686,
+          "y": 860
+        },
+        "orderQueue": [],
+        "bodyRadius": 16,
+        "hands": {},
+        "gearMass": 0
+      }
+    },
+    {
+      "tick": 180,
+      "gold": 215,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "build",
+            "unitId": "scene-mercenary-expedition-rally-us-worker-1",
+            "buildingKind": "workshop",
+            "x": 3374,
+            "y": 600
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 195,
+      "gold": 20,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 210,
+      "gold": 20,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 225,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "economy",
+          "command": {
+            "type": "mine",
+            "unitIds": [
+              "scene-mercenary-expedition-rally-us-worker-3"
+            ],
+            "resourceId": "main"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 240,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 255,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 270,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 285,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 300,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 315,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 330,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 345,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "mercenaryControl",
+          "command": {
+            "type": "holdPosition",
+            "unitIds": [
+              "scout"
+            ]
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 360,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 375,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 390,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 405,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 420,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 435,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 450,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "economy",
+          "command": {
+            "type": "mine",
+            "unitIds": [
+              "scene-mercenary-expedition-rally-us-worker-1"
+            ],
+            "resourceId": "main"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 465,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 480,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 495,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 510,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 525,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 540,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 555,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 570,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 585,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 600,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 615,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 630,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 645,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 660,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 675,
+      "gold": 149,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 690,
+      "gold": 149,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 705,
+      "gold": 159,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 720,
+      "gold": 159,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "tick": 735,
+      "gold": 169,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "hire",
+            "campId": "cleared-camp"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [],
+      "queue": []
+    },
+    {
+      "bornAt": 736,
+      "unit": {
+        "id": "unit-us-mercenary-1049",
+        "owner": "us",
+        "kind": "mercenary",
+        "x": 1950,
+        "y": 700,
+        "homeX": 1950,
+        "homeY": 700,
+        "hp": 155,
+        "maxHp": 155,
+        "speed": 74,
+        "attackDamage": 28,
+        "attackRange": 62,
+        "attackCooldown": 18,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "bodyRadius": 18,
+        "hands": {},
+        "gearMass": 0
+      }
+    },
+    {
+      "tick": 750,
+      "gold": 9,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "mercenaryControl",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-mercenary-1049"
+            ],
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 1950,
+          "y": 700,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 765,
+      "gold": 9,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2005.4862255742187,
+          "y": 698.7643693908407,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 780,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2060.9751364643907,
+          "y": 697.6558397115972,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 795,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2111.2614185103516,
+          "y": 699.0848423035048,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 810,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2158.3383490927868,
+          "y": 708.7406279937647,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 825,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2213.8261587786933,
+          "y": 709.9030551353087,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 840,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2269.3163585082575,
+          "y": 710.9454888648112,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 855,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2324.808534865637,
+          "y": 711.8767441380271,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 870,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2380.3021831324986,
+          "y": 712.7156258920201,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 885,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2435.7970776070074,
+          "y": 713.4678911760341,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 900,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2491.2930060706612,
+          "y": 714.1398171498982,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 915,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2546.789725731714,
+          "y": 714.7427200680094,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 930,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2602.2870647905042,
+          "y": 715.2857805549589,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 945,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2657.784926393276,
+          "y": 715.7727425555724,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 960,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2713.283220320455,
+          "y": 716.2077068001305,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 975,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2768.6446684247503,
+          "y": 712.8460434639522,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 990,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2823.8361044147314,
+          "y": 707.0065914608408,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1005,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2879.087734478213,
+          "y": 701.7643954843154,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1020,
+      "gold": 99,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2934.389154069568,
+          "y": 697.0769396780381,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1035,
+      "gold": 99,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 2989.74678743171,
+          "y": 693.1413077937837,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1050,
+      "gold": 109,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3045.1970110750467,
+          "y": 690.8336610777415,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1065,
+      "gold": 109,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3100.682043112221,
+          "y": 689.5628592275317,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1080,
+      "gold": 119,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3155.400342247713,
+          "y": 683.7391664419728,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1095,
+      "gold": 119,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3209.466225575567,
+          "y": 671.4594397784323,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1110,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "train",
+            "buildingId": "building-us-emberForge-1003",
+            "unitKind": "ashWarden"
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3264.5103758692544,
+          "y": 664.4639729242717,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1125,
+      "gold": 9,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3319.882662943465,
+          "y": 660.7485778638825,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 165,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1140,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3374.6643855718203,
+          "y": 654.5880925557883,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 150,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1155,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3424.9982853232846,
+          "y": 638.7431218089785,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 135,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1170,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3451.087353700464,
+          "y": 595.479250318746,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 120,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1185,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3483.6879935576108,
+          "y": 552.4521858572704,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 105,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1200,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3521.41123493672,
+          "y": 511.7433777212748,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 90,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1215,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 75,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1230,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 60,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1245,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 45,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1260,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 30,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1275,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1071",
+              "unitKind": "ashWarden",
+              "remaining": 15,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "bornAt": 1290,
+      "unit": {
+        "id": "unit-us-ashWarden-1082",
+        "owner": "us",
+        "kind": "ashWarden",
+        "x": 3545.1641619630927,
+        "y": 410.07759548456914,
+        "homeX": 3543,
+        "homeY": 408,
+        "hp": 165,
+        "maxHp": 165,
+        "speed": 60,
+        "attackDamage": 15,
+        "attackRange": 52,
+        "attackCooldown": 23,
+        "cooldown": 0,
+        "radius": 19,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 3562,
+          "y": 492
+        },
+        "orderQueue": [],
+        "bodyRadius": 19,
+        "hands": {},
+        "gearMass": 0
+      }
+    },
+    {
+      "tick": 1290,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1305,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1320,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1335,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1350,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1365,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1380,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1395,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1410,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1425,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1440,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1455,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1470,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1485,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1500,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1515,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1530,
+      "gold": 149,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "train",
+            "buildingId": "scene-mercenary-expedition-rally-us-cinderSpire-1",
+            "unitKind": "emberAcolyte"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1545,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 160,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1560,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 145,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1575,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 130,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1590,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 115,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1605,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 100,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1620,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 85,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1635,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 70,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1650,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 55,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1665,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 40,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1680,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 25,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 1695,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "cinderSpire",
+          "queue": [
+            {
+              "id": "training-1099",
+              "unitKind": "emberAcolyte",
+              "remaining": 10,
+              "paidGold": 130
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "bornAt": 1705,
+      "unit": {
+        "id": "unit-us-emberAcolyte-1112",
+        "owner": "us",
+        "kind": "emberAcolyte",
+        "x": 3665.9152468109887,
+        "y": 834.4375868503495,
+        "homeX": 3664,
+        "homeY": 832,
+        "hp": 78,
+        "maxHp": 78,
+        "speed": 62,
+        "attackDamage": 6,
+        "attackRange": 192,
+        "attackCooldown": 36,
+        "cooldown": 0,
+        "radius": 16,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 3686,
+          "y": 860
+        },
+        "orderQueue": [],
+        "bodyRadius": 16,
+        "hands": {},
+        "gearMass": 0
+      }
+    },
+    {
+      "tick": 1710,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1725,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1740,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1755,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1770,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1785,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1800,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1815,
+      "gold": 109,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1830,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1845,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1860,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1875,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1890,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1905,
+      "gold": 139,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1920,
+      "gold": 149,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1935,
+      "gold": 149,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1950,
+      "gold": 159,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1965,
+      "gold": 159,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 1980,
+      "gold": 169,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "hire",
+            "campId": "cleared-camp"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "bornAt": 1981,
+      "unit": {
+        "id": "unit-us-mercenary-1138",
+        "owner": "us",
+        "kind": "mercenary",
+        "x": 1950,
+        "y": 700,
+        "homeX": 1950,
+        "homeY": 700,
+        "hp": 155,
+        "maxHp": 155,
+        "speed": 74,
+        "attackDamage": 28,
+        "attackRange": 62,
+        "attackCooldown": 18,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "bodyRadius": 18,
+        "hands": {},
+        "gearMass": 0
+      }
+    },
+    {
+      "tick": 1995,
+      "gold": 9,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "mercenaryControl",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "scout"
+            ],
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "mercenaryControl",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-mercenary-1138"
+            ],
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 1950,
+          "y": 700,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2010,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2005.4862255742187,
+          "y": 698.7643693908407,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2025,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2060.9751364643907,
+          "y": 697.6558397115972,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2040,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2116.466143982394,
+          "y": 696.6574910666194,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2055,
+      "gold": 29,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2171.958974672369,
+          "y": 695.7658822320491,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2070,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2227.4532000595505,
+          "y": 694.9659675773606,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2085,
+      "gold": 39,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2282.948517034436,
+          "y": 694.2455421552382,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2100,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2338.444754674615,
+          "y": 693.5996242203445,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2115,
+      "gold": 49,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2393.941777481819,
+          "y": 693.025046217892,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2130,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2449.4393588278044,
+          "y": 692.5073016854441,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2145,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2504.9374126958955,
+          "y": 692.0428721761994,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2160,
+      "gold": 59,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2560.4358353846487,
+          "y": 691.6246540520146,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2175,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2615.934587288077,
+          "y": 691.2526215954554,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2190,
+      "gold": 69,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2671.4335730834364,
+          "y": 690.9174044977186,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2205,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3583.711116960752,
+            "y": 508.2612749861493
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2726.924765544629,
+          "y": 690.3904387088028,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2220,
+      "gold": 79,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3586.899131836077,
+            "y": 506.4943264422997
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2782.3118253520065,
+          "y": 686.8532923393068,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2235,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3590.9574170613646,
+            "y": 503.8434979259716
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2837.7208533670914,
+          "y": 683.6789399110348,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2250,
+      "gold": 89,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3594.837540252831,
+            "y": 500.94820665566607
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2893.1475938162566,
+          "y": 680.8304811608924,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2265,
+      "gold": 99,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1006"
+            ],
+            "x": 3555.0819289246756,
+            "y": 524.468828673948
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 2948.5778420474517,
+          "y": 678.7397132741005,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2280,
+      "gold": 99,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3003.920241038949,
+          "y": 682.8617769691672,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2295,
+      "gold": 109,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3059.3702688515395,
+          "y": 685.1560457871619,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2310,
+      "gold": 109,
+      "entries": [],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3114.8545482599966,
+          "y": 686.448106907984,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2325,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3588.780119534392,
+            "y": 506.0178769240038
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3169.139334952931,
+          "y": 677.8842593214557,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2340,
+      "gold": 119,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3223.7942395656232,
+          "y": 668.3555519732342,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2355,
+      "gold": 129,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Economy",
+          "command": {
+            "type": "train",
+            "buildingId": "building-us-emberForge-1003",
+            "unitKind": "ashWarden"
+          }
+        },
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3279.0059975629524,
+          "y": 662.855208354528,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": []
+    },
+    {
+      "tick": 2370,
+      "gold": 9,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3334.4157264642813,
+          "y": 659.749523949203,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1164",
+              "unitKind": "ashWarden",
+              "remaining": 165,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 2385,
+      "gold": 19,
+      "entries": [
+        {
+          "playerId": "us",
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-us-emberAcolyte-1112"
+            ],
+            "x": 3596,
+            "y": 500
+          }
+        }
+      ],
+      "mercenaries": [
+        {
+          "id": "unit-us-mercenary-1049",
+          "x": 3528.9558832125426,
+          "y": 503.60161609407567,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-us-mercenary-1138",
+          "x": 3388.557493010388,
+          "y": 650.0189386997577,
+          "order": {
+            "type": "move",
+            "x": 3596,
+            "y": 500,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "queue": [
+        {
+          "kind": "emberForge",
+          "queue": [
+            {
+              "id": "training-1164",
+              "unitKind": "ashWarden",
+              "remaining": 150,
+              "paidGold": 120
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "final": {
+    "gold": 19,
+    "paid": 320,
+    "travelers": [
+      "scout"
+    ],
+    "mercenaries": [
+      {
+        "id": "unit-us-mercenary-1049",
+        "x": 3528.9558832125426,
+        "y": 503.60161609407567,
+        "order": {
+          "type": "idle"
+        }
+      },
+      {
+        "id": "unit-us-mercenary-1138",
+        "x": 3433.9035885517446,
+        "y": 626.9800462967289,
+        "order": {
+          "type": "move",
+          "x": 3596,
+          "y": 500,
+          "avoidCombat": true
+        }
+      }
+    ]
+  },
+  "units": [
+    {
+      "id": "scout",
+      "owner": "us",
+      "kind": "emberRavager",
+      "x": 3504.9143610748743,
+      "y": 531.4945036354181,
+      "homeX": 3446,
+      "homeY": 600,
+      "hp": 118,
+      "maxHp": 118,
+      "speed": 76,
+      "attackDamage": 20,
+      "attackRange": 52,
+      "attackCooldown": 25,
+      "cooldown": 0,
+      "radius": 18,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "arrivedAt": {
+        "x": 3596,
+        "y": 500
+      },
+      "bodyRadius": 18,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-1",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3515.6501428670495,
+      "y": 496.35701503742007,
+      "homeX": 3536,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 10,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "return",
+        "timer": 0
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-2",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3349.9562210251834,
+      "y": 499.2639259469268,
+      "homeX": 3514,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "gather",
+        "timer": 35
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-3",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3424.9446816759355,
+      "y": 497.94833891796594,
+      "homeX": 3492,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 10,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "return",
+        "timer": 0
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-4",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3349.996983264935,
+      "y": 499.26321081991364,
+      "homeX": 3470,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "gather",
+        "timer": 5
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-5",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3442.9952706956265,
+      "y": 497.6316619176209,
+      "homeX": 3448,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "toMine",
+        "timer": 0
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-worker-6",
+      "owner": "us",
+      "kind": "worker",
+      "x": 3353.009117914724,
+      "y": 499.2103663523735,
+      "homeX": 3426,
+      "homeY": 500,
+      "hp": 70,
+      "maxHp": 70,
+      "speed": 60,
+      "attackDamage": 10,
+      "attackRange": 36,
+      "attackCooldown": 34,
+      "cooldown": 0,
+      "radius": 15,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "mine",
+        "resourceId": "main",
+        "phase": "toMine",
+        "timer": 0
+      },
+      "orderQueue": [],
+      "bodyRadius": 15,
+      "hands": {},
+      "gearMass": 0,
+      "mineSlot": "main"
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-1",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3643.2881639418283,
+      "y": 598.7294616636805,
+      "homeX": 3596,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-2",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3556.2349842857625,
+      "y": 544,
+      "homeX": 3582,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-3",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3550.1133184850246,
+      "y": 599.5716598383972,
+      "homeX": 3568,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-4",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3486.416497098776,
+      "y": 603.7756513892257,
+      "homeX": 3554,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-5",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3581.898456330709,
+      "y": 603.2736879488833,
+      "homeX": 3540,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-sparkArcher-6",
+      "owner": "us",
+      "kind": "sparkArcher",
+      "x": 3518.113862372966,
+      "y": 599.3850893893758,
+      "homeX": 3526,
+      "homeY": 600,
+      "hp": 85,
+      "maxHp": 85,
+      "speed": 63,
+      "attackDamage": 9,
+      "attackRange": 288,
+      "attackCooldown": 27,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "unit-us-emberAcolyte-1006",
+      "owner": "us",
+      "kind": "emberAcolyte",
+      "x": 3621.4255416873098,
+      "y": 544.0012211209824,
+      "homeX": 3664,
+      "homeY": 832,
+      "hp": 78,
+      "maxHp": 78,
+      "speed": 62,
+      "attackDamage": 6,
+      "attackRange": 192,
+      "attackCooldown": 36,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "arrivedAt": {
+        "x": 3555.0819289246756,
+        "y": 524.468828673948
+      },
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "unit-us-mercenary-1049",
+      "owner": "us",
+      "kind": "mercenary",
+      "x": 3528.9558832125426,
+      "y": 503.60161609407567,
+      "homeX": 1950,
+      "homeY": 700,
+      "hp": 155,
+      "maxHp": 155,
+      "speed": 74,
+      "attackDamage": 28,
+      "attackRange": 62,
+      "attackCooldown": 18,
+      "cooldown": 0,
+      "radius": 18,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "arrivedAt": {
+        "x": 3596,
+        "y": 500
+      },
+      "bodyRadius": 18,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "unit-us-ashWarden-1082",
+      "owner": "us",
+      "kind": "ashWarden",
+      "x": 3544.138041274837,
+      "y": 454.57878346136397,
+      "homeX": 3543,
+      "homeY": 408,
+      "hp": 165,
+      "maxHp": 165,
+      "speed": 60,
+      "attackDamage": 15,
+      "attackRange": 52,
+      "attackCooldown": 23,
+      "cooldown": 0,
+      "radius": 19,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "arrivedAt": {
+        "x": 3562,
+        "y": 492
+      },
+      "bodyRadius": 19,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "unit-us-emberAcolyte-1112",
+      "owner": "us",
+      "kind": "emberAcolyte",
+      "x": 3596.113746475941,
+      "y": 563.5796026469852,
+      "homeX": 3664,
+      "homeY": 832,
+      "hp": 78,
+      "maxHp": 78,
+      "speed": 62,
+      "attackDamage": 6,
+      "attackRange": 192,
+      "attackCooldown": 36,
+      "cooldown": 0,
+      "radius": 16,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "arrivedAt": {
+        "x": 3596,
+        "y": 500
+      },
+      "bodyRadius": 16,
+      "hands": {},
+      "gearMass": 0
+    },
+    {
+      "id": "unit-us-mercenary-1138",
+      "owner": "us",
+      "kind": "mercenary",
+      "x": 3433.9035885517446,
+      "y": 626.9800462967289,
+      "homeX": 1950,
+      "homeY": 700,
+      "hp": 155,
+      "maxHp": 155,
+      "speed": 74,
+      "attackDamage": 28,
+      "attackRange": 62,
+      "attackCooldown": 18,
+      "cooldown": 0,
+      "radius": 18,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "move",
+        "x": 3596,
+        "y": 500,
+        "avoidCombat": true
+      },
+      "orderQueue": [],
+      "bodyRadius": 18,
+      "hands": {},
+      "gearMass": 0
+    }
+  ],
+  "buildings": [
+    {
+      "id": "scene-mercenary-expedition-rally-us-townHall-1",
+      "owner": "us",
+      "kind": "townHall",
+      "x": 3596,
+      "y": 500,
+      "hp": 900,
+      "maxHp": 900,
+      "radius": 48,
+      "complete": true,
+      "buildProgress": 560,
+      "buildTime": 560,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3686,
+      "rallyY": 560,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-peer-townHall-1",
+      "owner": "peer",
+      "kind": "townHall",
+      "x": 596,
+      "y": 3500,
+      "hp": 900,
+      "maxHp": 900,
+      "radius": 48,
+      "complete": true,
+      "buildProgress": 560,
+      "buildTime": 560,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 686,
+      "rallyY": 3560,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-1",
+      "owner": "us",
+      "kind": "farm",
+      "x": 3696,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3786,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-2",
+      "owner": "us",
+      "kind": "farm",
+      "x": 3760,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3850,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-3",
+      "owner": "us",
+      "kind": "farm",
+      "x": 3824,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3914,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-4",
+      "owner": "us",
+      "kind": "farm",
+      "x": 3888,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3978,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-5",
+      "owner": "us",
+      "kind": "farm",
+      "x": 3952,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 4042,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-6",
+      "owner": "us",
+      "kind": "farm",
+      "x": 4016,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 4106,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-farm-7",
+      "owner": "us",
+      "kind": "farm",
+      "x": 4080,
+      "y": 1000,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 4170,
+      "rallyY": 1060,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-mercenary-expedition-rally-us-cinderSpire-1",
+      "owner": "us",
+      "kind": "cinderSpire",
+      "x": 3596,
+      "y": 800,
+      "hp": 500,
+      "maxHp": 500,
+      "radius": 38,
+      "complete": true,
+      "buildProgress": 215,
+      "buildTime": 215,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3686,
+      "rallyY": 860,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "building-us-emberForge-1003",
+      "owner": "us",
+      "kind": "emberForge",
+      "x": 3472,
+      "y": 432,
+      "hp": 560,
+      "maxHp": 560,
+      "radius": 40,
+      "complete": true,
+      "buildProgress": 210,
+      "buildTime": 210,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3562,
+      "rallyY": 492,
+      "queue": [
+        {
+          "id": "training-1164",
+          "unitKind": "ashWarden",
+          "remaining": 135,
+          "paidGold": 120
+        }
+      ],
+      "researchQueue": []
+    },
+    {
+      "id": "building-us-workshop-1008",
+      "owner": "us",
+      "kind": "workshop",
+      "x": 3376,
+      "y": 592,
+      "hp": 580,
+      "maxHp": 580,
+      "radius": 42,
+      "complete": true,
+      "buildProgress": 250,
+      "buildTime": 250,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 3466,
+      "rallyY": 652,
+      "queue": [],
+      "researchQueue": []
+    }
+  ]
+}

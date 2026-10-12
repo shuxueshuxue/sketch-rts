@@ -1,0 +1,700 @@
+{
+  "suite": "shared-units",
+  "origin": "http://127.0.0.1:34615",
+  "startedAt": "2026-10-11T14:23:44.279Z",
+  "screenshots": [
+    "gameplay-map-selection.png",
+    "gameplay-room-setup.png",
+    "gameplay-started.png",
+    "gameplay-grove-priest-menu.png",
+    "gameplay-grove-priest-queue.png",
+    "gameplay-grove-summoner-menu.png",
+    "gameplay-grove-summoner-queue.png",
+    "gameplay-grove-priest-world-selection.png",
+    "gameplay-grove-summoner-world-selection.png",
+    "gameplay-grove-foreign-building.png",
+    "gameplay-ember-priest-menu.png",
+    "gameplay-ember-priest-queue.png",
+    "gameplay-ember-summoner-menu.png",
+    "gameplay-ember-summoner-queue.png",
+    "gameplay-ember-priest-world-selection.png",
+    "gameplay-ember-summoner-world-selection.png",
+    "gameplay-ember-foreign-building.png"
+  ],
+  "steps": [
+    {
+      "step": "select-map",
+      "state": {
+        "url": "http://127.0.0.1:34615/?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "selected": "pineshade"
+      }
+    },
+    {
+      "step": "start-match",
+      "status": "inMatch",
+      "mapId": "pineshade"
+    },
+    {
+      "step": "shared-units-grove",
+      "producer": "sanctum",
+      "spawned": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "maxHp": 90,
+          "attackDamage": 7
+        },
+        {
+          "id": "unit-player-summoner-1003",
+          "kind": "summoner",
+          "maxHp": 95,
+          "attackDamage": 8
+        }
+      ],
+      "completedTick": 653
+    },
+    {
+      "step": "shared-units-ember",
+      "producer": "cinderSpire",
+      "spawned": [
+        {
+          "id": "unit-player-priest-1001",
+          "kind": "priest",
+          "maxHp": 90,
+          "attackDamage": 7
+        },
+        {
+          "id": "unit-player-summoner-1003",
+          "kind": "summoner",
+          "maxHp": 95,
+          "attackDamage": 8
+        }
+      ],
+      "completedTick": 704
+    }
+  ],
+  "errors": [],
+  "commands": [
+    {
+      "type": "command",
+      "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+      "playerId": "player",
+      "clientSeq": 0,
+      "command": {
+        "type": "train",
+        "buildingId": "grove-priest-producer",
+        "unitKind": "priest"
+      },
+      "epoch": 2
+    },
+    {
+      "type": "command",
+      "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+      "playerId": "player",
+      "clientSeq": 1,
+      "command": {
+        "type": "train",
+        "buildingId": "grove-summoner-producer",
+        "unitKind": "summoner"
+      },
+      "epoch": 2
+    },
+    {
+      "type": "command",
+      "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+      "playerId": "player",
+      "clientSeq": 0,
+      "command": {
+        "type": "train",
+        "buildingId": "ember-priest-producer",
+        "unitKind": "priest"
+      },
+      "epoch": 4
+    },
+    {
+      "type": "command",
+      "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+      "playerId": "player",
+      "clientSeq": 1,
+      "command": {
+        "type": "train",
+        "buildingId": "ember-summoner-producer",
+        "unitKind": "summoner"
+      },
+      "epoch": 4
+    }
+  ],
+  "harnessAdjustments": [
+    "DOM controls invoke their native click handlers atomically; map Canvas uses CDP pointer input.",
+    "Hide pointer-lock invitation overlay after match entry (same adjustment as existing room UI proofs).",
+    "Seed a local authoritative bareDuel scenario through existing reset API after completing real map/setup/start UI.",
+    "Shared-unit suite seeds ordinary complete buildings and 10 farms on legal open ground; initial gold is the server default with the existing reset API; training runs at the normal simulation tick rate."
+  ],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+  "sharedUnits": {
+    "catalog": [
+      "worker",
+      "footman",
+      "archer",
+      "horseArcher",
+      "raider",
+      "lancer",
+      "ashWarden",
+      "emberRavager",
+      "cinderRunner",
+      "sparkArcher",
+      "ashHexer",
+      "knight",
+      "priest",
+      "summoner",
+      "witch",
+      "golem",
+      "ashChieftain",
+      "cinderRevenant",
+      "spirit",
+      "mercenary",
+      "contractArcher",
+      "fieldMedic",
+      "wildling",
+      "mossGnawer",
+      "thornSlinger",
+      "barkMender",
+      "stonebackBrute",
+      "gladeWitch",
+      "transport",
+      "warship",
+      "shipOfTheLine",
+      "cutter",
+      "bombardShip",
+      "fireShip",
+      "carrier",
+      "siegeRam",
+      "ballista",
+      "catapult",
+      "organGun",
+      "ancientStag",
+      "murlocPeon",
+      "murlocHunter",
+      "tidePriest",
+      "deepSnapper",
+      "rubbleGolem",
+      "rockGolem",
+      "graniteGolem",
+      "ogreWarrior",
+      "ogreMage",
+      "ogreLord",
+      "spiderling",
+      "venomSpider",
+      "spiderQueen",
+      "dragonWhelp",
+      "redDragon"
+    ],
+    "byRace": {
+      "grove": {
+        "race": "grove",
+        "producer": "sanctum",
+        "initialGold": 500,
+        "placement": [
+          {
+            "x": 1488,
+            "y": 1424,
+            "kind": "sanctum"
+          },
+          {
+            "x": 2256,
+            "y": 1488,
+            "kind": "sanctum"
+          },
+          {
+            "x": 1360,
+            "y": 2512,
+            "kind": "cinderSpire"
+          },
+          {
+            "x": 1216,
+            "y": 1408,
+            "kind": "farm"
+          },
+          {
+            "x": 1408,
+            "y": 1152,
+            "kind": "farm"
+          },
+          {
+            "x": 1344,
+            "y": 1664,
+            "kind": "farm"
+          },
+          {
+            "x": 1664,
+            "y": 1216,
+            "kind": "farm"
+          },
+          {
+            "x": 1152,
+            "y": 1088,
+            "kind": "farm"
+          },
+          {
+            "x": 1728,
+            "y": 1536,
+            "kind": "farm"
+          },
+          {
+            "x": 1984,
+            "y": 1600,
+            "kind": "farm"
+          },
+          {
+            "x": 960,
+            "y": 1920,
+            "kind": "farm"
+          },
+          {
+            "x": 896,
+            "y": 896,
+            "kind": "farm"
+          },
+          {
+            "x": 1216,
+            "y": 704,
+            "kind": "farm"
+          }
+        ],
+        "startedTick": 27,
+        "menu": [
+          {
+            "buildingId": "grove-priest-producer",
+            "commands": [
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Witch",
+                "hotkey": "C",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          },
+          {
+            "buildingId": "grove-summoner-producer",
+            "commands": [
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Witch",
+                "hotkey": "C",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          }
+        ],
+        "training": [
+          {
+            "kind": "priest",
+            "job": {
+              "id": "training-1000",
+              "unitKind": "priest",
+              "remaining": 184,
+              "paidGold": 135
+            }
+          },
+          {
+            "kind": "summoner",
+            "job": {
+              "id": "training-1002",
+              "unitKind": "summoner",
+              "remaining": 208,
+              "paidGold": 180
+            }
+          }
+        ],
+        "rejections": [
+          {
+            "kind": "priest",
+            "status": 400,
+            "error": "Hosted command rejected: cinderSpire cannot train priest for grove"
+          },
+          {
+            "kind": "summoner",
+            "status": 400,
+            "error": "Hosted command rejected: cinderSpire cannot train summoner for grove"
+          },
+          {
+            "kind": "emberAcolyte",
+            "status": 400,
+            "error": "Malformed room command"
+          },
+          {
+            "kind": "pyreCaller",
+            "status": 400,
+            "error": "Malformed room command"
+          }
+        ],
+        "portraits": {
+          "priest-command": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+          "priest-queue": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+          "summoner-command": "ab63e1331d9b9898e9f75761f8b90f98fff9902f70192fe804dd672856984a61",
+          "summoner-queue": "ab63e1331d9b9898e9f75761f8b90f98fff9902f70192fe804dd672856984a61",
+          "priest-selection": "3e8443787e5fddaaf5a42034a722d851fb341ad22b574bdfb518a9ad094fce49",
+          "summoner-selection": "437960a8cf46508d613595e761e0111caee4c9918a7825bffdc325eee79f1de9"
+        },
+        "completedTick": 653,
+        "goldAfterTraining": 185,
+        "spawned": [
+          {
+            "id": "unit-player-priest-1001",
+            "kind": "priest",
+            "maxHp": 90,
+            "attackDamage": 7
+          },
+          {
+            "id": "unit-player-summoner-1003",
+            "kind": "summoner",
+            "maxHp": 95,
+            "attackDamage": 8
+          }
+        ]
+      },
+      "ember": {
+        "race": "ember",
+        "producer": "cinderSpire",
+        "initialGold": 500,
+        "placement": [
+          {
+            "x": 1488,
+            "y": 1424,
+            "kind": "cinderSpire"
+          },
+          {
+            "x": 2256,
+            "y": 1488,
+            "kind": "cinderSpire"
+          },
+          {
+            "x": 1360,
+            "y": 2512,
+            "kind": "sanctum"
+          },
+          {
+            "x": 1216,
+            "y": 1408,
+            "kind": "farm"
+          },
+          {
+            "x": 1408,
+            "y": 1152,
+            "kind": "farm"
+          },
+          {
+            "x": 1344,
+            "y": 1664,
+            "kind": "farm"
+          },
+          {
+            "x": 1664,
+            "y": 1216,
+            "kind": "farm"
+          },
+          {
+            "x": 1152,
+            "y": 1088,
+            "kind": "farm"
+          },
+          {
+            "x": 1728,
+            "y": 1536,
+            "kind": "farm"
+          },
+          {
+            "x": 1984,
+            "y": 1600,
+            "kind": "farm"
+          },
+          {
+            "x": 960,
+            "y": 1920,
+            "kind": "farm"
+          },
+          {
+            "x": 896,
+            "y": 896,
+            "kind": "farm"
+          },
+          {
+            "x": 1216,
+            "y": 704,
+            "kind": "farm"
+          }
+        ],
+        "startedTick": 14,
+        "menu": [
+          {
+            "buildingId": "ember-priest-producer",
+            "commands": [
+              {
+                "label": "Train Spark Archer",
+                "hotkey": "A",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Ash Hexer",
+                "hotkey": "X",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Mobility Training",
+                "hotkey": "M",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Range Training",
+                "hotkey": "R",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          },
+          {
+            "buildingId": "ember-summoner-producer",
+            "commands": [
+              {
+                "label": "Train Spark Archer",
+                "hotkey": "A",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Ash Hexer",
+                "hotkey": "X",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Mobility Training",
+                "hotkey": "M",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Range Training",
+                "hotkey": "R",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          }
+        ],
+        "training": [
+          {
+            "kind": "priest",
+            "job": {
+              "id": "training-1000",
+              "unitKind": "priest",
+              "remaining": 184,
+              "paidGold": 135
+            }
+          },
+          {
+            "kind": "summoner",
+            "job": {
+              "id": "training-1002",
+              "unitKind": "summoner",
+              "remaining": 208,
+              "paidGold": 180
+            }
+          }
+        ],
+        "rejections": [
+          {
+            "kind": "priest",
+            "status": 400,
+            "error": "Hosted command rejected: sanctum cannot train priest for ember"
+          },
+          {
+            "kind": "summoner",
+            "status": 400,
+            "error": "Hosted command rejected: sanctum cannot train summoner for ember"
+          },
+          {
+            "kind": "emberAcolyte",
+            "status": 400,
+            "error": "Malformed room command"
+          },
+          {
+            "kind": "pyreCaller",
+            "status": 400,
+            "error": "Malformed room command"
+          }
+        ],
+        "portraits": {
+          "priest-command": "81861317003fa8b3c90496a3889a62ef65696f1071e0d1fe782af93e18e9f6df",
+          "priest-queue": "81861317003fa8b3c90496a3889a62ef65696f1071e0d1fe782af93e18e9f6df",
+          "summoner-command": "4f132cbcfbcedfe5594ed91d51af7de59c5f5cbd349e42628f13a6b99560920f",
+          "summoner-queue": "4f132cbcfbcedfe5594ed91d51af7de59c5f5cbd349e42628f13a6b99560920f",
+          "priest-selection": "28ad7f0182c9e4ac65d1e6a858e7098a9adb0885f616f4f1777aec49c81c591c",
+          "summoner-selection": "df1bb3dfb951ff81f31e940fef8835c23822fa0580235d7e5ff6e983758312a2"
+        },
+        "completedTick": 704,
+        "goldAfterTraining": 185,
+        "spawned": [
+          {
+            "id": "unit-player-priest-1001",
+            "kind": "priest",
+            "maxHp": 90,
+            "attackDamage": 7
+          },
+          {
+            "id": "unit-player-summoner-1003",
+            "kind": "summoner",
+            "maxHp": 95,
+            "attackDamage": 8
+          }
+        ]
+      }
+    },
+    "artworkHashes": {
+      "priest-command": {
+        "grove": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+        "ember": "81861317003fa8b3c90496a3889a62ef65696f1071e0d1fe782af93e18e9f6df",
+        "different": true
+      },
+      "priest-queue": {
+        "grove": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+        "ember": "81861317003fa8b3c90496a3889a62ef65696f1071e0d1fe782af93e18e9f6df",
+        "different": true
+      },
+      "priest-selection": {
+        "grove": "3e8443787e5fddaaf5a42034a722d851fb341ad22b574bdfb518a9ad094fce49",
+        "ember": "28ad7f0182c9e4ac65d1e6a858e7098a9adb0885f616f4f1777aec49c81c591c",
+        "different": true
+      },
+      "summoner-command": {
+        "grove": "ab63e1331d9b9898e9f75761f8b90f98fff9902f70192fe804dd672856984a61",
+        "ember": "4f132cbcfbcedfe5594ed91d51af7de59c5f5cbd349e42628f13a6b99560920f",
+        "different": true
+      },
+      "summoner-queue": {
+        "grove": "ab63e1331d9b9898e9f75761f8b90f98fff9902f70192fe804dd672856984a61",
+        "ember": "4f132cbcfbcedfe5594ed91d51af7de59c5f5cbd349e42628f13a6b99560920f",
+        "different": true
+      },
+      "summoner-selection": {
+        "grove": "437960a8cf46508d613595e761e0111caee4c9918a7825bffdc325eee79f1de9",
+        "ember": "df1bb3dfb951ff81f31e940fef8835c23822fa0580235d7e5ff6e983758312a2",
+        "different": true
+      }
+    },
+    "visualReview": "Screenshots require human review for faction attire, silhouette and world/portrait consistency; differing pixel hashes prove repainting only."
+  },
+  "finalView": {
+    "unitIds": [
+      "ember-priest-display",
+      "ember-summoner-display",
+      "unit-player-priest-1001"
+    ],
+    "buildingIds": [
+      "building-player-townhall",
+      "building-enemy-townhall",
+      "ember-priest-producer",
+      "ember-summoner-producer",
+      "ember-foreign",
+      "ember-farm-0",
+      "ember-farm-1",
+      "ember-farm-2",
+      "ember-farm-3",
+      "ember-farm-4",
+      "ember-farm-5",
+      "ember-farm-6",
+      "ember-farm-7",
+      "ember-farm-8",
+      "ember-farm-9"
+    ],
+    "selectedIds": [
+      "ember-foreign"
+    ],
+    "localPlayerUnitIds": [
+      "ember-priest-display",
+      "ember-summoner-display",
+      "unit-player-priest-1001"
+    ],
+    "localPlayerBuildingIds": [
+      "building-player-townhall",
+      "ember-priest-producer",
+      "ember-summoner-producer",
+      "ember-foreign",
+      "ember-farm-0",
+      "ember-farm-1",
+      "ember-farm-2",
+      "ember-farm-3",
+      "ember-farm-4",
+      "ember-farm-5",
+      "ember-farm-6",
+      "ember-farm-7",
+      "ember-farm-8",
+      "ember-farm-9"
+    ],
+    "roomId": "room-d43a2e63-102c-4307-b5d5-6b9f606cbebb",
+    "focusedSelectionId": "ember-foreign",
+    "tick": 650
+  },
+  "passed": true,
+  "finishedAt": "2026-10-11T14:26:05.422Z"
+}

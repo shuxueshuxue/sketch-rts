@@ -8,7 +8,7 @@ import { planSummonerScreen } from './summoner-screen';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ race, mirror }))))(
   '$race host fights a melee pursuer before its first screen arrives (mirror=$mirror)', ({ race, mirror }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
-    const caller = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caller = 'summoner';
     let scene = sketchScene('uncovered-caster-melee').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
       .townHall('us', x(500), 500).townHall('foe', x(3500), 3500)

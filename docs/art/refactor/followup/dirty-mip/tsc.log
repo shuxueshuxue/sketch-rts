@@ -1,0 +1,12 @@
+src/client/world3d/card-mip-uploader.test.ts(20,118): error TS18046: 'source.image' is of type 'unknown'.
+src/client/world3d/card-mip-uploader.ts(62,6): error TS18047: 'scratch.texture.image.data' is possibly 'null'.
+src/client/world3d/card-mip-uploader.ts(79,118): error TS18047: 's.texture.image.data' is possibly 'null'.
+src/client/world3d/painted-card-batches.test.ts(144,54): error TS2339: Property 'map' does not exist on type 'Material<MaterialEventMap> | Material<MaterialEventMap>[]'.
+  Property 'map' does not exist on type 'Material<MaterialEventMap>'.
+src/client/world3d/painted-card-batches.test.ts(145,50): error TS2339: Property 'map' does not exist on type 'Material<MaterialEventMap> | Material<MaterialEventMap>[]'.
+  Property 'map' does not exist on type 'Material<MaterialEventMap>'.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

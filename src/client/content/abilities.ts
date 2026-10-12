@@ -30,16 +30,6 @@ export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
     },
     command: { icon: "☾", hotkey: "c" },
   },
-  emberMend: {
-    name: { en: "Ember Mend", zh: "余烬疗愈" },
-    description: { en: "Restores health to a wounded non-mechanical allied unit.", zh: "为受伤的非机械友方单位恢复生命。" },
-    command: { icon: "+", hotkey: "m" },
-  },
-  cinderSoul: {
-    name: { en: "Cinder Soul", zh: "余火魂灵" },
-    description: { en: "Creates a temporary spirit at a nearby ground point.", zh: "在附近地面目标点召唤一个临时灵体。" },
-    command: { icon: "◎", hotkey: "o" },
-  },
   ashCurse: {
     name: { en: "Ash Curse", zh: "灰烬诅咒" },
     description: {

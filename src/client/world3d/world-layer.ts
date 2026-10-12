@@ -1,7 +1,16 @@
+import {bloodSurfaceResolver} from '../combat-surfaces';
+import { deckRemainsMatrix } from './deck-remains';
+import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from '../deck-remains';
+import { drawAtlasCorpse } from '../atlas-art';
+import { corpseAppearanceKey } from '../art/corpses';
+import type {UnitAnimationFrame} from '../unit-animation';
+import {animationKey,projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
+import { PaintedCardBatches } from './painted-card-batches';
 import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
@@ -10,8 +19,9 @@ import { flightPose } from './flight-pose';
 import { paintedHit } from './painted-hit';
 import { WaterSurface } from './water';
 import { creatureShadow } from '../art/painted-creatures';
+import { spellOrbPalette } from '../art/effect-presentation';
 import { paintFigure } from '../art/painted-units';
-import { UNIT_CARDS } from '../content/units';
+import { appearanceFor,appearanceKey,corpseAppearanceFor } from '../art/unit-appearance';
 import { unitGlyphScale } from '../glyphs';
 import { footprintSquare } from '../footprint-view';
 import { relationTo,RELATION_INK } from '../relations';
@@ -26,7 +36,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 
-export type ActorPosition={x:number;y:number;bodyY:number;topY:number};
+export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
 
@@ -38,16 +48,25 @@ export class World3DLayer {
   private library=worldModels;
   private batches=new ActorBatches(this.scene);
   private selection=new SelectionMarkers(this.scene);
+  private combatInk=new CombatInk(this.scene);
+  private combatAnchors=new Map<string,CombatAnchor>();
+  combatStats(){return this.combatInk.stats();}
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
-  private cards=new Map<string,{mesh:THREE.Mesh;texture:THREE.CanvasTexture;used:number}>();
-  private cardPixels=0;
-  private cardGeometry=new Map<number,THREE.PlaneGeometry>();
+  private cards:PaintedCardBatches;
+  private remainsCards:PaintedCardBatches;
+  remainsStats(){return this.remainsCards.stats();}
+  cardStats(){return this.cards.stats();}
   private transforms:THREE.Matrix4[]=[];
   private transformCount=0;
   private transformPosition=new THREE.Vector3();
   private transformRotation=new THREE.Quaternion();
   private transformScale=new THREE.Vector3();
+  private projectedOrigin=new THREE.Vector3();
+  private projectedDirection=new THREE.Vector3();
+  private missileRotation=new THREE.Quaternion();
+  private missileDirection=new THREE.Vector3();
+  private missileAxis=new THREE.Vector3(1,0,0);
   private entities=new Map<string,GameSnapshot['units'][number]|GameSnapshot['buildings'][number]>();
   private ships=new Map<string,Unit>();
   private shipPoses=new Map<string,Unit>();
@@ -69,6 +88,10 @@ export class World3DLayer {
   private viewport='';
   private view:WorldFrame['view']|undefined;
   private disposed=false;
+  private contextLost=false;
+  private eventCanvas:HTMLCanvasElement|undefined;
+  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();};
+  private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   private shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.24}));
   private ball=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshStandardMaterial({color:'#414945',roughness:1}));
@@ -82,21 +105,52 @@ export class World3DLayer {
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined){
+    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1));
+    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1});
     this.flag.material.name='TeamColor';
+    this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';
     this.scene.add(new THREE.HemisphereLight('#ddd7c5','#263c3a',1.25));
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.bias=-.0004;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun,this.sun.target);this.shadow.rotation.x=-Math.PI/2;this.shadow.receiveShadow=true;this.scene.add(this.shadow);
   }
+  /** Detach the old renderer's public dispose listeners while its context is
+   * lost. Otherwise later reset/dispose attempts to delete pre-loss VAOs and
+   * buffers in the restored context. Scene meshes own their resource views;
+   * global decoded model templates are never traversed or disposed here. CPU
+   * geometry/texture data remains available for normal restoration uploads. */
+  private releaseContextResources(){
+    const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();
+    this.scene.traverse(object=>{
+      if(object instanceof THREE.Mesh){
+        object.dispose();geometries.add(object.geometry);
+        for(const material of Array.isArray(object.material)?object.material:[object.material])materials.add(material);
+        if(object.customDepthMaterial)materials.add(object.customDepthMaterial);
+        if(object.customDistanceMaterial)materials.add(object.customDistanceMaterial);
+      }
+      if(object instanceof THREE.DirectionalLight||object instanceof THREE.PointLight||object instanceof THREE.SpotLight){object.shadow.dispose();object.shadow.map=object.shadow.mapPass=null;}
+    });
+    for(const material of materials){
+      for(const value of Object.values(material))if(value instanceof THREE.Texture)textures.add(value);
+      if(material instanceof THREE.ShaderMaterial)for(const uniform of Object.values(material.uniforms)){
+        const values=Array.isArray(uniform.value)?uniform.value:[uniform.value];for(const value of values)if(value instanceof THREE.Texture)textures.add(value);
+      }
+      material.dispose();
+    }
+    for(const geometry of geometries)geometry.dispose();
+    for(const texture of textures)texture.dispose();
+  }
   static create(canvas:HTMLCanvasElement,context:WebGL2RenderingContext){
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
-    return new World3DLayer(renderer);
+    const layer=new World3DLayer(renderer);layer.eventCanvas=canvas;
+    canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
+    return layer;
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
@@ -112,7 +166,7 @@ export class World3DLayer {
     return{x:track.fromX+(track.x-track.fromX)*t,y:track.fromY+(track.y-track.fromY)*t};
   }
   draw(frame:WorldFrame){
-    const renderer=this.renderer;if(this.disposed||!renderer)return;
+    const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
     this.frame++;this.transformCount=0;this.view=frame.view;
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
     // Commands can replace a snapshot without advancing its tick (for example
@@ -138,7 +192,9 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
-    frame.animation?.update(snapshot,now);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
+    frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
+    frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
+    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion));
     if(snapshot.tick!==this.lastTick){
       this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
       for(const unit of snapshot.units)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
@@ -147,8 +203,13 @@ export class World3DLayer {
     }
     const {entities,ships}=this;
     const right=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),rotation=uprightCrewRotation(this.camera);
+    this.projectedOrigin.set(0,0,0).project(this.camera);
+    const projectVector=(direction:{x:number;y:number;height?:number})=>{
+      this.projectedDirection.set(direction.x,direction.height??0,direction.y).project(this.camera).sub(this.projectedOrigin);
+      return{x:this.projectedDirection.x*frame.view.width/2,y:-this.projectedDirection.y*frame.view.height/2};
+    };
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
-    this.positions.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.selection.begin();
+    this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*site.scale});
@@ -237,9 +298,14 @@ export class World3DLayer {
         const id=interactionTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
-      const scale=unitGlyphScale(unit.radius),foot=creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
-      this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale});
+      const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
+      const rawAnimation:UnitAnimationFrame=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
+      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
+      const animation=projectActionFrame(rawAnimation,facing,projectVector);
+      const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
+      this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing});
       if(!visible(at.x,bodyY))continue;
+      this.combatAnchors.set(unit.id,{x:at.x,y:at.y,floor:height,facing,sourceX:unit.x,sourceY:unit.y});
       const selected=frame.selectedIds?.has(unit.id)??false;
       if(unit.hp>0 && (selected || frame.hoveredId===unit.id)){
         let marker=this.pose(at.x,at.y,height+.15);
@@ -255,44 +321,63 @@ export class World3DLayer {
         const radius=(unit.bodyRadius??unit.radius)+3;
         this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
       }
-      const animation=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
-      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animation.mode}:${animation.frame}:${facing}:${density}`;
-      let card=this.cards.get(key);
-      if(!card){
-        const canvas=document.createElement('canvas');canvas.width=canvas.height=128*density;const ctx=canvas.getContext('2d')!;
-        ctx.scale(density,density);ctx.translate(64,64);ctx.scale(facing,1);
-        if(!paintFigure(ctx,unit.kind,ownerInk(unit.owner, snapshot),animation,facing))UNIT_CARDS[unit.kind].paint(ctx,ownerInk(unit.owner, snapshot));
-        const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-        const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data,alpha=new Uint8Array(canvas.width*canvas.height);for(let i=0;i<alpha.length;i++)alpha[i]=rgba[i*4+3]!;
-        texture.userData.alpha={width:canvas.width,height:canvas.height,pixels:alpha};
-        let geometry=this.cardGeometry.get(foot);if(!geometry){geometry=new THREE.PlaneGeometry(128,128/TILT).translate(0,foot/TILT,0);this.cardGeometry.set(foot,geometry);}
-        card={mesh:new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,toneMapped:false})),texture,used:this.frame};this.cards.set(key,card);this.cardPixels+=canvas.width*canvas.height;
-      }card.used=this.frame;
+      const appearance=appearanceFor(snapshot,unit);
+      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animationKey(animation)}:${facing}:${density}:${appearanceKey(appearance)}:${unit.variant??''}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
-      this.batches.add(`unit:${key}`,card.mesh,transform,unit.id);
+      this.cards.add(key,density,ctx=>{
+        ctx.scale(facing,1);
+        if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing,appearance);
+        else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
+      },transform,unit.id,foot,model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind));
+    }
+    for(const [shipId,corpses] of deckRemainsByShip(snapshot.corpses)){
+      const ship=this.shipPoses.get(shipId);if(!ship||ship.hp<=0)continue;
+      for(const corpse of corpses){
+      const pose=deckRemainsPose(corpse,ship);
+      if(!pose||!visible(pose.x,pose.y-pose.height*TILT,128))continue;
+      const model=corpse.variant?frame.models?.(corpse.variant):undefined;
+      const scale=model?Math.max(.72,corpse.radius/18):unitGlyphScale(corpse.radius);
+      const appearance=corpseAppearanceFor(snapshot,corpse),color=ownerInk(corpse.owner,snapshot),variant=remainsVariant(corpse.id);
+      const key=`corpse:${corpse.kind}:${corpse.variant??''}:${color}:${corpseAppearanceKey(appearance)}:${variant}`;
+      const transform=deckRemainsMatrix(this.pose(0,0,0),pose,scale);
+      this.remainsCards.add(key,zoom<.65?2:4,ctx=>{
+        // The fixed seven-pixel baseline is already in the world transform.
+        drawAtlasCorpse(ctx,corpse.kind,{x:0,y:-7},1,variant,model,corpse.variant,color,appearance);
+      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick));
+      }
     }
     for(const id of this.deckMotion.keys())if(!liveCrew.has(id))this.deckMotion.delete(id);
     for(const effect of snapshot.effects){
       if(!PHYSICAL_EFFECTS.has(effect.type))continue;
-      const shot=flightPose(effect,now-this.at);
+      const origin=frame.projectiles?.origin(effect);
+      const shot=flightPose(effect,now-this.at,origin);
       const model=shot.look==='flash'?this.flash:shot.look==='orb'?this.magic:shot.look==='fire'?this.fire:['arrow','spear','streak'].includes(shot.look)?this.bolt:this.ball;
-      if(visible(shot.x,shot.y))this.batches.add(`effect:${shot.look}`,model,this.pose(shot.x,shot.y,shot.height,shot.heading,shot.scale),effect.id);
+      const glow=shot.look==='orb'?spellOrbPalette(effect.sourceKind,effect.owner?snapshot.players[effect.owner]?.race:undefined).glow:undefined;
+      const color=glow?`rgb(${glow.r},${glow.g},${glow.b})`:undefined;
+      if(visible(shot.x,shot.y)){
+        let x=shot.x,y=shot.y,height=shot.height,rotation:THREE.Quaternion|undefined;
+        if(origin&&model===this.bolt){
+          const cp=Math.cos(shot.pitch);this.missileDirection.set(Math.cos(shot.heading)*cp,Math.sin(shot.pitch),Math.sin(shot.heading)*cp);
+          rotation=this.missileRotation.setFromUnitVectors(this.missileAxis,this.missileDirection);
+          // ConeGeometry's authored tip is +3 on its local X axis. The visual
+          // flight path is tip-anchored just like Canvas arrowFrame.
+          x-=this.missileDirection.x*3;y-=this.missileDirection.z*3;height-=this.missileDirection.y*3;
+        }
+        this.batches.add(`effect:${shot.look}:${color??''}`,model,this.pose(x,y,height,shot.heading,shot.scale,rotation),effect.id,color);
+      }
     }
-    this.batches.finish();this.selection.finish();
+    this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
+    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
-    if(this.cardPixels>12*1024*1024)for(const [key,card] of [...this.cards].sort((a,b)=>a[1].used-b[1].used)){
-      if(this.cardPixels<=12*1024*1024)break;
-      if(card.used===this.frame)continue;
-      this.batches.forget(`unit:${key}`);this.cardPixels-=card.texture.image.width*card.texture.image.height;(card.mesh.material as THREE.Material).dispose();card.texture.dispose();this.cards.delete(key);
-    }
     renderer.render(this.scene,this.camera);
   }
   pick(point:{x:number;y:number}){if(!this.view)return undefined;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(point.x/this.view.width*2-1,1-point.y/this.view.height*2),this.camera);
-    for(const hit of ray.intersectObjects(this.batches.objects(),false)){
+    for(const hit of ray.intersectObjects([...this.batches.objects(),...this.cards.objects()],false)){
       const material=(hit.object as THREE.Mesh).material;const first=Array.isArray(material)?material[hit.face?.materialIndex??0]:material;
       // A selected ship exposes the deck for crew commands. Its translucent
       // cloth must not intercept the visible crew behind the deformed sail.
       if(first?.name.startsWith('unbleached sail')&&first.transparent&&first.opacity<.5)continue;
+      if(hit.object.userData.paintedHit&&!hit.object.userData.paintedHit(hit.instanceId??0,hit.uv))continue;
       if(!paintedHit((first as THREE.MeshBasicMaterial)?.map??undefined,hit.uv))continue;
       const id=hit.object.userData.ids?.[hit.instanceId??0] as string|undefined;if(id && this.positions.has(id))return{id,height:hit.point.y};
     }return undefined;
@@ -307,14 +392,13 @@ export class World3DLayer {
     }else this.selection.ellipse(this.pose(body.x,body.y,.15),body.radius+3,(body.radius+3)*.55,color,selected);
   }
   dispose(){
-    if(this.disposed)return;this.disposed=true;this.reset();
-    this.selection.dispose();
+    if(this.disposed)return;this.disposed=true;
+    this.eventCanvas?.removeEventListener('webglcontextlost',this.onContextLost);this.eventCanvas?.removeEventListener('webglcontextrestored',this.onContextRestored);this.eventCanvas=undefined;this.reset();
+    this.selection.dispose();this.combatInk.dispose();
     this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
     // portraits. This layer owns only instances, rigs, cards and render targets.
     this.templates.clear();this.bounds.clear();
-    for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}this.cards.clear();this.cardPixels=0;
-    for(const geometry of this.cardGeometry.values())geometry.dispose();this.cardGeometry.clear();
     for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash,this.gangway]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}
     this.sun.shadow.dispose();this.sun.shadow.map=this.sun.shadow.mapPass=null;this.scene.clear();
     const renderer=this.renderer;this.renderer=undefined;

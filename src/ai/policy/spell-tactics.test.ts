@@ -120,8 +120,8 @@ describe("AI spell and focus tactics", () => {
       .player("v1", { team: "south", race: "grove" })
       .townHall("v2", 500, 500)
       .townHall("v1", 3500, 3500)
-      .unit("v2", "emberAcolyte", 540, 500, { id: "acolyte" })
-      .unit("v2", "pyreCaller", 580, 500, { id: "caller" })
+      .unit("v2", "priest", 540, 500, { id: "acolyte" })
+      .unit("v2", "summoner", 580, 500, { id: "caller" })
       .unit("v2", "ashHexer", 620, 500, { id: "hexer" })
       .unit("v2", "emberRavager", 570, 500, { id: "wounded", hp: 30 })
       .unit("v1", "footman", 710, 500, { id: "target" })
@@ -129,8 +129,8 @@ describe("AI spell and focus tactics", () => {
       .createGame();
 
     expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual([
-      { type: "cast", unitId: "acolyte", ability: "emberMend", targetId: "wounded" },
-      { type: "cast", unitId: "caller", ability: "cinderSoul", x: 634, y: 528 },
+      { type: "cast", unitId: "acolyte", ability: "heal", targetId: "wounded" },
+      { type: "cast", unitId: "caller", ability: "summon", x: 634, y: 528 },
       { type: "cast", unitId: "hexer", ability: "ashCurse", targetId: "target" },
     ]);
   });

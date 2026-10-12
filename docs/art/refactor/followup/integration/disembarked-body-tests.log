@@ -1,0 +1,15 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/combat-presentation.test.ts (23 tests) 54ms
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  13:09:45
+   Duration  1.40s (transform 886ms, setup 0ms, collect 1.17s, tests 54ms, environment 0ms, prepare 47ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

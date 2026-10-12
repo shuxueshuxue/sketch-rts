@@ -73,7 +73,8 @@ class Construction {
   }
 }
 const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779';
-export type SiteModelKind = 'citadel' | 'shop' | 'camp' | 'well' | 'statue' | 'beacon' | 'fort-lance' | 'fort-flame' | 'fort-mortar' | 'fort-ward' | 'fort-wall';
+export type { SiteModelKind } from './model-manifest';
+import type { SiteModelKind } from './model-manifest';
 function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
   const m=new Construction();
   switch(kind){

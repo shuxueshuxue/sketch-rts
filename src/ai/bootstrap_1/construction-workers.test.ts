@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
-import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
@@ -10,7 +10,7 @@ import { planBootstrapEconomy } from './economy';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(spare => ({ race, spare }))))(
   'builds $race tech with a free worker instead of draining a five-worker mine (spare=$spare)', ({ race, spare }) => {
     const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
-    const factory = UNIT_DEFS[heavy].trainedAt!;
+    const factory = trainingBuildingFor(race, heavy)!;
     let scene = sketchScene('construction-keeps-mining-lanes').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 500, 500).goldMine('main', 500 + GOLD_MINE_RULES.mainDistance, 500, 10000)

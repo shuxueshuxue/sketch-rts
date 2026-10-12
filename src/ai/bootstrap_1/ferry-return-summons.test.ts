@@ -14,8 +14,8 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 it.each(cases)('$version returns real $race crew but releases a summons-only ferry (mirror=$mirror, permanent=$permanent)',
   ({ version, race, mirror, permanent }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
-    const ability = race === 'grove' ? 'summon' : 'cinderSoul';
+    const caster = 'summoner';
+    const ability = 'summon';
     const game = sketchScene('ferry-return-summons').map('bareDuel').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', x(400), 500).townHall('foe', x(3600), 3500)
