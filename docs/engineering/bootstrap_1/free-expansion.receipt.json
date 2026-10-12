@@ -1,0 +1,211 @@
+{
+  "name": "bootstrap_1",
+  "parent": "09d54f26eb161f0d4a61eba883dc8e8e70a973cf",
+  "rulesVersion": 2,
+  "runtimeChanges": {
+    "modules": 2,
+    "addedLines": 15,
+    "removedLines": 2,
+    "newThresholds": 0,
+    "newPersistentFields": 0
+  },
+  "sourceHashes": {
+    "src/ai/bootstrap_1/economy.ts": "623f7d797c22cae8d44628d985ebcc7969d8aac0b17863a26cb69d7082ce9b42",
+    "src/ai/policy/v6/economy.ts": "9bce29211f0474b6f28fdc056d0f7aeb0c84f879e9b5eda63b3e73a1e36069c9"
+  },
+  "sdkTests": {
+    "passed": 236,
+    "failed": 0,
+    "suites": [
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "passed": 26,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "passed": 16,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "passed": 14,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "passed": 48,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "passed": 28,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "passed": 19,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "passed": 8,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "passed": 14,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "passed": 15,
+        "failed": 0
+      }
+    ],
+    "reportHashes": {
+      "bootstrap_1-free-expansion-sdk-final.json": "0e969de8f4a7b9ea4ffd3510ea572d597a0546df912d04a10d5c3ca081c5e8a0",
+      "bootstrap_1-free-expansion-two-income-final.json": "6d6020ea5e087540e616bfabc2fac8437cf795a7e22471d3f22235a66fc3dc7b",
+      "bootstrap_1-free-expansion-covered-sdk.json": "85aaeab1de324c377d77e9049b62e69bac39cbf9517da36b15cbab4155ad3a0a",
+      "bootstrap_1-free-expansion-mining-cover-final.json": "3ee9d3ce57c383e5b37668c6edb4fc6c7ad14ffc965e459e62373c8f10907c19"
+    }
+  },
+  "parentOnFinalNewCases": {
+    "passed": 24,
+    "failed": 24,
+    "total": 48,
+    "mode": "Exact parent source loaded for the two runtime modules through a test-only Vite loader; no repository mutation or command adaptation"
+  },
+  "build": {
+    "node": "20.20.2",
+    "command": "npm run build",
+    "exitCode": 0
+  },
+  "soloWindow": {
+    "mode": "One 9600->14400 native no-opponent same-world continuation with all AI memory and IDs restored; ordinary resources and cadence, current rules 2; victory disabled for the requested solo task. Not opponent acceptance or performance measurement.",
+    "map": "grandEstuary",
+    "version": "v9_knight",
+    "race": "grove",
+    "side": 0,
+    "startTick": 9600,
+    "endTick": 14400,
+    "startStateSha256": "7c6ba3860bf7868b19064036b1cadfe8c557eae75a6b0b4a7b5051bd0849a94e",
+    "parent": {
+      "summary": {
+        "label": "parent",
+        "tick": 14400,
+        "gold": 190.14,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 17,
+        "liveCreeps": 27,
+        "permanentDeaths": 5,
+        "activeOwnedMines": 3
+      },
+      "townHallBuildTicks": [
+        12705
+      ],
+      "fatalHits": [
+        {
+          "tick": 13138,
+          "id": "unit-p0-ballista-2005",
+          "kind": "ballista",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13395,
+          "id": "unit-p0-ballista-2275",
+          "kind": "ballista",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13669,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13910,
+          "id": "unit-p0-priest-1898",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14108,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        }
+      ]
+    },
+    "candidate": {
+      "summary": {
+        "label": "next",
+        "tick": 14400,
+        "gold": 200.56,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 16,
+        "liveCreeps": 28,
+        "permanentDeaths": 5,
+        "activeOwnedMines": 3
+      },
+      "townHallBuildTicks": [
+        12345
+      ],
+      "fatalHits": [
+        {
+          "tick": 13286,
+          "id": "unit-p0-ballista-2005",
+          "kind": "ballista",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13597,
+          "id": "unit-p0-witch-1656",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13887,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14195,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14397,
+          "id": "unit-p0-witch-2720",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        }
+      ]
+    },
+    "limitations": "Both branches lose five permanent army units to creeps. This is a current-rules solo causal observation, not opponent strength acceptance, heldout evaluation or a performance benchmark."
+  }
+}

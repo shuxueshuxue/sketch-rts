@@ -5,7 +5,7 @@ import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKi
 import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -21,6 +21,7 @@ import { controlledMercenaryGoals } from './mercenary-goals';
 import { shoppingGoals } from './shopping';
 import { routeArrivals } from '../../shared/route-selection';
 import { colonyRecoveryGoals } from './colony-recovery';
+import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -88,6 +89,12 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
   const { snapshot, owner, intel, own } = economy;
   // An issued hall construction already owns this expansion, including its walk to the site.
   if (economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === 'townHall')) return [];
+  if (enemyExpansionPower(snapshot, intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) === 0) {
+    const free = v6ExpansionGoal(economy, mine, priority, target), foes = armedFoes(snapshot, owner, economy.options);
+    const workers = economy.workers.filter(worker => retreatLandTravelTicks(snapshot, worker, free.point, foes) !== undefined);
+    return workers.length > 0 ? [{ ...free,
+      issue: used => economy.construct({ ...economy, workers }, 'townHall', free.point, used, 'expand') }] : [];
+  }
   const incomes = activeMiningBaseCount(snapshot, owner);
   const cover = own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange);
   if (incomes === 0 && !cover) return [];
