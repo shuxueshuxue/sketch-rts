@@ -48,10 +48,10 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   if (!isV6Policy(options)) return [];
   const home = mainBase(snapshot, owner);
   const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
-  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front, isV9Policy(options));
+  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front, isV9Policy(options), () => undefined);
 }
 
-export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], standAgainstMelee: boolean): GameCommand[] {
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined): GameCommand[] {
   const casters = units(snapshot, owner).filter(isBacklineKind);
   if (casters.length === 0) return [];
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
@@ -82,6 +82,10 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
     // shot at a knight 38 away (the V9 exam's S3, gullIsland). From shooters, which outreach it, and from spirits, gone in
     // 60 s, it still walks: standing against them too, V9 won 336 of 500 games against three where it had won 348.
     const on = threatsNear(caster).filter((enemy) => distance(enemy, caster) <= AUTO_ACQUIRE_RANGE);
+    if (screen.length < MIN_SCREEN && on.length > 0 && on.every(enemy => enemy.attackRange <= 100 && enemy.expiresTick === undefined)) {
+      const command = meleeMicro(caster, on);
+      if (command) { commands.push(command); continue; }
+    }
     if (standAgainstMelee && frontNear(caster).length < MIN_SCREEN && on.length > 0 && on.every((enemy) => enemy.attackRange <= 100 && enemy.expiresTick === undefined)) {
       if (caster.order.type === "move") commands.push({ type: "stop", unitIds: [caster.id] });
       continue;

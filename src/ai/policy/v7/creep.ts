@@ -136,7 +136,7 @@ function segmentDistance(point: Point, from: Point, to: Point) {
 }
 
 // The camp V7 is in the middle of, or none: a camp is held on to by its remaining creeps (its center moves as they die).
-function activeCamp(state: CreepState | undefined, camps: Camp[]): Camp | undefined {
+export function activeCamp(state: CreepState | undefined, camps: Camp[]): Camp | undefined {
   if (!state) return undefined;
   return camps.find((camp) => camp.creeps.some((creep) => distance({ x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }, state.center) <= CAMP_LINK + state.reach));
 }

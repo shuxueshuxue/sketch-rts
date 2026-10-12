@@ -15,6 +15,7 @@ import { mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
+import { planBootstrapCasterScreen } from './caster-screen';
 import { planSummonerScreen } from './summoner-screen';
 import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
@@ -96,7 +97,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       { ...script, run: planBootstrapGeneral },
     ];
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery,
-      version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : script];
+      version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, lootRecovery, mercenaryControl, script];
