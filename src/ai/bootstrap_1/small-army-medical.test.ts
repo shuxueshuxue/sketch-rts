@@ -3,7 +3,7 @@ import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, UNIT_DEFS } from '../../shared/catalog';
 import type { TrainableUnitKind } from '../../shared/types';
 import { createAiPolicyMemory } from '../memory';
 import { bootstrapPolicyContext, BOOTSTRAP_DOCTRINES } from './policy';
@@ -18,14 +18,14 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 
 it.each(cases)('funds recovery for an unlocked small $version army without a healer producer ($race, mirror=$mirror)', ({ version, race, mirror }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
-  const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+  const healer = 'priest';
   const strategy = BOOTSTRAP_DOCTRINES[version].find(strategy => strategy.race === race)!;
   const basic = race === 'grove' ? 'footman' : 'emberRavager';
   const army: TrainableUnitKind[] = version === 'v9_archer' ? [basic, basic, ...Array.from({ length: 4 }, () => strategy.standIn)] : Array.from({ length: 6 }, () => strategy.standIn);
   let scene = sketchScene('small-army-medical-prerequisite').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500).goldMine('income', x(716), 500, 6000).townHall('foe', x(3500), 3500)
-    .building('us', UNIT_DEFS[basic].trainedAt!, x(750), 850)
+    .building('us', trainingBuildingFor(race, basic)!, x(750), 850)
     .farms('us', 7, x(400), 2200).worker('us', x(650), 700, { order: { type: 'mine', resourceId: 'income', phase: 'toMine', timer: 0 } })
     .worker('us', x(680), 700, { order: { type: 'mine', resourceId: 'income', phase: 'toMine', timer: 0 } }).worker('us', x(710), 700, { order: { type: 'mine', resourceId: 'income', phase: 'toMine', timer: 0 } });
   for (const [index, kind] of army.entries()) scene = scene.unit('us', kind, x(1350 + index * 40), 1200,
@@ -38,7 +38,7 @@ it.each(cases)('funds recovery for an unlocked small $version army without a hea
   setBuildingBodies(game.map, game.buildings);
   const patients = game.units.filter(unit => unit.id === 'soldier-0' || unit.id === 'soldier-1');
   const startingHp = patients.map(unit => unit.hp);
-  expect(game.buildings.some(building => building.owner === 'us' && building.kind === UNIT_DEFS[healer].trainedAt)).toBe(false);
+  expect(game.buildings.some(building => building.owner === 'us' && building.kind === trainingBuildingFor(race, healer))).toBe(false);
   for (let tick = 0; tick < 2400; tick++) {
     if (tick % 15 === 0) {
       const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams });

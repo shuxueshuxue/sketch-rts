@@ -1,0 +1,41 @@
+{
+  "source": "/tmp/sketch-guard-baseline",
+  "units": 1000,
+  "frames": 360,
+  "warmupFrames": 120,
+  "burstEventsPer12Ticks": 48,
+  "meanMs": 1.079741147222221,
+  "p50Ms": 0.8822109999999839,
+  "p95Ms": 2.0375930000000153,
+  "maxMs": 3.4442959999998948,
+  "peakBodyMarks": 48,
+  "peakDroplets": 336,
+  "peakHeap": 62644496,
+  "cycles": [
+    {
+      "cycle": 0,
+      "heapBefore": 20082048,
+      "heapAfter": 20309064,
+      "meanMs": 1.3121059333333336
+    },
+    {
+      "cycle": 1,
+      "heapBefore": 20308136,
+      "heapAfter": 20326552,
+      "meanMs": 1.0800056583333335
+    },
+    {
+      "cycle": 2,
+      "heapBefore": 20185392,
+      "heapAfter": 20369968,
+      "meanMs": 1.2381636250000014
+    },
+    {
+      "cycle": 3,
+      "heapBefore": 20311832,
+      "heapAfter": 21639880,
+      "meanMs": 0.9210541583333282
+    }
+  ],
+  "method": "Same static 1000 units, fixed synthetic hit/release facts, 120 frames per cycle. First cycle warms up. Animation/facing/pose projection/blood CPU only; no simulation, rasterization, GPU or capture. Heap is whole Node process including loader and module graphs, not retained art memory."
+}

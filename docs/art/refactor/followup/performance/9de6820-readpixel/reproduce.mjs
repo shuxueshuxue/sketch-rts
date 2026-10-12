@@ -1,0 +1,44 @@
+// Execute from a frozen worktree. No production source is changed on disk.
+import {readFileSync,writeFileSync,mkdirSync,unlinkSync} from 'node:fs';
+import {spawnSync,execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+const output=resolve(process.argv[2]??'work/art-profile');mkdirSync(output,{recursive:true});
+const fullPages=process.argv.includes('--full-pages');
+const fenceGL=process.argv.includes('--fence-gl');
+const trueCompletion=process.argv.includes('--true-completion');
+const splitGL=process.argv.includes('--split-gl');
+const readPixel=process.argv.includes('--read-pixel');
+const root=process.cwd(),token=`.art-profile-${process.pid}`,temporary=`scripts/${token}.mjs`;
+const helper=readFileSync('scripts/art-profile-instrumentation.js','utf8');
+const card=readFileSync('src/client/world3d/painted-card-batches.ts','utf8');
+const bounds='const bounds=cardBounds(rgba,size),{page,layer}=this.slot(bounds.width,bounds.height);';
+const copy='pixels.fill(0,base,base+bounds.width*bounds.height*4);';
+const copyEnd='page.texture.addLayerUpdate(layer);';
+for(const anchor of [bounds,copy,copyEnd])if(!card.includes(anchor))throw Error('Card transform anchor changed: '+anchor);
+let transformed=card.replace(bounds,"const bounds=(window as any).__artProfileStage?.timed('boundsMs',()=>cardBounds(rgba,size))??cardBounds(rgba,size),{page,layer}=this.slot(bounds.width,bounds.height);");
+transformed=transformed.replace(copy,"const __artCopyStart=performance.now();"+copy).replace(copyEnd,"(window as any).__artProfileStage?.add('copyMs',performance.now()-__artCopyStart);"+copyEnd);
+writeFileSync(resolve(output,'painted-card-batches.instrumented.ts'),transformed);
+const transformPlugin=`{name:'art-profile-source',enforce:'pre',transform(code,id){if(id.split('?')[0].endsWith('/src/client/world3d/painted-card-batches.ts'))return {code:${JSON.stringify(transformed)},map:null};}},`;
+const sourceFiles=['scripts/art-browser-benchmark.mjs','scripts/art-dynamic-fixture.js','scripts/art-profile-instrumentation.js','src/client/world3d/painted-card-batches.ts','src/client/world3d/world-layer.ts'];
+writeFileSync(resolve(output,'manifest.json'),JSON.stringify({commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),worktree:root,status:execFileSync('git',['status','--short'],{encoding:'utf8'}),fullPageUploads:fullPages,fenceGL,trueCompletion,splitGL,readPixel,sourceSha256:Object.fromEntries(sourceFiles.map(p=>[p,createHash('sha256').update(readFileSync(p)).digest('hex')])),diagnostic:'One real 4-warmup / 12-measured-frame dynamic final-art lifetime. Instrumentation and CPU profiler overhead included; not formal comparison or isolated GPU execution timing. In splitGL mode normal submissionValuesMs contains CPU card/scene preparation only; textureInitSubmissionMs and drawSubmissionMs are separately recorded and must be added for total CPU submission.'},null,2));
+let script=readFileSync('scripts/art-browser-benchmark.mjs','utf8');
+const injection=`
+fixture='window.__artFullPageUpload='+${JSON.stringify(fullPages)}+';window.__artFenceGL='+${JSON.stringify(fenceGL)}+';window.__artSplitGL='+${JSON.stringify(splitGL)}+';\\n'+${JSON.stringify(helper)}+'\\n'+fixture;
+fixture=fixture.replace('    // Fixed snapshot and deterministic timestamps.', '    const artProfile=installArtProfile(layer);\\n    // Fixed snapshot and deterministic timestamps.');
+fixture=fixture.replace('      const at = performance.now();', '      artProfile.begin(n,frame.snapshot.tick);\\n      const at = performance.now();');
+fixture=fixture.replace('      finalRecord(n>=0);','      finalRecord(n>=0);artProfile.end();');
+if(${JSON.stringify(splitGL)})fixture=fixture.replace('const submitted = performance.now(); gl.finish();','const submitted = performance.now(); await artProfile.flushStages(); gl.finish();');
+else if(${JSON.stringify(readPixel)})fixture=fixture.replace('const submitted = performance.now(); gl.finish();','const submitted = performance.now(); artProfile.readPixel(); await artProfile.completeGpu(); gl.finish();');
+else if(${JSON.stringify(trueCompletion)})fixture=fixture.replace('const submitted = performance.now(); gl.finish();','const submitted = performance.now(); await artProfile.completeGpu(); gl.finish();');
+fixture=fixture.replace('const artInfo = { finalArt:', 'const artInfo = { profileFrames:artProfile.frames, finalArt:');
+fixture=fixture.replace('    Object.assign(frame,artSavedFrame);','    artProfile.restore();Object.assign(frame,artSavedFrame);');
+fixture=fixture.replaceAll('index===2','index===0').replaceAll('index === 2','index === 0');
+runner=runner.replace('plugins: [', 'plugins: ['+${JSON.stringify(transformPlugin)});
+runner=runner.replace('index < 3','index < 1').replace('result.cycles.length === 3','result.cycles.length === 1').replace('Expected all three dynamic resource cycles','Expected one diagnostic resource cycle').replace('retainedDisposedLayers === 3','retainedDisposedLayers === 1');
+runner=runner.replace('    const cycle = await evaluate(\u0060window.runtimeReview.cycle(\u0024{index})\u0060);', '    await pageCommand("Profiler.enable");await pageCommand("Profiler.setSamplingInterval",{interval:1000});const profileClock=await evaluate("performance.now()");await pageCommand("Profiler.start");\\n    const cycle = await evaluate(\u0060window.runtimeReview.cycle(\u0024{index})\u0060);\\n    const profile=await pageCommand("Profiler.stop");await writeFile('+${JSON.stringify(JSON.stringify(resolve(output,'cpu-profile.json')))}+',JSON.stringify({clockBeforeStartMs:profileClock,...profile}));');
+await writeFile(${JSON.stringify(resolve(output,'generated-fixture.js'))},fixture);await writeFile(${JSON.stringify(resolve(output,'generated-runner.mjs'))},runner);
+`;
+if(!script.includes('try {\n await writeFile(fixturePath,fixture)'))throw Error('Art generator anchor changed');
+script=script.replace('try {\n await writeFile(fixturePath,fixture)',injection+'\ntry {\n await writeFile(fixturePath,fixture)');
+try{writeFileSync(temporary,script);const run=spawnSync(process.execPath,['--import','tsx',temporary,'--dynamic','--final-art','--out',resolve(output,'profile.json'),'--screenshot',resolve(output,'profile.png')],{stdio:'inherit'});process.exitCode=run.status??1;}finally{unlinkSync(temporary);}

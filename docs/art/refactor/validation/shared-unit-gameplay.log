@@ -1,0 +1,12 @@
+UI click [data-open-create]
+UI click [data-map-entries] [data-map-id="pineshade"]
+UI click [data-map-next]
+UI click .game-mode-switch label:has(input[value="multiplayer"])
+UI click [data-start-room]
+Shared unit gameplay: grove
+UI click [data-command-dock] [data-hotkey="P"]:not([hidden]):not([data-training-progress])
+UI click [data-command-dock] [data-hotkey="U"]:not([hidden]):not([data-training-progress])
+Shared unit gameplay: ember
+UI click [data-command-dock] [data-hotkey="P"]:not([hidden]):not([data-training-progress])
+UI click [data-command-dock] [data-hotkey="U"]:not([hidden]):not([data-training-progress])
+{"passed":true,"steps":["select-map","start-match","shared-units-grove","shared-units-ember"],"report":"/workspace/sketch-rts-units/docs/art/refactor/units/gameplay/gameplay-proof.json"}

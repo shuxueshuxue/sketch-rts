@@ -1,0 +1,162 @@
+{
+  "averages": {
+    "sample": 5.5,
+    "tick": 25.5,
+    "startMs": 46476.25833333392,
+    "addRequests": 999,
+    "initialMissRequests": 310.1666666666667,
+    "warmCacheHits": 688.8333333333334,
+    "uniqueRasterizations": 248,
+    "paintMs": 51.15833333398526,
+    "readbacks": 248,
+    "readbackBytes": 291651584,
+    "readbackMs": 488.5416666707024,
+    "boundsMs": 98.09166666368644,
+    "slotEvictions": 242.25,
+    "slotMs": 4.158333332433055,
+    "copyMs": 21.908333332277834,
+    "rasterMs": 670.716666666946,
+    "duplicatePendingResolved": 62.166666666666664,
+    "pageAllocations": 0.5,
+    "pageAllocatedBytes": 4369066.666666667,
+    "pageAllocationMs": 0.4166666666666667,
+    "compactMs": 0.11666666654249032,
+    "finishMs": 672.1333333331471,
+    "dirtyPages": 45.666666666666664,
+    "dirtyLayers": 248,
+    "drawElementsInstancedCalls": 102,
+    "drawElementsInstancedMs": 0.12499999984477957,
+    "texSubImage3DCalls": 248,
+    "uploadBytes": 162998954.66666666,
+    "texSubImage3DMs": 4440.991666667163,
+    "generateMipmapCalls": 45.666666666666664,
+    "mipmapBaseTexels": 118445397.33333333,
+    "generateMipmapMs": 0.03333333320915699,
+    "texStorage3DCalls": 0.5,
+    "glAllocatedBaseTexels": 1092266.6666666667,
+    "texStorage3DMs": 0,
+    "drawElementsCalls": 1,
+    "drawElementsMs": 0,
+    "rendererMs": 4447.066666666418,
+    "finishCalls": 1,
+    "endMs": 51607.25833333377,
+    "pageRemovals": 0.08333333333333333,
+    "pageFreedBytes": 174762.66666666666,
+    "pageRemovalEvictions": 0.08333333333333333,
+    "pageRemovalMs": 0
+  },
+  "totals": {
+    "warmCacheHits": 8266,
+    "addRequests": 11988,
+    "initialMissRequests": 3722,
+    "uniqueRasterizations": 2976,
+    "slotEvictions": 2907
+  },
+  "cpuSampleAttributionTop": [
+    [
+      " http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 28",
+      53295.12300000129
+    ],
+    [
+      " http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 12",
+      5867.837000000026
+    ],
+    [
+      "cardBounds http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/world3d/painted-card-batches.ts 241",
+      1184.5529999999987
+    ],
+    [
+      "raster http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/world3d/painted-card-batches.ts 85",
+      273.5340000000001
+    ],
+    [
+      "paintedPlane http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/materials.ts 4",
+      205.8140000000001
+    ],
+    [
+      "(garbage collector)  0",
+      159.8459999999999
+    ],
+    [
+      "line http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 26",
+      121.92999999999995
+    ],
+    [
+      "polygon http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 3",
+      42.28600000000001
+    ],
+    [
+      "paintFigure http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/painted-units.ts 65",
+      30.945999999999998
+    ],
+    [
+      "slot http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/world3d/painted-card-batches.ts 52",
+      29.712
+    ],
+    [
+      "(program)  0",
+      23.868000000000002
+    ],
+    [
+      " http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 28",
+      22.836
+    ],
+    [
+      "draw http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/world3d/world-layer.ts 174",
+      21.279000000000003
+    ],
+    [
+      "cycle http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 261",
+      20.35
+    ],
+    [
+      " http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 5",
+      18.396999999999995
+    ],
+    [
+      "timed http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 5",
+      17.901
+    ],
+    [
+      "paintCreature http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/painted-creatures.ts 66",
+      13.437999999999999
+    ],
+    [
+      "ellipse http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 15",
+      11.996
+    ],
+    [
+      "update http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/unit-animation.ts 20",
+      11.378
+    ],
+    [
+      "solveFigureRig http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/rig.ts 63",
+      11.280000000000001
+    ],
+    [
+      "add http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 4",
+      10.211
+    ],
+    [
+      "mix http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/art/kit.ts 72",
+      9.639
+    ],
+    [
+      " http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/scripts/.art-70274-fixture.js 11",
+      7.351
+    ],
+    [
+      "uploadTexture http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/node_modules/.vite/deps/three.js?v=f658574d 39181",
+      6.869000000000001
+    ],
+    [
+      "add http://127.0.0.1:5173/@fs/tmp/sketch-art-profile/src/client/world3d/painted-card-batches.ts 68",
+      6.737
+    ]
+  ],
+  "cpuProfileClockMapping": "Approximate performance.now recorded immediately before CDP Profiler.start; profile timeDeltas accumulated from that anchor, useful hotspot attribution but no nanosecond alignment.",
+  "notes": [
+    "finishMs combines card finish and final GL finish due first diagnostic field-name collision; use fullDrawValuesMs-submissionValuesMs for precise final fence cost. Nested timer durations must not be summed twice.",
+    "GL call time includes synchronization/driver/software work; it is not isolated GPU command execution time."
+  ]
+}

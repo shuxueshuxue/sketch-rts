@@ -1,0 +1,102 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/sdk/client.test.ts (13 tests) 23ms
+ ❯ src/client/net/lockstep-client.test.ts (28 tests | 1 failed) 947ms
+   × lockstep client > reports local invalid frame command errors and asks for an authoritative checkpoint 9ms
+     → expected [ Array(1) ] to deeply equal [ 'townHall cannot train footman' ]
+   ✓ lockstep client > restores checkpoint snapshots to the same state as savegame restore 390ms
+   ✓ lockstep client > spreads an actual deep restored search across renders without consuming or changing authoritative frames 455ms
+ ✓ src/client/deployment/server-runtime.test.ts (11 tests) 263ms
+ ✓ src/server/room-net.test.ts (29 tests) 461ms
+ ✓ src/shared/savegame.test.ts (7 tests) 316ms
+ ✓ src/shared/unit-save-migration.test.ts (11 tests) 25ms
+ ✓ src/shared/replay.test.ts (4 tests) 26ms
+ ✓ src/shared/net/codec.test.ts (5 tests) 5ms
+ ✓ src/client/game-adapter.test.ts (3 tests) 7ms
+ ✓ src/server/room-current-tick.test.ts (2 tests) 60ms
+ ✓ src/server/room-history.test.ts (3 tests) 4ms
+ ✓ src/client/net/websocket-transport.test.ts (3 tests) 3ms
+ ✓ src/server/room-planning-restore.test.ts (3 tests) 1151ms
+   ✓ continued room navigation preparation > prepares an actual saved deep search without changing the room tick, snapshot or checksum 624ms
+   ✓ continued room navigation preparation > leaves a continued automatic room unchanged while its derived search warms over ticker turns 329ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/net/lockstep-client.test.ts > lockstep client > reports local invalid frame command errors and asks for an authoritative checkpoint
+AssertionError: expected [ Array(1) ] to deeply equal [ 'townHall cannot train footman' ]
+
+- Expected
++ Received
+
+  Array [
+-   "townHall cannot train footman",
++   "townHall cannot train footman for grove",
+  ]
+
+ ❯ src/client/net/lockstep-client.test.ts:211:20
+    209| 
+    210|     expect(() => client.updateToRenderTime()).not.toThrow();
+    211|     expect(errors).toEqual(["townHall cannot train footman"]);
+       |                    ^
+    212|     expect(transport.sent).toContainEqual({
+    213|       type: "syncEvent",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 121 passed (122)
+   Start at  11:31:46
+   Duration  4.44s (transform 2.38s, setup 0ms, collect 7.37s, tests 3.29s, environment 2ms, prepare 580ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/sdk/client.test.ts (13 tests) 18ms
+ ✓ src/client/net/lockstep-client.test.ts (28 tests) 1023ms
+   ✓ lockstep client > restores checkpoint snapshots to the same state as savegame restore 366ms
+   ✓ lockstep client > spreads an actual deep restored search across renders without consuming or changing authoritative frames 568ms
+ ✓ src/client/deployment/server-runtime.test.ts (11 tests) 224ms
+ ✓ src/server/room-net.test.ts (29 tests) 481ms
+ ✓ src/shared/savegame.test.ts (7 tests) 304ms
+ ✓ src/shared/unit-save-migration.test.ts (11 tests) 32ms
+ ✓ src/shared/replay.test.ts (4 tests) 27ms
+ ✓ src/shared/net/codec.test.ts (5 tests) 5ms
+ ✓ src/server/room-current-tick.test.ts (2 tests) 41ms
+ ✓ src/client/game-adapter.test.ts (3 tests) 8ms
+ ✓ src/server/room-planning-restore.test.ts (3 tests) 1034ms
+   ✓ continued room navigation preparation > prepares an actual saved deep search without changing the room tick, snapshot or checksum 568ms
+   ✓ continued room navigation preparation > leaves a continued automatic room unchanged while its derived search warms over ticker turns 331ms
+ ✓ src/client/net/websocket-transport.test.ts (3 tests) 5ms
+ ✓ src/server/room-history.test.ts (3 tests) 3ms
+
+ Test Files  13 passed (13)
+      Tests  122 passed (122)
+   Start at  11:32:04
+   Duration  4.53s (transform 2.39s, setup 0ms, collect 7.85s, tests 3.20s, environment 2ms, prepare 611ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/shared/unit-save-migration.test.ts (11 tests) 49ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  11:32:20
+   Duration  1.61s (transform 1.04s, setup 0ms, collect 1.32s, tests 49ms, environment 0ms, prepare 60ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

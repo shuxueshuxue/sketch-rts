@@ -15,7 +15,7 @@ function field(name: string, options: { wounded?: number; well?: boolean; healer
     .townHall("v5", 3_500, 2_000);
   for (let index = 0; index < 4; index += 1) scene = scene.unit("v8", "emberRavager", 880 + index * 20, 2_000, { id: `ravager-${index}` });
   if (options.well) scene = scene.building("v8", "emberShrine", 880, 2_000, { id: "shrine" });
-  if (options.healer) scene = scene.unit("v8", "emberAcolyte", 860, 2_040, { id: "acolyte" });
+  if (options.healer) scene = scene.unit("v8", "priest", 860, 2_040, { id: "acolyte" });
   const game = scene.build().createGame();
   const hurt = options.wounded ?? 0;
   game.units.filter((unit) => unit.id.startsWith("ravager-")).forEach((unit, index) => (unit.hp = index < 2 ? unit.maxHp - hurt : unit.hp));

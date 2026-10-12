@@ -694,7 +694,7 @@ function guardingTower(base: V6BaseIntel) {
 }
 
 function isSummoner(unit: Unit) {
-  return unit.kind === "summoner" || unit.kind === "pyreCaller";
+  return unit.kind === "summoner";
 }
 
 function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {

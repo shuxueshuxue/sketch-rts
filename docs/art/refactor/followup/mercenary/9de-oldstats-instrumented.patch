@@ -1,0 +1,49 @@
+diff --git a/workspace/sketch-rts/src/ai/bootstrap_1/mercenary-control.test.ts b/tmp/mercenary-isolated/9de-oldstats/src/ai/bootstrap_1/mercenary-control.test.ts
+index f15174f..ca118b8 100644
+--- a/workspace/sketch-rts/src/ai/bootstrap_1/mercenary-control.test.ts
++++ b/tmp/mercenary-isolated/9de-oldstats/src/ai/bootstrap_1/mercenary-control.test.ts
+@@ -1,3 +1,6 @@
++import { writeFileSync } from 'node:fs';
++Object.assign(UNIT_DEFS.priest, {hp:78,speed:62,attackDamage:6,attackRange:192,aimSpeed:480,cost:130,trainTime:175});
++Object.assign(UNIT_DEFS.summoner,{hp:88,speed:59,attackDamage:7,attackRange:208,aimSpeed:440,cost:174,trainTime:190});
+ import { expect, it } from 'vitest';
+ import { sketchScene } from '../../sdk/scene';
+ import { SdkCommandFrameRuntime } from '../../sdk/commands/frame';
+@@ -15,7 +18,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
+   (['grove', 'ember'] as const).flatMap(race => [false, true].flatMap(mirror =>
+     (['camp', 'planner'] as const).map(economy => ({ version, race, mirror, economy })))));
+ 
+-it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirror=$mirror)', ({ version, race, mirror, economy }) => {
++it.each(cases.filter(c => c.version === 'v9_archer' && c.race === 'ember' && c.economy === 'planner'))('$version collects and rallies $race mercenaries ($economy, mirror=$mirror)', ({ version, race, mirror, economy }) => {
+   const x = (value: number) => mirror ? 4096 - value : value;
+   const kind = version === 'v9_archer' ? race === 'grove' ? 'archer' : 'sparkArcher'
+     : version === 'v9_summoner' ? 'summoner'
+@@ -34,6 +37,7 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
+   memory.v6 = { phase: 3 };
+   const original = game.units.filter(unit => unit.owner === 'us'), travelers = new Set<string>();
+   expect(game.players.us!.gold).toBe(500);
++  const trace: unknown[] = [], born = new Set(game.units.map(u=>u.id));
+   let paid = 0;
+   for (let tick = 0; tick < 2400; tick++) {
+     if (tick % 15 === 0) {
+@@ -46,6 +50,7 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
+           const command = goal.issue();
+           return command ? [{ scriptId: 'v6Economy', command }] : [];
+         }), ...mercenaryControl.run(snapshot, 'us', options).map(command => ({ scriptId: mercenaryControl.id, command }))];
++      trace.push(structuredClone({tick, gold:game.players.us!.gold, entries, mercenaries:game.units.filter(u=>u.kind==='mercenary').map(u=>({id:u.id,x:u.x,y:u.y,order:u.order})), queue:game.buildings.filter(b=>b.queue.length).map(b=>({kind:b.kind,queue:b.queue}))}));
+       for (const entry of entries) {
+         if (entry.command.type === 'hire') paid += 160;
+         if (entry.scriptId === 'mercenaryControl' && entry.command.type === 'move'
+@@ -54,10 +59,12 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
+       sdk.issue(entries.map(entry => ({ ...entry, playerId: 'us' })), {}, { checksum: false });
+     }
+     stepGame(game);
++    for(const u of game.units) if(!born.has(u.id)){born.add(u.id);trace.push({bornAt:tick+1,unit:structuredClone(u)});}
+   }
+   const mercenaries = game.units.filter(unit => unit.owner === 'us' && unit.kind === 'mercenary');
+   const diagnostic = JSON.stringify({ gold: game.players.us!.gold, paid, travelers: [...travelers],
+     mercenaries: mercenaries.map(unit => ({ id: unit.id, x: unit.x, y: unit.y, order: unit.order })) });
++  writeFileSync('/workspace/sketch-rts-units/docs/art/refactor/followup/mercenary/9de-oldstats' + '-trace-' + mirror + '.json', JSON.stringify({trace, final:JSON.parse(diagnostic), units:game.units, buildings:game.buildings},null,2));
+   expect(travelers.size, diagnostic).toBe(1);
+   if (economy === 'camp') {
+     expect(paid, diagnostic).toBe(320);

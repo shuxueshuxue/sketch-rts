@@ -1,0 +1,55 @@
+{
+  "report": [
+    {
+      "pass": "directional-depth",
+      "maxChannelDifference": 16,
+      "meanChannelDifference": 0.0003204345703125,
+      "changedPixels": 179,
+      "totalPixels": 262144
+    },
+    {
+      "pass": "point-distance",
+      "maxChannelDifference": 4,
+      "meanChannelDifference": 0.0002288818359375,
+      "changedPixels": 175,
+      "totalPixels": 262144
+    }
+  ],
+  "rasterComparison": [
+    {
+      "changedChannels": 1217,
+      "maximum": 204,
+      "alphaChanged": 186,
+      "alphaMaximum": 5
+    },
+    {
+      "changedChannels": 1623,
+      "maximum": 204,
+      "alphaChanged": 186,
+      "alphaMaximum": 5
+    },
+    {
+      "changedChannels": 1324,
+      "maximum": 204,
+      "alphaChanged": 186,
+      "alphaMaximum": 5
+    },
+    {
+      "changedChannels": 1493,
+      "maximum": 204,
+      "alphaChanged": 186,
+      "alphaMaximum": 5
+    }
+  ],
+  "glError": 0,
+  "method": "512px RGBA comparison, same source canvas drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Left=prior individual textures; right=array instances.",
+  "errors": [],
+  "passed": false,
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

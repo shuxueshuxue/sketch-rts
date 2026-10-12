@@ -1,0 +1,16 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/ai/bootstrap_1/expansion-construction-escort.test.ts (12 tests) 2739ms
+   ✓ holds the third mining foundation through construction before resuming a distant assault ('v9_archer'/'grove', mirror=false) 403ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  12:06:27
+   Duration  4.70s (transform 1.34s, setup 0ms, collect 1.74s, tests 2.74s, environment 0ms, prepare 49ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

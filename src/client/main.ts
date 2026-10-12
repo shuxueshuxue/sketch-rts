@@ -1,3 +1,6 @@
+import {ProjectileOriginTracker} from './projectile-origins';
+import { CombatPresentationTracker } from "./combat-presentation";
+import { appearanceFor, appearanceForKind, appearanceKey } from "./art/unit-appearance";
 import { goldReadout } from "./hud-model";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
@@ -29,7 +32,7 @@ import "./battle-hud.css";
 import "./game-chrome.css";
 import "./game-ui.css";
 import { BattleHudSelection, type HudIdentity, type HudStatus } from "./battle-hud";
-import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
+import { clearCanvasArtCache, drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -94,7 +97,7 @@ import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
-import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules } from "../shared/catalog";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules, canTrainAt, trainableUnitsAt, trainingBuildingFor } from "../shared/catalog";
 import { carries, passengerLandingSpot } from "../shared/naval";
 import { SHOP_GOODS } from "../shared/shop";
 import { drawPaintedItem } from "./art/items";
@@ -110,7 +113,7 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, Lo
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
-type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"] };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"]; weaponKind?:Unit["kind"] };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
@@ -241,6 +244,8 @@ let selectedIds = new Set<string>();
 const unitFacing = new UnitFacingTracker();
 const unitMotion = new UnitMotionSmoother();
 const unitAnimation = new UnitAnimationTracker();
+const combatPresentation = new CombatPresentationTracker();
+const projectileOrigins = new ProjectileOriginTracker();
 const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let focusedStatusProjection: { snapshot: GameSnapshot; tick: number; id: string; locale: 'zh' | 'en'; statuses: PresentedUnitStatus[] } | undefined;
@@ -349,7 +354,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
@@ -492,7 +497,7 @@ window.addEventListener('pagehide',event=>{
   // A cached page resumes with its existing scene and connections on Back.
   if(event.persisted||applicationClosed)return;
   applicationClosed=true;routeRequest++;roomSetupSession.cancel();cancelAnimationFrame(animationFrame);clearRoomWatch();disconnectActiveMatch();deploymentRuntime.close();
-  worldPresentation.dispose();soundboard.dispose();disposeResourcePanel();
+  worldPresentation.dispose();clearCanvasArtCache();soundboard.dispose();disposeResourcePanel();
   const usedModels=[...resources.entries.keys()].some(url=>url.includes('/art/world3d/'));
   resources.dispose();snapshot=undefined;keys.clear();
   // These modules are already loaded when models were used. Startup teardown
@@ -685,12 +690,13 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
     element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
   }
   const color=ownerInk(localPlayerId,snapshot??undefined);
-  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}`,()=>{
+  const appearance=portrait.type === "unit" ? appearanceForKind(portrait.kind,currentPlayerState()?.race) : {};
+  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${portrait.type==='item'?portrait.weaponKind??'':''}:${color}:${appearanceKey(appearance)}`,()=>{
     const brush = requireCanvasContext(icon);
     const size=icon.clientWidth||icon.width;
     const center = { x: size/2, y: size/2 };
-    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color);
-    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8);
+    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color, appearance);
+    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8,false,portrait.weaponKind);
     else drawAtlasBuildingPortrait(brush, portrait.kind, size, color);
   });
 }
@@ -1482,6 +1488,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch() {
+  combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
   activeChatUnsubscribe?.();
@@ -2234,7 +2241,7 @@ function canBuild(kind: BuildingKind) {
 
 function canTrain(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return !commandMode && !openPalette && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  return !commandMode && !openPalette && Boolean(player && focusedPlayerBuildings().some((building) => building.complete && canTrainAt(player.race, building.kind, unitKind)));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
@@ -2569,11 +2576,11 @@ function closeCommandPalette() {
 function train(unitKind: TrainableUnitKind) {
   if (!syncBeforeCommandProjection()) return;
   const player = currentPlayerState();
-  if (!player || !RACE_DEFS[player.race].trainableUnits.includes(unitKind)) {
+  if (!player || !trainingBuildingFor(player.race, unitKind)) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
+  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && canTrainAt(player.race, candidate.kind, unitKind));
   if (!building) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
@@ -2782,7 +2789,8 @@ function selectedPlayerBuildings() {
 }
 
 function selectedPlayerRallyBuildings() {
-  return selectedPlayerBuildings().filter((building) => BUILDING_DEFS[building.kind].trains.length > 0);
+  const player=currentPlayerState();
+  return player ? selectedPlayerBuildings().filter((building) => trainableUnitsAt(player.race, building.kind).length > 0) : [];
 }
 
 function focusedPlayerUnits() {
@@ -3015,7 +3023,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       owner === localPlayerId && !isInCabin(entity) && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
       sailingStatus(entity), cabinStatus(entity,i18n.locale==='zh'),
     ].filter(Boolean).join(" · ") : "",
-    art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}:${selectionAppearanceKey(focused)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
     ...((entity && 'order' in entity) ? { statuses: focusedHudStatuses(entity) } : {}),
   };
@@ -3023,7 +3031,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
     return {
       key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
-      art:{ key:`${group.kind}:${ownerInk(owner??localPlayerId,snapshot??undefined)}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      art:{ key:`${group.kind}:${ownerInk(owner??localPlayerId,snapshot??undefined)}:${selectionAppearanceKey(group)}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
       activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
       decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
     };
@@ -3035,7 +3043,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind)+(isInCabin(passenger)?i18n.locale==='zh'?' · 舱内':' · Cabin':''), actionLabel: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
-      art: { key: `${passenger.kind}:${ownerInk(passenger.owner,snapshot??undefined)}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner,snapshot??undefined)) },
+      art: { key: `${passenger.kind}:${ownerInk(passenger.owner,snapshot??undefined)}:${appearanceKey(appearanceFor(snapshot!,passenger))}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner,snapshot??undefined), appearanceFor(snapshot!,passenger)) },
       activate: () => {if(isInCabin(passenger)){selectedIds=new Set([passenger.id]);focusedSelectionId=passenger.id;openPalette=undefined;updateHud();}else unloadPassenger(transport.id, passenger.id);},
       decorate: (button: HTMLButtonElement) => {button.dataset.inCabin=String(isInCabin(passenger));applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: isInCabin(passenger)?`${labelKind(passenger.kind)} · ${cabinStatus(passenger,i18n.locale==='zh')}`:t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [isInCabin(passenger)?i18n.locale==='zh'?'点击选中船员，可返回甲板。':'Select this crew member to return to deck.':t("hud.unloadPassengerHint")] });},
     })),
@@ -3112,12 +3120,20 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
   return buildingTooltip(group.kind, undefined, i18n, building ? snapshot?.players[building.owner]?.race : undefined);
 }
 
+function selectionAppearanceKey(group: SelectionGroup) {
+  const unit = group.entityType === 'unit' && snapshot?.units.find(unit => unit.id === group.ids[0]);
+  return unit && snapshot ? appearanceKey(appearanceFor(snapshot,unit)) : '';
+}
+
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
   const color = ownerInk(owner ?? localPlayerId,snapshot??undefined);
-  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color);
+  if (group.entityType === "unit") {
+    const unit = snapshot?.units.find(unit => unit.id === group.ids[0]);
+    drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color, unit && snapshot ? appearanceFor(snapshot,unit) : {});
+  }
   else drawAtlasBuildingPortrait(mini, group.kind, canvas.clientWidth, color);
 }
 
@@ -3164,7 +3180,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
-  const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
+  const tooltip = unitTooltip(progress.unitKind, undefined, i18n, currentPlayerState()?.race);
   applyTooltip(button, {
     ...tooltip,
     title: `${label} · ${t("hud.cancelTraining")}`,
@@ -3207,8 +3223,8 @@ function renderItemDock() {
       const liveButton = button;
       button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
       button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
-      drawCommandPortrait(button, { type:"item", kind:item.kind });
     }
+    drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
     button.dataset.carrierId = carrier.id;
     const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
     button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
@@ -3304,6 +3320,8 @@ function draw() {
     facing: unitFacing,
     motion: unitMotion,
     animation: unitAnimation,
+    combat: combatPresentation,
+    projectiles:projectileOrigins,
     reducedMotion: reducedUnitMotion.matches,
     labels: worldLabels,
     selectedIds,

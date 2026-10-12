@@ -10,7 +10,7 @@ import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored => ({ race, mirrored }))))(
   'keeps the advancing $race host outside enemy arrows (mirror=$mirrored)', ({ race, mirrored }) => {
     const x = (value: number) => mirrored ? 4096 - value : value;
-    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const kind = 'summoner';
     let scene = sketchScene('summon-advance-shooter-screen').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
       .townHall('us', x(500), 300).goldMine('main', x(788), 300, 10000)
@@ -23,7 +23,7 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
-    const ability = race === 'grove' ? 'summon' : 'cinderSoul';
+    const ability = race === 'grove' ? 'summon' : 'summon';
     for (const unit of game.units.filter(unit => unit.owner === 'us' && unit.kind === kind)) issuePlayerCommand(game, 'us',
       { type: 'cast', unitId: unit.id, ability, x: x(1550), y: unit.y });
     issuePlayerCommand(game, 'foe', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'foe').map(unit => unit.id) });

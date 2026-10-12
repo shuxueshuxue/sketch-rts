@@ -1,0 +1,22 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/world3d/card-mip-uploader.test.ts (6 tests) 14ms
+ ✓ src/client/world3d/card-pick-mask.test.ts (6 tests) 261ms
+ ✓ src/client/world3d/painted-card-batches.test.ts (14 tests) 539ms
+stdout | src/client/world3d/world-layer.test.ts > production scene CPU integration (GPU renderer mocked) > batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit
+2,000 troops: 49.2 ms CPU scene preparation, 1 actor mesh; GPU timing not measured
+
+ ✓ src/client/world3d/world-layer.test.ts (17 tests) 1197ms
+   ✓ production scene CPU integration (GPU renderer mocked) > binds water to the rendered match rather than the smaller home snapshot used for preloading 323ms
+
+ Test Files  4 passed (4)
+      Tests  43 passed (43)
+   Start at  13:54:46
+   Duration  4.30s (transform 2.07s, setup 0ms, collect 3.69s, tests 2.01s, environment 1ms, prepare 290ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

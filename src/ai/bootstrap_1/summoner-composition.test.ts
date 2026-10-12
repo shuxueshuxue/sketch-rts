@@ -3,7 +3,7 @@ import * as mining from '../../shared/mining';
 
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, UNIT_DEFS } from '../../shared/catalog';
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
@@ -15,15 +15,15 @@ describe('summon host support against artillery', () => {
     .flatMap(artillery => [false, true].map(mirrored => ({ race, artillery, mirrored }))))) (
     'pays for a lasting $race front against $artillery while continuing to summon (mirror=$mirrored)', ({ race, artillery, mirrored }) => {
     const x = (value: number) => mirrored ? 4096 - value : value;
-    const caller = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caller = 'summoner';
     const screen = race === 'grove' ? 'lancer' : 'ashWarden';
     let scene = sketchScene('summon-artillery-counter').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { race: artillery === 'ballista' ? 'grove' : 'ember', team: 'b' })
       .townHall('us', x(500), 500).goldMine('main', x(788), 500, 10000)
       .townHall('us', x(1400), 500).goldMine('natural', x(1688), 500, 10000)
       .townHall('foe', x(3500), 3500).unit('foe', artillery, x(3200), 3500, { order: { type: 'hold', x: x(3200), y: 3500 } })
-      .building('us', UNIT_DEFS[screen].trainedAt!, x(700), 850)
-      .building('us', UNIT_DEFS[caller].trainedAt!, x(1000), 850);
+      .building('us', trainingBuildingFor(race, screen)!, x(700), 850)
+      .building('us', trainingBuildingFor(race, caller)!, x(1000), 850);
     for (let i = 0; i < 8; i++) scene = scene.building('us', 'farm', x(400 + i * 64), 1600);
     for (let i = 0; i < 11; i++) scene = scene.worker('us', x(i < 5 ? 540 : 1440), 550 + i % 5 * 20,
       { order: { type: 'mine', resourceId: i < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
@@ -39,7 +39,7 @@ describe('summon host support against artillery', () => {
       if (tick % 15 === 0) {
         const entries = planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_summoner', memory }, { teams: game.teams });
         for (const { command } of entries) {
-          if (command.type === 'cast' && ['summon', 'cinderSoul'].includes(command.ability)) spells++;
+          if (command.type === 'cast' && ['summon', 'summon'].includes(command.ability)) spells++;
           if (command.type === 'train' && command.unitKind === screen) recruits.push(command.buildingId);
         }
         issueCommandFrame(game, entries);

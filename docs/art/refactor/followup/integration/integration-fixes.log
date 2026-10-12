@@ -1,0 +1,19 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/shared/sim/canonical.test.ts (4 tests) 153ms
+ ✓ src/story/director.test.ts (11 tests) 147ms
+ ✓ scripts/art-gpu-completion.test.mjs (3 tests) 3ms
+ ✓ src/sdk/package-boundaries.test.ts (7 tests) 2432ms
+   ✓ SDK package boundaries > does not carry banned cleanup-era naming in source or specs 2424ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  13:14:19
+   Duration  2.70s (transform 1.01s, setup 0ms, collect 2.32s, tests 2.73s, environment 1ms, prepare 215ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

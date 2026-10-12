@@ -6,7 +6,7 @@ import { boardUnit } from './decks';
 import { seconds } from './time';
 function scene(){const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;delete game.map.terrain;return game;}
 describe('medical healing and hull repairs',()=>{
-  for(const [kind,ability] of [['priest','heal'],['emberAcolyte','emberMend']] as const)it(`rejects manual ${ability} on a hull at both selection and simulation admission`,()=>{
+  for(const [kind,ability] of [['priest','heal'],['priest','heal']] as const)it(`rejects manual ${ability} on a hull at both selection and simulation admission`,()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',900,800),healer=game.spawnUnit('player',kind,900,740);ship.hp-=100;
     const command={type:'cast' as const,unitId:healer.id,ability,targetId:ship.id};
     expect(commandValidationError(snapshotGame(game),'player',command)).toBe('Healing cannot restore mechanical units');

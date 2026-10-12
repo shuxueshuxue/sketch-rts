@@ -2,7 +2,7 @@ import { engineeringWant } from "../engineering";
 import {seconds,SIM_TICKS_PER_SECOND} from '../../../shared/time';
 import { adaptiveArmyWants } from "../adaptive-army";
 import { isBuildPlacementClear } from "../../../shared/build-placement";
-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, canResearchAt, canTrainAt, requiredSupplyCap, trainingBuildingFor } from "../../../shared/catalog";
 import { detCos, detSin } from "../../../shared/det-math";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../../shared/types";
 import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build-layout";
@@ -277,7 +277,7 @@ function wantGoals(economy: Economy): Goal[] {
 function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
   if (missing <= 0) return [];
   if (!tierUnlocked(economy.snapshot, economy.owner, kind)) return lockedUnitGoals(economy, kind, missing, priority, claimed);
-  const makers = economy.own.filter((building) => BUILDING_DEFS[building.kind].trains.includes(kind));
+  const makers = economy.own.filter((building) => canTrainAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
   if (makers.length === 0) {
     const maker = producerFor(economy, kind);
     return maker ? buildingGoal(economy, maker, priority + PREREQUISITE_BONUS) : [];
@@ -313,7 +313,7 @@ function techFarmGoal(economy: Economy, priority: number): Goal[] {
 
 function producerFor(economy: Economy, kind: TrainableUnitKind): BuildingKind | undefined {
   const race = playerState(economy.snapshot, economy.owner).race;
-  return RACE_DEFS[race].buildableBuildings.find((building) => BUILDING_DEFS[building].trains.includes(kind));
+  return trainingBuildingFor(race, kind);
 }
 
 function buildingGoal(economy: Economy, kind: BuildingKind, priority: number): Goal[] {
@@ -384,7 +384,7 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
   const current = playerState(economy.snapshot, economy.owner).upgrades[kind] ?? 0;
   const next = UPGRADE_DEFS[kind].levels[current];
   if (current >= level || !next || economy.own.some((building) => building.researchQueue.some((job) => job.upgradeKind === kind))) return [];
-  const lab = economy.own.find((building) => building.complete && building.researchQueue.length === 0 && BUILDING_DEFS[building.kind].researches.includes(kind));
+  const lab = economy.own.find((building) => building.complete && building.researchQueue.length === 0 && canResearchAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
   if (!lab) return [];
   return [goal(`upgrade:${kind}`, priority, next.cost, true, () => research(economy, lab, kind))];
 }

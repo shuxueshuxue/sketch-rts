@@ -1,3 +1,4 @@
+import { RULES_VERSION, assertCurrentRulesVersion } from "../../shared/rules-version";
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
 import type { CheckpointFrame, CheckpointRequestReason, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../../shared/net/types";
 import { restoreSnapshotIntoGame } from "../../shared/sim";
@@ -31,7 +32,7 @@ export class LockstepClient {
   }
 
   join(): void {
-    this.options.transport.send({ type: "join", roomId: this.options.roomId, playerId: this.options.playerId });
+    this.options.transport.send({ type: "join", rulesVersion: RULES_VERSION, roomId: this.options.roomId, playerId: this.options.playerId });
   }
 
   requestCheckpoint(reason: CheckpointRequestReason = "manual", tick?: number): void {
@@ -126,6 +127,10 @@ export class LockstepClient {
   }
 
   private receiveMessage(message: ServerNetMessage): void {
+    if (message.type === "hello" || message.type === "frame" || message.type === "checkpoint" || message.type === "desync") {
+      try { assertCurrentRulesVersion(message.rulesVersion, "Server"); }
+      catch (error) { this.close(); this.options.onError?.(errorMessage(error)); return; }
+    }
     if (message.type === "hello") {
       if (message.roomId !== this.options.roomId || message.playerId !== this.options.playerId) return;
       this.epoch = message.epoch;
@@ -160,6 +165,7 @@ export class LockstepClient {
     try {
       this.receiveMessage(message);
     } catch (error) {
+      if (this.closed) return;
       // @@@lockstep-message-boundary - Transport callbacks run on the browser event loop; report sync faults visibly instead of letting one bad packet become a page-fatal exception.
       const message = errorMessage(error);
       this.options.onError?.(message);

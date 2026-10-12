@@ -6,13 +6,13 @@ import { setBuildingBodies } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { planShellEvasion } from './shell-evasion';
 
-const WALKERS = ['archer', 'sparkArcher', 'horseArcher', 'summoner', 'pyreCaller', 'knight', 'worker'] as const;
+const WALKERS = ['archer', 'sparkArcher', 'horseArcher', 'summoner', 'summoner', 'knight', 'worker'] as const;
 
 function walkingBolt(kind: typeof WALKERS[number], mirrored: boolean, delay: number,
   order: 'move' | 'attackMove', evasion: boolean) {
   const x = (value: number) => mirrored ? 4096 - value : value;
   const game = sketchScene('ordered-walk-visible-bolt').map('openClaims').replaceDefaults()
-    .player('us', { race: kind === 'sparkArcher' || kind === 'pyreCaller' ? 'ember' : 'grove', team: 'a' }).player('foe', { team: 'b' })
+    .player('us', { race: kind === 'sparkArcher' || kind === 'summoner' ? 'ember' : 'grove', team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500).townHall('foe', x(3500), 3500)
     .unit('foe', 'ballista', x(2120), 1600, { id: 'gun' })
     .unit('us', kind, x(1660), 1600, { id: 'bait' })

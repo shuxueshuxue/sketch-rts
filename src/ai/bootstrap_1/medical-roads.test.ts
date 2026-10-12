@@ -12,7 +12,7 @@ function field(race: 'grove' | 'ember', mirror: boolean, instant = false, island
   const game = sketchScene('medical-road-selection').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
     .townHall('us', x(3000), 3200).townHall('foe', x(500), 3500)
-    .unit('us', race === 'grove' ? 'priest' : 'emberAcolyte', x(instant ? 1680 : 1800), 800, { id: 'healer' })
+    .unit('us', 'priest', x(instant ? 1680 : 1800), 800, { id: 'healer' })
     .unit('us', race === 'grove' ? 'lancer' : 'emberRavager', x(instant ? 1480 : 1400), 800,
       { id: 'across', hp: 80, order: { type: 'hold', x: x(instant ? 1480 : 1400), y: 800 } })
     .unit('us', race === 'grove' ? 'lancer' : 'emberRavager', x(1800), 1300,

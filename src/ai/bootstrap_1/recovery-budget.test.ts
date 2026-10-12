@@ -3,7 +3,7 @@ import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { snapToFootprint } from '../../shared/terrain';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, UNIT_DEFS } from '../../shared/catalog';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
@@ -15,12 +15,12 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
   'funds $race recovery after its shared counter queue (mirror=$mirrored)', ({ race, mirrored }) => {
   const x = (value: number) => mirrored ? 4096 - value : value;
   const shooter = race === 'grove' ? 'archer' : 'sparkArcher', body = race === 'grove' ? 'lancer' : 'ashWarden';
-  const healer = race === 'grove' ? 'priest' : 'emberAcolyte', counter = race === 'grove' ? 'witch' : 'ashHexer';
+  const healer = 'priest', counter = race === 'grove' ? 'witch' : 'ashHexer';
   let scene = sketchScene('shared-counter-recovery-funding').map('openClaims').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
     .townHall('us', x(500), 500).goldMine('main', x(788), 500, 10000).townHall('foe', x(3500), 3500)
-    .farms('us', 8, x(400), 1700).building('us', UNIT_DEFS[shooter].trainedAt!, x(750), 900)
-    .building('us', UNIT_DEFS[counter].trainedAt!, x(1000), 900);
+    .farms('us', 8, x(400), 1700).building('us', trainingBuildingFor(race, shooter)!, x(750), 900)
+    .building('us', trainingBuildingFor(race, counter)!, x(1000), 900);
   for (let i = 0; i < 3; i++) scene = scene.worker('us', x(540), 530 + i * 20,
     { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
   for (let i = 0; i < 6; i++) scene = scene.unit('us', shooter, x(1050 + i * 35), 1100, { id: `wounded-${i}`, hp: 20 });

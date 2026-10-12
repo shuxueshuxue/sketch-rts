@@ -1,0 +1,21 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/world3d/card-mip-uploader.test.ts (4 tests) 16ms
+stdout | src/client/world3d/world-layer.test.ts > production scene CPU integration (GPU renderer mocked) > batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit
+2,000 troops: 49.6 ms CPU scene preparation, 1 actor mesh; GPU timing not measured
+
+ ✓ src/client/world3d/world-layer.test.ts (17 tests) 1071ms
+ ✓ src/client/world3d/painted-card-batches.test.ts (12 tests) 3673ms
+   ✓ painted card array batches > preserves the complete source and mip domain, including non-power-of-two action tiles 3462ms
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  13:27:46
+   Duration  4.46s (transform 1.37s, setup 0ms, collect 2.63s, tests 4.76s, environment 1ms, prepare 146ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

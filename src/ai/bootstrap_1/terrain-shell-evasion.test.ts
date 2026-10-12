@@ -9,7 +9,7 @@ import type { AiScript } from '../policy/types';
 import { shellEvasion } from './shell-evasion';
 
 const cases = ([{ kind: 'worker', race: 'grove' }, { kind: 'worker', race: 'ember' },
-  { kind: 'summoner', race: 'grove' }, { kind: 'pyreCaller', race: 'ember' }] as const)
+  { kind: 'summoner', race: 'grove' }, { kind: 'summoner', race: 'ember' }] as const)
   .flatMap(row => [false, true].map(mirror => ({ ...row, mirror })));
 
 it.each(cases)('gets a real $race $kind past a shell using its terrain arrival (mirror=$mirror)', ({ kind, race, mirror }) => {

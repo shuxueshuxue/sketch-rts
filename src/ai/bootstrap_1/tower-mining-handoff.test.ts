@@ -11,7 +11,7 @@ import { towerRushGoal } from './tower-rush';
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored => ({ race, mirrored }))))(
   'the $race tower convoy lets its loaded miner deposit before paid construction (mirror=$mirrored)', ({ race, mirrored }) => {
     const x = (value: number) => mirrored ? 4096 - value : value;
-    const casterKind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const casterKind = 'summoner';
     let scene = sketchScene('tower-mining-handoff').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', x(500), 500).goldMine('main', x(500 + GOLD_MINE_RULES.mainDistance), 500, 10000)

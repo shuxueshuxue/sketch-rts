@@ -1,0 +1,14 @@
+{
+  "commit": "9de6820873367c06401cdfa4d8938aa17e78f199",
+  "worktree": "/tmp/sketch-art-profile",
+  "status": "?? scripts/art-profile-diagnostic.mjs\n?? scripts/art-profile-instrumentation.js\n",
+  "fullPageUploads": true,
+  "sourceSha256": {
+    "scripts/art-browser-benchmark.mjs": "97787cc771563d1937e9093451098fa5dcff04f18db30ce0aabb247033487364",
+    "scripts/art-dynamic-fixture.js": "0e8c9f409c099a979637157946e9b57547b29cae61816b92012c212d0f464995",
+    "scripts/art-profile-instrumentation.js": "52d31acaa6e60f1ed2a82d7f9c147f6afa100a0d95baf61cf48abe69f8f6ff95",
+    "src/client/world3d/painted-card-batches.ts": "388f60c8053e0e1b935b1f1b41d0c98db0c696c950987a644e207a3d4df763b7",
+    "src/client/world3d/world-layer.ts": "aa1856a8fcdef78efadac14a00974b9ba08a8ecbcf05cd007fcbbb6c9bf3e7b6"
+  },
+  "diagnostic": "One real 4-warmup / 12-measured-frame dynamic final-art lifetime. Instrumentation and CPU profiler overhead included; not formal comparison or GPU execution timing."
+}

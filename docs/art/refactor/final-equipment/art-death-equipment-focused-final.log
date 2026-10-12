@@ -1,0 +1,40 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/art/story-remains.test.ts (29 tests) 303ms
+ ✓ src/client/art/death-equipment.test.ts (5 tests) 93ms
+ ✓ src/client/art/shared-caster-skins.test.ts (3 tests) 310ms
+ ✓ src/client/art/release-socket.test.ts (4 tests) 14ms
+ ✓ src/shared/corpses.test.ts (2 tests) 41ms
+ ❯ src/client/art/rig.test.ts (8 tests | 1 failed) 5422ms
+   ✓ catalog composition > returns all compatible equipment to exactly the ready raster after attack and casting 4796ms
+   × catalog composition > resolves compatible nonhuman issued loadouts and shows an equipped round shield 476ms
+     → expected Uint8ClampedArray[ 0, 0, 0, 0, 0, …(115201) ] to not deeply equal Uint8ClampedArray[ 0, 0, 0, 0, 0, …(115201) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/art/rig.test.ts > catalog composition > resolves compatible nonhuman issued loadouts and shows an equipped round shield
+AssertionError: expected Uint8ClampedArray[ 0, 0, 0, 0, 0, …(115201) ] to not deeply equal Uint8ClampedArray[ 0, 0, 0, 0, 0, …(115201) ]
+
+Compared values have no visual difference.
+
+ ❯ src/client/art/rig.test.ts:69:69
+     67|   expect(equipmentForKind('ogreWarrior')).toBe('club');
+     68|   expect(equipmentForKind('thornSlinger')).toBe('sling');
+     69|   expect(raster('footman',{mode:'idle',frame:0},{shield:true})).not.to…
+       |                                                                     ^
+     70|   expect(solveFigureRig(figures.footman!,{mode:'idle',frame:0},{weapon…
+     71|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 50 passed (51)
+   Start at  12:43:37
+   Duration  6.64s (transform 1.84s, setup 0ms, collect 5.40s, tests 6.18s, environment 2ms, prepare 344ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

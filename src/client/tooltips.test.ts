@@ -95,6 +95,20 @@ describe("gameplay tooltips", () => {
     expect(tooltip.hotkey).toBe("A");
   });
 
+  it("shows the same caster names with the correct race-specific producer and roster",()=>{
+    for(const kind of ['priest','summoner'] as const){
+      expect(unitTooltip(kind,undefined,createI18n('en'),'grove').requirements).toContain('Trained at: Sanctum');
+      expect(unitTooltip(kind,undefined,createI18n('en'),'ember').requirements).toContain('Trained at: Cinder Spire');
+      expect(unitTooltip(kind,undefined,createI18n('zh'),'ember').requirements.join(' ')).toContain('训练建筑：');
+    }
+    for(const [kind,race] of [['sanctum','grove'],['cinderSpire','ember']] as const){
+      const tooltip=tooltipText(buildingTooltip(kind,undefined,createI18n('en'),race));
+      expect(tooltip).toContain('Priest');expect(tooltip).toContain('Summoner');expect(tooltip).not.toMatch(/Ember Acolyte|Pyre Caller/);
+    }
+    expect(tooltipText(buildingTooltip('cinderSpire',undefined,createI18n('en'),'grove'))).not.toContain('Priest');
+    expect(unitTooltip('sparkArcher').body).toContain('ignite');expect(abilityTooltip('ashCurse').stats).toContain('Scorched enemy damage x0.3');
+  });
+
   it("describes ability targeting, range, and effect numbers", () => {
     expect(abilityTooltip("heal", "h")).toMatchObject({
       title: "Heal",
@@ -104,14 +118,8 @@ describe("gameplay tooltips", () => {
       hotkey: "H",
     });
     expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
-    expect(abilityTooltip("emberMend", "m")).toMatchObject({
-      title: "Ember Mend",
-      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", `Cooldown ${HEAL_COOLDOWN_SECONDS}s`]),
-      requirements: [],
-      hotkey: "M",
-    });
     expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
-    expect(abilityTooltip("cinderSoul", "o").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"]));
+    expect(abilityTooltip("summon", "u").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"]));
   });
 
   it("describes the charge with its window, blow and cooldown from the catalog, in both languages", () => {

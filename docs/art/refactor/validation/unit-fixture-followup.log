@@ -1,0 +1,31 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/ai/policy.test.ts (409 tests | 408 skipped) 11ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 408 skipped (409)
+   Start at  12:03:33
+   Duration  2.32s (transform 1.67s, setup 0ms, collect 2.11s, tests 11ms, environment 0ms, prepare 60ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/shared/aiming.test.ts (19 tests) 55ms
+ ✓ src/ai/policy/humanized-combat.test.ts (48 tests) 139ms
+
+ Test Files  2 passed (2)
+      Tests  67 passed (67)
+   Start at  12:03:42
+   Duration  2.02s (transform 1.47s, setup 0ms, collect 2.70s, tests 194ms, environment 0ms, prepare 95ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

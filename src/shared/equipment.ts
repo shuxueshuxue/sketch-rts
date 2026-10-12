@@ -5,7 +5,7 @@ import { UNIT_DEFS, unitRules, type UnitDef } from './catalog';
 import { SHIP_KINDS, shipProfile, distanceToHull } from './ship-geometry';
 import { seconds } from './time';
 import { reductionForGroup } from './damage-reduction';
-import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit, WorldItem } from './types';
+import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit, UnitKind, WorldItem } from './types';
 export const CARRY_SLOTS = ['carry0', 'carry1', 'carry2', 'carry3'] as const;
 export const ARMOR_SLOTS = ['head', 'body', 'feet'] as const;
 export const ITEM_TRANSFER_REACH = 72;
@@ -37,7 +37,7 @@ export const ITEM_DEFS: Record<ItemKind, {
     guardianScroll: { hands: 1, mass: .3 }, healingScroll: { hands: 1, mass: .3 },
     experienceBook: { hands: 1, mass: 1 }, breachCharge: { hands: 1, mass: 6 }, ivoryTower: { hands: 1, mass: 2 },
 };
-const HUMANOIDS = new Set<string>(['worker', 'footman', 'archer', 'knight', 'lancer', 'raider', 'ravager', 'runner', 'sparkArcher', 'horseArcher', 'priest', 'mage', 'witch', 'ashGuard', 'ashChieftain', 'cinderRevenant', 'emberPriest', 'necromancer', 'mercenary', 'contractArcher', 'fieldMedic']);
+const HUMANOIDS = new Set<UnitKind>(['worker', 'footman', 'archer', 'knight', 'lancer', 'raider', 'sparkArcher', 'horseArcher', 'priest', 'witch', 'ashChieftain', 'cinderRevenant', 'mercenary', 'contractArcher', 'fieldMedic']);
 export function canEquip(unit: Unit) { return HUMANOIDS.has(unit.kind) || unit.owner !== 'neutral' && !SHIP_KINDS.includes(unit.kind as never) && unit.radius <= 22; }
 export function isCarrySlot(slot: EquipmentSlot): boolean { return (CARRY_SLOTS as readonly string[]).includes(slot); }
 export function itemHands(item: WorldItem) {

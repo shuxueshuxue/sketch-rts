@@ -1,5 +1,5 @@
 import { missingMiningWorkers } from './workforce';
-import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
 import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
@@ -47,13 +47,14 @@ function wantedUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
 /** Reserve one production wave, rather than two supply for every idle producer. */
 function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, goals: ReturnType<typeof rankV6Goals>, wanted: Set<TrainableUnitKind>) {
   const own = snapshot.buildings.filter(building => building.owner === owner);
+  const race = snapshot.players[owner]!.race;
   const production = new Set(wanted);
-  for (const building of own) for (const kind of BUILDING_DEFS[building.kind].trains) {
+  for (const building of own) for (const kind of trainableUnitsAt(race, building.kind)) {
     if (goals.some(goal => goal.id === `engineering:${kind}`)) production.add(kind);
   }
   if (missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)) > 0) production.add('worker');
   return own.filter(building => building.complete).reduce((total, building) => {
-    const kinds = [...BUILDING_DEFS[building.kind].trains.filter(kind => production.has(kind)), ...building.queue.map(job => job.unitKind)];
+    const kinds = [...trainableUnitsAt(race, building.kind).filter(kind => production.has(kind)), ...building.queue.map(job => job.unitKind)];
     return total + Math.max(0, ...kinds.map(kind => UNIT_DEFS[kind].supplyUsed));
   }, 0);
 }
@@ -117,16 +118,16 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
   const own = snapshot.buildings.filter(building => building.owner === owner);
-  const healer = player.race === 'grove' ? 'priest' : 'emberAcolyte';
+  const healer = 'priest';
   const recovering = recoveryPatients(snapshot, owner).length > 0;
   // Keep the requested first healer funded until its ordinary training has been queued.
   const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
-    && own.some(building => BUILDING_DEFS[building.kind].trains.includes(healer) && (building.queue.length > 0 || recovering)
+    && own.some(building => canTrainAt(player.race, building.kind, healer) && (building.queue.length > 0 || recovering)
       && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
   // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete).reduce((total, building) => total
-      + Math.max(0, ...BUILDING_DEFS[building.kind].trains.filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
+      + Math.max(0, ...trainableUnitsAt(player.race, building.kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
   const threatenedHome = snapshot.units.some(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options)
     && halls.some(hall => Math.hypot(hall.x - unit.x, hall.y - unit.y) <= BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange
@@ -138,8 +139,8 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:')) {
       const kind = goal.id.split(':')[1] as BuildingKind;
       const existing = own.filter(building => building.kind === kind);
-      if (existing.length > 0 && BUILDING_DEFS[kind].trains.length > 0) {
-        productionReserve = Math.max(0, ...BUILDING_DEFS[kind].trains.filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)) * existing.length;
+      if (existing.length > 0 && trainableUnitsAt(player.race, kind).length > 0) {
+        productionReserve = Math.max(0, ...trainableUnitsAt(player.race, kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)) * existing.length;
         if (productionReserve === 0) return [];
       }
     }

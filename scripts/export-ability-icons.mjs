@@ -12,8 +12,8 @@ const artDirectory = path.join(root, 'public/art/abilities');
 const reviewDirectory = path.join(root, 'assets/abilities');
 const skills = [
   ['heal', 'Heal', 'magic', '#64cb93'], ['summon', 'Summon', 'magic', '#64cedc'],
-  ['curse', 'Curse', 'magic', '#b580e3'], ['emberMend', 'Ember Mend', 'magic', '#ea9b52'],
-  ['cinderSoul', 'Cinder Soul', 'magic', '#ec8953'], ['ashCurse', 'Ash Curse', 'magic', '#b697ce'],
+  ['curse', 'Curse', 'magic', '#b580e3'],
+  ['ashCurse', 'Ash Curse', 'magic', '#b697ce'],
   ['charge', 'Charge', 'physical'], ['stomp', 'Stomp', 'physical'],
   ['bloodlust', 'Bloodlust', 'magic', '#d46a78'], ['web', 'Web', 'magic', '#acba8b'],
   ['pinningBolt', 'Pinning Bolt', 'physical'], ['incendiaryFlume', 'Burning Oil', 'physical', '#c68b57'],
@@ -79,7 +79,8 @@ for (const [id, label, family, accent] of skills) {
     bytes: bytes.length, sha256: digest(bytes), source: `svg-sources/${id in statusIcons ? 'status' : id in magicIcons ? 'magic' : 'physical'}.mjs` });
 }
 // Historical UI acceptance screenshots remain evidence of the earlier tested interface.
-for (const file of await readdir(artDirectory)) if (path.extname(file) === '.webp') await rm(path.join(artDirectory, file));
+const runtimeFiles = new Set(skills.map(([id]) => `${id}.svg`));
+for (const file of await readdir(artDirectory)) if (path.extname(file) === '.webp' || path.extname(file) === '.svg' && !runtimeFiles.has(file)) await rm(path.join(artDirectory, file));
 for (const file of ['skills-source.webp', 'statuses-source.webp', 'ability-icons-review.webp']) {
   await rm(path.join(reviewDirectory, file), { force: true });
 }
