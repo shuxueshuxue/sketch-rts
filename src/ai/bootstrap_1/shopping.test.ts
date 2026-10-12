@@ -8,6 +8,7 @@ import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { bootstrapPolicyContext } from './policy';
 import { shopping, shoppingGoals } from './shopping';
+import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 
 const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ version, race, mirror }))));
@@ -68,25 +69,35 @@ it('the full planner pays for a distant guardian scroll while running its normal
   game.scriptedVictory = true;
   game.shops = [createShop('far-shop', 3200, 2200)];
   game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
-  let bought = 0, trained = 0;
+  let bought = 0, boughtScroll = 0, trained = 0, returnedScroll = false;
   const shoppers = new Set<string>();
   for (let tick = 0; tick < 6000; tick++) {
     if (tick % 15 === 0) {
+      const returning = memory.shopping?.kind === 'guardianScroll' && memory.shopping.returning
+        ? { ...memory.shopping } : undefined;
       const entries = planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_archer', memory }, { teams: game.teams });
       bought += entries.filter(entry => entry.command.type === 'buy').length;
+      boughtScroll += entries.filter(entry => entry.command.type === 'buy' && entry.command.item === 'guardianScroll').length;
       trained += entries.filter(entry => entry.command.type === 'train').length;
-      if (memory.shopping) shoppers.add(memory.shopping.unitId);
+      if (memory.shopping?.kind === 'guardianScroll') shoppers.add(memory.shopping.unitId);
+      if (returning && (memory.shopping?.unitId !== returning.unitId || memory.shopping.kind !== 'guardianScroll')) {
+        const courier = game.units.find(unit => unit.id === returning.unitId)!;
+        const home = game.buildings.find(building => building.id === returning.homeId)!;
+        expect(walkingDistance(game.map, courier, home, 'land')).toBeLessThanOrEqual(V7_GATHERED_RANGE);
+        returnedScroll = true;
+      }
       sdk.issue(entries, {}, { checksum: false });
     }
     stepGame(game);
   }
   const diagnostic = JSON.stringify({ bought, trained, task: memory.shopping, gold: game.players.us!.gold, kinds: game.units.filter(unit => unit.owner === 'us').map(unit => unit.kind) });
   expect(bought, diagnostic).toBeGreaterThanOrEqual(1);
+  expect(boughtScroll, diagnostic).toBe(1);
   expect(trained, diagnostic).toBeGreaterThan(0);
   expect(shoppers.size, diagnostic).toBe(1);
   const shopper = game.units.find(unit => shoppers.has(unit.id))!;
   expect(game.items.some(item => item.kind === 'guardianScroll' && item.carrierId === shopper.id), diagnostic).toBe(true);
-  expect(memory.shopping, diagnostic).toBeUndefined();
+  expect(returnedScroll, diagnostic).toBe(true);
   expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(200);
   expect(game.match.stats.unitsLost.us).toBe(0);
 });
