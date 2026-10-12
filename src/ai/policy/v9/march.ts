@@ -14,9 +14,9 @@ import { neutralCamps, type Camp } from "../v7/creep";
 // camp once 500 from it walked into the middle's brutes and witches the same way, chalkFen generated, 5:10).
 // The step out stands on the target's ground: measured as the crow flies, it stood on an island off the shore, and an
 // army sent there stood on the beach across from it to the end (pool-gullIsland-1, 19 soldiers from 17:00 to 40:00).
-const PASS_CLEARANCE = 300;
-const DETOUR_GAP = 460;
-const END_CLEARANCE = 450;
+export const PASS_CLEARANCE = 300;
+export const DETOUR_GAP = 460;
+export const END_CLEARANCE = 450;
 const EDGE_MARGIN = 120;
 
 // Units still on the way (farther than ARRIVED from the point) head for the march point from their middle; units at the

@@ -82,6 +82,9 @@ jobs:
       - name: Verify camp reinforcements and unsupported caster micro
         run: npx vitest run src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
 
+      - name: Verify assault camp detours and closed roads
+        run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 
