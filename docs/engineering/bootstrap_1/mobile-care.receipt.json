@@ -1,0 +1,86 @@
+{
+  "base": "79208e49d40a60052c6ba091d4d86d4d6c4cb13d",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/expedition-recovery.ts": "1c8b7ad3559f8cf6116b95a61c309d8d70748eb732fa251bc16761024d8d3398",
+    "src/ai/bootstrap_1/mine-defense.ts": "3491e660bbf3ad52b4fc72e2b19faa5a319b568fe8095da77676d306fe0ac3cb",
+    "src/ai/bootstrap_1/policy.ts": "c21f552e646a074bc14504a4a41902704431d491679556160676db93d8aa7284",
+    "src/ai/bootstrap_1/mobile-care.ts": "f5c6c8dddcd692568b40350f904edcc982e81db592a8199174c90cb0d17d78e7"
+  },
+  "sdk": {
+    "passed": 148,
+    "failed": 0,
+    "reportSha256": "393fe088f4fa2b1e4f9d44e65bd3e7eb8991e08176f05935dd7a8d9e870569e1",
+    "suites": [
+      {
+        "file": "expedition-recovery.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "expedition-unmedicated.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "front-recovery.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "mainland-medical-priority.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "medical-roads.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "mobile-care.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "mounted-expedition.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "mounted-fleet-ownership.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "mounted-shopping.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "recovery-move-continuity.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "rider-crossing.test.ts",
+        "passed": 21
+      },
+      {
+        "file": "shopping.test.ts",
+        "passed": 13
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "79208e49d40a60052c6ba091d4d86d4d6c4cb13d",
+    "passed": 0,
+    "failed": 6,
+    "reportSha256": "74ed5b7f1183eb2c31cda06435816d1d5c58ca1ed407ee5fa489b6d02d33c1fb"
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "completedBuildLog": true,
+    "logSha256": "6c23981fc5c7e2dc2ae5ae9e5757c6bcde8013e9b16b066f46d6c0aa670f74ad"
+  },
+  "nativeWindow": {
+    "from": 9000,
+    "to": 9300,
+    "parentPermanentDeaths": 2,
+    "candidatePermanentDeaths": 2,
+    "riderSurvives": false,
+    "reportSha256": "adb80967a8a86c361ca725ceb27037350773db7be756a3c969c9bb3aedaa552c",
+    "scope": "Same failed experimental sortie world, IDs, and all controller memories; current complete controllers. No survival or formal win claim."
+  }
+}

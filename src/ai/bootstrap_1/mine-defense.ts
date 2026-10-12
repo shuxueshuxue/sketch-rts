@@ -15,6 +15,7 @@ import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { groundFrontThreat, groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
+import { mobileCare } from './mobile-care';
 import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
@@ -187,6 +188,7 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   for (const id of mercenaryControlUnitIds(snapshot, owner, options)) crew.add(id);
   for (const id of lootRecoveryUnitIds(snapshot, owner, options)) crew.add(id);
   for (const id of shoppingUnitIds(snapshot, owner, options)) crew.add(id);
+  for (const id of mobileCare.claimsUnits!(snapshot, owner, options)) crew.add(id);
   const army = intel.army.filter(unit => !crew.has(unit.id) && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
