@@ -1,0 +1,38 @@
+{
+  "pr": 341,
+  "revision": "7d4ea71648ed6ce807b29fb7626b2753b07581f9",
+  "run": 38255729415,
+  "attempt": 1,
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Run npm run build:production",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "conclusion": "success"
+    }
+  ],
+  "productionLatest": "7d4ea71648ed6ce807b29fb7626b2753b07581f9",
+  "ci": {
+    "run": 38254009138,
+    "attempt": 1,
+    "head": "5540c08938ca44a322b8418173ae8e1be0669f94",
+    "conclusion": "success"
+  },
+  "fullAcceptance": "pending",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+}
