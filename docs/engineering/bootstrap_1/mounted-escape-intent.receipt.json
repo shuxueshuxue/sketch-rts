@@ -1,0 +1,94 @@
+{
+  "base": "e4bc05df239a5fa1baf631fa35b1f04cc1ac204f",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-micro.ts": "d673f6883dbcd20477c446bb954b92cc1824c277aca67a3d3618a33b3a95a4f8"
+  },
+  "sdk": {
+    "passed": 75,
+    "failed": 0,
+    "reportSha256": "55be23c8a0395b806976a61cc81ec2242bb8a1c60192657bb052632af7822d97",
+    "suites": [
+      {
+        "file": "ai/bootstrap_1/caster-melee-micro.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "ai/bootstrap_1/expedition-recovery.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-camp-preparation.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-charge.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-escape-continuity.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-escape-intent.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-expedition.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-items.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-micro.test.ts",
+        "passed": 11
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-prepared-shot.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-retreat-motion.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "ai/bootstrap_1/mounted-spent-charge.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "ai/bootstrap_1/recovery-move-continuity.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "ai/bootstrap_1/shell-evasion.test.ts",
+        "passed": 2
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "dccc8c5f9b6ee8266b61b45565dcb8ad50e48de5",
+    "passed": 4,
+    "failed": 4,
+    "reportSha256": "90d9b7536d39baa47eea45ff5e7da2d42b74efa4010f00d2133735065c443206"
+  },
+  "causalWindow": {
+    "from": 9000,
+    "to": 9300,
+    "candidate": "Unpublished early mounted-support experiment; one exact compiled condition changed, all other bytes unchanged.",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeRiderAlive": false,
+    "afterRiderAlive": false,
+    "beforeBundleSha256": "2b9416b8db87c344cec57e133d6391a1fefe1fe2a818d7d45d0f4181f484e9e8",
+    "afterBundleSha256": "e4cee1d5438f0a91da2c2794ee775430ef8a2be59af4fafd3c9eec7e1846506d",
+    "reportSha256": "3aa9e51a5eaaaaaf8882597fb827e4162887b51cbc13db830935e4e928a1f05c",
+    "memoryInitialization": "All candidate and frozen memories restored without edits; no combat win or survival improvement claim."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "dc20c429073178dc0c82cb7492316fff6a703c82616fa5829c1989cf60c69dfb"
+  }
+}
