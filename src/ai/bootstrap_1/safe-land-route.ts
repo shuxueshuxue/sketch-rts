@@ -24,16 +24,22 @@ export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Po
 
 /** Check the same building-aware steering road that a recovery move will execute. */
 export function retreatLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]): number | undefined {
+  const road = retreatLandRoad(snapshot, unit, goal, foes);
+  return road && Math.hypot(road.points[road.points.length - 1]!.x - goal.x, road.points[road.points.length - 1]!.y - goal.y)
+    <= MOVE_ORDER_ARRIVAL_RANGE ? road.ticks : undefined;
+}
+
+/** A native retreat road may end beside a building; the task decides its arrival range. */
+export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]) {
   if (routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed) === undefined) return undefined;
-  const points = groundSteeringRoute(snapshot.map, unit, goal), end = points[points.length - 1]!;
-  if (Math.hypot(end.x - goal.x, end.y - goal.y) > MOVE_ORDER_ARRIVAL_RANGE) return undefined;
+  const points = groundSteeringRoute(snapshot.map, unit, goal);
   const cost = points.slice(1).reduce((sum, point, index) => sum + groundTravelCost(snapshot.map, points[index]!, point)!, 0);
   const ticks = Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
   const disks = foes.flatMap(foe => {
     const reach = retreatThreatReach(snapshot, foe, unit, THINK_TICKS + ticks);
     return reach > 0 ? [{ x: foe.x, y: foe.y, radius: reach + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }] : [];
   });
-  return routeLeavesDisks(points, disks) ? ticks : undefined;
+  return routeLeavesDisks(points, disks) ? { points, ticks } : undefined;
 }
 
 /** Avoid-combat movement suppresses native normal fire; active casts remain possible within the next think. */

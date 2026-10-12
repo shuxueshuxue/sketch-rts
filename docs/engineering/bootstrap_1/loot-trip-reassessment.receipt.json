@@ -1,0 +1,90 @@
+{
+  "base": "697b84e3bfe168f34df1a64cc937387147ee43d6",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/loot-recovery.ts": "6f459820cbe708f97039d0f92a6df6e6a5041f443b8f972571e042ed49f3b8b4",
+    "src/ai/bootstrap_1/safe-land-route.ts": "32f2e8b0defc9401dfa356c5de89e7b935841dd34763d82a53e1837c069a3135",
+    "src/ai/memory.ts": "118ce12288c2251702b9854e4ad362f874a9986f7848f145de57aab11188a79f"
+  },
+  "sdk": {
+    "uniquePassed": 182,
+    "failed": 0,
+    "reportSha256": "f635fc667874b072a1dbe27244a4cfaf83f3b0070bb3d9f873a79515c4b3a066",
+    "suites": [
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "passed": 48
+      },
+      {
+        "file": "src/ai/bootstrap_1/loot-recovery.test.ts",
+        "passed": 13
+      },
+      {
+        "file": "src/ai/bootstrap_1/loot-trip-reassessment.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/mercenary-control.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/recovery-road-coverage.test.ts",
+        "passed": 60
+      },
+      {
+        "file": "src/ai/bootstrap_1/shopping.test.ts",
+        "passed": 13
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+    "passed": 12,
+    "failed": 12,
+    "allInterceptCasesFail": true,
+    "reportSha256": "220965f79509534be567b5080b6798ae5405d242913ebfdaab2ef2a06e268c17"
+  },
+  "causalWindow": {
+    "from": 6000,
+    "to": 7200,
+    "match": "pineshade/v9_knight/v8+v8/grove/0",
+    "engineRevision": "697b84e3bfe168f34df1a64cc937387147ee43d6",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "sourceSha256": "c3b7206de94bdca52ca4f80bf1a0e164da4f8dfefd0c2ed168970b9657465c54",
+    "beforeDeaths": [
+      {
+        "tick": 6192,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "unit-p2-lancer-1083"
+      },
+      {
+        "tick": 6423,
+        "kind": "lancer",
+        "id": "unit-p0-lancer-1102",
+        "source": "unit-p2-lancer-1083"
+      }
+    ],
+    "afterDeaths": [
+      {
+        "tick": 6192,
+        "kind": "mercenary",
+        "id": "unit-p0-mercenary-1641",
+        "source": "unit-p2-lancer-1083"
+      }
+    ],
+    "courier": {
+      "id": "unit-p0-lancer-1102",
+      "hp": 173,
+      "maxHp": 173,
+      "level": 1
+    },
+    "candidatePhaseInitialization": "Observed existing pickupItem task initialized as returning:false. Frozen opponent memories unchanged. Not formal acceptance."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "894bfacc188b3b9ea38ec67a44bf1f9bb68fd44fb70b9cf61de36ba2b9786efd"
+  }
+}
