@@ -143,6 +143,10 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
       + strengthOf(enemy.army.filter(unit => distance(unit, center) <= LOCAL_RANGE)), 0)
       + enemyTowersNear(world, center, 520) * TOWER_STRENGTH,
     respondingPower,
+    selectAttack: (choices, eligible) => {
+      const first = choices[0];
+      return first && eligible(first) ? first : undefined;
+    },
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls].some(hall => distance(hall, point) <= V7_HOME_REACH),
     campOnOwnSide: onOwnSide,
     defenseTarget: (_snapshot, intel, options) => isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel),
@@ -170,6 +174,7 @@ type ArmyPlan = {
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
   frontThreat: (intel: V6Intel, front: Unit[], center: Point) => number;
   respondingPower: typeof respondingPower;
+  selectAttack: (choices: AttackChoice[], eligible: (choice: AttackChoice) => boolean) => AttackChoice | undefined;
   withinHomeReach: (intel: V6Intel, point: Point) => boolean;
   campOnOwnSide: typeof onOwnSide;
   defenseTarget: (snapshot: GameSnapshot, intel: V6Intel, options: AiPolicyContext) => ArmyDefense | undefined;
@@ -280,20 +285,15 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     return order(snapshot, owner, memory, "creep", front, natural, options);
   }
 
-  const target = attackTarget(intel, attackMargin(options), threatWithin);
   const idle = current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= IDLE_TICKS;
   const marching = marchStrength(available) * (1 + profile.aggression);
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
   // A main is a long walk into two armies' reach: V6 marched four summoners at an enemy main 3165 away at 240s because both
   // armies had left it, met them on the way, and came home to lose its own. An expansion needs no such floor.
   const mainFloor = isV9Policy(options) && intel.ownTowers.length >= V9_FORTRESS_TOWERS ? V9_MAIN_ATTACK_FLOOR : MAIN_ATTACK_FLOOR;
-  const exposed = target && intel.enemies.find((enemy) => enemy.owner === target.base.owner)!.power < marching * 0.5;
-  const ready = !isMain(intel, target?.base) || marching >= mainFloor || (isV7Policy(options) && exposed && marching >= target!.need);
   // @@@v7-far-attack - Against two opponents a march across the map meets both armies on the way: V7 sent five ravagers at
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
-  const farOff = isV7Policy(options) && target !== undefined && !plan.withinHomeReach(intel, target.base.hall);
-  const opposing = isV7Policy(options) && target ? response(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
   // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
@@ -302,8 +302,15 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   // end, each army's middle 1600 from the other's natural (base-sides-2).
   const stale = isV9Policy(options) && current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= V9_STALE_TICKS;
   const maxed = stale && (snapshot.players[owner]?.supplyUsed ?? 0) >= STALE_ARMY_SUPPLY;
-  const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
-  if (target && regrouped && ready && (maxed || (committed && (marching >= target.need || (idle && marching >= target.defended))))) {
+  const target = plan.selectAttack(attackChoices(intel, attackMargin(options), threatWithin), choice => {
+    const exposed = intel.enemies.find(enemy => enemy.owner === choice.base.owner)!.power < marching * 0.5;
+    const ready = !isMain(intel, choice.base) || marching >= mainFloor || (isV7Policy(options) && exposed && marching >= choice.need);
+    const farOff = isV7Policy(options) && !plan.withinHomeReach(intel, choice.base.hall);
+    const committed = !farOff || stale || marching >= response(intel, choice.base, front)
+      * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
+    return ready && (maxed || (committed && (marching >= choice.need || (idle && marching >= choice.defended))));
+  });
+  if (target && regrouped) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : maxed && marching < target.defended ? "maxed" : "idleArmy"}`);
     return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, reinforcements, {}, gatherAssault && isMain(intel, target.base)));
   }
@@ -564,7 +571,9 @@ function toward(from: Point, to: Point, length: number): Point {
   return gap < 1 ? from : { x: from.x + ((to.x - from.x) / gap) * Math.min(length, gap), y: from.y + ((to.y - from.y) / gap) * Math.min(length, gap) };
 }
 
-function attackTarget(intel: V6Intel, margin: number, within: ArmyPlan['threatWithin']): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
+type AttackChoice = { base: V6BaseIntel; need: number; defended: number; why: string };
+
+function attackChoices(intel: V6Intel, margin: number, within: ArmyPlan['threatWithin']): AttackChoice[] {
   const choices = intel.enemies.flatMap((enemy) => {
     const main = mainHall(enemy);
     return targetBases(enemy, intel).map((base) => {
@@ -583,7 +592,7 @@ function attackTarget(intel: V6Intel, margin: number, within: ArmyPlan['threatWi
       return { base, need: defended * margin + 2, defended, why };
     });
   });
-  return choices.sort((a, b) => a.need - b.need)[0];
+  return choices.sort((a, b) => a.need - b.need);
 }
 
 // An opponent's main is the hall its other buildings stand around.
