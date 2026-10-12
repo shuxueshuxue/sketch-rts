@@ -1,0 +1,93 @@
+{
+  "base": "a8597397c5ba1d1a0a0aa827e036db602d9066c0",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-tasks.ts": "73256ca879b26baf2e417c09db4274befc79294b4bdee65979f0b692b0835164",
+    "src/ai/bootstrap_1/mounted-micro.ts": "8c4f5d6b86c56070157054ac56114785b80d084c09a9da00883b62553026d2a1"
+  },
+  "runtimeDiff": {
+    "files": 2,
+    "insertions": 14,
+    "deletions": 5
+  },
+  "sdk": {
+    "passed": 123,
+    "failed": 0,
+    "reportSha256": "a3e10a1a9af44ccfa36375a5bf87420d5a99cfcbe1c1bb195d20f2a7c846bf63",
+    "suites": [
+      {
+        "file": "mobile-care.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "mounted-approach.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "mounted-camp-preparation.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "mounted-charge.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "mounted-escape-intent.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "mounted-expedition-priority.test.ts",
+        "passed": 18
+      },
+      {
+        "file": "mounted-fleet-ownership.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "mounted-ground-assignments.test.ts",
+        "passed": 18
+      },
+      {
+        "file": "mounted-micro.test.ts",
+        "passed": 11
+      },
+      {
+        "file": "mounted-nearby-raid.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "mounted-raids.test.ts",
+        "passed": 7
+      },
+      {
+        "file": "mounted-retreat-motion.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "mounted-road-admission.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "mounted-spent-charge.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "rider-crossing.test.ts",
+        "passed": 21
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "a8597397c5ba1d1a0a0aa827e036db602d9066c0",
+    "passed": 6,
+    "failed": 6,
+    "reportSha256": "833bb20cbc51aab48a57c6e3f08f3a453483454f68d84ea193006debc7aeda52"
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "299bd9b687faf9d9746fd14c06ed4741128a742ee947c82518cbab85b0cb6e30"
+  },
+  "scope": "Native full-controller task scenes across three families and mirrors, Grove riders. Zero permanent deaths, zero HP loss, zero spend until assigned objectives complete. Not an official-map victory or formal acceptance."
+}
