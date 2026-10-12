@@ -14,12 +14,12 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
-import { groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
+import { groundFrontThreat, groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
 import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { bootstrapExpansionMine } from './expansion-target';
-import { availableV6Army, planV6Army, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
+import { availableV6Army, planV6Army, retreatV6Front, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
 import { activeCamp, neutralCamps, V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
@@ -120,6 +120,7 @@ export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, option
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const intel = mainArmyIntel(snapshot, owner, options), creep = options.memory.v6?.creep;
+  const previous = options.memory.v6?.general;
   const recruits = creep ? availableV6Army(snapshot, options, intel).filter(unit => !unit.deck && !isBacklineKind(unit)
     && unit.attackDamage > 0 && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE
     && !creep.group.includes(unit.id) && !['cast', 'charge'].includes(unit.order.type)) : [];
@@ -133,6 +134,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     campTerritory: 'ground',
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
+    frontThreat: (world, front) => groundFrontThreat(snapshot, world, front),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
       .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
@@ -158,6 +160,12 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       { type: 'move', unitIds: walking.map(unit => unit.id), ...creep.staging }, options));
   }
   const general = options.memory.v6?.general;
+  if (previous?.mode === 'attack' && general?.mode !== 'attack' && options.memory.v6?.retreatedAt === snapshot.tick) {
+    const ordered = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+    const leaving = intel.army.filter(unit => !isBacklineKind(unit) && previous.group!.includes(unit.id) && !ordered.has(unit.id));
+    commands.push(...retreatV6Front(snapshot, owner, leaving, general!.target!, options)
+      .map(command => ({ ...command, avoidCombat: true })));
+  }
   return general?.mode === 'attack' && general.stage !== 'gather'
     && !intel.army.some(unit => general.group!.includes(unit.id) && (unit.kind === 'ballista' || unit.kind === 'catapult'))
     ? routeAssaultCampCommands(snapshot, commands,

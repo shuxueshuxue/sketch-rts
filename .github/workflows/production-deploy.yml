@@ -91,6 +91,9 @@ jobs:
       - name: Verify research intent survives occupied labs
         run: npx vitest run src/ai/bootstrap_1/research-intent.test.ts src/ai/bootstrap_1/research-prerequisites.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts
 
+      - name: Verify actual front exposure and disengagement
+        run: npx vitest run src/ai/bootstrap_1/front-exposure.test.ts src/ai/policy/v6/general.test.ts src/ai/bootstrap_1/battle-roads.test.ts src/ai/bootstrap_1/covered-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 

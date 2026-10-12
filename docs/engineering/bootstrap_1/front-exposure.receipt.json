@@ -1,0 +1,64 @@
+{
+  "base": "898c935f3f1bde2d46b8368943a00e443ac45a49",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/policy/v6/general.ts": "3b4631481e6520605c47e5f8ee38c3188ba14cc333772d22578bc80c3f906579",
+    "src/ai/policy/ground-threat.ts": "fa73d60b377d2de349f966728f6177ae95dc48670eabbad1a6a27baeac796167",
+    "src/ai/bootstrap_1/mine-defense.ts": "9be32577746e226508e61d0343bd7bfca65f9bee25ee765facd08a7775f84aa5"
+  },
+  "sdk": {
+    "passed": 147,
+    "failed": 0,
+    "reportSha256": "10b076b0b9656602b5a17608098c4382ac6ad18139eeb0e4e9ad7fc922aeb2f2",
+    "suites": [
+      {
+        "file": "ai/bootstrap_1/assault-cohesion.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "ai/bootstrap_1/battle-roads.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "ai/bootstrap_1/covered-defense.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "ai/bootstrap_1/front-exposure.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "ai/bootstrap_1/front-recovery.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "ai/policy/v6/general.test.ts",
+        "passed": 37
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "898c935f3f1bde2d46b8368943a00e443ac45a49",
+    "passed": 12,
+    "failed": 12,
+    "reportSha256": "8db2cdb577486bbddeea6b9a8de7418cd2290f09031d3003e2dad0be67a23721"
+  },
+  "causalWindow": {
+    "from": 12000,
+    "to": 14000,
+    "engineRevision": "898c935f3f1bde2d46b8368943a00e443ac45a49",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeDeaths": 15,
+    "afterDeaths": 5,
+    "beforePermanentArmy": 10,
+    "afterPermanentArmy": 12,
+    "reportSha256": "1fb74d665166ee91bb39f3e1da30fdee12a04c34b78b20cf45912e0a10dcad29",
+    "memoryInitialization": "All candidate and frozen memories restored without edits; not formal acceptance."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "ca3c6f58c463a836a11b464a17846ab4635b09faf2713343a52294aa1f49f10d"
+  }
+}

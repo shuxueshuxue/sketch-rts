@@ -46,7 +46,7 @@ import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 //   5. Otherwise creep the strongest camp it beats with room to spare, far from enemy armies, for stars and items.
 //   6. Otherwise hold at a rally in front of the main.
 
-const LOCAL_RANGE = 900;
+export const LOCAL_RANGE = 900;
 const TARGET_REGION = 1_800;
 // Armies within the local range of the target defend it in full; further out, within the target region, at this share.
 const FAR_DEFENDER_SHARE = 0.5;
@@ -139,6 +139,9 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     campTerritory: 'home',
     chooseMine: isV9Policy(options) ? v9ExpansionMine : nextExpansionMine,
     threatWithin: (unit, point, range) => distance(unit, point) <= range,
+    frontThreat: (world, _front, center) => world.enemies.reduce((total, enemy) => total
+      + strengthOf(enemy.army.filter(unit => distance(unit, center) <= LOCAL_RANGE)), 0)
+      + enemyTowersNear(world, center, 520) * TOWER_STRENGTH,
     respondingPower,
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls].some(hall => distance(hall, point) <= V7_HOME_REACH),
     campOnOwnSide: onOwnSide,
@@ -165,6 +168,7 @@ type ArmyPlan = {
   campTerritory: 'home' | 'ground';
   chooseMine: typeof nextExpansionMine;
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
+  frontThreat: (intel: V6Intel, front: Unit[], center: Point) => number;
   respondingPower: typeof respondingPower;
   withinHomeReach: (intel: V6Intel, point: Point) => boolean;
   campOnOwnSide: typeof onOwnSide;
@@ -234,7 +238,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   // With a single working mine, secure the requested replacement before continuing a distant assault.
   if (!miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, threatWithin);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat);
     if (continued) return continued;
   }
 
@@ -267,7 +271,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     }
   }
   if (miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, threatWithin);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat);
     if (continued) return continued;
   }
   const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
@@ -323,7 +327,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   return order(snapshot, owner, memory, "hold", front, rally, options);
 }
 
-function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean, within: ArmyPlan['threatWithin']): GameCommand[] | undefined {
+function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean, frontThreat: ArmyPlan['frontThreat']): GameCommand[] | undefined {
   const memory = v6Memory(options), current = memory.general;
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);
@@ -336,8 +340,7 @@ function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const group = attackGroup(available, front, current.group ?? []);
     const marching = group.filter((unit) => front.includes(unit));
     const center = marching.length > 0 ? averagePoint(marching) : undefined;
-    const facing = center ? intel.enemies.reduce((total, enemy) => total + strengthOf(enemy.army.filter(unit => within(unit, center, LOCAL_RANGE))), 0)
-      + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
+    const facing = center ? frontThreat(intel, marching, center) : 0;
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
     const gaps = center ? enemyGaps(intel, center) : {};
     const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});

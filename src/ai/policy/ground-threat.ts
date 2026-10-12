@@ -4,7 +4,10 @@ import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import type { Point } from './spatial';
 import type { V6BaseIntel, V6Intel } from './v6/intel';
-import { strengthOf } from './v6/strength';
+import { strengthOf, TOWER_STRENGTH } from './v6/strength';
+import { LOCAL_RANGE } from './v6/general';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { THINK_TICKS } from '../bootstrap_1/mounted-micro';
 
 /** Fire crosses terrain; a land reinforcement outside firing range needs a road. */
 export function groundThreatWithin(snapshot: GameSnapshot, unit: Unit, point: Point, range: number) {
@@ -26,4 +29,13 @@ export function groundRespondingPower(snapshot: GameSnapshot, intel: V6Intel, ta
   const counterraiders = income.flatMap(hall => routeArrivals(snapshot.map, army, hall, 'land')
     .filter(unit => unit.ticks <= arrival).map(unit => unit.unit));
   return strengthOf([...new Set([...firing, ...responders, ...counterraiders])]);
+}
+
+/** A remote member cannot move the center away from the soldiers actually exposed to fire. */
+export function groundFrontThreat(snapshot: GameSnapshot, intel: V6Intel, front: Unit[]) {
+  const army = intel.enemies.flatMap(enemy => enemy.army).filter(enemy =>
+    front.some(unit => groundThreatWithin(snapshot, enemy, unit, LOCAL_RANGE)));
+  const towers = intel.enemies.flatMap(enemy => enemy.buildings).filter(tower => tower.complete && tower.attackDamage > 0
+    && front.some(unit => strikeGap(tower, unit) <= tower.attackRange + unit.speed * THINK_TICKS / SIM_TICKS_PER_SECOND));
+  return strengthOf(army) + towers.length * TOWER_STRENGTH;
 }
