@@ -43,7 +43,7 @@ jobs:
       - name: Test continued area escape under pursuit
         run: npx vitest run src/ai/bootstrap_1/area-pursuit.test.ts
       - name: Verify recovery roads and reachable care endpoints
-        run: npx vitest run src/shared/retreat-route.test.ts src/ai/bootstrap_1/recovery-road-coverage.test.ts src/ai/bootstrap_1/front-recovery.test.ts src/ai/bootstrap_1/recovery-cast-cover.test.ts src/ai/bootstrap_1/front-post-area.test.ts
+        run: npx vitest run src/shared/retreat-route.test.ts src/ai/bootstrap_1/recovery-road-coverage.test.ts src/ai/bootstrap_1/front-recovery.test.ts src/ai/bootstrap_1/recovery-cast-cover.test.ts src/ai/bootstrap_1/front-post-area.test.ts src/ai/bootstrap_1/lethal-item-care.test.ts
 
       - name: Verify bounded fronts and commanded movement
         run: npx vitest run src/shared/route-prefix.test.ts src/ai/bootstrap_1/front-road-prefix.test.ts src/shared/sim/unit-update.test.ts src/shared/ship-queued-course.test.ts src/ai/policy/spatial.test.ts src/ai/policy/nearest-query-order.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/skirmish-retreat-memory.test.ts src/ai/policy/v5-ranged-core.test.ts src/ai/policy/humanized-combat.test.ts src/ai/policy/mechanical-healing.test.ts
