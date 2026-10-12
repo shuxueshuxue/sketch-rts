@@ -1,0 +1,180 @@
+{
+  "pr": 333,
+  "revision": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+  "run": 38216767242,
+  "attempt": 1,
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Run npm run build:production",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "conclusion": "success"
+    }
+  ],
+  "productionLatest": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+  "ci": {
+    "run": 38216142131,
+    "attempt": 1,
+    "conclusion": "success",
+    "head": "e3691af5d972394babf771bb8ec405b3e27f4391"
+  },
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "observations": [
+    {
+      "file": "bootstrap_1-fresh-knight-two-v8-rules2.json",
+      "sha256": "70d34396eecd06a9a8d9f079f73d8fcd192ba3cdbf2f0da356c51185219296ba",
+      "candidateRevision": "e3691af5d972394babf771bb8ec405b3e27f4391",
+      "engineRevision": "99a4bc3b3006c8c7f2bdaa7c6f826407fd28b8c5",
+      "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+      "match": "pineshade/v9_knight/v8+v8/grove/0",
+      "summary": {
+        "tick": 11323,
+        "winner": "p1",
+        "owners": {
+          "p0": {
+            "gold": 45,
+            "pop": 0,
+            "halls": 0,
+            "workers": 0,
+            "permanentArmy": 0
+          },
+          "p1": {
+            "gold": 138.21,
+            "pop": 43,
+            "halls": 3,
+            "workers": 13,
+            "permanentArmy": 15
+          },
+          "p2": {
+            "gold": 87.8,
+            "pop": 43,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 12
+          }
+        },
+        "subjectPermanentDeaths": 34
+      },
+      "checksum": "7411f755",
+      "firstLosses": [
+        {
+          "tick": 6135,
+          "kind": "lancer",
+          "id": "unit-p0-lancer-1290",
+          "source": "creep-gen-3-2"
+        },
+        {
+          "tick": 6274,
+          "kind": "mercenary",
+          "id": "unit-p0-mercenary-1641",
+          "source": "creep-gen-3-2"
+        },
+        {
+          "tick": 6446,
+          "kind": "lancer",
+          "id": "unit-p0-lancer-1102",
+          "source": "unit-p2-lancer-1100"
+        },
+        {
+          "tick": 6797,
+          "kind": "lancer",
+          "id": "unit-p0-lancer-1093",
+          "source": "creep-gen-3-1"
+        },
+        {
+          "tick": 7476,
+          "kind": "mercenary",
+          "id": "unit-p0-mercenary-2088",
+          "source": "building-p2-defenseTower-1766"
+        }
+      ],
+      "published": true
+    },
+    {
+      "file": "bootstrap_1-knight-opening-observation.json",
+      "sha256": "7a2a0c064a0047a482418e4e470eb1a59cf48075fcb012a096fde3e7c2993df8",
+      "candidateRevision": "uncommitted opening composition prototype on 66dfd2d17f0e55933d1955027cb04246bd6dea57",
+      "engineRevision": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+      "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+      "match": "pineshade/v9_knight/v8+v8/grove/0",
+      "summary": {
+        "tick": 12000,
+        "winner": null,
+        "owners": {
+          "p0": {
+            "gold": 49,
+            "pop": 0,
+            "halls": 1,
+            "workers": 0,
+            "permanentArmy": 0
+          },
+          "p1": {
+            "gold": 228.08,
+            "pop": 49,
+            "halls": 3,
+            "workers": 11,
+            "permanentArmy": 18
+          },
+          "p2": {
+            "gold": 315.71,
+            "pop": 47,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 15
+          }
+        },
+        "subjectPermanentDeaths": 31
+      },
+      "checksum": "9ff968f6",
+      "firstLosses": [
+        {
+          "tick": 9787,
+          "kind": "mercenary",
+          "id": "unit-p0-mercenary-1876",
+          "source": "unit-p2-raider-1732"
+        },
+        {
+          "tick": 9827,
+          "kind": "knight",
+          "id": "unit-p0-knight-2428",
+          "source": "unit-p2-raider-1732"
+        },
+        {
+          "tick": 9861,
+          "kind": "lancer",
+          "id": "unit-p0-lancer-1093",
+          "source": "unit-p2-lancer-1091"
+        },
+        {
+          "tick": 9961,
+          "kind": "mercenary",
+          "id": "unit-p0-mercenary-2592",
+          "source": "unit-p2-lancer-1224"
+        },
+        {
+          "tick": 10037,
+          "kind": "lancer",
+          "id": "unit-p0-lancer-1084",
+          "source": "unit-p2-priest-1756"
+        }
+      ],
+      "published": false
+    }
+  ]
+}
