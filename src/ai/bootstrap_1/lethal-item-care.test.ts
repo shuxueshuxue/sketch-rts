@@ -16,7 +16,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 function field(version: typeof cases[number]['version'], race: 'grove' | 'ember', mirror: boolean) {
   const x = (value: number) => mirror ? 4096 - value : value;
   const kind = version === 'v9_archer' ? race === 'grove' ? 'horseArcher' : 'sparkArcher'
-    : version === 'v9_summoner' ? race === 'grove' ? 'summoner' : 'pyreCaller'
+    : version === 'v9_summoner' ? 'summoner'
       : race === 'grove' ? 'knight' : 'ashChieftain';
   const scene = sketchScene('lethal-carried-items-before-fixed-wounded-threshold').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
