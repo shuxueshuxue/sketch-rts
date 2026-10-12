@@ -99,13 +99,13 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
     ];
-    if (script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery,
+    if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (script === AI_SCRIPT_LIBRARY.allySupport) return [mobileCare, mountedTasks, lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
-      ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
+      ? [medicalRecovery, towerRushAbilities, summonerTowerRush] : [medicalRecovery, bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
     return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval,
       claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
