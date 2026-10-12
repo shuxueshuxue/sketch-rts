@@ -47,7 +47,8 @@ describe('painted atlas bounds',()=>{
       if(!hasPaintedUnit(kind))continue;
       for(const mode of ['idle','walk','attack','cast'] as const)for(let frame=0;frame<(mode==='walk'?8:mode==='idle'?1:6);frame++){
         const pose:UnitAnimationFrame={mode,frame};
-        for(const facing of [-1,1] as const)assertFits(b=>paintFigure(b,kind,'#476f69',pose,facing),`${kind}/${mode}/${frame}/${facing}/tile${actionPaintSize(pose)}`,actionPaintSize(pose));
+        const size=actionPaintSize(pose,kind);
+        for(const facing of [-1,1] as const)assertFits(b=>paintFigure(b,kind,'#476f69',pose,facing),`${kind}/${mode}/${frame}/${facing}/tile${size}`,size);
       }
     }
   });
