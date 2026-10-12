@@ -1,0 +1,18 @@
+{
+  "name": "bootstrap_1",
+  "kind": "candidate-acceptance",
+  "requestedAt": "2026-10-12T01:40:00Z",
+  "productionSourceRevision": "978450b171c0d0ba73ad34eb6d9f9fe5ba4a2048",
+  "frozenPolicyRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "seed": "bootstrap_1-development",
+  "roles": ["candidate"],
+  "mapCount": 15,
+  "subjects": ["v9_archer", "v9_summoner", "v9_knight"],
+  "opponents": ["v5", "v7", "v8", "v5+v7", "v5+v8", "v7+v8", "v5+v5", "v7+v7", "v8+v8"],
+  "races": ["grove", "ember"],
+  "sides": [0, 1],
+  "games": 1620,
+  "thinkInterval": 15,
+  "maxTicks": 48000,
+  "unseen": false
+}

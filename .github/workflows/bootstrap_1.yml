@@ -34,7 +34,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        role: [baseline, candidate]
         map: [sapphireArchipelago, grandEstuary, brokenSea, templeSpring, turtleLake, elderwood, ringwater, loneMarket, reedwater, veiledHill, greystonePass, pineshade, gullIsland, stillwater, twoShores]
         subject: [v9_archer, v9_summoner, v9_knight]
     steps:
@@ -47,12 +46,12 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Play every rival group, race and side
-        run: node --import tsx scripts/bootstrap_1.ts --maps '${{ matrix.map }}' --subjects '${{ matrix.subject }}' ${{ matrix.role == 'baseline' && '--baseline' || '' }} --out .playtest/bootstrap_1/report.json
+        run: node --import tsx scripts/bootstrap_1.ts --maps '${{ matrix.map }}' --subjects '${{ matrix.subject }}' --out .playtest/bootstrap_1/report.json
       - name: Save complete match evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bootstrap_1-${{ matrix.role }}-${{ matrix.map }}-${{ matrix.subject }}
+          name: bootstrap_1-candidate-${{ matrix.map }}-${{ matrix.subject }}
           path: .playtest/bootstrap_1/
           include-hidden-files: true
           retention-days: 14
