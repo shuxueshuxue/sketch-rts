@@ -19,6 +19,43 @@ const work = (worker: Unit, remaining = 13): WorldEffect => ({
 });
 
 describe("unit pose history", () => {
+  it('adds guard poses only to armed anatomy, keeping unarmed creature idle/gait caches unchanged',()=>{
+    for(const kind of ['wildling','golem','ogreWarrior'] as const){
+      const unit=soldier({kind}),tracker=new UnitAnimationTracker();
+      const effect:WorldEffect={id:'hit',type:'melee',x:140,y:170,duration:16,remaining:16,sourceId:unit.id,actionMode:'attack',actionTick:0,fromX:100,fromY:100,toX:140,toY:170};
+      tracker.update({...snap(0,unit),effects:[effect]},0);
+      for(let tick=1;tick<=8;tick++)tracker.update({...snap(tick,unit),effects:[]},tick*50);
+      expect(Boolean(tracker.frame(unit,400).carry)).toBe(kind==='ogreWarrior');
+    }
+  });
+  it('uses the actual release tick and direction when a snapshot skips over the contact tick',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.scriptedVictory=true;
+    game.units=[];game.buildings=[];game.resources=[];game.obstacles=[];
+    const actor=game.spawnUnit('player','lancer',600,600),target=game.spawnUnit('enemy','footman',566,659);
+    actor.order={type:'hold',x:actor.x,y:actor.y};target.order={type:'hold',x:target.x,y:target.y};target.hp=1;
+    const animation=new UnitAnimationTracker();animation.update(game,0);
+    stepGame(game);stepGame(game);animation.update(game,100);
+    expect(animation.frame(actor,100)).toMatchObject({mode:'attack',frame:1,carry:6,direction:{x:-34,y:59}});
+    for(let tick=3;tick<=8;tick++){stepGame(game);animation.update(game,tick*50);}
+    expect(animation.frame(actor,400)).toMatchObject({mode:'idle',carry:6,carryDirection:{x:-34,y:59}});
+  });
+  it('keeps the last attack direction while idle and walking for three seconds, then returns and expires',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker();
+    const effect:WorldEffect={id:'guard-hit',type:'melee',x:140,y:170,duration:16,remaining:16,sourceId:actor.id,actionMode:'attack',actionTick:1,fromX:100,fromY:100,toX:140,toY:170};
+    tracker.update({...snap(0,actor),effects:[]},0);
+    tracker.update({...snap(1,actor),effects:[effect]},50);
+    const update=(tick:number,dx=0)=>{actor.x+=dx;tracker.update({...snap(tick,actor),effects:[]},tick*50);return tracker.frame(actor,tick*50);};
+    for(let tick=2;tick<=7;tick++)update(tick);
+    expect(tracker.frame(actor,350)).toMatchObject({mode:'idle',carry:6,carryDirection:{x:40,y:70}});
+    expect(update(8,-5)).toMatchObject({mode:'walk',carry:6});
+    expect(tracker.frame(actor,100000).carry).toBe(6); // a stalled simulation freezes it
+    for(let tick=9;tick<=67;tick++)update(tick);
+    expect(tracker.frame(actor,3350).carry).toBe(6);
+    for(let tick=68;tick<=72;tick++)update(tick);
+    expect(tracker.frame(actor,3600).carry).toBeLessThan(6);
+    for(let tick=73;tick<=77;tick++)update(tick);
+    expect(tracker.frame(actor,3850).carry).toBeUndefined();
+  });
   it('keeps real hold-position counterattacks facing their victim through recovery and idle',()=>{
     const game=createGame('bareDuel',{aiPlayers:[]});game.scriptedVictory=true;
     game.units=[];game.buildings=[];game.resources=[];game.obstacles=[];

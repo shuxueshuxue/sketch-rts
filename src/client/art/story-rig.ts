@@ -1,3 +1,4 @@
+import {figureWeaponSurface,creatureWeaponSurface} from './weapon-surface';
 import { actionPaintSize } from './action-direction';
 import { figureReleaseSocket } from './release-socket';
 /** Campaigns author appearance and socket details, never another body/animation
@@ -45,6 +46,7 @@ export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size
     b.restore();
   };
   return Object.assign(paint,{
+    weaponSurface:(pose:import('../unit-animation').UnitAnimationFrame,override:Readonly<FigurePresentation>={})=>figureWeaponSurface(kind,pose,{...presentation,...gear(override)},size),
     release:(pose:import('../unit-animation').UnitAnimationFrame,override:Readonly<FigurePresentation>={})=>figureReleaseSocket(kind,pose,{...presentation,...gear(override)},size),
     remains:((b,_team,override={})=>{const equipment=gear(override);paintCorpse(b,kind,{...remains,...equipment,...(equipment.weapon!==undefined||equipment.shield!==undefined?{shield:sampleFigurePose(appearance,IDLE_FRAME,{...presentation,...equipment}).shield}:{})});}) as UnitRemainsPainter,
   });
@@ -56,5 +58,5 @@ export function storyCreature(kind: UnitKind, presentation: CreatureAppearance):
     b.save(); b.translate(0, 17 - creatureGround(kind, presentation));
     paintCreature(b, kind, team, pose, presentation); b.restore();
   };
-  return Object.assign(paint,{paintSize:(pose:import('../unit-animation').UnitAnimationFrame)=>Math.max(160,actionPaintSize(pose,kind)),release:(pose:import('../unit-animation').UnitAnimationFrame)=>{const socket=creatureReleaseSocket(kind,pose,presentation);return socket?{x:socket.x,y:socket.y+17-socket.ground,ground:17}:undefined;},remains:((b)=>paintCorpse(b,kind,remains)) as UnitRemainsPainter});
+  return Object.assign(paint,{weaponSurface:(pose:import('../unit-animation').UnitAnimationFrame)=>creatureWeaponSurface(kind,pose,presentation),paintSize:(pose:import('../unit-animation').UnitAnimationFrame)=>Math.max(160,actionPaintSize(pose,kind)),release:(pose:import('../unit-animation').UnitAnimationFrame)=>{const socket=creatureReleaseSocket(kind,pose,presentation);return socket?{x:socket.x,y:socket.y+17-socket.ground,ground:17}:undefined;},remains:((b)=>paintCorpse(b,kind,remains)) as UnitRemainsPainter});
 }

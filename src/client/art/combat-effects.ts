@@ -29,7 +29,8 @@ export function drawCombatBody(ctx:Brush,marks:CombatPresentationFrame['body'],p
   for(const mark of marks){
     ctx.globalAlpha=mark.alpha*.77;
     const x=point.x+facing*mark.localX,y=point.y+mark.localY;
-    ctx.beginPath();ctx.ellipse(x,y,mark.radius*.65,mark.radius,mark.angle*facing,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(x,y,mark.width??mark.radius*.65,mark.radius,mark.angle*facing,0,Math.PI*2);ctx.fill();
+    if(mark.surface==='weapon')continue;
     ctx.globalAlpha=mark.alpha*.36;ctx.fillStyle='#542f2b';
     ctx.beginPath();ctx.ellipse(x,y+mark.radius*.7,mark.radius*.25,mark.radius*.62,mark.angle*facing,0,Math.PI*2);ctx.fill();ctx.fillStyle='#883e34';
   }

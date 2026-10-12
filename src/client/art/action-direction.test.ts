@@ -9,6 +9,20 @@ import { ART_ACTION_SIZE } from './raster-cache';
 import type { EquipmentKind } from './equipment';
 import type { UnitAnimationFrame } from '../unit-animation';
 const weapons:EquipmentKind[]=['none','sword','greatSword','axe','club','pike','pitchfork','bow','staff','crozier','pick','javelin','sling'];
+it('keeps carry direction separate from gait and keys it in both idle and walk rasters',()=>{
+ for(const mode of ['idle','walk'] as const){
+  const up=projectActionFrame({mode,frame:2,carry:6,carryDirection:{x:-40,y:-70}},-1);
+  const down=projectActionFrame({mode,frame:2,carry:6,carryDirection:{x:40,y:70}},1);
+  expect(up).toMatchObject({mode,frame:2,carry:6,carryAim:-4});
+  expect(down.carryAim).toBe(4);expect(animationKey(up)).not.toBe(animationKey(down));
+  const ready=sampleFigurePose(figures.lancer!,{mode,frame:2}),guard=sampleFigurePose(figures.lancer!,down);
+  expect(guard.motion.stride).toBe(ready.motion.stride);expect(guard.angle+guard.lean).toBeCloseTo(Math.PI/3);
+  expect(actionPaintSize(down,'lancer')).toBe(ART_ACTION_SIZE);
+ }
+ const recover=projectActionFrame({mode:'attack',frame:5,carry:6,carryDirection:{x:40,y:70}},1);
+ expect(recover).toMatchObject({mode:'idle',carryAim:4,carry:6});
+ expect(animationKey(recover)).not.toBe(animationKey({mode:'idle',frame:0}));
+});
 it('quantizes continuous targets to thirteen states and shares recovery with ready',()=>{
  const poses=new Set<UnitAnimationFrame>();
  for(let degrees=-90;degrees<=90;degrees+=.5){

@@ -1,3 +1,4 @@
+import {bloodSurfaceResolver} from './combat-surfaces';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from './deck-remains';
 import type {ProjectileOriginTracker} from './projectile-origins';
 import { projectActionFrame, projectPaperDirection } from './art/action-direction';
@@ -186,7 +187,8 @@ export function drawWorld(frame: WorldFrame) {
   }
   painter.animation?.update(snapshot, painter.now, frame.story?.unitActions);
   if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
-  frame.combat?.update(snapshot,painter.now);
+  if(!frame.actorPositions)trackUnitFacing(painter.facing,painter.snapshot);
+  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1));
   frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
   const combat=frame.combat?.frame(painter.now);
   if(combat&&!frame.physicalCombat){
@@ -244,7 +246,6 @@ export function drawWorld(frame: WorldFrame) {
       ctx.fillText(frame.locale === "zh" ? "等待金币" : "Waiting for gold", point.x, point.y+40); ctx.restore();
     }
   }
-  trackUnitFacing(painter.facing,painter.snapshot);
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
   const actors=[...snapshot.buildings,...snapshot.units.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
   if (frame.pass !== 'overlay') drawGangways(painter);
@@ -529,7 +530,7 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
-    const facing=painter.facing.actionFacing(unit.id,rawPose.direction,projectPaperDirection);
+    const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
     const pose=projectActionFrame(rawPose,facing);
     if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
     else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));

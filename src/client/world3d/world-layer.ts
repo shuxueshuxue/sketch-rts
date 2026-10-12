@@ -1,3 +1,4 @@
+import {bloodSurfaceResolver} from '../combat-surfaces';
 import { deckRemainsMatrix } from './deck-remains';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from '../deck-remains';
 import { drawAtlasCorpse } from '../atlas-art';
@@ -191,9 +192,9 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
-    frame.combat?.update(snapshot,now);
     frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
     frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
+    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion));
     if(snapshot.tick!==this.lastTick){
       this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
       for(const unit of snapshot.units)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
@@ -299,7 +300,7 @@ export class World3DLayer {
       }
       const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
       const rawAnimation:UnitAnimationFrame=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
-      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction,projectVector,facing);
+      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
       const animation=projectActionFrame(rawAnimation,facing,projectVector);
       const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing});

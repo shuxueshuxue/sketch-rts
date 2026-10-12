@@ -5,7 +5,7 @@ import {SHIP_CAMERA} from '../../shared/ship-geometry';
 import {COMBAT_PRESENTATION_LIMITS as LIMITS,type CombatPresentationFrame} from '../combat-presentation';
 
 const TILT=Math.tan(SHIP_CAMERA.tilt);
-export const COMBAT_INK_LIMIT=(LIMITS.bursts+LIMITS.residueBursts)*LIMITS.dropletsPerBurst+LIMITS.bursts*LIMITS.dropletsPerBurst+LIMITS.bursts+LIMITS.speedLines;
+export const COMBAT_INK_LIMIT=(LIMITS.bursts+LIMITS.residueBursts)*LIMITS.dropletsPerBurst+LIMITS.bursts*LIMITS.dropletsPerBurst+LIMITS.bursts+LIMITS.speedLines+LIMITS.transferredMarks;
 export type CombatAnchor={x:number;y:number;floor:number;facing:1|-1;sourceX?:number;sourceY?:number};
 const VERTEX=`
 attribute vec2 inkData;
@@ -78,7 +78,7 @@ export class CombatInk {
   if(this.disposed)return;this.clear();
   for(const mark of frame.ground)if(mark.height>0)this.add(mark.x,mark.y,mark.height,mark.radius,mark.radius*.48,mark.angle,mark.alpha*.72,'deck',true);
   for(const mark of frame.body){const at=anchors.get(mark.unitId);if(!at)continue;
-   this.add(at.x+mark.localX*at.facing,at.y,at.floor-mark.localY/TILT,mark.radius*.65,mark.radius,mark.angle*at.facing,mark.alpha*.77,'body');}
+   this.add(at.x+mark.localX*at.facing,at.y,at.floor-mark.localY/TILT,mark.width??mark.radius*.65,mark.radius,mark.angle*at.facing,mark.alpha*.77,'body');}
   for(const drop of frame.droplets){const speed=Math.hypot(drop.vx,drop.vy-drop.vz*TILT),angle=Math.atan2(drop.vy-drop.vz*TILT,drop.vx);
    this.add(drop.x,drop.y,drop.height,drop.radius*(reducedMotion?1:1+Math.min(.85,speed/180)),drop.radius*.7,angle,drop.alpha*.82,'air');}
   if(!reducedMotion)for(const line of frame.speedLines){const at=anchors.get(line.unitId);if(!at)continue;

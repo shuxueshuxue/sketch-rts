@@ -1,14 +1,17 @@
+import {figures,creatures} from './art/appearance';
 import type { UnitActionCue } from "../story/stage";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, Unit, WorldEffect } from "../shared/types";
 
-export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number; aim?: number; direction?: Readonly<{x:number;y:number;height?:number}> };
+export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number; aim?: number; direction?: Readonly<{x:number;y:number;height?:number}>; carryDirection?: Readonly<{x:number;y:number;height?:number}>; carry?: number; carryAim?: number };
 export const IDLE_FRAME: UnitAnimationFrame = Object.freeze({ mode: "idle", frame: 0 });
 const TICK_MS = 1000 / SIM_TICKS_PER_SECOND;
 const WALK_FRAMES = 8;
 const ACTION_FRAMES = 6;
 const ATTACK_MS = 300;
 const CAST_MS = 500;
+export const ATTACK_CARRY_MS = 3000;
+const CARRY_RETURN_MS = 450;
 const MINING_STROKE_TICKS = 13;
 // Finite display states are shared by every unit and renderer. No per-frame
 // object allocation, and the variant participates in sprite cache identity.
@@ -22,7 +25,7 @@ const actionFrames = {
 
 type Action = { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number; releaseId?: string; direction?:Readonly<{x:number;y:number;height?:number}>; frames?:UnitAnimationFrame[] };
 type Track = {
-  x: number; y: number; cooldown: number;
+  x: number; y: number; cooldown: number; dx:number; canCarry:boolean;
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   cueTick?: number;
@@ -31,6 +34,8 @@ type Track = {
   phase: number; speed: number; moving: boolean; still: boolean;
   mining?: { resourceId: string; timer: number; workTicks: number };
   action?: Action;
+  carry?: Action;
+  carryFrames?: Map<string,UnitAnimationFrame>|undefined;
 };
 
 /** Presentation only: observed displacement drives feet; a cooldown *increase*
@@ -76,6 +81,7 @@ export class UnitAnimationTracker {
         track.cooldown=unit.cooldown;track.abilities={...unit.abilityCooldowns};
         if(track.still||unit.hp<=0||unit.effects.some(effect=>effect.type==='stun')||track.action&&track.action.tick>release.tick)continue;
         track.action=release;
+        if(track.canCarry&&release.mode==='attack'&&release.direction){track.carry=release;track.carryFrames=undefined;}else if(release.mode==='cast'){delete track.carry;delete track.carryFrames;}
       }
       this.applyCues(cues,snapshot.tick);return;
     }
@@ -97,7 +103,7 @@ export class UnitAnimationTracker {
       }
       const release=releases.get(unit.id);
       if(release&&(!action||release.tick>action.tick||release.tick===action.tick&&(!action.direction||release.mode==='cast'&&action.mode!=='cast')
-        ||action!==previous?.action&&release.tick===this.tick&&release.tick>(previous?.releaseTick??-1)))action=release;
+        ||action!==previous?.action&&this.tick!==undefined&&release.tick>=this.tick&&release.tick>(previous?.releaseTick??-1)))action=release;
       const pulse = unit.kind === "worker" && unit.order.type !== "mine" && !moving ? work.get(unit.id) : undefined;
       const gathering = unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "gather" && unit.order.timer > 0
         ? unit.order : undefined;
@@ -112,7 +118,7 @@ export class UnitAnimationTracker {
       } else if (action?.mining || (moving || unit.order.type === "mine") && action?.mode === "work") action = undefined;
       if (unit.effects.some((effect) => effect.type === "stun")) action = undefined;
       const track: Track = {
-        x: unit.x, y: unit.y, cooldown: unit.cooldown,
+        x: unit.x, y: unit.y, cooldown: unit.cooldown,dx:previous?unit.x-previous.x:0,canCarry:!!figures[unit.kind]||!!creatures[unit.kind]?.weapon,
         abilities: { ...unit.abilityCooldowns }, phase: phase % 1,
         speed: moving ? distance / gap / 28 : 0,
         moving: moving && !unit.effects.some((effect) => effect.type === "stun"),
@@ -120,6 +126,7 @@ export class UnitAnimationTracker {
         ...(gathering ? { mining: { resourceId: gathering.resourceId, timer: gathering.timer, workTicks } } : {}),
         ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
+        ...((figures[unit.kind]||creatures[unit.kind]?.weapon)&&action?.mode==='attack'&&action.direction?{carry:action,...(previous?.carry===action?{carryFrames:previous.carryFrames}:{})}:previous?.carry&&!(action&&action.mode!=='attack'&&action.tick>=previous.carry.tick)?{carry:previous.carry,carryFrames:previous.carryFrames}:{}),
         ...(release||previous?.releaseTick!==undefined?{releaseTick:Math.max(release?.tick??-1,previous?.releaseTick??-1)}:{}),
         ...(release?.releaseId??previous?.releaseId?{releaseId:release?.releaseId??previous!.releaseId!}:{}),
         ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
@@ -140,6 +147,7 @@ export class UnitAnimationTracker {
       if (track.still || track.action && track.action.tick > cue.tick) continue;
       const direction=releaseDirection(cue);
       track.action = { mode: cue.mode, tick: cue.tick, ...(direction?{direction}:{}), ...(cue.mode === "attack" ? { variant: variantFor(cue.unitId, cue.tick) } : {}) };
+      if(track.canCarry&&cue.mode==='attack'&&direction){track.carry=track.action;track.carryFrames=undefined;}else if(cue.mode==='cast'){delete track.carry;delete track.carryFrames;}
     }
   }
 
@@ -155,12 +163,31 @@ export class UnitAnimationTracker {
         const base=track.action.mode === "attack" ? actionFrames.attack[track.action.variant ?? 0]![frame]! : actionFrames[track.action.mode][frame]!;
         if(!track.action.direction)return base;
         track.action.frames??=[];
-        return track.action.frames[frame]??=(Object.freeze({...base,direction:track.action.direction}));
+        const directed=track.action.frames[frame]??=(Object.freeze({...base,direction:track.action.direction}));
+        return track.action.mode==='attack'&&frame>0?this.withCarry(track,directed,fraction):directed;
       }
     }
-    return track.moving
-      ? walkFrames[Math.floor(((track.phase + track.speed * fraction) % 1) * WALK_FRAMES)]!
+    const cycle=Math.floor(((track.phase+track.speed*fraction)%1)*WALK_FRAMES);
+    const carrying=track.carry&&((this.tick-track.carry.tick+fraction)*TICK_MS<ATTACK_MS+ATTACK_CARRY_MS+CARRY_RETURN_MS);
+    const backwards=carrying&&track.dx*(track.carry?.direction?.x??0)<0;
+    const base=track.moving
+      ? walkFrames[backwards?(WALK_FRAMES-cycle)%WALK_FRAMES:cycle]!
       : idleFrames[Math.floor(((this.tick + fraction) / (SIM_TICKS_PER_SECOND * 3) + phaseFor(unit.id)) % 1 * WALK_FRAMES)]!;
+    return this.withCarry(track,base,fraction);
+  }
+
+  private withCarry(track:Track,base:UnitAnimationFrame,fraction:number):UnitAnimationFrame {
+    if(!track.carry?.direction||this.tick===undefined)return base;
+    const elapsed=(this.tick-track.carry.tick+fraction)*TICK_MS-ATTACK_MS;
+    if(elapsed>=ATTACK_CARRY_MS+CARRY_RETURN_MS)return base;
+    // Six bounded return samples. Render cadence and wall-clock pauses cannot
+    // extend a carry or create unbounded sprite identities.
+    const carry=Math.max(1,Math.min(6,Math.ceil((ATTACK_CARRY_MS+CARRY_RETURN_MS-elapsed)/CARRY_RETURN_MS*6)));
+    const key=`${base.mode}:${base.frame}:${base.variant??0}:${carry}`;
+    track.carryFrames??=new Map();
+    let result=track.carryFrames.get(key);
+    if(!result){result=Object.freeze({...base,carry,carryDirection:track.carry.direction});track.carryFrames.set(key,result);}
+    return result;
   }
 }
 

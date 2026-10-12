@@ -4,6 +4,7 @@ import { sampleMotion, actionDirection, type MotionFamily } from './motion';
 import { figures, creatures, type Figure } from './appearance';
 import type { UnitKind } from '../../shared/types';
 import type { EquipmentKind } from './equipment';
+import {carryStrength} from './action-direction';
 // Lift, wind up, strike, follow through, recover, ready. The tool remains in
 // the worker's hand; only the upper body moves during a work stroke.
 const WORK_POSES: {lean:number;wrist:XY;tool:number}[] = [
@@ -111,6 +112,19 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   drawing=blend(authored.ready,authored.contact,weight);
   drawing.angle+=direction.correction*weight;
  }
+ // A post-strike guard is its own relaxed drawing, not a frozen extended arm.
+ // It replaces only the ready contribution; feet, gait and contact stay live.
+ const carry=carryStrength(pose)/6;
+ const guarding=carry>0&&(pose.mode==='idle'||pose.mode==='walk'||pose.mode==='attack');
+ if(guarding&&weapon!=='none'&&weapon!=='sling'){
+  const aim=actionDirection({mode:'attack',frame:0,aim:pose.carryAim??0});
+  const guard=staff?staffDrawing(aim.source,false).contact:hand(
+   ([[11,-26],[13,-20],[13,-12]] as XY[])[aim.source+1]!,
+   ([[8,-23],[9,-20],[9,-17]] as XY[])[aim.source+1]!,
+   aim.angle+(shaft||weapon==='bow'?0:Math.PI/2));
+  const amount=carry*(pose.mode==='attack'?(pose.frame===0?0:1-Math.max(0,Math.min(1,weight))):1);
+  drawing=blend(drawing,guard,amount);
+ }
  if(work)drawing=hand(work.wrist,[7,-22],work.tool);
  if(cast&&shield){
   // A shield arm stays braced. Invoke with the weapon hand instead of moving
@@ -143,6 +157,7 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   const contactElbows:XY[]=weapon==='bow'?[[-1,-26],[1,-18],[-1,-13]]:
    shaft?[[0,-20],[-2,-16],[0,-14]]:[[-2,-24],[2,-17],[-2,-20]];
   supportElbow=mix(readyElbow,contactElbows[source+1]!,weight);
+  if(guarding)supportElbow=mix(supportElbow,[-2,pose.carryAim!<0?-22:pose.carryAim!>0?-14:-17],carry*(1-Math.max(0,weight)));
   if(cast){support=mix(support,spellHands[source+1]!,cast);supportElbow=mix(supportElbow,spellElbows[source+1]!,cast);}
  }
  const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);
