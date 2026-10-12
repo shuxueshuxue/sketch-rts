@@ -18,5 +18,6 @@
   "repair": "In progress on bootstrap_1-mounted-island-approach; same failed case now passes after keeping road coverage physical and leaving motion anticipation to micro. Final original regressions pending.",
   "lastVerifiedProduction": "a8597397c5ba1d1a0a0aa827e036db602d9066c0",
   "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
-  "fullAcceptance": "pending"
+  "fullAcceptance": "pending",
+  "supersededBy": "mounted-island-approach-release.receipt.json"
 }
