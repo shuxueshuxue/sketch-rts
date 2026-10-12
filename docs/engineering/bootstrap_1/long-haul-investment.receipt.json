@@ -1,5 +1,5 @@
 {
-  "base": "336288916ae0a231122a8f7e7ec7c253d559f926",
+  "base": "ce1d3152c8c609531df4445916480d8be78a34b0",
   "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
   "fullAcceptance": "pending",
   "runtimeHashes": {
@@ -52,12 +52,20 @@
     ],
     "replacementOrderAdvanceTicks": 2625,
     "replacementOrderAdvanceSeconds": 131.25,
-    "scope": "Same world, IDs and all three controller memories; current native rules and unchanged opponents. No permanent deaths in either continuation; no winner. Not a fresh campaign or formal acceptance."
+    "scope": "Same world, IDs and all three controller memories; current native rules and unchanged opponents. No permanent deaths in either continuation; no winner. Not a fresh campaign or formal acceptance.",
+    "comparisonBase": "336288916ae0a231122a8f7e7ec7c253d559f926"
   },
   "build": {
     "exitCode": 0,
     "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
     "logSha256": "dd2251ecfcec19c5b610c1f071eb63129f735eb74d167279fbc8abdbe66a0ab5",
-    "sourceBase": "336288916ae0a231122a8f7e7ec7c253d559f926"
+    "sourceBase": "336288916ae0a231122a8f7e7ec7c253d559f926",
+    "note": "Local build verified on #348 base before independent #349/#350 healing integration; the combined final build is checked by production before publication."
+  },
+  "integration": {
+    "passed": 100,
+    "failed": 0,
+    "reportSha256": "a1dacd71651457630b0dcb6044db81f235a5c0f11730c08294ee56f862d1f034",
+    "scope": "All 60 labor cases, 12 simultaneous-heal cases and all 28 healing-post continuity cases after integrating public #350."
   }
 }
