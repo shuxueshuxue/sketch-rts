@@ -92,3 +92,6 @@ jobs:
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
+
+      - name: Verify small armies pay for existing counters
+        run: npx vitest run src/ai/bootstrap_1/early-counter-production.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts

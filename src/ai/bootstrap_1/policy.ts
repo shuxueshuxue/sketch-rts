@@ -63,8 +63,13 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
       && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === trainingBuildingFor(snapshot.players[owner]!.race, healer))))
     ? [{ unit: healer, count: Math.min(2, Math.max(1, Math.floor(army.length / 5))), priority: 65 }] : [];
   const mounted = mountedRecruitment(snapshot, owner, options);
-  if (army.length < 10) return [...medical, ...mounted];
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
+  const counters: V6Want[] = [];
+  if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) counters.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 67 });
+  if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
+    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
+      || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) counters.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
+  if (army.length < 10) return [...counters, ...medical, ...mounted];
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = trainingBuildingFor(snapshot.players[owner]!.race, main)!;
@@ -80,12 +85,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
   );
-  if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) wants.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 65 });
-  if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
-    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
-      || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
-  wants.push(...medical, ...mounted);
+  wants.push(...counters, ...medical, ...mounted);
   return wants;
 }
 
