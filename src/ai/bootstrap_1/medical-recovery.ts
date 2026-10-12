@@ -16,16 +16,27 @@ export function recoveryPatients(snapshot: GameSnapshot, owner: PlayerId) {
 
 function assignments(snapshot: GameSnapshot, owner: PlayerId, patients: readonly Unit[]) {
   const own = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.kind !== 'worker');
-  return own.flatMap(healer => {
-    const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal');
-    if (!ability) return [];
-    const eligible = patients.filter(patient => matchesUnitTarget(patient, ABILITY_DEFS[ability].targets, snapshot));
-    const ready = eligible.filter(patient => distance(healer, patient) <= ABILITY_DEFS[ability].range);
-    const target = ready.length > 0
-      ? ready.sort((a, b) => distance(healer, a) - distance(healer, b))[0]
-      : nearestByRoute(snapshot.map, eligible, healer, unitMover(healer.kind));
-    return target ? [{ healer, target, ability }] : [];
-  });
+  const projectedHealth = new Map(patients.map(patient => [patient.id, patient.hp]));
+  const healers = own.flatMap(healer => UNIT_DEFS[healer.kind].abilities.flatMap(ability => {
+    const definition = ABILITY_DEFS[ability];
+    return definition.behavior === 'heal' ? [{ healer, ability, definition }] : [];
+  }));
+  // A ready heal in this frame changes which patient needs the next healer's spell.
+  return healers.sort((a, b) => abilityCooldown(a.healer, a.ability) - abilityCooldown(b.healer, b.ability))
+    .flatMap(({ healer, ability, definition }) => {
+      const eligible = patients.filter(patient => projectedHealth.get(patient.id)! < patient.maxHp
+        && matchesUnitTarget(patient, definition.targets, snapshot));
+      const ready = eligible.filter(patient => distance(healer, patient) <= definition.range);
+      const target = ready.length > 0
+        ? ready.sort((a, b) => projectedHealth.get(a.id)! / a.maxHp - projectedHealth.get(b.id)! / b.maxHp
+          || distance(healer, a) - distance(healer, b))[0]
+        : nearestByRoute(snapshot.map, eligible, healer, unitMover(healer.kind));
+      if (!target) return [];
+      if (abilityCooldown(healer, ability) <= 0 && distance(healer, target) <= definition.range) {
+        projectedHealth.set(target.id, projectedHealth.get(target.id)! + definition.healAmount);
+      }
+      return [{ healer, target, ability }];
+    });
 }
 
 export function planMedicalRecovery(snapshot: GameSnapshot, owner: PlayerId, patients: readonly Unit[]): GameCommand[] {
@@ -37,9 +48,13 @@ export function planMedicalRecovery(snapshot: GameSnapshot, owner: PlayerId, pat
         : { type: 'holdPosition', unitIds: [healer.id] });
 }
 
+export function medicalRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId) {
+  return new Set(assignments(snapshot, owner, recoveryPatients(snapshot, owner)).map(({ healer }) => healer.id));
+}
+
 /** Recovery owns the healer until critical permanent patients can fight again. */
 export const medicalRecovery: AiScript = {
   id: 'medicalRecovery', phase: 'tactics',
-  claimsUnits: (snapshot, owner) => new Set(assignments(snapshot, owner, recoveryPatients(snapshot, owner)).map(({ healer }) => healer.id)),
+  claimsUnits: medicalRecoveryUnitIds,
   run: (snapshot, owner) => planMedicalRecovery(snapshot, owner, recoveryPatients(snapshot, owner)),
 };
