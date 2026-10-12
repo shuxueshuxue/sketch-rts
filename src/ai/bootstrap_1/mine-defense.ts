@@ -3,6 +3,7 @@ import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { routeAssaultCampCommands } from './assault-camp-roads';
+import { armedFoes } from './safe-land-route';
 import { recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
@@ -159,7 +160,9 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   const general = options.memory.v6?.general;
   return general?.mode === 'attack' && general.stage !== 'gather'
     && !intel.army.some(unit => general.group!.includes(unit.id) && (unit.kind === 'ballista' || unit.kind === 'catapult'))
-    ? routeAssaultCampCommands(snapshot, commands, general.group!, general.target!) : commands;
+    ? routeAssaultCampCommands(snapshot, commands,
+      intel.army.filter(unit => !isBacklineKind(unit) && general.group!.includes(unit.id)).map(unit => unit.id), general.target!,
+      armedFoes(snapshot, owner, options)) : commands;
 }
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {

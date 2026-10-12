@@ -55,7 +55,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
 
       - name: Verify assault camp detours and closed roads
-        run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts
+        run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts src/ai/bootstrap_1/assault-cohesion.test.ts
 
       - name: Verify loot couriers recheck roads and preserve veteran return
         run: npx vitest run src/ai/bootstrap_1/loot-trip-reassessment.test.ts src/ai/bootstrap_1/loot-recovery.test.ts src/ai/bootstrap_1/recovery-road-coverage.test.ts

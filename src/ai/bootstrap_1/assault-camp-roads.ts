@@ -1,17 +1,21 @@
 import { detCos, detSin } from '../../shared/det-math';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
-import { groundSteeringRoute, routeClearsDisks, routeLeavesDisks } from '../../shared/route-selection';
+import { groundSteeringRoute, routeClearsDisks, routeLeavesDisks, routeWithinDistance } from '../../shared/route-selection';
 import { isOpenGround } from '../../shared/terrain';
-import type { GameCommand, GameSnapshot, Unit } from '../../shared/types';
+import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 import { CREEP_STAGING_TURNS, neutralCamps, type Camp } from '../policy/v7/creep';
+import { JOIN_RANGE } from '../policy/v6/general';
+import { strengthOf } from '../policy/v6/strength';
 import { DETOUR_GAP, END_CLEARANCE, PASS_CLEARANCE } from '../policy/v9/march';
+import { retreatThreatReach } from './safe-land-route';
+import { THINK_TICKS } from './mounted-micro';
 
 type March = { kind: 'direct' } | { kind: 'detour'; point: Point } | { kind: 'blocked' };
 
 /** A transit road must clear camps on every native steering segment, including its second leg. */
-export function assaultCampRouter(snapshot: GameSnapshot, goal: Point, camps: readonly Camp[]) {
-  const transit = camps.filter(camp => distance(camp.center, goal) > camp.reach + END_CLEARANCE);
+export function assaultCampRouter(snapshot: GameSnapshot, goal: Point, camps: readonly Camp[], contactAtDestination: boolean) {
+  const transit = camps.filter(camp => !contactAtDestination || distance(camp.center, goal) > camp.reach + END_CLEARANCE);
   const disks = transit.flatMap(camp => camp.creeps.map(creep => ({ x: creep.x, y: creep.y, radius: PASS_CLEARANCE })));
   const target = snapshot.buildings.find(building => distance(building, goal) <= MOVE_ORDER_ARRIVAL_RANGE);
   const roads = new Map<string, ReturnType<typeof groundSteeringRoute>>();
@@ -66,9 +70,19 @@ export function assaultCampRouter(snapshot: GameSnapshot, goal: Point, camps: re
 }
 
 /** Split an assault's movement by each fighter's actual road; blocked transit holds outside the camp. */
-export function routeAssaultCampCommands(snapshot: GameSnapshot, commands: GameCommand[], group: readonly string[], goal: Point) {
+export function routeAssaultCampCommands(snapshot: GameSnapshot, commands: GameCommand[], group: readonly string[], goal: Point, foes: readonly (Unit | Building)[]) {
   const camps = neutralCamps(snapshot);
-  const route = assaultCampRouter(snapshot, goal, camps);
+  const fighters = snapshot.units.filter(unit => group.includes(unit.id));
+  const together = fighters.length > 0 && fighters.every(unit =>
+    routeWithinDistance(snapshot.map, unit, fighters[0]!, 'land', JOIN_RANGE));
+  const columns = together ? [] : fighters.map(leader => ({ leader, units: fighters.filter(unit =>
+    routeWithinDistance(snapshot.map, unit, leader, 'land', JOIN_RANGE)) }))
+    .sort((a, b) => strengthOf(b.units) - strengthOf(a.units));
+  const gathering = columns.length > 0 && columns[0]!.units.length < fighters.length
+    && columns[0]!.units.every(unit => foes.every(foe => distance(unit, foe) > retreatThreatReach(snapshot, foe, unit, THINK_TICKS)))
+    ? columns[0] : undefined;
+  const destination = gathering ? gathering.leader : goal;
+  const route = assaultCampRouter(snapshot, destination, camps, !gathering);
   const assigned = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : []));
   const continuing = snapshot.units.filter(unit => group.includes(unit.id) && !assigned.has(unit.id))
     .flatMap<GameCommand>(unit => unit.order.type === 'attackMove' || unit.order.type === 'move'
@@ -79,10 +93,15 @@ export function routeAssaultCampCommands(snapshot: GameSnapshot, commands: GameC
     for (const id of command.unitIds) {
       if (!group.includes(id)) { original.push(id); continue; }
       const unit = snapshot.units.find(unit => unit.id === id)!;
+      if (gathering && gathering.units.includes(unit)) {
+        routed.push({ type: 'holdPosition', unitIds: [id] });
+        continue;
+      }
       const road = route(unit);
       if (road.kind === 'direct') {
         const order = unit.order, moving = order.type === 'move' || order.type === 'attackMove';
-        if (assigned.has(id) && distance(command, goal) <= MOVE_ORDER_ARRIVAL_RANGE) original.push(id);
+        if (gathering) routed.push({ type: 'move', unitIds: [id], x: destination.x, y: destination.y, avoidCombat: true });
+        else if (assigned.has(id) && distance(command, goal) <= MOVE_ORDER_ARRIVAL_RANGE) original.push(id);
         else if (assigned.has(id) || !moving || distance(order, goal) > MOVE_ORDER_ARRIVAL_RANGE)
           routed.push({ ...command, unitIds: [id], ...goal });
       }
