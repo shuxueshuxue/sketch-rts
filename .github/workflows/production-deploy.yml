@@ -76,6 +76,9 @@ jobs:
       - name: Verify bounded fronts and commanded movement
         run: npx vitest run src/shared/route-prefix.test.ts src/ai/bootstrap_1/front-road-prefix.test.ts src/shared/sim/unit-update.test.ts src/shared/ship-queued-course.test.ts src/ai/policy/spatial.test.ts src/ai/policy/nearest-query-order.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/skirmish-retreat-memory.test.ts src/ai/policy/v5-ranged-core.test.ts src/ai/policy/humanized-combat.test.ts src/ai/policy/mechanical-healing.test.ts
 
+      - name: Verify safe free mine capital and builder roads
+        run: npx vitest run src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts src/ai/bootstrap_1/expansion-road-threat.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 

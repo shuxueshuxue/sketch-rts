@@ -1,0 +1,1320 @@
+{
+  "name": "bootstrap_1",
+  "parent": "09d54f26eb161f0d4a61eba883dc8e8e70a973cf",
+  "rulesVersion": 2,
+  "runtimeChanges": {
+    "modules": 2,
+    "addedLines": 15,
+    "removedLines": 2,
+    "newThresholds": 0,
+    "newPersistentFields": 0
+  },
+  "sourceHashes": {
+    "src/ai/bootstrap_1/economy.ts": "623f7d797c22cae8d44628d985ebcc7969d8aac0b17863a26cb69d7082ce9b42",
+    "src/ai/policy/v6/economy.ts": "9bce29211f0474b6f28fdc056d0f7aeb0c84f879e9b5eda63b3e73a1e36069c9"
+  },
+  "sdkTests": {
+    "passed": 236,
+    "failed": 0,
+    "cases": [
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget funds grove artillery behind four heavies before refilling the light cavalry quota",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget funds ember artillery behind four heavies before refilling the light cavalry quota",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget buys a grove healer and recovers the wounded permanent summon screen through the full command stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget buys a ember healer and recovers the wounded permanent summon screen through the full command stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget builds and pays for the mixed grove opening from normal starting gold and mining",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget builds and pays for the mixed ember opening from normal starting gold and mining",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget funds the first grove heavy squad after the opening instead of waiting for a full light line",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget funds the first ember heavy squad after the opening instead of waiting for a full light line",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget recruits 'grove' medical support for 6 shooters and heals with ordinary commands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget recruits 'grove' medical support for 5 shooters and heals with ordinary commands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget recruits 'ember' medical support for 6 shooters and heals with ordinary commands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget recruits 'ember' medical support for 5 shooters and heals with ordinary commands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget uses the shared Grove queue to counter a summon wave before restoring its wounded shooters",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget keeps the explicit grove opening squad while tech is locked instead of substituting extra basic soldiers",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget keeps the explicit ember opening squad while tech is locked instead of substituting extra basic soldiers",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget adds the grove heavy unit factory and trains through both real queues",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget adds the ember heavy unit factory and trains through both real queues",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget leaves a normal recruitment wave funded before adding another factory (190 gold)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget leaves a normal recruitment wave funded before adding another factory (365 gold)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget leaves a normal recruitment wave funded before adding another factory (455 gold)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget spends on a summoner or an advance tower according to a real incoming attack (false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget spends on a summoner or an advance tower according to a real incoming attack (true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget builds a covered third mining hall with ordinary funds instead of buying population for idle producers",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget finishes a real farm before resuming training when the next unit cannot fit",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget trains a real unit with the remaining gold when a duplicate research request cannot be issued",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/economy.test.ts",
+        "name": "bootstrap_1 production budget recruits another summoner instead of researching weapons that do not strengthen its spirits",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_archer'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_archer'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_archer'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_archer'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_summoner'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_summoner'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_summoner'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_summoner'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_knight'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_knight'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_knight'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+        "name": "holds the third mining foundation through construction before resuming a distant assault ('v9_knight'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "still rejects an expansion under direct ranged fire across the wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "still rejects an expansion under direct ranged fire across the wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_archer' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_archer' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_archer' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_archer' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_summoner' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_summoner' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_summoner' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_summoner' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_knight' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_knight' pays for the near 'grove' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_knight' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-road-threat.test.ts",
+        "name": "'v9_knight' pays for the near 'ember' free mine before wall-detouring melee can arrive (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=false, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=false, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=true, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_archer' occupies a free sixth mine and respects allied ownership (mirror=true, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=false, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=false, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=true, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_summoner' occupies a free sixth mine and respects allied ownership (mirror=true, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=false, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=false, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=true, free=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-target-cap.test.ts",
+        "name": "'v9_knight' occupies a free sixth mine and respects allied ownership (mirror=true, free=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' spends its remaining 'grove' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' spends its remaining 'grove' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' spends its remaining 'ember' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' spends its remaining 'ember' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' spends its remaining 'grove' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' spends its remaining 'grove' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' spends its remaining 'ember' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' spends its remaining 'ember' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' spends its remaining 'grove' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' spends its remaining 'grove' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' spends its remaining 'ember' capital on the clear mine directly (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' spends its remaining 'ember' capital on the clear mine directly (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'tower'-held 'grove' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'ally'-held 'grove' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'tower'-held 'grove' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'ally'-held 'grove' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'tower'-held 'ember' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'ally'-held 'ember' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'tower'-held 'ember' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' leaves the 'ally'-held 'ember' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' leaves the 'ally'-held 'grove' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' leaves the 'ally'-held 'grove' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' leaves the 'ally'-held 'ember' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_summoner' leaves the 'ally'-held 'ember' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'tower'-held 'grove' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'ally'-held 'grove' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'tower'-held 'grove' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'ally'-held 'grove' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'tower'-held 'ember' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'ally'-held 'ember' mine unclaimed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'tower'-held 'ember' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' leaves the 'ally'-held 'ember' mine unclaimed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' uses the safe 'grove' builder road instead of the closer exposed worker (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' uses the safe 'grove' builder road instead of the closer exposed worker (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' uses the safe 'ember' builder road instead of the closer exposed worker (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' uses the safe 'ember' builder road instead of the closer exposed worker (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' uses the safe 'grove' builder road instead of the closer exposed worker (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' uses the safe 'grove' builder road instead of the closer exposed worker (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' uses the safe 'ember' builder road instead of the closer exposed worker (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' uses the safe 'ember' builder road instead of the closer exposed worker (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' holds its 'grove' expansion when every builder road is exposed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' holds its 'grove' expansion when every builder road is exposed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' holds its 'ember' expansion when every builder road is exposed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_archer' holds its 'ember' expansion when every builder road is exposed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' holds its 'grove' expansion when every builder road is exposed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' holds its 'grove' expansion when every builder road is exposed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' holds its 'ember' expansion when every builder road is exposed (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/free-expansion.test.ts",
+        "name": "'v9_knight' holds its 'ember' expansion when every builder road is exposed (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy opens one building at a time, preserving the remaining miners until the barracks stands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy puts the sanctum up once one more farm reaches the casters' bar, and trains footmen in the summoners' place until then",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy moves to the second phase once most of its summoners stand, and asks for a second sanctum",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy still takes the natural in the second phase, ahead of more summoners",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy takes another base when its main's mine runs dry, though the dry hall still stands",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy puts a tower up at a base under attack ahead of everything but farms, and never where it reaches a standing camp",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy trains the next base's workers ahead of its hall, but no faster than the army grows",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy keeps training workers without an army while the phase's units still wait on their tier",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy V7 opens on footmen and the natural, buying no farm ahead of need; V6 goes for the casters' bar",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy V7 leaves its opening only once the natural stands as well as the footmen",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy V7 puts a tower up ahead of an army that outweighs its own and is still on the way; V6 waits for it to arrive",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy V7 leaves its opening at 5:00 even when the natural has not fallen",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy V7 trains no workers for a base it has not started, where V6 trains that base's five ahead",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy builds a farm first when supply runs short",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/policy/v6/economy.test.ts",
+        "name": "v6 economy raises a goal's priority the longer it waits, and keeps the wait through a moment's absence",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_archer' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_archer' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_archer' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_archer' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_summoner' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_summoner' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_summoner' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_summoner' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_knight' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_knight' builds and deposits at a safe third 'grove' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_knight' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/two-income-expansion.test.ts",
+        "name": "'v9_knight' builds and deposits at a safe third 'ember' mine while its army holds elsewhere (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_archer'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_archer'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_archer'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_archer'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_summoner'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_summoner'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_summoner'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_summoner'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_knight'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_knight'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_knight'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/critical-mining-escort.test.ts",
+        "name": "escorts its contested replacement through construction instead of resuming a distant assault ('v9_knight'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_archer'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_archer'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_archer'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_archer'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_summoner'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_knight'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_knight'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_knight'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "clears and mines its natural instead of a distant naval land detour ('v9_knight'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "still expands and mines an established 'grove' overseas colony (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "still expands and mines an established 'grove' overseas colony (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "still expands and mines an established 'ember' overseas colony (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/expansion-authority.test.ts",
+        "name": "still expands and mines an established 'ember' overseas colony (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' restores its idle wounded 'grove' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' restores its idle wounded 'grove' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' restores its idle wounded 'ember' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' restores its idle wounded 'ember' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' restores its idle wounded 'grove' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' restores its idle wounded 'grove' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' restores its idle wounded 'ember' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' restores its idle wounded 'ember' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' restores its idle wounded 'grove' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' restores its idle wounded 'grove' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' restores its idle wounded 'ember' soldier before rejoining (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' restores its idle wounded 'ember' soldier before rejoining (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "keeps a wounded 'grove' healer using its own available spell (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "keeps a wounded 'grove' healer using its own available spell (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "keeps a wounded 'ember' healer using its own available spell (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "keeps a wounded 'ember' healer using its own available spell (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' stays inside actual 'grove' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' stays inside actual 'grove' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' stays inside actual 'ember' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_archer' stays inside actual 'ember' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' stays inside actual 'grove' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' stays inside actual 'grove' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' stays inside actual 'ember' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_summoner' stays inside actual 'ember' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' stays inside actual 'grove' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' stays inside actual 'grove' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' stays inside actual 'ember' healing range across a sealed wall (mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/front-post-continuity.test.ts",
+        "name": "'v9_knight' stays inside actual 'ember' healing range across a sealed wall (mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense lets the grove guard march past an exhausted mine to the next front",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense lets the ember guard march past an exhausted mine to the next front",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new grove artillery toward an active camp through the full v9_archer stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new ember artillery toward an active camp through the full v9_archer stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new grove artillery toward an active camp through the full v9_summoner stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new ember artillery toward an active camp through the full v9_summoner stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new grove artillery toward an active camp through the full v9_knight stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense moves new ember artillery toward an active camp through the full v9_knight stack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense enrolls grove artillery that actually reaches the camp staging point",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense enrolls ember artillery that actually reaches the camp staging point",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense assigns a grove detachment to a mining perimeter tower without recalling the distant attack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense assigns a ember detachment to a mining perimeter tower without recalling the distant attack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense protects the working mine before fighting a larger group at a forward outpost",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense lets the grove host use real summons for the near raid without recalling the distant attack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense lets the ember host use real summons for the near raid without recalling the distant attack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense does not assign spirits whose normal lifetime expires before they can reach the hall",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense defends the miners while the distant main army completes its attack",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense keeps a raid that exceeds a detachment in the main commander\u2019s defense scope",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mine-defense.test.ts",
+        "name": "bootstrap_1 independent mine defense releases the guard as soon as the raid is removed, without changing enemy intel",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_archer'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_archer'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_archer'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_archer'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_knight'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_knight'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_knight'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-capital.test.ts",
+        "name": "funds the replacement before research consumes its final working mine ('v9_knight'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_archer'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_archer'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_archer'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_archer'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_knight'/'grove', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_knight'/'grove', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_knight'/'ember', mirror=false)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "builds and mines the unoccupied replacement directly while the army holds elsewhere ('v9_knight'/'ember', mirror=true)",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when covered",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when two-incomes",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when no-income",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when guarded",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when occupied",
+        "status": "passed"
+      },
+      {
+        "file": "src/ai/bootstrap_1/mining-tower-cover.test.ts",
+        "name": "decides cleared-mine cover from income and actual occupation when rising",
+        "status": "passed"
+      }
+    ]
+  },
+  "parentOnFinalNewCases": {
+    "passed": 24,
+    "failed": 24,
+    "total": 48,
+    "mode": "Exact parent source loaded for the two runtime modules through a test-only Vite loader; no repository mutation or command adaptation"
+  },
+  "build": {
+    "node": "20.20.2",
+    "command": "npm run build",
+    "exitCode": 0
+  },
+  "soloWindow": {
+    "mode": "One 9600->14400 native no-opponent same-world continuation with all AI memory and IDs restored; ordinary resources and cadence, current rules 2; victory disabled for the requested solo task. Not opponent acceptance or performance measurement.",
+    "map": "grandEstuary",
+    "version": "v9_knight",
+    "race": "grove",
+    "side": 0,
+    "startTick": 9600,
+    "endTick": 14400,
+    "startStateSha256": "7c6ba3860bf7868b19064036b1cadfe8c557eae75a6b0b4a7b5051bd0849a94e",
+    "parent": {
+      "summary": {
+        "label": "parent",
+        "tick": 14400,
+        "gold": 190.14,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 17,
+        "liveCreeps": 27,
+        "permanentDeaths": 5,
+        "activeOwnedMines": 3
+      },
+      "townHallBuildTicks": [
+        12705
+      ],
+      "fatalHits": [
+        {
+          "tick": 13138,
+          "id": "unit-p0-ballista-2005",
+          "kind": "ballista",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13395,
+          "id": "unit-p0-ballista-2275",
+          "kind": "ballista",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13669,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 13910,
+          "id": "unit-p0-priest-1898",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14108,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        }
+      ]
+    },
+    "candidate": {
+      "summary": {
+        "label": "next",
+        "tick": 14400,
+        "gold": 200.56,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 16,
+        "liveCreeps": 28,
+        "permanentDeaths": 5,
+        "activeOwnedMines": 3
+      },
+      "townHallBuildTicks": [
+        12345
+      ],
+      "fatalHits": [
+        {
+          "tick": 13286,
+          "id": "unit-p0-ballista-2005",
+          "kind": "ballista",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13597,
+          "id": "unit-p0-witch-1656",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13887,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14195,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14397,
+          "id": "unit-p0-witch-2720",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        }
+      ]
+    },
+    "limitations": "Both branches lose five permanent army units to creeps. This is a current-rules solo causal observation, not opponent strength acceptance, heldout evaluation or a performance benchmark."
+  }
+}
