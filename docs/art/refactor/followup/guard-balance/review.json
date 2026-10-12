@@ -1,0 +1,360 @@
+{
+  "before": "997a306",
+  "unchangedContacts": 6864,
+  "fps": 20,
+  "framesPerVideo": 144,
+  "source": "Production painters, identical poses: six contact-to-ready samples at 50ms each, 900ms prepared idle. Three variants, both facings. Comparison board, not simulated battle.",
+  "measures": [
+    {
+      "kind": "lancer",
+      "aim": -4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 7.0710678118654755,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 14.212670403551897,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": -4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 5.818934610390461,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 12.484390253432485,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": -4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 6.374197988766903,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 13.290237018202498,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 0,
+      "variant": 0,
+      "before": {
+        "gripTravel": 1,
+        "angleTravel": 2.291831180523295
+      },
+      "after": {
+        "gripTravel": 9,
+        "angleTravel": 2.291831180523295
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 0,
+      "variant": 1,
+      "before": {
+        "gripTravel": 1.25,
+        "angleTravel": 2.291831180523295
+      },
+      "after": {
+        "gripTravel": 8.25,
+        "angleTravel": 2.291831180523295
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 0,
+      "variant": 2,
+      "before": {
+        "gripTravel": 1.0770329614269003,
+        "angleTravel": 2.291831180523295
+      },
+      "after": {
+        "gripTravel": 8.600000000000001,
+        "angleTravel": 2.291831180523295
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 6.708203932499369,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 13.453624047073712,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 5.646459067415614,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 11.844091353919897,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "lancer",
+      "aim": 4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 6.1021963259141385,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 12.590345507570474,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": -4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 7.0710678118654755,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 14.212670403551897,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": -4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 6.119231977952788,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 12.314422438750423,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": -4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 6.511282515756785,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 13.199878787322254,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 0,
+      "variant": 0,
+      "before": {
+        "gripTravel": 4.123105625617661,
+        "angleTravel": 2.2918311805232934
+      },
+      "after": {
+        "gripTravel": 8.54400374531753,
+        "angleTravel": 2.2918311805232934
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 0,
+      "variant": 1,
+      "before": {
+        "gripTravel": 4.254703279900961,
+        "angleTravel": 2.2918311805232934
+      },
+      "after": {
+        "gripTravel": 8.124192267542664,
+        "angleTravel": 2.2918311805232934
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 0,
+      "variant": 2,
+      "before": {
+        "gripTravel": 4.187791780879274,
+        "angleTravel": 2.2918311805232934
+      },
+      "after": {
+        "gripTravel": 8.31971153346076,
+        "angleTravel": 2.2918311805232934
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 6.708203932499369,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 13.453624047073712,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 5.492950027080166,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 12.270798670013292,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "knight",
+      "aim": 4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 6.043707471411901,
+        "angleTravel": 0
+      },
+      "after": {
+        "gripTravel": 12.814304507073336,
+        "angleTravel": 0
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": -4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 6.0827625302982185,
+        "angleTravel": 2.498025833720487
+      },
+      "after": {
+        "gripTravel": 11.40175425099138,
+        "angleTravel": 38.96113006889598
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": -4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 5.484669543372689,
+        "angleTravel": 13.682161994674159
+      },
+      "after": {
+        "gripTravel": 11.010976341814562,
+        "angleTravel": 27.77699390794231
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": -4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 3.7903298009540007,
+        "angleTravel": 3.254470429392977
+      },
+      "after": {
+        "gripTravel": 9.28151927218815,
+        "angleTravel": 44.71362633200945
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 0,
+      "variant": 0,
+      "before": {
+        "gripTravel": 6.708203932499369,
+        "angleTravel": 11.413529738155713
+      },
+      "after": {
+        "gripTravel": 10.77032961426901,
+        "angleTravel": 69.90085100596043
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 0,
+      "variant": 1,
+      "before": {
+        "gripTravel": 5.4782478950847056,
+        "angleTravel": 8.639993091423094
+      },
+      "after": {
+        "gripTravel": 9.590161625332495,
+        "angleTravel": 49.84732817638163
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 0,
+      "variant": 2,
+      "before": {
+        "gripTravel": 4.95429106936603,
+        "angleTravel": 11.992217111237856
+      },
+      "after": {
+        "gripTravel": 8.800284086323577,
+        "angleTravel": 70.47953837904258
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 4,
+      "variant": 0,
+      "before": {
+        "gripTravel": 12.041594578792294,
+        "angleTravel": 4.125646890191463
+      },
+      "after": {
+        "gripTravel": 4.123105625617661,
+        "angleTravel": 85.37071147449265
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 4,
+      "variant": 1,
+      "before": {
+        "gripTravel": 12.343419299367579,
+        "angleTravel": 22.253329997631635
+      },
+      "after": {
+        "gripTravel": 3.82099463490856,
+        "angleTravel": 58.99173458666956
+      }
+    },
+    {
+      "kind": "footman",
+      "aim": 4,
+      "variant": 2,
+      "before": {
+        "gripTravel": 11.204713293966964,
+        "angleTravel": 1.014486062631092
+      },
+      "after": {
+        "gripTravel": 2.7176460402340843,
+        "angleTravel": 82.25955064693228
+      }
+    }
+  ]
+}

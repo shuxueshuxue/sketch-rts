@@ -172,7 +172,7 @@ describe('bootstrap_1 independent mine defense', () => {
     expect(candidate.players.us!.gold).toBeGreaterThan(control.players.us!.gold);
   });
   it.each(['grove', 'ember'] as const)('lets the %s host use real summons for the near raid without recalling the distant attack', race => {
-    const kind = race === 'grove' ? 'summoner' : 'pyreCaller', ability = race === 'grove' ? 'summon' : 'cinderSoul';
+    const kind = 'summoner', ability = race === 'grove' ? 'summon' : 'summon';
     let scene = sketchScene('summoned-mine-guard').replaceDefaults()
       .player('us', { race, team: 'a' }).player('fa', { race: 'grove', team: 'b' }).player('fb', { race: 'grove', team: 'b' })
       .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })

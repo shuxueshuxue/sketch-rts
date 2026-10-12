@@ -9,8 +9,8 @@ import { SHOOTER_UNIT_KINDS, SUMMONING_UNIT_KINDS, V8_FORBIDDEN_UNIT_KINDS } fro
 
 describe("v8 fields no shooter and no summoner", () => {
   it("forbids the shooters and the summoning kinds read from the catalog", () => {
-    expect(SUMMONING_UNIT_KINDS).toEqual(new Set(["summoner", "pyreCaller"]));
-    expect(V8_FORBIDDEN_UNIT_KINDS).toEqual(new Set([...SHOOTER_UNIT_KINDS, "summoner", "pyreCaller"]));
+    expect(SUMMONING_UNIT_KINDS).toEqual(new Set(["summoner"]));
+    expect(V8_FORBIDDEN_UNIT_KINDS).toEqual(new Set([...SHOOTER_UNIT_KINDS, "summoner"]));
   });
 
   it("wants none of them in any phase, raid or stand-in of any strategy", () => {

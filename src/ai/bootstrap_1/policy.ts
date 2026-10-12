@@ -1,4 +1,4 @@
-import { RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
@@ -44,7 +44,7 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
         // Once the natural and opening screen stand, unlock the heavy line before filling the light cavalry quota.
         ...(index === 1 ? [{ unit: strategy.race === 'grove' ? 'knight' as const : 'ashChieftain' as const, count: 4, priority: 62 }] : []),
         ...phase.wants.map(want => 'building' in want && want.building === 'emberForge'
-          ? { ...want, building: UNIT_DEFS.ashChieftain.trainedAt! } : want),
+          ? { ...want, building: trainingBuildingFor('ember', 'ashChieftain')! } : want),
       ],
     })),
   })),
@@ -53,17 +53,17 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
 function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   const grove = snapshot.players[owner]!.race === 'grove';
-  const healer = grove ? 'priest' : 'emberAcolyte';
+  const healer = 'priest';
   const recovering = recoveryPatients(snapshot, owner).length > 0;
   const medical: V6Want[] = (version === 'v9_archer' || recovering) && (army.length >= 10
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
-      && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt)))
+      && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === trainingBuildingFor(snapshot.players[owner]!.race, healer))))
     ? [{ unit: healer, count: Math.min(2, Math.max(1, Math.floor(army.length / 5))), priority: 65 }] : [];
   if (army.length < 10) return medical;
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
-    : version === 'v9_summoner' ? (grove ? 'summoner' : 'pyreCaller') : (grove ? 'horseArcher' : 'sparkArcher');
-  const producer = UNIT_DEFS[main].trainedAt!;
+    : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
+  const producer = trainingBuildingFor(snapshot.players[owner]!.race, main)!;
   const wants: V6Want[] = [
     { bases: 1 + Math.floor(army.length / 5), priority: 76 },
     { building: producer, count: 2, priority: 57 },
@@ -118,10 +118,11 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
-  return wants.flatMap(want => 'upgrade' in want && player.upgrades[want.upgrade] < want.level ? [{
-    building: UPGRADE_DEFS[want.upgrade].researchBuildingKinds.find(kind => RACE_DEFS[player.race].buildableBuildings.includes(kind))!,
-    count: 1, priority: want.priority,
-  }] : []);
+  return wants.flatMap(want => {
+    if (!('upgrade' in want) || !(player.upgrades[want.upgrade] < want.level)) return [];
+    const building = UPGRADE_DEFS[want.upgrade].researchBuildingKinds.find(kind => canResearchAt(player.race, kind, want.upgrade));
+    return building ? [{ building, count: 1, priority: want.priority }] : [];
+  });
 }
 
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {

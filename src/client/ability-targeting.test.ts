@@ -94,8 +94,8 @@ describe("selected unit spell casting", () => {
   });
 
   it.each([
-    ["emberAcolyte", "emberMend"], ["witch", "curse"], ["ashHexer", "ashCurse"], ["summoner", "summon"],
-    ["pyreCaller", "cinderSoul"], ["ballista", "pinningBolt"], ["fireShip", "incendiaryFlume"], ["knight", "charge"],
+    ["witch", "curse"], ["ashHexer", "ashCurse"], ["summoner", "summon"],
+    ["ballista", "pinningBolt"], ["fireShip", "incendiaryFlume"], ["knight", "charge"],
   ] as const)("reserves a different %s for each pending %s command", (kind, ability) => {
     const game = field(kind), casters = [...game.units], pending: CastCommand[] = [];
     const def = ABILITY_DEFS[ability];

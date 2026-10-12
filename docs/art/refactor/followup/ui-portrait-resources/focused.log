@@ -1,0 +1,33 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/art/portrait-fit.test.ts (7 tests) 182ms
+ ✓ src/client/appearance-integration.test.ts (3 tests) 144ms
+ ✓ src/client/art/shared-caster-skins.test.ts (3 tests) 161ms
+ ❯ src/client/world3d/model-portraits.test.ts (6 tests | 1 failed) 1144ms
+   ✓ fits every current ship and building in UI without a second resource request or a stale sprite 639ms
+   × retires evicted GLB canvases explicitly and reports retained ownership 9ms
+     → Cannot read properties of undefined (reading 'color')
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/world3d/model-portraits.test.ts > retires evicted GLB canvases explicitly and reports retained ownership
+TypeError: Cannot read properties of undefined (reading 'color')
+ ❯ src/client/world3d/model-portraits.ts:48:98
+
+ ❯ Mesh.traverse node_modules/three/build/three.core.js:12974:3
+ ❯ Module.currentModelPortrait src/client/world3d/model-portraits.ts:35:19
+ ❯ src/client/world3d/model-portraits.test.ts:123:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 18 passed (19)
+   Start at  13:29:45
+   Duration  2.30s (transform 1.41s, setup 0ms, collect 4.14s, tests 1.63s, environment 1ms, prepare 196ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

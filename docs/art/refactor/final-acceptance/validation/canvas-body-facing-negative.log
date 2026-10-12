@@ -1,0 +1,31 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ❯ src/client/world-renderer-facing-negative.test.ts (19 tests | 1 failed | 18 skipped) 24ms
+   × world renderer > mirrors attached blood with the rendered recovery pose, not a new order facing behind it 23ms
+     → expected 304.36969785755446 to be close to 297.0751563672902, received difference is 7.294541490264237, but expected 0.005
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/world-renderer-facing-negative.test.ts > world renderer > mirrors attached blood with the rendered recovery pose, not a new order facing behind it
+AssertionError: expected 304.36969785755446 to be close to 297.0751563672902, received difference is 7.294541490264237, but expected 0.005
+ ❯ src/client/world-renderer-facing-negative.test.ts:264:59
+    262|     const painted=drawUnit.mock.calls.find(call=>Math.abs(call[2].x-ac…
+    263|     expect(painted).toBeDefined();expect(painted[5]).toBe(1);
+    264|     expect(ellipse).toBeDefined();expect(ellipse.args[0]).toBeCloseTo(…
+       |                                                           ^
+    265|     drawUnit.mockRestore();
+    266|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 skipped (19)
+   Start at  13:56:01
+   Duration  1.50s (transform 1.01s, setup 0ms, collect 1.30s, tests 24ms, environment 0ms, prepare 47ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

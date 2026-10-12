@@ -14,7 +14,7 @@ import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
-import { ABILITY_DEFS, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, canTrainAt, canResearchAt, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach, carries, passengerLandingSpot } from "../naval";
 import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
@@ -140,8 +140,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, true);
     if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`);
-    if (!BUILDING_DEFS[building.kind].trains.includes(command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind}`);
-    if (!RACE_DEFS[player.race].trainableUnits.includes(command.unitKind)) return commandError(`${player.race} race cannot train ${command.unitKind}`);
+    if (!canTrainAt(player.race, building.kind, command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind} for ${player.race}`);
     const cap = requiredSupplyCap(command.unitKind);
     if (player.supplyCap < cap) return commandError(`Need a supply cap of ${cap} to train ${command.unitKind}`, true);
     if (!canSupply(snapshot, owner, command.unitKind)) return commandError(`Need more supply to train ${command.unitKind}`, true);
@@ -154,7 +153,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const upgrade = UPGRADE_DEFS[command.upgradeKind];
     if (!upgrade) return commandError(`Unknown upgrade ${command.upgradeKind}`);
     if (!RACE_DEFS[player.race].upgrades.includes(command.upgradeKind)) return commandError(`${player.race} race cannot research ${command.upgradeKind}`);
-    if (!upgrade.researchBuildingKinds.includes(building.kind) || !BUILDING_DEFS[building.kind].researches.includes(command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
+    if (!canResearchAt(player.race, building.kind, command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
     const currentLevel = player.upgrades[command.upgradeKind] ?? 0;
     if (currentLevel >= maxUpgradeLevel(command.upgradeKind)) return commandError(`${command.upgradeKind} already at max level`, true);
     if (building.researchQueue.some((job) => job.upgradeKind === command.upgradeKind)) return commandError(`${command.upgradeKind} is already queued`, true);

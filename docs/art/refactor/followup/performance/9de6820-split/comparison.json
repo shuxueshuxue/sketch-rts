@@ -1,0 +1,103 @@
+{
+  "checks": {
+    "replay": true,
+    "visible": true,
+    "modes": true,
+    "cards": true,
+    "finalArt": true,
+    "decodedRGBA": true
+  },
+  "allChecks": true,
+  "fullCompletionWall": {
+    "meanMs": 5989.62500000031,
+    "p50Ms": 6113.4000000003725,
+    "p95Ms": 6743.60000000149,
+    "maxMs": 6743.60000000149
+  },
+  "cpuSubmission": {
+    "meanMs": 676.7916666671323,
+    "p50Ms": 678.9000000003725,
+    "p95Ms": 954.2000000011176,
+    "maxMs": 954.2000000011176
+  },
+  "means": {
+    "paintMs": 49.00000000388051,
+    "readbackMs": 468.60833333494764,
+    "boundsMs": 113.95000000173847,
+    "copyMs": 21.649999995560695,
+    "rendererMs": 2.4916666665424905,
+    "texSubImage3DMs": 41.33333333224679,
+    "uploadBytes": 162998954.66666666,
+    "dirtyPages": 45.666666666666664,
+    "dirtyLayers": 248,
+    "generateMipmapMs": 0.07500000003104408,
+    "trueGpuTailMs": null,
+    "textureInitSubmissionMs": 43.81666666672876,
+    "textureInitTailMs": 4680.825000000031,
+    "drawSubmissionMs": 2.516666666449358,
+    "drawTailMs": 585.5749999997206
+  },
+  "completionStatuses": [
+    {
+      "tick": 20,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 21,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 22,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 23,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 24,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 25,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 26,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 27,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 28,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 29,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 30,
+      "texture": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 31,
+      "texture": 37148,
+      "draw": 37148
+    }
+  ],
+  "note": "Asynchronous wait is a GPU-completion wall upper bound including scheduling overhead, not GPU duration. Instrumentation/CDP and deliberate serialization affect these diagnostic timings."
+}

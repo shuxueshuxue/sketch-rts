@@ -89,7 +89,7 @@ describe("veteran skill catalog contracts", () => {
       if (skill.pool === "specialist") expect(assignments.get(skill.id)).toBeGreaterThan(1);
       else expect(VETERAN_COMMON_SKILL_IDS).toContain(skill.id);
     }
-    for (const kind of ["priest", "emberAcolyte", "fieldMedic"] as const) {
+    for (const kind of ["priest", "priest", "fieldMedic"] as const) {
       expect(VETERAN_SPECIALIST_SKILLS[kind]).toContain("veteranHealingWave");
       expect(VETERAN_SPECIALIST_SKILLS[kind]).toContain("veteranInnerFire");
     }

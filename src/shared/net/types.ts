@@ -69,7 +69,7 @@ export type RoomSyncSummary = {
 export type RoomEpoch = number;
 
 export type ClientNetMessage =
-  | { type: "join"; roomId: string; playerId: PlayerId }
+  | { type: "join"; rulesVersion: number; roomId: string; playerId: PlayerId }
   | { type: "command"; roomId: string; playerId: PlayerId; command: GameCommand; clientSeq?: number; epoch: RoomEpoch }
   | { type: "chat"; roomId: string; playerId: PlayerId; senderName: string; text: string }
   | { type: "checksum"; roomId: string; playerId: PlayerId; tick: number; hash: string; epoch: RoomEpoch }
@@ -77,10 +77,10 @@ export type ClientNetMessage =
   | { type: "requestCheckpoint"; roomId: string; playerId: PlayerId; tick?: number; reason?: CheckpointRequestReason; clientTick?: number; clientChecksum?: string; epoch: RoomEpoch };
 
 export type ServerNetMessage =
-  | { type: "hello"; roomId: string; playerId: PlayerId; tick: number; epoch: RoomEpoch }
-  | { type: "frame"; frame: CommandFrame; epoch: RoomEpoch }
-  | { type: "checkpoint"; checkpoint: CheckpointFrame; epoch: RoomEpoch }
-  | { type: "desync"; roomId: string; tick: number; checksums: Record<string, string>; epoch: RoomEpoch }
+  | { type: "hello"; rulesVersion: number; roomId: string; playerId: PlayerId; tick: number; epoch: RoomEpoch }
+  | { type: "frame"; rulesVersion: number; frame: CommandFrame; epoch: RoomEpoch }
+  | { type: "checkpoint"; rulesVersion: number; checkpoint: CheckpointFrame; epoch: RoomEpoch }
+  | { type: "desync"; rulesVersion: number; roomId: string; tick: number; checksums: Record<string, string>; epoch: RoomEpoch }
   | { type: "error"; roomId: string; message: string; clientSeq?: number }
   | { type: "chat"; message: ChatMessage }
   | { type: "room"; room: RoomState };

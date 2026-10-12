@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
 import { snapToFootprint, setBuildingBodies } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
@@ -22,7 +22,7 @@ it.each((['v9_archer', 'v9_knight'] as const).flatMap(version => (['grove', 'emb
       .townHall('us', x(500), 500).goldMine('empty-main', x(788), 500, 0)
       .townHall('us', x(1200), 1300).goldMine('working', x(1488), 1300, 125)
       .goldMine('replacement', x(2300), 1800, 10000).townHall('foe', x(3500), 500)
-      .building('us', lab, x(800), 800).building('us', UNIT_DEFS[heavy].trainedAt!, x(800), 1000)
+      .building('us', lab, x(800), 800).building('us', trainingBuildingFor(race, heavy)!, x(800), 1000)
       .worker('us', x(1200), 1500, { id: 'builder' });
     for (let i = 0; i < 8; i++) scene = scene.building('us', 'farm', x(400 + i * 64), 3000)
       .unit('foe', 'knight', x(3300 + i % 4 * 40), 650 + Math.floor(i / 4) * 40, { id: `garrison-${i}` });

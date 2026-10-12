@@ -1,14 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { resources,type ResourcePhase } from '../resources';
-import { BUILDING_DEFS } from '../../shared/catalog';
-import { SHIP_KINDS,isShipKind } from '../../shared/ship-geometry';
+import { isShipKind } from '../../shared/ship-geometry';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import type { GameSnapshot } from '../../shared/types';
 import { attachShipRigParts } from './sail-rig';
 
-export const SITE_MODELS=['citadel','shop','camp','well','statue','beacon','fort-lance','fort-flame','fort-mortar','fort-ward','fort-wall'];
-export const matchModelKeys=[...SHIP_KINDS.map(kind=>`ships/${kind}`),...new Set([...Object.keys(BUILDING_DEFS),...SITE_MODELS])].map(kind=>kind.startsWith('ships/')?kind:`buildings/${kind}`);
+export { SITE_MODELS, MATCH_MODEL_KEYS as matchModelKeys } from '../art/model-manifest';
 export function snapshotModelKeys(snapshot:GameSnapshot){return [...new Set([...snapshot.units.filter(unit=>isShipKind(unit.kind)).map(unit=>`ships/${unit.kind}`),...snapshot.units.filter(unit=>isShipKind(unit.kind)).flatMap(ship=>installedWeapons(snapshot,ship).flatMap(item=>{const weapon=mountedWeaponPose(ship,item);return weapon?[`ships/${weapon.art}`]:[];})),...snapshot.buildings.map(building=>`buildings/${building.kind}`),...(snapshot.shops?.length?['buildings/shop']:[]),...(snapshot.mercenaryCamps.length?['buildings/camp']:[])])];}
 
 export class ModelLibrary {

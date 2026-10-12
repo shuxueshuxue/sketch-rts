@@ -1,0 +1,21 @@
+6:36:46 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+6:36:48 PM [vite] (client) ✨ new dependencies optimized: three/addons/loaders/GLTFLoader.js
+6:36:48 PM [vite] (client) ✨ optimized dependencies changed. reloading
+ART frame 0 -4
+ART frame 0 0
+ART sample 0 0 7544.900000002235 2436.5
+ART sample 0 1 6439.5 2214.099999997765
+ART sample 0 2 8177.5 2932.800000000745
+ART sample 0 3 5897.099999997765 2168.2999999970198
+ART frame 0 4
+ART sample 0 4 7182.900000002235 2548.10000000149
+ART sample 0 5 6786.39999999851 2401.800000000745
+ART sample 0 6 6303.5 2195.199999999255
+ART sample 0 7 8252.300000000745 3122.10000000149
+ART frame 0 8
+ART sample 0 8 6504.699999999255 2319.60000000149
+ART sample 0 9 7069.400000002235 2634.7000000029802
+ART sample 0 10 7506.199999999255 2797.5
+ART sample 0 11 7411.800000000745 2758.60000000149
+{"artCycle":0,"artTiming":{"meanMs":7089.683333333582,"p50Ms":7182.900000002235,"p95Ms":8252.300000000745,"maxMs":8252.300000000745},"modes":{"walk":8187,"cast":704,"idle":2710,"attack":387},"visible":967}
+ART frame 1 -4

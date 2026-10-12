@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { TrainableUnitKind } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
@@ -39,15 +39,15 @@ describe('bootstrap_1 production budget', () => {
   it.each(['grove', 'ember'] as const)('funds %s artillery behind four heavies before refilling the light cavalry quota', race => {
     const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
     const light = race === 'grove' ? 'raider' : 'emberRavager';
-    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     const artillery = race === 'grove' ? 'ballista' : 'catapult';
     let scene = sketchScene('heavy-line-artillery-support').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
       .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
-      .building('us', UNIT_DEFS[heavy].trainedAt!, 700, 850).building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850)
+      .building('us', trainingBuildingFor(race, heavy)!, 700, 850).building('us', trainingBuildingFor(race, healer)!, 1000, 850)
       .building('us', 'workshop', 1200, 850).farms('us', 9, 400, 1600);
-    if (UNIT_DEFS[light].trainedAt !== UNIT_DEFS[heavy].trainedAt) scene = scene.building('us', UNIT_DEFS[light].trainedAt!, 700, 1050);
+    if (trainingBuildingFor(race, light) !== trainingBuildingFor(race, heavy)) scene = scene.building('us', trainingBuildingFor(race, light)!, 700, 1050);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,
       { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
     for (let index = 0; index < 4; index++) scene = scene.unit('us', heavy, 1300 + index * 30, 1100);
@@ -74,14 +74,14 @@ describe('bootstrap_1 production budget', () => {
     expect(game.players.us!.gold + game.match.stats.goldSpent.us!).toBeLessThanOrEqual(500 + mined - carrying);
   });
   it.each(['grove', 'ember'] as const)('buys a %s healer and recovers the wounded permanent summon screen through the full command stack', race => {
-    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster = 'summoner';
     const body = race === 'grove' ? 'footman' : 'emberRavager';
-    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     let scene = sketchScene('summon-host-medical-support').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
       .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
-      .building('us', UNIT_DEFS[caster].trainedAt!, 1800, 1200).farms('us', 7, 400, 1600);
+      .building('us', trainingBuildingFor(race, caster)!, 1800, 1200).farms('us', 7, 400, 1600);
     // Keep a live opponent so abandoned-base demolition cannot end the medical observation early.
     for (let index = 0; index < 3; index++) scene = scene.worker('foe', 3600, 3400 + index * 30);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 530 + index % 5 * 20,
@@ -124,23 +124,23 @@ describe('bootstrap_1 production budget', () => {
     }
     expect(game.units.filter(unit => unit.kind === screen).length).toBeGreaterThanOrEqual(2);
     expect(game.units.filter(unit => unit.kind === shooter).length).toBeGreaterThanOrEqual(2);
-    expect(game.buildings.some(building => building.kind === UNIT_DEFS[screen].trainedAt && building.complete)).toBe(true);
-    expect(game.buildings.some(building => building.kind === UNIT_DEFS[shooter].trainedAt && building.complete)).toBe(true);
-    const spent = BUILDING_DEFS[UNIT_DEFS[screen].trainedAt!].cost + BUILDING_DEFS[UNIT_DEFS[shooter].trainedAt!].cost
+    expect(game.buildings.some(building => building.kind === trainingBuildingFor(race, screen) && building.complete)).toBe(true);
+    expect(game.buildings.some(building => building.kind === trainingBuildingFor(race, shooter) && building.complete)).toBe(true);
+    const spent = BUILDING_DEFS[trainingBuildingFor(race, screen)!].cost + BUILDING_DEFS[trainingBuildingFor(race, shooter)!].cost
       + 2 * UNIT_DEFS[screen].cost + 2 * UNIT_DEFS[shooter].cost;
     expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(spent);
   });
   it.each(['grove', 'ember'] as const)('funds the first %s heavy squad after the opening instead of waiting for a full light line', race => {
     const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
     const basic = race === 'grove' ? 'lancer' : 'emberRavager';
-    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     let scene = sketchScene('heavy-after-natural').replaceDefaults().player('us', { race, team: 'a' }).player('foe', { team: 'b' })
       // This budget exercise uses two ordinary five-worker mining lanes. Keep
       // them at the standard layout distance as that economy changes.
       .townHall('us', 500, 500).goldMine('main', 500 + GOLD_MINE_RULES.mainDistance, 500, 10000)
       .townHall('us', 1400, 500).goldMine('natural', 1400 + GOLD_MINE_RULES.mainDistance, 500, 10000).townHall('foe', 3500, 3500)
-      .building('us', UNIT_DEFS[basic].trainedAt!, 700, 850)
-      .building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850).farms('us', 6, 400, 1500);
+      .building('us', trainingBuildingFor(race, basic)!, 700, 850)
+      .building('us', trainingBuildingFor(race, healer)!, 1000, 850).farms('us', 6, 400, 1500);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,
       { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
     for (let index = 0; index < 6; index++) scene = scene.unit('us', basic, 1300 + index * 30, 900);
@@ -164,12 +164,12 @@ describe('bootstrap_1 production budget', () => {
   ]))('recruits $race medical support for $shooters shooters and heals with ordinary commands', ({ race, shooters, gold }) => {
     const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
     const screen = race === 'grove' ? 'lancer' : 'ashWarden';
-    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     let scene = sketchScene('shooting-line-medical-support').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold })
       .townHall('us', 500, 500).townHall('foe', 3000, 3000).farms('us', 8, 400, 1500)
-      .building('us', UNIT_DEFS[shooter].trainedAt!, 800, 850);
-    if (UNIT_DEFS[healer].trainedAt !== UNIT_DEFS[shooter].trainedAt) scene = scene.building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850);
+      .building('us', trainingBuildingFor(race, shooter)!, 800, 850);
+    if (trainingBuildingFor(race, healer) !== trainingBuildingFor(race, shooter)) scene = scene.building('us', trainingBuildingFor(race, healer)!, 1000, 850);
     for (let index = 0; index < shooters; index++) scene = scene.unit('us', shooter, 850 + index * 35, 900, { id: `shooter-${index}`, hp: 20 });
     for (let index = 0; index < 4; index++) scene = scene.unit('us', screen, 850 + index * 35, 1020);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
@@ -221,13 +221,13 @@ describe('bootstrap_1 production budget', () => {
 
   it.each(['grove', 'ember'] as const)('keeps the explicit %s opening squad while tech is locked instead of substituting extra basic soldiers', race => {
     const basic: TrainableUnitKind = race === 'grove' ? 'footman' : 'emberRavager';
-    const caster: TrainableUnitKind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const caster: TrainableUnitKind = 'summoner';
     let scene = sketchScene('explicit-opening-before-caster-tier').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
       .playerState('us', { gold: BUILDING_DEFS.farm.cost + UNIT_DEFS[basic].cost })
       .townHall('us', 500, 500).goldMine('main', 788, 500, 4000)
       .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 4000).townHall('foe', 3500, 3000)
-      .building('us', UNIT_DEFS[basic].trainedAt!, 700, 850).farms('us', 3, 400, 1500);
+      .building('us', trainingBuildingFor(race, basic)!, 700, 850).farms('us', 3, 400, 1500);
     for (let i = 0; i < 11; i++) scene = scene.worker('us', 400 + i * 35, 800);
     for (let i = 0; i < 4; i++) scene = scene.unit('us', basic, 1400 + i * 35, 1000);
     const options = () => ({ version: 'v2' as const, requestedVersion: 'v7' as const, memory: createAiPolicyMemory(), armyWants: [],
@@ -253,9 +253,9 @@ describe('bootstrap_1 production budget', () => {
   it.each(['grove', 'ember'] as const)('adds the %s heavy unit factory and trains through both real queues', race => {
     const grove = race === 'grove';
     const heavy = grove ? 'knight' : 'ashChieftain';
-    const producer = UNIT_DEFS[heavy].trainedAt!;
+    const producer = trainingBuildingFor(race, heavy)!;
     const basic = grove ? 'raider' : 'emberRavager';
-    const healer = grove ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     const hexer = grove ? 'witch' : 'ashHexer';
     const lab = grove ? 'barracks' : 'emberForge';
     let scene = sketchScene('heavy-production-chain').replaceDefaults()
@@ -264,7 +264,7 @@ describe('bootstrap_1 production budget', () => {
       .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 4000).townHall('foe', 2800, 2800)
       .building('us', producer, 500, 850).building('us', lab, 700, 850)
       .building('us', 'defenseTower', 1450, 700)
-      .building('us', UNIT_DEFS[healer].trainedAt!, 900, 850).farms('us', 10, 400, 1600);
+      .building('us', trainingBuildingFor(race, healer)!, 900, 850).farms('us', 10, 400, 1600);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', 500 + index * 30, 650);
     for (let index = 0; index < (grove ? 8 : 10); index++) scene = scene.unit('us', basic, 1400 + index * 30, 1000);
     for (let index = 0; index < 3; index++) scene = scene.unit('us', healer, 1400 + index * 40, 1150).unit('us', hexer, 1400 + index * 40, 1250);
@@ -397,7 +397,7 @@ describe('bootstrap_1 production budget', () => {
       .building('us', 'defenseTower', 1450, 700)
       .farms('us', 5, 400, 1300);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', 500 + index * 35, 650);
-    for (let index = 0; index < 10; index++) scene = scene.unit('us', 'pyreCaller', 1500 + index * 35, 1000, { id: `caller-${index}` });
+    for (let index = 0; index < 10; index++) scene = scene.unit('us', 'summoner', 1500 + index * 35, 1000, { id: `caller-${index}` });
     const control = scene.build().createGame(), candidate = scene.build().createGame();
     for (const [index, game] of [control, candidate].entries()) {
       const memory = createAiPolicyMemory(); memory.v6 = { phase: 2 };
@@ -407,17 +407,17 @@ describe('bootstrap_1 production budget', () => {
       for (const command of commands) issuePlayerCommand(game, 'us', command);
       for (let tick = 0; tick < 700; tick++) stepGame(game);
       const caster = game.units.find(unit => unit.id === 'caller-0')!;
-      issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability: 'cinderSoul', x: caster.x + 54, y: caster.y + 28 });
+      issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability: 'summon', x: caster.x + 54, y: caster.y + 28 });
     }
     expect(control.players.us!.upgrades.weaponTraining).toBe(1);
     expect(candidate.players.us!.upgrades.weaponTraining).toBe(0);
-    expect(control.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller')).toHaveLength(10);
-    expect(candidate.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller')).toHaveLength(11);
+    expect(control.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner')).toHaveLength(10);
+    expect(candidate.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner')).toHaveLength(11);
     for (const game of [control, candidate]) {
       const spirit = game.units.find(unit => unit.owner === 'us' && unit.kind === 'spirit')!;
       expect(spirit.attackDamage).toBe(UNIT_DEFS.spirit.attackDamage);
       expect(spirit.maxHp).toBe(UNIT_DEFS.spirit.hp);
     }
-    expect(candidate.players.us!.gold).toBe(180 - UNIT_DEFS.pyreCaller.cost);
+    expect(candidate.players.us!.gold).toBe(180 - UNIT_DEFS.summoner.cost);
   });
 });

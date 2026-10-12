@@ -60,7 +60,7 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror =
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500).townHall('foe', x(3500), 3500)
     .building('us', race === 'grove' ? 'moonWell' : 'emberShrine', x(1000), 1000)
-    .unit('us', race === 'grove' ? 'priest' : 'emberAcolyte', x(1100), 1000,
+    .unit('us', 'priest', x(1100), 1000,
       { id: 'healer', hp: 20 }).build().createGame();
   game.scriptedVictory = true;
   const healer = game.units.find(unit => unit.id === 'healer')!;

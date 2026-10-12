@@ -1,0 +1,24 @@
+
+> sketch-rts@0.2.0 build:production
+> npm run build && npm run build:server-bundle
+
+
+> sketch-rts@0.2.0 build
+> tsc --noEmit && vite build
+
+src/ai/bootstrap_1/colony-recovery.test.ts(26,17): error TS2345: Argument of type '"priest" | "emberAcolyte"' is not assignable to parameter of type '"worker" | "footman" | "archer" | "horseArcher" | "raider" | "lancer" | "ashWarden" | "emberRavager" | "cinderRunner" | "sparkArcher" | "ashHexer" | "knight" | "priest" | "summoner" | ... 40 more ... | "redDragon"'.
+  Type '"emberAcolyte"' is not assignable to type '"worker" | "footman" | "archer" | "horseArcher" | "raider" | "lancer" | "ashWarden" | "emberRavager" | "cinderRunner" | "sparkArcher" | "ashHexer" | "knight" | "priest" | "summoner" | ... 40 more ... | "redDragon"'.
+src/ai/bootstrap_1/ferry-return-summons.test.ts(23,19): error TS2345: Argument of type '"summoner" | "pyreCaller"' is not assignable to parameter of type '"worker" | "footman" | "archer" | "horseArcher" | "raider" | "lancer" | "ashWarden" | "emberRavager" | "cinderRunner" | "sparkArcher" | "ashHexer" | "knight" | "priest" | "summoner" | ... 40 more ... | "redDragon"'.
+  Type '"pyreCaller"' is not assignable to type '"worker" | "footman" | "archer" | "horseArcher" | "raider" | "lancer" | "ashWarden" | "emberRavager" | "cinderRunner" | "sparkArcher" | "ashHexer" | "knight" | "priest" | "summoner" | ... 40 more ... | "redDragon"'.
+src/ai/bootstrap_1/ferry-return-summons.test.ts(34,107): error TS2322: Type '"summon" | "cinderSoul"' is not assignable to type 'AbilityKind'.
+  Type '"cinderSoul"' is not assignable to type 'AbilityKind'.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

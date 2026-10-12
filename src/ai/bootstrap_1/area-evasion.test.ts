@@ -10,7 +10,7 @@ import type { AiScript } from '../policy/types';
 import { planShellEvasion, shellEvasion } from './shell-evasion';
 
 function stormFight(kind: UnitKind, evasion: boolean, pursuit = 0) {
-  const race = ['sparkArcher', 'pyreCaller', 'ashChieftain'].includes(kind) ? 'ember' : 'grove';
+  const race = ['sparkArcher', 'summoner', 'ashChieftain'].includes(kind) ? 'ember' : 'grove';
   let scene = sketchScene('storm-march-conflict').map('openClaims').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', 400, 400).townHall('foe', 3500, 3500)
@@ -53,7 +53,7 @@ describe('bootstrap_1 sustained ground area evasion', () => {
     console.log(JSON.stringify({ side, control: control.damage, candidate: candidate.damage }));
   });
 
-  it.each(['horseArcher', 'sparkArcher', 'summoner', 'pyreCaller', 'knight', 'ashChieftain'] as const)(
+  it.each(['horseArcher', 'sparkArcher', 'summoner', 'summoner', 'knight', 'ashChieftain'] as const)(
     'moves the %s out of a real storm despite repeated army orders, then returns command', kind => {
       const control = stormFight(kind, false), candidate = stormFight(kind, true);
       expect(candidate.damage).toBeLessThan(control.damage);

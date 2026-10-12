@@ -3,7 +3,8 @@ import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
 import {worldModels,matchModelKeys} from './model-library';
-import {currentModelPortrait,clearModelPortraits} from './model-portraits';
+import {currentModelPortrait,clearModelPortraits,activateModelPortraits,modelPortraitStats} from './model-portraits';
+import {drawModelPortrait} from '../model-portraits';
 import * as sailRig from './sail-rig';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 const fetcher=vi.fn(async(url:string)=>new Response(readFileSync(`public/art/world3d/${url.split('/art/world3d/')[1]!.split('?')[0]}`)));
@@ -111,4 +112,43 @@ it('invalidates projections when a decoded model is replaced under the same asse
   const refreshed=currentModelPortrait('ships/warship','#65908c')!;
   expect(refreshed).not.toBe(original);expect(changedPixels(original,refreshed)).toBeGreaterThan(100);
   getModel.mockReturnValue(undefined);expect(currentModelPortrait('ships/warship','#65908c')).toBeUndefined();
+});
+
+
+it('retires evicted GLB canvases explicitly and reports retained ownership',()=>{
+  clearModelPortraits();
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(10,20,10),new THREE.MeshStandardMaterial({color:'#886655'}));
+  mesh.geometry.clearGroups(); // One material, unlike BoxGeometry's six-slot default groups.
+  vi.spyOn(worldModels,'portraitModel').mockReturnValue(mesh);
+  vi.spyOn(sailRig,'defaultRigPortrait').mockImplementation(model=>({model,dispose:()=>{}}));
+  const first=currentModelPortrait('small','#000000')!,before=Buffer.from(pixels(first));
+  for(let i=1;i<=64;i++)currentModelPortrait('small',`#${i.toString(16).padStart(6,'0')}`);
+  expect(first.width).toBe(1);expect(first.height).toBe(1);
+  expect(modelPortraitStats()).toMatchObject({entries:64,cacheBytes:64*256*256*4,borrowedCanvases:0,retiredCanvases:0,ownedCanvasBytes:64*256*256*4});
+  const recreated=currentModelPortrait('small','#000000')!;
+  expect(Buffer.from(pixels(recreated)).equals(before)).toBe(true);
+  clearModelPortraits();expect(recreated.width).toBe(1);expect(modelPortraitStats().ownedCanvasBytes).toBe(0);
+  mesh.geometry.dispose();mesh.material.dispose();
+});
+
+it('pins the immediate provider image across nested draws and clear',()=>{
+  clearModelPortraits();activateModelPortraits();
+  let outerImage:HTMLCanvasElement|undefined;
+  const nested={drawImage:(image:HTMLCanvasElement)=>{
+    expect(image).toBe(outerImage);clearModelPortraits();
+    expect(image.width).toBe(256);expect(modelPortraitStats()).toMatchObject({entries:0,borrowedCanvases:1,retiredCanvases:1,ownedCanvasBytes:256*256*4});
+  }} as unknown as CanvasRenderingContext2D;
+  const outer={drawImage:(image:HTMLCanvasElement)=>{
+    outerImage=image;expect(drawModelPortrait(nested,'ships/warship',0,0,64,'#65908c')).toBe(true);
+    expect(image.width).toBe(256);
+  }} as unknown as CanvasRenderingContext2D;
+  expect(drawModelPortrait(outer,'ships/warship',0,0,64,'#65908c')).toBe(true);
+  expect(outerImage!.width).toBe(1);expect(modelPortraitStats().ownedCanvasBytes).toBe(0);
+});
+
+it('releases a borrowed model image even if the destination draw throws',()=>{
+  clearModelPortraits();activateModelPortraits();
+  const ctx={drawImage:()=>{clearModelPortraits();throw new Error('destination');}} as unknown as CanvasRenderingContext2D;
+  expect(()=>drawModelPortrait(ctx,'ships/warship',0,0,64,'#65908c')).toThrow('destination');
+  expect(modelPortraitStats().ownedCanvasBytes).toBe(0);
 });

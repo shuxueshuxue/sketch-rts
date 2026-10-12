@@ -1,0 +1,13 @@
+{
+  "fps": 24,
+  "frames": 288,
+  "directions": [
+    -60,
+    0,
+    60
+  ],
+  "variants": 3,
+  "facings": 2,
+  "source": "current production painter",
+  "timing": "Review holds on ready/contact; event contact through six recovery samples. Not a simulated battle or pre-hit windup."
+}

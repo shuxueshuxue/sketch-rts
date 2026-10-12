@@ -1,0 +1,68 @@
+{
+  "checks": [
+    {
+      "kind": "horseArcher",
+      "firstTick": 10,
+      "tipError": 0.00002607111130954056,
+      "origin": {
+        "x": 626.9528901941483,
+        "y": 690,
+        "height": 65.02409458081245
+      }
+    },
+    {
+      "kind": "priest",
+      "firstTick": 12,
+      "tipError": 0.000023497187263233978,
+      "origin": {
+        "x": 630.800377500648,
+        "y": 850,
+        "height": 18.441966865801025
+      }
+    },
+    {
+      "kind": "archer",
+      "firstTick": 13,
+      "tipError": 0.00002575637922329193,
+      "origin": {
+        "x": 623.4654251265499,
+        "y": 510,
+        "height": 59.589097717065
+      }
+    }
+  ],
+  "glError": 0,
+  "programs": [
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    }
+  ],
+  "passed": true,
+  "method": "24 native simulation ticks; actual release events, real WorldPresentation GPU rendering. Authored arrow tip and orb center measured against the locked visual socket trajectory. No simulation coordinates, arrival durations or collision rules changed.",
+  "errors": [],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

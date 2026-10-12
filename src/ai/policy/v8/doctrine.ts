@@ -100,7 +100,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
     phases: [
       {
         wants: [
-          { unit: "emberAcolyte", count: 2, priority: 65 },
+          { unit: "priest", count: 2, priority: 65 },
           MAIN_TOWERS,
           { bases: 2, priority: 60 },
           NATURAL_TOWER,
@@ -115,7 +115,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
           { bases: 2, priority: 66 },
           { unit: "ashChieftain", count: 6, priority: 61 },
           { unit: "emberRavager", count: 10, priority: 58 },
-          { unit: "emberAcolyte", count: 3, priority: 56 },
+          { unit: "priest", count: 3, priority: 56 },
           { unit: "ashHexer", count: 3, priority: 55 },
           { building: "emberForge", count: 2, priority: 52 },
           { upgrade: "reinforcedPlating", level: 1, priority: 51 },
@@ -129,7 +129,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
           { unit: "emberRavager", count: 16, priority: 55 },
           { unit: "ashChieftain", count: 10, priority: 57 },
           { unit: "cinderRevenant", count: 6, priority: 54 },
-          { unit: "emberAcolyte", count: 4, priority: 53 },
+          { unit: "priest", count: 4, priority: 53 },
           { unit: "ashHexer", count: 4, priority: 53 },
           { upgrade: "weaponTraining", level: 2, priority: 51 },
           { upgrade: "reinforcedPlating", level: 2, priority: 50 },

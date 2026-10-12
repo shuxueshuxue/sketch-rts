@@ -1,0 +1,18 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-units
+
+ ✓ src/client/unit-facing.test.ts (11 tests) 7ms
+ ✓ src/client/unit-animation.test.ts (27 tests) 48ms
+ ✓ src/recorder/record.test.ts (6 tests) 1762ms
+   ✓ headless recorder > films the same pixels every time: the match is deterministic and animation runs on match time 1335ms
+
+ Test Files  3 passed (3)
+      Tests  44 passed (44)
+   Start at  12:05:28
+   Duration  5.34s (transform 2.79s, setup 0ms, collect 4.99s, tests 1.82s, environment 0ms, prepare 225ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

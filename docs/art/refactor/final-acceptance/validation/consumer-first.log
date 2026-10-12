@@ -1,0 +1,42 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/client/unit-facing.test.ts (11 tests) 7ms
+ ✓ src/client/content/cards.test.ts (6 tests) 12ms
+ ❯ src/client/world-renderer.test.ts (19 tests | 1 failed) 143ms
+   × world renderer > mirrors attached blood with the rendered recovery pose, not a new order facing behind it 12ms
+     → expected 297.0751563672902 to be close to 296.3527292548679, received difference is 0.7224271124223378, but expected 0.005
+ ✓ src/client/art/combat-effects.test.ts (5 tests) 7ms
+ ✓ src/client/art/items.test.ts (3 tests) 348ms
+   ✓ uses actual issued bow, pike and javelin geometry in both inventory and ground records 325ms
+ ✓ src/client/art/model-manifest.test.ts (2 tests) 298ms
+ ✓ scripts/painted-sprite-bounds.test.ts (4 tests) 3017ms
+   ✓ painted atlas bounds > keeps every ship steady across sailing frames while land siege wheels still turn 502ms
+   ✓ painted atlas bounds > fits every humanoid action and facing inside its production atlas domain 2383ms
+ ✓ src/client/art/rig.test.ts (8 tests) 4667ms
+   ✓ catalog composition > returns all compatible equipment to exactly the ready raster after attack and casting 4512ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/world-renderer.test.ts > world renderer > mirrors attached blood with the rendered recovery pose, not a new order facing behind it
+AssertionError: expected 297.0751563672902 to be close to 296.3527292548679, received difference is 0.7224271124223378, but expected 0.005
+ ❯ src/client/world-renderer.test.ts:258:59
+    256|     expect(Math.abs(mark.localX)).toBeGreaterThan(.001);
+    257|     const ellipse=rendered.calls.find(call=>call.name==='ellipse'&&cal…
+    258|     expect(ellipse).toBeDefined();expect(ellipse.args[0]).toBeCloseTo(…
+       |                                                           ^
+    259|   });
+    260| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 7 passed (8)
+      Tests  1 failed | 57 passed (58)
+   Start at  13:54:02
+   Duration  5.58s (transform 1.49s, setup 0ms, collect 3.99s, tests 8.50s, environment 1ms, prepare 399ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

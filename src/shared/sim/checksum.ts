@@ -20,10 +20,28 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 15: enlarged hulls, guard stations, population cabins and deployed boarding bridges.
 // 16: persisted, fairly scheduled complex ship route requests.
 // 17: exact saved state of deterministic incremental ship navigation.
-export const CHECKSUM_VERSION = 17;
+// 18: death-time corpse equipment, owner race and deck attachment facts.
+export const CHECKSUM_VERSION = 18;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
+}
+
+/** Same-rules replay compatibility only; callers must validate the rules version first. */
+export function checksumGameForVersion(game: Game, version: number): string {
+  if (version === CHECKSUM_VERSION) return checksumGame(game);
+  const checkedGame = { ...game };
+  if (version === 2) {
+    delete checkedGame.corpses;
+  } else if (version === 17) {
+    if (game.corpses) checkedGame.corpses = game.corpses.map(corpse => {
+      const { equipmentCaptured, rightItemKind, weaponKind, leftItemKind, ownerRace, deck, ...prior } = corpse;
+      return prior;
+    });
+  } else {
+    throw new Error(`Unsupported checksum version ${version}`);
+  }
+  return checksumGame(checkedGame);
 }
 
 export function fnv1a(input: string) {

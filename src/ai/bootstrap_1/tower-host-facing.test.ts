@@ -9,7 +9,7 @@ import { summonerTowerRush } from './tower-rush';
 describe('summon host facing actual outpost attackers', () => {
   it.each((['grove', 'ember'] as const).flatMap(race => [-1, 1].map(side => ({ race, side }))))(
     'keeps the $race host behind its tower under artillery from side $side', ({ race, side }) => {
-      const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+      const kind = 'summoner';
       let scene = sketchScene('summon-outpost-flank').map('openClaims').replaceDefaults()
         .player('us', { race, team: 'a' }).player('foe', { race: 'ember', team: 'b' })
         .playerState('us', { gold: 0 }).townHall('us', 400, 300)

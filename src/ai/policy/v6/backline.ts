@@ -33,7 +33,7 @@ const MIN_SCREEN = 3;
 // casters keep a short step behind the front, inside the shooters' and towers' reach along with it.
 const V8_SCREEN_DEPTH = 110;
 
-const BACKLINE_KINDS = new Set(["summoner", "pyreCaller", "priest", "witch", "emberAcolyte", "ashHexer", "fieldMedic"]);
+const BACKLINE_KINDS = new Set(["summoner", "priest", "witch", "ashHexer", "fieldMedic"]);
 
 export function isBacklineKind(unit: Unit) {
   return BACKLINE_KINDS.has(unit.kind);

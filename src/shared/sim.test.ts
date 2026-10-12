@@ -91,17 +91,17 @@ function sumPlayerStats(record: PlayerNumberMap) {
 describe("sketch RTS simulation", () => {
   it("defines a production roster with at least 10 distinct unit kinds and 5 building kinds including a tower", () => {
     expect(TRAINABLE_UNIT_KINDS.length).toBeGreaterThanOrEqual(10);
-    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "ashWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "ashWarden", "emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(MERCENARY_UNIT_KINDS).toEqual(expect.arrayContaining(["mercenary", "contractArcher", "fieldMedic"]));
     expect(MERCENARY_UNIT_KINDS).toHaveLength(3);
     expect(Object.keys(BUILDING_DEFS).length).toBeGreaterThanOrEqual(5);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(0);
     expect(Object.keys(RACE_DEFS)).toEqual(expect.arrayContaining(["grove", "ember"]));
     expect(RACE_DEFS.grove.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest", "horseArcher"]));
-    expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(RACE_DEFS.grove.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "archeryRange", "sanctum", "defenseTower", "moonWell", "farm"]));
     expect(RACE_DEFS.grove.buildableBuildings).not.toEqual(expect.arrayContaining(["emberForge", "cinderSpire", "emberShrine"]));
-    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["ashWarden", "worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["ashWarden", "worker", "emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(RACE_DEFS.ember.trainableUnits).not.toEqual(expect.arrayContaining(["footman", "archer", "horseArcher", "raider", "lancer", "knight", "priest", "summoner", "witch", "golem"]));
     expect(RACE_DEFS.ember.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"]));
     expect(RACE_DEFS.ember.buildableBuildings).not.toEqual(expect.arrayContaining(["barracks", "archeryRange", "stables", "sanctum", "workshop", "moonWell"]));
@@ -113,18 +113,18 @@ describe("sketch RTS simulation", () => {
     expect(rawValue("emberRavager")).toBeLessThanOrEqual(rawValue("ashWarden"));
     expect(rawValue("cinderRunner")).toBeLessThanOrEqual(rawValue("raider"));
     expect(rawValue("sparkArcher")).toBeLessThanOrEqual(rawValue("archer"));
-    expect(rawValue("emberAcolyte")).toBeLessThanOrEqual(rawValue("priest"));
+    expect(rawValue("priest")).toBeLessThanOrEqual(rawValue("priest"));
     expect(rawValue("ashHexer")).toBeLessThanOrEqual(rawValue("witch"));
-    expect(rawValue("pyreCaller")).toBeLessThanOrEqual(rawValue("summoner"));
+    expect(rawValue("summoner")).toBeLessThanOrEqual(rawValue("summoner"));
   });
 
   it("gives ember support units their own abilities through shared ability primitives", () => {
-    expect(UNIT_DEFS.emberAcolyte.abilities).toEqual(["emberMend"]);
+    expect(UNIT_DEFS.priest.abilities).toEqual(["heal"]);
     expect(UNIT_DEFS.ashHexer.abilities).toEqual(["ashCurse"]);
-    expect(UNIT_DEFS.pyreCaller.abilities).toEqual(["cinderSoul"]);
-    expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: ABILITY_DEFS.heal.cooldown });
+    expect(UNIT_DEFS.summoner.abilities).toEqual(["summon"]);
+    expect(ABILITY_DEFS.heal).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: ABILITY_DEFS.heal.cooldown });
     expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, effectDuration: seconds(18), cooldown: seconds(7.5) });
-    expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(60), cooldown: seconds(40) });
+    expect(ABILITY_DEFS.summon).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(60), cooldown: seconds(40) });
   });
 
   it("lets ember research shared combat tech from the ember forge", () => {
@@ -1313,8 +1313,8 @@ describe("sketch RTS simulation", () => {
       .player("enemy", { race: "grove" })
       .townHall("player", 500, 500)
       .townHall("enemy", 3500, 3500)
-      .unit("player", "emberAcolyte", 2000, 2000, { id: "ember-acolyte" })
-      .unit("player", "pyreCaller", 2050, 2000, { id: "pyre-caller" })
+      .unit("player", "priest", 2000, 2000, { id: "ember-acolyte" })
+      .unit("player", "summoner", 2050, 2000, { id: "pyre-caller" })
       .unit("player", "ashHexer", 2100, 2000, { id: "ash-hexer" })
       .unit("player", "emberRavager", 2030, 2040, { id: "hurt-ravager", hp: 30 })
       .unit("enemy", "raider", 2240, 2000, { id: "ash-target" })
@@ -1326,8 +1326,8 @@ describe("sketch RTS simulation", () => {
     const hurt = game.units.find((unit) => unit.id === "hurt-ravager")!;
     const enemy = game.units.find((unit) => unit.id === "ash-target")!;
 
-    issueCommand(game, { type: "cast", unitId: acolyte.id, ability: "emberMend", targetId: hurt.id });
-    issueCommand(game, { type: "cast", unitId: caller.id, ability: "cinderSoul", x: 2090, y: 2040 });
+    issueCommand(game, { type: "cast", unitId: acolyte.id, ability: "heal", targetId: hurt.id });
+    issueCommand(game, { type: "cast", unitId: caller.id, ability: "summon", x: 2090, y: 2040 });
     issueCommand(game, { type: "cast", unitId: hexer.id, ability: "ashCurse", targetId: enemy.id });
     stepMany(game, 5);
 

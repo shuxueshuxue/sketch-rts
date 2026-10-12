@@ -71,11 +71,12 @@ const smallSelection = new Set([
 const largeSelection = new Set(game.units.map(unit => unit.id));
 
 function stats(layer, renderer = layer.renderer) {
-  const maps = ['positions', 'templates', 'bounds', 'cards', 'cardGeometry', 'rigModels', 'rigPoses', 'deckMotion', 'entities', 'ships', 'shipPoses', 'gangwaySurfaces', 'recoil'];
+  const maps = ['positions', 'templates', 'bounds', 'rigModels', 'rigPoses', 'deckMotion', 'entities', 'ships', 'shipPoses', 'gangwaySurfaces', 'recoil'];
   const selection = layer.selection, batches = [...selection.batches.values()];
   return {
     owned: Object.fromEntries([
       ...maps.map(key => [key, layer[key]?.size ?? null]),
+      ['cardPages', layer.cardStats().pages], ['cardEntries', layer.cardStats().cards], ['cardCpuBytes', layer.cardStats().cpuBytes],
       ['actorBatches', layer.batches.batches.size], ['actorGeometries', layer.batches.geometries.size], ['actorTextures', layer.batches.textures.size],
       ['selectionBatches', selection.batches.size], ['selectionHulls', selection.hulls.size],
     ]),

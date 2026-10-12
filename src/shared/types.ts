@@ -1,4 +1,4 @@
-import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
+import type { BUILDING_RULES, UNIT_RULES, RACE_TECH_RULES, VariantRules, WeaponDef } from "./catalog";
 import type { AttackKind } from "./attack-presentation";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
@@ -10,8 +10,7 @@ export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
 export type MapId = (typeof MAP_IDS)[number];
 export type RaceId = "grove" | "ember";
-// Unit and building kinds are the rows of the catalog's rule tables (shared/catalog.ts); a trainable unit is one with a
-// building that trains it.
+// Unit and building kinds come from combat rules; trainable kinds come from race production relationships.
 export type UnitKind = keyof typeof UNIT_RULES;
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
 // The creep families of the camp templates (see shared/camps.ts).
@@ -22,10 +21,11 @@ export type CreepFamilyUnitKind =
   | "spiderling" | "venomSpider" | "spiderQueen"
   | "dragonWhelp" | "redDragon";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
-export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
+type UnionKeys<T> = T extends unknown ? keyof T : never;
+export type TrainableUnitKind = UnionKeys<(typeof RACE_TECH_RULES)[RaceId]["units"]>;
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web" | VeteranActiveSkillId;
+export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web" | VeteranActiveSkillId;
 export type EquipmentSlot = "head" | "body" | "feet" | "carry0" | "carry1" | "carry2" | "carry3";
 export type ShipEquipmentKind = "shipCannon" | "shipMortar" | "flameProjector";
 export type ItemKind = ShipEquipmentKind | "issuedWeapon" | "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
@@ -97,12 +97,26 @@ export type WorldEffect = {
   owner?: Owner;
   damage?: number;
   damageProfile?: DamageProfile;
+  /** Immutable hit-time presentation facts; corpses need not exist yet. */
+  targetKind?: UnitKind;
+  targetHpAfter?: number;
+  targetMaxHp?: number;
+  targetRadius?: number;
+  targetUnitClass?: "mechanical" | "nonMechanical";
+  targetDeck?: { shipId: string; x: number; y: number; heading: number };
   amount?: number;
   radius?: number;
   tickEvery?: number;
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt, or whose weapon dealt a hit, so the
    * client can sound the blow. Presentation only. */
   sourceKind?: UnitKind | BuildingKind;
+  /** Actual release author; unlike unitId on hit effects, this is never the victim. */
+  sourceId?: string;
+  actionMode?: "attack" | "cast";
+  actionTick?: number;
+  /** A volley aims one gesture at an area while individual missiles fan out. */
+  actionToX?: number;
+  actionToY?: number;
   attackKind?: AttackKind;
   /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
   unitId?: string;
@@ -617,6 +631,13 @@ export type Corpse = {
   radius: number;
   diedAtTick: number;
   variant?: string;
+  /** Death-time presentation facts, captured before held items are dropped. */
+  equipmentCaptured?: true;
+  rightItemKind?: 'issuedWeapon' | 'greatSword';
+  weaponKind?: UnitKind;
+  leftItemKind?: 'roundShield';
+  ownerRace?: RaceId;
+  deck?: {shipId:string;x:number;y:number};
 };
 
 export type GameSnapshot = {

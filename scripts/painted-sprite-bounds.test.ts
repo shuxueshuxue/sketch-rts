@@ -1,3 +1,5 @@
+import { actionPaintSize } from '../src/client/art/action-direction';
+import { ART_TILE_SIZE } from '../src/client/art/raster-cache';
 import { paintCorpse } from '../src/client/art/corpses';
 import { createCanvas } from '@napi-rs/canvas';
 import { describe,it,expect } from 'vitest';
@@ -8,14 +10,17 @@ import { BUILDING_CARDS } from '../src/client/content/buildings';
 import type { UnitKind,BuildingKind } from '../src/shared/types';
 import type { UnitAnimationFrame } from '../src/client/unit-animation';
 import { unitMover } from '../src/shared/catalog';
-function assertFits(paint:(b:CanvasRenderingContext2D)=>void,label:string){
-  const c=createCanvas(128,128),b=c.getContext('2d');b.translate(64,64);
+function assertFits(paint:(b:CanvasRenderingContext2D)=>void,label:string,tileSize:number=ART_TILE_SIZE){
+  // Render beyond the production tile so detached outlying pixels cannot be
+  // silently clipped before the assertion sees them. Keep the clear edge rule.
+  const padding=16,size=tileSize+padding*2;
+  const c=createCanvas(size,size),b=c.getContext('2d');b.translate(size/2,size/2);
   paint(b as unknown as CanvasRenderingContext2D);
-  const pixels=b.getImageData(0,0,128,128).data;
+  const pixels=b.getImageData(0,0,size,size).data;
   let ink=0,edge=0;
-  for(let y=0;y<128;y++)for(let x=0;x<128;x++){
-    const a=pixels[(y*128+x)*4+3]!;ink+=a>0?1:0;
-    if(x===0||x===127||y===0||y===127)edge+=a;
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const a=pixels[(y*size+x)*4+3]!;ink+=a>0?1:0;
+    if(x<=padding||x>=padding+tileSize-1||y<=padding||y>=padding+tileSize-1)edge+=a;
   }
   expect(ink,label+' is visible').toBeGreaterThan(80);
   expect(edge,label+' is not clipped by atlas').toBe(0);
@@ -37,12 +42,13 @@ describe('painted atlas bounds',()=>{
   it('fits a visible corpse or wreck for every unit kind',()=>{
     for(const kind of Object.keys(UNIT_CARDS) as UnitKind[])assertFits(b=>paintCorpse(b,kind),kind+' corpse');
   });
-  it('fits every humanoid action and facing inside the existing atlas tile',()=>{
+  it('fits every humanoid action and facing inside its production atlas domain',()=>{
     for(const kind of Object.keys(UNIT_CARDS) as UnitKind[]){
       if(!hasPaintedUnit(kind))continue;
       for(const mode of ['idle','walk','attack','cast'] as const)for(let frame=0;frame<(mode==='walk'?8:mode==='idle'?1:6);frame++){
         const pose:UnitAnimationFrame={mode,frame};
-        for(const facing of [-1,1] as const)assertFits(b=>paintFigure(b,kind,'#476f69',pose,facing),`${kind}/${mode}/${frame}/${facing}`);
+        const size=actionPaintSize(pose,kind);
+        for(const facing of [-1,1] as const)assertFits(b=>paintFigure(b,kind,'#476f69',pose,facing),`${kind}/${mode}/${frame}/${facing}/tile${size}`,size);
       }
     }
   });

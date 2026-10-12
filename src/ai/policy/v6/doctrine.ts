@@ -175,9 +175,9 @@ export const V6_STRATEGIES: V6Strategy[] = [
     phases: [
       {
         wants: [
-          { unit: "pyreCaller", count: 4, priority: 65 },
+          { unit: "summoner", count: 4, priority: 65 },
           { bases: 2, priority: 60 },
-          { unit: "pyreCaller", count: 8, priority: 50 },
+          { unit: "summoner", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
         advanceSupply: 30,
@@ -185,7 +185,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { bases: 2, priority: 66 },
-          { unit: "pyreCaller", count: 14, priority: 56 },
+          { unit: "summoner", count: 14, priority: 56 },
           { building: "cinderSpire", count: 2, priority: 54 },
           { bases: 3, priority: 45 },
         ],
@@ -194,7 +194,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "pyreCaller", count: 44, priority: 52 },
+          { unit: "summoner", count: 44, priority: 52 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
           { bases: 4, priority: 35 },
@@ -214,9 +214,9 @@ export const V6_STRATEGIES: V6Strategy[] = [
     phases: [
       {
         wants: [
-          { unit: "pyreCaller", count: 4, priority: 65 },
+          { unit: "summoner", count: 4, priority: 65 },
           { bases: 2, priority: 60 },
-          { unit: "pyreCaller", count: 8, priority: 50 },
+          { unit: "summoner", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
         advanceSupply: 30,
@@ -224,7 +224,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { bases: 2, priority: 66 },
-          { unit: "pyreCaller", count: 14, priority: 56 },
+          { unit: "summoner", count: 14, priority: 56 },
           { unit: "cinderRunner", count: 4, priority: 54 },
           { building: "cinderSpire", count: 2, priority: 52 },
           { upgrade: "speedTraining", level: 1, priority: 50 },
@@ -235,7 +235,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "pyreCaller", count: 44, priority: 52 },
+          { unit: "summoner", count: 44, priority: 52 },
           { unit: "cinderRunner", count: 5, priority: 50 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
