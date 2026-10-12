@@ -200,7 +200,7 @@ export function drawWorld(frame: WorldFrame) {
     trackUnitFacing(painter.facing,painter.snapshot,viewIndex.entities);
     painter.animation?.observeDirections(painter.now,(id,direction)=>painter.facing.actionFacing(id,direction,projectPaperDirection),painter.reducedMotion);
   }
-  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1));
+  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1),areas=>viewIndex.queryBoundsUnion(areas));
   frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
   const combat=frame.combat?.frame(painter.now);
   if(combat&&!frame.physicalCombat){

@@ -577,3 +577,61 @@ describe('offscreen release direction history',()=>{
     }
   });
 });
+
+describe('reused snapshot observation storage',()=>{
+  it('retains pose cache identity while observation records alternate between snapshots',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),poses=new Map<string,ReturnType<UnitAnimationTracker['frame']>>();
+    const effect:WorldEffect={id:'cache-contact',type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:0,x:70,y:100,fromX:100,fromY:100,toX:70,toY:100,duration:16,remaining:16};
+    for(let tick=0;tick<75;tick++){
+      tracker.update({...snap(tick,actor),effects:tick===0?[effect]:[]},tick*50);
+      const pose=tracker.frame(actor,tick*50),key=JSON.stringify(pose),old=poses.get(key);
+      if(old)expect(pose).toBe(old);else poses.set(key,pose);
+    }
+    expect(poses.size).toBeGreaterThan(8);
+  });
+
+  it('copies mutable cooldown and deck snapshots and clears optional observations on disembarking',()=>{
+    const actor=soldier({abilityCooldowns:{heal:10},deck:{shipId:'boat',x:0,y:0}}),tracker=new UnitAnimationTracker();
+    tracker.update(snap(0,actor),0);
+    actor.abilityCooldowns!.heal=9;tracker.update(snap(1,actor),50);
+    expect(tracker.frame(actor,50).mode).toBe('idle');
+    actor.abilityCooldowns!.heal=240;tracker.update(snap(2,actor),100);
+    expect(tracker.frame(actor,100)).toMatchObject({mode:'cast',frame:0});
+    delete actor.abilityCooldowns!.heal;actor.abilityCooldowns!.charge=100;
+    tracker.update(snap(3,actor),150);expect(tracker.frame(actor,150)).toMatchObject({mode:'cast',frame:0});
+    actor.abilityCooldowns!.stomp=200;tracker.update(snap(4,actor),200);
+    expect(tracker.frame(actor,200)).toMatchObject({mode:'cast',frame:0});
+    delete actor.abilityCooldowns;tracker.update(snap(5,actor),250);
+    actor.abilityCooldowns={stomp:50};tracker.update(snap(6,actor),300);
+    expect(tracker.frame(actor,300)).toMatchObject({mode:'cast',frame:0});
+    // Expire the cast, then exercise mutable deck records, deck exit and land gait.
+    for(let tick=7;tick<=16;tick++)tracker.update(snap(tick,actor),tick*50);
+    actor.deck!.x=3;tracker.update(snap(17,actor),850);
+    expect(tracker.frame(actor,850).mode).toBe('walk');
+    delete actor.deck;actor.x+=3;tracker.update(snap(18,actor),900);
+    expect(tracker.frame(actor,900).mode).toBe('idle');
+    actor.x+=3;tracker.update(snap(19,actor),950);
+    expect(tracker.frame(actor,950).mode).toBe('walk');
+  });
+
+  it('bounds observation allocations for a stable crew/miner and clears pooled histories on rewind',()=>{
+    const worker=soldier({kind:'worker',deck:{shipId:'boat',x:0,y:0},order:{type:'mine',resourceId:'gold',phase:'gather',timer:100}}),tracker=new UnitAnimationTracker();
+    const records=new Set<unknown>(),abilities=new Set<unknown>(),decks=new Set<unknown>(),mining=new Set<unknown>();
+    const storage=tracker as unknown as {tracks:Map<string,{abilities:object;deck?:object;mining?:object}>};
+    for(let tick=0;tick<30;tick++){
+      if(worker.order.type==='mine')worker.order.timer=100-tick;
+      tracker.update(snap(tick,worker),tick*50);
+      const track=storage.tracks.get(worker.id)!;
+      records.add(track);abilities.add(track.abilities);decks.add(track.deck);mining.add(track.mining);
+      if(tick)expect(tracker.frame(worker,tick*50).mode).toBe('work');
+    }
+    expect([records.size,abilities.size,decks.size,mining.size]).toEqual([2,2,2,2]);
+    worker.order={type:'hold',x:100,y:100};delete worker.deck;
+    tracker.update(snap(0,worker),1500);
+    expect(tracker.frame(worker,1500)).toMatchObject({mode:'idle'});
+    expect(storage.tracks.get(worker.id)?.deck).toBeUndefined();
+    expect(storage.tracks.get(worker.id)?.mining).toBeUndefined();
+    worker.x+=4;tracker.update(snap(1,worker),1550);
+    expect(tracker.frame(worker,1550).mode).toBe('walk');
+  });
+});

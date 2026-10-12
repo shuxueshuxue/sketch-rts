@@ -27,13 +27,16 @@ const actionFrames = {
 type Action = { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number; mining?: true; variant?: number; releaseId?: string; direction?:Readonly<{x:number;y:number;height?:number}>; frames?:UnitAnimationFrame[] };
 type Track = {
   x: number; y: number; cooldown: number; dx:number; canCarry:boolean;
+  spare?: Track;
   deck?: NonNullable<Unit['deck']>;
+  deckBuffer?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   cueTick?: number;
   releaseTick?: number;
   releaseId?: string;
   phase: number; speed: number; moving: boolean; still: boolean;
   mining?: { resourceId: string; timer: number; workTicks: number };
+  miningBuffer?: NonNullable<Track['mining']>;
   action?: Action;
   carry?: Action;
   carryFrames?: Map<string,UnitAnimationFrame>|undefined;
@@ -45,6 +48,9 @@ type Track = {
  * match or stalled network does not leave soldiers marching or casting forever. */
 export class UnitAnimationTracker {
   private tracks = new Map<string, Track>();
+  private spareTracks = new Map<string, Track>();
+  private work = new Map<string, WorldEffect>();
+  private releases = new Map<string, Action>();
   private tick: number | undefined;
   private receivedAt = 0;
   private releaseEffects: readonly WorldEffect[] | undefined;
@@ -62,9 +68,10 @@ export class UnitAnimationTracker {
     const continuous = gap > 0 && gap <= 10;
     // Construction and repair need a real pulse. Mining instead exposes actual
     // progress in its gather timer; merely waiting at the entrance is not work.
-    const work = new Map((snapshot.effects ?? []).filter(effect => effect.type === "repair" && effect.unitId && effect.remaining > 0).map(effect => [effect.unitId!, effect]));
-    const releases=new Map<string,Action>();
+    const work=this.work,releases=this.releases;
+    work.clear();releases.clear();
     for(const effect of snapshot.effects??[]) {
+      if(effect.type==='repair'&&effect.unitId&&effect.remaining>0)work.set(effect.unitId,effect);
       if(!effect.sourceId||!effect.actionMode)continue;
       const tick=effect.actionTick??snapshot.tick-Math.max(0,effect.duration-effect.remaining);
       if(snapshot.tick-tick>SIM_TICKS_PER_SECOND)continue;
@@ -82,7 +89,7 @@ export class UnitAnimationTracker {
         track.releaseTick=release.tick;track.releaseId=release.releaseId!;
         // The command may already have raised these cooldowns. Record that
         // observation so the next tick does not invent a second release.
-        track.cooldown=unit.cooldown;track.abilities={...unit.abilityCooldowns};
+        track.cooldown=unit.cooldown;copyAbilities(track.abilities,unit.abilityCooldowns);
         if(track.still||unit.hp<=0||unit.effects.some(effect=>effect.type==='stun')||track.action&&track.action.tick>release.tick)continue;
         track.action=release;
         if(track.canCarry&&release.mode==='attack'&&release.direction){track.carry=release;track.carryFrames=undefined;}else if(release.mode==='cast'){delete track.carry;delete track.carryFrames;}
@@ -90,9 +97,9 @@ export class UnitAnimationTracker {
       }
       this.applyCues(cues,snapshot.tick);return;
     }
-    const next = new Map<string, Track>();
+    const next=this.spareTracks;next.clear();
     for (const unit of snapshot.units) {
-      const previous = continuous ? this.tracks.get(unit.id) : undefined;
+      const current=this.tracks.get(unit.id),previous=continuous?current:undefined;
       const distance = !previous ? 0 : unit.deck || previous.deck
         ? unit.deck?.shipId===previous.deck?.shipId ? Math.hypot(unit.deck!.x-previous.deck!.x,unit.deck!.y-previous.deck!.y) : 0
         : Math.hypot(unit.x - previous.x, unit.y - previous.y);
@@ -102,8 +109,10 @@ export class UnitAnimationTracker {
       let action = previous?.action;
       if (previous) {
         if (unit.cooldown > previous.cooldown && unit.order.type !== "repair" && unit.order.type !== "repairUnit" && unit.order.type !== "repairShip") action = { mode: "attack", tick: snapshot.tick, variant: variantFor(unit.id, snapshot.tick) };
-        const cast = Object.entries(unit.abilityCooldowns ?? {}).some(([ability, ticks]) =>
-          ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
+        let cast=false;
+        for(const ability in unit.abilityCooldowns){
+          if(ability!=='charge'&&Object.hasOwn(unit.abilityCooldowns,ability)&&unit.abilityCooldowns[ability as keyof Track['abilities']]!>(previous.abilities[ability as keyof Track['abilities']]??0)){cast=true;break;}
+        }
         if (cast) action = { mode: "cast", tick: snapshot.tick };
       }
       const release=releases.get(unit.id);
@@ -121,25 +130,41 @@ export class UnitAnimationTracker {
         // held miner cannot keep swinging and a network pause freezes the pose.
         action = { mode: "work", tick: snapshot.tick - workTicks, durationMs: MINING_STROKE_TICKS * TICK_MS, mining: true };
       } else if (action?.mining || (moving || unit.order.type === "mine") && action?.mode === "work") action = undefined;
-      if (unit.effects.some((effect) => effect.type === "stun")) action = undefined;
-      const track: Track = {
-        x: unit.x, y: unit.y, cooldown: unit.cooldown,dx:previous?unit.x-previous.x:0,canCarry:!!figures[unit.kind]||!!creatures[unit.kind]?.weapon,
-        abilities: { ...unit.abilityCooldowns }, phase: phase % 1,
-        speed: moving ? distance / gap / 28 : 0,
-        moving: moving && !unit.effects.some((effect) => effect.type === "stun"),
-        still: unit.hp <= 0 || unit.pushX !== undefined || unit.pushY !== undefined || unit.effects.some(effect => effect.type === "stun"),
-        ...(gathering ? { mining: { resourceId: gathering.resourceId, timer: gathering.timer, workTicks } } : {}),
-        ...(unit.deck ? {deck:{...unit.deck}} : {}),
-        ...(action ? { action } : {}),
-        ...((figures[unit.kind]||creatures[unit.kind]?.weapon)&&action?.mode==='attack'&&action.direction?{carry:action,...(previous?.carry===action?{carryFrames:previous.carryFrames}:{})}:previous?.carry&&!(action&&action.mode!=='attack'&&action.tick>=previous.carry.tick)?{carry:previous.carry,carryFrames:previous.carryFrames}:{}),
-        ...(release||previous?.releaseTick!==undefined?{releaseTick:Math.max(release?.tick??-1,previous?.releaseTick??-1)}:{}),
-        ...(release?.releaseId??previous?.releaseId?{releaseId:release?.releaseId??previous!.releaseId!}:{}),
-        ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
-      };
+      let stunned=false;
+      for(const effect of unit.effects)if(effect.type==='stun'){stunned=true;break;}
+      if(stunned)action=undefined;
+      const canCarry=!!figures[unit.kind]||!!creatures[unit.kind]?.weapon;
+      const carry=canCarry&&action?.mode==='attack'&&action.direction?action:previous?.carry&&!(action&&action.mode!=='attack'&&action.tick>=previous.carry.tick)?previous.carry:undefined;
+      const carryFrames=carry&&previous?.carry===carry?previous.carryFrames:undefined;
+      const releaseTick=release||previous?.releaseTick!==undefined?Math.max(release?.tick??-1,previous?.releaseTick??-1):undefined;
+      const releaseId=release?.releaseId??previous?.releaseId,cueTick=previous?.cueTick;
+      // Each ID owns two mutable observation records. Finish reading previous
+      // before writing its spare; immutable action/pose references are shared.
+      const track=current?.spare??createTrack();
+      if(current){track.spare=current;current.spare=track;}
+      track.dx=previous?unit.x-previous.x:0;
+      track.x=unit.x;track.y=unit.y;track.cooldown=unit.cooldown;track.canCarry=canCarry;
+      copyAbilities(track.abilities,unit.abilityCooldowns);
+      track.phase=phase%1;track.speed=moving?distance/gap/28:0;
+      track.moving=moving&&!stunned;track.still=unit.hp<=0||unit.pushX!==undefined||unit.pushY!==undefined||stunned;
+      if(gathering){
+        const mining=track.miningBuffer??=( {resourceId:gathering.resourceId,timer:0,workTicks:0} );
+        mining.resourceId=gathering.resourceId;mining.timer=gathering.timer;mining.workTicks=workTicks;track.mining=mining;
+      }else delete track.mining;
+      if(unit.deck){
+        const deck=track.deckBuffer??=({shipId:unit.deck.shipId,x:0,y:0});
+        deck.shipId=unit.deck.shipId;deck.x=unit.deck.x;deck.y=unit.deck.y;track.deck=deck;
+      }else delete track.deck;
+      if(action)track.action=action;else delete track.action;
+      if(carry)track.carry=carry;else delete track.carry;
+      if(carryFrames)track.carryFrames=carryFrames;else delete track.carryFrames;
+      if(releaseTick!==undefined)track.releaseTick=releaseTick;else delete track.releaseTick;
+      if(releaseId)track.releaseId=releaseId;else delete track.releaseId;
+      if(cueTick!==undefined)track.cueTick=cueTick;else delete track.cueTick;
       next.set(unit.id, track);
       this.queueDirection(unit.id,track,snapshot.tick);
     }
-    this.tracks = next;
+    this.spareTracks=this.tracks;this.tracks=next;
     this.tick = snapshot.tick;
     this.receivedAt = now;
     this.applyCues(cues, snapshot.tick);
@@ -229,6 +254,15 @@ export class UnitAnimationTracker {
     if(!result){result=Object.freeze({...base,carry,carryDirection:track.carry.direction});track.carryFrames.set(key,result);}
     return result;
   }
+}
+
+function createTrack():Track {
+  return {x:0,y:0,cooldown:0,dx:0,canCarry:false,abilities:{},phase:0,speed:0,moving:false,still:false};
+}
+
+function copyAbilities(target:Track['abilities'],source:Unit['abilityCooldowns']) {
+  for(const ability in target)if(!source||!Object.hasOwn(source,ability))delete target[ability as keyof Track['abilities']];
+  for(const ability in source)if(Object.hasOwn(source,ability))target[ability as keyof Track['abilities']]=source[ability as keyof Track['abilities']]!;
 }
 
 function phaseFor(id: string) {

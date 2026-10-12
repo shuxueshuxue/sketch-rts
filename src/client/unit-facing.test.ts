@@ -37,6 +37,24 @@ describe("unit facing", () => {
     expect(walk([100, 100 - step * 2, 100 - step * 2, 100 - step * 2])).toEqual([1, -1, -1, -1]);
   });
 
+  it('reuses unchanged immutable history while preserving old values across turns and new anchors', () => {
+    const right: FacingState = Object.freeze({ facing: 1, anchorX: 100 });
+    const left: FacingState = Object.freeze({ facing: -1, anchorX: 100 });
+    expect(nextFacing(right, at(100), undefined)).toBe(right);
+    expect(nextFacing(right, at(99), undefined)).toBe(right);
+    expect(nextFacing(right, at(100), { x: 200, y: 0 })).toBe(right);
+    expect(nextFacing(left, at(100), undefined)).toBe(left);
+    expect(nextFacing(left, at(101), undefined)).toBe(left);
+    expect(nextFacing(left, at(100), { x: 0, y: 0 })).toBe(left);
+    const advanced = nextFacing(right, at(110), undefined);
+    expect(advanced).toEqual({ facing: 1, anchorX: 110 });
+    expect(advanced).not.toBe(right);
+    const turned = nextFacing(right, at(100), { x: 0, y: 0 });
+    expect(turned).toEqual({ facing: -1, anchorX: 100 });
+    expect(turned).not.toBe(right);
+    expect(right).toEqual({ facing: 1, anchorX: 100 });
+  });
+
   it("measures the turn from the furthest point reached, so a small drift back after a long walk does not turn it", () => {
     const step = FACING_TURN_DISTANCE;
     expect(walk([100, 100 + step * 10, 100 + step * 10 - step * 0.5])).toEqual([1, 1, 1]);
@@ -192,6 +210,15 @@ describe('snapshot facing history', () => {
     tracker.updateSnapshot(game, () => ({ x: 200, y: 100 }));
     tracker.updateSnapshot(game, () => ({ x: 200, y: 100 }));
     expect(tracker.facing('actor')).toBe(1);
+    expect(tracker.actionFacing('actor', { x: 0, y: -200 })).toBe(-1);
+  });
+
+  it('keeps pre-update history intact when a release turns a reused stationary state', () => {
+    const tracker = new UnitFacingTracker();
+    tracker.update([actor()], () => ({ x: 0, y: 100 }));
+    tracker.update([actor()], () => ({ x: 0, y: 100 }));
+    expect(tracker.actionFacing('actor', { x: 40, y: 0 })).toBe(1);
+    expect(tracker.actionFacing('actor', undefined)).toBe(1);
     expect(tracker.actionFacing('actor', { x: 0, y: -200 })).toBe(-1);
   });
 

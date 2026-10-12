@@ -163,7 +163,7 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
   private offscreenPosition(id:string):ActorPosition|undefined{
     const frame=this.currentFrame,unit=this.activeIndex.units.get(id);
     if(!frame||!unit||unit.deck||isInCabin(unit)||shipProfile(unit))return undefined;
@@ -190,18 +190,6 @@ export class World3DLayer {
     const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
     this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
-    // Commands can replace a snapshot without advancing its tick (for example
-    // a crew member leaving shelter). Mutable recorder snapshots also advance
-    // ticks or replace arrays, so tick alone is not a sufficient cache key.
-    const indexCounts=`${snapshot.units.length}:${snapshot.buildings.length}:${snapshot.effects.length}`;
-    if(snapshot!==this.snapshot||snapshot.tick!==this.lastTick||snapshot.units!==this.indexedUnits||snapshot.buildings!==this.indexedBuildings||snapshot.effects!==this.indexedEffects||indexCounts!==this.indexCounts){
-      this.entities.clear();this.ships.clear();this.recoil.clear();
-      for(const unit of snapshot.units){this.entities.set(unit.id,unit);if(shipProfile(unit))this.ships.set(unit.id,unit);}
-      for(const building of snapshot.buildings)this.entities.set(building.id,building);
-      for(const effect of snapshot.effects)if(effect.type==='muzzleFlash'&&effect.itemId&&!this.recoil.has(effect.itemId))this.recoil.set(effect.itemId,effect);
-      this.snapshot=snapshot;
-      this.indexedUnits=snapshot.units;this.indexedBuildings=snapshot.buildings;this.indexedEffects=snapshot.effects;this.indexCounts=indexCounts;
-    }
     const viewport=`${frame.view.width}:${frame.view.height}:${Math.min(devicePixelRatio,2)}`;
     if(viewport!==this.viewport){renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
     configureWorldCamera(this.camera,frame.view);
@@ -216,9 +204,20 @@ export class World3DLayer {
     frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
     frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);
     this.activeIndex=frame.viewIndex??this.viewIndex;this.activeIndex.update(snapshot,frame.motion);
+    this.entities=this.activeIndex.entities;
+    // Commands can replace a snapshot without advancing its tick; recordings
+    // can advance a mutable snapshot or replace arrays. Reuse the shared entity
+    // index instead of constructing another all-world map for this layer.
+    const indexCounts=`${snapshot.units.length}:${snapshot.buildings.length}:${snapshot.effects.length}`;
+    if(snapshot!==this.snapshot||snapshot.tick!==this.lastTick||snapshot.units!==this.indexedUnits||snapshot.buildings!==this.indexedBuildings||snapshot.effects!==this.indexedEffects||indexCounts!==this.indexCounts){
+      this.ships.clear();this.recoil.clear();
+      for(const unit of this.activeIndex.ships)this.ships.set(unit.id,unit);
+      for(const effect of snapshot.effects)if(effect.type==='muzzleFlash'&&effect.itemId&&!this.recoil.has(effect.itemId))this.recoil.set(effect.itemId,effect);
+      this.snapshot=snapshot;this.indexedUnits=snapshot.units;this.indexedBuildings=snapshot.buildings;this.indexedEffects=snapshot.effects;this.indexCounts=indexCounts;
+    }
     this.sailMotion.update({tick:snapshot.tick,units:this.activeIndex.sailing},now);
     trackUnitFacing(frame.facing,snapshot,this.activeIndex.entities);
-    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion));
+    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion),areas=>this.activeIndex.queryBoundsUnion(areas));
     if(snapshot.tick!==this.lastTick){
       this.facing.update({units:this.activeIndex.crew});const continuous=snapshot.tick===this.lastTick+1;
       for(const unit of this.activeIndex.crew)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;

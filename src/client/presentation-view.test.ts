@@ -10,6 +10,25 @@ import type {UnitKind} from '../shared/types';
 
 function scene(){const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.buildings=[];game.effects=[];game.projectiles=[];return game;}
 describe('presentation viewport candidates',()=>{
+  it('unions world-space contact ranges once without rejecting a receiver seen outside an earlier range',()=>{
+    const game=scene(),middle=game.spawnUnit('player','footman',500,100),far=game.spawnUnit('player','footman',7000,100),index=new PresentationViewIndex();
+    index.update(snapshotGame(game));
+    const a={left:0,top:0,right:200,bottom:200},b={left:400,top:0,right:600,bottom:200},c={left:6900,top:0,right:7100,bottom:200};
+    expect(index.queryBoundsUnion([a,b,b,c]).map(u=>u.id)).toEqual([middle.id,far.id]);
+    expect(index.queryBoundsUnion([])).toHaveLength(0);
+    expect(index.query({x:30000,y:30000,width:800,height:600})).toHaveLength(0);
+    expect(index.queryBoundsUnion([c]).map(u=>u.id)).toEqual([far.id]);
+  });
+  it('incrementally relocates, deletes, reorders and changes the bounds policy without leaving stale candidates',()=>{
+    const game=scene(),a=game.spawnUnit('player','footman',100,100),b=game.spawnUnit('player','lancer',200,100),index=new PresentationViewIndex(),view={x:0,y:0,width:800,height:600};
+    let snapshot=snapshotGame(game);index.update(snapshot);expect(index.query(view).map(u=>u.id)).toEqual([a.id,b.id]);
+    a.x=9000;game.tick++;snapshot=snapshotGame(game);snapshot.units.reverse();index.update(snapshot);
+    expect(index.query(view).map(u=>u.id)).toEqual([b.id]);expect(index.units.get(a.id)!.x).toBe(9000);
+    game.tick++;a.variant='unbounded';snapshot=snapshotGame(game);snapshot.units.reverse();index.update(snapshot);expect(index.query(view).map(u=>u.id)).toEqual([b.id,a.id]);
+    delete a.variant;game.units=[a];game.tick++;index.update(snapshotGame(game));expect(index.query(view)).toHaveLength(0);expect(index.entities.has(b.id)).toBe(false);
+    a.x=400;a.radius=100;game.tick++;index.update(snapshotGame(game));expect(index.query(view).map(u=>u.id)).toEqual([a.id]);
+    game.units=[];game.tick++;index.update(snapshotGame(game));expect(index.stats().cells).toBe(0);expect(index.units.size).toBe(0);expect(index.entities.size).toBe(0);
+  });
   it('queries a fixed view without returning ten thousand ordinary offscreen units, while preserving original draw order',()=>{
     const game=scene();
     for(let i=0;i<10000;i++)game.spawnUnit('player','footman',6000+i%100*60,6000+Math.floor(i/100)*60);

@@ -5,7 +5,7 @@ type Point = { x: number; y: number; height?: number };
 /** Unit models are painted facing right (1); -1 draws the mirror image, facing left. */
 export type Facing = 1 | -1;
 
-export type FacingState = { facing: Facing; anchorX: number };
+export type FacingState = Readonly<{ facing: Facing; anchorX: number }>;
 
 // @@@unit-facing - A unit turns only once it has gone this far (world units) against the way it faces, so shoves and
 // jitter in a crowd don't make it flicker. The anchor is the furthest point reached in the current direction.
@@ -13,17 +13,22 @@ export const FACING_TURN_DISTANCE = 3;
 
 /**
  * Where a unit faces this frame: toward the enemy it is attacking or charging, otherwise the way it last moved sideways.
- * A unit that stops keeps its facing.
+ * A unit that stops keeps its facing. Unchanged history reuses the previous immutable value.
  */
 export function nextFacing(previous: FacingState | undefined, unit: Pick<Unit, "x" | "order"> & Partial<Pick<Unit,"y">>, target: Point | undefined): FacingState {
-  if (target && Math.abs(target.x - unit.x) >= Math.max(FACING_TURN_DISTANCE,Math.abs(target.y-(unit.y??target.y))*.08)) return { facing: target.x < unit.x ? -1 : 1, anchorX: unit.x };
+  if (target && Math.abs(target.x - unit.x) >= Math.max(FACING_TURN_DISTANCE,Math.abs(target.y-(unit.y??target.y))*.08)) {
+    const facing = target.x < unit.x ? -1 : 1;
+    return previous?.facing === facing && previous.anchorX === unit.x ? previous : { facing, anchorX: unit.x };
+  }
   if (!previous) return { facing: 1, anchorX: unit.x };
   if (previous.facing === 1) {
     if (unit.x <= previous.anchorX - FACING_TURN_DISTANCE) return { facing: -1, anchorX: unit.x };
-    return { facing: 1, anchorX: Math.max(previous.anchorX, unit.x) };
+    const anchorX = Math.max(previous.anchorX, unit.x);
+    return anchorX === previous.anchorX ? previous : { facing: 1, anchorX };
   }
   if (unit.x >= previous.anchorX + FACING_TURN_DISTANCE) return { facing: 1, anchorX: unit.x };
-  return { facing: -1, anchorX: Math.min(previous.anchorX, unit.x) };
+  const anchorX = Math.min(previous.anchorX, unit.x);
+  return anchorX === previous.anchorX ? previous : { facing: -1, anchorX };
 }
 
 export function attackTargetId(order: UnitOrder) {
@@ -92,7 +97,7 @@ export class UnitFacingTracker {
     // the resting side, so a temporary action-only mirror would snap back after
     // every counterattack. Later movement or a new target can still turn it.
     const state=this.states.get(unitId);
-    if(state)this.states.set(unitId,{...state,facing});
+    if(state && state.facing !== facing)this.states.set(unitId,{...state,facing});
     return facing;
   }
 
