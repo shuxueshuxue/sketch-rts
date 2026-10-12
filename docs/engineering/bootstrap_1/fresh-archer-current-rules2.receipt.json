@@ -1,0 +1,84 @@
+{
+  "candidateEquivalentPublicRevision": "94bb72ee95f4ad37b5698d80240c91853c8b19f7",
+  "matchedRuntimeInputs": 221,
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "rulesVersion": 2,
+  "mode": "Normal start through 12000, then unchanged compiled controller continuation with all world state, IDs and all three controller memories to native victory. One observed game, not a sweep or formal acceptance.",
+  "match": {
+    "name": "pineshade/v9_archer/v8+v8/grove/0",
+    "mapId": "pineshade",
+    "subject": "v9_archer",
+    "side": 0,
+    "seed": "bootstrap_1-current-rules-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_archer",
+        "versionLabel": "v9_archer",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "result": "loss",
+  "summary": {
+    "tick": 39578,
+    "winner": "p1",
+    "owners": {
+      "p0": {
+        "gold": 58.27,
+        "pop": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0
+      },
+      "p1": {
+        "gold": 39.07,
+        "pop": 14,
+        "halls": 2,
+        "workers": 4,
+        "permanentArmy": 5
+      },
+      "p2": {
+        "gold": 151.87,
+        "pop": 39,
+        "halls": 4,
+        "workers": 11,
+        "permanentArmy": 11
+      }
+    },
+    "subjectPermanentDeaths": 85
+  },
+  "checksum": "c60c3425",
+  "rawReportSha256": "409b5540d641328f076f10174ae31ef90d5fe9134603c04c223ff4e056b89228",
+  "openingCommandHash": "5128198ee86c7376246936259007fc5378c55636992076374eed918b2590bd6e",
+  "continuationCommandHash": "1faa50270b19c5022058227bb1c711b1a20ca9401c9bd273dd4fb0324cb1c2fd",
+  "lossesByKind": {
+    "footman": 2,
+    "lancer": 12,
+    "mercenary": 5,
+    "priest": 4,
+    "worker": 35,
+    "archer": 20,
+    "horseArcher": 5,
+    "ballista": 2
+  },
+  "fullAcceptance": "pending"
+}
