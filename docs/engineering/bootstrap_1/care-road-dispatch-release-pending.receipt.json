@@ -20,5 +20,6 @@
     "lastObservedStatus": "in_progress",
     "lastObservedConclusion": null,
     "blockingObservation": "GitHub API subsequently returned HTTP 401; saved GH_TOKEN binding is false and runtime secrets are empty. Final five publishing steps and release tag are not yet verified."
-  }
+  },
+  "supersededBy": "care-road-dispatch-release.receipt.json"
 }

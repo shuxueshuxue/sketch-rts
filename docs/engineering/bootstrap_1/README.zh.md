@@ -4,7 +4,7 @@
 
 ## 当前记录（2026-10-12）
 
-最新合并为 #352 `ed6ee2b94ab03f01558424df148471823ab68327`，[伤兵道路推进与独立射手调度](./care-road-dispatch.zh.md) 的 419 项本地 SDK 检查、构建和首次 CI `38312588704` 通过。首次生产 `38313021360` 启动后 GitHub 再次返回 401，尚未核验最终结果。[固定开局射手](./fresh-archer-care-dispatch.zh.md) 在当前规则的 Pineshade／Grove／方向 0 对两个冻结 v8，于 36962 tick 获胜、永久损失 24，原 #351 同配置败北、损失 85。另一[固定开局骑士](./fresh-knight-care-dispatch.zh.md) 在 28590 tick 败北、损失 53；一格胜利不能代替三路线完整验收。
+最新合并为 #352 `ed6ee2b94ab03f01558424df148471823ab68327`，[伤兵道路推进与独立射手调度](./care-road-dispatch.zh.md) 的 419 项本地 SDK 检查、构建和首次 CI `38312588704` 通过。首次生产 `38313021360` 已成功，五个发布步骤、最终组合构建和精确提交的 production-latest 标签均核验。[发布证明](./care-road-dispatch-release.receipt.json)。期间的 401 曾阻止检查，随后代理访问恢复；环境 Secret 尚未保存绑定。[固定开局射手](./fresh-archer-care-dispatch.zh.md) 在当前规则的 Pineshade／Grove／方向 0 对两个冻结 v8，于 36962 tick 获胜、永久损失 24，原 #351 同配置败北、损失 85。另一[固定开局骑士](./fresh-knight-care-dispatch.zh.md) 在 28590 tick 败北、损失 53；一格胜利不能代替三路线完整验收。
 
 此前最新已验证线上版本为 #351 `94bb72ee95f4ad37b5698d80240c91853c8b19f7`，[远矿补工投资](./long-haul-investment.zh.md) 的首次 CI `38302373998` 和生产 `38303338846` 成功，最终组合构建、五个发布步骤和版本标签均验证。[发布证明](./long-haul-investment-release.receipt.json)。同一残局的 131.25 秒提前和资产增长是局部因果结果；[原 #351 的射手正常对局](./fresh-archer-current-rules2.zh.md) 在 39578 tick 失败、85 次永久损失，完整验收仍未达标。
 
