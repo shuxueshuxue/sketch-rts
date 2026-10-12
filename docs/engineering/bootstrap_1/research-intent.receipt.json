@@ -1,0 +1,78 @@
+{
+  "base": "2a68a103c0ab5869d9e9aa1acb2ba6935c755753",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/policy/v6/economy.ts": "77c109f4b1e6a842a3a950da36ffb442eb73cf97295dfb59a6bff81245882693"
+  },
+  "sdk": {
+    "passed": 61,
+    "failed": 0,
+    "reportSha256": "2078f3285877f21e85166e0817cab6d9ec5815d3404936445b93a59fece16ca9",
+    "suites": [
+      {
+        "file": "ai/bootstrap_1/economy.test.ts",
+        "passed": 26
+      },
+      {
+        "file": "ai/bootstrap_1/research-intent.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "ai/bootstrap_1/research-prerequisites.test.ts",
+        "passed": 16
+      },
+      {
+        "file": "ai/policy/v6/economy.test.ts",
+        "passed": 15
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "3fc462aa4c1813a212c6b01c1760b1ea4b2ac29e",
+    "passed": 0,
+    "failed": 4,
+    "reportSha256": "ecaff2242872e4525491eb4bd91095ac11ed00fadb28ad4d2dbcbb17ed617fb7"
+  },
+  "causalWindow": {
+    "from": 6000,
+    "to": 14000,
+    "engineRevision": "2a68a103c0ab5869d9e9aa1acb2ba6935c755753",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeDeaths": 18,
+    "afterDeaths": 18,
+    "afterUpgrades": {
+      "weaponTraining": 1,
+      "reinforcedPlating": 1,
+      "buildingDurability": 0,
+      "speedTraining": 0,
+      "rangeTraining": 0,
+      "leadership": 0
+    },
+    "researchCommands": [
+      {
+        "tick": 8595,
+        "command": {
+          "type": "research",
+          "buildingId": "building-p0-barracks-1011",
+          "upgradeKind": "weaponTraining"
+        }
+      },
+      {
+        "tick": 10020,
+        "command": {
+          "type": "research",
+          "buildingId": "building-p0-barracks-1011",
+          "upgradeKind": "reinforcedPlating"
+        }
+      }
+    ],
+    "reportSha256": "58d26b86baa6a93ce97130e23f7e98e9d6343ccec20ca2287d2dcba5d7226379",
+    "memoryInitialization": "All candidate and frozen memories restored without edits; not formal acceptance."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "8126bf8215e2c745ea9044e53ca3571ba21a19cc3ee7e335480bd30728433ce1"
+  }
+}
