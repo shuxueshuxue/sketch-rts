@@ -5,7 +5,8 @@ import type { Building, GameMap, Obstacle, Unit } from "./types";
 import { deckPlacement } from "./decks";
 import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
 import { nearestShipPose } from "./ship-navigation";
-import { decksTouch, shipShorePoints } from "./connected-decks";
+import { decksCanTransfer, shipShorePoints } from "./connected-decks";
+import { isInCabin } from './ship-cabin';
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
 // soldier strikes a ship that has come in to the shallows, where it can wade out to it, and not one out on deep water; an
@@ -16,11 +17,12 @@ import { decksTouch, shipShorePoints } from "./connected-decks";
 // share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
 // and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
 export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle, units: readonly Unit[] = [], attackRange = attacker.attackRange) {
+  if (isInCabin(attacker) || ('order' in target && isInCabin(target))) return false;
   const targetDeck="order" in target && target.deck && units.find(ship=>ship.id===target.deck!.shipId);
   if (attacker.deck) {
     if ("deck" in target && target.deck?.shipId === attacker.deck.shipId) return true;
     const ship = units.find(unit => unit.id === attacker.deck!.shipId);
-    if(ship && targetDeck && decksTouch(ship,targetDeck,attacker))return true;
+    if(ship && targetDeck && decksCanTransfer(ship,targetDeck,attacker))return true;
     if(ship && !targetDeck && shipShorePoints(ship,map).some(point=>sameGround(map,point,target,"land")))return true;
     const stand = ship && deckPlacement(ship, attacker, units, worldToLocal(ship,target), false);
     const at = ship && stand ? localToWorld(ship,stand) : attacker;

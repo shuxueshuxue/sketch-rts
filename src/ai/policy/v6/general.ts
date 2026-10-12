@@ -1,6 +1,6 @@
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import { canCast } from "../../../shared/ability-cooldowns";
-import { HIGH_UPKEEP_SUPPLY } from "../../../shared/catalog";
+const HIGH_UPKEEP_SUPPLY = 81; // Original frozen attack threshold; independent of the current income curve.
 import type { V6PolicyMemory } from "../../memory";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
@@ -583,7 +583,7 @@ function guardingTower(base: V6BaseIntel) {
 }
 
 function isSummoner(unit: Unit) {
-  return unit.kind === "summoner" || unit.kind === "pyreCaller";
+  return unit.kind === "summoner";
 }
 
 function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {

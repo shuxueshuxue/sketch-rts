@@ -3,6 +3,7 @@ import { detCos, detSin } from "./det-math";
 import { seconds } from "./time";
 import { MAP_POOL } from "./map-pool";
 import { GOLD_MINE_RULES } from "./mining";
+import { isShipKind, SHIP_SIZE_MULTIPLIER, SHIP_SIZE_VERSION } from "./ship-geometry";
 import type { Building, BuildingKind, GameMap, MapId, MercenaryCamp, MercenaryUnitKind, Owner, PlayerId, ResourceNode, TrainableUnitKind, Unit, UnitKind, WorldItem } from "./types";
 
 export { LADDER_MAP_ID, LADDER_SLOT_IDS } from "./map-ids";
@@ -278,7 +279,7 @@ export function createUnit(
     attackRange: stats.attackRange,
     attackCooldown: stats.attackCooldown,
     cooldown: 0,
-    radius: stats.radius,
+    radius: stats.radius * (isShipKind(kind) ? SHIP_SIZE_MULTIPLIER : 1),
     carryingGold: 0,
     kills: 0,
     xp: 0,
@@ -293,14 +294,26 @@ export function createUnit(
     pushX: undefined,
     pushY: undefined,
     arrivedAt: undefined,
+    aim: undefined,
+    facing: undefined,
+    hands: undefined,
+    gearMass: undefined,
+    holdMass: undefined,
+    shipParts: undefined,
+    fittings: undefined,
+    bodyRadius: undefined,
+    mineSlot: undefined,
+    veteranSkill: undefined,
+    veteranSkillChoices: undefined,
     expiresTick: undefined,
+    shipSizeVersion: isShipKind(kind) ? SHIP_SIZE_VERSION : undefined,
   };
 }
 
 // A unit read back from JSON, in the one shape of createUnit's (see @@@unit-shape): its own fields over a fresh unit's, with
 // the optional fields it lacks left undefined rather than filled in.
 export function withUnitShape(unit: Unit): Unit {
-  return Object.assign(createUnit(unit.id, unit.owner, unit.kind, unit.x, unit.y), { homeX: undefined, homeY: undefined, orderQueue: undefined }, unit);
+  return Object.assign(createUnit(unit.id, unit.owner, unit.kind, unit.x, unit.y), { homeX: undefined, homeY: undefined, orderQueue: undefined, shipSizeVersion: undefined }, unit);
 }
 
 export function buildTimeFor(kind: BuildingKind) {

@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { convexHull, expandConvex, polygonPlanes, polygonTouchesCell, type Point } from './navigation-math';
+import { convexHull, expandConvex, polygonPlanes, polygonRadius, polygonTouchesCell, type Point } from './navigation-math';
 export type OccupancyMask = {
   bounds: [
     number,
@@ -12,16 +12,25 @@ export type OccupancyMask = {
 const angle = Math.PI / 4, steps = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]] as const;
 /** A rasterized configuration-space footprint. Generated from geometry, never from a game map. */
 export function buildNavigationMasks(hull: readonly Point[], cell: number): OccupancyMask[][] {
-  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)));
-  const outline = (x: number, y: number, heading: number) => hull.map(p => ({ x: x + p.x * detCos(heading) - p.y * detSin(heading), y: y + p.x * detSin(heading) + p.y * detCos(heading) }));
+  const radius = polygonRadius(hull);
+  const outline = (x: number, y: number, heading: number) => {
+    const c=detCos(heading),s=detSin(heading);
+    return hull.map(p => ({ x: x + p.x * c - p.y * s, y: y + p.x * s + p.y * c }));
+  };
   const sweep = (h: number, turn: number, dx: number, dy: number) => {
     const count = Math.max(1, Math.ceil(Math.abs(turn) * radius / 2)), covered = new Set<string>();
     const error = turn ? radius * (turn / count) ** 2 / 8 + 1e-7 : 0;
     let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    let previous = outline(cell / 2, cell / 2, h);
     for (let i = 0; i < count; i++) {
-      const envelope = convexHull([...outline(cell / 2 + dx * i / count, cell / 2 + dy * i / count, h + i * turn / count), ...outline(cell / 2 + dx * (i + 1) / count, cell / 2 + dy * (i + 1) / count, h + (i + 1) * turn / count)]);
+      // Adjacent sweep segments share this exact endpoint. Retain its local
+      // outline instead of allocating and rotating all vertices twice.
+      const next = outline(cell / 2 + dx * (i + 1) / count, cell / 2 + dy * (i + 1) / count, h + (i + 1) * turn / count);
+      const envelope = convexHull([...previous, ...next]);
+      previous = next;
       const poly = error ? expandConvex(envelope, error) : envelope;
-      const l = Math.min(...poly.map(p => p.x)), t = Math.min(...poly.map(p => p.y)), r = Math.max(...poly.map(p => p.x)), b = Math.max(...poly.map(p => p.y));
+      let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+      for (const point of poly) { l = Math.min(l, point.x); t = Math.min(t, point.y); r = Math.max(r, point.x); b = Math.max(b, point.y); }
       left = Math.min(left, l);
       top = Math.min(top, t);
       right = Math.max(right, r);

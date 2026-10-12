@@ -12,7 +12,7 @@ export function estuaryMap(
   options: GeneratedLayoutOptions,
   players: PlayerId[],
 ): GeneratedMap {
-  const size = options.size ?? 8192,
+  const size = options.size ?? 10240,
     cell = 32,
     cols = Math.ceil(size / cell),
     middle = size / 2;
@@ -76,11 +76,11 @@ export function estuaryMap(
         Math.hypot(at.x - middle, at.y - middle) < 260;
       const patch = fractalNoise(seed, Math.abs(p.x - middle), p.y, 900, 50);
       cells +=
-        gap < 135
+        gap < 352
           ? ford
             ? ","
             : "~"
-          : gap < 220
+          : gap < 448
             ? ","
             : protectedGround
               ? "."
@@ -88,7 +88,7 @@ export function estuaryMap(
                 ? "T"
                 : patch < .25
                   ? "#"
-                  : gap < 370 && patch < .45
+                  : gap < 600 && patch < .45
                     ? "m"
                     : ".";
     }

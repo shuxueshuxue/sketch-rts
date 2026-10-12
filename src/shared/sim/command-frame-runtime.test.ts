@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createGame } from "../sim";
-import { CommandFrameRuntime } from "./command-frame-runtime";
+import type { CommandEnvelope } from "../net/types";
+import { CommandFrameRuntime, normalizeCommandFrameEntries } from "./command-frame-runtime";
 
 describe("command frame runtime boundary", () => {
   it("keeps local and hosted adapters from re-owning frame validation application or stepping", () => {
@@ -147,5 +148,23 @@ describe("command frame runtime boundary", () => {
 
     expect(frame?.commands).toEqual([{ playerId: "player", command: { type: "hire", campId: "mixed-source-camp" } }]);
     expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "mercenary")).toHaveLength(1);
+  });
+
+  it("keeps first claim order across item and camp collisions without deduplicating movement", () => {
+    const entries: CommandEnvelope[] = [
+      { playerId: "player", command: { type: "move", unitIds: ["worker"], x: 900, y: 900 } },
+      { playerId: "player", command: { type: "pickupItem", unitId: "worker", itemId: "boots" } },
+      { playerId: "enemy", command: { type: "hire", campId: "camp" } },
+      { playerId: "enemy", command: { type: "pickupItem", unitId: "raider", itemId: "boots" } },
+      { playerId: "player", command: { type: "hire", campId: "camp" } },
+    ];
+    entries.push(entries[0]!);
+    const result = normalizeCommandFrameEntries(entries);
+    expect(result).toEqual([entries[0], entries[1], entries[2], entries[0]]);
+    result.length = 0;
+    expect(entries).toHaveLength(6);
+    const empty: CommandEnvelope[] = [];
+    expect(normalizeCommandFrameEntries(empty)).toEqual([]);
+    expect(normalizeCommandFrameEntries(empty)).not.toBe(empty);
   });
 });

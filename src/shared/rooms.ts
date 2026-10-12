@@ -5,12 +5,12 @@ import { fnv1a } from "./sim/checksum";
 import { poolMap, poolSeatsFit } from "./map-pool";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
-export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v5";
-export const ROOM_AI_VERSIONS: RoomAiVersion[] = ["v5", "v7", "v8"];
+export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v9_archer";
+export const ROOM_AI_VERSIONS: RoomAiVersion[] = ["v9_archer", "v9_summoner", "v9_knight"];
 // @@@room-ai-races - The races each computer player plays, declared here alone: a seat lists only the computer players
-// of its race, and a room refuses one set to a race it does not play. All three play both (V5 has a playbook for each,
-// and V7 and V8 are built to play either: see src/ai/policy/versions.ts).
-export const ROOM_AI_RACES: Readonly<Record<RoomAiVersion, readonly RaceId[]>> = { v5: RACE_IDS, v7: RACE_IDS, v8: RACE_IDS };
+// of its race, and a room refuses one set to a race it does not play. The three V9 families play both races
+// through their own doctrines and shared command planner (see src/ai/bootstrap_1/policy.ts).
+export const ROOM_AI_RACES: Readonly<Record<RoomAiVersion, readonly RaceId[]>> = { v9_archer: RACE_IDS, v9_summoner: RACE_IDS, v9_knight: RACE_IDS };
 
 export function roomAiVersionsFor(race: RaceId): RoomAiVersion[] {
   return ROOM_AI_VERSIONS.filter((version) => ROOM_AI_RACES[version].includes(race));

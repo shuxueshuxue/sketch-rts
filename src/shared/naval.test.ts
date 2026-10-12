@@ -1,7 +1,7 @@
 import { installedWeapons } from "./ship-equipment";
 import { UNIT_DEFS } from "./catalog";
 import { shipPassengers } from "./ship-geometry";
-import { deckPointFits, deckLoad } from "./decks";
+import { deckPointFits, deckLoad, restoreCargoDecks } from "./decks";
 import { hullFits } from "./ship-navigation";
 import { boardingBerth, BOARDING_GAP } from './naval';
 import { distanceToHull } from './ship-geometry';
@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
 import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
 import { applyCommandFrame } from "./sim/frame";
-import { isWalkable, type Terrain } from "./terrain";
+import { isWalkable, sameGround, type Terrain } from "./terrain";
 import type { ScenarioBuildingSeed, ScenarioUnitSeed } from "./types";
 
 // A 30 by 20 grid: land in columns 0-8, a strip of shallows down column 9, the sea from column 10 on, and in it an island
@@ -59,9 +59,19 @@ describe("ships", () => {
     const sim = game([], [{ id: "yard", owner: "player", kind: "shipyard", x: 275, y: at(0, 10).y }]);
     issuePlayerCommand(sim, "player", { type: "setRally", buildingIds: ["yard"], ...at(26, 9) });
     issuePlayerCommand(sim, "player", { type: "train", buildingId: "yard", unitKind: "warship" });
-    run(sim, 900, () => {
-      for (const ship of sim.units.filter((candidate) => candidate.kind === "warship")) expect(hullFits(sim.map, ship)).toBe(true);
+    let previous: {x:number;y:number;heading:number}|undefined,travel=0,totalYaw=0;
+    // This tight coast includes exact departure and arrival turns. Allow a
+    // minute including construction, while bounding route length and turning
+    // so the larger time budget cannot hide a loop or a stuck hull.
+    run(sim, 1200, () => {
+      for (const ship of sim.units.filter((candidate) => candidate.kind === "warship")) {
+        expect(hullFits(sim.map, ship)).toBe(true);
+        const heading=ship.sailing!.heading;
+        if(previous){travel+=Math.hypot(ship.x-previous.x,ship.y-previous.y);totalYaw+=Math.abs(Math.atan2(Math.sin(heading-previous.heading),Math.cos(heading-previous.heading)));}
+        previous={x:ship.x,y:ship.y,heading};
+      }
     });
+    expect(travel).toBeLessThan(800);expect(totalYaw).toBeLessThan(300*Math.PI/180);
     const ship = sim.units.find((candidate) => candidate.kind === "warship")!;
     expect(Math.hypot(ship.x - at(26, 9).x, ship.y - at(26, 9).y),JSON.stringify({x:ship.x,y:ship.y,order:ship.order,sailing:ship.sailing})).toBeLessThan(5);
   });
@@ -69,12 +79,20 @@ describe("ships", () => {
   it("are struck only by what reaches them: a soldier leaves one out on deep water alone and wades out to one in the shallows", () => {
     const sim = game([
       { id: "footman", owner: "player", kind: "footman", ...at(7, 5) },
-      { id: "warship", owner: "enemy", kind: "warship", ...at(14, 5) },
+      { id: "warship", owner: "enemy", kind: "warship", ...at(16, 5) },
     ]);
+    const warship = unit(sim, "warship")!;
+    // Hold the full hull in deep water, with its bow battery facing the coast.
+    // An idle defender is otherwise free to sail toward the soldier.
+    warship.sailing = { heading: Math.PI, speed: 0, load: 0, balance: 0 };
+    warship.order = { type: 'hold', x: warship.x, y: warship.y };
     run(sim, 300);
     expect(unit(sim, "footman")!.hp).toBeLessThan(145);
     expect(unit(sim, "footman")!.x).toBe(at(7, 5).x);
     expect(unit(sim, "warship")!.hp).toBe(UNIT_DEFS.warship.hp);
+    // Keep the melee phase independent of the preceding cannon damage and
+    // the larger hull's impact as it enters the shallows.
+    unit(sim, 'footman')!.hp = unit(sim, 'footman')!.maxHp;
     for(const weapon of installedWeapons(sim,unit(sim,"warship")!))weapon.cooldownRemaining=9999;
     issuePlayerCommand(sim, "enemy", { type: "move", unitIds: ["warship"], ...at(9, 5), avoidCombat:true });
     run(sim, 350);
@@ -163,13 +181,36 @@ describe("transports", () => {
 
   it("rejects a portrait unload in deep water with a shore message, leaving passengers and orders untouched", () => {
     const { sim, ferry } = loadedFerry(15);
-    ferry.y = at(15, 2).y;
+    Object.assign(ferry, { x: 528, y: 64 });
+    ferry.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+    expect(hullFits(sim.map, ferry)).toBe(true);
     const command = { type: "unloadPassenger" as const, transportId: "ferry", passengerId: "a" };
     expect(commandValidationError(snapshotGame(sim), "player", command)).toMatch(/No clear landing nearby/);
     applyCommandFrame(sim, { roomId: "test", tick: sim.tick, sequence: 0, commands: [{ playerId: "player", command }] });
     expect(ferry.cargo).toHaveLength(2);
     expect(unit(sim, "a")).toBeUndefined();
     expect(ferry.order.type).toBe("idle");
+  });
+
+  for (const correctShore of [true, false]) it(`${correctShore ? "unloads from a stopped nearby berth" : "keeps passengers aboard at a stop on the wrong island"} when the requested berth is occupied`, () => {
+    const { sim, ferry } = loadedFerry(16);
+    restoreCargoDecks(sim.units);
+    const target = at(19, 9);
+    Object.assign(ferry, correctShore ? { x: 528, y: 400 } : { x: 336, y: 304 });
+    issuePlayerCommand(sim, "player", { type: "unload", unitIds: [ferry.id], ...target });
+    // A saved partial route can end at clear water beside an occupied berth.
+    ferry.sailing!.heading = -Math.PI / 2;
+    ferry.sailing!.speed = 0;
+    ferry.sailing!.route = {
+      goalX: target.x, goalY: target.y, points: [], end: { x: ferry.x, y: ferry.y },
+      partial: true, cruise: false, trafficKey: "",
+      startX: ferry.x, startY: ferry.y, startHeading: ferry.sailing!.heading,
+    };
+    expect(Math.hypot(ferry.x - target.x, ferry.y - target.y)).toBeGreaterThan(64);
+    stepGame(sim);
+    expect(shipPassengers(sim.units, ferry)).toHaveLength(correctShore ? 0 : 2);
+    expect(ferry.order.type).toBe(correctShore ? "idle" : "unload");
+    if (correctShore) for (const id of ["a", "b"]) expect(sameGround(sim.map, unit(sim, id)!, target)).toBe(true);
   });
 
   it("does not unload another owner's cargo or repeat a stale passenger click", () => {
@@ -210,15 +251,16 @@ describe("transports", () => {
       { id: "w4", owner: "player", kind: "worker", ...at(5, 11) },
       { id: "f1", owner: "player", kind: "footman", ...at(4, 9) },
       { id: "f2", owner: "player", kind: "footman", ...at(4, 10) },
-      { id: "f3", owner: "player", kind: "footman", ...at(3, 10) },
+      { id: "f3", owner: "player", kind: "rockGolem", ...at(3, 10) },
     ]);
     const supply = sim.players.player!.supplyUsed;
-    issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2", "w3", "w4", "f1", "f2", "f3"], transportId: "transport" });
-    run(sim, 400);
+    const passengers = sim.units.filter(candidate => candidate.id !== 'transport');
+    issuePlayerCommand(sim, "player", { type: "board", unitIds: passengers.map(candidate => candidate.id), transportId: "transport" });
+    run(sim, 800); // Low-speed berth assistance precedes boarding.
     const transport = unit(sim, "transport")!;
     const crew = shipPassengers(sim.units, transport);
     expect(crew.length).toBeGreaterThan(1);
-    expect(crew.length).toBeLessThan(7);
+    expect(crew.length).toBeLessThan(passengers.length);
     for (const passenger of crew) {
       expect(unit(sim, passenger.id)).toBe(passenger);
       expect(deckPointFits(transport, passenger, passenger.deck!, sim.units)).toBe(true);
@@ -227,7 +269,7 @@ describe("transports", () => {
     for (const passenger of sim.units.filter(unit => unit.id !== transport.id)) expect(passenger.order.type).not.toBe("board");
     expect(sim.players.player!.supplyUsed).toBe(supply);
     issuePlayerCommand(sim, "player", { type: "unload", unitIds: ["transport"], ...at(22, 9) });
-    run(sim, 600);
+    run(sim, 1200); // Unloading includes the bounded auxiliary approach.
     expect(transport.cargo).toBeUndefined();
     expect(shipPassengers(sim.units, transport)).toHaveLength(0);
     for (const id of crew.map(unit => unit.id)) {
@@ -245,7 +287,7 @@ describe("transports", () => {
       { id: "warship", owner: "enemy", kind: "warship", ...at(16, 15) },
     ]);
     issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2"], transportId: "transport" });
-    run(sim, 200);
+    run(sim, 600); // Includes the larger hull's bounded turn toward its shore berth.
     expect(shipPassengers(sim.units, unit(sim, "transport")!)).toHaveLength(2);
     issuePlayerCommand(sim, "enemy", { type: "attack", unitIds: ["warship"], targetId: "transport" });
     run(sim, 1200);
@@ -262,7 +304,7 @@ describe("transports", () => {
     ]);
     issuePlayerCommand(sim, "player", { type: "attackMove", unitIds: ["transport"], ...at(16, 4) });
     expect(unit(sim, "transport")!.order.type).toBe("move");
-    run(sim, 400); // Includes a bounded turn and a physical departure from the parallel berth.
+    run(sim, 1000); // Includes a bounded turn and low-speed departure from the parallel berth.
     expect(["idle", "move"]).toContain(unit(sim, "transport")!.order.type);
     expect(Math.hypot(unit(sim, "transport")!.x - at(16, 4).x, unit(sim, "transport")!.y - at(16, 4).y)).toBeLessThan(5);
   });

@@ -1,7 +1,7 @@
-import type { GameCommand, GameSnapshot, AiScriptVersion, PlayerId } from "../../shared/types";
+import type { GameCommand, GameSnapshot, AiScriptVersion as CurrentAiScriptVersion, BootstrapAiVersion, PlayerId } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 
-export type { AiScriptVersion } from "../../shared/types";
+export type AiScriptVersion = Exclude<CurrentAiScriptVersion, BootstrapAiVersion>;
 
 export type AiBehaviorId = "workerHarassment" | "earlyHarassment" | "skirmishPreservation" | "expansionRegroup" | "economicCatchUp";
 

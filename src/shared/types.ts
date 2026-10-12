@@ -1,14 +1,16 @@
-import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
+import type { BUILDING_RULES, UNIT_RULES, RACE_TECH_RULES, VariantRules, WeaponDef } from "./catalog";
 import type { AttackKind } from "./attack-presentation";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
+import type { VeteranActiveSkillId, VeteranSkillId } from "./veteran-skills";
+import type { DamageFilter, DamageProfile } from "./damage-types";
+export type { VeteranSkillId } from "./veteran-skills";
 
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
 export type MapId = (typeof MAP_IDS)[number];
 export type RaceId = "grove" | "ember";
-// Unit and building kinds are the rows of the catalog's rule tables (shared/catalog.ts); a trainable unit is one with a
-// building that trains it.
+// Unit and building kinds come from combat rules; trainable kinds come from race production relationships.
 export type UnitKind = keyof typeof UNIT_RULES;
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
 // The creep families of the camp templates (see shared/camps.ts).
@@ -19,10 +21,11 @@ export type CreepFamilyUnitKind =
   | "spiderling" | "venomSpider" | "spiderQueen"
   | "dragonWhelp" | "redDragon";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
-export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
+type UnionKeys<T> = T extends unknown ? keyof T : never;
+export type TrainableUnitKind = UnionKeys<(typeof RACE_TECH_RULES)[RaceId]["units"]>;
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web" | VeteranActiveSkillId;
 export type EquipmentSlot = "head" | "body" | "feet" | "carry0" | "carry1" | "carry2" | "carry3";
 export type ShipEquipmentKind = "shipCannon" | "shipMortar" | "flameProjector";
 export type ItemKind = ShipEquipmentKind | "issuedWeapon" | "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
@@ -33,11 +36,16 @@ export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDura
 export type UnitStatusEffect = {
   // @@@creep-status - slow (a murloc's net), stun (a golem's stomp), root (a spider queen's web), poison (a venom spider's
   // bite), bloodlust (an ogre mage's): see sim updateUnitStatusEffects and statusPace.
-  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust";
+  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust" | "protection" | "veteranBuff";
   remaining: number;
   damageMultiplier?: number;
+  damageReduction?: number;
+  damageFilter?: DamageFilter;
+  protectionGroup?: "ward";
+  attackSpeedMultiplier?: number;
   // Who poisoned the unit, credited with what the poison does.
   sourceId?: string;
+  sourceOwner?: Owner;
 };
 
 export type WorldEffect = {
@@ -88,12 +96,27 @@ export type WorldEffect = {
   toY?: number;
   owner?: Owner;
   damage?: number;
+  damageProfile?: DamageProfile;
+  /** Immutable hit-time presentation facts; corpses need not exist yet. */
+  targetKind?: UnitKind;
+  targetHpAfter?: number;
+  targetMaxHp?: number;
+  targetRadius?: number;
+  targetUnitClass?: "mechanical" | "nonMechanical";
+  targetDeck?: { shipId: string; x: number; y: number; heading: number };
   amount?: number;
   radius?: number;
   tickEvery?: number;
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt, or whose weapon dealt a hit, so the
    * client can sound the blow. Presentation only. */
   sourceKind?: UnitKind | BuildingKind;
+  /** Actual release author; unlike unitId on hit effects, this is never the victim. */
+  sourceId?: string;
+  actionMode?: "attack" | "cast";
+  actionTick?: number;
+  /** A volley aims one gesture at an area while individual missiles fan out. */
+  actionToX?: number;
+  actionToY?: number;
   attackKind?: AttackKind;
   /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
   unitId?: string;
@@ -112,6 +135,10 @@ export type Projectile = {
   toX: number;
   toY: number;
   damage: number;
+  /** Captured when fired; armor is evaluated once against this profile at impact. */
+  damageProfile?: DamageProfile;
+  /** Old saves have ordinary shots whose armor was already settled at launch. */
+  armorAlreadyApplied?: boolean;
   remaining: number;
   duration: number;
   weapon?: WeaponDef;
@@ -131,6 +158,7 @@ export type UnitOrder =
   // Mining timer counts waiting ticks at the entrance, then remaining ticks while gathering.
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
+  | { type: "repairUnit"; targetId: string }
   | { type: "repairShip"; targetId: string }
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
@@ -139,7 +167,9 @@ export type UnitOrder =
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number; heading?: number; shore?: {x:number;y:number} } }
+  | { type: "boardShip"; targetId: string }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
+  | { type: "enterCabin"; shipId: string }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
   // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
@@ -180,6 +210,8 @@ export type Unit = {
   homeY?: number;
   hp: number;
   maxHp: number;
+  /** Explicit invulnerability; ordinary armor and wards use damage reduction. */
+  invulnerable?: boolean;
   /** Movement distance per second. */
   speed: number;
   attackDamage: number;
@@ -189,12 +221,12 @@ export type Unit = {
   cooldown: number;
   aim?: UnitAim | undefined;
   /** Hand references point into the four shared carried positions. */
-  hands?: { right?: string; left?: string };
-  gearMass?: number;
-  holdMass?: number;
-  shipParts?: { rigging:number; rudder:number };
-  fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[];
-  bodyRadius?: number;
+  hands?: { right?: string; left?: string } | undefined;
+  gearMass?: number | undefined;
+  holdMass?: number | undefined;
+  shipParts?: { rigging:number; rudder:number; cabin?:number } | undefined;
+  fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[] | undefined;
+  bodyRadius?: number | undefined;
   /** Simulation-facing angle in radians while aiming or firing. */
   facing?: number | undefined;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
@@ -214,19 +246,52 @@ export type Unit = {
   cargoCapacity?: number;
   /** Position on a moving ship, in its local physical coordinate system. */
   deck?: { shipId: string; x: number; y: number } | undefined;
+  /** Sheltered crew remain ordinary passengers; a breach removes protection until a clear exit opens. */
+  cabin?: { shipId:string; breached?:true } | undefined;
   /** Continuous heading and rates, shared by physical motion and real-time rendering. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number} }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number } | undefined;
+    /** Actual signed world velocity, used to calculate apparent wind on the next tick. */
+    velocityX?: number;
+    velocityY?: number;
+    sail?: { angle: number; billow: number; set: number; mode: 'sail' | 'tacking' | 'maneuver' | 'calm-assist' | 'idle' };
+    /** The helm retains its turn rate across ticks and target updates. */
+    yawRate?: number;
+    pursuit?: { targetId: string; phase: 'approach' | 'engage'; moving: boolean };
+    /** An idle fleet's saved guard station and current defensive engagement. */
+    defense?: { originX:number; originY:number; targetId?:string; returning?:boolean };
+    gangway?: import('./ship-gangway').ShipGangway;
+    gangwayCooldownUntilTick?: number;
+    /** Age of a deferred complex route request; persisted for fair replay-stable scheduling. */
+    planningRequestedAtTick?: number;
+    /** Last tick which still needed the queued plan; expires abandoned requests. */
+    planningLastRequestedAtTick?: number;
+    /** Exact finite JSON state of a deterministic, resumable route search. */
+    planningJob?: string;
+    /** Last live request for the saved job; abandoned work expires at tick boundaries. */
+    planningJobLastRequestedAtTick?: number;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean; curvature?: number; speedLimit?: number; queuedTurn?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
+      intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean;
+      avoidSide?: number; avoidTicks?: number; avoidHeading?: number; avoidBaseHeading?: number; avoidTargetId?: string; tackHeading?: number;
+      /** The next plain move is previewed until the rounded corner is passed. */
+      queuedX?: number; queuedY?: number; queuedPassed?: boolean;
+    } | undefined;
   } | undefined;
-  /** Physical scaling for unusually large campaign hulls. */
+  /** Authored physical scale for campaign hulls, before the fleet-wide ship size multiplier. */
   deckScale?: number;
+  /** Saved radius, fittings and deck coordinates have received the fleet-wide size migration. */
+  shipSizeVersion?: 1 | undefined;
+  /** A crew member supported between the two live gangway anchors. */
+  gangway?: import('./ship-gangway').GangwayCrossing;
   radius: number;
   carryingGold: number;
   /** Active gold-mine assignment, released when its order ends. */
-  mineSlot?: string;
+  mineSlot?: string | undefined;
   kills: number;
   xp: number;
   level: number;
+  /** Drawn once on reaching three stars; learning never rerolls these offers. */
+  veteranSkillChoices?: VeteranSkillId[] | undefined;
+  veteranSkill?: VeteranSkillId | undefined;
   expiresTick?: number | undefined;
   effects: UnitStatusEffect[];
   order: UnitOrder;
@@ -259,6 +324,8 @@ export type Building = {
 };
 
 export type TrainingJob = {
+  /** The price actually paid, so later balance changes cannot increase refunds. */
+  paidGold?: number;
   id?: string;
   unitKind: TrainableUnitKind;
   remaining: number;
@@ -327,7 +394,10 @@ export type WorldItem = {
 };
 
 export type PlayerState = {
+  /** Assigned once per match; saved independently of alliance display mode. */
+  color?: string;
   race: RaceId;
+  /** Gold units, settled to two decimal places; UI displays whole gold. */
   gold: number;
   supplyUsed: number;
   supplyCap: number;
@@ -355,7 +425,8 @@ export type OwnerNumberMap = Record<Owner, number> & {
   neutral: number;
 };
 
-export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9";
+export type BootstrapAiVersion = "v9_archer" | "v9_summoner" | "v9_knight";
+export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9" | BootstrapAiVersion;
 
 // A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
 export type GeneratedLayoutKind = "ring" | "sides";
@@ -465,6 +536,16 @@ export type GameMap = {
   width: number;
   height: number;
   landmarks: TerrainLandmark[];
+  /** True wind blowing toward this world-XY angle (radians), in world distance per second. */
+  wind?: {
+    direction: number;
+    speed: number;
+    /** Last scheduled field change; absent before the first change or in an older save. */
+    changedAtTick?: number;
+    /** Previous field, for client-only transition animation. */
+    fromDirection?: number;
+    fromSpeed?: number;
+  };
   // Ground a unit cannot cross (see @@@terrain); a map without it is open everywhere.
   terrain?: Terrain;
 };
@@ -503,6 +584,7 @@ export type TerrainLandmark = {
 };
 
 export type GameCommand =
+  | { type: "learnVeteranSkill"; unitId: string; skill: VeteranSkillId }
   | { type: "cancelTraining"; buildingId: string; jobId: string }
   | { type: "move"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
@@ -513,6 +595,7 @@ export type GameCommand =
   | { type: "aim"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
+  | { type: "repairUnit"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
@@ -524,8 +607,12 @@ export type GameCommand =
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
+  | { type: "boardShip"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "cancelBoardShip"; unitIds: string[] }
   | { type: "unload"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "unloadPassenger"; transportId: string; passengerId: string }
+  | { type: "enterCabin"; unitIds: string[] }
+  | { type: "leaveCabin"; unitIds: string[] }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
@@ -544,6 +631,13 @@ export type Corpse = {
   radius: number;
   diedAtTick: number;
   variant?: string;
+  /** Death-time presentation facts, captured before held items are dropped. */
+  equipmentCaptured?: true;
+  rightItemKind?: 'issuedWeapon' | 'greatSword';
+  weaponKind?: UnitKind;
+  leftItemKind?: 'roundShield';
+  ownerRace?: RaceId;
+  deck?: {shipId:string;x:number;y:number};
 };
 
 export type GameSnapshot = {
@@ -580,7 +674,7 @@ export type LocalUserProfile = {
 export type SlotController = "human" | "ai" | "open" | "closed";
 
 // The computer players a room offers, per AI slot.
-export type RoomAiVersion = "v5" | "v7" | "v8";
+export type RoomAiVersion = BootstrapAiVersion;
 // A seat's race or computer player, or one drawn when the match starts (see resolvedRoomSlots).
 export type RaceChoice = RaceId | "random";
 export type RoomAiChoice = RoomAiVersion | "random";

@@ -138,7 +138,7 @@ const V5_SHOOTER_UPGRADE_BASE = 4;
 const V5_SHOOTER_UPGRADE_STEP = 3;
 const OUTNUMBERED_MIN_ENEMY_FIGHTERS = 5;
 const OUTNUMBERED_OPENING_END_TICK = 300 * 20;
-const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
+const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest"]);
 
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
 
@@ -2111,7 +2111,7 @@ function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: P
   if (army.length < 5) return false;
   if (!army.some((unit) => unit.kind === "sparkArcher")) return false;
   // @@@ember-support-milestone - Once Ember has a frontline and first spark, the first acolyte unlocks its race kit instead of adding another melee body.
-  return !army.some((unit) => unit.kind === "emberAcolyte");
+  return !army.some((unit) => unit.kind === "priest");
 }
 
 function shouldPrioritizeAffordableHeavyTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {

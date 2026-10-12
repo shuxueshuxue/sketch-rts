@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame } from "./sim";
-import { createShop } from "./shop";
+import { createShop, shopBuyer } from "./shop";
 import { commandValidationError } from "./sim/command-validation";
 import { shipHoldSlots, ITEM_DEFS } from "./equipment";
-import { shipProfile } from "./ship-geometry";
+import { localToWorld, shipProfile } from "./ship-geometry";
 import { bodyMass } from "./physical-body";
 import { purchasePlacement, findPurchaseRecipient } from "./purchase";
+import { boardUnit, deckPlacement } from "./decks";
+import { cabinDoor, enterCabinStep, isInCabin } from "./ship-cabin";
 import type { GameCommand } from "./types";
 function fixture() {
   const game = createGame("bareDuel", { players: ["player", "enemy"] });
@@ -19,6 +21,19 @@ function fixture() {
   game.buildings = [dock];
   const worker = game.spawnUnit("player", "worker", 600, 690), ship = game.spawnUnit("player", "transport", 720, 600);
   return { game, shop, dock, worker, ship };
+}
+function shelteredBuyer() {
+  const context = fixture(), { game, ship, worker, shop } = context;
+  expect(boardUnit(ship, worker, game.units)).toBe(true);
+  const point = deckPlacement(ship, worker, game.units, cabinDoor(ship), true, 2)!;
+  expect(point).toBeDefined();
+  worker.deck = { shipId: ship.id, ...point };
+  Object.assign(worker, localToWorld(ship, point));
+  issuePlayerCommand(game, "player", { type: "enterCabin", unitIds: [worker.id] });
+  enterCabinStep(game, worker);
+  expect(isInCabin(worker)).toBe(true);
+  shop.x = worker.x; shop.y = worker.y;
+  return context;
 }
 describe("explicit purchase recipients", () => {
   it("delivers to the chosen character rather than a nearer one, with a recipient effect", () => {
@@ -70,6 +85,24 @@ describe("explicit purchase recipients", () => {
     expect(() => issuePlayerCommand(game, "player", { type: "buyShipEquipment", buildingId: dock.id, item: "shipCannon", recipientId: ship.id })).toThrow(/weight/);
     expect(game.players.player!.gold).toBe(3000);
   });
+  it("refuses direct delivery into a cabin before money, stock or item identity changes", () => {
+    const { game, shop, dock, worker } = shelteredBuyer();
+    const before = snapshotGame(game), nextId = game.nextId;
+    const commands: GameCommand[] = [
+      { type: "buy", shopId: shop.id, item: "regenRing", recipientId: worker.id },
+      { type: "buyShipEquipment", buildingId: dock.id, item: "shipCannon", recipientId: worker.id },
+    ];
+    expect(purchasePlacement(game, "player", shop, "regenRing", worker.id)).toEqual({ refusal: "Leave the cabin before receiving equipment" });
+    for (const command of commands) {
+      expect(commandValidationError(snapshotGame(game), "player", command)).toMatch(/cabin/);
+      expect(() => issuePlayerCommand(game, "player", command)).toThrow(/cabin/);
+    }
+    expect(game.players.player!.gold).toBe(before.players.player!.gold);
+    expect(game.shops).toEqual(before.shops);
+    expect(game.items).toEqual(before.items);
+    expect(game.nextId).toBe(nextId);
+    expect(isInCabin(worker)).toBe(true);
+  });
 });
 
 describe("purchase recipient resolution", () => {
@@ -92,5 +125,16 @@ describe("purchase recipient resolution", () => {
     for(let i=0;i<shipHoldSlots(ship);i++)game.items.push({id:`full-${i}`,kind:"experienceBook",shipId:ship.id,holdSlot:i,x:ship.x,y:ship.y,cooldownRemaining:0});
     expect(findPurchaseRecipient(game,"player",dock,ship.id,true)?.id).toBe(ship.id);
     expect(purchasePlacement(game,"player",dock,"shipCannon",ship.id)).toHaveProperty("refusal");
+  });
+  it("replaces a sheltered preferred recipient and gives automatic purchases to the exposed buyer", () => {
+    const { game, shop, worker } = shelteredBuyer();
+    const exposed = game.spawnUnit("player", "worker", shop.x + 80, shop.y);
+    const recipient = findPurchaseRecipient(game, "player", shop, worker.id);
+    expect(recipient).toBeDefined();
+    expect(isInCabin(recipient!)).toBe(false);
+    expect(shopBuyer(game, "player", shop, "regenRing")?.id).toBe(exposed.id);
+    issuePlayerCommand(game, "player", { type: "buy", shopId: shop.id, item: "regenRing" });
+    expect(game.items.find(item => item.kind === "regenRing")).toMatchObject({ carrierId: exposed.id });
+    expect(game.items.some(item => item.kind === "regenRing" && item.carrierId === worker.id)).toBe(false);
   });
 });

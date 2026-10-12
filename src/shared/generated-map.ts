@@ -10,6 +10,7 @@ import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
 import { cellIndexAt, footprintCells, footprintHalf, isFootprintBuildable, isShoreFootprint, snapToFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
 import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
+import { GridFlood } from "./grid-flood";
 import { resourceBlocksPlacement } from "./build-placement";
 import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
@@ -102,7 +103,7 @@ const MASS_RADIUS = [110, 280] as const;
 // drawn first, which every mine, camp, post and plateau keeps off (see Field.dry). A way may cross water marked crossable,
 // where its ground becomes a ford of shallows (walked and sailed both) or a bridge (walked, and no ship passes under it);
 // never other water. An island holds a mine that only a ship reaches: ISLAND_WATER of water round it keeps its shallows off
-// the land's and leaves four cells of deep water or more between the two at their nearest, six of water in all. At 200 the
+// the land's and leaves a full large-hull turning basin between the two at their nearest. At 200 the
 // wobble of the bay's rim and the shallows of both shores left two deep cells in 476 of the 1036 crossings between an island
 // and other land on the 1v3 bed's 250 maps, and one in 12: an island a cell of water off the shore (the owner's word).
 // Every start has a beach on the open water nearest its natural, with a way down to it, wherever the idea has
@@ -110,8 +111,13 @@ const MASS_RADIUS = [110, 280] as const;
 // @@@terrain-movers). A draw is kept only if every beach takes a shipyard on water of OPEN_WATER deep cells or more, and
 // every island's mine is reached from such a shipyard's water.
 const SEA_WOBBLE = 0.12;
-const ISLAND_RADIUS = GOLD_MINE_RULES.townHallDistance + 80;
-const ISLAND_WATER = 320;
+// The mine's hauling base must have a complete foundation and a cell-wide
+// worker lane, rather than one lucky footprint squeezed against the shoreline.
+const MINE_BASE_CLEARING = GOLD_MINE_RULES.baseRange + footprintHalf(BUILDING_DEFS.townHall.radius, TERRAIN_CELL) + TERRAIN_CELL;
+const ISLAND_RADIUS = MINE_BASE_CLEARING + 40;
+// A 386-unit enlarged line ship needs room for its full hull to swing between
+// island shores; six more water cells leave a turning basin after both shoals.
+const ISLAND_WATER = 512;
 const BEACH_RADIUS = 190;
 const OPEN_WATER = 64;
 // A rock pile or gate shuts its way only where the walk round it is at least this many times the step across it.
@@ -147,21 +153,21 @@ type IdeaSpec = {
 const duel = (count: number) => count === 2;
 const four = (count: number) => count === 4;
 const IDEAS: Record<MapIdea, IdeaSpec> = {
-  islandStarts: { kind: "ring", seats: count => count === 2 || count === 4, sizes: () => [6144], walk: WALK_SHARE, layout: openRing },
+  islandStarts: { kind: "ring", seats: count => count === 2 || count === 4, sizes: () => [7680], walk: WALK_SHARE, layout: openRing },
   openRing: { kind: "ring", seats: () => true, sizes: (count) => sizesFor("ring", count), walk: WALK_SHARE, layout: openRing },
   openSides: { kind: "sides", seats: () => true, sizes: (count) => sizesFor("sides", count), walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "open") },
-  fountainRing: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: fountainRing },
-  turtleIsle: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 512], walk: [0.54, 0.62], masses: { forest: 0.55, rock: 0.45, water: 0 }, layout: turtleIsle },
-  twistedPaths: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: [0.46, 0.52], masses: { forest: 0.85, rock: 0.15, water: 0 }, layout: twistedPaths },
-  outerSea: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: outerSea },
-  oneMarket: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 512, STANDARD_MAP_SIZE + 1_024], walk: WALK_SHARE, layout: oneMarket },
+  fountainRing: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: WALK_SHARE, layout: fountainRing },
+  turtleIsle: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 2_048], walk: [0.54, 0.62], masses: { forest: 0.55, rock: 0.45, water: 0 }, layout: turtleIsle },
+  twistedPaths: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: [0.46, 0.52], masses: { forest: 0.85, rock: 0.15, water: 0 }, layout: twistedPaths },
+  outerSea: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: WALK_SHARE, layout: outerSea },
+  oneMarket: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 2_048, STANDARD_MAP_SIZE + 2_560], walk: WALK_SHARE, layout: oneMarket },
   floodedValley: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 512, STANDARD_MAP_SIZE + 1_024], walk: [0.6, 0.7], masses: { forest: 0.5, rock: 0.5, water: 0 }, layout: floodedValley },
   hiddenHill: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 512], walk: [0.5, 0.6], layout: hiddenHill },
   bridgeStand: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512], walk: WALK_SHARE, layout: bridgeStand },
   deepJungle: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512], walk: [0.36, 0.44], masses: { forest: 0.8, rock: 0.05, water: 0.15 }, layout: deepJungle },
-  northIsles: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: northIsles },
-  riverValley: { kind: "sides", seats: count=>count===4 || count===8, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "river") },
-  twoShores: { kind: "sides", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "strait") },
+  northIsles: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: WALK_SHARE, layout: northIsles },
+  riverValley: { kind: "sides", seats: count=>count===4 || count===8, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "river") },
+  twoShores: { kind: "sides", seats: four, sizes: () => [STANDARD_MAP_SIZE + 2_560, STANDARD_MAP_SIZE + 3_072], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "strait") },
 };
 const FALLBACK: Record<GeneratedLayoutKind, MapIdea> = { ring: "openRing", sides: "openSides" };
 
@@ -230,6 +236,9 @@ class Field {
   readonly plateaus: Plateau[] = [];
   // Ground that stays open whatever is drawn on it (a start, a mine and its hall, a camp, a post).
   readonly reserved: Disk[] = [];
+  // Optional mineral base clearings. Keep an already usable footprint as drawn;
+  // adding every pad up front changes mass placement even beside roomy mines.
+  readonly mineBasePads: { mine:Point; at:Point; radius:number }[] = [];
   // The idea's water (see @@@generated-water): deep water, the depth of the sea along the map's edge, land raised in it that
   // walks join (a home island, a lake's island crossed to), islands only a ship reaches, and every start's shore.
   readonly waters: Water[] = [];
@@ -366,8 +375,19 @@ class Field {
   // degrees either way where that crowds another camp (every copy turned alike); a guard that fits nowhere is left out.
   addGuardedMines(mines: Point[], color: CampTier, awayFrom: (mine: Point, index: number) => Point, item?: ItemKind) {
     this.mines.push(...mines);
-    // Keep the mine open; the surrounding clearing also holds its hauling base.
-    for (const at of mines) this.reserved.push({ at, radius: 230 });
+    // Keep the mineral clearing and prepare a separate base pad, preferably
+    // away from its guard. Carve it only if the finished terrain lacks a complete
+    // hauling foundation and worker perimeter; roomy mines retain their woods.
+    for (const [index, at] of mines.entries()) {
+      this.reserved.push({ at, radius:230 });
+      const away = unit(sub(at,awayFrom(at,index)));
+      for (const turn of [0,Math.PI/2,-Math.PI/2,Math.PI,Math.PI/4,-Math.PI/4,3*Math.PI/4,-3*Math.PI/4]) {
+        const pad = roundPoint(step(at,rotate(away,turn),GOLD_MINE_RULES.mainDistance));
+        if (!this.dry(pad,160) || !this.offPlateaus(pad,160)) continue;
+        this.mineBasePads.push({mine:at,at:pad,radius:160});
+        break;
+      }
+    }
     for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
       const guards = mines.map((mine, index) => roundPoint(step(mine, rotate(unit(sub(awayFrom(mine, index), mine)), turn), GUARD_OFFSET)));
       if (!this.campFits(guards, mines, START_SAFETY + CAMP_SPREAD + 10)) continue;
@@ -678,7 +698,7 @@ function fountainRing(field: Field, players: PlayerId[], teams: Record<PlayerId,
   const { middle, polar, between } = ring;
   const SIZE = field.size;
   for (const bay of field.copies(polar(SIZE * field.between(0.57, 0.6), between))) {
-    field.waters.push({ points: [bay], half: SIZE * field.between(0.12, 0.135), wobble: 0.1 });
+    field.waters.push({ points: [bay], half: Math.max(ISLAND_RADIUS + ISLAND_WATER, SIZE * field.between(0.12, 0.135)), wobble: 0.1 });
     field.islands.push({ at: bay, radius: ISLAND_RADIUS });
   }
   if (!field.dry(ring.base, ring.plateau + 150)) return false;
@@ -708,7 +728,7 @@ function turtleIsle(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const { middle, polar, between } = ring;
   const SIZE = field.size;
   const island = SIZE * field.between(0.075, 0.085);
-  field.waters.push({ points: [middle], half: island + SIZE * field.between(0.07, 0.08), wobble: 0.1, crossable: true });
+  field.waters.push({ points: [middle], half: island + SIZE * field.between(0.09, 0.1), wobble: 0.1, crossable: true });
   field.lands.push({ at: middle, radius: island });
   if (!field.dry(ring.base, ring.plateau + 150)) return false;
   const naturalArea = standardMain(field, ring.base, ring.inward, ring.plateau);
@@ -759,7 +779,7 @@ function twistedPaths(field: Field, players: PlayerId[], teams: Record<PlayerId,
 // @@@idea-outer-sea - A sea all round the map's edge, a bay between every two neighbours with an island mine in it, so a
 // fleet sails round to any start's back; the land in the middle is the open ring's.
 function outerSea(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
-  const coast = field.size * field.between(0.07, 0.09);
+  const coast = field.size * field.between(0.09, 0.11);
   const ring = ringStarts(field, players, teams, teamOrder, field.random() < 0.5 ? 0 : Math.PI / 4, [0.33, 0.38], coast * (1 + SEA_WOBBLE) + 160);
   const { middle, polar, between } = ring;
   field.coast = coast;
@@ -787,12 +807,12 @@ function outerSea(field: Field, players: PlayerId[], teams: Record<PlayerId, str
 // and lightly held; few camps, the middle's fought over.
 function oneMarket(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
   const SIZE = field.size;
-  const coast = SIZE * field.between(0.05, 0.065);
+  const coast = SIZE * field.between(0.07, 0.085);
   const ring = ringStarts(field, players, teams, teamOrder, (Math.PI * 5) / 4, [0.4, 0.46], coast * (1 + SEA_WOBBLE) + 160);
   const { middle, polar, between } = ring;
   field.coast = coast;
   const channel = polar(SIZE, between);
-  field.waters.push({ points: [channel, middle, field.copies(channel)[1]!], half: SIZE * field.between(0.055, 0.07), wobble: 0.14, crossable: true });
+  field.waters.push({ points: [channel, middle, field.copies(channel)[1]!], half: SIZE * field.between(0.075, 0.09), wobble: 0.14, crossable: true });
   const isle = SIZE * field.between(0.045, 0.055);
   field.lands.push({ at: middle, radius: isle });
   if (!field.dry(ring.base, ring.plateau + 150)) return false;
@@ -857,7 +877,7 @@ function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   ]) field.blocks.push(block.map(roundPoint));
   const naturalArea = standardMain(field, ring.base, { x: 0, y: 1 }, ring.plateau, [0, 0.5]);
   if (!naturalArea) return false;
-  const hill = Math.max(SIZE * field.between(0.06, 0.07), GOLD_MINE_RULES.townHallDistance + 96);
+  const hill = Math.max(SIZE * field.between(0.06, 0.07), MINE_BASE_CLEARING + 80);
   const feet = field.addHill(middle, hill, [{ x: 0, y: field.center }, { x: SIZE, y: field.center }]);
   field.rings.push({ at: middle, inner: hill + 40, outer: hill + field.between(170, 230) });
   // Its back ways: a narrow ramp up the hill's back from either forest, the way on through the forest down to the open
@@ -958,7 +978,7 @@ function northIsles(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const { middle, polar, between } = ring;
   const firstAngle = between - ring.turn / 2;
   field.waters.push({ points: [middle], half: SIZE, wobble: 0, crossable: true });
-  for (const at of field.copies(polar(ring.radius * field.between(0.78, 0.85), firstAngle))) field.lands.push({ at, radius: SIZE * field.between(0.23, 0.25) });
+  for (const at of field.copies(polar(ring.radius * field.between(0.86, 0.9), firstAngle))) field.lands.push({ at, radius: SIZE * field.between(0.2, 0.22) });
   field.lands.push({ at: middle, radius: SIZE * field.between(0.055, 0.065) });
   const corner = field.center / Math.max(Math.abs(detCos(between)), Math.abs(detSin(between)));
   field.addIslands(polar(corner * field.between(0.62, 0.7), between), true);
@@ -1000,8 +1020,8 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   const perSide = members[0]!.length;
   const plateau = field.between(480, 540);
   const margin = plateau + 130;
-  if (middleKind === "strait") field.waters.push({ points: [place({ x: CENTER, y: -200 }), place({ x: CENTER, y: SIZE + 200 })], half: SIZE * field.between(0.04, 0.055), wobble: 0.15, crossable: true });
-  if (middleKind === "river") field.waters.push({ points: [place({ x: CENTER, y: -200 }), place({ x: CENTER, y: SIZE + 200 })], half: field.between(110, 150), wobble: 0.2, crossable: true });
+  if (middleKind === "strait") field.waters.push({ points: [place({ x: CENTER, y: -200 }), place({ x: CENTER, y: SIZE + 200 })], half: SIZE * field.between(0.07, 0.085), wobble: 0.15, crossable: true });
+  if (middleKind === "river") field.waters.push({ points: [place({ x: CENTER, y: -200 }), place({ x: CENTER, y: SIZE + 200 })], half: field.between(320, 384), wobble: 0.12, crossable: true });
   // One side is drawn (the left, before any turn); the mirror gives the other.
   const own: { base: Point; area: Point }[] = [];
   for (let index = 0; index < perSide; index += 1) {
@@ -1148,7 +1168,7 @@ function shoresFrom(field: Field, from: Point): Shore[] {
 // becomes a cliff but for its ramps, stray pockets and specks are filled or cleared, the water's rim becomes shallows, and the
 // map is kept only if every start reaches everything, no island is walked to, and every shore takes a shipyard on open
 // water.
-function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
+function carveTerrain(field: Field, plain: boolean, allowBasePads = true): Terrain | undefined {
   const cells = Math.round(field.size / TERRAIN_CELL);
   const grid = new Grid(cells, field);
   for (const clearing of field.clearings) grid.keep(clearing.at, clearing.radius, clearing.wobble, clearing.plateau === true);
@@ -1183,7 +1203,16 @@ function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
   if (!grid.obstaclesFit(field.bases[0]!)) return undefined;
   if (!field.bases.every((base) => grid.roomAround(base, 450) >= 0.55)) return undefined;
   const terrain = grid.terrain();
-  if (!field.mines.every((mine) => grid.hallFits(mine, terrain))) return undefined;
+  const missingBases = field.mines.filter(mine => !grid.hallFits(mine,terrain));
+  if (missingBases.length) {
+    if (!allowBasePads) return undefined;
+    const pads = missingBases.map(mine => field.mineBasePads.find(pad => pad.mine === mine));
+    if (pads.some(pad => !pad)) return undefined;
+    for (const pad of pads) field.reserved.push({at:pad!.at,radius:pad!.radius});
+    // This is map creation only. Recheck the complete layout, including shortcut
+    // gates and water access, after opening just the deficient mineral bases.
+    return carveTerrain(field,plain,false);
+  }
   if (grid.islandWalked(field.bases[0]!)) return undefined;
   if (!harbours(field, terrain)) return undefined;
   return terrain;
@@ -1316,6 +1345,7 @@ class Grid {
   readonly shut: Uint8Array;
   readonly shutCells: number[] = [];
   readonly count: number;
+  private readonly floodTraversal: GridFlood;
   private openCount = 0;
   private landCount = 0;
   private islandCount = 0;
@@ -1325,6 +1355,7 @@ class Grid {
     readonly field: Field,
   ) {
     this.count = cells * cells;
+    this.floodTraversal = new GridFlood(cells);
     this.open = new Uint8Array(this.count).fill(1);
     this.kept = new Uint8Array(this.count);
     this.way = new Uint8Array(this.count);
@@ -1474,10 +1505,15 @@ class Grid {
     });
   }
 
-  // Mud over the open ground within the patch (its ways too), but plateaus, ramps, water and bridges.
+  // Mud over the open ground within the patch (its ways too), but plateaus,
+  // ramps, water, bridges and the prepared mineral courtyards. A nearby hall's
+  // short hauling lane stays dry; routes beyond that clearing still cross mud.
   mire(patch: Water) {
     this.band(patch, (index) => {
       if (!this.open[index] || this.plateau[index] || this.ramp[index] || this.shallow[index] || this.bridge[index] || this.sea[index]) return;
+      const at = this.center(index);
+      if (this.field.mines.some(mine => distance(at, mine) <= 230)
+        || this.field.mains.some(mine => distance(at, mine) <= 150)) return;
       this.mud[index] = 1;
     });
   }
@@ -1518,10 +1554,9 @@ class Grid {
 
   // Whether every open cell but an island's is reached from the start, with the rocks and gates standing.
   whole(from: Point) {
-    const reached: number[] = [];
-    this.flood4(this.indexAt(from), (index) => this.open[index] === 1 && !this.shut[index], reached);
+    const reached = this.floodTraversal.walk(this.indexAt(from), (index) => this.open[index] === 1 && !this.shut[index]).count;
     const shutOpen = this.shutCells.filter((index) => this.open[index] && !this.island[index]).length;
-    return reached.length === this.openCount - this.islandCount - shutOpen;
+    return reached === this.openCount - this.islandCount - shutOpen;
   }
 
   // @@@generated-obstacles - Rocks and gates stand across shortcuts only: each on open ground, the land whole with all of
@@ -1755,25 +1790,7 @@ class Grid {
 
   // Four-way flood from a cell over the cells that pass; the cells reached (listed into `into` when given).
   flood4(start: number, passes: (index: number) => boolean, into?: number[]) {
-    const reached = new Uint8Array(this.count);
-    const queue = [start];
-    reached[start] = 1;
-    for (let head = 0; head < queue.length; head += 1) {
-      const index = queue[head]!;
-      into?.push(index);
-      const col = index % this.cells;
-      const row = (index - col) / this.cells;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-        const c = col + dx;
-        const r = row + dy;
-        if (c < 0 || r < 0 || c >= this.cells || r >= this.cells) continue;
-        const next = r * this.cells + c;
-        if (reached[next] || !passes(next)) continue;
-        reached[next] = 1;
-        queue.push(next);
-      }
-    }
-    return reached;
+    return this.floodTraversal.walk(start, passes, into).reached;
   }
 
   neighbours(index: number) {
@@ -1802,16 +1819,17 @@ class Grid {
     return all === 0 ? 0 : open / all;
   }
 
-  // Whether a hall fits outside the mine's hauling lane, its whole footprint open and off every ramp, see
-  // @@@ramp-unbuildable).
+  // Whether a hall fits outside the mine's hauling lane, its whole foundation
+  // and worker perimeter open, off every ramp and away from rock/gate bodies.
   hallFits(mine: Point, terrain: Terrain) {
     const map = { terrain };
     for (const reach of [GOLD_MINE_RULES.townHallDistance, 300]) {
       for (let spoke = 0; spoke < 16; spoke += 1) {
         const at = snapToFootprint(map, BUILDING_DEFS.townHall.radius, step(mine, heading((spoke / 16) * Math.PI * 2), reach));
         if (resourceBlocksPlacement(map, "townHall", at, mine)) continue;
-        if (Math.hypot(at.x - mine.x, at.y - mine.y) > 300 || !isFootprintBuildable(map, at.x, at.y, BUILDING_DEFS.townHall.radius)) continue;
-        const footprint = footprintCells(TERRAIN_CELL, at.x, at.y, BUILDING_DEFS.townHall.radius);
+        const paddedRadius = BUILDING_DEFS.townHall.radius + TERRAIN_CELL;
+        if (Math.hypot(at.x - mine.x, at.y - mine.y) > 300 || !isFootprintBuildable(map, at.x, at.y, paddedRadius)) continue;
+        const footprint = footprintCells(TERRAIN_CELL, at.x, at.y, paddedRadius);
         let clear = true;
         for (let row = footprint.top; row <= footprint.bottom; row++) for (let col = footprint.left; col <= footprint.right; col++) {
           const index = row * this.cells + col;

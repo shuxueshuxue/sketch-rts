@@ -4,6 +4,10 @@ import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";
 import { creepGoldBounty, unitValue } from "./unit-value";
 import { seconds } from "./time";
+import { VETERAN_ACTIVE_SKILL_IDS, VETERAN_SKILLS, type VeteranActiveSkillId } from "./veteran-skills";
+import type { DamageProfile } from "./damage-types";
+import type { UnitClass, UnitTargetFilter } from "./unit-targeting";
+import { TRANSPORT_COMBAT } from './transport-role';
 
 export const MERCENARY_HIRE_RANGE = 220;
 export const SUPPORT_BUILDING_HEAL = 5;
@@ -11,6 +15,7 @@ export const DOCK_REPAIR = { range: 240, hpPerSecond: 3, goldPerSecond: 1 };
 
 /** Weapon rules belong to the simulation, independent of maps and AI versions. */
 export type WeaponDef = {
+  damageProfile?: DamageProfile;
   presentation?: AttackKind;
   delivery: "ram" | "bolt" | "shell" | "cone";
   buildingMultiplier?: number;
@@ -26,13 +31,10 @@ export type WeaponDef = {
   burst?: number;
 };
 
-// @@@catalog-rules - A unit's rules say where it comes from: the building that trains it and the race that owns it (no
-// race: every race). Unit kinds, each building's training list, each race's units and buildings, and the lists command
-// validation checks against are all derived from these rows, so a new unit or building is one row here (plus its card
-// in client/content for how it looks); nothing else in shared/ needs to be told.
+// @@@catalog-rules - Combat rules are shared by every race. Production belongs to RACE_TECH_RULES;
+// a unit can have different producers without duplicating its combat behavior or statistics.
 export type UnitDef = {
-  trainedAt?: BuildingKind;
-  race?: RaceId;
+  unitClass: UnitClass;
   hp: number;
   /** Movement distance per second. */
   speed: number;
@@ -48,6 +50,8 @@ export type UnitDef = {
   goldBounty?: number;
   abilities: AbilityKind[];
   armor?: "heavy";
+  /** Incoming ordinary ranged attacks, including siege and towers. Active spells bypass it. */
+  rangedDamageTaken?: number;
   // Damage multiplier against summoned units and casters (units with an ability).
   casterSlayer?: number;
   // Innate health regeneration, on top of leadership's.
@@ -92,19 +96,16 @@ export const SPLASH_SHARE = 0.15;
 // advanced unit at 7:00-8:30; no AI reached the elite bar inside 12 minutes.
 export const TIER_SUPPLY_CAP = { 2: 42, 3: 60 } as const;
 
-// Upkeep: from LOW_UPKEEP_SUPPLY in use a player banks 70% of the gold its workers bring back, from HIGH_UPKEEP_SUPPLY 40%.
-export const LOW_UPKEEP_SUPPLY = 51;
-export const HIGH_UPKEEP_SUPPLY = 81;
-
 // Heavy armor (knights, golems, ash chieftains and cinder revenants): a shooter's or caster's attack deals half damage, a defense
 // tower's 70%. Melee blows land in full.
-export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
+export { HEAVY_ARMOR_DAMAGE } from "./damage-reduction";
 
 // Whether a unit casts the ability on its own (see autocast): "on" and "off" are the default of an ability the player can
 // switch, "none" one that is only ever cast by hand. As in Warcraft III, nearly every unit ability starts on.
 export type AutocastDefault = "on" | "off" | "none";
 
-export type AbilityDef = { autocast: AutocastDefault } & (
+export type AbilityDef = { autocast: AutocastDefault; targets?: UnitTargetFilter } & (
+  | { behavior: "veteran"; skill: VeteranActiveSkillId; range: number; plannerRange: number; cooldown: number; effectType: "heal" | "guardianField" | "bloodlust" }
   | { behavior: "weapon"; target: "enemy" | "point"; weapon: WeaponDef; range: number; plannerRange: number; cooldown: number; damage: number; rootTicks?: number; burnTicks?: number; effectType: "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround" }
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
@@ -147,7 +148,7 @@ export type BuildingRules = {
   shore?: true;
 };
 
-// What the building trains is derived from the units' trainedAt, in catalog order.
+// Training lists are derived from the race-specific production relationships.
 export type BuildingDef = BuildingRules & { trains: TrainableUnitKind[] };
 
 export type UpgradeDef = {
@@ -179,30 +180,28 @@ export type RaceDef = {
 
 // Ranged basic attacks, including hired troops, creeps and naval guns, use 80% of their former reach.
 export const UNIT_RULES = {
-  worker: { trainedAt: "townHall", hp: 70, speed: 60, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, abilities: [] },
-  footman: { trainedAt: "barracks", race: "grove", hp: 145, speed: 62, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
-  archer: { trainedAt: "archeryRange", race: "grove", hp: 83, speed: 60, radius: 16, attackDamage: 13, attackRange: 319.2, aimSpeed: 480, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, abilities: [] },
+  worker: { hp: 70, speed: 60, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, abilities: [] },
+  footman: { hp: 145, speed: 62, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
+  archer: { hp: 83, speed: 60, radius: 16, attackDamage: 13, attackRange: 319.2, aimSpeed: 480, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, abilities: [] },
   // The cavalry strikes from the saddle with a reach a little under the lancer's 74 (it had a footman's, 48 and 52).
-  horseArcher: { trainedAt: "stables", race: "grove", hp: 109, speed: 90, radius: 19, attackDamage: 10, attackRange: 264, aimSpeed: 600, attackCooldown: seconds(1.5), cost: 150, trainTime: seconds(10), supplyUsed: 2, abilities: [], tier: 2, aimMoveTolerance: 72 },
-  raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 82, radius: 18, attackDamage: 14, attackRange: 72, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, abilities: ["charge"], tier: 2 },
-  lancer: { trainedAt: "barracks", race: "grove", hp: 130, speed: 68, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, abilities: [] },
-  ashWarden: { trainedAt: "emberForge", race: "ember", hp: 165, speed: 60, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
-  emberRavager: { trainedAt: "emberForge", race: "ember", hp: 118, speed: 76, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
-  cinderRunner: { trainedAt: "emberForge", race: "ember", hp: 96, speed: 87, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
-  sparkArcher: { trainedAt: "cinderSpire", race: "ember", hp: 75, speed: 63, radius: 16, attackDamage: 12, attackRange: 288, aimSpeed: 540, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, abilities: [] },
-  emberAcolyte: { trainedAt: "cinderSpire", race: "ember", hp: 78, speed: 62, radius: 16, attackDamage: 6, attackRange: 192, aimSpeed: 480, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, abilities: ["emberMend"], tier: 2 },
-  ashHexer: { trainedAt: "cinderSpire", race: "ember", hp: 82, speed: 64, radius: 16, attackDamage: 7, attackRange: 240, aimSpeed: 520, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, abilities: ["ashCurse"], tier: 2 },
-  pyreCaller: { trainedAt: "cinderSpire", race: "ember", hp: 88, speed: 59, radius: 17, attackDamage: 7, attackRange: 208, aimSpeed: 440, attackCooldown: seconds(1.9), cost: 174, trainTime: seconds(9.5), supplyUsed: 2, abilities: ["cinderSoul"], tier: 2 },
-  knight: { trainedAt: "stables", race: "grove", hp: 220, speed: 72, radius: 22, attackDamage: 24, attackRange: 72, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, abilities: ["charge"], armor: "heavy", tier: 3 },
-  priest: { trainedAt: "sanctum", race: "grove", hp: 90, speed: 60, radius: 16, attackDamage: 7, attackRange: 201.6, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, abilities: ["heal"], tier: 2 },
-  summoner: { trainedAt: "sanctum", race: "grove", hp: 95, speed: 56, radius: 17, attackDamage: 8, attackRange: 218.4, aimSpeed: 400, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, abilities: ["summon"], tier: 2 },
-  witch: { trainedAt: "sanctum", race: "grove", hp: 92, speed: 62, radius: 16, attackDamage: 8, attackRange: 252, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, abilities: ["curse"], tier: 2 },
-  golem: { trainedAt: "workshop", race: "grove", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
+  horseArcher: { hp: 109, speed: 90, radius: 19, attackDamage: 10, attackRange: 264, aimSpeed: 600, attackCooldown: seconds(1.5), cost: 150, trainTime: seconds(10), supplyUsed: 2, abilities: [], tier: 2, aimMoveTolerance: 72 },
+  raider: { hp: 115, speed: 82, radius: 18, attackDamage: 14, attackRange: 72, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, abilities: ["charge"], tier: 2 },
+  lancer: { hp: 130, speed: 68, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, abilities: [] },
+  ashWarden: { hp: 165, speed: 60, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
+  emberRavager: { hp: 118, speed: 76, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
+  cinderRunner: { hp: 96, speed: 87, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
+  sparkArcher: { hp: 85, speed: 63, radius: 16, attackDamage: 9, attackRange: 288, aimSpeed: 540, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, abilities: [] },
+  ashHexer: { hp: 82, speed: 64, radius: 16, attackDamage: 7, attackRange: 240, aimSpeed: 520, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, abilities: ["ashCurse"], tier: 2 },
+  knight: { hp: 220, speed: 72, radius: 22, attackDamage: 24, attackRange: 72, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, abilities: ["charge"], armor: "heavy", tier: 3 },
+  priest: { hp: 90, speed: 60, radius: 16, attackDamage: 7, attackRange: 201.6, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, abilities: ["heal"], tier: 2 },
+  summoner: { hp: 95, speed: 56, radius: 17, attackDamage: 8, attackRange: 218.4, aimSpeed: 400, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, abilities: ["summon"], tier: 2 },
+  witch: { hp: 92, speed: 62, radius: 16, attackDamage: 8, attackRange: 252, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, abilities: ["curse"], tier: 2 },
+  golem: { unitClass: "mechanical", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
   // Ember's heavies, raised in the ashen hall and heavy-armored like the grove's knight and golem, but built for
   // other jobs. The chieftain hunts casters and what they summon (half again as much damage to both); the revenant is
   // light for an elite and burns its wounds away, back to full health in about twenty seconds.
-  ashChieftain: { trainedAt: "ashenHall", race: "ember", hp: 210, speed: 66, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, abilities: [], armor: "heavy", casterSlayer: 1.5, tier: 3 },
-  cinderRevenant: { trainedAt: "ashenHall", race: "ember", hp: 150, speed: 70, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, abilities: [], armor: "heavy", regenPerSecond: 7, tier: 3 },
+  ashChieftain: { hp: 210, speed: 66, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, abilities: [], armor: "heavy", casterSlayer: 1.5, tier: 3 },
+  cinderRevenant: { hp: 150, speed: 70, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, abilities: [], armor: "heavy", regenPerSecond: 7, tier: 3 },
   spirit: { hp: 85, speed: 70, radius: 15, attackDamage: 13, attackRange: 55, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, abilities: [] },
   mercenary: { hp: 155, speed: 74, radius: 18, attackDamage: 28, attackRange: 62, attackCooldown: seconds(0.9), cost: 160, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
   contractArcher: { hp: 93, speed: 64, radius: 16, attackDamage: 19, attackRange: 352.8, aimSpeed: 600, attackCooldown: seconds(1.35), cost: 145, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
@@ -213,18 +212,20 @@ export const UNIT_RULES = {
   barkMender: { hp: 68, speed: 64, radius: 18, attackDamage: 7, attackRange: 88, aimSpeed: 400, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: ["heal"] },
   stonebackBrute: { hp: 210, speed: 72, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
   gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
-  // @@@ships - Both races can board every ship. Transport passengers deal half damage;
+  // @@@ships - Both races can board every ship. Troop ferry passengers deal half damage;
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
-  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
-  warship: { trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
-  bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
-  fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
-  siegeRam: { trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
-  ballista: { trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
-  catapult: { trainedAt: "workshop", race: "ember", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
-  organGun: { trainedAt: "workshop", race: "ember", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
+  transport: { unitClass: "mechanical", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
+  warship: { unitClass: "mechanical", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  // Four removable cannons are included in the purchase; the hull has no extra intrinsic shot.
+  shipOfTheLine: { unitClass: "mechanical", hp: 740, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  cutter: { unitClass: "mechanical", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
+  bombardShip: { unitClass: "mechanical", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { unitClass: "mechanical", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  carrier: { unitClass: "mechanical", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
+  siegeRam: { unitClass: "mechanical", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
+  ballista: { unitClass: "mechanical", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
+  catapult: { unitClass: "mechanical", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
+  organGun: { unitClass: "mechanical", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
   ancientStag: { hp: 360, speed: 88, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [] },
   // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
   // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:
@@ -238,9 +239,9 @@ export const UNIT_RULES = {
   murlocHunter: { hp: 98, speed: 72, radius: 15, attackDamage: 13, attackRange: 120, aimSpeed: 480, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], slowOnHit: true, threat: 1.05 },
   tidePriest: { hp: 100, speed: 64, radius: 17, attackDamage: 10, attackRange: 160, aimSpeed: 440, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["heal"] },
   deepSnapper: { hp: 350, speed: 70, radius: 26, attackDamage: 31, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [], armor: "heavy", threat: 1.25 },
-  rubbleGolem: { hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
-  rockGolem: { hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
-  graniteGolem: { hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  rubbleGolem: { unitClass: "mechanical", hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
+  rockGolem: { unitClass: "mechanical", hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { unitClass: "mechanical", hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
   ogreWarrior: { hp: 178, speed: 68, radius: 22, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
   ogreMage: { hp: 145, speed: 64, radius: 22, attackDamage: 15, attackRange: 160, aimSpeed: 400, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: ["bloodlust"], threat: 1.15 },
   ogreLord: { hp: 380, speed: 68, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: [], threat: 1.35 },
@@ -249,11 +250,11 @@ export const UNIT_RULES = {
   spiderQueen: { hp: 350, speed: 80, radius: 26, attackDamage: 33, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: ["web"] },
   dragonWhelp: { hp: 170, speed: 84, radius: 22, attackDamage: 17, attackRange: 144, aimSpeed: 540, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [] },
   redDragon: { hp: 600, speed: 80, radius: 28, attackDamage: 42, attackRange: 176, aimSpeed: 480, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 8, abilities: [], splash: true, threat: 1.3 },
-} satisfies Record<string, Omit<UnitDef, "xpReward" | "goldBounty">>;
+} satisfies Record<string, Omit<UnitDef, "xpReward" | "goldBounty" | "unitClass"> & { unitClass?: UnitClass }>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
   Object.entries(UNIT_RULES).map(([kind, row]) => {
-    const def: UnitDef = { ...row, xpReward: 0 };
+    const def: UnitDef = { unitClass: "nonMechanical", ...row, xpReward: 0 };
     def.xpReward = kind === "spirit" ? 0 : Math.round(unitValue(def) / 3);
     if (def.creepFoodPower) def.goldBounty = creepGoldBounty(def.creepFoodPower, def.threat);
     return [kind, def];
@@ -266,7 +267,7 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
 // the tooltips) takes it for its base, as any subtype passes for its supertype; the sim, which knows variants, plays it
 // by its own numbers. Its abilities are its base's: a campaign's own powers are scripts (see story/). Variants live in
 // the game that uses them (Game.variants), never in these tables, so no campaign can move the balance of any other game.
-export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "casterSlayer" | "regenPerSecond">>;
+export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "rangedDamageTaken" | "casterSlayer" | "regenPerSecond" | "unitClass">>;
 
 export type UnitVariantDef = UnitVariantStats & {
   base: UnitKind;
@@ -312,28 +313,31 @@ export function unitMover(kind: UnitKind): Mover {
   return NAVAL_KINDS.has(kind) ? "sea" : "land";
 }
 
-export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].trainedAt !== undefined) as TrainableUnitKind[];
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
-export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web", "pinningBolt", "incendiaryFlume"];
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "ashCurse", "charge", "stomp", "bloodlust", "web", "pinningBolt", "incendiaryFlume", ...VETERAN_ACTIVE_SKILL_IDS];
 
 // What a curse deals at once to a summoned unit (a spirit has 85 hp): both races' curses are the answer to a summoner's
 // free army, so they share the one number.
 const CURSE_SUMMONED_DAMAGE = 100;
 
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
+  ...Object.fromEntries(VETERAN_ACTIVE_SKILL_IDS.map(skill => {
+    const effect = VETERAN_SKILLS[skill].effect;
+    if (effect.type !== "active") throw new Error(`Veteran ability ${skill} must be active`);
+    return [skill, { behavior: "veteran", skill, range: effect.radius, plannerRange: effect.radius, cooldown: effect.cooldown,
+      effectType: effect.action === "heal" ? "heal" : effect.modifiers.damageReduction ? "guardianField" : "bloodlust", autocast: "on", ...(effect.targets ? { targets: effect.targets } : {}) }];
+  })) as Record<VeteranActiveSkillId, AbilityDef>,
   pinningBolt: { behavior: "weapon", target: "enemy", weapon: { presentation: "bolt", delivery: "bolt", radius: 20, maxHits: 3, pierceShare: 0.7 }, range: 472, plannerRange: 472, cooldown: seconds(14), damage: 36, rootTicks: seconds(2), effectType: "siegeBolt", autocast: "none" },
   incendiaryFlume: { behavior: "weapon", target: "point", weapon: { presentation: "fire", delivery: "shell", radius: 85, buildingMultiplier: 0.7 }, range: 224, plannerRange: 224, cooldown: seconds(18), damage: 14, burnTicks: seconds(4), effectType: "burningGround", autocast: "none" },
 
   // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
   // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
   // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
-  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
+  heal: { behavior: "heal", targets: { unitClasses: ["nonMechanical"] }, range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
   curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "curse", autocast: "on" },
-  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
-  cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
   ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "scorch", autocast: "on" },
   // The cavalry's charge: from 180 to 300 away, a slide that would carry the rider `drive` past the unit it meets (see
   // @@@charge), and a blow of twice the weapon's.
@@ -377,8 +381,69 @@ export const BUILDING_RULES = {
 
 export const BUILDABLE_BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];
 
+export type ProductionRule = { at: BuildingKind };
+
+// Shared hulls and workers have one production declaration, just as they have one combat definition.
+const COMMON_PRODUCTION = {
+  worker: { at: "townHall" },
+  transport: { at: "shipyard" }, warship: { at: "shipyard" }, shipOfTheLine: { at: "shipyard" },
+  cutter: { at: "shipyard" }, bombardShip: { at: "shipyard" }, fireShip: { at: "shipyard" }, carrier: { at: "shipyard" },
+} satisfies Partial<Record<UnitKind, ProductionRule>>;
+
+// A production edge identifies the race, unit and producer together. Unlock supply remains the
+// unit's tier (requiredSupplyCap), so sharing a unit never bypasses its existing technology bar.
+export const RACE_TECH_RULES = {
+  grove: { units: {
+    ...COMMON_PRODUCTION,
+    footman: { at: "barracks" }, lancer: { at: "barracks" }, archer: { at: "archeryRange" },
+    horseArcher: { at: "stables" }, raider: { at: "stables" }, knight: { at: "stables" },
+    priest: { at: "sanctum" }, summoner: { at: "sanctum" }, witch: { at: "sanctum" },
+    golem: { at: "workshop" }, ballista: { at: "workshop" },
+  } },
+  ember: { units: {
+    ...COMMON_PRODUCTION,
+    ashWarden: { at: "emberForge" }, emberRavager: { at: "emberForge" }, cinderRunner: { at: "emberForge" },
+    sparkArcher: { at: "cinderSpire" }, priest: { at: "cinderSpire" }, ashHexer: { at: "cinderSpire" }, summoner: { at: "cinderSpire" },
+    ashChieftain: { at: "ashenHall" }, cinderRevenant: { at: "ashenHall" },
+    siegeRam: { at: "workshop" }, catapult: { at: "workshop" }, organGun: { at: "workshop" },
+  } },
+} satisfies Record<RaceId, { units: Partial<Record<UnitKind, ProductionRule>> }>;
+
+const PRODUCTION: Record<RaceId, Partial<Record<UnitKind, ProductionRule>>> = {
+  grove: RACE_TECH_RULES.grove.units, ember: RACE_TECH_RULES.ember.units,
+};
+
+export function trainingBuildingFor(race: RaceId, kind: UnitKind): BuildingKind | undefined {
+  return PRODUCTION[race][kind]?.at;
+}
+
+export function canTrainAt(race: RaceId, building: BuildingKind, kind: UnitKind): boolean {
+  return trainingBuildingFor(race, kind) === building;
+}
+
+export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter(kind =>
+  canTrainForAnyRace(kind),
+) as TrainableUnitKind[];
+
+function canTrainForAnyRace(kind: UnitKind): boolean {
+  return Object.values(PRODUCTION).some(units => units[kind] !== undefined);
+}
+
+const TRAINING_BY_RACE = Object.fromEntries(
+  Object.keys(PRODUCTION).map(race => [race, Object.fromEntries(
+    BUILDABLE_BUILDING_KINDS.map(building => [building,
+      Object.freeze(TRAINABLE_UNIT_KINDS.filter(kind => canTrainAt(race as RaceId, building, kind))),
+    ]),
+  )]),
+) as Record<RaceId, Record<BuildingKind, readonly TrainableUnitKind[]>>;
+
+export function trainableUnitsAt(race: RaceId, building: BuildingKind): readonly TrainableUnitKind[] {
+  return TRAINING_BY_RACE[race][building];
+}
+
+
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = Object.fromEntries(
-  BUILDABLE_BUILDING_KINDS.map((kind) => [kind, { ...BUILDING_RULES[kind], trains: TRAINABLE_UNIT_KINDS.filter((unit) => UNIT_DEFS[unit].trainedAt === kind) }]),
+  BUILDABLE_BUILDING_KINDS.map((kind) => [kind, { ...BUILDING_RULES[kind], trains: TRAINABLE_UNIT_KINDS.filter(unit => Object.values(PRODUCTION).some(units => units[unit]?.at === kind)) }]),
 ) as Record<BuildingKind, BuildingDef>;
 
 const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "worker");
@@ -390,9 +455,8 @@ const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "wo
 // or trained after: about 3,500 gold of units for an army that keeps fighting, 2-5 times what stands at that moment. The
 // prices return about 1.8 times their gold on that reach, as weapons I and II already did for light units.
 
-export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
+const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds">> = {
   weaponTraining: {
-    researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
@@ -401,7 +465,6 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   reinforcedPlating: {
-    researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
@@ -410,7 +473,6 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   buildingDurability: {
-    researchBuildingKinds: ["townHall"],
     affectedUnitKinds: [],
     levels: [
       { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
@@ -419,7 +481,6 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
   // A tenth faster a level: at a quarter a level (1.25, 1.38, 1.5) a footman at the third outran a raider untrained (4.5
   // against 82), and the riders' speed was theirs no more.
   speedTraining: {
-    researchBuildingKinds: ["stables", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 185, researchTime: seconds(46), speedMultiplier: 1.1 },
@@ -428,7 +489,6 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   rangeTraining: {
-    researchBuildingKinds: ["workshop", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 195, researchTime: seconds(48), attackRangeMultiplier: 1.15 },
@@ -437,7 +497,6 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   leadership: {
-    researchBuildingKinds: ["sanctum", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     // @@@leadership-by-stars - A second and a third star are worth more than the first. One star regenerates 1, 2 and 3
     // health a second by the research's level, as it always did; two stars 3, 5 and 7; three stars 6, 9 and 12. A single
@@ -453,6 +512,19 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
 };
 
 export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability", "speedTraining", "rangeTraining", "leadership"];
+// Building rules are the single source for where a technology can be researched.
+export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = Object.fromEntries(
+  UPGRADE_KINDS.map(kind => [kind, {
+    ...UPGRADE_RULES[kind],
+    researchBuildingKinds: BUILDABLE_BUILDING_KINDS.filter(building => BUILDING_DEFS[building].researches.includes(kind)),
+  }]),
+) as Record<UpgradeKind, UpgradeDef>;
+
+export function canResearchAt(race: RaceId, building: BuildingKind, upgrade: UpgradeKind): boolean {
+  const rules = BUILDING_DEFS[building];
+  return (rules.race === undefined || rules.race === race) && rules.researches.includes(upgrade);
+}
+
 export const MAX_UPGRADE_LEVEL = 3;
 export function maxUpgradeLevel(upgradeKind: UpgradeKind) {
   return UPGRADE_DEFS[upgradeKind].levels.length;
@@ -475,9 +547,9 @@ function raceDef(id: RaceId, name: string, note: string): RaceDef {
     id,
     name,
     note,
-    trainableUnits: TRAINABLE_UNIT_KINDS.filter((kind) => owns(UNIT_DEFS[kind].race)),
+    trainableUnits: TRAINABLE_UNIT_KINDS.filter(kind => trainingBuildingFor(id, kind) !== undefined),
     buildableBuildings: BUILDABLE_BUILDING_KINDS.filter((kind) => owns(BUILDING_DEFS[kind].race)),
-    upgrades: UPGRADE_KINDS,
+    upgrades: UPGRADE_KINDS.filter(upgrade => BUILDABLE_BUILDING_KINDS.some(building => canResearchAt(id, building, upgrade))),
   };
 }
 

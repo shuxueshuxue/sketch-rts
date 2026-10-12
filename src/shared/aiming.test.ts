@@ -1,7 +1,7 @@
 import { SIM_TICKS_PER_SECOND } from "./time";
 import { describe, expect, it } from "vitest";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot } from "./aiming";
-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "./catalog";
+import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, trainingBuildingFor } from "./catalog";
 import { isGameCommand } from "./command-schema";
 import { createUnit } from "./map";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from "./sim";
@@ -31,12 +31,12 @@ describe("reticle aiming", () => {
     expect(aimingProfile(UNIT_DEFS.horseArcher)!.speed).toBeGreaterThan(aimingProfile(UNIT_DEFS.ballista)!.speed);
   });
 
-  it("restores fifteen percent shooter health without raising caster health", () => {
-    for (const [kind, oldHp] of [["archer", 72], ["sparkArcher", 65], ["horseArcher", 95], ["contractArcher", 81], ["thornSlinger", 72], ["murlocHunter", 85]] as const) {
+  it("retains shooter health, adjusted Spark durability and shared priest health", () => {
+    for (const [kind, oldHp] of [["archer", 72], ["horseArcher", 95], ["contractArcher", 81], ["thornSlinger", 72], ["murlocHunter", 85]] as const) {
       expect(UNIT_DEFS[kind].hp).toBe(Math.round(oldHp * 1.15));
     }
+    expect(UNIT_DEFS.sparkArcher.hp).toBe(85);
     expect(UNIT_DEFS.priest.hp).toBe(90);
-    expect(UNIT_DEFS.emberAcolyte.hp).toBe(78);
   });
   it("spends distance / reticle speed before the first shot, then keeps stationary firing cadence", () => {
     const game = battle(), unit = game.units[0]!;
@@ -242,7 +242,7 @@ describe("faction roster roles", () => {
     expect(BUILDING_DEFS.stables.trains).toContain("horseArcher");
   });
   it("separates engineering rosters, with one extra workshop choice for Ember", () => {
-    const workshop = (race: "grove" | "ember") => RACE_DEFS[race].trainableUnits.filter(kind => UNIT_DEFS[kind].trainedAt === "workshop").sort();
+    const workshop = (race: "grove" | "ember") => RACE_DEFS[race].trainableUnits.filter(kind => trainingBuildingFor(race, kind) === "workshop").sort();
     expect(workshop("grove")).toEqual(["ballista", "golem"]);
     expect(workshop("ember")).toEqual(["catapult", "organGun", "siegeRam"]);
   });

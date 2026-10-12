@@ -1,5 +1,11 @@
-import { createGame, restoreSnapshotIntoGame, type Game } from "./sim";
+import { RULES_VERSION, savedRulesVersion } from "./rules-version";
+import { canonicalizeSavedUnits, assertCanonicalSavedKinds } from "./unit-save-migration";
+import { createGame, refreshUnitStats, restoreSnapshotIntoGame, snapshotGame, type Game } from "./sim";
+import { upgradeSavedCombat } from "./combat-save-upgrade";
+import { rollVeteranSkillChoices, veteranSkillFitsUnitClass, VETERAN_COMMON_SKILL_IDS, VETERAN_SPECIALIST_SKILLS, type VeteranSkillId } from "./veteran-skills";
+import { unitClassOf } from "./unit-targeting";
 import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
+import { weaponRules } from "./equipment";
 import { UPGRADE_KINDS } from "./catalog";
 import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
 
@@ -7,6 +13,8 @@ export const SAVEGAME_SCHEMA_VERSION = 1;
 
 export type SaveGameRecord = {
   schemaVersion: typeof SAVEGAME_SCHEMA_VERSION;
+  /** Absent only on pre-versioned historical saves. */
+  rulesVersion?: number;
   id: string;
   label?: string;
   createdAt: string;
@@ -51,11 +59,12 @@ export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGam
   if (room.status !== "inMatch") throw new Error("Only live room matches can be saved");
   return {
     schemaVersion: SAVEGAME_SCHEMA_VERSION,
+    rulesVersion: RULES_VERSION,
     id: input.id,
     ...(input.label ? { label: input.label } : {}),
     createdAt: now.toISOString(),
     room: clone(room),
-    snapshot: clone(game),
+    snapshot: clone(snapshotGame(game)),
     runtime: {
       nextId: game.nextId,
       activePlayers: [...game.activePlayers],
@@ -79,12 +88,82 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
     ...(save.runtime.aiVersions ? { aiVersions: save.runtime.aiVersions } : {}),
   };
   const game = createGame(save.snapshot.map.id, options);
-  restoreSnapshotIntoGame(game, { ...save.snapshot, teams: save.runtime.teams, players: normalizeSavedPlayers(save.snapshot.players) }, save.runtime.nextId);
+  const olderCombatRules = (save.runtime.checksumVersion ?? 1) < 8;
+  const migration = savedRulesVersion(save.rulesVersion) < RULES_VERSION ? canonicalizeSavedUnits(save.snapshot) : undefined;
+  const canonical = migration?.snapshot ?? save.snapshot;
+  assertCanonicalSavedKinds(canonical);
+  const snapshot = olderCombatRules ? upgradeSavedCombat(canonical) : canonical;
+  restoreSnapshotIntoGame(game, { ...snapshot, teams: save.runtime.teams, players: normalizeSavedPlayers(snapshot.players) }, save.runtime.nextId);
   game.activePlayers = [...save.runtime.activePlayers];
+  // Canonical stats may differ; keep the exact living/dead HP, capped by the
+  // new maximum. No percentage heal, cooldown reset, or veteran-choice reroll.
+  if (migration) {
+    const refresh = (unit: Game["units"][number]) => {
+      if (migration.changedUnitIds.has(unit.id)) {
+        const hp = unit.hp;
+        if (unit.owner === "neutral" && !unit.variant) {
+          const rules = weaponRules(game, unit);
+          unit.maxHp = rules.hp;
+          unit.speed = rules.speed;
+          unit.radius = unit.bodyRadius = rules.radius;
+          unit.attackDamage = rules.attackDamage;
+          unit.attackRange = rules.attackRange;
+          unit.attackCooldown = rules.attackCooldown;
+        }
+        refreshUnitStats(game, unit);
+        unit.hp = Math.min(hp, unit.maxHp);
+      }
+      unit.cargo?.forEach(refresh);
+    };
+    game.units.forEach(refresh);
+  }
+  if (olderCombatRules) {
+    for (const unit of game.units) {
+      if (unit.owner === "neutral" || unit.level <= 0 || unit.hp <= 0 || (unit.variant && game.variants?.[unit.variant]?.heroic)) continue;
+      const hp = unit.hp;
+      refreshUnitStats(game, unit);
+      unit.hp = Math.min(hp, unit.maxHp);
+      if (unit.level >= 3 && unit.expiresTick === undefined && !unit.veteranSkillChoices) {
+        unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game));
+      }
+    }
+  }
+  if ((save.runtime.checksumVersion ?? 1) < 9) upgradeUnitClassSkillChoices(game);
+  // Earlier cruise references lack planned turn curvature and firing attitudes.
+  // Keep the physical
+  // pose, momentum and order, and build a fresh route on the next tick.
+  if ((save.runtime.checksumVersion ?? 1) < 13) for (const unit of game.units) if (unit.sailing) {
+    delete unit.sailing.route; delete unit.sailing.yawRate; delete unit.sailing.pursuit;
+  }
   return game;
 }
 
+/** Preserve old choices except personal skills that can no longer affect the learner. */
+function upgradeUnitClassSkillChoices(game: Game): void {
+  for (const unit of game.units) {
+    const unitClass = unitClassOf(unit, game);
+    const eligible = (skill: VeteranSkillId) => veteranSkillFitsUnitClass(skill, unitClass);
+    const lostSkill = unit.veteranSkill && !eligible(unit.veteranSkill);
+    if (lostSkill) delete unit.veteranSkill;
+    if (lostSkill && !unit.veteranSkillChoices) {
+      unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClass);
+    }
+    const choices = unit.veteranSkillChoices;
+    if (!choices?.some(skill => !eligible(skill))) continue;
+    const retained = new Set(choices.filter(eligible));
+    const replacements = [...(VETERAN_SPECIALIST_SKILLS[unit.kind] ?? []), ...VETERAN_COMMON_SKILL_IDS]
+      .filter(skill => eligible(skill) && !retained.has(skill));
+    unit.veteranSkillChoices = choices.map(skill => {
+      if (eligible(skill)) return skill;
+      const replacement = replacements.shift();
+      if (!replacement) throw new Error(`No valid veteran replacement for ${unit.kind}`);
+      return replacement;
+    });
+  }
+}
+
 export function assertSaveGame(save: SaveGameRecord) {
+  savedRulesVersion(save.rulesVersion);
   if (save.schemaVersion !== SAVEGAME_SCHEMA_VERSION) throw new Error(`Unsupported savegame schema ${save.schemaVersion}`);
   if (save.room.status !== "inMatch") throw new Error("Savegame does not contain a live match");
   if (save.snapshot.map.id !== save.room.mapId) throw new Error("Savegame room/map mismatch");

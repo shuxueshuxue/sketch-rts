@@ -16,22 +16,29 @@ import {isWalkable,sameGround} from './terrain';
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 // 10-08: main mines preserve a 288-unit haul after hall snapping; new halls require 280 units.
 // Island and hill mine sites now leave room for that ordinary construction rule.
+// 10-09: eleven naval layouts gain larger bounds, broader channels and more ocean
+// between islands for the enlarged fleet. Their authored economics keep the same mine counts.
+// Mineral isles and expansion clearings now include complete hauling foundations
+// and worker access around all four walls; named map bounds and mine counts stay fixed.
+// 10-09 follow-up: minimum hall distance 210 and all snapped initial hauling lanes
+// exactly 216; the shorter mineral offset also updates protected terrain around mains.
+// Prepared mineral courtyards stay dry in mire layouts; reedwater retains mud outside them.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'588e067235aba4c3',
-  grandEstuary:'b7df7106eb1ec398',
-  brokenSea: "4905eb4f1d15b68d",
-  templeSpring: "b700123d0a5893a4",
-  turtleLake: "b56718014121ee4e",
-  elderwood: "3cac543bddf4e1c9",
-  ringwater: "17705d6a48173c4e",
-  loneMarket: "470216b8afeb6d81",
-  reedwater: "b060dd837b1b70b3",
-  veiledHill: "9081c1158081f81d",
-  greystonePass: "7586e9b861260ff7",
-  pineshade: "304b90ad639a507c",
-  gullIsland: "e87c67ce4616a399",
-  stillwater: "7c4aa16203706976",
-  twoShores: "a8c696fbba006d1c",
+  sapphireArchipelago:'b6703a780998228c',
+  grandEstuary:'f61173bfe2528d83',
+  brokenSea: "ccf2b2d83de2b3e1",
+  templeSpring: "573bc1e6dd39e87f",
+  turtleLake: "57468c4991eaf724",
+  elderwood: "2421b993970b6212",
+  ringwater: "8ea4e0320581a02b",
+  loneMarket: "ba20d16b14e5104b",
+  reedwater: "2a97d95f469f461e",
+  veiledHill: "b2c80d16362a59cc",
+  greystonePass: "f9a7a649d1d05728",
+  pineshade: "502472ad7ac76b35",
+  gullIsland: "2be7184ae9b2ba29",
+  stillwater: "e67ba5ef77911369",
+  twoShores: "db5e5da96cbefa5a",
 };
 
 const host = { id: "host", name: "Host" };

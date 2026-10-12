@@ -44,13 +44,13 @@ describe("room model", () => {
     expect(setup.options.teams).toEqual({ player: "team-1", enemy: "team-1", "player-4": "team-2" });
   });
 
-  it("starts each AI slot with the computer player chosen for it, V5 when none is", () => {
+  it("starts each AI slot with the computer player chosen for it, V9 archer when none is", () => {
     let room = createRoom({ id: "room-ai-versions", host, slotCount: 4 });
-    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "team-2", race: "grove", aiVersion: "v8" });
-    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "team-2", race: "ember", aiVersion: "v7" });
+    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "team-2", race: "grove", aiVersion: "v9_knight" });
+    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "team-2", race: "ember", aiVersion: "v9_summoner" });
     // A room from before random seats: a computer seat with no computer player set.
     room = { ...room, slots: room.slots.map((slot) => (slot.id === "slot-4" ? { id: slot.id, playerId: slot.playerId, controller: "ai" as const, name: "AI", team: "team-2", race: "grove" as const, ready: true } : slot)) };
-    expect(roomToGameSetup(room).options.aiVersions).toEqual({ enemy: "v8", enemy2: "v7", "player-4": "v5" });
+    expect(roomToGameSetup(room).options.aiVersions).toEqual({ enemy: "v9_knight", enemy2: "v9_summoner", "player-4": "v9_archer" });
   });
 
   it("draws a random seat's race, then a computer player that plays it, the same at every start and in the result", () => {
@@ -80,18 +80,18 @@ describe("room model", () => {
 
   it("locks a computer seat on a random race to a random computer player, and refuses one that does not play its race", () => {
     let room = createRoom({ id: "room-ai-race", host, slotCount: 2 });
-    room = updateRoomSlot(room, "slot-2", { race: "random", aiVersion: "v8" });
+    room = updateRoomSlot(room, "slot-2", { race: "random", aiVersion: "v9_knight" });
     expect(room.slots[1]!.aiVersion).toBe("random");
-    room = updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v8" });
-    expect(room.slots[1]!.aiVersion).toBe("v8");
+    room = updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v9_knight" });
+    expect(room.slots[1]!.aiVersion).toBe("v9_knight");
 
-    const declared = ROOM_AI_RACES.v5;
-    (ROOM_AI_RACES as Record<string, readonly string[]>).v5 = ["grove"];
+    const declared = ROOM_AI_RACES.v9_archer;
+    (ROOM_AI_RACES as Record<string, readonly string[]>).v9_archer = ["grove"];
     try {
-      expect(roomAiVersionsFor("ember")).not.toContain("v5");
-      expect(() => updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v5" })).toThrow("v5 does not play ember");
+      expect(roomAiVersionsFor("ember")).not.toContain("v9_archer");
+      expect(() => updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v9_archer" })).toThrow("v9_archer does not play ember");
     } finally {
-      (ROOM_AI_RACES as Record<string, readonly string[]>).v5 = declared;
+      (ROOM_AI_RACES as Record<string, readonly string[]>).v9_archer = declared;
     }
   });
 
@@ -217,7 +217,7 @@ describe("room model", () => {
     expect(setup.playerSlots.filter((slot) => slot.controller === "ai")).toHaveLength(15);
     expect(setup.options.players).toHaveLength(30);
     expect(setup.options.aiPlayers).toHaveLength(15);
-    expect(setup.options.aiVersions?.["ai-1"]).toBe("v5");
+    expect(setup.options.aiVersions?.["ai-1"]).toBe("v9_archer");
     expect(setup.options.players?.slice(0, 3)).toEqual(["human-1", "human-2", "human-3"]);
     expect(setup.options.aiPlayers?.slice(0, 3)).toEqual(["ai-1", "ai-2", "ai-3"]);
   });

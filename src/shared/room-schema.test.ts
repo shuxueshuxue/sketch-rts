@@ -1,3 +1,4 @@
+import { ITEM_DEFS } from "./equipment";
 import { describe, expect, it } from "vitest";
 import {
   assertCreateRoomInput,
@@ -35,7 +36,8 @@ describe("shared room setup schema", () => {
       ready: false,
     });
     expect(parseSlotPatch({ controller: "bot" })).toBeUndefined();
-    expect(parseSlotPatch({ aiVersion: "v8" })).toEqual({ aiVersion: "v8" });
+    expect(parseSlotPatch({ aiVersion: "v9_knight" })).toEqual({ aiVersion: "v9_knight" });
+    for (const aiVersion of ["v5", "v7", "v8"]) expect(parseSlotPatch({ aiVersion })).toBeUndefined();
     expect(parseSlotPatch({ aiVersion: "v6" })).toBeUndefined();
     expect(parseSlotCountsRequest({ humanCount: 2, aiCount: 3 })).toEqual({ humanCount: 2, aiCount: 3 });
     expect(parseSlotCountsRequest({ humanCount: 0, aiCount: 3 })).toBeUndefined();
@@ -84,12 +86,21 @@ it('validates portable seat settings and strips live identities before creation'
   const input = { id: 'shared', host: { id: 'host', name: 'Host' }, humanCount: 1, aiCount: 1, layoutSeed: 'world',
     seatSetup: [
       { controller: 'human', team: 'ffa', race: 'grove', userId: 'somebody', ready: false },
-      { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v8', userId: 'injected' },
+      { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v9_knight', userId: 'injected' },
     ] };
   const room = assertCreateRoomInput(input);
   expect(room.layoutSeed).toBe('world');
-  expect(room.seatSetup).toEqual([{ controller: 'human', team: 'ffa', race: 'grove' }, { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v8' }]);
+  expect(room.seatSetup).toEqual([{ controller: 'human', team: 'ffa', race: 'grove' }, { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v9_knight' }]);
   for (const patch of [{ layoutSeed: '' }, { seatSetup: input.seatSetup.slice(0, 1) }, { humanCount: 2, aiCount: 0 }, { seatSetup: [{ ...input.seatSetup[0], controller: 'ai' }, input.seatSetup[1]] }]) {
     expect(() => assertCreateRoomInput({ ...input, ...patch })).toThrow('Malformed room create input');
   }
+});
+
+// SDK scenarios must accept the same equipment catalogue as shops and live play.
+it("accepts every current item seed and rejects unknown item names", () => {
+  for (const kind of Object.keys(ITEM_DEFS)) {
+    const request = { mapId: "bareDuel", options: { scenario: { addItems: [{ id: `seed-${kind}`, kind, x: 1200, y: 960, carrierId: "soldier", cooldownRemaining: 0 }] } } };
+    expect(parseResetRoomRequest(request), kind).toEqual(request);
+  }
+  expect(parseResetRoomRequest({ mapId: "bareDuel", options: { scenario: { addItems: [{ id: "bad", kind: "unknownItem", x: 0, y: 0, cooldownRemaining: 0 }] } } })).toBeUndefined();
 });

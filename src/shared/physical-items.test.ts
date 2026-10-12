@@ -10,6 +10,19 @@ import { dropItemCommand } from '../client/item-controls';
 import type { WorldItem } from './types';
 function scene(){const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;game.map.width=1600;game.map.height=1600;game.map.terrain={cell:40,cols:40,rows:40,cells:Array.from({length:1600},(_,i)=>i%40<8?'.':i%40===8?',':'~').join('')};return game;}
 describe('supported items and physical deck interaction',()=>{
+  it('handles newly dropped land and water items after an empty actual simulation frame',()=>{
+    const game=scene(),items=game.items;
+    stepGame(game);
+    expect(game.items).toBe(items);
+    expect(game.items).toEqual([]);
+    items.push({id:'new-land',kind:'shipCannon',x:100,y:100,cooldownRemaining:0},
+      {id:'new-water',kind:'shipCannon',x:1000,y:1000,cooldownRemaining:0});
+    stepGame(game);
+    expect(game.items).toBe(items);
+    expect(game.items.map(item=>item.id)).toEqual(['new-land']);
+    stepGame(game);
+    expect(game.items.map(item=>item.id)).toEqual(['new-land']);
+  });
   it('destroys loose equipment in shallow and deep water, keeps land loot and moving deck objects',()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',700,700);
     const item=(id:string,x:number,y:number):WorldItem=>({id,kind:'shipCannon',x,y,cooldownRemaining:0});

@@ -1,0 +1,397 @@
+import { describe, expect, it } from 'vitest';
+import { createUnit } from './map';
+import { strikeGap } from './combat-geometry';
+import { hullContact, hullGap, shipProfile } from './ship-geometry';
+import { polygonRadius } from './navigation-math';
+import { boardUnit, deckPlacement, syncDecks } from './decks';
+import { interceptTime, shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
+import { checksumGame } from './sim/checksum';
+import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from './sim';
+import type { Unit } from './types';
+import { shipPartMax } from './ship-handling';
+import { STAND_SPEED } from './push';
+
+function pair() {
+  const ship = createUnit('pursuer', 'player', 'warship', 500, 700);
+  const target = createUnit('quarry', 'enemy', 'transport', 1000, 700);
+  ship.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+  target.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+  const units = [ship, target];
+  const place = (gap: number) => { target.x += gap - strikeGap(ship, target); };
+  return { ship, target, units, place };
+}
+
+function scene() {
+  const game = createGame('bareDuel', { aiPlayers: [] });
+  game.units = []; game.buildings = []; game.items = []; game.resources = []; game.scriptedVictory = true;
+  game.map.width = 2400; game.map.height = 2000;
+  game.map.terrain = { cell: 40, cols: 60, rows: 50, cells: '~'.repeat(3000) };
+  game.map.wind = { direction: Math.PI / 2, speed: 80 };
+  return game;
+}
+
+function maneuverPair() {
+  const { ship, target } = pair();
+  target.x = 2000;
+  ship.sailing!.speed = 60;
+  ship.order = { type: 'attack', targetId: target.id };
+  const peer = createUnit('turning-peer', 'player', 'warship', 800, 700);
+  peer.shipParts = { ...shipPartMax(peer) };
+  peer.order = { type: 'attack', targetId: target.id };
+  peer.sailing = { heading: 0, speed: 0, velocityX: 0, velocityY: 0, load: 0, balance: 0,
+    pursuit: { targetId: target.id, phase: 'approach', moving: false },
+    route: { goalX: 800, goalY: 1300, targetId: target.id, intent: 'pursuit', cruise: false,
+      startX: 800, startY: 700, startHeading: 0, age: 20, end: { x: 800, y: 1300 }, points: [
+        { x: 800, y: 700, heading: Math.PI / 2, exact: true },
+        { x: 800, y: 707, heading: Math.PI / 2, curvature: 0 },
+        { x: 800, y: 900, heading: Math.PI / 2, curvature: 0 },
+        { x: 800, y: 1300, heading: Math.PI / 2, curvature: 0 },
+      ] } };
+  return { ship, target, peer, units: [ship, peer, target] };
+}
+
+describe('ship tactical pursuit', () => {
+  it('keeps a walking land target at its firing station while a walking deck target follows the carrying hull', () => {
+    const { ship, target, units } = pair();
+    const walker=createUnit('walker','enemy','footman',800,700);
+    walker.order={type:'move',x:1600,y:700};units.push(walker);
+    expect(shipPursuitGoal(ship,walker,units,312,0,false,()=>true)).toBeUndefined();
+    expect(ship.sailing!.pursuit).toMatchObject({targetId:walker.id,moving:false,phase:'engage'});
+    boardUnit(target,walker,units);target.order={type:'move',x:1800,y:700};
+    walker.order={type:'move',x:walker.x+50,y:walker.y};
+    target.sailing!.velocityX=20;
+    expect(shipPursuitGoal(ship,walker,units,312,0,false,()=>true)!.targetId).toBe(target.id);
+    expect(ship.sailing!.pursuit).toMatchObject({targetId:target.id,moving:true});
+  });
+  it('validates an existing usable station without consuming or cancelling a pending navigation request', () => {
+    const { ship, target, units } = pair(); target.x = 2000;
+    const station = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    ship.sailing!.route = { goalX: station.x, goalY: station.y, intent: 'pursuit', targetId: target.id,
+      points: [{ ...station, heading: 0 }], end: { ...station }, cruise: true };
+    ship.sailing!.planningRequestedAtTick = 17;
+    ship.sailing!.planningLastRequestedAtTick = 99;
+    let requests = 0, stationChecks = 0, armed = true;
+    const calculate = (fleet: Unit[]) => shipPursuitGoal(fleet[0]!, fleet[1]!, fleet, 312, 0, false,
+      () => false, undefined, undefined, 0, () => { stationChecks++; return armed; }, () => { requests++; return false; });
+    expect(calculate(units)).toMatchObject({ x: station.x, y: station.y });
+    expect(requests).toBe(0); expect(stationChecks).toBe(1);
+    expect(ship.sailing).toMatchObject({ planningRequestedAtTick: 17, planningLastRequestedAtTick: 99 });
+    expect(calculate(JSON.parse(JSON.stringify(units)))).toEqual(calculate(units));
+    expect(requests).toBe(0);
+    // A newly unusable gun lane does require a replacement search. While
+    // denied, retain the saved controls and let normal live steering wait.
+    armed = false;
+    Object.assign(ship.sailing!.route!, { arrivalRadius: 18, targetSpeed: 12, fireHeading: .2, retreat: true });
+    expect(calculate(units)).toMatchObject({ x: station.x, y: station.y,
+      arrivalRadius: 18, targetSpeed: 12, fireHeading: .2, retreat: true });
+    expect(requests).toBe(1);
+    expect(ship.sailing).toMatchObject({ planningRequestedAtTick: 17, planningLastRequestedAtTick: 99 });
+  });
+
+  it('keeps a saved firing station and live headway while its replacement search waits, including JSON restoration', () => {
+    const { ship, target, peer, units } = maneuverPair();
+    ship.sailing!.route = { goalX: 1740, goalY: 720, intent: 'pursuit', targetId: target.id,
+      points: [{ x: 1740, y: 720, heading: 0 }], end: { x: 1740, y: 720 }, cruise: true };
+    let stationChecks = 0, searchRequests = 0;
+    const calculate = (fleet: Unit[]) => shipPursuitGoal(fleet[0]!, fleet[2]!, fleet, 312, 0, false,
+      () => false, undefined, undefined, 0, () => { stationChecks++; return false; }, () => { searchRequests++; return false; });
+    const waiting = calculate(units)!;
+    expect(stationChecks).toBe(1); expect(searchRequests).toBe(1);
+    expect(waiting.x).toBe(1740); expect(waiting.y).toBe(720);
+    expect(waiting.targetSpeed).toBeLessThan(ship.sailing!.speed);
+    expect(calculate(JSON.parse(JSON.stringify(units)))).toEqual(waiting);
+    peer.y += 300;
+    expect(calculate(units)!.targetSpeed).toBeUndefined();
+    Object.assign(ship.sailing!.route!, { arrivalRadius: 18, targetSpeed: 12, fireHeading: .2, retreat: true });
+    expect(calculate(units)).toMatchObject({ arrivalRadius: 18, targetSpeed: 12, fireHeading: .2, retreat: true });
+    delete ship.sailing!.route;
+    expect(calculate(units)).toBeUndefined();
+    expect(stationChecks).toBe(4); expect(searchRequests).toBe(5);
+  });
+
+  it('never retains a different quarry’s station when admission waits, or budgets a moving intercept', () => {
+    const { ship, target, units } = pair();
+    ship.sailing!.route = { goalX: 800, goalY: 700, intent: 'pursuit', targetId: 'previous-quarry',
+      points: [{ x: 800, y: 700, heading: 0 }], end: { x: 800, y: 700 } };
+    let requests = 0;
+    const calculate = () => shipPursuitGoal(ship, target, units, 312, 0, false, () => false,
+      undefined, undefined, 0, () => true, () => { requests++; return false; });
+    expect(calculate()).toBeUndefined();
+    expect(requests).toBe(1);
+    target.order = { type: 'move', x: 2000, y: 700 };
+    target.sailing!.velocityX = 20;
+    const moving = calculate()!;
+    expect(moving.targetId).toBe(target.id);
+    expect(moving.x).toBeGreaterThan(ship.x);
+    expect(requests).toBe(1);
+  });
+
+  it('brakes before a friendly battery’s turn without replacing its firing station, including JSON restoration', () => {
+    const { ship, target, peer, units } = maneuverPair();
+    peer.sailing!.route!.age = 160;
+    const station = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    peer.sailing!.route!.age = 20;
+    const yielding = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(yielding.x).toBe(station.x); expect(yielding.y).toBe(station.y);
+    expect(yielding.targetSpeed).toBeGreaterThan(0);
+    expect(yielding.targetSpeed).toBeLessThan(ship.sailing!.speed);
+    // The short next sample alone is insufficient; the farther planned leg
+    // shows that the front battery actually intends to leave the lane.
+    const restored: Unit[] = JSON.parse(JSON.stringify(units));
+    expect(shipPursuitGoal(restored[0]!, restored[2]!, restored, 312, 0, false, () => false)).toEqual(yielding);
+    ship.x = 550;
+    expect(shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!.targetSpeed).toBe(0);
+  });
+
+  it('keeps departure room through slow turn exit and releases it when the peer clears the lane', () => {
+    const { ship, target, peer, units } = maneuverPair();
+    const route = peer.sailing!.route!;
+    route.points.shift(); route.cruise = true; route.age = 90;
+    peer.sailing!.heading = Math.PI / 2; peer.sailing!.velocityY = 8;
+    const departing = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(departing.targetSpeed).toBeLessThan(ship.sailing!.speed);
+    peer.y += 180;
+    expect(shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!.targetSpeed).toBeUndefined();
+  });
+
+  it('releases maneuver yielding for ended, disabled, unrelated or non-clearing friendly ships', () => {
+    const changes: ((peer: Unit, ship: Unit, target: Unit) => void)[] = [
+      peer => { peer.hp = 0; },
+      peer => { peer.owner = 'enemy'; },
+      peer => { peer.order = { type: 'move', x: peer.x, y: peer.y + 1000 }; },
+      peer => { peer.sailing!.pursuit!.targetId = 'other-target'; },
+      peer => { peer.sailing!.pursuit!.phase = 'engage'; },
+      peer => { peer.sailing!.route!.age = 160; },
+      peer => { peer.shipParts!.rigging = 0; },
+      peer => { peer.shipParts!.rudder = 0; },
+      peer => { peer.effects.push({ type: 'stun', remaining: 500 }); },
+      peer => { peer.effects.push({ type: 'root', remaining: 500 }); },
+      peer => { peer.pushX = STAND_SPEED + 1; },
+      peer => { peer.sailing!.route!.points.splice(2); },
+      peer => { for (const point of peer.sailing!.route!.points) { point.x += point.y - peer.y; point.y = peer.y; } },
+      peer => { peer.x = 200; },
+      peer => { peer.y += 300; },
+      (_peer, _ship, target) => { target.sailing!.velocityX = 10; },
+    ];
+    for (const change of changes) {
+      const { ship, target, peer, units } = maneuverPair();
+      change(peer, ship, target);
+      expect(shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!.targetSpeed).toBeUndefined();
+    }
+  });
+  it('closes on a crossing hull with a short-range weapon while reserving both complete outlines', () => {
+    const ship = createUnit('flame', 'player', 'fireShip', 2000, 2000), target = createUnit('crossing', 'enemy', 'transport', 2245, 2000);
+    ship.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+    target.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+    target.order = { type: 'move', x: target.x, y: target.y + 2000 };
+    const goal = shipPursuitGoal(ship, target, [ship, target], 144, 0, false, () => false)!;
+    expect(goal.x).toBeGreaterThan(ship.x); expect(goal.x).toBeLessThan(target.x);
+    const station = { ...ship, x: goal.x, y: goal.y };
+    expect(hullContact(station, target)).toBeUndefined(); expect(hullGap(station, target)).toBeGreaterThanOrEqual(12 - 1e-6);
+    target.sailing.heading = 0;
+    const aligned = shipPursuitGoal(ship, target, [ship, target], 144, 0, false, () => false)!;
+    expect(aligned.x).toBeLessThan(goal.x);
+    const alignedStation = { ...ship, x: aligned.x, y: aligned.y };
+    expect(hullContact(alignedStation, target)).toBeUndefined(); expect(hullGap(alignedStation, target)).toBeGreaterThanOrEqual(12 - 1e-6);
+  });
+  it('keeps a useful stationary firing station while the approaching hull changes bearing', () => {
+    const { ship, target, units } = pair();
+    const first = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    ship.sailing!.route = { goalX: first.x, goalY: first.y, targetId: target.id, intent: 'pursuit',
+      points: [{ ...first, heading: 0 }], end: first };
+    ship.x -= 120; ship.y += 140;
+    const next = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(next.x).toBe(first.x); expect(next.y).toBe(first.y);
+    target.x += 3; target.y -= 2;
+    const shifted = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(shifted.x).toBe(first.x); expect(shifted.y).toBe(first.y);
+    const blocker = createUnit('blocker', 'player', 'warship', first.x, first.y);
+    units.push(blocker);
+    const clear = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(clear.x - first.x, clear.y - first.y)).toBeGreaterThan(100);
+  });
+
+  it('reserves distinct incoming fleet firing stations and releases them when an attack ends', () => {
+    const target = createUnit('target', 'enemy', 'carrier', 2000, 1600);
+    const fleet = Array.from({ length: 3 }, (_, index) => createUnit(`ship-${index}`, 'player', 'warship', 800, 1200 + index * 400));
+    const units = [...fleet, target];
+    for (const unit of units) unit.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+    const goals = fleet.map(ship => {
+      ship.order = { type: 'attack', targetId: target.id };
+      const goal = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+      ship.sailing!.route = { goalX: goal.x, goalY: goal.y, targetId: target.id, intent: 'pursuit',
+        points: [{ ...goal, heading: 0 }], end: goal };
+      return goal;
+    });
+    const clearance = polygonRadius(shipProfile(fleet[0]!)!.hull) * 2 + 8;
+    for (let i = 0; i < goals.length; i++) for (let j = i + 1; j < goals.length; j++) {
+      expect(Math.hypot(goals[i]!.x - goals[j]!.x, goals[i]!.y - goals[j]!.y)).toBeGreaterThanOrEqual(clearance);
+    }
+    fleet[0]!.order = { type: 'move', x: 1000, y: 2500 };
+    fleet[1]!.sailing!.route = undefined;
+    fleet[2]!.order = { type: 'hold', x: fleet[2]!.x, y: fleet[2]!.y };
+    const next = shipPursuitGoal(fleet[1]!, target, units, 312, 0, false, () => false)!;
+    // The nearest station on the center pursuer's bearing becomes available.
+    expect(next.y).toBe(target.y);
+    expect(next.x).toBeLessThan(target.x);
+  });
+
+  it('uses a stopped firing peer’s actual hull without reserving its abandoned approach goal', () => {
+    const { ship, target, units } = pair();
+    const nearest = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    const peer = createUnit('parked', 'player', 'warship', target.x, target.y + 600);
+    peer.order = { type: 'attack', targetId: target.id };
+    peer.sailing = { heading: 0, speed: 0, load: 0, balance: 0,
+      pursuit: { targetId: target.id, phase: 'approach', moving: false },
+      route: { goalX: nearest.x, goalY: nearest.y, targetId: target.id, intent: 'pursuit',
+        points: [{ ...nearest, heading: 0 }], end: nearest } };
+    units.push(peer);
+    const reserved = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(reserved.x - nearest.x, reserved.y - nearest.y)).toBeGreaterThan(200);
+    peer.sailing.pursuit!.phase = 'engage';
+    const available = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(available.x).toBe(nearest.x); expect(available.y).toBe(nearest.y);
+    // The same peer still blocks a real station occupied by its hull.
+    peer.x = nearest.x; peer.y = nearest.y;
+    const occupied = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(occupied.x - peer.x, occupied.y - peer.y)).toBeGreaterThan(200);
+  });
+
+  it('leads a crossing target and bounds predictions for an escaping faster ship', () => {
+    expect(interceptTime(100, 0, 0, 30, 50)).toBeCloseTo(2.5);
+    expect(interceptTime(100, 0, 70, 0, 50)).toBeGreaterThan(0);
+    expect(interceptTime(10000, 0, 70, 0, 50)).toBe(6);
+    expect(interceptTime(0, 0, 0, 0, 0)).toBe(0);
+    const { ship, target, units } = pair();
+    target.sailing!.velocityY = 40;
+    const goal = shipPursuitGoal(ship, target, units, 312)!;
+    expect(goal.y).toBeGreaterThan(target.y);
+    expect(goal.intent).toBe('pursuit');
+    expect(goal).not.toHaveProperty('heading');
+  });
+
+  it('keeps a fast quarry’s predicted firing station out of its present hull', () => {
+    const { ship, target, units } = pair();
+    target.sailing!.velocityX = 60;
+    const goal = shipPursuitGoal(ship, target, units, 312)!;
+    const station = { ...ship, ...goal, sailing: { ...ship.sailing!, heading: Math.atan2(goal.y - ship.y, goal.x - ship.x) } };
+    expect(hullContact(station, target)).toBeUndefined();
+    expect(goal.x).toBeGreaterThan(ship.x);
+    expect(goal.x).toBeLessThan(target.x);
+    expect(goal.targetId).toBe(target.id);
+  });
+
+  it('keeps the carrying hull as the navigation target when gunnery changes crew', () => {
+    const { ship, target, units } = pair();
+    const a = createUnit('crew-a', 'enemy', 'footman', target.x, target.y);
+    const b = createUnit('crew-b', 'enemy', 'archer', target.x, target.y);
+    units.push(a, b); boardUnit(target, a, units); boardUnit(target, b, units); syncDecks(units);
+    expect(shipNavigationTarget(a, units)).toBe(target);
+    const first = shipPursuitGoal(ship, a, units, 312)!;
+    target.sailing!.heading += .4; syncDecks(units);
+    const next = shipPursuitGoal(ship, b, units, 312)!;
+    expect(first.targetId).toBe(target.id); expect(next.targetId).toBe(target.id);
+    expect(ship.sailing!.pursuit!.targetId).toBe(target.id);
+  });
+
+  it('holds engagement across the firing boundary and resumes only outside its wider band', () => {
+    const { ship, target, units, place } = pair();
+    place(240); expect(shipPursuitGoal(ship, target, units, 312)).toBeUndefined();
+    expect(shipCanTurnForAttack(ship)).toBe(true);
+    for (const gap of [309, 316, 310, 318, 311]) {
+      place(gap); expect(shipPursuitGoal(ship, target, units, 312)).toBeUndefined();
+      expect(ship.sailing!.pursuit!.phase).toBe('engage');
+    }
+    place(340); expect(shipPursuitGoal(ship, target, units, 312)).toBeDefined();
+    expect(shipCanTurnForAttack(ship)).toBe(false);
+  });
+
+  it('keeps moving targets under navigation control inside weapon range', () => {
+    const { ship, target, units, place } = pair(); place(240);
+    target.sailing!.velocityX = 20;
+    let goal = shipPursuitGoal(ship, target, units, 312)!;
+    expect(ship.sailing!.pursuit!.phase).toBe('engage');
+    expect(goal.targetSpeed).toBeGreaterThan(0); expect(shipCanTurnForAttack(ship)).toBe(false);
+    target.sailing!.velocityX = 2;
+    goal = shipPursuitGoal(ship, target, units, 312)!;
+    expect(goal.targetSpeed).toBeGreaterThan(0);
+    target.sailing!.velocityX = 0; target.order = { type: 'move', x: 1800, y: 700 };
+    expect(shipPursuitGoal(ship, target, units, 312)).toBeDefined();
+    expect(shipCanTurnForAttack(ship)).toBe(false);
+    target.order = { type: 'idle' };
+    expect(shipPursuitGoal(ship, target, units, 312)).toBeUndefined();
+    expect(shipCanTurnForAttack(ship)).toBe(true);
+  });
+
+  it('brakes a stationary engagement before handing hull rotation to gunnery', () => {
+    const { ship, target, units, place } = pair(); place(240); ship.sailing!.speed = 30;
+    expect(shipPursuitGoal(ship, target, units, 312)!.targetSpeed).toBe(0);
+    expect(shipCanTurnForAttack(ship)).toBe(false);
+    ship.sailing!.speed = .5;
+    expect(shipPursuitGoal(ship, target, units, 312)).toBeUndefined();
+    expect(shipCanTurnForAttack(ship)).toBe(true);
+  });
+
+  it('keeps a stopped leader’s waiting station fixed when the follower changes bearing', () => {
+    const { ship, target, units } = pair(); target.sailing!.heading = Math.PI / 3;
+    const first = shipPursuitGoal(ship, target, units, 140, 0, true)!;
+    ship.x -= 100; ship.y += 200;
+    const next = shipPursuitGoal(ship, target, units, 140, 0, true)!;
+    expect(next.x).toBeCloseTo(first.x); expect(next.y).toBeCloseTo(first.y);
+    expect(next.targetId).toBe(target.id);
+  });
+
+  it('brakes beside a stopped leader in upwind conditions without circling its stand-off point', () => {
+    const game = scene(); game.map.wind = { direction: Math.PI, speed: 80 };
+    const ship = game.spawnUnit('player', 'warship', 940, 1120), target = game.spawnUnit('player', 'transport', 1200, 1000);
+    ship.sailing!.heading = -Math.PI / 2; ship.sailing!.speed = 40;
+    ship.sailing!.velocityY = -40; target.order = { type: 'hold', x: target.x, y: target.y };
+    issuePlayerCommand(game, 'player', { type: 'follow', unitIds: [ship.id], targetId: target.id });
+    for (let i = 0; i < 160; i++) stepGame(game);
+    expect(ship.order.type).toBe('follow'); expect(ship.sailing!.speed).toBe(0);
+    expect(ship.sailing!.pursuit).toMatchObject({ targetId: target.id, phase: 'engage', moving: false });
+    expect(Math.hypot(ship.x - target.x, ship.y - target.y)).toBeGreaterThan(220);
+    expect(Math.hypot(ship.x - target.x, ship.y - target.y)).toBeLessThan(310);
+    const stopped = { x: ship.x, y: ship.y };
+    for (let i = 0; i < 160; i++) stepGame(game);
+    expect(ship.x).toBe(stopped.x); expect(ship.y).toBe(stopped.y);
+  });
+
+  it('preserves pursuit state independently in snapshots and resumes the same simulation', () => {
+    const game = scene(), ship = game.spawnUnit('player', 'warship', 600, 700), target = game.spawnUnit('enemy', 'transport', 1200, 800);
+    target.order = { type: 'move', x: 1300, y: 1700, avoidCombat: true };
+    issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: target.id });
+    for (let i = 0; i < 40; i++) stepGame(game);
+    const snapshot = snapshotGame(game), saved = snapshot.units.find(unit => unit.id === ship.id)!.sailing!.pursuit!;
+    expect(saved.targetId).toBe(target.id); expect(saved).not.toBe(ship.sailing!.pursuit);
+    const restored = scene(); restoreSnapshotIntoGame(restored, snapshot, game.nextId);
+    expect(restored.units.find(unit => unit.id === ship.id)!.sailing!.pursuit).not.toBe(saved);
+    for (let i = 0; i < 100; i++) { stepGame(game); stepGame(restored); expect(checksumGame(restored)).toBe(checksumGame(game)); }
+    issuePlayerCommand(game, 'player', { type: 'move', unitIds: [ship.id], x: 1000, y: 1000 });
+    expect(ship.sailing!.pursuit).toBeUndefined();
+  });
+
+  for (const heading of [0, Math.PI / 2]) for (const sideOnly of [false, true]) {
+    it(`reaches a firing position for crew on the far deck (heading=${heading}, sideOnly=${sideOnly})`, () => {
+      const game = scene(); game.map.wind = { direction: 0, speed: 80 };
+      const ship = game.spawnUnit('player', 'warship', 800, 1000), target = game.spawnUnit('enemy', 'carrier', 1200, 1000);
+      const crew = game.spawnUnit('enemy', 'footman', target.x, target.y);
+      target.hp = target.maxHp = crew.hp = crew.maxHp = 100000;
+      boardUnit(target, crew, game.units);
+      const at = deckPlacement(target, crew, game.units, { x: 85, y: 25 })!;
+      crew.deck = { shipId: target.id, ...at }; syncDecks(game.units);
+      crew.order = { type: 'hold', x: crew.x, y: crew.y }; crew.cooldown = 99999;
+      target.order = { type: 'hold', x: target.x, y: target.y }; ship.sailing!.heading = heading;
+      game.items = game.items.filter(item => item.shipId !== target.id && (!sideOnly || item.shipId !== ship.id));
+      if (sideOnly) game.items.push({ id: 'side-gun', kind: 'shipCannon', shipId: ship.id, mountId: 'starboard0', durability: 90, x: ship.x, y: ship.y, cooldownRemaining: 0 });
+      issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: target.id });
+      let fired = false;
+      for (let i = 0; i < 600; i++) {
+        stepGame(game);
+        if (game.projectiles.some(projectile => projectile.attackerId === ship.id)) fired = true;
+      }
+      expect(ship.sailing!.pursuit!.targetId).toBe(target.id);
+      expect(fired).toBe(true);
+    });
+  }
+});

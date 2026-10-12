@@ -1,4 +1,5 @@
 import { isBuildPlacementClear } from "../shared/build-placement";
+import { GOLD_MINE_RULES } from "../shared/mining";
 import { snapshotGame } from "../shared/sim";
 import { describe, expect, it } from "vitest";
 import {
@@ -263,7 +264,9 @@ describe("interactive playtest SDK", () => {
     expect(order).toMatchObject({type:"build",buildingKind:"townHall"});
     if(order.type!=="build")throw new Error("missing expansion order");
     expect(isBuildPlacementClear(snapshotGame(session.game),"townHall",order)).toBe(true);
-    expect(Math.hypot(order.x-760,order.y-760)).toBeLessThan(260);
+    const mineDistance = Math.hypot(order.x - 760, order.y - 760);
+    expect(mineDistance).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
+    expect(mineDistance).toBeLessThan(GOLD_MINE_RULES.baseRange);
     expect(session.game.buildings).toHaveLength(2);
     stepInteractivePlaytestSession(session, 200);
     expect(session.game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main")).toMatchObject({

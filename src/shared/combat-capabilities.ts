@@ -3,10 +3,11 @@ import { installedWeapons, SHIP_WEAPONS } from "./ship-equipment";
 import { shipProfile } from "./ship-geometry";
 import { SIM_TICKS_PER_SECOND } from "./time";
 import type { Building, GameSnapshot, Unit } from "./types";
+import { veteranWeaponRange } from "./veteran-stats";
 /** Current working weapons, rather than a hull's catalog or purchase price.
  * Cooldown, aiming, firing arcs and projectiles remain execution concerns. */
 export function combatCapability(
-  snapshot: GameSnapshot,
+  snapshot: Pick<GameSnapshot, "items" | "variants">,
   unit: Unit | Building,
 ) {
   if (!("order" in unit))
@@ -18,12 +19,20 @@ export function combatCapability(
         Math.max(1, unit.attackCooldown),
     };
   const rules = weaponRules(snapshot, unit);
+  // Land stats already include upgrades and training; equipment still supplies
+  // the weapon cooldown. Avoid building a one-weapon list for every army query.
+  if (!shipProfile(unit))
+    return {
+      armed: unit.attackDamage > 0,
+      range: Math.max(0, unit.attackRange),
+      dps: 0 + (unit.attackDamage * SIM_TICKS_PER_SECOND) / Math.max(1, rules.attackCooldown),
+    };
   // Saves without a fittings record retain their saved weapon stats until
   // the common restore path materializes the equipment. An empty record is
   // explicitly unarmed and must never fall back to the hull catalog.
   const intrinsic = {
     damage: shipProfile(unit) ? rules.attackDamage : unit.attackDamage,
-    range: shipProfile(unit) ? rules.attackRange : unit.attackRange,
+    range: shipProfile(unit) ? veteranWeaponRange(unit, rules.attackRange) : unit.attackRange,
     cooldown: rules.attackCooldown,
   };
   const weapons =
@@ -34,7 +43,7 @@ export function combatCapability(
             const def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
             return {
               damage: def.damage,
-              range: def.range,
+              range: veteranWeaponRange(unit, def.range),
               cooldown: def.cooldown,
             };
           })

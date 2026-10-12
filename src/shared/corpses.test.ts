@@ -1,3 +1,4 @@
+import {boardUnit} from './decks';
 import {checksumGame} from './sim/checksum';
 import {describe,it,expect} from 'vitest';
 import {createGame,stepGame,snapshotGame,restoreSnapshotIntoGame,removeUnit} from './sim';
@@ -20,6 +21,19 @@ describe('persistent remains',()=>{
   expect(game.entityById?.has(id)).toBe(false);
   const older={...saved};delete older.corpses;
   restoreSnapshotIntoGame(game,older,nextId);expect(game.corpses).toBeUndefined();
+ });
+ it('captures a surviving ship attachment without aliasing live, saved or restored state',()=>{
+  const game=createGame('bareDuel',{aiPlayers:[]});game.scriptedVictory=true;
+  const ship=game.spawnUnit('player','transport',1700,1700),crew=game.spawnUnit('player','footman',1700,1700);
+  expect(boardUnit(ship,crew,game.units)).toBe(true);const deck={...crew.deck!};crew.hp=0;stepGame(game);
+  const corpse=game.corpses!.find(c=>c.unitId===crew.id)!;expect(corpse.deck).toEqual(deck);
+  crew.deck!.x+=11;expect(corpse.deck).toEqual(deck);
+  const saved=snapshotGame(game);corpse.deck!.x+=17;expect(saved.corpses!.find(c=>c.unitId===crew.id)!.deck).toEqual(deck);
+  restoreSnapshotIntoGame(game,saved,game.nextId);game.corpses!.find(c=>c.unitId===crew.id)!.deck!.y+=19;
+  expect(saved.corpses!.find(c=>c.unitId===crew.id)!.deck).toEqual(deck);
+  const passenger=game.spawnUnit('player','footman',ship.x,ship.y);const restoredShip=game.units.find(u=>u.id===ship.id)!;
+  expect(boardUnit(restoredShip,passenger,game.units)).toBe(true);restoredShip.hp=0;stepGame(game);
+  expect(game.corpses!.some(c=>c.unitId===passenger.id)).toBe(false);
  });
  it('does not mistake expiry, a scripted exit, or passengers aboard a wreck for field corpses',()=>{
   const game=createGame('bareDuel');game.scriptedVictory=true;

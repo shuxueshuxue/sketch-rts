@@ -1,20 +1,28 @@
+import { unitControlsMercenaryCamp } from '../mercenary-camp';
 import { canReceiveHealing } from '../healing';
-import { SHIP_WEAPONS, installedWeapons, shipNeedsRepair } from "../ship-equipment";
+import { SHIP_WEAPONS, installedWeapons } from "../ship-equipment";
+import { isMechanicalUnit, matchesUnitTarget, unitClassOf } from "../unit-targeting";
+import { unitNeedsRepair } from "../unit-repair";
+import { veteranSkillFitsUnitClass } from "../veteran-skills";
 import { canEquip, dropRefusal, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
-import { shipPassengers } from "../ship-geometry";
+import { shipPassengers, shipProfile } from "../ship-geometry";
+import { shipBoardingRefusal, shipBoardingTargetRefusal } from "../ship-gangway";
+import { sameGround } from "../terrain";
 import { canBoard } from "../decks";
 import { abilityCooldown } from "../ability-cooldowns";
 import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
-import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, canTrainAt, canResearchAt, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach, carries, passengerLandingSpot } from "../naval";
 import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, UnitKind } from "../types";
 import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
+import { isStunned, unitAbilities } from "../unit-abilities";
+import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
 
 export type CommandLegalityError = {
   message: string;
@@ -27,6 +35,21 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
   const ids="unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+  if (command.type !== 'enterCabin' && command.type !== 'leaveCabin' && command.type !== 'stop' && snapshot.units.some(unit => ids.includes(unit.id) && isInCabin(unit))) return commandError('Leave the cabin before acting',true);
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    const selected = snapshot.units.filter(unit => command.unitIds.includes(unit.id) && unit.owner === owner && unit.hp > 0);
+    if (command.type === 'enterCabin') return selected.some(unit => canEnterCabin(snapshot,unit)) ? undefined : commandError('No available cabin for these crew members',true);
+    return selected.some(unit => { const ship = snapshot.units.find(ship => ship.id === unit.cabin?.shipId); return isInCabin(unit) && ship && cabinExitPoint(snapshot,ship,unit); }) ? undefined : commandError('No clear deck space by the cabin door',true);
+  }
+  if (command.type === 'transferItem') {
+    const item = snapshot.items.find(item => item.id === command.itemId);
+    const affected = [item?.carrierId, 'unitId' in command.destination ? command.destination.unitId : 'installerId' in command.destination ? command.destination.installerId : undefined];
+    if (snapshot.units.some(unit => affected.includes(unit.id) && isInCabin(unit))) return commandError('Leave the cabin before exchanging equipment',true);
+  }
+  if (command.type === 'unloadPassenger' && snapshot.units.some(unit => unit.id === command.passengerId && isInCabin(unit))) return commandError('Leave the cabin before disembarking',true);
+  if ('targetId' in command && snapshot.units.some(unit => unit.id === command.targetId && isInCabin(unit))) return commandError('Crew inside a cabin cannot be targeted',true);
   if(["build","mine","repair","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
@@ -51,6 +74,28 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && canBoard(ship, unit, snapshot.units))
       ? undefined : commandError("No free deck space or payload capacity for these units", true);
   }
+  if (command.type === 'boardShip' || command.type === 'cancelBoardShip') {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    if (!command.unitIds.length) return commandError('No ships selected for boarding');
+    const target = command.type === 'boardShip'
+      ? snapshot.units.find(unit => unit.id === command.targetId && unit.hp > 0 && shipProfile(unit)) : undefined;
+    if (command.type === 'boardShip' && !target) return commandError(`Unknown boarding target ${command.targetId}`, true);
+    for (const id of command.unitIds) {
+      const source = snapshot.units.find(unit => unit.id === id && unit.owner === owner)!;
+      if (source.hp <= 0 || !shipProfile(source)) return commandError('Boarding requires a living ship', true);
+      if (command.type === 'cancelBoardShip') continue;
+      const refusal = shipBoardingRefusal(source, snapshot.units, snapshot.tick, snapshot);
+      if (refusal === 'crew') return commandError('Boarding requires exposed walking crew on the source deck', true);
+      if (refusal === 'cooldown') return commandError('Boarding is cooling down', true);
+      if (refusal) return commandError('Boarding requires a living ship', true);
+      const targetRefusal = shipBoardingTargetRefusal(source, target!);
+      if (targetRefusal === 'height') return commandError('Decks are too far apart in height for boarding');
+      if (targetRefusal) return commandError('Boarding requires another living ship');
+      if (!sameGround(snapshot.map, source, target!, 'sea')) return commandError('Ships are in separate waters', true);
+    }
+    return undefined;
+  }
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
   if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, true));
   if (command.type === "mine") return missingUnitError(snapshot, owner, command.unitIds) ?? (snapshot.resources.some((resource) => resource.id === command.resourceId) ? undefined : commandError(`Unknown resource ${command.resourceId}`, true));
@@ -62,12 +107,14 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (building.hp >= building.maxHp) return commandError(`${building.kind} is already fully repaired`, true);
     return undefined;
   }
-  if (command.type === "repairShip") {
+  if (command.type === "repairShip" || command.type === "repairUnit") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    const ship = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && UNIT_DEFS[unit.kind].naval);
-    if (!ship) return commandError(`Unknown ${owner} ship ${command.targetId}`, true);
-    if (!shipNeedsRepair(snapshot,ship)) return commandError(`${ship.kind} is already fully repaired`, true);
+    if (!snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && unit.hp > 0 && unit.kind === "worker")) return commandError("Unit repair requires a worker");
+    const target = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && unit.hp > 0);
+    if (!target || (command.type === "repairShip" && !UNIT_DEFS[target.kind].naval)) return commandError(`Unknown ${owner} ${command.type === "repairShip" ? "ship" : "unit"} ${command.targetId}`, true);
+    if (!isMechanicalUnit(target, snapshot)) return commandError("Only mechanical units can be repaired");
+    if (!unitNeedsRepair(snapshot, target)) return commandError(`${target.kind} is already fully repaired`, true);
     return undefined;
   }
   if (command.type === "build") {
@@ -93,8 +140,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, true);
     if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`);
-    if (!BUILDING_DEFS[building.kind].trains.includes(command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind}`);
-    if (!RACE_DEFS[player.race].trainableUnits.includes(command.unitKind)) return commandError(`${player.race} race cannot train ${command.unitKind}`);
+    if (!canTrainAt(player.race, building.kind, command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind} for ${player.race}`);
     const cap = requiredSupplyCap(command.unitKind);
     if (player.supplyCap < cap) return commandError(`Need a supply cap of ${cap} to train ${command.unitKind}`, true);
     if (!canSupply(snapshot, owner, command.unitKind)) return commandError(`Need more supply to train ${command.unitKind}`, true);
@@ -107,7 +153,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const upgrade = UPGRADE_DEFS[command.upgradeKind];
     if (!upgrade) return commandError(`Unknown upgrade ${command.upgradeKind}`);
     if (!RACE_DEFS[player.race].upgrades.includes(command.upgradeKind)) return commandError(`${player.race} race cannot research ${command.upgradeKind}`);
-    if (!upgrade.researchBuildingKinds.includes(building.kind) || !BUILDING_DEFS[building.kind].researches.includes(command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
+    if (!canResearchAt(player.race, building.kind, command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
     const currentLevel = player.upgrades[command.upgradeKind] ?? 0;
     if (currentLevel >= maxUpgradeLevel(command.upgradeKind)) return commandError(`${command.upgradeKind} already at max level`, true);
     if (building.researchQueue.some((job) => job.upgradeKind === command.upgradeKind)) return commandError(`${command.upgradeKind} is already queued`, true);
@@ -126,12 +172,22 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   }
   if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return commandError(delivery.refusal,true);}return canSpendGold(snapshot,owner,SHIP_WEAPONS[command.item].cost)?undefined:commandError(`Need ${SHIP_WEAPONS[command.item].cost} gold`,true);}
   if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item, command.recipientId);
+  if (command.type === "learnVeteranSkill") {
+    const unit = snapshot.units.find(candidate => candidate.id === command.unitId && candidate.owner === owner && candidate.hp > 0);
+    if (!unit) return commandError(`Unknown living ${owner} unit ${command.unitId}`, true);
+    if (unit.veteranSkill) return commandError("Veteran skill already learned", true);
+    if (unit.level < 3 || unit.expiresTick !== undefined || (unit.variant !== undefined && snapshot.variants?.[unit.variant]?.heroic)) return commandError("Only a permanent three-star non-hero unit may learn a veteran skill");
+    const choices = unit.veteranSkillChoices;
+    if (!choices || choices.length !== 3 || new Set(choices).size !== 3 || !choices.includes(command.skill)) return commandError("Skill is not one of this unit's three veteran choices");
+    if (!veteranSkillFitsUnitClass(command.skill, unitClassOf(unit, snapshot))) return commandError("Veteran skill cannot affect this unit class");
+    return undefined;
+  }
   if (command.type === "cast") return castError(snapshot, owner, command);
   if (command.type === "setAutocast") {
     if (!canAutocast(command.ability)) return commandError(`${command.ability} cannot be autocast`);
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && UNIT_DEFS[unit.kind].abilities.includes(command.ability))
+    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && unitAbilities(unit).includes(command.ability))
       ? undefined
       : commandError(`None of those units has ${command.ability}`);
   }
@@ -165,6 +221,10 @@ function commandError(message: string, transient = false): CommandLegalityError 
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
+  if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
+    const unitIds = currentUnitIds(game,owner,command.unitIds);
+    return unitIds.length ? {...command,unitIds} : undefined;
+  }
   if (command.type === "unloadPassenger") {
     const ship=currentUnit(game,owner,command.transportId);
     return ship && (shipPassengers(game.units,ship).some(passenger=>passenger.id===command.passengerId) || ship.cargo?.some(passenger=>passenger.id===command.passengerId)) ? command : undefined;
@@ -176,6 +236,13 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if (command.type === "board") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 && game.units.some(unit=>unit.id===command.transportId && unit.hp>0 && carries(unit)>0) ? { ...command, unitIds } : undefined;
+  }
+  if (command.type === 'boardShip' || command.type === 'cancelBoardShip') {
+    const unitIds = currentUnitIds(game, owner, command.unitIds)
+      .filter(id => { const unit = currentUnit(game, owner, id); return unit && unit.hp > 0 && shipProfile(unit); });
+    if (!unitIds.length) return undefined;
+    if (command.type === 'boardShip' && !game.units.some(unit => unit.id === command.targetId && unit.hp > 0 && shipProfile(unit))) return undefined;
+    return { ...command, unitIds };
   }
   if (command.type === "attack") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
@@ -198,10 +265,11 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (unitIds.length === 0 || !building) return undefined;
     return { ...command, unitIds };
   }
-  if (command.type === "repairShip") {
-    const unitIds = currentWorkerIds(game, owner, command.unitIds);
-    const ship = currentUnit(game, owner, command.targetId);
-    return unitIds.length && ship ? { ...command, unitIds } : undefined;
+  if (command.type === "repairShip" || command.type === "repairUnit") {
+    const ownUnit = ownUnitLookup(game.units, owner, command.unitIds.length);
+    const unitIds = command.unitIds.filter(id => { const unit = ownUnit(id); return unit?.kind === "worker" && unit.hp > 0; });
+    const target = currentUnit(game, owner, command.targetId);
+    return unitIds.length && target && target.hp > 0 ? { ...command, unitIds } : undefined;
   }
   if (command.type === "build") {
     if (currentUnit(game, owner, command.unitId)?.kind !== "worker") return undefined;
@@ -222,6 +290,10 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     const building = currentBuilding(game, owner, command.buildingId);
     if (!building) return undefined;
     return command;
+  }
+  if (command.type === "learnVeteranSkill") {
+    const unit = currentUnit(game, owner, command.unitId);
+    return unit && unit.hp > 0 ? command : undefined;
   }
   if (command.type === "cast") {
     const caster = currentUnit(game, owner, command.unitId);
@@ -305,12 +377,17 @@ function rallyTargetError(snapshot: GameSnapshot, owner: PlayerId, target: Extra
 }
 
 function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<GameCommand, { type: "cast" }>) {
-  const caster = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner);
+  const caster = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.hp > 0);
   if (!caster) return commandError(`Unknown ${owner} caster ${command.unitId}`, true);
-  if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
+  if (!unitAbilities(caster).includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
+  if (isStunned(caster)) return commandError(`${caster.kind} is stunned`, true);
   if(command.ability==="incendiaryFlume" && caster.fittings && !installedWeapons(snapshot,caster).some(item=>item.kind==="flameProjector" && (item.durability ?? 1)>0))return commandError("An operational flame projector is required",true);
   if (abilityCooldown(caster, command.ability) > 0) return commandError(`${caster.kind} is on cooldown`, true);
-  const behavior = ABILITY_DEFS[command.ability].behavior;
+  const definition = ABILITY_DEFS[command.ability];
+  const behavior = definition.behavior;
+  const unitTarget = command.targetId ? snapshot.units.find(unit => unit.id === command.targetId) : undefined;
+  if (unitTarget && !matchesUnitTarget(unitTarget, definition.targets, snapshot)) return commandError(behavior === "heal" ? "Healing cannot restore mechanical units" : "Ability cannot target this unit class");
+  if (behavior === "veteran") return undefined;
   if (behavior === "weapon") {
     const def = ABILITY_DEFS[command.ability];
     if (def.behavior !== "weapon") return commandError("Unknown weapon ability");
@@ -323,7 +400,7 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   }
   if (behavior === "heal") {
     const target = snapshot.units.find(unit => unit.id === command.targetId);
-    if (target && !canReceiveHealing(target)) return commandError("Healing cannot repair ships");
+    if (target && !canReceiveHealing(target, snapshot)) return commandError("Healing cannot restore mechanical units");
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
       : commandError("Heal requires an allied unit target");
@@ -375,7 +452,7 @@ function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) 
 }
 
 function hasFriendlyUnitAtCamp(snapshot: GameSnapshot, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
-  return snapshot.units.some((unit) => unit.owner === owner && distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
+  return snapshot.units.some((unit) => unit.owner === owner && unitControlsMercenaryCamp(unit, camp));
 }
 
 function findTarget(snapshot: GameSnapshot, targetId: string) {

@@ -379,6 +379,8 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
 function plannerView(game: Game): GameSnapshot {
   return {
     tick: game.tick,
+    equipmentVersion: 1,
+    rateUnits: "perSecond",
     match: game.match,
     map: game.map,
     teams: { ...game.teams },
@@ -391,6 +393,8 @@ function plannerView(game: Game): GameSnapshot {
     items: game.items.slice(),
     projectiles: game.projectiles.slice(),
     effects: game.effects.slice(),
+    ...(game.corpses ? { corpses: game.corpses.slice() } : {}),
+    ...(game.obstacles ? { obstacles: game.obstacles.slice() } : {}),
     ...(game.variants ? { variants: { ...game.variants } } : {}),
   };
 }

@@ -1,6 +1,7 @@
 import { canEquip, freeItemSlot, ITEM_DEFS, shipHoldSlots, shipItemMass } from "./equipment";
 import { bodyMass } from "./physical-body";
 import { distanceToHull, shipProfile } from "./ship-geometry";
+import { isInCabin } from "./ship-cabin";
 import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit } from "./types";
 export const PURCHASE_REACH = 120;
 export type PurchaseSeller = {
@@ -28,7 +29,7 @@ export function purchaseRecipientInRange(unit: Unit, seller: PurchaseSeller): bo
 
 /** Keep an explicit choice while valid; otherwise select a nearby recipient independently of the current goods. */
 export function findPurchaseRecipient(snapshot: Pick<GameSnapshot, "units">, owner: PlayerId, seller: PurchaseSeller, preferredId?: string, preferShips = false): Unit | undefined {
-  const eligible = (unit: Unit) => unit.owner === owner && unit.hp > 0 && Boolean(canEquip(unit) || shipProfile(unit)) && purchaseRecipientInRange(unit, seller);
+  const eligible = (unit: Unit) => unit.owner === owner && unit.hp > 0 && !isInCabin(unit) && Boolean(canEquip(unit) || shipProfile(unit)) && purchaseRecipientInRange(unit, seller);
   const chosen = snapshot.units.find(unit => unit.id === preferredId && eligible(unit));
   if (chosen) return chosen;
   let best: Unit | undefined;
@@ -45,6 +46,8 @@ export function purchasePlacement(snapshot: Pick<GameSnapshot, "units" | "items"
   const recipient = snapshot.units.find(unit => unit.id === recipientId && unit.hp > 0 && unit.owner === owner);
   if (!recipient)
     return { refusal: "Choose a living unit or ship of yours" };
+  if (isInCabin(recipient))
+    return { refusal: "Leave the cabin before receiving equipment" };
   const profile = shipProfile(recipient);
   if (!purchaseRecipientInRange(recipient, seller))
     return { refusal: "Move the recipient closer to the seller" };

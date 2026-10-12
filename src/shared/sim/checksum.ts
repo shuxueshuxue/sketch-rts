@@ -10,10 +10,38 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 5: live deck crew, local deck orders and continuous hull poses.
 // 6: serialized hull routes and swept coast collision.
 // 7: equipment positions, live mounted weapons and damaged ship parts.
-export const CHECKSUM_VERSION = 7;
+// 8: fixed veteran skill offers, learned skills and shared damage-reduction effects.
+// 9: unit classes, skill target filters and general mechanical repair orders.
+// 10: true wind, sail trim, signed hull velocity and wind-aware routes.
+// 11: deterministic eight-minute wind changes and serialized weather events.
+// 12: persistent voyage helm, passing decisions and moving-target pursuit.
+// 13: curved laylines, moving gun aim and stable firing stations.
+// 14: sheltered cabin crew, compartment damage and heavy broadside hulls.
+// 15: enlarged hulls, guard stations, population cabins and deployed boarding bridges.
+// 16: persisted, fairly scheduled complex ship route requests.
+// 17: exact saved state of deterministic incremental ship navigation.
+// 18: death-time corpse equipment, owner race and deck attachment facts.
+export const CHECKSUM_VERSION = 18;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
+}
+
+/** Same-rules replay compatibility only; callers must validate the rules version first. */
+export function checksumGameForVersion(game: Game, version: number): string {
+  if (version === CHECKSUM_VERSION) return checksumGame(game);
+  const checkedGame = { ...game };
+  if (version === 2) {
+    delete checkedGame.corpses;
+  } else if (version === 17) {
+    if (game.corpses) checkedGame.corpses = game.corpses.map(corpse => {
+      const { equipmentCaptured, rightItemKind, weaponKind, leftItemKind, ownerRace, deck, ...prior } = corpse;
+      return prior;
+    });
+  } else {
+    throw new Error(`Unsupported checksum version ${version}`);
+  }
+  return checksumGame(checkedGame);
 }
 
 export function fnv1a(input: string) {

@@ -7,11 +7,12 @@ import { SIM_TICKS_PER_SECOND, seconds } from './time';
 import { ITEM_DEFS } from './equipment';
 import { weaponRules } from './equipment';
 import { combatCapability } from './combat-capabilities';
-import { localToWorld, shipProfile } from './ship-geometry';
+import { localToWorld, shipProfile, SHIP_SIZE_MULTIPLIER } from './ship-geometry';
 import { sailToward, turnShipToward } from './sailing';
 import { checksumGame } from './sim/checksum';
 import type { WorldItem } from './types';
 import { createBuilding } from './map';
+import { TRANSPORT_COMBAT } from './transport-role';
 function match() { const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.items = []; game.buildings = []; game.scriptedVictory = true; delete game.map.terrain; game.players.player!.gold = 3000; return game; }
 function run(game: ReturnType<typeof match>, ticks: number) { for (let i = 0; i < ticks; i++)
     stepGame(game); }
@@ -175,6 +176,30 @@ describe('physical ship equipment', () => {
         expect(sideShots).toBeGreaterThan(0);
         expect(shipGunCanAim(ship, side, enemy)).toBe(true);
     });
+    it('plans a turn for a target inside veteran cannon range but outside the untrained battery range', () => {
+        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800);
+        const bow = shipMounts(ship).find(mount => mount.id === 'bow')!;
+        const target = { x: ship.x + bow.x + SHIP_WEAPONS.shipCannon.range * 1.05, y: ship.y };
+        ship.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+        expect(bestFiringHeading(game, ship, target)).toBe(Math.PI / 2);
+        ship.veteranSkill = 'veteranSiegeDrill';
+        const heading = bestFiringHeading(game, ship, target);
+        expect(Math.abs(heading)).toBeLessThan(Math.PI / 2);
+        ship.sailing.heading = heading;
+        const pivot = localToWorld(ship, bow);
+        expect(Math.hypot(target.x - pivot.x, target.y - pivot.y)).toBeGreaterThan(SHIP_WEAPONS.shipCannon.range);
+        expect(Math.hypot(target.x - pivot.x, target.y - pivot.y)).toBeLessThanOrEqual(SHIP_WEAPONS.shipCannon.range * 1.1 + 1e-7);
+        expect(shipGunCanAim(ship, installedWeapons(game, ship)[0]!, target)).toBe(true);
+    });
+    it('keeps veteran mortars subject to their original minimum range while planning turns', () => {
+        const game = match(), ship = game.spawnUnit('player', 'bombardShip', 900, 800);
+        ship.veteranSkill = 'veteranSiegeDrill';
+        ship.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+        const bow = shipMounts(ship).find(mount => mount.id === 'bow')!;
+        const centerDistance = SHIP_WEAPONS.shipMortar.weapon.minRange! - Math.hypot(bow.x, bow.y) - 1;
+        // This point remains inside minimum range under every possible hull rotation.
+        expect(bestFiringHeading(game, ship, { x: ship.x + centerDistance, y: ship.y })).toBe(Math.PI / 2);
+    });
     it('uses a close-range side gun instead of retreating because its bow mortar is inside minimum range',()=>{
         const game=match(),ship=game.spawnUnit('player','bombardShip',900,800),enemy=game.spawnUnit('enemy','footman',1010,800);
         enemy.hp=enemy.maxHp=1000;enemy.cooldown=9999;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
@@ -207,7 +232,7 @@ describe('physical ship equipment', () => {
         run(game, shot.remaining);
         expect(a.hp).toBeLessThan(hpa);
         expect(b.hp).toBeLessThan(hpb);
-        expect(ship.hp).toBeCloseTo(hull - shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare!);
+        expect(ship.hp).toBeCloseTo(hull - Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
     });
     it('prices bundled weapons as paid equipment plus a nonzero hull', () => {
         for (const [ship, weapon] of [['warship', 'shipCannon'], ['bombardShip', 'shipMortar'], ['fireShip', 'flameProjector']] as const) {
@@ -233,6 +258,7 @@ describe('physical ship equipment', () => {
         expect(worker.radius).toBe(worker.bodyRadius);
         expect(cannon.mountId).toBeUndefined();
         expect(source.attackDamage).toBe(0);
+        Object.assign(worker,localToWorld(target,{x:0,y:-shipProfile(target)!.beam/2-20}));
         issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: target.id, mountId: 'bow', installerId: worker.id } });
         expect(cannon.shipId).toBe(target.id);
         expect(cannon.durability).toBe(45);
@@ -262,7 +288,7 @@ describe('physical ship equipment', () => {
         cannon.shipId = transport.id;
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: transport.id, mountId: 'bow', installerId: worker.id } })).toThrow(/Clear the deck/);
         const small = game.spawnUnit('player', 'cutter', 700, 660);
-        small.deckScale=1; // This fixture specifically tests an undersized four-cell hold.
+        small.deckScale=1/SHIP_SIZE_MULTIPLIER; // This fixture specifically tests an undersized four-cell hold at physical scale 1.
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: small.id, slot: 1 } })).toThrow(/No room/);
     });
     it('gives a refitted transport a working independently aimed cannon with real muzzle effects', () => {

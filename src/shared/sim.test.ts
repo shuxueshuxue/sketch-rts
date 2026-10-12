@@ -5,6 +5,7 @@ import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
+import { GOLD_MINE_RULES } from "./mining";
 import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame } from "./sim";
 import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
@@ -90,17 +91,17 @@ function sumPlayerStats(record: PlayerNumberMap) {
 describe("sketch RTS simulation", () => {
   it("defines a production roster with at least 10 distinct unit kinds and 5 building kinds including a tower", () => {
     expect(TRAINABLE_UNIT_KINDS.length).toBeGreaterThanOrEqual(10);
-    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "ashWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "ashWarden", "emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(MERCENARY_UNIT_KINDS).toEqual(expect.arrayContaining(["mercenary", "contractArcher", "fieldMedic"]));
     expect(MERCENARY_UNIT_KINDS).toHaveLength(3);
     expect(Object.keys(BUILDING_DEFS).length).toBeGreaterThanOrEqual(5);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(0);
     expect(Object.keys(RACE_DEFS)).toEqual(expect.arrayContaining(["grove", "ember"]));
     expect(RACE_DEFS.grove.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest", "horseArcher"]));
-    expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(RACE_DEFS.grove.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "archeryRange", "sanctum", "defenseTower", "moonWell", "farm"]));
     expect(RACE_DEFS.grove.buildableBuildings).not.toEqual(expect.arrayContaining(["emberForge", "cinderSpire", "emberShrine"]));
-    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["ashWarden", "worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["ashWarden", "worker", "emberRavager", "cinderRunner", "sparkArcher", "priest", "ashHexer", "summoner"]));
     expect(RACE_DEFS.ember.trainableUnits).not.toEqual(expect.arrayContaining(["footman", "archer", "horseArcher", "raider", "lancer", "knight", "priest", "summoner", "witch", "golem"]));
     expect(RACE_DEFS.ember.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"]));
     expect(RACE_DEFS.ember.buildableBuildings).not.toEqual(expect.arrayContaining(["barracks", "archeryRange", "stables", "sanctum", "workshop", "moonWell"]));
@@ -112,18 +113,18 @@ describe("sketch RTS simulation", () => {
     expect(rawValue("emberRavager")).toBeLessThanOrEqual(rawValue("ashWarden"));
     expect(rawValue("cinderRunner")).toBeLessThanOrEqual(rawValue("raider"));
     expect(rawValue("sparkArcher")).toBeLessThanOrEqual(rawValue("archer"));
-    expect(rawValue("emberAcolyte")).toBeLessThanOrEqual(rawValue("priest"));
+    expect(rawValue("priest")).toBeLessThanOrEqual(rawValue("priest"));
     expect(rawValue("ashHexer")).toBeLessThanOrEqual(rawValue("witch"));
-    expect(rawValue("pyreCaller")).toBeLessThanOrEqual(rawValue("summoner"));
+    expect(rawValue("summoner")).toBeLessThanOrEqual(rawValue("summoner"));
   });
 
   it("gives ember support units their own abilities through shared ability primitives", () => {
-    expect(UNIT_DEFS.emberAcolyte.abilities).toEqual(["emberMend"]);
+    expect(UNIT_DEFS.priest.abilities).toEqual(["heal"]);
     expect(UNIT_DEFS.ashHexer.abilities).toEqual(["ashCurse"]);
-    expect(UNIT_DEFS.pyreCaller.abilities).toEqual(["cinderSoul"]);
-    expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: ABILITY_DEFS.heal.cooldown });
+    expect(UNIT_DEFS.summoner.abilities).toEqual(["summon"]);
+    expect(ABILITY_DEFS.heal).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: ABILITY_DEFS.heal.cooldown });
     expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, effectDuration: seconds(18), cooldown: seconds(7.5) });
-    expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(60), cooldown: seconds(40) });
+    expect(ABILITY_DEFS.summon).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(60), cooldown: seconds(40) });
   });
 
   it("lets ember research shared combat tech from the ember forge", () => {
@@ -221,7 +222,7 @@ describe("sketch RTS simulation", () => {
     expect(futureRaider.attackRange).toBe(Math.round(UNIT_DEFS.raider.attackRange * 1.15));
   });
 
-  it("heals starred owned units with leadership including mercenaries without healing rookies", () => {
+  it("heals starred non-mechanical mercenaries with leadership while excluding mechanical bodies and rookies", () => {
     const game = sketchScene("leadership-regeneration")
       .map("bareDuel")
       .replaceDefaults()
@@ -243,14 +244,14 @@ describe("sketch RTS simulation", () => {
     mercenary.level = 3;
     mercenary.hp = 50;
 
-    expect(leadershipRegenPerSecond(game, veteran)).toBe(12);
+    expect(leadershipRegenPerSecond(game, veteran)).toBe(0);
     expect(leadershipRegenPerSecond(game, rookie)).toBe(0);
     expect(leadershipRegenPerSecond(game, mercenary)).toBe(12);
 
     stepMany(game, 20);
 
     expect(veteran.level).toBe(3);
-    expect(veteran.hp).toBeCloseTo(112, 5);
+    expect(veteran.hp).toBe(100);
     expect(rookie.hp).toBe(50);
     expect(mercenary.hp).toBeCloseTo(62, 5);
     expect(game.effects.some((effect) => effect.type === "heal")).toBe(false);
@@ -677,7 +678,7 @@ describe("sketch RTS simulation", () => {
     expect(incomeWithEight).toBeLessThanOrEqual(incomeWithFive);
   });
 
-  it("taxes delivered mine gold through Warcraft-like upkeep brackets", () => {
+  it("settles delivered mine gold along the equivalent-mine upkeep curve", () => {
     const game = createGame();
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     const mine = game.resources.find((resource) => resource.kind === "goldMine")!;
@@ -693,12 +694,12 @@ describe("sketch RTS simulation", () => {
       stepGame(game);
     };
 
-    deliverAtSupply(50);
+    deliverAtSupply(40);
     expect(game.players.player.gold).toBe(10);
-    deliverAtSupply(51);
-    expect(game.players.player.gold).toBe(17);
-    deliverAtSupply(81);
-    expect(game.players.player.gold).toBe(21);
+    deliverAtSupply(70);
+    expect(game.players.player.gold).toBe(15);
+    deliverAtSupply(100);
+    expect(game.players.player.gold).toBe(18.33);
   });
 
   it("builds a barracks and trains soldiers", () => {
@@ -707,7 +708,8 @@ describe("sketch RTS simulation", () => {
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
     game.players.player.gold = 1000;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: townHall.x + 260, y: townHall.y + 80 });
+    // The main mine now lies east of the hall at the shared hauling distance; build south of that lane.
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: townHall.x + 100, y: townHall.y + 230 });
     expect(game.match.stats.goldSpent.player).toBe(0);
     stepMany(game, 360);
     expect(game.match.stats.goldSpent.player).toBe(BUILDING_DEFS.barracks.cost);
@@ -1155,24 +1157,33 @@ describe("sketch RTS simulation", () => {
     expect(finisher.level).toBe(1);
     expect(game.effects.map((effect) => effect.type as string)).not.toContain("levelUp");
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 1 / 3)));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 1 / 3)));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toBeUndefined();
 
     killWith(game, finisher, "ancientStag");
     expect(finisher.level).toBe(2);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 2 / 3)));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 2 / 3)));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toBeUndefined();
 
-    for (let i = 0; i < 6; i += 1) killWith(game, finisher, "ancientStag");
+    // Once the third star's offer exists, later kills retain it.
+    for (let i = 0; i < 4; i += 1) killWith(game, finisher, "ancientStag");
+    expect(finisher.level).toBe(3);
+    expect(finisher.veteranSkillChoices).toHaveLength(3);
+    expect(new Set(finisher.veteranSkillChoices).size).toBe(3);
+    const offered = [...finisher.veteranSkillChoices!];
+    for (let i = 0; i < 2; i += 1) killWith(game, finisher, "ancientStag");
 
     expect(finisher.kills).toBe(9);
     expect(finisher.level).toBe(3);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 2));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 2));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toEqual(offered);
     expect(nearbyAlly.xp).toBe(0);
     expect(nearbyAlly.level).toBe(0);
   });
 
-  it("applies veterancy after tech bonuses with a linear non-compounding multiplier", () => {
+  it("applies veterancy only to health after tech bonuses with a linear non-compounding multiplier", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 5_000;
     const barracks = createBuilding("building-player-veterancy-tech-barracks", "player", "barracks", 760, 680, true);
@@ -1190,7 +1201,7 @@ describe("sketch RTS simulation", () => {
     const techAttack = UNIT_DEFS.knight.attackDamage * UPGRADE_DEFS.weaponTraining.levels[2]!.attackMultiplier!;
     const techHp = UNIT_DEFS.knight.hp * UPGRADE_DEFS.reinforcedPlating.levels[2]!.maxHpMultiplier!;
     expect(knight.level).toBe(3);
-    expect(knight.attackDamage).toBe(Math.round(techAttack * 2));
+    expect(knight.attackDamage).toBe(Math.round(techAttack));
     expect(knight.maxHp).toBe(Math.round(techHp * 2));
   });
 
@@ -1208,7 +1219,7 @@ describe("sketch RTS simulation", () => {
 
     expect(carrier.level).toBe(1);
     expect(carrier.maxHp).toBe(Math.round(UNIT_DEFS.mercenary.hp * (1 + 1 / 3)));
-    expect(carrier.attackDamage).toBe(Math.round(UNIT_DEFS.mercenary.attackDamage * (1 + 1 / 3)));
+    expect(carrier.attackDamage).toBe(UNIT_DEFS.mercenary.attackDamage);
     expect(game.items.some((item) => item.id === "book-same-scaling")).toBe(false);
   });
 
@@ -1302,8 +1313,8 @@ describe("sketch RTS simulation", () => {
       .player("enemy", { race: "grove" })
       .townHall("player", 500, 500)
       .townHall("enemy", 3500, 3500)
-      .unit("player", "emberAcolyte", 2000, 2000, { id: "ember-acolyte" })
-      .unit("player", "pyreCaller", 2050, 2000, { id: "pyre-caller" })
+      .unit("player", "priest", 2000, 2000, { id: "ember-acolyte" })
+      .unit("player", "summoner", 2050, 2000, { id: "pyre-caller" })
       .unit("player", "ashHexer", 2100, 2000, { id: "ash-hexer" })
       .unit("player", "emberRavager", 2030, 2040, { id: "hurt-ravager", hp: 30 })
       .unit("enemy", "raider", 2240, 2000, { id: "ash-target" })
@@ -1315,8 +1326,8 @@ describe("sketch RTS simulation", () => {
     const hurt = game.units.find((unit) => unit.id === "hurt-ravager")!;
     const enemy = game.units.find((unit) => unit.id === "ash-target")!;
 
-    issueCommand(game, { type: "cast", unitId: acolyte.id, ability: "emberMend", targetId: hurt.id });
-    issueCommand(game, { type: "cast", unitId: caller.id, ability: "cinderSoul", x: 2090, y: 2040 });
+    issueCommand(game, { type: "cast", unitId: acolyte.id, ability: "heal", targetId: hurt.id });
+    issueCommand(game, { type: "cast", unitId: caller.id, ability: "summon", x: 2090, y: 2040 });
     issueCommand(game, { type: "cast", unitId: hexer.id, ability: "ashCurse", targetId: enemy.id });
     stepMany(game, 5);
 
@@ -1359,20 +1370,20 @@ describe("sketch RTS simulation", () => {
       .townHall("ember", 500, 500)
       .townHall("grove", 3500, 3500)
       .unit("ember", "sparkArcher", 1000, 1000, { id: "spark" })
-      .unit("ember", "emberRavager", 1030, 1000, { id: "ravager" })
-      .unit("grove", "footman", 1050, 1000, { id: "target" })
+      .unit("ember", "emberRavager", 1000, 1100, { id: "ravager", order: { type: "hold", x: 1000, y: 1100 } })
+      .unit("grove", "footman", 1250, 1000, { id: "target", order: { type: "hold", x: 1250, y: 1000 } })
       .build()
       .createGame();
     const target = game.units.find((unit) => unit.id === "target")!;
 
     issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["spark"], targetId: "target" });
-    stepUntil(game, 40, () => target.effects.some((effect) => effect.type === "scorch"));
+    expect(stepUntil(game, 300, () => target.effects.some((effect) => effect.type === "scorch"))).toBe(true);
     const hpAfterSpark = target.hp;
     issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["ravager"], targetId: "target" });
-    stepUntil(game, 40, () => target.hp < hpAfterSpark);
+    stepUntil(game, 100, () => target.hp < hpAfterSpark - UNIT_DEFS.emberRavager.attackDamage);
 
     expect(target.effects.some((effect) => effect.type === "scorch")).toBe(true);
-    expect(game.effects.some((effect) => effect.type === "scorch")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "burningGround")).toBe(true);
     expect(hpAfterSpark - target.hp).toBeGreaterThan(UNIT_DEFS.emberRavager.attackDamage);
   });
 
@@ -1570,7 +1581,9 @@ describe("sketch RTS simulation", () => {
     for (let i = 0; i < 6; i += 1) killWith(game, hired, "ancientStag");
 
     expect(hired.level).toBe(3);
-    expect(hired.attackDamage).toBeGreaterThan(UNIT_DEFS.contractArcher.attackDamage);
+    expect(hired.attackDamage).toBe(UNIT_DEFS.contractArcher.attackDamage);
+    expect(hired.maxHp).toBe(UNIT_DEFS.contractArcher.hp * 2);
+    expect(hired.veteranSkillChoices).toHaveLength(3);
   });
 
   it("requires a friendly unit at a mercenary camp before hiring", () => {
@@ -2184,7 +2197,7 @@ describe("sketch RTS simulation", () => {
     for (const owner of ["player", "enemy"] as PlayerId[]) {
       const townHalls = game.buildings.filter((building) => building.owner === owner && building.kind === "townHall" && building.complete);
       const expansionTownHall = townHalls.find((townHall) => distanceToClosestMainMine(game, townHall) > 650);
-      const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < 260) : undefined;
+      const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < GOLD_MINE_RULES.baseRange) : undefined;
       const miners = expansionMine
         ? game.units.filter((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === expansionMine.id)
         : [];
@@ -2192,12 +2205,15 @@ describe("sketch RTS simulation", () => {
       expect(townHalls.length).toBeGreaterThanOrEqual(2);
       expect(expansionTownHall).toBeDefined();
       expect(expansionMine).toBeDefined();
+      expect(distance(expansionMine!, expansionTownHall!)).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
       expect(miners.length).toBeGreaterThan(0);
     }
   });
 
   it("runs a fast two-AI duel with no neutral camps or mercenary camps", () => {
-    const result = runTwoAiDuel("bareDuel");
+    // Continuous upkeep slows the mirror: 6 kills at 30 minutes, 12 at 40.
+    // Keep the combat assertion and the same total CPU ceiling.
+    const result = runTwoAiDuel("bareDuel", 48_000);
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
@@ -2412,7 +2428,7 @@ describe("sketch RTS simulation", () => {
 function ownersHaveMiningExpansions(game: ReturnType<typeof createGame>, owners: PlayerId[]) {
   return owners.every((owner) => {
     const expansionTownHall = game.buildings.find((building) => building.owner === owner && building.kind === "townHall" && building.complete && distanceToClosestMainMine(game, building) > 650);
-    const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < 260) : undefined;
+    const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < GOLD_MINE_RULES.baseRange) : undefined;
     return Boolean(expansionMine && game.units.some((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === expansionMine.id));
   });
 }

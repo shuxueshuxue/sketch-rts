@@ -199,7 +199,7 @@ function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: 
 const STUTTER_MIN_STEP = 30;
 const STUTTER_MAX_STEP = 160;
 const STUTTER_THREAT_MARGIN = 60;
-const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "emberAcolyte", "fieldMedic"]);
+const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "fieldMedic"]);
 
 function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;

@@ -640,13 +640,18 @@ const STEP_COLS = [1, 0, -1, 0, 1, -1, -1, 1];
 const STEP_ROWS = [0, 1, 0, -1, 1, 1, -1, -1];
 
 function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: number[]): BoxField {
+  const size = box.width * box.height;
+  return growBoxInto(state, box, seeds, costs, { dist: new Int32Array(size), next: new Int32Array(size) });
+}
+
+function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>): BoxField {
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
   const origin = box.top * width + box.left;
-  const size = columns * rows;
-  const dist = new Int32Array(size).fill(UNREACHED);
-  const next = new Int32Array(size).fill(UNKNOWN);
+  const { dist, next } = arrays;
+  dist.fill(UNREACHED);
+  next.fill(UNKNOWN);
   const buckets = state.boxBuckets;
   const order = seeds.map((_, index) => index);
   if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
@@ -936,6 +941,62 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
 
+/** Continuous travel cost of a clear land segment, in equivalent bare-ground units.
+ * The caller supplies walkable terrain; status, arrival tolerance and per-tick
+ * boundary rounding belong to actual movement. */
+export function groundSegmentTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number {
+  return groundSegmentProgress(map, from, goal, Infinity).cost;
+}
+
+/** Continuous position on a clear segment after spending equivalent bare-ground distance. */
+export function groundSegmentAdvance(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, budget: number): Point {
+  const { fraction } = groundSegmentProgress(map, from, goal, budget);
+  return fraction === 1 ? goal : { x: from.x + (goal.x - from.x) * fraction, y: from.y + (goal.y - from.y) * fraction };
+}
+
+function groundSegmentProgress(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, budget: number) {
+  const dx = goal.x - from.x, dy = goal.y - from.y, length = Math.hypot(dx, dy), terrain = map.terrain;
+  if (!terrain || length === 0) return { cost: Math.min(length, budget), fraction: length === 0 ? 1 : Math.min(1, budget / length) };
+  const cell = terrain.cell, stepX = Math.sign(dx), stepY = Math.sign(dy);
+  let col = Math.floor(from.x / cell), row = Math.floor(from.y / cell);
+  if (dx < 0 && from.x === col * cell) col--;
+  if (dy < 0 && from.y === row * cell) row--;
+  let nextX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;
+  let nextY = dy === 0 ? Infinity : ((row + Number(dy > 0)) * cell - from.y) / dy;
+  const spanX = cell / Math.abs(dx), spanY = cell / Math.abs(dy);
+  let at = 0, cost = 0;
+  while (at < 1) {
+    const end = Math.min(1, nextX, nextY);
+    const pace = CELL_GROUND[terrain.cells[row * terrain.cols + col]!]!.pace;
+    const next = cost + (end - at) * length / pace;
+    if (next >= budget) return { cost: budget, fraction: at + (budget - cost) * pace / length };
+    cost = next;
+    if (end === nextX) { col += stepX; nextX += spanX; }
+    if (end === nextY) { row += stepY; nextY += spanY; }
+    at = end;
+  }
+  return { cost, fraction: 1 };
+}
+
+/** Ground travel cost in equivalent bare-ground units. A clear straight segment
+ * uses actual terrain pace; a detour uses the steering grid's quantized weights.
+ * Excludes body detours and status effects. */
+export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return Math.hypot(from.x - goal.x, from.y - goal.y);
+  const state = runtime(terrain, 'land'), start = padAt(state, from.x, from.y), target = padAt(state, goal.x, goal.y);
+  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return groundSegmentTravelCost(map, from, goal);
+  const field = cached(state, -target - 1, () => {
+    const arrays = state.spare.pop() ?? { dist: new Int32Array(state.walk.length), next: new Int32Array(state.walk.length), used: 0 };
+    const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+    growBoxInto(state, box, [target], undefined, arrays);
+    return arrays;
+  });
+  const cost = field.dist[start]!;
+  return cost >= UNREACHED ? undefined : cost * terrain.cell / (STRAIGHT * GROUND_WEIGHT);
+}
+
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
 // land is a whole of its own, and so is a lake's water. Whether two points stand in one whole is sameGround; how many
 // wholes there are, groundWholes (a ladder map's land is one: the generator keeps no open ground a start cannot reach).
@@ -1028,11 +1089,20 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // round bodies (see @@@building-body). Ships keep the sea's own routing: no building stands in deep water.
 type Body = { x: number; y: number; radius: number };
 // `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
-type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; revision:number };
+type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; revision:number; bodies: Body[]; shared: boolean };
 const overlays = new WeakMap<object, Overlay>();
 let nextGroundRevision=1;
 /** Identity of the current building obstruction field, for geometry-only caches. */
 export function groundRevision(map:object){return overlays.get(map)?.revision ?? 0;}
+
+/** A snapshot reads this geometry; later construction must leave that snapshot's field intact. */
+export function shareBuildingBodies(source: object, target: object) {
+  const overlay = overlays.get(source);
+  if (overlay) {
+    overlay.shared = true;
+    overlays.set(target, overlay);
+  }
+}
 
 export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
   const terrain = map.terrain;
@@ -1041,13 +1111,18 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
     overlays.delete(map);
     return;
   }
+  const current = overlays.get(map);
+  if (current?.terrain === terrain && current.bodies.length === bodies.length
+    && bodies.every((body, index) => body.x === current.bodies[index]!.x
+      && body.y === current.bodies[index]!.y && body.radius === current.bodies[index]!.radius)) return;
   const ground = runtime(terrain, "land");
-  let overlay = overlays.get(map);
-  if (!overlay || overlay.terrain !== terrain) {
+  let overlay = current;
+  if (!overlay || overlay.terrain !== terrain || overlay.shared) {
     const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++ };
+    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
     overlays.set(map, overlay);
   }
+  overlay.bodies = bodies.map(({ x, y, radius }) => ({ x, y, radius }));
   const state = overlay.state;
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);
@@ -1067,8 +1142,9 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   }
   if (dirty.size === 0) return;
   overlay.revision=nextGroundRevision++;
-  state.clearance.fill(0);
-  fillClearance(state);
+  // A connectivity-only runtime has not needed clearance yet. Its first
+  // segment query will build it from the current, updated walkable cells.
+  if (state.clearance) { state.clearance.fill(0); fillClearance(state); }
   state.nearest.clear();
   if (state.tiles) redoTiles(state, state.tiles, dirty);
 }
@@ -1095,13 +1171,13 @@ type TerrainRuntime = {
   // ground's everywhere for a ship.
   weight: Uint8Array;
   // Chebyshev distance in cells to the nearest blocked cell (or the map's edge): 0 on a blocked cell.
-  clearance: Uint16Array;
+  clearance?: Uint16Array;
   fields: Map<number, Field>;
   spare: Field[];
   clock: number;
   nearest: Map<number, number>;
   // Dial's buckets, kept between fields: the whole map's (see grow) and the boxes' (see growBox).
-  buckets: Int32Array[];
+  buckets?: Int32Array[];
   tops: Int32Array;
   boxBuckets: number[][];
   offsets: Int32Array;
@@ -1151,17 +1227,14 @@ function createRuntime(terrain: Terrain, mover: Mover): TerrainRuntime {
     width,
     walk,
     weight,
-    clearance: new Uint16Array(count),
     fields: new Map(),
     clock: 0,
     spare: [],
     nearest: new Map(),
-    buckets: Array.from({ length: 8 }, () => new Int32Array(count)),
     tops: new Int32Array(8),
     boxBuckets: Array.from({ length: BUCKETS }, () => []),
     offsets,
   };
-  fillClearance(state);
   return state;
 }
 
@@ -1194,7 +1267,8 @@ function stepAllowed(state: TerrainRuntime, at: number, direction: number) {
 }
 
 function fillClearance(state: TerrainRuntime) {
-  const { walk, clearance, offsets } = state;
+  const { walk, offsets } = state;
+  const clearance = state.clearance ??= new Uint16Array(walk.length);
   const queue = new Int32Array(walk.length);
   let tail = 0;
   // Blocked cells (the border among them) seed their walkable neighbours at 1.
@@ -1223,12 +1297,14 @@ function fillClearance(state: TerrainRuntime) {
 // whose clearance is k has every cell within k - 1 of it walkable, so the walk jumps to the edge of that square.
 
 function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
-  const { terrain, walk, clearance, width } = state;
+  const { terrain, walk, width } = state;
   const size = terrain.cell;
   let at = padAt(state, ax, ay);
   const end = padAt(state, bx, by);
   if (at < 0 || end < 0 || walk[at] !== 1 || walk[end] !== 1) return false;
   if (at === end) return true;
+  if (!state.clearance) fillClearance(state);
+  const clearance = state.clearance!;
   const dx = bx - ax;
   const dy = by - ay;
   const length = Math.sqrt(dx * dx + dy * dy);
@@ -1320,7 +1396,8 @@ function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
 // The walking cost over the whole map from every cell to the nearest source, on the terrain alone (Dial's algorithm over
 // eight neighbours, no corner cut): the AIs' walking distances and routes (see walkingDistance, walkRoute).
 function grow(state: TerrainRuntime, sources: number[]): Field {
-  const { walk, offsets, buckets, tops } = state;
+  const { walk, offsets, tops } = state;
+  const buckets = state.buckets ??= Array.from({ length: 8 }, () => new Int32Array(walk.length));
   const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
   const dist = field.dist;
   dist.fill(UNREACHED);

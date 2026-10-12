@@ -4,6 +4,61 @@ import { createSnapshotQuery } from "./snapshot-query";
 import { sketchScene } from "./scene";
 
 describe("SDK snapshot query", () => {
+  it("keeps completed building lists isolated across owners, kinds and repeated reads", () => {
+    const game = sketchScene("sdk-completed-building-isolation")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("own", { team: "north" })
+      .player("foe", { team: "south" })
+      .townHall("own", 500, 500, { id: "main" })
+      .building("own", "farm", 650, 500, { id: "farm" })
+      .townHall("own", 900, 500, { id: "second" })
+      .building("own", "townHall", 1200, 500, { id: "unfinished", complete: false })
+      .townHall("foe", 3000, 3000, { id: "foe-main" })
+      .build().createGame();
+    const query = createSnapshotQuery(snapshotGame(game));
+    const halls = query.completeBuildingsFor("own", "townHall");
+    expect(halls.map(building => building.id)).toEqual(["main", "second"]);
+    halls.reverse();
+    halls.splice(0, halls.length);
+    expect(query.completeBuildingsFor("own", "townHall").map(building => building.id)).toEqual(["main", "second"]);
+    expect(query.completeBuildingsFor("own", "townHall")).not.toBe(halls);
+
+    const all = query.completeBuildingsFor("own");
+    expect(all.map(building => building.id)).toEqual(["main", "farm", "second"]);
+    all.pop();
+    expect(query.completeBuildingsFor("own").map(building => building.id)).toEqual(["main", "farm", "second"]);
+    expect(query.completeBuildingsFor("own", "farm").map(building => building.id)).toEqual(["farm"]);
+    expect(query.completeBuildingsFor("foe", "townHall").map(building => building.id)).toEqual(["foe-main"]);
+    const missing = query.completeBuildingsFor("own", "barracks");
+    expect(missing).toEqual([]);
+    missing.push(query.buildingById("main")!);
+    expect(query.completeBuildingsFor("own", "barracks")).toEqual([]);
+  });
+
+  it("refreshes completed building lists on a new snapshot after construction and ownership changes", () => {
+    const game = sketchScene("sdk-completed-building-next-frame")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("own", { team: "north" })
+      .player("foe", { team: "south" })
+      .townHall("own", 500, 500, { id: "captured" })
+      .building("own", "townHall", 900, 500, { id: "finished", complete: false })
+      .townHall("foe", 3000, 3000, { id: "foe-main" })
+      .build().createGame();
+    const first = createSnapshotQuery(snapshotGame(game));
+    expect(first.completeBuildingsFor("own", "townHall").map(building => building.id)).toEqual(["captured"]);
+    expect(first.completeBuildingsFor("foe").map(building => building.id)).toEqual(["foe-main"]);
+
+    game.buildings.find(building => building.id === "captured")!.owner = "foe";
+    game.buildings.find(building => building.id === "finished")!.complete = true;
+    const next = createSnapshotQuery(snapshotGame(game));
+    expect(next.completeBuildingsFor("own", "townHall").map(building => building.id)).toEqual(["finished"]);
+    expect(next.completeBuildingsFor("foe").map(building => building.id)).toEqual(["captured", "foe-main"]);
+    expect(first.completeBuildingsFor("own", "townHall").map(building => building.id)).toEqual(["captured"]);
+    expect(first.completeBuildingsFor("foe").map(building => building.id)).toEqual(["foe-main"]);
+  });
+
   it("parses a raw snapshot into player-relative RTS views", () => {
     const scene = sketchScene("sdk-snapshot-query")
       .map("openClaims")

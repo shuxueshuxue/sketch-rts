@@ -7,6 +7,7 @@ import type { GameMap, Unit, WorldItem } from './types';
 /** Loose items need actual support. A deck carries its floor objects; water
  * destroys them, including equipment released by a sinking hull. */
 export function settleGroundItems(items: WorldItem[], units: readonly Unit[], map: GameMap) {
+  if (items.length === 0) return false;
   const ships=units.filter(unit=>unit.hp>0 && shipProfile(unit));
   let changed=false;
   const kept=items.filter(item=>{

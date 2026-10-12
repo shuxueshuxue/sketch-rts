@@ -77,7 +77,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
 }
 
 function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(canReceiveHealing);
+  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(unit => canReceiveHealing(unit, snapshot));
 }
 
 function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions) {

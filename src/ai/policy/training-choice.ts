@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
+import { UNIT_DEFS, trainableUnitsAt } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { isOpponentOwner } from "./ownership";
 import { distance } from "./spatial";
@@ -13,7 +13,7 @@ import { isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
   const choice = preferredTrainingChoice(snapshot, owner, building, options);
   if (!choice || tierUnlocked(snapshot, owner, choice)) return choice;
-  return BUILDING_DEFS[building.kind].trains.find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
+  return trainableUnitsAt(playerState(snapshot, owner).race, building.kind).find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
 }
 
 function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions): TrainableUnitKind | undefined {
@@ -75,10 +75,10 @@ function v5RangedCoreChoice(snapshot: GameSnapshot, owner: PlayerId, building: B
   if (building.kind === "cinderSpire") {
     if (army.length < 6) return "sparkArcher";
     const count = (kind: TrainableUnitKind) => army.filter(unit => unit.kind === kind).length;
-    if (count("emberAcolyte") < 1) return "emberAcolyte";
+    if (count("priest") < 1) return "priest";
     if (army.length >= 8 && count("sparkArcher") >= army.length * .6) {
       if (count("ashHexer") < 1) return "ashHexer";
-      if (count("pyreCaller") < 1) return "pyreCaller";
+      if (count("summoner") < 1) return "summoner";
     }
     return "sparkArcher";
   }
@@ -100,20 +100,20 @@ function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUni
 function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): TrainableUnitKind {
   const army = combatUnits(snapshot, owner);
   const sparkArchers = army.filter((unit) => unit.kind === "sparkArcher").length;
-  const acolytes = army.filter((unit) => unit.kind === "emberAcolyte").length;
+  const acolytes = army.filter((unit) => unit.kind === "priest").length;
   const hexers = army.filter((unit) => unit.kind === "ashHexer").length;
-  const callers = army.filter((unit) => unit.kind === "pyreCaller").length;
+  const callers = army.filter((unit) => unit.kind === "summoner").length;
   const supportTarget = options.version === "v2" && army.length >= 8 ? 2 : 1;
-  if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
+  if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "priest";
   if (sparkArchers < 1) return "sparkArcher";
-  if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
-  if (acolytes < 1) return "emberAcolyte";
+  if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "priest";
+  if (acolytes < 1) return "priest";
   if (hexers < 1) return "ashHexer";
-  if (callers < 1) return "pyreCaller";
-  if (options.version === "v2" && callers < supportTarget) return "pyreCaller";
+  if (callers < 1) return "summoner";
+  if (options.version === "v2" && callers < supportTarget) return "summoner";
   if (options.version === "v2" && hexers < supportTarget) return "ashHexer";
   if (sparkArchers < army.length / 3) return "sparkArcher";
-  return "emberAcolyte";
+  return "priest";
 }
 
 function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -125,7 +125,7 @@ function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: Pre
 
 export function shouldPrioritizeWoundedPriestTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}) {
   if (options.version !== "v2") return false;
-  const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "emberAcolyte" || unit.kind === "fieldMedic").length;
+  const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "fieldMedic").length;
   if (healers >= 2) return false;
   return combatUnits(snapshot, owner).filter((unit) => unit.kind !== "priest" && unit.kind !== "fieldMedic" && unit.hp < unit.maxHp * 0.62).length >= 3;
 }

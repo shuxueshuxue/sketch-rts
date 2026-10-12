@@ -3,6 +3,7 @@ import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
 import { isMeleeStance } from "./push";
+import { isVeteranSkillId } from "./veteran-skills";
 
 export function isGameCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
@@ -12,9 +13,10 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "aim") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attack" || command.type === "follow") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "stop" || command.type === "holdPosition") return isStringArray(command.unitIds);
+  if (command.type === "enterCabin" || command.type === "leaveCabin") return isStringArray(command.unitIds) && command.queued === undefined;
   if (command.type === "mine") return isStringArray(command.unitIds) && typeof command.resourceId === "string";
   if (command.type === "repair") return isStringArray(command.unitIds) && typeof command.buildingId === "string";
-  if (command.type === "repairShip") return isStringArray(command.unitIds) && typeof command.targetId === "string";
+  if (command.type === "repairShip" || command.type === "repairUnit") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "build") return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "setRally") return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
   if (command.type === "cancelTraining") return typeof command.buildingId === "string" && typeof command.jobId === "string";
@@ -23,6 +25,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "hire") return typeof command.campId === "string";
   if(command.type==="buyShipEquipment")return typeof command.buildingId==="string" && ["shipCannon","shipMortar","flameProjector"].includes(command.item as string) && (command.recipientId===undefined || typeof command.recipientId==="string");
   if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string" && (command.recipientId===undefined || typeof command.recipientId==="string");
+  if (command.type === "learnVeteranSkill") return typeof command.unitId === "string" && isVeteranSkillId(command.skill);
   if (command.type === "cast") {
     return (
       typeof command.unitId === "string" &&
@@ -35,6 +38,9 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "setAutocast") return isStringArray(command.unitIds) && isAbilityKind(command.ability) && typeof command.enabled === "boolean";
   if (command.type === "setStance") return isStringArray(command.unitIds) && isMeleeStance(command.stance);
   if (command.type === "board") return isStringArray(command.unitIds) && typeof command.transportId === "string";
+  if (command.type === "boardShip") return isStringArray(command.unitIds) && typeof command.targetId === "string"
+    && (command.queued === undefined || typeof command.queued === "boolean");
+  if (command.type === "cancelBoardShip") return isStringArray(command.unitIds) && command.queued === undefined;
   if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y) && (command.avoidCombat===undefined || typeof command.avoidCombat==='boolean');
   if (command.type === "unloadPassenger") return typeof command.transportId === "string" && typeof command.passengerId === "string";
   if(command.type==="wieldItem")return typeof command.unitId==="string" && (command.itemId===undefined || typeof command.itemId==="string") && (command.hand==="right" || command.hand==="left");

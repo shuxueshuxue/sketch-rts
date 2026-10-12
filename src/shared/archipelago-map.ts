@@ -3,12 +3,14 @@ import { fractalNoise, coordinateRandom } from "./environment/noise";
 import { campRoster, campMembers } from "./camps";
 import { detCos, detSin } from "./det-math";
 import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
+import { BUILDING_DEFS } from './catalog';
+import { footprintHalf } from './terrain';
 import {ecologicalDressing,prepareEcology} from './map-dressing';
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
 /** A terrain generator only. Naval policy reads connectivity and resources, never this layout's identity. */
 export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerId[]): GeneratedMap {
-    const size = options.size ?? 6144;
+    const size = options.size ?? 7680;
     const cell = 32, cols = Math.ceil(size / cell);
     let seed = 2166136261;
     for (const c of options.seed)
@@ -16,10 +18,15 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     const rotation = (seed % 1000) / 1000 * Math.PI * 2;
     const center = { x: size / 2, y: size / 2 };
     const point = (angle: number, reach: number) => ({ x: center.x + detCos(angle) * reach, y: center.y + detSin(angle) * reach });
-    const homes = players.map((owner, index) => ({ owner, at: point(rotation + index * Math.PI * 2 / players.length, size * .345), radius: size * .095 }));
+    // More ocean between islands, while the playable home ground remains close
+    // to its previous size. Mining offsets and the terrain's 32-unit cells stay fixed.
+    const homes = players.map((owner, index) => ({ owner, at: point(rotation + index * Math.PI * 2 / players.length, size * .36), radius: Math.max(480, size * .076) }));
     const large=players.length>=6;
-    const mainland = { at: center, radius: size * (large ? .12 : .155) };
-    const satellites=large?players.map((_,i)=>({at:point(rotation+(i+.5)*Math.PI*2/players.length,size*.225),radius:size*.047})):[];
+    const mainland = { at: center, radius: size * (large ? .096 : .124) };
+    // A satellite's central mine needs a 280–320-unit hauling base, its whole
+    // foundation and a worker lane round it even on the indented coast. Keep the
+    // island centers fixed, so only these previously cramped mineral isles grow.
+    const satellites=large?players.map((_,i)=>({at:point(rotation+(i+.5)*Math.PI*2/players.length,size*.225),radius:Math.max(560,size*.0376)})):[];
     const land = [mainland, ...homes,...satellites];
     let cells = "";
     for (let row = 0; row < cols; row++)
@@ -48,7 +55,7 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     const mainlandRoster = campRoster(() => coordinateRandom(seed, 0, 0, 20), mainlandTier, "open", used).kinds;
     const satelliteRoster = campRoster(() => coordinateRandom(seed, 0, 0, 21), "orange", "water", used).kinds;
     for (let index = 0; index < players.length * (large?1:2); index++) {
-        const at = point(rotation + index * Math.PI * (large?2:1) / players.length, size * (large?.072:.095));
+        const at = point(rotation + index * Math.PI * (large?2:1) / players.length, size * (large?.0576:.076));
         result.resources.push({ id: `gold-mainland-${index}`, kind: "goldMine", ...at, amount: 9000 });
         const center = { x: at.x, y: at.y + 120 };
         result.units.push(...campMembers(mainlandRoster, center).map((member, i) => createUnit(`guard-${index}-${i}`, "neutral", member.kind, member.x, member.y)));
@@ -64,11 +71,13 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     });
     // Camps, shops and mineral seams must remain usable through the wooded interior.
     if(large){
-        const open=[...result.resources,...result.units.filter(unit=>unit.owner==='neutral'),...result.sites];
+        const mineClearance=GOLD_MINE_RULES.baseRange+footprintHalf(BUILDING_DEFS.townHall.radius,cell)+cell;
+        const open=[...result.units.filter(unit=>unit.owner==='neutral'),...result.sites];
         result.terrain.cells=[...result.terrain.cells].map((tile,index)=>{
             if(tile!=='T'&&tile!=='#')return tile;
             const at={x:(index%cols+.5)*cell,y:(Math.floor(index/cols)+.5)*cell};
-            return open.some(point=>Math.hypot(at.x-point.x,at.y-point.y)<240)?'.':tile;
+            return result.resources.some(point=>Math.hypot(at.x-point.x,at.y-point.y)<mineClearance)
+                ||open.some(point=>Math.hypot(at.x-point.x,at.y-point.y)<240)?'.':tile;
         }).join('');
     }
     prepareEcology(result.terrain,options.seed);
