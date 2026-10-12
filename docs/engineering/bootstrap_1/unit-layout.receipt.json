@@ -1,0 +1,161 @@
+{
+  "parent": "3655bdce19bf4729a718945d6fdd4861bba5d13a",
+  "sourceHashes": {
+    "src/shared/map.ts": "ebd5f6bb23881bbe35954a90d4cd22f3308891ffeabe662b99b2780e3dec0048",
+    "src/shared/types.ts": "18182e36497e3589099d4e7bf846f700bf25ef0e99135faed59af428b8080458",
+    "src/shared/mining.ts": "b2a7784d784f3d0d38abcbceb449aeeac319195a4b8faa41c34b08030cc8aa41",
+    "src/shared/ship-queued-course.ts": "13b12dcee549bd8ce168bbaf31adf4334bc28cf93da8dbbf0d83137ea45c1844"
+  },
+  "sdk": {
+    "passed": 152,
+    "failed": 0
+  },
+  "nativePerFrameEquality": {
+    "frames": 1200,
+    "exactSerializedSnapshot": true,
+    "canonicalState": true,
+    "commands": true,
+    "aiMemory": true,
+    "nextId": true,
+    "checksum": "931d1cc2"
+  },
+  "objectShape": {
+    "parent": {
+      "mode": "Short ordinary SDK commands; diagnostic V8 shape inspection only, no throughput result",
+      "rows": [
+        {
+          "label": "native birth",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "idle",
+          "hasArrival": true,
+          "hasAim": false
+        },
+        {
+          "label": "native arrival",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "idle",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": false
+        },
+        {
+          "label": "native aim",
+          "sameMapAsIdlePeer": false,
+          "fastProperties": true,
+          "order": "aim",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": true
+        },
+        {
+          "label": "next native move",
+          "sameMapAsIdlePeer": false,
+          "fastProperties": true,
+          "order": "move",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": true
+        }
+      ]
+    },
+    "candidate": {
+      "mode": "Short ordinary SDK commands; diagnostic V8 shape inspection only, no throughput result",
+      "rows": [
+        {
+          "label": "native birth",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "idle",
+          "hasArrival": true,
+          "hasAim": true
+        },
+        {
+          "label": "native arrival",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "idle",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": true
+        },
+        {
+          "label": "native aim",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "aim",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": true
+        },
+        {
+          "label": "next native move",
+          "sameMapAsIdlePeer": true,
+          "fastProperties": true,
+          "order": "move",
+          "hasArrival": true,
+          "arrival": {
+            "x": 1000,
+            "y": 1000
+          },
+          "hasAim": true
+        }
+      ]
+    }
+  },
+  "localCpu": {
+    "parent": "3655bdce19bf4729a718945d6fdd4861bba5d13a",
+    "mode": "Fresh ordinary SDK bare-duel objects, original v2 controllers; 1200 per-frame canonical/command/AI-memory/ID comparisons; two warmups each, 4000-tick ABBA CPU windows; not whole-game performance or v9 acceptance",
+    "rows": [
+      {
+        "label": "parent",
+        "cpuMs": 1149.372,
+        "hash": "2cadad39",
+        "nextId": 1137,
+        "units": 26
+      },
+      {
+        "label": "next",
+        "cpuMs": 889.813,
+        "hash": "2cadad39",
+        "nextId": 1137,
+        "units": 26
+      },
+      {
+        "label": "next",
+        "cpuMs": 1396.62,
+        "hash": "2cadad39",
+        "nextId": 1137,
+        "units": 26
+      },
+      {
+        "label": "parent",
+        "cpuMs": 1895.733,
+        "hash": "2cadad39",
+        "nextId": 1137,
+        "units": 26
+      }
+    ]
+  },
+  "productionAcceptance": false,
+  "productionBuild": {
+    "node": "20.20.2",
+    "exitCode": 0
+  }
+}
