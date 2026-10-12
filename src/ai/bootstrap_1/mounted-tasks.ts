@@ -2,6 +2,7 @@ import { detCos, detSin } from '../../shared/det-math';
 import { isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { retreatLandTravelTicks } from './safe-land-route';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
@@ -25,7 +26,10 @@ function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers:
         return gap >= THREAT_RANGE || gap > mountedThreatReach(snapshot, foe, { ...point, radius: rider.radius }, THINK_TICKS + rider.cooldown)
           + foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
       }));
-  return nearestByRoute(snapshot.map, points, rider, 'land');
+  if (distance(rider, worker) < THREAT_RANGE) return nearestByRoute(snapshot.map, points, rider, 'land');
+  return points.map(point => ({ point, road: walkingDistance(snapshot.map, rider, point, 'land')! }))
+    .sort((a, b) => a.road - b.road)
+    .find(({ point }) => retreatLandTravelTicks(snapshot, rider, point, [...towers, ...defenders]) !== undefined)?.point;
 }
 
 function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
@@ -83,7 +87,6 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   while (riders.length) {
     const lead = riders[0]!;
     const local = riders.filter(unit => sameGround(snapshot.map, lead, unit));
-    riders = riders.filter(unit => !local.includes(unit));
     const hall = nearestByRoute(snapshot.map, snapshot.buildings
       .filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
       .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && exposedMiningLine(snapshot, lead, worker, hall, towers, defenders))), lead, 'land');
@@ -94,11 +97,14 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
     // A lone scout raids an exposed line when it is closer than the next camp.
     if (hall && (local.length >= 2 || !camp
       || walkingDistance(snapshot.map, lead, hall, 'land')! < walkingDistance(snapshot.map, lead, camp.center, 'land')!)) {
-      active.push({ unitIds: local.slice(0, 3).map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
+      const crew = local.slice(0, 3);
+      active.push({ unitIds: crew.map(unit => unit.id), objective: { kind: 'raid', hallId: hall.id, owner: hall.owner } });
+      riders = riders.filter(unit => !crew.includes(unit));
       continue;
     }
-    if (!camp) continue;
+    if (!camp) { riders = riders.filter(unit => !local.includes(unit)); continue; }
     active.push({ unitIds: [lead.id], objective: { kind: 'camp', ids: camp.creeps.map(unit => unit.id) } });
+    riders = riders.filter(unit => unit !== lead);
   }
   return active;
 }

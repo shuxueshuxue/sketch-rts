@@ -6,6 +6,7 @@ import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
 import { isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { groundSteeringRoute, routeLeavesDisks } from '../../shared/route-selection';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { unitAbilities } from '../../shared/unit-abilities';
 import { itemsFor } from '../../shared/equipment';
@@ -93,7 +94,9 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     if (!foes.some(foe => 'order' in foe && foe.order.type === 'attack' && foe.order.targetId === rider.id)) {
       const approach = 1 - rider.attackRange / distance(rider, target);
       const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
-      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))) {
+      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))
+        && routeLeavesDisks(groundSteeringRoute(snapshot.map, rider, entry), foes.map(foe => ({ x: foe.x, y: foe.y,
+          radius: mountedThreatReach(snapshot, foe, rider, horizon) + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0) })))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
       return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station), false);
