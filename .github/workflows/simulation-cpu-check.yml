@@ -80,6 +80,9 @@ jobs:
       - name: Verify independent riders use admitted roads and parallel objectives
         run: npx vitest run src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts
 
+      - name: Verify landed riders retain zero-loss camp completion
+        run: npx vitest run src/ai/bootstrap_1/mounted-expedition.test.ts --testNamePattern=v9_knight
+
       - name: Verify mobile patients and existing care ownership
         run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts
 
