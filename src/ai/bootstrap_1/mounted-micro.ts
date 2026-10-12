@@ -119,7 +119,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   // Keep the original scoring radius; recovery extends the selected endpoint by the move arrival range below.
   const step = Math.max(rider.speed * THINK_TICKS,
     ...threats.map(threat => threat.speed * (THINK_TICKS + 2))) / SIM_TICKS_PER_SECOND;
-  const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
+  const innerWindow = avoidCombat ? [] : foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider, horizon).map(limit => ({ foe, limit })) : []);
   const bodies = snapshot.units.filter(unit => unit.id !== rider.id && !unit.deck
     && unitMover(unit.kind) === 'land' && !(unit.kind === 'worker' && unit.order.type === 'mine'));
   const choices = [rider, ...(destination && distance(rider, destination) <= step ? [destination] : []), ...Array.from({ length: 16 }, (_, index) => ({
