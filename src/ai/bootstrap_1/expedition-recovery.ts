@@ -35,6 +35,10 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
   const landed = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land'
     && unit.kind !== 'worker' && unit.order.type !== 'board' && home && !sameGround(snapshot.map, unit, home));
+  return landRecoveryAssignments(snapshot, owner, options, landed);
+}
+
+export function landRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, landed: Unit[]) {
   const healers = landed.filter(unit => UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal'));
   const posts = postRecoveryAssignments(snapshot, owner, options).filter(({ patient }) => landed.includes(patient));
   const resting = new Set(posts.map(({ patient }) => patient.id));
@@ -69,6 +73,15 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
   return { recovering, unmedicated, foes, posts };
 }
 
+export function patientRendezvousCommands(snapshot: GameSnapshot,
+  recovering: ReturnType<typeof landRecoveryAssignments>['recovering'], foes: readonly (Unit | Building)[], medics: ReadonlySet<string>): GameCommand[] {
+  return recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
+    const threats = patientThreats(snapshot, patient, foes);
+    if (threats.length) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+    return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
+  });
+}
+
 export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const { recovering, unmedicated, posts } = recoveryAssignments(snapshot, owner, options);
   return new Set([...recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]), ...unmedicated.map(({ patient }) => patient.id),
@@ -94,13 +107,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
-  const retreat: GameCommand[] = recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
-    const threats = patientThreats(snapshot, patient, foes);
-    if (threats.length) {
-      return mountedEscape(snapshot, patient, threats, 0, healer, true);
-    }
-    return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
-  });
+  const retreat = patientRendezvousCommands(snapshot, recovering, foes, medics);
   return [...commands.flatMap((command): GameCommand[] => {
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];

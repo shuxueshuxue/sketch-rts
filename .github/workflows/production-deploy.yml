@@ -100,6 +100,10 @@ jobs:
       - name: Verify mounted escape and shooting intents
         run: npx vitest run src/ai/bootstrap_1/mounted-escape-intent.test.ts src/ai/bootstrap_1/mounted-charge.test.ts src/ai/bootstrap_1/mounted-spent-charge.test.ts src/ai/bootstrap_1/mounted-retreat-motion.test.ts src/ai/bootstrap_1/mounted-camp-preparation.test.ts
 
+
+      - name: Verify mobile patients and existing care ownership
+        run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts
+
       - name: Verify executable assault targets and legacy commander
         run: npx vitest run src/ai/bootstrap_1/attack-target-eligibility.test.ts src/ai/policy/v6/general.test.ts src/ai/bootstrap_1/attack-reinforcements.test.ts
 
