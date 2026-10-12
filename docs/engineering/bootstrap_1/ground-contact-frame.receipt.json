@@ -1,0 +1,92 @@
+{
+  "parent": "101cbf03c4a208fb72a5c53315b7ea95f5804b77",
+  "sourceHashes": {
+    "src/shared/sim.ts": "d19a0d5188496022cfed4d07f319b04d1f340a500476b9abe3d0a9e97af9b55b"
+  },
+  "sdk": {
+    "passed": 64,
+    "failed": 0
+  },
+  "perFrameEquality": {
+    "frames": 600,
+    "commands": true,
+    "snapshot": true,
+    "aiMemory": true,
+    "nextId": true
+  },
+  "diagnosticCounts": {
+    "parent": "101cbf03c4a208fb72a5c53315b7ea95f5804b77",
+    "mode": "Diagnostic instrumentation of separation-only hull checks and mover classifications for 600 native ticks; not a CPU measurement. Same actual native checkpoint and ordinary v2 controller; all final worlds and memories equal.",
+    "rows": [
+      {
+        "label": "parent",
+        "groundConstraintCalls": 0,
+        "separationClassifications": 36388,
+        "hash": "83166476",
+        "nextId": 4392
+      },
+      {
+        "label": "next",
+        "groundConstraintCalls": 0,
+        "separationClassifications": 0,
+        "hash": "83166476",
+        "nextId": 4392
+      }
+    ]
+  },
+  "localCpu": {
+    "parent": "101cbf03c4a208fb72a5c53315b7ea95f5804b77",
+    "mode": "One real late default-duel checkpoint with ordinary v2 controllers: 600 exact command/world/memory comparisons; 3 warmups and 3000-tick ABBA CPU measurements; native victory; not full-duel acceptance",
+    "rows": [
+      {
+        "label": "parent",
+        "cpuMs": 1693.509,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "next",
+        "cpuMs": 1136.429,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "next",
+        "cpuMs": 1329.787,
+        "hash": "15920fe7",
+        "nextId": 4540
+      },
+      {
+        "label": "parent",
+        "cpuMs": 1032.325,
+        "hash": "15920fe7",
+        "nextId": 4540
+      }
+    ]
+  },
+  "productionAccepted": false,
+  "terrainDiagnosticCounts": {
+    "parent": "101cbf03c4a208fb72a5c53315b7ea95f5804b77",
+    "mode": "Diagnostic instrumentation of separation-only hull checks and mover classifications for 600 native ticks; not a CPU measurement. Observed Reedwater 8400-tick native world, existing orders advance for 600 ticks without replanning; all final worlds and nextIds equal. This diagnostic is not a CPU result or fresh game.",
+    "rows": [
+      {
+        "label": "parent",
+        "groundConstraintCalls": 10238,
+        "separationClassifications": 10238,
+        "hash": "24e04bb3",
+        "nextId": 2861
+      },
+      {
+        "label": "next",
+        "groundConstraintCalls": 0,
+        "separationClassifications": 0,
+        "hash": "24e04bb3",
+        "nextId": 2861
+      }
+    ]
+  },
+  "productionBuild": {
+    "node": "20.20.2",
+    "exitCode": 0
+  }
+}
