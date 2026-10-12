@@ -183,6 +183,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const producers = new Set<string>();
   const labs = new Set<string>();
   for (const goal of goals) {
+    if (goal.producer && producers.has(goal.producer)) continue;
     // Fund the existing production wave before spending the remainder on more factories.
     if (goal.productionReserve > 0 && gold < goal.cost + goal.productionReserve) continue;
     const research = goal.id.startsWith('upgrade:')
