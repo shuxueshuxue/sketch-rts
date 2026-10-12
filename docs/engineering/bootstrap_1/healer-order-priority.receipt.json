@@ -1,0 +1,30 @@
+{
+  "base": "922b5b6a5fe7d845d526f8b840d519c325b09f19",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/policy.ts": "e9c7e6638ddf369f6ba0942ebc77e88043a0182e27f2e1e9bcce0a84aaaea94b"
+  },
+  "runtimeChange": "Move existing medicalRecovery from the backline slot to immediately before abilities. No state/stat/resource/cadence changes.",
+  "sdk": {
+    "passed": 213,
+    "failed": 0,
+    "sha256": "2f748e16b81e08ff65f66f3c36cd10b250314688726a0e7eb5e27593c060426d",
+    "failedDeploymentSuiteIncluded": "front-post-continuity.test.ts",
+    "sameFrameAllocationCasesRetained": 12
+  },
+  "failedParentDeployment": {
+    "pr": 349,
+    "run": 38298977817,
+    "attempt": 1,
+    "conclusion": "failure",
+    "suite": "front-post-continuity.test.ts",
+    "failedCases": 4,
+    "assertionsUnchanged": true,
+    "notRetried": true
+  },
+  "buildValidation": {
+    "previousRuntimeProjectBuild": "Node 20 build at PR #349 completed successfully; only two existing stack references reordered in this repair.",
+    "finalProductionBuild": "pending"
+  },
+  "fullAcceptance": "pending"
+}
