@@ -61,7 +61,7 @@ export function withinRangeOf<T extends Point>(items: T[], range: number): (poin
   };
 }
 
-function withinRange(a: Point, b: Point, range: number) {
+export function withinRange(a: Point, b: Point, range: number) {
   const dx = a.x - b.x, dy = a.y - b.y;
   if (Math.abs(dx) > range || Math.abs(dy) > range) return false;
   return hypot2(dx, dy) <= range;
