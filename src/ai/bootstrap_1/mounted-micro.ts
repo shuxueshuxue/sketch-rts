@@ -96,7 +96,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
       if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))
         && routeLeavesDisks(groundSteeringRoute(snapshot.map, rider, entry), foes.map(foe => ({ x: foe.x, y: foe.y,
-          radius: mountedThreatReach(snapshot, foe, rider, horizon) + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0) })))) {
+          radius: mountedThreatReach(snapshot, foe, rider, horizon) })))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
       return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station), false);
