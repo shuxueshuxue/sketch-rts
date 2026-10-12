@@ -1,7 +1,7 @@
 import { mercenaryControlUnitIds } from './mercenary-control';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
-import { chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
+import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
@@ -18,7 +18,7 @@ import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { bootstrapExpansionMine } from './expansion-target';
 import { availableV6Army, planV6Army, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
-import { V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
+import { activeCamp, neutralCamps, V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planV8Charge } from '../policy/v8/charge';
@@ -148,7 +148,9 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     pursue: defense => walkingDistance(snapshot.map, defense.hall, defense.field)! <= distance(defense.hall, defense.field) + defense.leash!,
   });
   if (creep && options.memory.v6?.creep === creep) {
+    const camps = neutralCamps(snapshot), target = activeCamp(creep, camps)!;
     const walking = recruits.filter(unit => !arrived.includes(unit)
+      && campRecruitRoadClear(snapshot, unit, creep.staging, camps, target)
       && !(unit.order.type === 'move' && distance(unit.order, creep.staging) < V7_GATHERED_RANGE));
     if (walking.length) commands.push(resolveAiCommandIntent(snapshot, owner,
       { type: 'move', unitIds: walking.map(unit => unit.id), ...creep.staging }, options));

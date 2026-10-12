@@ -69,7 +69,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   }
   const aim = rider.aim ? rider.aim : rider;
   // Outside weapon range we are walking, not waiting for aim at the distant target.
-  const shot = rider.cooldown > THINK_TICKS || distance(rider, target) > rider.attackRange ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
+  const shot = rider.cooldown > THINK_TICKS || distance(rider, target) > rider.attackRange ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS[rider.kind])!.speed;
   const horizon = THINK_TICKS + rider.cooldown;
   const margin = (point: Point, foe: Threat) => distance(point, foe) - mountedThreatReach(snapshot, foe, rider, horizon);
   // Inside a charge minimum, the shot and next think share the same narrow firing window.

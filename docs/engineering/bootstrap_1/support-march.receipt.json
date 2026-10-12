@@ -1,0 +1,202 @@
+{
+  "name": "bootstrap_1",
+  "parent": "99a4bc3b3006c8c7f2bdaa7c6f826407fd28b8c5",
+  "rulesVersion": 2,
+  "runtimeModules": 8,
+  "newPersistentFields": 0,
+  "newNumericThresholds": 0,
+  "sourceHashes": {
+    "src/ai/bootstrap_1/camp-geometry.ts": "f2368a2bafb9e30e6e0bd96774bab0fc0ad049e967d2a0649db64d101e9bff9a",
+    "src/ai/bootstrap_1/mine-defense.ts": "37263c35c5deaf8eeaeb8d9850248394d83447e22c9f08bed6c9c55419ca22d8",
+    "src/ai/policy/v7/creep.ts": "2112b883e5bbc4122a7f2b89dd685a7dca54650d64baf5976ef270be5a4019d3",
+    "src/ai/policy/v6/backline.ts": "20a3ba1be7eb0c2ecb31dee6d027e316bf590972d724255c2e59ada8c63eb0dc",
+    "src/ai/bootstrap_1/mounted-micro.ts": "61a5cf0f13b48a5c5c3396efcfe64903b7fc0cef962f198debc1160c3936d157",
+    "src/ai/bootstrap_1/caster-screen.ts": "6329749b7d36ae39c0d56b7e6a53e7a7cc0bc1e835006df857239706a9580d33",
+    "src/ai/bootstrap_1/policy.ts": "655558f141e6901232bf6c8b45498c26000baa6e46975b8139dcdb11c77cad08",
+    "src/ai/bootstrap_1/summoner-screen.ts": "a933ff8da4f6e779b0a813fba66293d9c8934b3a61baa3210ff9bbb500e1a44f"
+  },
+  "sdk": {
+    "passed": 165,
+    "failed": 0,
+    "suites": [
+      {
+        "file": "src/ai/bootstrap_1/camp-assembly.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-geometry.test.ts",
+        "passed": 14
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-recruit-road.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-return-roads.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/camp-territory-roads.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/caster-melee-micro.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/expedition-recovery.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/global-camps.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/mainland-medical-priority.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/medical-roads.test.ts",
+        "passed": 12
+      },
+      {
+        "file": "src/ai/bootstrap_1/mounted-camp-preparation.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "src/ai/bootstrap_1/mounted-guarded-line.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "src/ai/bootstrap_1/mounted-micro.test.ts",
+        "passed": 11
+      },
+      {
+        "file": "src/ai/bootstrap_1/mounted-prepared-shot.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "src/ai/bootstrap_1/mounted-spent-charge.test.ts",
+        "passed": 2
+      },
+      {
+        "file": "src/ai/bootstrap_1/summoner-screen.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "src/ai/policy/v6/backline.test.ts",
+        "passed": 6
+      }
+    ],
+    "reportHashes": {
+      "bootstrap_1-recruit-road-sdk.json": "7a0b89874ea3641e47e2cc2ac0b43c83c28acdc2fcc598219bdf5116a3970ae3",
+      "bootstrap_1-caster-kite-sdk.json": "b852603dcfe11df8764826e722175bb50d63afca8be9424f4a8ef2d7c9596225",
+      "bootstrap_1-support-march-new-sdk.json": "797827bd4db8e8aeb428d62717e27dc51e5a87fac3b976057e9b01ef88e0cbb7",
+      "bootstrap_1-support-march-mounted-sdk.json": "9f3bfc6bcc9274480e3b62f73405cd5ed4f26263be0fe2e828a2194eb96e82b8"
+    }
+  },
+  "newCasesAgainstParent": {
+    "total": 36,
+    "passed": 12,
+    "failed": 24
+  },
+  "build": {
+    "node": "20.20.2",
+    "command": "npm run build",
+    "exitCode": 0
+  },
+  "soloWindow": {
+    "mode": "Native same-world 9600->14400 solo continuation, restored AI memory and IDs, ordinary rules/resources/cadence. Victory disabled solely for no-opponent observation; not strength acceptance.",
+    "map": "grandEstuary",
+    "version": "v9_knight",
+    "race": "grove",
+    "side": 0,
+    "baseline": {
+      "summary": {
+        "label": "next",
+        "tick": 14400,
+        "gold": 200.56,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 16,
+        "liveCreeps": 28,
+        "permanentDeaths": 5,
+        "activeOwnedMines": 3
+      },
+      "fatalHits": [
+        {
+          "tick": 13286,
+          "id": "unit-p0-ballista-2005",
+          "kind": "ballista",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13597,
+          "id": "unit-p0-witch-1656",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        },
+        {
+          "tick": 13887,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14195,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-0"
+        },
+        {
+          "tick": 14397,
+          "id": "unit-p0-witch-2720",
+          "kind": "witch",
+          "source": "guard-1-2-2"
+        }
+      ]
+    },
+    "recruitRoadPrototype": {
+      "parent": "09d54f26eb161f0d4a61eba883dc8e8e70a973cf",
+      "summary": {
+        "label": "next",
+        "tick": 14400,
+        "gold": 151.25,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 19,
+        "liveCreeps": 29,
+        "permanentDeaths": 2,
+        "activeOwnedMines": 3
+      },
+      "fatalHits": [
+        {
+          "tick": 12561,
+          "id": "unit-p0-priest-1237",
+          "kind": "priest",
+          "source": "guard-1-2-1"
+        },
+        {
+          "tick": 12645,
+          "id": "unit-p0-priest-1254",
+          "kind": "priest",
+          "source": "guard-1-2-1"
+        }
+      ]
+    },
+    "candidate": {
+      "summary": {
+        "label": "next",
+        "tick": 14400,
+        "gold": 170.33,
+        "halls": 3,
+        "workers": 16,
+        "permanentArmy": 21,
+        "liveCreeps": 29,
+        "permanentDeaths": 0,
+        "activeOwnedMines": 3
+      },
+      "fatalHits": []
+    }
+  }
+}
