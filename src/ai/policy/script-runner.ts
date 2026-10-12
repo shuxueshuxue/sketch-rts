@@ -7,6 +7,7 @@ import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { navalBudgetReserve } from "./naval";
 import { shopErrandCost } from "./v9/shop";
 import { SHIP_WEAPONS } from "../../shared/ship-equipment";
+import { withAiGoldBudget } from './snapshot';
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
@@ -26,7 +27,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
   const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0);
-  const economySnapshot = pendingCost ? { ...snapshot, players: { ...snapshot.players, [owner]: { ...snapshot.players[owner]!, gold: Math.max(0, snapshot.players[owner]!.gold - pendingCost) } } } : snapshot;
+  const economySnapshot = pendingCost ? withAiGoldBudget(snapshot, owner, Math.max(0, snapshot.players[owner]!.gold - pendingCost)) : snapshot;
   const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
   const shopReserve = shopErrandCost(economySnapshot, owner, policyOptions) ?? 0;
   let spent = 0;
@@ -35,7 +36,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const gold = Math.max(0, player.gold - spent) - reserve;
     // An unchanged budget is the same shared world frame. Keeping its identity
     // lets later scripts reuse the spatial queries already built for it.
-    return Object.is(gold, player.gold) ? economySnapshot : { ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...player, gold } } };
+    return Object.is(gold, player.gold) ? economySnapshot : withAiGoldBudget(economySnapshot, owner, gold);
   };
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;

@@ -221,12 +221,12 @@ export type Unit = {
   cooldown: number;
   aim?: UnitAim | undefined;
   /** Hand references point into the four shared carried positions. */
-  hands?: { right?: string; left?: string };
-  gearMass?: number;
-  holdMass?: number;
-  shipParts?: { rigging:number; rudder:number; cabin?:number };
-  fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[];
-  bodyRadius?: number;
+  hands?: { right?: string; left?: string } | undefined;
+  gearMass?: number | undefined;
+  holdMass?: number | undefined;
+  shipParts?: { rigging:number; rudder:number; cabin?:number } | undefined;
+  fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[] | undefined;
+  bodyRadius?: number | undefined;
   /** Simulation-facing angle in radians while aiming or firing. */
   facing?: number | undefined;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
@@ -285,13 +285,13 @@ export type Unit = {
   radius: number;
   carryingGold: number;
   /** Active gold-mine assignment, released when its order ends. */
-  mineSlot?: string;
+  mineSlot?: string | undefined;
   kills: number;
   xp: number;
   level: number;
   /** Drawn once on reaching three stars; learning never rerolls these offers. */
-  veteranSkillChoices?: VeteranSkillId[];
-  veteranSkill?: VeteranSkillId;
+  veteranSkillChoices?: VeteranSkillId[] | undefined;
+  veteranSkill?: VeteranSkillId | undefined;
   expiresTick?: number | undefined;
   effects: UnitStatusEffect[];
   order: UnitOrder;

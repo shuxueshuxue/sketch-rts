@@ -20,6 +20,7 @@ import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
 import { shoppingGoals } from './shopping';
 import { routeArrivals } from '../../shared/route-selection';
+import { colonyRecoveryGoals } from './colony-recovery';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -109,6 +110,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options));
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
+  goals.push(...colonyRecoveryGoals(snapshot, owner, options));
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const ranked = ageV6Goals(snapshot, options, goals);

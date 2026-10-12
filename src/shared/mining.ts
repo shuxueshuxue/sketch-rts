@@ -58,7 +58,7 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
     }
     if (!unit.mineSlot) continue;
     if (unit.hp <= 0 || unit.kind !== "worker" || unit.order.type !== "mine" || unit.order.resourceId !== unit.mineSlot || !resources.has(unit.mineSlot)) {
-      delete unit.mineSlot;
+      unit.mineSlot = undefined;
       continue;
     }
   }

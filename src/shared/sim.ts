@@ -87,8 +87,8 @@ export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
   /** Derived at tick boundaries; never serialized or used as a source of permanent stats. */
-  veteranFrame?: Map<string, VeteranUnitModifiers>;
-  veteranAutocastFrame?: VeteranAutocastFrame;
+  veteranFrame?: Map<string, VeteranUnitModifiers> | undefined;
+  veteranAutocastFrame?: VeteranAutocastFrame | undefined;
   miningFrame?: MiningFrame;
   boardingHolds?: ReadonlySet<string>;
   deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number; profile?:DamageProfile }>;
@@ -201,6 +201,9 @@ const nativeUnitSpawners = new WeakMap<Game, Game["spawnUnit"]>();
 const NAVAL_FRAME = 1;
 const CARGO_FRAME = 2;
 const EMPTY_VETERAN_FRAME = 4;
+// These private empty task views are only read by the simulation's ship passes.
+const EMPTY_SHIP_STARTS = new Map<string, { x: number; y: number; heading: number }>();
+const EMPTY_SHIP_DEFENSES: ShipDefenseFrame = new Map();
 
 function navalFrameFlags(game: Game): number {
   // Native births and automatic star gains never assign a learned skill.
@@ -216,7 +219,7 @@ function navalFrameFlags(game: Game): number {
     if (unit.deck || unit.cabin || unit.gangway || unit.sailing || isShipKind(unit.kind)
       || order.type === "board" || order.type === "boardShip" || order.type === "unload" || order.type === "enterCabin"
       || order.type === "move" && (order.rendezvousFor || order.deckPoint || order.deckShipId)
-      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags = NAVAL_FRAME;
+      || order.type === "attackMove" && (order.deckPoint || order.deckShipId)) flags |= NAVAL_FRAME;
   }
   // Preserve the existing vessel view even after direct equal-length array
   // replacement. This shortcut must not change that public mutation behavior.
@@ -799,7 +802,7 @@ export function stepGame(game: Game) {
   if (navalFrame) updateDockRepairs(game);
   updateTowerAttacks(game);
   const vessels = shipsIn(game.units);
-  const starts = new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  const starts = vessels.length ? new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }])) : EMPTY_SHIP_STARTS;
   // The empty collision frame still clears prior hull impacts and binds ground
   // movement to this tick's no-hull geometry.
   beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
@@ -824,11 +827,11 @@ export function stepGame(game: Game) {
       updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
     }
   } else {
-    game.boardingHolds = new Set();
-    defenses = new Map();
+    if (!game.boardingHolds || game.boardingHolds.size) game.boardingHolds = new Set();
+    defenses = EMPTY_SHIP_DEFENSES;
   }
   const updateUnitsSource = game.units, updateUnitsCount = game.units.length;
-  const ferry = updateUnits(game,defenses,navalFrame);
+  const ferry = updateUnits(game,defenses,navalFrame,emptyVeteranFrame);
   // Summons act next tick, but their bodies participate in this tick's tail.
   // A queued boarding/unload order can also activate during the unit pass.
   if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && (navalFrameFlags(game) & NAVAL_FRAME))) navalFrame = true;
@@ -843,7 +846,7 @@ export function stepGame(game: Game) {
     updateCabinPassengers(game);
   }
   slideUnits(game);
-  separateUnits(game);
+  separateUnits(game, navalFrame);
   if (navalFrame) syncDecks(game.units);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
   for(const impact of drainShipCollisionImpacts(game.units)) {
@@ -1207,11 +1210,11 @@ function refreshVeteranFrameAfterCommandSpawn(game: Game) {
 }
 function refreshVeteranFrame(game: Game, empty = false) {
   const previous = game.veteranFrame;
-  game.veteranFrame = empty ? new Map() : buildVeteranFrame(game, veteranNearby(game));
+  game.veteranFrame = empty ? undefined : buildVeteranFrame(game, veteranNearby(game));
   // No current or departed projection can change any unit's derived stats.
-  if (!previous?.size && game.veteranFrame.size === 0) return;
+  if (!previous?.size && !game.veteranFrame?.size) return;
   for (const unit of game.units) {
-    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
+    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame?.has(unit.id))) {
       const hp = unit.hp;
       applyDerivedUnitStats(game, unit);
       // Aura projection changes derived combat stats, never health (including fractions below one).
@@ -1362,8 +1365,9 @@ function updateResources(game: Game) {
 // ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
-function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean): Ferry | undefined {
-  game.veteranAutocastFrame = {};
+function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean, emptyVeteranFrame: boolean): Ferry | undefined {
+  game.veteranAutocastFrame = emptyVeteranFrame ? undefined : {};
+  const autocastFrame = game.tick % AUTOCAST_EVERY_TICKS === 0;
   const cabinMovementFrame = hasCabinCrewMovementFrame(game);
   let ferry: Ferry | undefined;
   const vessels=navalFrame ? shipsIn(game.units) : undefined;
@@ -1393,19 +1397,24 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     // strikes nor casts, and its order waits for it.
     if (unit.order.type !== "charge") {
       if ((unit.pushX !== undefined && isStaggered(unit)) || (unit.effects.length !== 0 && isStunned(unit))) continue;
+      // A commanded move cannot activate a queue, leash a player unit, repair
+      // a deck or autocast. Run its existing movement after the common clocks
+      // and control effects, including exact arrival and queued helm courses.
+      if (unit.owner !== "neutral" && unit.order.type === "move") {
+        advanceMoveOrder(game, unit, unit.order, navalUnitFrame);
+        continue;
+      }
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
       if (navalUnitFrame && autoRepairDeckShip(game, unit)) continue;
-      autocastStep(game, unit);
+      if (autocastFrame) autocastStep(game, unit);
     }
     switch (unit.order.type) {
       case "charge":
         updateChargeOrder(game, unit);
         continue;
       case "move":
-        if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
-        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units, navalUnitFrame);
-        if (walkEnded(game, unit, unit.order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, unit.order);
+        advanceMoveOrder(game, unit, unit.order, navalUnitFrame);
         continue;
       case "attackMove":
         updateAttackMoveOrder(game, unit, navalUnitFrame);
@@ -1493,6 +1502,12 @@ function deckGoal(unit: Unit, ship: Unit | undefined, goal: { x: number; y: numb
   if((order.type!=="move" && order.type!=="attackMove") || !order.deckPoint || order.x!==goal.x || order.y!==goal.y)return goal;
   const parent=units.find(unit=>unit.id===(order.deckShipId ?? ship?.id));
   return parent ? localToWorld(parent,order.deckPoint) : goal;
+}
+
+function advanceMoveOrder(game: Game, unit: Unit, order: Extract<UnitOrder, { type: "move" }>, navalFrame: boolean) {
+  if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) return;
+  moveToward(unit, order.x, order.y, game.map, game.units, navalFrame);
+  if (walkEnded(game, unit, order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, order);
 }
 
 function updateShipOwnership(game:Game) {
@@ -2608,7 +2623,7 @@ const SUMMON_STEP = 60;
 const CHARGE_IMPACT_TICKS = 12;
 
 function autocastStep(game: Game, unit: Unit) {
-  if (game.tick % AUTOCAST_EVERY_TICKS !== 0 || !AUTOCAST_ORDERS.has(unit.order.type)) return;
+  if (!AUTOCAST_ORDERS.has(unit.order.type)) return;
   for (const ability of unitAbilities(unit)) {
     if (abilityCooldown(unit, ability) > 0 || !autocastEnabled(unit, ability)) continue;
     const def = ABILITY_DEFS[ability];
@@ -2969,16 +2984,20 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
 
 function updateProjectiles(game: Game) {
   if (game.projectiles.length === 0) return;
-  const pending: Projectile[] = [];
-  for (const projectile of game.projectiles) {
+  const projectiles = game.projectiles;
+  let pending: Projectile[] | undefined;
+  for (let index = 0; index < projectiles.length; index++) {
+    const projectile = projectiles[index]!;
     projectile.remaining -= 1;
     if (projectile.remaining > 0) {
-      pending.push(projectile);
+      pending?.push(projectile);
       continue;
     }
+    pending ??= projectiles.slice(0, index);
     applyProjectileImpact(game, projectile);
   }
-  game.projectiles = pending;
+  // Until the first impact, both membership and target indexes remain current.
+  if (pending) game.projectiles = pending;
 }
 
 function applyProjectileImpact(game: Game, projectile: Projectile) {
@@ -4067,6 +4086,8 @@ type SeparationFrame = {
   members: Unit[];
   cellX: number[];
   cellY: number[];
+  x: number[];
+  y: number[];
   // Flattened bucket pairs preserve the original map and neighbor traversal.
   pairs: SeparationBucket[];
   valid: boolean;
@@ -4088,7 +4109,7 @@ function clearSeparationBuckets(frame: SeparationFrame) {
 
 function clearSeparationMembership(frame: SeparationFrame) {
   clearSeparationBuckets(frame);
-  frame.members.length = frame.cellX.length = frame.cellY.length = 0;
+  frame.members.length = frame.cellX.length = frame.cellY.length = frame.x.length = frame.y.length = 0;
 }
 
 function invalidateSeparationFrame(game: Game) {
@@ -4109,36 +4130,40 @@ function separationBucketSlot(frame: SeparationFrame, key: number): number {
   return slot;
 }
 
-function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number): boolean {
+function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSize: number, navalFrame: boolean): boolean {
   frame.unchangedSource = frame.unchangedMembers = 0;
   if (!frame.valid) return false;
   let member = 0;
   for (let i = 0; i < game.units.length; i += 1) {
     const unit = game.units[i]!;
     // Orders, cabin state and unit kind can change without replacing the array.
-    if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
-    if (frame.members[member] !== unit || !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
-      || !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
+    // The native grounded frame already checked every body, including births.
+    if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
+    if (frame.members[member] !== unit
+      || !Object.is(frame.x[member], unit.x) && !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
+      || !Object.is(frame.y[member], unit.y) && !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
       frame.unchangedSource = i; frame.unchangedMembers = member;
       return false;
     }
+    // Record verified within-cell movement; contacts still read live geometry.
+    frame.x[member] = unit.x; frame.y[member] = unit.y;
     member += 1;
   }
   frame.unchangedSource = game.units.length; frame.unchangedMembers = member;
   return member === frame.members.length;
 }
 
-function separateUnits(game: Game) {
+function separateUnits(game: Game, navalFrame: boolean) {
   const cellSize = 80;
   let frame = separationFrames.get(game);
   if (!frame) {
-    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], pairs: [], valid: false, unchangedSource: 0, unchangedMembers: 0 };
+    frame = { buckets: [], lookup: new Array(16), mask: 15, shift: 28, pool: [], members: [], cellX: [], cellY: [], x: [], y: [], pairs: [], valid: false, unchangedSource: 0, unchangedMembers: 0 };
     separationFrames.set(game, frame);
   }
   const buckets = frame.buckets;
   const aPoint = { x: 0, y: 0 }, bPoint = { x: 0, y: 0 };
   const openGround = !game.map.terrain && groundShipFrameEmpty(game.units);
-  if (!separationMembershipMatches(game, frame, cellSize)) {
+  if (!separationMembershipMatches(game, frame, cellSize, navalFrame)) {
     // The verified prefix already has this frame's exact cells and source
     // order. Retain its private metadata while rebuilding bucket storage;
     // classify only the suffix starting at the first actual mismatch.
@@ -4169,6 +4194,7 @@ function separateUnits(game: Game) {
         buckets.push(bucket);
       }
       frame.members[member] = unit;
+      frame.x[member] = unit.x; frame.y[member] = unit.y;
       frame.cellX[member] = x; frame.cellY[member++] = y;
       bucket.units[bucket.count++] = unit;
     };
@@ -4176,10 +4202,10 @@ function separateUnits(game: Game) {
     for (let i = sourceStart; i < game.units.length; i += 1) {
       const unit = game.units[i]!;
       // Hulls use swept navigation contact; mining workers pass through bodies.
-      if (isInCabin(unit) || isShipKind(unit.kind) || minerGhost(unit)) continue;
+      if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
       insert(unit, Math.floor(unit.x / cellSize), Math.floor(unit.y / cellSize));
     }
-    frame.members.length = frame.cellX.length = frame.cellY.length = member;
+    frame.members.length = frame.cellX.length = frame.cellY.length = frame.x.length = frame.y.length = member;
     for (const bucket of buckets) {
       frame.pairs.push(bucket, bucket);
       for (const [ox, oy] of SEPARATION_NEIGHBORS) {
@@ -4277,18 +4303,24 @@ function spatialBucketKey(entity: SpatialEntity, cellSize: number) {
   return numericBucketKey(Math.floor(entity.x / cellSize), Math.floor(entity.y / cellSize));
 }
 
-const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[] }>();
+const spatialMembership = new WeakMap<object, { members: SpatialEntity[]; cellX: number[]; cellY: number[]; x: number[]; y: number[] }>();
 
+// Unchanged coordinates still occupy their recorded cell; changed axes are classified normally.
 function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: number, previous?: SpatialIndex<T>): SpatialIndex<T> {
   const cached = previous && Object.is(previous.cellSize, cellSize) ? spatialMembership.get(previous) : undefined;
+  let prefix = 0;
   if (cached && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize)) || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))) {
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
+      prefix = i + 1;
     }
     // Buckets hold live entity references. Within a cell, narrow-phase range
     // checks still read current coordinates; membership and visit order match.
@@ -4301,12 +4333,14 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
   if (cached) spatialMembership.delete(previous!);
   const members = cached?.members ?? [];
   const cellX = cached?.cellX ?? [], cellY = cached?.cellY ?? [];
-  members.length = cellX.length = cellY.length = 0;
+  const positionsX = cached ? cached.x : [], positionsY = cached ? cached.y : [];
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
-  for (const entity of entities) {
-    members.push(entity);
-    const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
-    cellX.push(x); cellY.push(y);
+  for (let i = 0; i < entities.length; i += 1) {
+    const entity = entities[i]!;
+    const x = i < prefix ? cellX[i]! : Math.floor(entity.x / cellSize);
+    const y = i < prefix ? cellY[i]! : Math.floor(entity.y / cellSize);
+    members[i] = entity; positionsX[i] = entity.x; positionsY[i] = entity.y;
+    cellX[i] = x; cellY[i] = y;
     left = Math.min(left, x); right = Math.max(right, x);
     top = Math.min(top, y); bottom = Math.max(bottom, y);
     const key = numericBucketKey(x, y);
@@ -4314,9 +4348,10 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (bucket) bucket.push(entity);
     else buckets.set(key, [entity]);
   }
+  members.length = cellX.length = cellY.length = positionsX.length = positionsY.length = entities.length;
   const index = { team: undefined, cellSize, buckets, left, right, top, bottom };
   // Copy membership separately: callers append, replace and reorder game.units.
-  spatialMembership.set(index, { members, cellX, cellY });
+  spatialMembership.set(index, { members, cellX, cellY, x: positionsX, y: positionsY });
   return index;
 }
 
@@ -4326,19 +4361,26 @@ const teamSpatialMembership = new WeakMap<object, {
   cellX: number[];
   cellY: number[];
   teams: string[];
+  x: number[];
+  y: number[];
 }>();
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
   const cached = previous ? teamSpatialMembership.get(previous) : undefined;
+  let prefix = 0;
   if (cached && Object.is(cached.cellSize, cellSize) && cached.members.length === entities.length) {
     let unchanged = true;
     for (let i = 0; i < entities.length; i += 1) {
       const entity = entities[i]!;
-      if (cached.members[i] !== entity || !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
-        || !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize)) || cached.teams[i] !== teamKey(game, entity.owner)) {
+      if (cached.members[i] !== entity
+        || !Object.is(cached.x[i], entity.x) && !Object.is(cached.cellX[i], Math.floor(entity.x / cellSize))
+        || !Object.is(cached.y[i], entity.y) && !Object.is(cached.cellY[i], Math.floor(entity.y / cellSize))
+        || cached.teams[i] !== teamKey(game, entity.owner)) {
         unchanged = false;
         break;
       }
+      cached.x[i] = entity.x; cached.y[i] = entity.y;
+      prefix = i + 1;
     }
     // Internal indexes retain live bodies. Team membership and visit order
     // must match independently of coordinate-key aliases and mutable owners.
@@ -4349,22 +4391,25 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   if (reusable) teamSpatialMembership.delete(previous!);
   const members = reusable?.members ?? [];
   const cellX = reusable?.cellX ?? [], cellY = reusable?.cellY ?? [], teams = reusable?.teams ?? [];
-  members.length = cellX.length = cellY.length = teams.length = 0;
-  for (const entity of entities) {
-    members.push(entity);
-    const team = teamKey(game, entity.owner);
-    teams.push(team);
+  const positionsX = reusable ? reusable.x : [], positionsY = reusable ? reusable.y : [];
+  for (let i = 0; i < entities.length; i += 1) {
+    const entity = entities[i]!;
+    const team = i < prefix ? teams[i]! : teamKey(game, entity.owner);
+    members[i] = entity; positionsX[i] = entity.x; positionsY[i] = entity.y;
+    teams[i] = team;
     let index = indexes.get(team);
     if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
-    const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
-    cellX.push(x); cellY.push(y);
+    const x = i < prefix ? cellX[i]! : Math.floor(entity.x / cellSize);
+    const y = i < prefix ? cellY[i]! : Math.floor(entity.y / cellSize);
+    cellX[i] = x; cellY[i] = y;
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
     const key = numericBucketKey(x, y), bucket = index.buckets.get(key);
     if (bucket) bucket.push(entity);
     else index.buckets.set(key, [entity]);
   }
-  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams });
+  members.length = cellX.length = cellY.length = teams.length = positionsX.length = positionsY.length = entities.length;
+  teamSpatialMembership.set(indexes, { cellSize, members, cellX, cellY, teams, x: positionsX, y: positionsY });
   return indexes;
 }
 
@@ -4387,12 +4432,15 @@ function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: n
 function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: number, test: (unit: Unit) => boolean): Unit | undefined {
   const index = game.unitSpatial;
   if (!index) return game.units.find(unit => !isInCabin(unit) && test(unit));
-  const radius = Math.ceil(range / index.cellSize);
-  const bx = Math.floor(point.x / index.cellSize);
-  const by = Math.floor(point.y / index.cellSize);
-  for (let ox = -radius; ox <= radius; ox += 1) {
-    for (let oy = -radius; oy <= radius; oy += 1) {
-      const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
+  // Both callers reject bodies outside their physical range. Keep the same
+  // x-then-y visit order, but omit cells the range cannot reach and empty extents.
+  const size = index.cellSize;
+  const right = Math.min(index.right, Math.floor((point.x + range) / size));
+  const bottom = Math.min(index.bottom, Math.floor((point.y + range) / size));
+  const top = Math.max(index.top, Math.floor((point.y - range) / size));
+  for (let x = Math.max(index.left, Math.floor((point.x - range) / size)); x <= right; x += 1) {
+    for (let y = top; y <= bottom; y += 1) {
+      const bucket = index.buckets.get(numericBucketKey(x, y));
       if (!bucket) continue;
       for (const unit of bucket) if (!isInCabin(unit) && test(unit)) return unit;
     }

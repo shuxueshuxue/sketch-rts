@@ -31,6 +31,7 @@ import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import { mineClaimedByAlly } from './mine-claims';
+import { chooseNavalMine } from './naval-mines';
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
 import { engagementTargets } from "./engagements";
@@ -128,6 +129,10 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
         if (dock && "placement" in purchasePlacement(snapshot,owner,dock,outfit.kind,outfit.shipId)) return {id:'naval:gun',cost:SHIP_WEAPONS[outfit.kind].cost,issue:()=>({type:'buyShipEquipment',buildingId:dock.id,item:outfit.kind,recipientId:outfit.shipId})};
     }
+    const plan = islandPlan(snapshot, owner, options, eligible);
+    // Landed builders establish the paid beachhead before older colonies recruit more garrison.
+    const capital = settlementHallWant(snapshot, owner, plan);
+    if (capital) return capital;
     const foothold = footholdWant(snapshot, owner);
     if (foothold)
         return { ...foothold, closeout: true };
@@ -137,7 +142,6 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
         return undefined;
-    const plan = islandPlan(snapshot, owner, options, eligible);
     const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
     if (!water)
         return undefined;
@@ -185,12 +189,11 @@ function footholdWant(snapshot: GameSnapshot, owner: PlayerId): NavalWant | unde
     }
     return undefined;
 }
-// The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+function settlementHallWant(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan | undefined): NavalWant | undefined {
     if (plan && !islandHallOf(snapshot, owner, plan) && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300)) {
-        const builder = units(snapshot, owner).filter(unit => unit.kind === "worker" && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine))
-            .sort((a, b) => distance(a, plan.mine) - distance(b, plan.mine))[0];
-        const site = builder && hallSite(snapshot, plan.mine);
+        const site = hallSite(snapshot, plan.mine);
+        const builder = site && nearestByRoute(snapshot.map, units(snapshot, owner).filter(unit => unit.kind === "worker"
+            && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine)), site, 'land');
         if (builder && site)
             return { id: "naval:islandHall", cost: BUILDING_DEFS.townHall.cost, issue: used => {
                     if (used.has(builder.id) || builder.order.type === 'build')
@@ -199,6 +202,13 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
                     return { type: "build", unitId: builder.id, buildingKind: "townHall", ...site };
                 } };
     }
+    return undefined;
+}
+
+// The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+    const capital = settlementHallWant(snapshot, owner, plan);
+    if (capital) return capital;
     const engineers = units(snapshot, owner).filter(unit => unit.kind === "worker");
     if ((plan || assault) && engineers.length < 6) {
         const hall = halls.find(hall => hall.complete && !hall.queue.length);
@@ -522,6 +532,16 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             return [];
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
     }
+    // A loaded colony expedition can take newly available income before it sails.
+    if (mission.purpose === 'settle' && mission.phase === 'loading' && island && mission.targetId !== island.mine.id) {
+        const landing = coastOnWater(snapshot, island.mine, boat);
+        if (landing) {
+            mission.targetId = island.mine.id;
+            mission.to = landing;
+            mission.sinceTick = snapshot.tick;
+            delete mission.progress;
+        }
+    }
     const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
     // A precise berth turn moves the hull while its center stays still. Measure
     // the bow's angular travel against the same distance gate as translation.
@@ -536,11 +556,11 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
     if (mission.phase === "return") {
-        if (shipPassengers(snapshot.units,boat).length) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
-        // An empty ferry can be dispatched from its actual location. Returning
-        // to a stale departure coast wastes minutes and can jam a new convoy.
+        if (shipPassengers(snapshot.units,boat).some(unit => unit.expiresTick === undefined)) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
+        // A ferry without permanent crew can be dispatched from its actual location.
+        // Returning ephemeral summons to a stale coast must not delay the next crew.
         delete ferries[boat.id];
-        return [];
+        return boat.order.type === "idle" ? [] : [{ type: "stop", unitIds: [boat.id] }];
     }
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
@@ -928,18 +948,21 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         if (!mine || mine.amount <= 0 || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
             known = undefined;
     }
-    if (!known || (!known.plan && snapshot.tick - known.tick >= PLAN_RETRY)) {
+    const sailing = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === 'settle' && mission.phase === 'sailing');
+    if (!known || (!sailing && snapshot.tick - known.tick >= PLAN_RETRY)) {
         // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
         const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
-        const plan = snapshot.resources
+        const candidates = snapshot.resources
             .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
                 && !mineClaimedByAlly(snapshot, owner, mine, options))
             .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
-            .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options, true)))
-            .sort((a, b) => {
-                const guard = (mine: ResourceNode) => snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, mine) < 400).reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0);
-                return guard(a.mine) * 500 + distance(a.mine, home) - guard(b.mine) * 500 - distance(b.mine, home);
-            })[0];
+            .flatMap(entry => {
+                if (!isWalkable(map, entry.landing.x, entry.landing.y, 'sea')) return [];
+                const shore = shoreSpot(snapshot, owner, entry.landing, options, true);
+                const departure = shore && coastOnWater(snapshot, shore, entry.landing);
+                return departure ? [{ ...entry, departure }] : [];
+            });
+        const plan = chooseNavalMine(snapshot, owner, candidates, options);
         known = { tick: snapshot.tick, ...(plan ? { plan: { mineId: plan.mine.id, landing: { x: plan.landing.x, y: plan.landing.y } } } : {}) };
         memory.island = known;
     }

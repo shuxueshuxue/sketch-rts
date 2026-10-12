@@ -33,14 +33,16 @@ type ValidationPurpose = "admission" | "apply";
 
 export function normalizeCommandFrameEntries<Entry extends { command: GameCommand }>(entries: Entry[]): Entry[] {
   const normalized: Entry[] = [];
-  const hiredCampIds = new Set<string>();
-  const pickedItemIds = new Set<string>();
+  let hiredCampIds: Set<string> | undefined;
+  let pickedItemIds: Set<string> | undefined;
   for (const entry of entries) {
     if (entry.command.type === "hire") {
+      hiredCampIds ??= new Set<string>();
       if (hiredCampIds.has(entry.command.campId)) continue;
       hiredCampIds.add(entry.command.campId);
     }
     if (entry.command.type === "pickupItem") {
+      pickedItemIds ??= new Set<string>();
       if (pickedItemIds.has(entry.command.itemId)) continue;
       pickedItemIds.add(entry.command.itemId);
     }
