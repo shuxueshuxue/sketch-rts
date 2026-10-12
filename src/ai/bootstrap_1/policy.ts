@@ -20,6 +20,7 @@ import { planSummonerScreen } from './summoner-screen';
 import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
+import { mobileCare } from './mobile-care';
 import { expeditionRecoveryUnitIds, planBootstrapNaval } from './expedition-recovery';
 import { navalUnitIds } from '../policy/naval';
 import { mercenaryControl } from './mercenary-control';
@@ -100,7 +101,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
-    if (script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, lootRecovery, mercenaryControl, script];
+    if (script === AI_SCRIPT_LIBRARY.allySupport) return [mobileCare, mountedTasks, lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
