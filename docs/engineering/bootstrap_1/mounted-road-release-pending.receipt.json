@@ -1,0 +1,22 @@
+{
+  "pr": 344,
+  "revision": "b50cc87982c333ddbdbef9a0977d2251d8b03250",
+  "ci": {
+    "run": 38274097376,
+    "head": "f020441a1b3e33e7725872cd90fb69b1962d2df2",
+    "attempt": 1,
+    "conclusion": "success"
+  },
+  "production": {
+    "run": 38275295955,
+    "attempt": 1,
+    "conclusion": "failure",
+    "step": "Test mounted shore clearance and recovery movement",
+    "failedCases": 3,
+    "detail": "Unmirrored landed rider remains alive with zero damage but leaves last golem at 15 HP after the original 24000-tick deadline. No retries or assertion weakening."
+  },
+  "repair": "In progress on bootstrap_1-mounted-island-approach; same failed case now passes after keeping road coverage physical and leaving motion anticipation to micro. Final original regressions pending.",
+  "lastVerifiedProduction": "a8597397c5ba1d1a0a0aa827e036db602d9066c0",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending"
+}
