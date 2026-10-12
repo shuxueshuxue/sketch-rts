@@ -136,6 +136,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     frontThreat: (world, front) => groundFrontThreat(snapshot, world, front),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
+    selectAttack: (choices, eligible) => choices.find(eligible),
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
       .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
     campOnOwnSide: (world, point) => {
