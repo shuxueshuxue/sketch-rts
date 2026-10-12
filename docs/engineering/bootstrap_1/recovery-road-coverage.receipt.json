@@ -1,0 +1,65 @@
+{
+  "task": "bootstrap_1",
+  "parentHead": "2203fbdc412e3ce0af189541fa0a7bdbaa4b060f",
+  "sourceHashes": {
+    "src/shared/route-selection.ts": "4d686e3c6a5a99ca546d4def49caa90d27d81643a302bb6f963d75f92c96be75",
+    "src/ai/bootstrap_1/safe-land-route.ts": "4a1a20ebe2dc39a1b90ab650a31cc7a5e15a165e464e21e390334b13b874a509",
+    "src/ai/bootstrap_1/front-recovery.ts": "6c3cccd682d658e451f3f4bdcf2bfabdff1a4c604e8c02b4c567a7fab6d1d67d",
+    "src/ai/bootstrap_1/mounted-micro.ts": "2461b4c0e18ad257649f6a3c981b6211027bb9d7708f3868d2799df61ebc4d6d"
+  },
+  "sdk": {
+    "uniquePassed": 263,
+    "failed": 0,
+    "coreRoadScenes": 60,
+    "coreParentPassed": 18,
+    "coreParentFailed": 42,
+    "geometryCases": 6,
+    "existingFrontCases": 36,
+    "readyItemScenes": 12,
+    "existingStormHandoverCases": 12,
+    "oldCoordinateExpectations": "Only two assertions now expect the native reachable clinic entrance; survival, healing, resource and casualty assertions unchanged."
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "viteSeconds": 30.97
+  },
+  "historicalWindow": {
+    "mode": "same tick 8400 world/all three memories to tick 9000, pre-intent intermediate candidate; not a new win",
+    "parent": {
+      "permanentArmy": 14,
+      "losses": 0,
+      "patientHp": 82
+    },
+    "candidate": {
+      "permanentArmy": 14,
+      "losses": 0,
+      "patientHp": 102
+    }
+  },
+  "limits": [
+    "Steering geometry includes buildings; body collisions, pushes, status effects and moving-target changes remain actual movement.",
+    "No claim of whole-matrix or held-out completion.",
+    "Intermediate observed matches are not acceptance of the final head."
+  ],
+  "artifacts": {
+    "/tmp/bootstrap_1-recovery-roads-intent-sdk.json": "251e5ebb0f736c2f9f2a3ac2313db9ac94e6b80a2117b6d851b0268de6f0d660",
+    "/tmp/bootstrap_1-recovery-roads-final-related-sdk.json": "6b87ca4d4938b644b15103cf36cb03339f654b6bedf983dc3d224d76933de0e0",
+    "/tmp/bootstrap_1-recovery-roads-parent-sdk.json": "07189e2612723333381f6d3051fa0824d9ee783f9a9a808053283a1c928b200e",
+    "/tmp/bootstrap_1-recovery-roads-final-build.log": "0183280509ee66bd27a547b91bf375098d27a55990f5801a7a122e03cdfd2f97",
+    "/tmp/bootstrap_1-recovery-road-parent-window.json": "f1e613aadbe518fe3fc91696cef2e53bb2ea8d85321df78e08fe263fa118bc2e",
+    "/tmp/bootstrap_1-recovery-road-next-window.json": "02d38acdf5a5d64f9f3451b28289b5f929d44c7b1403cb08a7457fc1f325f4d7",
+    "/tmp/bootstrap_1-recovery-road-final-window.json": "56828225ca780f110cb51b676a1400be8d4fe80f43ffb1d8bb1714923529a020"
+  },
+  "finalWindow": {
+    "mode": "same tick 8400 world and all three original policy memories, normal resources/rules and 15-tick think, not a fresh-match win",
+    "end": 9000,
+    "permanentNonWorkers": 14,
+    "losses": 0,
+    "patient": {
+      "id": "unit-p0-footman-1248",
+      "kind": "footman",
+      "hp": 102
+    }
+  }
+}

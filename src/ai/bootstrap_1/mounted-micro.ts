@@ -41,7 +41,12 @@ function itemReach(snapshot: GameSnapshot, foe: Unit, horizon: number) {
 export function mountedThreatReach(snapshot: GameSnapshot, foe: Threat, rider: Pick<Unit, 'x' | 'y' | 'radius'>, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
   const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider, horizon).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
-  return Math.max(weaponReach, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
+  return Math.max(weaponReach, castThreatReach(snapshot, foe, rider, horizon));
+}
+
+/** Active skills and carried attacks can still execute while ordinary fire is suppressed by a move order. */
+export function castThreatReach(snapshot: GameSnapshot, foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
+  return Math.max(0, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
     return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
       && abilityCooldown(foe, ability) <= horizon
