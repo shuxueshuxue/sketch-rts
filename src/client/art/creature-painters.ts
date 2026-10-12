@@ -67,11 +67,13 @@ function stoneBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-18,-27],[-7,-36],[12,-33],[20,-22],[15,-6],[8,2],[-13,0],[-21,-14]],c);
  stone(b,-9,-20,22,22,lighter(c,.08),1);stone(b,9,-20,19,25,darker(c,.05),1);stone(b,0,-4,22,12,darker(c,.13));
  stone(b,-18,-28,rubble?17:24,granite?18:20,c,1);stone(b,17,-27,21,18,c);
- // A small recessed face emerges from rock, without a crown or helmet outline.
- mass(b,[[-9,-35],[-7,-41],[0,-45],[7,-43],[10,-37],[7,-31],[-2,-29]],darker(c,.12));
- line(b,[[-6,-36],[-1,-37],[2,-35],[7,-36]],'#343e36',1.8);
- line(b,[[-4,-36],[-1,-36.5]],'#c0b58a',.6);line(b,[[4,-35.5],[6,-36]],'#c0b58a',.6);
- line(b,[[1,-35],[0,-31],[4,-30]],'#9d9b82',.65);
+ // Restore the broad, simple original head silhouette. Large planes read
+ // at game scale; eyes are a recess in the stone, not tiny human features.
+ mass(b,[[-10,-42],[3,-46],[11,-38],[8,-28],[-7,-28],[-12,-35]],c);
+ mass(b,[[3,-44],[11,-38],[8,-28],[2,-29]],darker(c,.2));
+ line(b,[[-7,-40],[2,-43],[7,-38]],lighter(c,.26),.85);
+ line(b,[[-3,-35],[7,-35]],'#303a34',1.6);
+ line(b,[[-2,-34],[6,-34]],'#b9b08b',.55);
  if(l.kind==='golem'){
   line(b,[[-4,-24],[1,-27],[5,-23],[0,-17],[-4,-21],[3,-21]],'#b2a580',1);
   line(b,[[-2,-18],[1,-13]],'#b2a580',.7);
@@ -99,9 +101,12 @@ function woodBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-15,2],[-20,-15],[-16,-32],[-7,-42],[7,-41],[17,-30],[15,-10],[20,0],[7,5],[1,-4],[-5,3]],c);
  for(const i of [-12,-5,3,10])stroke(b,[[i,0],[i-5,-12,i+5,-23,i,-37]],darker(c,.3),1.15);
  for(const i of [-10,-1,8])stroke(b,[[i,0],[i-4,-14,i+5,-25,i+1,-38]],'#b3a47c',.65);
- mass(b,[[-9,-31],[-8,-42],[-3,-49],[0,-42],[7,-46],[10,-34],[4,-27]],darker(c,.07));
- line(b,[[-5,-36],[-2,-35]],'#d4c899',1);line(b,[[3,-35],[6,-36]],'#d4c899',1);
- stroke(b,[[-2,-31],[0,-29],[4,-31]],'#3f493a',.8);
+ mass(b,[[-10,-42],[2,-47],[11,-39],[8,-28],[-6,-27],[-12,-34]],c);
+ mass(b,[[2,-44],[10,-38],[7,-29],[2,-30]],darker(c,.2));
+ line(b,[[-4,-35],[6,-35]],'#343d31',1.65);
+ line(b,[[-3,-35],[5,-35]],'#b5b58a',.55);
+ stroke(b,[[-6,-42],[-4,-39],[-5,-31]],'#a69b70',.8);
+ stroke(b,[[1,-42],[2,-38],[0,-30]],darker(c,.3),.65);
  // Stoneback is a rooted creature with a weathered carapace, not a recoloured golem.
  for(const [x,y,w,h] of [[-17,-27,17,14],[13,-26,18,14],[-8,-17,12,13]])stone(b,x!,y!,w!,h!,'#85877b',1);
  for(const [x,y] of [[-22,-30],[-13,-37],[15,-31],[11,-40]]){
@@ -124,14 +129,16 @@ function ogreBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  stroke(b,[[-14,-19],[-6,-20,0,-14,9,-19]],darker(c,.22),.9);stroke(b,[[0,-13],[-2,-7,2,-3,0,1]],darker(c,.25),.8);
  mass(b,[[-11,-2],[13,-2],[18,10],[7,12],[0,9],[-9,12],[-17,9]],'#625247');
  line(b,[[-13,0],[12,0]],'#3f3932',2);mass(b,[[0,-2],[4,-2],[4,2],[0,2]],'#a7946b');
- // Small head buried in a thick neck, rather than a large cartoon face.
- b.save();b.translate(4,-34);b.scale(.7,.8);b.translate(0,34);
- mass(b,[[-9,-31],[-12,-38,-9,-46,-1,-46],[8,-47,13,-40,10,-32],[6,-26,-3,-25,-9,-31]],c);
- mass(b,[[1,-37],[9,-38],[13,-33],[9,-28],[0,-29],[-3,-32]],lighter(c,.08));
- line(b,[[-4,-38],[1,-39],[6,-38]],'#4d433a',1.3);line(b,[[0,-35],[2,-35]],'#ded0a7',.7);
- line(b,[[1,-30],[10,-31]],'#4a3f34',.8);
- mass(b,[[2,-29],[3,-34],[5,-29]],BONE);mass(b,[[9,-29],[11,-33],[11,-29]],BONE);
- stroke(b,[[-7,-40],[-3,-45,5,-45,9,-39]],'#51483b',1.6);b.restore();
+ // The original broad brow, jaw and tusks survive at normal zoom. Do
+ // not shrink the face to make a bulky body appear more "realistic".
+ mass(b,[[-9,-43],[3,-47],[11,-39],[8,-28],[-6,-27],[-12,-35]],c);
+ mass(b,[[3,-45],[10,-39],[8,-29],[3,-28],[2,-34]],darker(c,.16));
+ line(b,[[-4,-36],[1,-37],[7,-36]],'#423d34',1.45);
+ line(b,[[-2,-35],[0,-35]],'#d5c8a3',.55);
+ mass(b,[[-1,-35],[3,-34],[5,-30],[1,-28],[-3,-30]],lighter(c,.08));
+ line(b,[[-5,-29],[6,-29]],'#4b4138',.85);
+ for(const x of [-5,5])mass(b,[[x-1,-27],[x,-33],[x+2,-27]],BONE);
+ line(b,[[-7,-41],[1,-44],[6,-40]],lighter(c,.18),.7);
  flesh(b,[16,-26],p.elbow,p.hand,12,c);
  paintRigidEquipment(b,l.weapon==='staff'?'staff':'club',p.hand,p.angle,p.casting);fist(b,p.hand,c);
  if(l.weapon==='staff'){
@@ -157,9 +164,14 @@ function fishBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  for(const [x,y] of [[-19,-32],[-16,-9],[-24,-1]])line(b,[[-8,-14],[x!,y!]],lighter(c,.12),.6);
  mass(b,[[-10,4],[-16,-5,-14,-21,-5,-26],[5,-30,15,-24,15,-13],[15,-4,11,6,0,7],[-6,6,-9,5,-10,4]],c);
  mass(b,[[3,-22],[12,-20],[13,-7],[6,4],[-1,3]],lighter(c,.13));
- mass(b,[[-5,-24],[-4,-34,7,-35,16,-29],[21,-26,27,-22,29,-17],[24,-12,14,-12,6,-17],[-1,-17,-5,-20,-5,-24]],c);
- mass(b,[[13,-23],[21,-23],[29,-18],[26,-14],[15,-15]],lighter(c,.12));
- line(b,[[15,-16],[27,-16]],'#36453c',.9);ellipse(b,14,-25,1.8,1.2,'#c8b68d');ellipse(b,14.5,-25,.5,1,'#303a31');
+ // A swept crest and short wedge jaw, recovered from the original
+ // fish silhouette. Avoid the bulbous skull and protruding duckbill.
+ mass(b,[[-10,-23],[-7,-35],[4,-29],[16,-25],[25,-18],[22,-13],[8,-14],[-2,-18]],c);
+ mass(b,[[8,-25],[17,-23],[25,-18],[22,-15],[10,-16]],lighter(c,.12));
+ mass(b,[[9,-15],[24,-17],[21,-12],[10,-12]],darker(c,.15));
+ line(b,[[11,-15],[24,-17]],'#34443a',.85);
+ ellipse(b,14,-25,1.4,1.3,'#c8b68d');ellipse(b,14.4,-25,.5,.8,'#303a31');
+ line(b,[[10,-27],[16,-27]],darker(c,.32),.65);
  for(const y of [-20,-17,-14])stroke(b,[[4,y],[1,y+1,1,y+3,4,y+4]],darker(c,.22),.6);
  flesh(b,[-6,-13],[-11,-6],p.free,3.4,darker(c,.12));
  flesh(b,[9,-13],p.elbow,p.hand,4,c);
@@ -187,12 +199,15 @@ function houndBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  // Ragged mane follows the chest, not a row of identical spikes.
  mass(b,[[8,-20],[16,-25],[22,-21],[21,-11],[25,-5],[18,-4],[15,4],[10,-1],[7,-9]],moss?'#4f5a45':darker(c,.08));
  const x=p.headX,y=p.headY;
- mass(b,[[14,-7],[18,-17,x-7,y-7,x+2,y-7],[x+7,y-7,x+8,y,x+14,y+3],[x+15,y+6,x+6,y+10,x-2,y+7],[x-7,y+5,20,2,16,2]],c);
- mass(b,[[x-5,y-5],[x-6,y-12],[x+1,y-8],[x+4,y-10],[x+6,y-4]],darker(c,.08));
- mass(b,[[x+3,y+1],[x+10,y+1],[x+15,y+4],[x+12,y+6],[x+3,y+5]],lighter(c,.11));
- mass(b,[[x+1,y+6],[x+14,y+4],[x+11,y+8+Math.max(0,p.strike)*3],[x+1,y+9]],darker(c,.18));
- line(b,[[x+3,y+5],[x+14,y+4]],INK,.7);ellipse(b,x+14,y+3,.9,1.1,'#33372f');
- line(b,[[x-1,y-2],[x+3,y-1]],'#423f35',1.2);ellipse(b,x+2,y-1,.65,.65,'#c6b88c');
+ mass(b,[[14,-7],[x-8,y-5],[x+1,y-8],[x+8,y-2],[x+15,y+4],[x+9,y+7],[x-2,y+10],[18,2]],c);
+ mass(b,[[x-7,y-4],[x-6,y-13],[x,y-7]],darker(c,.12));
+ mass(b,[[x,y-7],[x+3,y-13],[x+5,y-3]],c);
+ mass(b,[[x+1,y+5],[x+14,y+4],[x+10,y+8+Math.max(0,p.strike)*3],[x-1,y+9]],darker(c,.18));
+ line(b,[[x+2,y+5],[x+14,y+4]],INK,.85);
+ mass(b,[[x+12,y+2],[x+15,y+4],[x+12,y+5]],'#33372f');
+ line(b,[[x-1,y-3],[x+4,y-1]],darker(c,.4),.95);
+ ellipse(b,x+2,y-1,.85,.75,'#c6b88c');
+ line(b,[[x-5,y+2],[x-2,y+5],[x-4,y+8]],lighter(c,.16),.7);
  if(p.strike>.4)mass(b,[[x+9,y+5],[x+10,y+8],[x+11,y+5]],BONE);
  for(const [fx,fy] of [[-18,-15],[-9,-17],[3,-17],[12,-18],[18,-12]])stroke(b,[[fx!-3,fy!-1],[fx!,fy!+2],[fx!+1,fy!+5]],moss?'#9aa078':'#b2a181',.65);
  b.translate(0,-p.bob);beastLeg(b,-14,false,true,c,p);beastLeg(b,17,true,true,c,p);b.translate(0,p.bob);
@@ -203,10 +218,11 @@ function stagBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-25,-19],[-17,-28,6,-28,18,-23],[22,-20,23,-11,17,-7],[7,-7,0,-9,-11,-5],[-20,-5,-28,-10,-25,-19]],c);
  mass(b,[[-18,-8],[-7,-12,5,-14,17,-12],[12,-5,2,-7,-7,-4],[-16,-2,-20,-5,-18,-8]],lighter(c,.1));
  const x=p.headX,y=p.headY;
- mass(b,[[12,-9],[20,-17,18,y+1,x-6,y-6],[x,y-11,x+8,y-5,x+11,y+1],[x+16,y+5,x+13,y+8,x+5,y+7],[x-3,y+4,22,-6,15,-5]],c);
- mass(b,[[x+2,y],[x+12,y+2],[x+13,y+5],[x+4,y+6]],darker(c,.12));
+ mass(b,[[12,-9],[20,-17,18,y+1,x-6,y-6],[x+1,y-9],[x+9,y],[x+12,y+4],[x+3,y+7],[x-3,y+4,22,-6,15,-5]],c);
+ mass(b,[[x+3,y+3],[x+12,y+4],[x+3,y+7],[x-2,y+5]],darker(c,.15));
  mass(b,[[x-4,y-5],[x-13,y-12],[x-5,y-13],[x,y-7]],lighter(c,.1));
- line(b,[[x+4,y],[x+7,y+1]],'#413f34',.9);
+ ellipse(b,x+2,y-1,.8,.8,'#d1bf94');
+ line(b,[[x+10,y+3],[x+12,y+4]],'#413f34',.8);
  for(const side of [-1,1]){
   const root:XY=[x-2+side*3,y-7],mid:XY=[x-6+side*9,y-22],tip:XY=[x-10+side*13,y-34];
   stroke(b,[root,[mid[0],mid[1],mid[0]+3,mid[1]-2,...tip]],'#76694f',2.2);
@@ -232,9 +248,11 @@ function turtleBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  }
  const x=p.headX,y=p.headY;
  flesh(b,[18,-2],[x-6,y+4],[x+4,y+4],10,c);
- mass(b,[[x-4,y+2],[x-2,y-7,x+9,y-7,x+14,y+2],[x+16,y+5,x+10,y+10,x+1,y+8]],c);
- mass(b,[[x+8,y+2],[x+15,y+4],[x+11,y+7],[x+4,y+5]],'#b2a58b');
- line(b,[[x+3,y+6],[x+14,y+4]],INK,.8);ellipse(b,x+6,y,.9,.8,'#c2b284');
+ mass(b,[[x-6,y+3],[x-3,y-5],[x+4,y-7],[x+11,y-1],[x+15,y+4],[x+7,y+9],[x-2,y+8]],c);
+ mass(b,[[x+3,y+5],[x+15,y+4],[x+10,y+8],[x+1,y+9]],darker(c,.16));
+ line(b,[[x+4,y+5],[x+14,y+4]],INK,.85);
+ ellipse(b,x+5,y-1,1,.85,'#c2b284');
+ line(b,[[x+1,y-3],[x+6,y-3]],darker(c,.3),.65);
  stroke(b,[[-24,2],[-33,5,-37,10,-42,12]],c,3);
  b.translate(0,-p.bob);
  for(const side of [-1,1]){const x=side*17,foot:XY=[side*31-p.walk*side*3,18-Math.max(0,-p.stepLift*side)*2];flesh(b,[x,0],[side*26,7],foot,7,c);for(const i of [-1,0,1])line(b,[[foot[0]+i*2,foot[1]-3],[foot[0]+i*3+3,foot[1]]],BONE,.85);}
@@ -255,8 +273,9 @@ function spiderBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-22,-12],[-23,-22,-9,-25,-4,-16],[-2,-8,-9,-3,-17,-5]],darker(c,.12));
  for(const i of [-1,0,1])stroke(b,[[-16+i*5,-22],[-20+i*7,-11],[-15+i*5,0]],queen?'#a58e85':'#a49e7c',.8);
  const hx=9+p.dx*5,hy=-4+p.dy*4;
- mass(b,[[hx-10,hy-4],[hx-5,hy-11,hx+7,hy-11,hx+12,hy-2],[hx+15,hy+5,hx+4,hy+10,hx-5,hy+6]],lighter(c,.04));
- for(const [x,y] of [[5,-2],[8,-1],[6,2],[10,2]])ellipse(b,hx+x!,hy+y!,.65,.7,'#b7ab89');
+ // Keep the original compact oval face separate from the abdomen.
+ ellipse(b,hx,hy+1,10,8.5,lighter(c,.02),INK);
+ for(const [x,y,r] of [[5,-2,1],[7,1,1],[2,-4,.55],[4,4,.55]])ellipse(b,hx+x!,hy+y!,r!,r!,'#c2b58c');
  for(const side of [-1,1]){
   const tip:XY=[p.release[0],p.release[1]+side*2];
   mass(b,[[hx+7,hy+3+side*2],[hx+16,hy+2+side*6],[tip[0]+1,tip[1]+4],[tip[0]-3,tip[1]],[hx+10,hy+4]],'#a9a08b');
@@ -285,14 +304,17 @@ function dragonBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-18,-4],[-8,-10,5,-9,19,-4],[16,4,4,6,-11,2]],'#a28a6b');
  for(const y of [-3,0,3])stroke(b,[[-12,y],[1,y-3,9,y-2,16,y]],'#695a47',.65);
  const x=p.headX,y=p.headY;
- mass(b,[[13,-2],[22,-12,17,y-6,x-5,y-10],[x+3,y-14,x+9,y-5,x+13,y+1],[x+17,y+5,x+7,y+9,x+1,y+6],[x-7,y+6,22,6,15,4]],c);
+ // Recover the original dragon's wedge brow and long amber eye. The
+ // jaw shares the authored mouth socket while the neck keeps its new curve.
+ mass(b,[[13,-2],[22,-12,17,y-6,x-6,y-7],[x+2,y-10],[x+10,y-3],[x+15,y+4],[x+4,y+9],[x-5,y+5,22,6,15,4]],c);
  mass(b,[[21,1],[25,-10,x-5,y+1,x+3,y+3],[x+9,y+8,x+7,y+10,x,y+9],[x-6,y+9,24,8,21,1]],'#b29b79');
- mass(b,[[x+1,y],[x+8,y-1],[x+15,y+3],[x+14,y+5],[x+2,y+6]],lighter(c,.08));
- mass(b,[[x+1,y+6],[x+14,y+4],[x+12,y+8+Math.max(0,p.strike)*3],[x+3,y+10]],darker(c,.16));
- line(b,[[x+2,y+5],[x+14,y+4]],INK,.75);
- line(b,[[x-1,y-3],[x+4,y-2]],'#463c35',1);line(b,[[x+1,y-2],[x+4,y-2]],'#cfba80',.65);
+ mass(b,[[x+1,y+5],[x+14,y+4],[x+10,y+8+Math.max(0,p.strike)*3],[x+1,y+10]],darker(c,.18));
+ line(b,[[x+2,y+5],[x+14,y+4]],'#352d28',1);
+ line(b,[[x-1,y-2],[x+5,y-2]],'#45362d',1.8);
+ line(b,[[x,y-2],[x+5,y-2]],'#d5b06b',.9);
+ line(b,[[x+11,y+1],[x+13,y+2]],'#45362d',.7);
  for(const side of [-1,1])mass(b,[[x-4+side*3,y-6],[x-11+side*4,y-15],[x-5+side*3,y-12],[x+side*3,y-6]],BONE);
- if(l.crown){stroke(b,[[x-6,y-2],[x-9,y+2],[x-4,y+4]],'#c3a983',.7);}
+ if(l.crown)stroke(b,[[x-7,y-3],[x-4,y+1],[x-3,y+6]],'#c3a983',.85);
  for(const i of [0,1,2,3,4]){
   const sx=-20+i*7,sy=-18+(i<2?0:2);
   mass(b,[[sx-2,sy],[sx-4,sy-7],[sx+2,sy-3],[sx+4,sy+1]],'#88785e');

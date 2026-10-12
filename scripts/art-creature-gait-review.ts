@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {creatures} from '../src/client/art/appearance';
 import {paintCreature} from '../src/client/art/painted-creatures';
 import type {UnitKind} from '../src/shared/types';
-const label=process.argv[2]??'after',out='docs/art/refactor/followup/creature-gait';
+const label=process.argv[2]??'after',out=process.argv[3]??'docs/art/refactor/followup/creature-gait';
 mkdirSync(`${out}/${label}`,{recursive:true});
 const kinds=Object.keys(creatures) as UnitKind[],still:Record<string,string>={};
 for(let frame=0;frame<8;frame++){
