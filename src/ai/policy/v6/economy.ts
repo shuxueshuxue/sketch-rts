@@ -31,7 +31,7 @@ import { SHOP_PRIORITY, shopErrandCost } from "../v9/shop";
 
 // `hold`: the goal's gold is kept for it even while it cannot be issued yet (V9's shop errand, whose unit is still on its
 // way: see @@@v9-shop).
-type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true };
+type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true; producer?: string };
 
 type Economy = {
   snapshot: GameSnapshot;
@@ -80,6 +80,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
   const bought = new Set<string>();
   const producers = new Set<string>();
   for (const goal of goals) {
+    if (goal.producer && producers.has(goal.producer)) continue;
     if (goal.cost > gold - (navalReservePurchase(goal.id) ? 0 : navalReserve)) {
       if (goal.save && goal.cost > gold) break;
       continue;
@@ -251,12 +252,11 @@ function outweighingPush(economy: Economy): { hall: Building; threat: number } |
 
 function wantGoals(economy: Economy): Goal[] {
   const goals: Goal[] = [];
-  const claimed = new Set<string>();
   const wants = [...economy.phase.wants, ...(economy.options.armyWants === undefined ? adaptiveArmyWants(economy.snapshot, economy.owner, economy.options) : economy.options.armyWants)].sort((a, b) => b.priority - a.priority);
   for (const want of wants) {
     const priority = want.priority + (economy.threatened && "unit" in want ? THREAT_BONUS : 0);
     if ("unit" in want) {
-      goals.push(...unitGoals(economy, want.unit, want.count - have(economy, want.unit), priority, claimed));
+      goals.push(...unitGoals(economy, want.unit, want.count - have(economy, want.unit), priority));
     } else if ("building" in want) {
       if (economy.own.filter((building) => building.kind === want.building).length < want.count) goals.push(...buildingGoal(economy, want.building, priority));
     } else if ("towers" in want) {
@@ -272,36 +272,37 @@ function wantGoals(economy: Economy): Goal[] {
   return goals.filter((candidate) => candidate.id.startsWith("unit:") || (!seen.has(candidate.id) && Boolean(seen.add(candidate.id))));
 }
 
-// Missing units are trained from idle buildings that can make them; with no such building at all, the building is queued
-// ahead of them (AMAI's RefreshNeeded).
-function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
+// Keep unmet recruitment intents while queues are busy; the executor assigns each producer after aging and ranking.
+// With no such building at all, its construction is queued ahead of the units (AMAI's RefreshNeeded).
+function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number): Goal[] {
   if (missing <= 0) return [];
-  if (!tierUnlocked(economy.snapshot, economy.owner, kind)) return lockedUnitGoals(economy, kind, missing, priority, claimed);
+  if (!tierUnlocked(economy.snapshot, economy.owner, kind)) return lockedUnitGoals(economy, kind, missing, priority);
   const makers = economy.own.filter((building) => canTrainAt(playerState(economy.snapshot, economy.owner).race, building.kind, kind));
   if (makers.length === 0) {
     const maker = producerFor(economy, kind);
     return maker ? buildingGoal(economy, maker, priority + PREREQUISITE_BONUS) : [];
   }
   return makers
-    .filter((building) => building.complete && building.queue.length === 0 && !claimed.has(building.id))
+    .filter((building) => building.complete)
+    .sort((a, b) => a.queue.length - b.queue.length)
     .slice(0, missing)
-    .flatMap((building) => {
-      if (!canSupply(economy.snapshot, economy.owner, kind)) return [];
-      claimed.add(building.id);
-      return [goal(`unit:${kind}`, priority, UNIT_DEFS[kind].cost, true, () => train(economy, building, kind))];
+    .map((building) => {
+      const ready = building.queue.length === 0 && canSupply(economy.snapshot, economy.owner, kind);
+      return { ...goal(`unit:${kind}`, priority, UNIT_DEFS[kind].cost, ready, () => ready ? train(economy, building, kind) : undefined),
+        producer: building.id };
     });
 }
 
 // @@@v6-tech-up - A want whose tier is still locked is met two ways at once: farms ahead of need until the supply cap
 // reaches the bar (the tech V6 buys), and the strategy's basic soldier in the missing units' place meanwhile, so the
 // opening still has an army. The units' own building goes up once one more farm would reach the bar.
-function lockedUnitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
+function lockedUnitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number): Goal[] {
   const bar = requiredSupplyCap(kind);
   const cap = playerState(economy.snapshot, economy.owner).supplyCap;
   const maker = producerFor(economy, kind);
   const makerGoals = maker && cap + BUILDING_DEFS.farm.supplyProvided >= bar && !economy.own.some((building) => building.kind === maker) ? buildingGoal(economy, maker, priority) : [];
   const standIn = economy.strategy.standIn;
-  return [...techFarmGoal(economy, priority), ...makerGoals, ...unitGoals(economy, standIn, missing - have(economy, standIn), priority - 1, claimed)];
+  return [...techFarmGoal(economy, priority), ...makerGoals, ...unitGoals(economy, standIn, missing - have(economy, standIn), priority - 1)];
 }
 
 function techFarmGoal(economy: Economy, priority: number): Goal[] {

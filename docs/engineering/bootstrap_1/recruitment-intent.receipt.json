@@ -1,0 +1,66 @@
+{
+  "base": "eb71abafe573c6e2a6b1eb3bb095d75e157426c0",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/policy/v6/economy.ts": "9841e168e8aa73c4450ffafbd899346dd3cde87766e4c5b4480f265921151a9e",
+    "src/ai/bootstrap_1/economy.ts": "b4ab358378ce1e406f641f8e0c7dc5252980c6808a2d3386e6bc1cb5cc0e23d4"
+  },
+  "sdk": {
+    "passed": 83,
+    "failed": 0,
+    "reportSha256": "7ae272ea71853b9fc96d078ff8010e6a90796af36370619657ce52be20ea9ef2",
+    "suites": [
+      {
+        "file": "ai/bootstrap_1/economy.test.ts",
+        "passed": 26
+      },
+      {
+        "file": "ai/bootstrap_1/recruitment-intent.test.ts",
+        "passed": 16
+      },
+      {
+        "file": "ai/bootstrap_1/research-intent.test.ts",
+        "passed": 4
+      },
+      {
+        "file": "ai/bootstrap_1/research-prerequisites.test.ts",
+        "passed": 16
+      },
+      {
+        "file": "ai/policy/v6-no-shooters.test.ts",
+        "passed": 3
+      },
+      {
+        "file": "ai/policy/v8-forbidden-units.test.ts",
+        "passed": 3
+      },
+      {
+        "file": "ai/policy/v6/economy.test.ts",
+        "passed": 15
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "eb71abafe573c6e2a6b1eb3bb095d75e157426c0",
+    "passed": 12,
+    "failed": 4,
+    "reportSha256": "63efc80aae92565129c48c156d4227fcfc7e70a7c605995aa29df4d29d6d61ed"
+  },
+  "causalWindow": {
+    "from": 6000,
+    "to": 7200,
+    "engineRevision": "eb71abafe573c6e2a6b1eb3bb095d75e157426c0",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeDeaths": 0,
+    "afterDeaths": 0,
+    "identicalFinalSnapshot": true,
+    "reportSha256": "8d6ea324f7ca64d0674fc904ae084e908db6b07387a2b5775aa7a43a9c959484",
+    "memoryInitialization": "All candidate and frozen memories restored without edits; no combat improvement or formal win claim."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "96b9bc0a983e524fab18d0b35961855ee381ee6b572a5b26f63f1052ae24ccfa"
+  }
+}
