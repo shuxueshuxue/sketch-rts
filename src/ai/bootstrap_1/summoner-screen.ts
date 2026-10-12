@@ -1,3 +1,4 @@
+import { casterMeleeMicro } from './caster-screen';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { sameGround } from '../../shared/terrain';
 import { averagePoint, distance } from '../policy/spatial';
@@ -32,7 +33,7 @@ export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, opti
       // A rear gun or a fresh summon behind the host is not its advancing screen.
       const screen = front.filter(unit => unit.attackRange <= 80
         && (unit.x - center.x) * toward.x + (unit.y - center.y) * toward.y > 0);
-      return planCasterScreen(snapshot, owner, options, intel.home, center, screen, true);
+      return planCasterScreen(snapshot, owner, options, intel.home, center, screen, true, casterMeleeMicro(snapshot, owner, options));
     }
   }
   const foes = intel.enemies.flatMap(enemy => enemy.army);
@@ -41,5 +42,5 @@ export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, opti
       && foes.some(foe => distance(foe, tower) <= tower.attackRange))
       .sort((a, b) => distance(a, general.target!) - distance(b, general.target!))[0]
     : undefined;
-  return planCasterScreen(snapshot, owner, options, intel.home, tower ?? v6CasterPost(general, intel.home), front, true);
+  return planCasterScreen(snapshot, owner, options, intel.home, tower ?? v6CasterPost(general, intel.home), front, true, casterMeleeMicro(snapshot, owner, options));
 }
