@@ -1,8 +1,10 @@
-import { groundApproachRoute, routeClearsDisks } from '../../shared/route-selection';
+import { groundApproachRoute, groundSteeringRoute, routeClearsDisks } from '../../shared/route-selection';
+import type { GameSnapshot, Unit } from '../../shared/types';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { walkableGoal, walkingDistance } from '../../shared/terrain';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { withinRangeOf, type Point } from '../policy/spatial';
-import { chooseCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
+import { chooseCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type Camp, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
 
 /** Every fighter's approach and the camp's return road must clear other camps. */
 export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof chooseV7Camp>) => {
@@ -38,3 +40,11 @@ export const startBootstrapCamp: typeof startV7Creep = (snapshot, front, choice,
     stage: 'gather', since: snapshot.tick, group: choice.group.map(unit => unit.id) };
   recordPlay(memory, choice.why === 'expansion' ? 'general:clearExpansion' : 'general:creep');
 };
+
+/** A reinforcement takes its own native steering road, outside every unrelated camp. */
+export function campRecruitRoadClear(snapshot: GameSnapshot, unit: Unit, staging: Point, camps: readonly Camp[], target: Camp) {
+  const road = groundSteeringRoute(snapshot.map, unit, staging), end = road[road.length - 1]!;
+  return Math.hypot(end.x - staging.x, end.y - staging.y) <= MOVE_ORDER_ARRIVAL_RANGE && routeClearsDisks(road,
+    camps.filter(camp => camp !== target).flatMap(camp => camp.creeps.map(creep =>
+      ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE }))));
+}
