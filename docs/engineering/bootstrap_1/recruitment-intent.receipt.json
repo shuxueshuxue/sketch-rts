@@ -61,6 +61,6 @@
   "build": {
     "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
     "exitCode": 0,
-    "logSha256": "96b9bc0a983e524fab18d0b35961855ee381ee6b572a5b26f63f1052ae24ccfa"
+    "logSha256": "21da7c0888b46f57cd43ea84906f4dd080c5bb993ccb425982e0faf7f887a471"
   }
 }
