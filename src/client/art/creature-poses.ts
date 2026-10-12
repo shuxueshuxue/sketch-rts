@@ -22,16 +22,20 @@ export function creatureDrawing(shape:Shape,weapon:EquipmentKind|undefined,frame
  const ready:XY=shape==='fish'?[22,-5]:[24,-2];
  const contact:XY=(shape==='fish'?[[18,-28],[31,-15],[29,3]]:shape==='stone'||shape==='wood'?[[25,-34],[36,-16],[29,9]]:[[24,-30],[34,-16],[30,2]])[aim.source+1] as XY;
  let hand=staff?mix(ready,[26,-12],casting||Math.max(0,strike)*.5):mix(ready,contact,strike);
- let elbow=mix(shape==='fish'?[14,-8]:[23,-14],(shape==='fish'?[[12,-18],[18,-12],[17,-6]]:[[20,-26],[24,-19],[24,-8]])[aim.source+1] as XY,staff?casting*.4:strike);
+ const readyElbow:XY=shape==='fish'?[14,-8]:[23,-14];
+ let elbow=mix(readyElbow,(shape==='fish'?[[12,-18],[18,-12],[17,-6]]:[[20,-26],[24,-19],[24,-8]])[aim.source+1] as XY,staff?casting*.4:strike);
  const free=mix(shape==='fish'?[-12,0]:[-25,-1],[[0,-33],[15,-18],[7,2]][aim.source+1] as XY,casting);
  let angle=staff?.04+casting*.06:weapon==='javelin'?.45+(aim.angle+1.2-.45)*strike:.18+(aim.angle+1.4-.18)*strike;
  const carry=carryStrength(frame)/6;
  if(weapon&&carry&&(frame.mode==='idle'||frame.mode==='walk'||frame.mode==='attack')){
   const direction=actionDirection({mode:'attack',frame:0,aim:frame.carryAim??0});
-  const amount=carry*(frame.mode==='attack'?(frame.frame===0?0:1-Math.max(0,strike)):1);
-  const guard:XY=(shape==='fish'?[[18,-23],[24,-12],[24,-1]]:[[22,-24],[27,-13],[26,-1]])[direction.source+1] as XY;
-  hand=mix(hand,guard,amount);elbow=mix(elbow,[shape==='fish'?15:22,guard[1]+3],amount);
-  angle+=((staff?.04:direction.angle+Math.PI/2)-angle)*amount;
+  const amount=carry*(frame.mode==='attack'?(frame.frame===0?0:1-strike):1);
+  const guard:XY=(staff?[[23,-6],[24,-4],[24,-2]]:shape==='fish'?[[14,-8],[19,-10],[19,-13]]:[[22,-10],[23,-6],[22,-14]])[direction.source+1] as XY;
+  const guardElbow:XY=shape==='fish'?[13,-10]:[20,-15];
+  hand=[hand[0]+(guard[0]-ready[0])*amount,hand[1]+(guard[1]-ready[1])*amount];
+  elbow=[elbow[0]+(guardElbow[0]-readyElbow[0])*amount,elbow[1]+(guardElbow[1]-readyElbow[1])*amount];
+  const guardAngle=staff?.04:weapon==='pike'?direction.angle+Math.PI/2:[-.2,.35,.85][direction.source+1]!+direction.correction*.5;
+  angle+=(guardAngle-(staff?.04:weapon==='javelin'?.45:.18))*amount;
  }
  const headX=(shape==='stag'?25:shape==='turtle'?27:shape==='dragon'?35:27)+dx*(shape==='turtle'?12:6)+strike*2;
  const headY=(shape==='stag'?-39:shape==='turtle'?-8:shape==='dragon'?-24:-18)+dy*11+strike*(shape==='stag'?9:2);

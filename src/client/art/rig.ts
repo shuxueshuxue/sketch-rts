@@ -74,6 +74,24 @@ function staffDrawing(source:number,casting:boolean){
   hand([13,-20],[10,-22],.12),hand([14,-15],[10,-19],.08),hand([14,-12],[10,-17],-.12),
  ][source+1]!,strength:casting?1:.65};
 }
+/** Directed preparation: hands are withdrawn from contact, while each tool
+ * retains its own attack plane. A blade needs room to arc; a spear needs room
+ * to travel along its shaft, not a rotation back to the default carry angle. */
+function guardDrawing(weapon:EquipmentKind,aim:ReturnType<typeof actionDirection>):HandDrawing {
+ const index=aim.source+1;
+ if(weapon==='pike'||weapon==='pitchfork')return hand(
+  ([[7,-16],[4,-19],[9,-24]] as XY[])[index]!,
+  ([[6,-19],[5,-19],[6,-20]] as XY[])[index]!,aim.angle);
+ if(weapon==='bow')return hand(
+  ([[12,-24],[13,-20],[14,-15]] as XY[])[index]!,
+  ([[8,-22],[8,-20],[9,-18]] as XY[])[index]!,aim.angle);
+ if(weapon==='staff'||weapon==='crozier')return hand(
+  ([[11,-15],[11,-12],[12,-10]] as XY[])[index]!,[9,-18],.04);
+ return hand(
+  ([[10,-18],[9,-21],[10,-25]] as XY[])[index]!,
+  ([[7,-18],[7,-20],[7,-21]] as XY[])[index]!,
+  (weapon==='javelin'?[-.1,.6,1.2]:[-.2,.55,1.2])[index]!+aim.correction*.5);
+}
 /** One authored drawing supplies both render passes and release/equipment sockets. */
 export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: FigurePresentation = {}) {
  const weapon=options.weapon??defaultEquipment(f),family=equipmentFamily(weapon),requested=options.motion;
@@ -85,45 +103,52 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
  const shield=weapon!=='greatSword'&&weapon!=='bow'&&weapon!=='pick'&&(options.shield??(weapon==='sword'||shaft&&(!!f.mounted||!!f.elite)));
  const supported=weapon==='bow'||weapon==='greatSword'||weapon==='pick'||shaft&&!shield;
  const variant=Math.abs(Math.trunc(pose.variant??0))%3;
- let drawing:HandDrawing;
+ let drawing:HandDrawing,readyDrawing:HandDrawing;
+ let angleReturn:number|undefined;
  let weight=pose.mode==='attack'?motion.reach:0;
  const source=direction.source;
  if(staff){
   const authored=staffDrawing(source,cast>0);weight=(cast||impact)*authored.strength;
+  readyDrawing=authored.ready;
   drawing=blend(authored.ready,authored.contact,weight);
   drawing.angle+=(pose.mode==='attack'?[0,-.08,.09][variant]!:0)*weight;
  }else if(weapon==='bow'){
   const authored=bowDrawing(source);weight=pose.mode==='attack'?([1,.76,.48,.24,.08,0][pose.frame]??0):0;
+  readyDrawing=authored.ready;
   drawing=blend(authored.ready,authored.contact,weight);
   drawing.angle+=direction.correction*weight;
  }else if(shaft){
   const authored=shaftDrawing(!!f.mounted,source);drawing=blend(authored.ready,authored.contact,weight);
+  readyDrawing=authored.ready;
   // Retract along the strike before raising the spear back to its carry pose.
   // Reusing reach for rotation erased a down-thrust after just one sample and
   // let short-reach variants miss the requested attack plane even at contact.
   const turn=pose.mode==='attack'?([1,1,.82,.46,.16,0][pose.frame]??0):0;
+  angleReturn=1-turn;
   drawing.angle=authored.ready.angle+(authored.contact.angle+direction.correction-authored.ready.angle)*turn;
  }else if(weapon==='none'||weapon==='sling'||weapon==='javelin'){
   const ready=hand(weapon==='none'?[8,-3]:[12,-12],[7,-14],weapon==='javelin'?.45:0);
+  readyDrawing=ready;
   const contact=[hand([13,-34],[8,-25],-.4),hand([24,-20],[13,-20],1.4),hand([17,-9],[9,-15],2.2)][source+1]!;
   drawing=blend(ready,contact,weight);
  }else{
   const authored=bladeDrawing(weapon,source,variant,requested==='thrust');
+  readyDrawing=authored.ready;
   drawing=blend(authored.ready,authored.contact,weight);
   drawing.angle+=direction.correction*weight;
  }
- // A post-strike guard is its own relaxed drawing, not a frozen extended arm.
- // It replaces only the ready contribution; feet, gait and contact stay live.
+ // Replace the ready endpoint, not the already evaluated stroke. Blending the
+ // stroke a second time erased travel and clamped away its signed recoil.
  const carry=carryStrength(pose)/6;
  const guarding=carry>0&&(pose.mode==='idle'||pose.mode==='walk'||pose.mode==='attack');
  if(guarding&&weapon!=='none'&&weapon!=='sling'){
   const aim=actionDirection({mode:'attack',frame:0,aim:pose.carryAim??0});
-  const guard=staff?staffDrawing(aim.source,false).contact:hand(
-   ([[11,-26],[13,-20],[13,-12]] as XY[])[aim.source+1]!,
-   ([[8,-23],[9,-20],[9,-17]] as XY[])[aim.source+1]!,
-   aim.angle+(shaft||weapon==='bow'?0:Math.PI/2));
-  const amount=carry*(pose.mode==='attack'?(pose.frame===0?0:1-Math.max(0,Math.min(1,weight))):1);
-  drawing=blend(drawing,guard,amount);
+  const guard=guardDrawing(weapon,aim);
+  const amount=carry*(pose.mode==='attack'?(pose.frame===0?0:1-weight):1);
+  const rotation=carry*(pose.mode==='attack'?(pose.frame===0?0:angleReturn??1-weight):1);
+  drawing={wrist:[drawing.wrist[0]+(guard.wrist[0]-readyDrawing.wrist[0])*amount,drawing.wrist[1]+(guard.wrist[1]-readyDrawing.wrist[1])*amount],
+   elbow:[drawing.elbow[0]+(guard.elbow[0]-readyDrawing.elbow[0])*amount,drawing.elbow[1]+(guard.elbow[1]-readyDrawing.elbow[1])*amount],
+   angle:drawing.angle+(guard.angle-readyDrawing.angle)*rotation};
  }
  if(work)drawing=hand(work.wrist,[7,-22],work.tool);
  if(cast&&shield){
@@ -157,7 +182,11 @@ export function sampleFigurePose(f: Figure, pose: UnitAnimationFrame, options: F
   const contactElbows:XY[]=weapon==='bow'?[[-1,-26],[1,-18],[-1,-13]]:
    shaft?[[0,-20],[-2,-16],[0,-14]]:[[-2,-24],[2,-17],[-2,-20]];
   supportElbow=mix(readyElbow,contactElbows[source+1]!,weight);
-  if(guarding)supportElbow=mix(supportElbow,[-2,pose.carryAim!<0?-22:pose.carryAim!>0?-14:-17],carry*(1-Math.max(0,weight)));
+  if(guarding){
+   const guardElbow:XY=shaft?[-4,(pose.carryAim??0)>0?-20:-16]:[-2,(pose.carryAim??0)<0?-22:(pose.carryAim??0)>0?-14:-17];
+   const amount=carry*(pose.mode==='attack'?(pose.frame===0?0:1-weight):1);
+   supportElbow=[supportElbow[0]+(guardElbow[0]-readyElbow[0])*amount,supportElbow[1]+(guardElbow[1]-readyElbow[1])*amount];
+  }
   if(cast){support=mix(support,spellHands[source+1]!,cast);supportElbow=mix(supportElbow,spellElbows[source+1]!,cast);}
  }
  const release=socketPoint(wrist,angle,shaft?48:weapon==='bow'?16:0,staff?-23:shaft||weapon==='bow'?0:-31);

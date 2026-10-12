@@ -16,6 +16,36 @@ const raster=(kind:UnitKind,pose:UnitAnimationFrame,presentation:FigurePresentat
  return b.getImageData(0,0,180,160).data;
 };
 describe('authored projected poses',()=>{
+ it('prepares a directed thrust with visible travel, without sweeping the spear back across other planes',()=>{
+  for(const kind of ['lancer','knight'] as const)for(const aim of [-4,0,4])for(let variant=0;variant<3;variant++){
+   const ready=sampleFigurePose(figures[kind]!,{mode:'idle',frame:0,carry:6,carryAim:aim});
+   const contact=sampleFigurePose(figures[kind]!,{mode:'attack',frame:0,aim,variant});
+   const axis=aim*Math.PI/12;
+   const along=(contact.wrist[0]-ready.wrist[0])*Math.cos(axis)+(contact.wrist[1]-ready.wrist[1])*Math.sin(axis);
+   expect(along).toBeGreaterThan(7);
+   expect(distance(contact.wrist,ready.wrist)).toBeLessThan(20);
+   for(let frame=1;frame<6;frame++){
+    const recovery=sampleFigurePose(figures[kind]!,{mode:'attack',frame,aim,variant,carry:6,carryAim:aim});
+    expect(Math.abs(recovery.angle+recovery.lean-axis)).toBeLessThan(.06);
+   }
+   const recoil=sampleFigurePose(figures[kind]!,{mode:'attack',frame:3,aim,variant,carry:6,carryAim:aim});
+   expect((recoil.wrist[0]-ready.wrist[0])*Math.cos(axis)+(recoil.wrist[1]-ready.wrist[1])*Math.sin(axis)).toBeLessThan(-.5);
+  }
+ });
+ it('retains a blade arc from directed preparation, and never shifts the actual contact pose',()=>{
+  for(const weapon of ['sword','greatSword','axe','pike','bow','staff','crozier','javelin'] as const)for(const aim of [-4,0,4])for(let variant=0;variant<3;variant++){
+   const pose={mode:'attack',frame:0,aim,variant} as const;
+   const contact=sampleFigurePose(figures.footman!,pose,{weapon});
+   const carried=sampleFigurePose(figures.footman!,{...pose,carry:6,carryAim:aim},{weapon});
+   expect(carried.wrist).toEqual(contact.wrist);expect(carried.angle).toBe(contact.angle);
+   expect(carried.support).toEqual(contact.support);expect(carried.supportElbow).toEqual(contact.supportElbow);
+   if(weapon==='sword'||weapon==='greatSword'||weapon==='axe'){
+    const ready=sampleFigurePose(figures.footman!,{mode:'idle',frame:0,carry:6,carryAim:aim},{weapon});
+    expect(Math.abs(contact.angle-ready.angle)).toBeGreaterThan(.3);
+    expect(Math.abs(contact.angle-ready.angle)).toBeLessThan(1.8);
+   }
+  }
+ });
  it('keeps a thrust on its target plane during contact and initial retraction for every variant',()=>{
   for(const kind of ['lancer','knight'] as const)for(const aim of [-4,0,4])for(let variant=0;variant<3;variant++){
    const expected=aim===0?-.04:aim*Math.PI/12;
