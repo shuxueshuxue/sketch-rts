@@ -1,0 +1,80 @@
+{
+  "base": "7d4ea71648ed6ce807b29fb7626b2753b07581f9",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/policy/v6/general.ts": "181eeeb990dad4ba9d129c10bed4d046eac3beff816a5a44088834a40e25cc5f",
+    "src/ai/bootstrap_1/mine-defense.ts": "25a6e303fb882731e05bfb77596b8783b0f8d8d9d3b4818ff7d858be9449a423"
+  },
+  "sdk": {
+    "passed": 167,
+    "failed": 0,
+    "reportSha256": "d354e93ea1cc9321f3b64089c4591444d17c489b1e5e5567013df0424737429b",
+    "suites": [
+      {
+        "file": "ai/bootstrap_1/assault-camp-roads.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "ai/bootstrap_1/assault-cohesion.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "ai/bootstrap_1/attack-reinforcements.test.ts",
+        "passed": 8
+      },
+      {
+        "file": "ai/bootstrap_1/attack-target-eligibility.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "ai/bootstrap_1/battle-roads.test.ts",
+        "passed": 36
+      },
+      {
+        "file": "ai/bootstrap_1/covered-defense.test.ts",
+        "passed": 6
+      },
+      {
+        "file": "ai/bootstrap_1/front-exposure.test.ts",
+        "passed": 24
+      },
+      {
+        "file": "ai/policy/v6/general.test.ts",
+        "passed": 37
+      }
+    ]
+  },
+  "parentControl": {
+    "revision": "eb71abafe573c6e2a6b1eb3bb095d75e157426c0",
+    "generalSourceIdenticalToBase": true,
+    "passed": 12,
+    "failed": 12,
+    "reportSha256": "8193f4bd77c4ed039f9af6fd5870f38674c09f9936497706944a86872b06cd97"
+  },
+  "causalWindow": {
+    "from": 12000,
+    "to": 14000,
+    "engineRevision": "7d4ea71648ed6ce807b29fb7626b2753b07581f9",
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "beforeDeaths": 5,
+    "afterDeaths": 5,
+    "beforePermanentArmy": 12,
+    "afterPermanentArmy": 12,
+    "identicalFinalSnapshot": true,
+    "reportSha256": "8893803e45c3c80fc355e913b35aa8dddded83798db0e3c40dc7773d952d5861",
+    "memoryInitialization": "All candidate and frozen memories restored without edits; no combat improvement or formal win claim."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "21798412dbc9befc945ff8a4383715fb3161379dbaa0cc79cbdcf4e15ee1641f",
+    "scope": "Full project build before the final selector scope refinement."
+  },
+  "finalScopeTypes": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npx tsc --noEmit -p /tmp/bootstrap_1-attack-target-eligibility-types.json",
+    "exitCode": 0,
+    "configSha256": "e0210a96e3cb76b92673a14a39cbac7eb0edbe84c2232629a9843b0c10b0a8ff",
+    "logSha256": "7657976608dd0eaf914c050ec1f2c1779230c59e18d3acf9b2f62e80a03c91c0"
+  }
+}
