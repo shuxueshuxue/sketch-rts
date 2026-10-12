@@ -1,0 +1,130 @@
+{
+  "base": "ed6ee2b94ab03f01558424df148471823ab68327",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/policy.ts": "3803f1409bb0e75d67bb736e7e3a7376a667b47b673f6f45b98ad2ac47835397"
+  },
+  "sdk": {
+    "passed": 242,
+    "failed": 0,
+    "newCases": 28,
+    "sha256": "9e0c19b7506e507716faa90ab73e0554f5a3bc08e3601b2808141115659801fc"
+  },
+  "parentControl": {
+    "passed": 2,
+    "failed": 26,
+    "sha256": "5b773634774b2f00dfa4f570d12da368d3f4de680cc13416a65082a3de35cbe3",
+    "testSourceSha256": "786db8d9bcc87869a3014d9657094a0af33f3448bbe78b8c3329a851335e77ac"
+  },
+  "build": {
+    "exitCode": 0,
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "logSha256": "4655c12d9f4ef34d7c814ccf3b431fc4d9e989d82f32e4c5fe199c78a8828366"
+  },
+  "nativeWindow": {
+    "from": 6000,
+    "to": 12000,
+    "match": {
+      "name": "greystonePass/v9_summoner/v5+v7/ember/1",
+      "mapId": "greystonePass",
+      "subject": "v9_summoner",
+      "side": 1,
+      "seed": "bootstrap_1-current-rules-observation",
+      "unseen": false,
+      "agents": {
+        "p0": {
+          "version": "v9_summoner",
+          "versionLabel": "v9_summoner",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v7",
+          "versionLabel": "v7",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 12000,
+      "thinkInterval": 15
+    },
+    "commandScriptSha256": "3dde84510e6c5e9a644dab0ef08de45f509e0b6d4c8d4c6dbd1fa01b01652859",
+    "sourceInputsVerified": 221,
+    "parent": {
+      "reportSha256": "cc0e9d315d4ff5cb2000d21f32c556d8362e90863834c5e1ba4febcfe728d0a0",
+      "windowPermanentDeaths": 20,
+      "summary": {
+        "tick": 12000,
+        "winner": null,
+        "owners": {
+          "p0": {
+            "gold": 128,
+            "pop": 5,
+            "halls": 1,
+            "workers": 5,
+            "permanentArmy": 0
+          },
+          "p1": {
+            "gold": 296,
+            "pop": 28,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 9
+          },
+          "p2": {
+            "gold": 43.53,
+            "pop": 45,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 15
+          }
+        },
+        "subjectPermanentDeaths": 21
+      }
+    },
+    "candidate": {
+      "reportSha256": "58689b145cc9747e92dc972a248bcaa1c5c93f7378780d3f8dabd93ec65c39e4",
+      "windowPermanentDeaths": 17,
+      "summary": {
+        "tick": 12000,
+        "winner": null,
+        "owners": {
+          "p0": {
+            "gold": 96,
+            "pop": 10,
+            "halls": 1,
+            "workers": 6,
+            "permanentArmy": 2
+          },
+          "p1": {
+            "gold": 296,
+            "pop": 28,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 9
+          },
+          "p2": {
+            "gold": 105.65,
+            "pop": 49,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 17
+          }
+        },
+        "subjectPermanentDeaths": 17
+      },
+      "checksum": "5632563c"
+    },
+    "scope": "Same native ordinary tick-6000 world, IDs and all three controller memories. Parent is the exact completed public #352 ordinary continuation. Candidate introduced at checkpoint, no winner by tick 12000; not a fresh campaign win or full acceptance."
+  }
+}
