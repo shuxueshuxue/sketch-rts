@@ -1,3 +1,4 @@
+import { RULES_VERSION, assertCurrentRulesVersion } from "./rules-version";
 import { restoreGameFromSave, type SaveGameRecord } from "./savegame";
 import { snapshotGame, type Game } from "./sim";
 import { advanceCommandFrameTick } from "./sim/command-frame-runtime";
@@ -22,6 +23,7 @@ export type DebugReplayCheckpoint = {
 
 export type DebugReplayTrace = {
   schemaVersion: typeof DEBUG_REPLAY_SCHEMA_VERSION;
+  rulesVersion?: number;
   id: string;
   label?: string;
   initialSave: SaveGameRecord;
@@ -30,8 +32,10 @@ export type DebugReplayTrace = {
 };
 
 export function createDebugReplayTrace(input: { id: string; label?: string; initialSave: SaveGameRecord }): DebugReplayTrace {
+  assertCurrentRulesVersion(input.initialSave.rulesVersion, "Replay initial save");
   return {
     schemaVersion: DEBUG_REPLAY_SCHEMA_VERSION,
+    rulesVersion: RULES_VERSION,
     id: input.id,
     ...(input.label ? { label: input.label } : {}),
     initialSave: clone(input.initialSave),
@@ -57,6 +61,9 @@ export function recordReplayCheckpoint(trace: DebugReplayTrace, game: Game) {
 
 export function replayTraceToTick(trace: DebugReplayTrace, targetTick: number): Game {
   if (trace.schemaVersion !== DEBUG_REPLAY_SCHEMA_VERSION) throw new Error(`Unsupported debug replay schema ${trace.schemaVersion}`);
+  // Check before choosing a checkpoint: neither seek path may mix rules.
+  assertCurrentRulesVersion(trace.rulesVersion, "Replay");
+  assertCurrentRulesVersion(trace.initialSave.rulesVersion, "Replay initial save");
   if (!Number.isInteger(targetTick) || targetTick < trace.initialSave.snapshot.tick) throw new Error(`Invalid replay target tick ${targetTick}`);
   const checkpoint = nearestCheckpoint(trace, targetTick);
   const game = checkpoint ? restoreCheckpoint(trace, checkpoint) : restoreGameFromSave(trace.initialSave);
@@ -84,6 +91,7 @@ export function extractReplayFrameSave(trace: DebugReplayTrace, targetTick: numb
   const game = replayTraceToTick(trace, targetTick);
   return {
     ...clone(trace.initialSave),
+    rulesVersion: RULES_VERSION,
     id: input.id,
     ...(input.label ? { label: input.label } : {}),
     snapshot: snapshotGame(game),

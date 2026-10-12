@@ -1,0 +1,121 @@
+{
+  "checks": {
+    "replay": true,
+    "visible": true,
+    "modes": true,
+    "cards": true,
+    "finalArt": true,
+    "decodedRGBA": true
+  },
+  "allChecks": true,
+  "fullCompletionWall": {
+    "meanMs": 6018.116666666698,
+    "p50Ms": 6195,
+    "p95Ms": 6819.5,
+    "maxMs": 6819.5
+  },
+  "cpuSubmission": {
+    "meanMs": 693.5249999997517,
+    "p50Ms": 711.5999999996275,
+    "p95Ms": 884,
+    "maxMs": 884
+  },
+  "means": {
+    "readPixelMs": null,
+    "trueGpuTailPolls": null,
+    "paintMs": 48.48333333494762,
+    "readbackMs": 476.78333333227783,
+    "boundsMs": 115.97499999776483,
+    "copyMs": 28.858333333861083,
+    "rendererMs": 2.6833333331160247,
+    "texSubImage3DMs": 55.84166666756695,
+    "uploadBytes": 162998954.66666666,
+    "dirtyPages": 45.666666666666664,
+    "dirtyLayers": 248,
+    "generateMipmapMs": null,
+    "trueGpuTailMs": null,
+    "textureInitSubmissionMs": 58.25000000031044,
+    "textureInitTailMs": 6.6833333332712455,
+    "drawSubmissionMs": 2.6916666665735343,
+    "drawTailMs": 568.8416666666357,
+    "mipSubmissionMs": 0.06666666657353441,
+    "mipTailMs": 4687.883333333458,
+    "deferredMipCalls": 45.666666666666664,
+    "executedDeferredMipCalls": 45.666666666666664
+  },
+  "completionStatuses": [
+    {
+      "tick": 20,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 21,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 22,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 23,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 24,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 25,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 26,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 27,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 28,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 29,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 30,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    },
+    {
+      "tick": 31,
+      "texture": 37148,
+      "mip": 37148,
+      "draw": 37148
+    }
+  ],
+  "note": "Asynchronous wait is a GPU-completion wall upper bound including scheduling overhead, not GPU duration. Instrumentation/CDP and deliberate serialization affect these diagnostic timings."
+}

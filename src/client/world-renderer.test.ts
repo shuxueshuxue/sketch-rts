@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearCanvasArtCache } from "./atlas-art";
+import * as atlasArt from "./atlas-art";
 import { setScratchCanvasFactory } from "./art/scratch-canvas";
 import { UnitFacingTracker } from "./unit-facing";
+import { CombatPresentationTracker } from "./combat-presentation";
+import { UnitAnimationTracker } from "./unit-animation";
 import { UnitMotionSmoother } from "./unit-motion";
 import { RELATION_INK } from "./relations";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
@@ -32,6 +36,9 @@ function recordingContext() {
     createLinearGradient: gradient,
     createRadialGradient: gradient,
     measureText: () => ({ width: 0 }),
+    // This recorder checks draw order/transforms, not raster bounds. An opaque
+    // scratch surface retains the full tile; real crop pixels have their own test.
+    getImageData: (_x:number,_y:number,width:number,height:number) => ({data:new Uint8ClampedArray(width*height*4).fill(255)}),
   };
   const state: Record<string, unknown> = { globalAlpha: 1, strokeStyle: "#000", fillStyle: "#000", lineWidth: 1, font: "10px sans-serif", textAlign: "start", lineCap: "butt", lineJoin: "miter", shadowBlur: 0, shadowColor: "transparent" };
   const ctx = new Proxy(state, {
@@ -134,7 +141,28 @@ describe("world renderer", () => {
     const strokes = rendered.calls.filter(call => call.name === 'stroke').map(call => call.ink);
     expect(strokes).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.enemy]));
   });
-  beforeEach(() => setScratchCanvasFactory(fakeCanvas));
+  it('draws deck remains only in the ship group and reuses art while support moves and weather changes',()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.buildings=[];game.items=[];game.resources=[];game.mercenaryCamps=[];game.shops=[];game.obstacles=[];game.map={...game.map,landmarks:[]};
+    const ship=game.spawnUnit('player','warship',300,300);
+    game.corpses=[{id:'deck-art-proof',unitId:'dead',kind:'footman',owner:'player',x:300,y:300,radius:18,diedAtTick:0,variant:'deck-art-proof',deck:{shipId:ship.id,x:10,y:20}}];
+    const remains=vi.fn((ctx:CanvasRenderingContext2D)=>ctx.fillRect(-8,-3,16,6));
+    const models=()=>({paint:()=>{},remains});
+    const snapshot=snapshotGame(game);
+    drawWorld(frame(snapshot,{pass:'ground',models}));
+    expect(remains).not.toHaveBeenCalled();
+    const first=frame(snapshot,{models});drawWorld(first);
+    expect(remains).toHaveBeenCalledTimes(1);
+    const live=snapshot.units[0]!;live.x+=50;live.sailing!.heading=Math.PI/2;snapshot.tick+=200;
+    const moved=frame(snapshot,{models});drawWorld(moved);
+    expect(remains).toHaveBeenCalledTimes(1);
+    expect(moved.calls.some(call=>call.name==='rotate'&&call.args[0]===Math.PI/2)).toBe(true);
+    snapshot.units=[];
+    const sunk=frame(snapshot,{models});drawWorld(sunk);
+    expect(spriteDraws(sunk.calls)).toHaveLength(0);
+    expect(remains).toHaveBeenCalledTimes(1);
+  });
+
+  beforeEach(() => { clearCanvasArtCache(); setScratchCanvasFactory(fakeCanvas); });
   afterEach(() => setScratchCanvasFactory(undefined));
 
   it('draws the physical gangway polygon in the Canvas fallback and removes it when the hulls separate', () => {
@@ -210,6 +238,31 @@ describe("world renderer", () => {
     expect(facingLeft.facing.facing("south-footman")).toBe(-1);
     expect(spriteDraws(facingLeft.calls)).toHaveLength(2);
     expect(facingLeft.calls.filter((call) => call.name === "scale" && call.args[0] === -1 && call.args[1] === 1)).toHaveLength(1);
+  });
+
+  it('mirrors attached blood with the rendered recovery pose, not a new order facing behind it',()=>{
+    const drawUnit=vi.spyOn(atlasArt,'drawAtlasUnit');
+    const snapshot=duelSnapshot({northX:300,southX:400}),actor=snapshot.units.find(unit=>unit.id==='north-footman')!;
+    actor.order={type:'attack',targetId:'south-footman'};
+    snapshot.effects=[
+      {id:'held-release',type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:snapshot.tick,x:400,y:300,fromX:300,fromY:300,toX:400,toY:300,duration:16,remaining:16},
+      {id:'held-body-mark',type:'hit',unitId:actor.id,x:300,y:300,damage:40,targetHpAfter:60,targetMaxHp:180,targetKind:'footman',targetUnitClass:'nonMechanical',duration:14,remaining:14},
+    ];
+    const facing=new UnitFacingTracker(),animation=new UnitAnimationTracker(),combat=new CombatPresentationTracker();
+    drawWorld(frame(snapshot,{facing,animation,combat}));
+    snapshot.units.find(unit=>unit.id==='south-footman')!.x=200;snapshot.tick++;
+    for(const effect of snapshot.effects)effect.remaining--;
+    drawUnit.mockClear();
+    const rendered=frame(snapshot,{facing,animation,combat,now:1050});drawWorld(rendered);
+    expect(facing.facing(actor.id)).toBe(-1);expect(facing.releaseFacing(actor.id)).toBe(1);
+    const mark=combat.frame(1050).body.find(mark=>mark.unitId===actor.id)!;
+    expect(Math.abs(mark.localX)).toBeGreaterThan(.001);
+    const ellipse=rendered.calls.find(call=>call.name==='ellipse'&&call.args[2]===mark.radius*.65&&call.args[3]===mark.radius)!;
+    // Compare with the actual atlas anchor, including native hit shake.
+    const painted=drawUnit.mock.calls.find(call=>Math.abs(call[2].x-actor.x)<25)!;
+    expect(painted).toBeDefined();expect(painted[5]).toBe(1);
+    expect(ellipse).toBeDefined();expect(ellipse.args[0]).toBeCloseTo(painted[2].x+mark.localX);
+    drawUnit.mockRestore();
   });
 
   it("leaves out units outside the view", () => {

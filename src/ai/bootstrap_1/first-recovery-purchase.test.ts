@@ -3,7 +3,7 @@ import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { snapToFootprint } from '../../shared/terrain';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { trainingBuildingFor, UNIT_DEFS } from '../../shared/catalog';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
@@ -14,13 +14,13 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
   'buys the first $race healer before another tower consumes its ready budget (mirror=$mirrored)', ({ race, mirrored }) => {
     const x = (value: number) => mirrored ? 4096 - value : value;
     const body = race === 'grove' ? 'knight' : 'ashChieftain';
-    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const healer = 'priest';
     const gold = UNIT_DEFS[healer].cost;
     let scene = sketchScene('ready-recovery-under-pressure').map('openClaims').replaceDefaults()
       .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold })
       .townHall('us', x(500), 500, { id: 'hall' }).goldMine('main', x(788), 500, 10000)
       .townHall('foe', x(3500), 3500).farms('us', 8, x(400), 1900)
-      .building('us', UNIT_DEFS[healer].trainedAt!, x(700), 800)
+      .building('us', trainingBuildingFor(race, healer)!, x(700), 800)
       .unit('foe', 'archer', x(900), 900, { id: 'raider' });
     for (let i = 0; i < 5; i++) scene = scene.worker('us', x(600), 470 + i * 25,
       { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });

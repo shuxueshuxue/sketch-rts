@@ -8,7 +8,7 @@ export type AbilityIconId = AbilityKind | VeteranSkillId
 /** Each command and status loads one self-contained hand-authored SVG; authoring sources and the review sheet stay outside the runtime. */
 export const ABILITY_ICON_FILES: Readonly<Record<AbilityIconId, string>> = {
   heal: "heal.svg", summon: "summon.svg", curse: "curse.svg",
-  emberMend: "emberMend.svg", cinderSoul: "cinderSoul.svg", ashCurse: "ashCurse.svg",
+  ashCurse: "ashCurse.svg",
   charge: "charge.svg", stomp: "stomp.svg", bloodlust: "bloodlust.svg", web: "web.svg",
   pinningBolt: "pinningBolt.svg", incendiaryFlume: "incendiaryFlume.svg",
   veteranResilience: "veteranResilience.svg", veteranMobility: "veteranMobility.svg",

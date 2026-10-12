@@ -5817,7 +5817,7 @@ describe("SDK preset AI policy", () => {
       .unit("v3", "emberRavager", 2005, 2061)
       .unit("v3", "emberRavager", 1981, 2128)
       .unit("v3", "sparkArcher", 2027, 2110)
-      .unit("v3", "emberAcolyte", 2058, 2099)
+      .unit("v3", "priest", 2058, 2099)
       .townHall("v4-tr", 3600, 1475)
       .unit("v4-tr", "contractArcher", 1383, 2243, { id: "main-pressure-archer-a", order: { type: "attack", targetId: "runner-b" } })
       .unit("v4-tr", "contractArcher", 1330, 2207, { id: "main-pressure-archer-b", order: { type: "attack", targetId: "runner-b" } })
@@ -9376,7 +9376,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v5", 500, 2050)
       .unit("v5", "cinderRunner", 820, 2600, { id: "claimed-runner" })
       .unit("v5", "sparkArcher", 880, 2050, { id: "retreat-archer", order: { type: "move", x: 500, y: 2050 } })
-      .unit("v5", "emberAcolyte", 850, 2080, { id: "retreat-acolyte", order: { type: "move", x: 500, y: 2050 } })
+      .unit("v5", "priest", 850, 2080, { id: "retreat-acolyte", order: { type: "move", x: 500, y: 2050 } })
       .unit("v5", "emberRavager", 1040, 2280, { id: "free-ravager-a" })
       .unit("v5", "cinderRunner", 1080, 2310, { id: "free-runner" })
       .unit("v5", "emberRavager", 1120, 2340, { id: "free-ravager-b" })
@@ -10281,11 +10281,11 @@ describe("SDK preset AI policy", () => {
       .townHall("v2-prod", 3300, 3300)
       .build();
     const game = scene.createGame();
-    game.players.v3!.gold = 130;
+    game.players.v3!.gold = UNIT_DEFS.priest.cost;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v3", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "emberAcolyte" });
+    expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "priest" });
   });
 
   it("v3 ember breaks a near-expansion bank for the first spark once melee and spire are online", () => {
@@ -12938,7 +12938,7 @@ describe("SDK preset AI policy", () => {
       .unit("v3", "cinderRunner", 1740, 2300, { order: { type: "attack", targetId: "scene-v5-worker-pressure-yields-to-target-army-fight-v5-footman-1" } })
       .unit("v3", "emberRavager", 1780, 2340)
       .unit("v3", "sparkArcher", 1820, 2300)
-      .unit("v3", "emberAcolyte", 1860, 2340)
+      .unit("v3", "priest", 1860, 2340)
       .unit("v3", "contractArcher", 1900, 2300)
       .townHall("v3", 3400, 1000)
       .worker("v3", 3260, 980, { id: "v3-target-worker" })
@@ -13166,7 +13166,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v5", 500, 500)
       .worker("v5", 450, 500)
       .unit("v5", "sparkArcher", 1180, 1000, { id: "front-archer", hp: 45 })
-      .unit("v5", "emberAcolyte", 1200, 1040, { id: "front-acolyte", hp: 48 })
+      .unit("v5", "priest", 1200, 1040, { id: "front-acolyte", hp: 48 })
       .unit("v5", "ashHexer", 1220, 1080, { id: "front-hexer", hp: 50 })
       .unit("v5", "emberRavager", 760, 980, { id: "rear-ravager-a" })
       .unit("v5", "cinderRunner", 780, 1040, { id: "rear-runner-b" })

@@ -10,8 +10,8 @@ const groveCasters = [
   { kind: "witch", ability: "curse" },
 ] as const;
 const emberCasters = [
-  { kind: "emberAcolyte", ability: "emberMend" },
-  { kind: "pyreCaller", ability: "cinderSoul" },
+  { kind: "priest", ability: "heal" },
+  { kind: "summoner", ability: "summon" },
   { kind: "ashHexer", ability: "ashCurse" },
 ] as const;
 

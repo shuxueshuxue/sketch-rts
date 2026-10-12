@@ -1,0 +1,101 @@
+{
+  "programs": [
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    }
+  ],
+  "settings": {
+    "reference": "array",
+    "filter": "mip",
+    "shadows": true,
+    "anisotropy": 8,
+    "extent": "full"
+  },
+  "renderInfo": {
+    "frame": 6,
+    "calls": 5,
+    "triangles": 34,
+    "points": 0,
+    "lines": 0
+  },
+  "report": [
+    {
+      "pass": "directional-depth",
+      "referenceVisiblePixels": 24637,
+      "candidateVisiblePixels": 24637,
+      "maxChannelDifference": 0,
+      "meanChannelDifference": 0,
+      "changedPixels": 0,
+      "totalPixels": 262144,
+      "largest": []
+    },
+    {
+      "pass": "point-distance",
+      "referenceVisiblePixels": 26839,
+      "candidateVisiblePixels": 26839,
+      "maxChannelDifference": 0,
+      "meanChannelDifference": 0,
+      "changedPixels": 0,
+      "totalPixels": 262144,
+      "largest": []
+    }
+  ],
+  "rasterComparison": [
+    {
+      "changedChannels": 0,
+      "maximum": 0,
+      "alphaChanged": 0,
+      "alphaMaximum": 0
+    },
+    {
+      "changedChannels": 0,
+      "maximum": 0,
+      "alphaChanged": 0,
+      "alphaMaximum": 0
+    },
+    {
+      "changedChannels": 0,
+      "maximum": 0,
+      "alphaChanged": 0,
+      "alphaMaximum": 0
+    },
+    {
+      "changedChannels": 0,
+      "maximum": 0,
+      "alphaChanged": 0,
+      "alphaMaximum": 0
+    }
+  ],
+  "glError": 0,
+  "method": "512px source RGBA comparison, same CPU scratch drawing, resolution, mipmaps, anisotropy, alpha cutout, original MeshBasic color pipeline, ACES scene and PCF directional/point shadows. Cropped layers reconstructed through their actual instance transforms. Columns=full reference, cropped array, difference amplified 8x. Diagnostic settings are explicit; shadow-off still requires visible actors. Each draw rebinds the multisample target after readback. CPU/GPU scratch antialiasing differences are measured separately by art-raster-profile.",
+  "errors": [],
+  "passed": true,
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

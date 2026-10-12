@@ -1,0 +1,817 @@
+{
+  "notes": [
+    "Both reports use identical reliable-completion helper and fixture input hashes. Waits include GPU work and scheduling, not pure GPU duration.",
+    "Owned arrays and scratch textures are counted separately; GPU storage values are estimates. Baseline scratch bytes are zero because the frozen implementation has no scratch-mip textures.",
+    "JS heap includes retained polling telemetry; slower runs retain more records. Heap/RSS differences cannot all be treated as product memory improvement."
+  ],
+  "scenes": {
+    "dynamic": {
+      "beforeCommit": "0f93be611ced03514194288236a0d0d08c6d0214",
+      "afterCommit": "e06e047724825905815f30c79253bff72567f37d",
+      "checks": {
+        "beforePassed": true,
+        "afterPassed": true,
+        "sameFixture": true,
+        "sameBenchmarkInputs": true,
+        "sameEnvironment": true,
+        "sameCycles": true,
+        "reliable": true
+      },
+      "cycles": [
+        {
+          "index": 0,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55
+          },
+          "afterCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55,
+            "scratchTextures": 2,
+            "scratchCpuBytes": 2686976,
+            "scratchGpuBytes": 3582620,
+            "mipInitializedPages": 65,
+            "mipLayerUpdates": 4584,
+            "mipCopyCalls": 45709,
+            "arrayBaseUploadBytes": 1090519040,
+            "scratchUploadBytes": 5127143424
+          },
+          "ownedBytes": {
+            "beforeCPU": 816840704,
+            "beforeGPUEstimate": 1089120939,
+            "afterArrayCPU": 816840704,
+            "afterScratchCPU": 2686976,
+            "afterTotalCPU": 819527680,
+            "afterArrayGPUEstimate": 1089120939,
+            "afterScratchGPUEstimate": 3582620,
+            "afterTotalGPUEstimate": 1092703559
+          }
+        },
+        {
+          "index": 1,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55
+          },
+          "afterCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55,
+            "scratchTextures": 2,
+            "scratchCpuBytes": 2686976,
+            "scratchGpuBytes": 3582620,
+            "mipInitializedPages": 65,
+            "mipLayerUpdates": 4584,
+            "mipCopyCalls": 45709,
+            "arrayBaseUploadBytes": 1090519040,
+            "scratchUploadBytes": 5127143424
+          },
+          "ownedBytes": {
+            "beforeCPU": 816840704,
+            "beforeGPUEstimate": 1089120939,
+            "afterArrayCPU": 816840704,
+            "afterScratchCPU": 2686976,
+            "afterTotalCPU": 819527680,
+            "afterArrayGPUEstimate": 1089120939,
+            "afterScratchGPUEstimate": 3582620,
+            "afterTotalGPUEstimate": 1092703559
+          }
+        },
+        {
+          "index": 2,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55
+          },
+          "afterCards": {
+            "pages": 47,
+            "cards": 752,
+            "pixels": 204210176,
+            "cpuBytes": 816840704,
+            "gpuBytes": 1089120939,
+            "rasterizations": 4577,
+            "copiedLayers": 55,
+            "scratchTextures": 2,
+            "scratchCpuBytes": 2686976,
+            "scratchGpuBytes": 3582620,
+            "mipInitializedPages": 65,
+            "mipLayerUpdates": 4584,
+            "mipCopyCalls": 45709,
+            "arrayBaseUploadBytes": 1090519040,
+            "scratchUploadBytes": 5127143424
+          },
+          "ownedBytes": {
+            "beforeCPU": 816840704,
+            "beforeGPUEstimate": 1089120939,
+            "afterArrayCPU": 816840704,
+            "afterScratchCPU": 2686976,
+            "afterTotalCPU": 819527680,
+            "afterArrayGPUEstimate": 1089120939,
+            "afterScratchGPUEstimate": 3582620,
+            "afterTotalGPUEstimate": 1092703559
+          }
+        }
+      ],
+      "pixels": {
+        "width": 1280,
+        "height": 720,
+        "exactRGBA": true,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0,
+        "changedPixels": 0
+      },
+      "passed": true
+    },
+    "all-units": {
+      "beforeCommit": "0f93be611ced03514194288236a0d0d08c6d0214",
+      "afterCommit": "e06e047724825905815f30c79253bff72567f37d",
+      "checks": {
+        "beforePassed": true,
+        "afterPassed": true,
+        "sameFixture": true,
+        "sameBenchmarkInputs": true,
+        "sameEnvironment": true,
+        "sameCycles": true,
+        "reliable": true
+      },
+      "cycles": [
+        {
+          "index": 0,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        },
+        {
+          "index": 1,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        },
+        {
+          "index": 2,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        },
+        {
+          "index": 3,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        },
+        {
+          "index": 4,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        },
+        {
+          "index": 5,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 14,
+            "cards": 220,
+            "pixels": 14680064,
+            "cpuBytes": 58720256,
+            "gpuBytes": 78293675,
+            "rasterizations": 220,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 14,
+            "mipLayerUpdates": 220,
+            "mipCopyCalls": 1980,
+            "arrayBaseUploadBytes": 58720256,
+            "scratchUploadBytes": 57671680
+          },
+          "ownedBytes": {
+            "beforeCPU": 58720256,
+            "beforeGPUEstimate": 78293675,
+            "afterArrayCPU": 58720256,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 58982400,
+            "afterArrayGPUEstimate": 78293675,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 78643199
+          }
+        }
+      ],
+      "pixels": {
+        "width": 1280,
+        "height": 720,
+        "exactRGBA": true,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0,
+        "changedPixels": 0
+      },
+      "passed": true
+    },
+    "naval": {
+      "beforeCommit": "0f93be611ced03514194288236a0d0d08c6d0214",
+      "afterCommit": "e06e047724825905815f30c79253bff72567f37d",
+      "checks": {
+        "beforePassed": true,
+        "afterPassed": true,
+        "sameFixture": true,
+        "sameBenchmarkInputs": true,
+        "sameEnvironment": true,
+        "sameCycles": true,
+        "reliable": true
+      },
+      "cycles": [
+        {
+          "index": 0,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        },
+        {
+          "index": 1,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        },
+        {
+          "index": 2,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        },
+        {
+          "index": 3,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        },
+        {
+          "index": 4,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        },
+        {
+          "index": 5,
+          "checks": {
+            "replay": true,
+            "visible": true,
+            "modes": true,
+            "finalArt": true,
+            "sameSamples": true,
+            "signaled": true,
+            "cardContents": true
+          },
+          "passed": true,
+          "beforeCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0
+          },
+          "afterCards": {
+            "pages": 9,
+            "cards": 131,
+            "pixels": 9437184,
+            "cpuBytes": 37748736,
+            "gpuBytes": 50331648,
+            "rasterizations": 131,
+            "copiedLayers": 0,
+            "scratchTextures": 1,
+            "scratchCpuBytes": 262144,
+            "scratchGpuBytes": 349524,
+            "mipInitializedPages": 9,
+            "mipLayerUpdates": 131,
+            "mipCopyCalls": 1179,
+            "arrayBaseUploadBytes": 37748736,
+            "scratchUploadBytes": 34340864
+          },
+          "ownedBytes": {
+            "beforeCPU": 37748736,
+            "beforeGPUEstimate": 50331648,
+            "afterArrayCPU": 37748736,
+            "afterScratchCPU": 262144,
+            "afterTotalCPU": 38010880,
+            "afterArrayGPUEstimate": 50331648,
+            "afterScratchGPUEstimate": 349524,
+            "afterTotalGPUEstimate": 50681172
+          }
+        }
+      ],
+      "pixels": {
+        "width": 1280,
+        "height": 720,
+        "exactRGBA": true,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0,
+        "changedPixels": 0
+      },
+      "passed": true
+    }
+  },
+  "allPassed": true
+}

@@ -1,3 +1,4 @@
+import { ITEM_DEFS } from "./equipment";
 import { describe, expect, it } from "vitest";
 import {
   assertCreateRoomInput,
@@ -93,4 +94,13 @@ it('validates portable seat settings and strips live identities before creation'
   for (const patch of [{ layoutSeed: '' }, { seatSetup: input.seatSetup.slice(0, 1) }, { humanCount: 2, aiCount: 0 }, { seatSetup: [{ ...input.seatSetup[0], controller: 'ai' }, input.seatSetup[1]] }]) {
     expect(() => assertCreateRoomInput({ ...input, ...patch })).toThrow('Malformed room create input');
   }
+});
+
+// SDK scenarios must accept the same equipment catalogue as shops and live play.
+it("accepts every current item seed and rejects unknown item names", () => {
+  for (const kind of Object.keys(ITEM_DEFS)) {
+    const request = { mapId: "bareDuel", options: { scenario: { addItems: [{ id: `seed-${kind}`, kind, x: 1200, y: 960, carrierId: "soldier", cooldownRemaining: 0 }] } } };
+    expect(parseResetRoomRequest(request), kind).toEqual(request);
+  }
+  expect(parseResetRoomRequest({ mapId: "bareDuel", options: { scenario: { addItems: [{ id: "bad", kind: "unknownItem", x: 0, y: 0, cooldownRemaining: 0 }] } } })).toBeUndefined();
 });

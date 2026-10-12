@@ -1,0 +1,443 @@
+{
+  "comparedPaths": 70,
+  "allIdentical": true,
+  "files": [
+    {
+      "file": "src/shared/det-math.test.ts",
+      "baselineBlob": "ebdb372f37e96eabb1008c806acda0e40feae235",
+      "currentBlob": "ebdb372f37e96eabb1008c806acda0e40feae235",
+      "identical": true
+    },
+    {
+      "file": "src/shared/det-math.ts",
+      "baselineBlob": "01705d9079677835fe1f60506ac2f57519b766b9",
+      "currentBlob": "01705d9079677835fe1f60506ac2f57519b766b9",
+      "identical": true
+    },
+    {
+      "file": "src/shared/naval-combat.test.ts",
+      "baselineBlob": "c819223dafc3ef14b120258834f39c42fcfcb60f",
+      "currentBlob": "c819223dafc3ef14b120258834f39c42fcfcb60f",
+      "identical": true
+    },
+    {
+      "file": "src/shared/naval-map-spacing.test.ts",
+      "baselineBlob": "47239414e32469558d66ac4619f16d89d91b8bd7",
+      "currentBlob": "47239414e32469558d66ac4619f16d89d91b8bd7",
+      "identical": true
+    },
+    {
+      "file": "src/shared/naval.test.ts",
+      "baselineBlob": "ed06097f5be2b293f7383d00cd2b5df4c8e2c4d9",
+      "currentBlob": "ed06097f5be2b293f7383d00cd2b5df4c8e2c4d9",
+      "identical": true
+    },
+    {
+      "file": "src/shared/naval.ts",
+      "baselineBlob": "b28a96d343a93043adb943fc6da0e8f2ddbc3139",
+      "currentBlob": "b28a96d343a93043adb943fc6da0e8f2ddbc3139",
+      "identical": true
+    },
+    {
+      "file": "src/shared/sailing-budget.test.ts",
+      "baselineBlob": "973bdb65143d198fe8b4b3fa518921be3ebbab2d",
+      "currentBlob": "973bdb65143d198fe8b4b3fa518921be3ebbab2d",
+      "identical": true
+    },
+    {
+      "file": "src/shared/sailing.ts",
+      "baselineBlob": "8b329d0cc9331258152f35f9933761ed47e2fb8f",
+      "currentBlob": "8b329d0cc9331258152f35f9933761ed47e2fb8f",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-avoidance.ts",
+      "baselineBlob": "dbfd87142988dea83e6c6d8675bdd84a894389a8",
+      "currentBlob": "dbfd87142988dea83e6c6d8675bdd84a894389a8",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-cabin-movement-frame.test.ts",
+      "baselineBlob": "0127f452ebbb84e78fb543e51619d5c0fb0c8a55",
+      "currentBlob": "0127f452ebbb84e78fb543e51619d5c0fb0c8a55",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-cabin-quota.test.ts",
+      "baselineBlob": "705eb3a577ddbb3e5fc33635d23b9631159fcd7c",
+      "currentBlob": "705eb3a577ddbb3e5fc33635d23b9631159fcd7c",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-cabin-quota.ts",
+      "baselineBlob": "734fb5a82cada813394f3f49626aba77b5dda81c",
+      "currentBlob": "734fb5a82cada813394f3f49626aba77b5dda81c",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-cabin.test.ts",
+      "baselineBlob": "b8a508307f827a9205d985834ede625e4f63af81",
+      "currentBlob": "b8a508307f827a9205d985834ede625e4f63af81",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-cabin.ts",
+      "baselineBlob": "143cb1cf37f0e5d1e7e8f25384b427c048b8ccc2",
+      "currentBlob": "143cb1cf37f0e5d1e7e8f25384b427c048b8ccc2",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-collisions.test.ts",
+      "baselineBlob": "4dd9b40eea58df6f27740146830b8e83431f28b7",
+      "currentBlob": "4dd9b40eea58df6f27740146830b8e83431f28b7",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-collisions.ts",
+      "baselineBlob": "1668fcb8e7d82a01888d67717c13f2b543ea7bc1",
+      "currentBlob": "1668fcb8e7d82a01888d67717c13f2b543ea7bc1",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-combat-quality.test.ts",
+      "baselineBlob": "c9473b4348c6c6e0ca511e2b7d81d0ac8a7c845d",
+      "currentBlob": "c9473b4348c6c6e0ca511e2b7d81d0ac8a7c845d",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-course-avoidance.test.ts",
+      "baselineBlob": "632bf658b88ec91eaf4fad7629f61034117cd6c8",
+      "currentBlob": "632bf658b88ec91eaf4fad7629f61034117cd6c8",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-defense.test.ts",
+      "baselineBlob": "28450bbc369e52f53dc552bc8cd170461f495fdf",
+      "currentBlob": "28450bbc369e52f53dc552bc8cd170461f495fdf",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-defense.ts",
+      "baselineBlob": "40973916424c7338dbceac5f286a750173836a94",
+      "currentBlob": "40973916424c7338dbceac5f286a750173836a94",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-departure-turn.test.ts",
+      "baselineBlob": "6ef367319d1f5bbb6e7e1b2861a51ccd27ee6b8c",
+      "currentBlob": "6ef367319d1f5bbb6e7e1b2861a51ccd27ee6b8c",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-equipment.test.ts",
+      "baselineBlob": "7e488ac46af1242a81c6ed938ccc094d521aa16e",
+      "currentBlob": "7e488ac46af1242a81c6ed938ccc094d521aa16e",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-equipment.ts",
+      "baselineBlob": "5c26dfc0bd85a2a96f18258bcd29a8187f35ecf3",
+      "currentBlob": "5c26dfc0bd85a2a96f18258bcd29a8187f35ecf3",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-fire-control.test.ts",
+      "baselineBlob": "e7be6efa75ea1956db7eedc623e8c94abd0737d6",
+      "currentBlob": "e7be6efa75ea1956db7eedc623e8c94abd0737d6",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-fire-control.ts",
+      "baselineBlob": "c9f499b18d4f8395bb143badd5eaa6a69169ce0d",
+      "currentBlob": "c9f499b18d4f8395bb143badd5eaa6a69169ce0d",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-frame-vessels.test.ts",
+      "baselineBlob": "8163ac6eba447eb0cf0172df96dcaf038f198b62",
+      "currentBlob": "8163ac6eba447eb0cf0172df96dcaf038f198b62",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-gangway-integration.test.ts",
+      "baselineBlob": "158a558472061f1f695c8bc81352912ac9a03586",
+      "currentBlob": "158a558472061f1f695c8bc81352912ac9a03586",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-gangway.test.ts",
+      "baselineBlob": "c83b44f54fa58c582c6e7e6ffcef05215d69a845",
+      "currentBlob": "c83b44f54fa58c582c6e7e6ffcef05215d69a845",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-gangway.ts",
+      "baselineBlob": "22f1ad7c816c4771beea3dbb1fa3ac3d3b9d3e5f",
+      "currentBlob": "22f1ad7c816c4771beea3dbb1fa3ac3d3b9d3e5f",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-geometry.test.ts",
+      "baselineBlob": "c7f0c33a03bcea94656ec741912d54876e2adc23",
+      "currentBlob": "c7f0c33a03bcea94656ec741912d54876e2adc23",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-geometry.ts",
+      "baselineBlob": "88b0c67e23dc323db61d032a91f49c50756ac432",
+      "currentBlob": "88b0c67e23dc323db61d032a91f49c50756ac432",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-guidance.ts",
+      "baselineBlob": "470049a886c832b98a7e88bd98fc33cd64b3d0fd",
+      "currentBlob": "470049a886c832b98a7e88bd98fc33cd64b3d0fd",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-handling.test.ts",
+      "baselineBlob": "57085dde5b6f697430ce178266cdd6feea2040cb",
+      "currentBlob": "57085dde5b6f697430ce178266cdd6feea2040cb",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-handling.ts",
+      "baselineBlob": "6751b75548d9fa265d1c4d0e42462641b11d6498",
+      "currentBlob": "6751b75548d9fa265d1c4d0e42462641b11d6498",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-launch.test.ts",
+      "baselineBlob": "6570e71c5f973dd268a4e23dfc847f8b7604b706",
+      "currentBlob": "6570e71c5f973dd268a4e23dfc847f8b7604b706",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-launch.ts",
+      "baselineBlob": "c9dbbfd994d486346fd0cff7f99efbef2e778645",
+      "currentBlob": "c9dbbfd994d486346fd0cff7f99efbef2e778645",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-maneuver-recovery.test.ts",
+      "baselineBlob": "f3000441e46314aed2d26b1ea5f9f55dee767009",
+      "currentBlob": "f3000441e46314aed2d26b1ea5f9f55dee767009",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-motion.test.ts",
+      "baselineBlob": "676ec9588b26ecea6e1e9e7b0dd985c3ed2423d3",
+      "currentBlob": "676ec9588b26ecea6e1e9e7b0dd985c3ed2423d3",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-motion.ts",
+      "baselineBlob": "ce3ec5b46bf50f42be408ca7a3496995f58d7343",
+      "currentBlob": "ce3ec5b46bf50f42be408ca7a3496995f58d7343",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-mounted-combat.test.ts",
+      "baselineBlob": "69efa9bfe66f48dfc1e2cdef48ad7be51bbd355e",
+      "currentBlob": "69efa9bfe66f48dfc1e2cdef48ad7be51bbd355e",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation-heuristic.test.ts",
+      "baselineBlob": "0cc81dfa8ff37a879d5d6586b2f20cf5a60fc69e",
+      "currentBlob": "0cc81dfa8ff37a879d5d6586b2f20cf5a60fc69e",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation-potential.test.ts",
+      "baselineBlob": "1c1d680d05ae33eef20849e025afcbf414b21991",
+      "currentBlob": "1c1d680d05ae33eef20849e025afcbf414b21991",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation-potential.ts",
+      "baselineBlob": "e8feb624826eb6b5061dc4ad55be5675157589c3",
+      "currentBlob": "e8feb624826eb6b5061dc4ad55be5675157589c3",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation-workspace.test.ts",
+      "baselineBlob": "240e2e78168b0d87c59ae2f5633b2074686f2f82",
+      "currentBlob": "240e2e78168b0d87c59ae2f5633b2074686f2f82",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation.test.ts",
+      "baselineBlob": "c94431d5dfcac7d1cb8af68bcde5ef6b80e4d97f",
+      "currentBlob": "c94431d5dfcac7d1cb8af68bcde5ef6b80e4d97f",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-navigation.ts",
+      "baselineBlob": "808e77b477575d56671e7a196a2181c673c55fa1",
+      "currentBlob": "808e77b477575d56671e7a196a2181c673c55fa1",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-physical-integration.test.ts",
+      "baselineBlob": "bda94ba1ec709db648bd6c1da6ab156dd0ab5809",
+      "currentBlob": "bda94ba1ec709db648bd6c1da6ab156dd0ab5809",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-planning-budget.test.ts",
+      "baselineBlob": "1c7ecb4263f286448b780fec3962eae9b5c4f95d",
+      "currentBlob": "1c7ecb4263f286448b780fec3962eae9b5c4f95d",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-planning-budget.ts",
+      "baselineBlob": "dd6b3c0d7a58b8531b26267349e0bc4c3256308b",
+      "currentBlob": "dd6b3c0d7a58b8531b26267349e0bc4c3256308b",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-planning-job.ts",
+      "baselineBlob": "966ccffcdcbf8e779f173bc09cfdd6344154a4bf",
+      "currentBlob": "966ccffcdcbf8e779f173bc09cfdd6344154a4bf",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-planning-state.test.ts",
+      "baselineBlob": "e489c07ff7f0cac0bbbe3de81ad906ca108e7d73",
+      "currentBlob": "e489c07ff7f0cac0bbbe3de81ad906ca108e7d73",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-pursuit.test.ts",
+      "baselineBlob": "147d760d046cd6488b875ff05e0a2dc9cc3325d4",
+      "currentBlob": "147d760d046cd6488b875ff05e0a2dc9cc3325d4",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-pursuit.ts",
+      "baselineBlob": "417b557cf46761cdd7010ca32624d1c5edf65ccf",
+      "currentBlob": "417b557cf46761cdd7010ca32624d1c5edf65ccf",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-queued-course.test.ts",
+      "baselineBlob": "3f7dda1e8ad542eb1ae2a638ae1b6a67238f16ff",
+      "currentBlob": "3f7dda1e8ad542eb1ae2a638ae1b6a67238f16ff",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-queued-course.ts",
+      "baselineBlob": "ef3431ab63f980061b78d8378ea019695d7f2aef",
+      "currentBlob": "ef3431ab63f980061b78d8378ea019695d7f2aef",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-queued-wind.test.ts",
+      "baselineBlob": "5bfd2bfecd4d4c98e9a2f76293354525347b5f25",
+      "currentBlob": "5bfd2bfecd4d4c98e9a2f76293354525347b5f25",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-route-length-bound.test.ts",
+      "baselineBlob": "af310c93a83956ae887b5cbebe4dde943ab8e979",
+      "currentBlob": "af310c93a83956ae887b5cbebe4dde943ab8e979",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-search-continuation.test.ts",
+      "baselineBlob": "4c65dc22ec618b7078e202fac17b25926221e366",
+      "currentBlob": "4c65dc22ec618b7078e202fac17b25926221e366",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-steering.test.ts",
+      "baselineBlob": "9df26de1381b5689bba84154f75ed6aeb30ea2cb",
+      "currentBlob": "9df26de1381b5689bba84154f75ed6aeb30ea2cb",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-tacking.test.ts",
+      "baselineBlob": "66fc251d542b4acd63d11743069b0348a57ad458",
+      "currentBlob": "66fc251d542b4acd63d11743069b0348a57ad458",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-traffic-recovery.test.ts",
+      "baselineBlob": "a610621ced5e3eb9da9965c6cb0d8e0637bdf089",
+      "currentBlob": "a610621ced5e3eb9da9965c6cb0d8e0637bdf089",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-training-cost.test.ts",
+      "baselineBlob": "a047f461227c26e8db77129243c0c041e8cacb2b",
+      "currentBlob": "a047f461227c26e8db77129243c0c041e8cacb2b",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-voyage-quality.test.ts",
+      "baselineBlob": "8a7d5401b27516352bed41a2fd7a31b6b4cfb977",
+      "currentBlob": "8a7d5401b27516352bed41a2fd7a31b6b4cfb977",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-voyage.test.ts",
+      "baselineBlob": "c97386e4d99e4080d9d3be1198030988dc371d63",
+      "currentBlob": "c97386e4d99e4080d9d3be1198030988dc371d63",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-wind-quality.test.ts",
+      "baselineBlob": "927174580795664337a68f3646f826d1b1352329",
+      "currentBlob": "927174580795664337a68f3646f826d1b1352329",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-wind.test.ts",
+      "baselineBlob": "f5a37dce957c52bad94529110b32189242853a92",
+      "currentBlob": "f5a37dce957c52bad94529110b32189242853a92",
+      "identical": true
+    },
+    {
+      "file": "src/shared/ship-wind.ts",
+      "baselineBlob": "59b9611cd62366dd5e0a8faf8f4baa4c13df8982",
+      "currentBlob": "59b9611cd62366dd5e0a8faf8f4baa4c13df8982",
+      "identical": true
+    },
+    {
+      "file": "src/shared/terrain-arrival.test.ts",
+      "baselineBlob": "5b67d16b6ed67a66c7cb0f9d8eec1c6558895443",
+      "currentBlob": "5b67d16b6ed67a66c7cb0f9d8eec1c6558895443",
+      "identical": true
+    },
+    {
+      "file": "src/shared/terrain.test.ts",
+      "baselineBlob": "c32c2fc3fbe977a0257b41b7a18999a969f2329b",
+      "currentBlob": "c32c2fc3fbe977a0257b41b7a18999a969f2329b",
+      "identical": true
+    },
+    {
+      "file": "src/shared/terrain.ts",
+      "baselineBlob": "10f09ffa682218a73a5e846eb0dea9aadee777b6",
+      "currentBlob": "10f09ffa682218a73a5e846eb0dea9aadee777b6",
+      "identical": true
+    }
+  ],
+  "pr320": {
+    "originalCommit": "4df34db4007e435dc7268085ecc7868de85cefd8",
+    "cherryPickCommit": "a3e3d78c638518fb604deb602c7dfd2e34e5d55c",
+    "patchIds": {
+      "a3e3d78": "5282d50a4be9a15b0a0d9331384fce13e0ba314e",
+      "4df34db": "5282d50a4be9a15b0a0d9331384fce13e0ba314e"
+    },
+    "patchesIdentical": true,
+    "cherryPickIsAncestorOfCurrent": true,
+    "files": [
+      ".github/workflows/production-deploy.yml",
+      "docs/engineering/bootstrap_1/expansion-construction-escort.zh.md",
+      "src/ai/bootstrap_1/expansion-construction-escort.test.ts",
+      "src/ai/policy/v6/general.ts"
+    ],
+    "changesAfterCherryPick": "diff --git a/src/ai/policy/v6/general.ts b/src/ai/policy/v6/general.ts\nindex 67fca83..0659b30 100644\n--- a/src/ai/policy/v6/general.ts\n+++ b/src/ai/policy/v6/general.ts\n@@ -694,7 +694,7 @@ function guardingTower(base: V6BaseIntel) {\n }\n \n function isSummoner(unit: Unit) {\n-  return unit.kind === \"summoner\" || unit.kind === \"pyreCaller\";\n+  return unit.kind === \"summoner\";\n }\n \n function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {\n"
+  }
+}

@@ -1,6 +1,7 @@
 import type { CommandEnvelope } from "../shared/net/types";
 import { createGame, restoreSnapshotIntoGame, snapshotGame, type Game } from "../shared/sim";
-import { CHECKSUM_VERSION, checksumGame } from "../shared/sim/checksum";
+import { CHECKSUM_VERSION, checksumGame, checksumGameForVersion } from "../shared/sim/checksum";
+import { assertCurrentRulesVersion, RULES_VERSION } from "../shared/rules-version";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 import type { StoryEvent } from "./events";
@@ -43,7 +44,8 @@ export type GameState = {
 export type Checkpoint<Vars> = { label: string; tick: number; game: GameState; vars: Vars; random: number; stage: StageMemory };
 
 // checksumVersion: the CHECKSUM_VERSION `checksum` was made with (absent in saves from before it, which were version 1).
-export type StorySave<Vars> = { story: string; checkpoint: Checkpoint<Vars>; inputs: LoggedInput[]; tick: number; checksum: string; checksumVersion?: number };
+// Untagged saves predate shared-unit rules and cannot be replayed under the current simulation.
+export type StorySave<Vars> = { story: string; checkpoint: Checkpoint<Vars>; inputs: LoggedInput[]; tick: number; checksum: string; checksumVersion?: number; rulesVersion?: number };
 
 // What the player's side may do: what a human at the keyboard could.
 export type PlayerControls = {
@@ -179,7 +181,7 @@ export class Director<Vars = unknown> {
   }
 
   save(): StorySave<Vars> {
-    return clone({ story: this.options.id, checkpoint: this.checkpointTaken, inputs: this.log, tick: this.game.tick, checksum: checksumGame(this.game), checksumVersion: CHECKSUM_VERSION });
+    return clone({ story: this.options.id, checkpoint: this.checkpointTaken, inputs: this.log, tick: this.game.tick, checksum: checksumGame(this.game), checksumVersion: CHECKSUM_VERSION, rulesVersion: RULES_VERSION });
   }
 
   // Rebuilds a story from a save: the checkpoint's game, the story resumed at the checkpoint's label, and the inputs
@@ -187,20 +189,19 @@ export class Director<Vars = unknown> {
   // of the story (or the story is not deterministic) and loading fails.
   static load<Vars>(options: Omit<DirectorOptions<Vars>, "game" | "vars">, save: StorySave<Vars>): Director<Vars> {
     if (save.story !== options.id) throw new Error(`Save belongs to story ${save.story}, not ${options.id}`);
+    assertCurrentRulesVersion(save.rulesVersion, `Story save of ${save.story}`);
     // A save hashed another way cannot be checked by this build: say so, rather than that it does not replay.
     const checksumVersion = save.checksumVersion ?? 1;
-    if (checksumVersion !== CHECKSUM_VERSION && checksumVersion !== 2) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
+    if (checksumVersion !== CHECKSUM_VERSION && checksumVersion !== 17 && checksumVersion !== 2) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
     const game = reviveGame(save.checkpoint.game);
     const director = new Director<Vars>({ ...options, game, vars: clone(save.checkpoint.vars) }, clone(save.checkpoint));
     director.replaying = clone(save.inputs);
     director.begin(save.checkpoint.label);
     while (director.game.tick < save.tick) director.advance();
     delete director.replaying;
-    // Version 2 did not hash remains: verify its original representation while
-    // retaining the replay-generated records in the loaded game.
-    const checkedGame = { ...director.game };
-    if (checksumVersion === 2) delete checkedGame.corpses;
-    const checksum = checksumGame(checkedGame);
+    // Check the complete original representation; only fields absent from that
+    // checksum format are omitted. Keep the replay-generated facts in memory.
+    const checksum = checksumGameForVersion(director.game, checksumVersion);
     if (checksum !== save.checksum) throw new Error(`Save of ${save.story} does not replay: tick ${save.tick} hashes ${checksum}, the save says ${save.checksum}`);
     if (options.pilot) director.startPilot(save.checkpoint.label);
     director.settle();

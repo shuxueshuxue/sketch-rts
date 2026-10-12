@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import { decodeServerNetMessage, encodeNetMessage } from "../../shared/net/codec";
@@ -123,8 +124,8 @@ describe("server deployment runtime", () => {
 
     const started = runtime.connectRoom(startedRoom, "spectator-viewer", true, () => {});
 
-    expect(transport.sent).toEqual([{ type: "join", roomId: startedRoom.id, playerId: "spectator-viewer" }]);
-    transport.emit({ type: "hello", roomId: startedRoom.id, playerId: "spectator-viewer", tick: 28, epoch: 3 });
+    expect(transport.sent).toEqual([{ type: "join", rulesVersion: RULES_VERSION, roomId: startedRoom.id, playerId: "spectator-viewer" }]);
+    transport.emit({ type: "hello", rulesVersion: RULES_VERSION, roomId: startedRoom.id, playerId: "spectator-viewer", tick: 28, epoch: 3 });
     expect(transport.sent).toContainEqual(expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0, epoch: 3 }));
     expect(() => started.adapter.sendCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toThrow("Spectators cannot issue commands");
   });

@@ -89,7 +89,7 @@ describe("AI skirmish tactics", () => {
       .unit("v3", "emberRavager", 2600, 2110)
       .unit("v3", "cinderRunner", 2630, 2070)
       .unit("v3", "contractArcher", 2660, 2050)
-      .unit("v3", "emberAcolyte", 2580, 2140)
+      .unit("v3", "priest", 2580, 2140)
       .build()
       .createGame();
 

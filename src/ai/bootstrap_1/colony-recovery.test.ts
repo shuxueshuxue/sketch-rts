@@ -14,7 +14,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 it.each(cases)('$version builds paid $race care for its separated island patient (mirror=$mirror)', ({ version, race, mirror }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
   const patientKind = race === 'grove' ? 'footman' : 'emberRavager';
-  const medic = race === 'grove' ? 'priest' : 'emberAcolyte';
+  const medic = 'priest';
   let scene = sketchScene('colony-local-recovery').map('bareDuel').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500, { id: 'home' })

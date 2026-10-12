@@ -1,0 +1,705 @@
+{
+  "kinds": [
+    "wildling",
+    "mossGnawer",
+    "ancientStag",
+    "spiderling",
+    "venomSpider",
+    "spiderQueen",
+    "dragonWhelp",
+    "redDragon",
+    "golem",
+    "rubbleGolem",
+    "rockGolem",
+    "graniteGolem",
+    "stonebackBrute",
+    "ogreWarrior",
+    "ogreMage",
+    "ogreLord",
+    "murlocPeon",
+    "murlocHunter",
+    "tidePriest",
+    "deepSnapper",
+    "spirit"
+  ],
+  "rasterReuse": {
+    "unique": 434,
+    "total": 841,
+    "repeated": 254,
+    "max": 6
+  },
+  "prepareMs": 361.19999999925494,
+  "timings": [
+    {
+      "simulationMs": 8.399999998509884,
+      "renderSubmitMs": 254.60000000149012,
+      "renderCompleteMs": 254.69999999925494,
+      "frameMs": 263.0999999977648
+    },
+    {
+      "simulationMs": 1.2000000029802322,
+      "renderSubmitMs": 51.099999997764826,
+      "renderCompleteMs": 51.099999997764826,
+      "frameMs": 52.30000000074506
+    },
+    {
+      "simulationMs": 1.0999999977648258,
+      "renderSubmitMs": 67.80000000074506,
+      "renderCompleteMs": 67.90000000223517,
+      "frameMs": 69
+    },
+    {
+      "simulationMs": 1.300000000745058,
+      "renderSubmitMs": 100.89999999850988,
+      "renderCompleteMs": 100.89999999850988,
+      "frameMs": 102.19999999925494
+    },
+    {
+      "simulationMs": 0.9000000022351742,
+      "renderSubmitMs": 38.19999999925494,
+      "renderCompleteMs": 38.30000000074506,
+      "frameMs": 39.20000000298023
+    },
+    {
+      "simulationMs": 0.4000000022351742,
+      "renderSubmitMs": 25.5,
+      "renderCompleteMs": 25.599999997764826,
+      "frameMs": 26
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 2.699999999254942,
+      "renderCompleteMs": 2.699999999254942,
+      "frameMs": 3.199999999254942
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 94.19999999925494,
+      "renderCompleteMs": 94.30000000074506,
+      "frameMs": 95
+    },
+    {
+      "simulationMs": 1.6000000014901161,
+      "renderSubmitMs": 62.5,
+      "renderCompleteMs": 62.5,
+      "frameMs": 64.10000000149012
+    },
+    {
+      "simulationMs": 1.4000000022351742,
+      "renderSubmitMs": 84.89999999850988,
+      "renderCompleteMs": 85,
+      "frameMs": 86.40000000223517
+    },
+    {
+      "simulationMs": 1.2000000029802322,
+      "renderSubmitMs": 120.5,
+      "renderCompleteMs": 120.59999999776483,
+      "frameMs": 121.80000000074506
+    },
+    {
+      "simulationMs": 1.199999999254942,
+      "renderSubmitMs": 126.60000000149012,
+      "renderCompleteMs": 126.60000000149012,
+      "frameMs": 127.80000000074506
+    },
+    {
+      "simulationMs": 0.9000000022351742,
+      "renderSubmitMs": 93.69999999925494,
+      "renderCompleteMs": 93.80000000074506,
+      "frameMs": 94.70000000298023
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 78.39999999850988,
+      "renderCompleteMs": 78.5,
+      "frameMs": 79.10000000149012
+    },
+    {
+      "simulationMs": 1.1000000014901161,
+      "renderSubmitMs": 95.19999999925494,
+      "renderCompleteMs": 95.19999999925494,
+      "frameMs": 96.30000000074506
+    },
+    {
+      "simulationMs": 0.7999999970197678,
+      "renderSubmitMs": 21.100000001490116,
+      "renderCompleteMs": 21.100000001490116,
+      "frameMs": 21.899999998509884
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 10.800000000745058,
+      "renderCompleteMs": 10.800000000745058,
+      "frameMs": 11.400000002235174
+    },
+    {
+      "simulationMs": 1,
+      "renderSubmitMs": 18.800000000745058,
+      "renderCompleteMs": 19.699999999254942,
+      "frameMs": 20.699999999254942
+    },
+    {
+      "simulationMs": 2.800000000745058,
+      "renderSubmitMs": 89.59999999776483,
+      "renderCompleteMs": 89.59999999776483,
+      "frameMs": 92.39999999850988
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 18.699999999254942,
+      "renderCompleteMs": 18.800000000745058,
+      "frameMs": 19.5
+    },
+    {
+      "simulationMs": 1.199999999254942,
+      "renderSubmitMs": 30.399999998509884,
+      "renderCompleteMs": 30.5,
+      "frameMs": 31.699999999254942
+    },
+    {
+      "simulationMs": 1,
+      "renderSubmitMs": 47.400000002235174,
+      "renderCompleteMs": 47.400000002235174,
+      "frameMs": 48.400000002235174
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 117.59999999776483,
+      "renderCompleteMs": 117.59999999776483,
+      "frameMs": 118.30000000074506
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 40.900000002235174,
+      "renderCompleteMs": 41,
+      "frameMs": 41.80000000074506
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 27.199999999254942,
+      "renderCompleteMs": 27.199999999254942,
+      "frameMs": 27.800000000745058
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 33.19999999925494,
+      "renderCompleteMs": 33.19999999925494,
+      "frameMs": 33.80000000074506
+    },
+    {
+      "simulationMs": 0.5999999977648258,
+      "renderSubmitMs": 94.30000000074506,
+      "renderCompleteMs": 94.30000000074506,
+      "frameMs": 94.89999999850988
+    },
+    {
+      "simulationMs": 1.300000000745058,
+      "renderSubmitMs": 41.69999999925494,
+      "renderCompleteMs": 41.69999999925494,
+      "frameMs": 43
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 27.900000002235174,
+      "renderCompleteMs": 27.900000002235174,
+      "frameMs": 28.400000002235174
+    },
+    {
+      "simulationMs": 0.5999999977648258,
+      "renderSubmitMs": 86.70000000298023,
+      "renderCompleteMs": 86.70000000298023,
+      "frameMs": 87.30000000074506
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 30.800000000745058,
+      "renderCompleteMs": 30.800000000745058,
+      "frameMs": 31.5
+    },
+    {
+      "simulationMs": 0.9000000022351742,
+      "renderSubmitMs": 41.69999999925494,
+      "renderCompleteMs": 41.79999999701977,
+      "frameMs": 42.69999999925494
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 55.69999999925494,
+      "renderCompleteMs": 55.69999999925494,
+      "frameMs": 56.399999998509884
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 110.39999999850988,
+      "renderCompleteMs": 110.5,
+      "frameMs": 111.30000000074506
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 45.099999997764826,
+      "renderCompleteMs": 45.099999997764826,
+      "frameMs": 45.80000000074506
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 21.100000001490116,
+      "renderCompleteMs": 21.200000002980232,
+      "frameMs": 21.900000002235174
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 21.699999999254942,
+      "renderCompleteMs": 21.800000000745058,
+      "frameMs": 22.300000000745058
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 92.90000000223517,
+      "renderCompleteMs": 92.90000000223517,
+      "frameMs": 93.40000000223517
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 27.599999997764826,
+      "renderCompleteMs": 27.699999999254942,
+      "frameMs": 28.199999999254942
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 23.5,
+      "renderCompleteMs": 23.5,
+      "frameMs": 24.100000001490116
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 36.099999997764826,
+      "renderCompleteMs": 36.19999999925494,
+      "frameMs": 36.69999999925494
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 89.29999999701977,
+      "renderCompleteMs": 89.29999999701977,
+      "frameMs": 90
+    },
+    {
+      "simulationMs": 5.899999998509884,
+      "renderSubmitMs": 39.5,
+      "renderCompleteMs": 39.600000001490116,
+      "frameMs": 45.5
+    },
+    {
+      "simulationMs": 0.5999999977648258,
+      "renderSubmitMs": 40.5,
+      "renderCompleteMs": 40.600000001490116,
+      "frameMs": 41.19999999925494
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 97.09999999776483,
+      "renderCompleteMs": 97.09999999776483,
+      "frameMs": 97.59999999776483
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 37.69999999925494,
+      "renderCompleteMs": 37.69999999925494,
+      "frameMs": 38.5
+    },
+    {
+      "simulationMs": 1.0999999977648258,
+      "renderSubmitMs": 20.5,
+      "renderCompleteMs": 20.600000001490116,
+      "frameMs": 21.699999999254942
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 21,
+      "renderCompleteMs": 21,
+      "frameMs": 21.600000001490116
+    },
+    {
+      "simulationMs": 7,
+      "renderSubmitMs": 88.59999999776483,
+      "renderCompleteMs": 88.69999999925494,
+      "frameMs": 95.69999999925494
+    },
+    {
+      "simulationMs": 1,
+      "renderSubmitMs": 35.30000000074506,
+      "renderCompleteMs": 35.30000000074506,
+      "frameMs": 36.30000000074506
+    },
+    {
+      "simulationMs": 1.0999999977648258,
+      "renderSubmitMs": 31.900000002235174,
+      "renderCompleteMs": 32,
+      "frameMs": 33.099999997764826
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 35.69999999925494,
+      "renderCompleteMs": 35.69999999925494,
+      "frameMs": 36.400000002235174
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 95.30000000074506,
+      "renderCompleteMs": 97.30000000074506,
+      "frameMs": 97.80000000074506
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 29.899999998509884,
+      "renderCompleteMs": 29.899999998509884,
+      "frameMs": 30.699999999254942
+    },
+    {
+      "simulationMs": 5.300000000745058,
+      "renderSubmitMs": 37.099999997764826,
+      "renderCompleteMs": 37.099999997764826,
+      "frameMs": 42.399999998509884
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 41.100000001490116,
+      "renderCompleteMs": 41.100000001490116,
+      "frameMs": 41.70000000298023
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 92.40000000223517,
+      "renderCompleteMs": 92.5,
+      "frameMs": 93.19999999925494
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 39.29999999701977,
+      "renderCompleteMs": 39.29999999701977,
+      "frameMs": 40
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 26,
+      "renderCompleteMs": 26,
+      "frameMs": 26.600000001490116
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 81.30000000074506,
+      "renderCompleteMs": 81.30000000074506,
+      "frameMs": 81.80000000074506
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 27.899999998509884,
+      "renderCompleteMs": 27.899999998509884,
+      "frameMs": 28.399999998509884
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 26.199999999254942,
+      "renderCompleteMs": 26.199999999254942,
+      "frameMs": 26.699999999254942
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 23.599999997764826,
+      "renderCompleteMs": 23.699999999254942,
+      "frameMs": 24.300000000745058
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 83.60000000149012,
+      "renderCompleteMs": 83.60000000149012,
+      "frameMs": 84.20000000298023
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 23.199999999254942,
+      "renderCompleteMs": 23.300000000745058,
+      "frameMs": 23.800000000745058
+    },
+    {
+      "simulationMs": 4.600000001490116,
+      "renderSubmitMs": 21.800000000745058,
+      "renderCompleteMs": 21.899999998509884,
+      "frameMs": 26.5
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 50,
+      "renderCompleteMs": 50.100000001490116,
+      "frameMs": 50.80000000074506
+    },
+    {
+      "simulationMs": 0.4000000022351742,
+      "renderSubmitMs": 83.80000000074506,
+      "renderCompleteMs": 83.89999999850988,
+      "frameMs": 84.30000000074506
+    },
+    {
+      "simulationMs": 0.7999999970197678,
+      "renderSubmitMs": 25.200000002980232,
+      "renderCompleteMs": 25.300000000745058,
+      "frameMs": 26.099999997764826
+    },
+    {
+      "simulationMs": 0.6000000014901161,
+      "renderSubmitMs": 27.899999998509884,
+      "renderCompleteMs": 27.899999998509884,
+      "frameMs": 28.5
+    },
+    {
+      "simulationMs": 0.5,
+      "renderSubmitMs": 23.300000000745058,
+      "renderCompleteMs": 23.300000000745058,
+      "frameMs": 23.800000000745058
+    },
+    {
+      "simulationMs": 0.3999999985098839,
+      "renderSubmitMs": 70.19999999925494,
+      "renderCompleteMs": 70.19999999925494,
+      "frameMs": 70.59999999776483
+    },
+    {
+      "simulationMs": 0.30000000074505806,
+      "renderSubmitMs": 17.199999999254942,
+      "renderCompleteMs": 17.199999999254942,
+      "frameMs": 17.5
+    },
+    {
+      "simulationMs": 0.5999999977648258,
+      "renderSubmitMs": 28.100000001490116,
+      "renderCompleteMs": 28.100000001490116,
+      "frameMs": 28.699999999254942
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 91.5,
+      "renderCompleteMs": 91.5,
+      "frameMs": 92.30000000074506
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 41.79999999701977,
+      "renderCompleteMs": 41.899999998509884,
+      "frameMs": 42.600000001490116
+    },
+    {
+      "simulationMs": 0.7999999970197678,
+      "renderSubmitMs": 44.900000002235174,
+      "renderCompleteMs": 45,
+      "frameMs": 45.79999999701977
+    },
+    {
+      "simulationMs": 0.6999999992549419,
+      "renderSubmitMs": 38.70000000298023,
+      "renderCompleteMs": 38.70000000298023,
+      "frameMs": 39.400000002235174
+    },
+    {
+      "simulationMs": 0.8000000007450581,
+      "renderSubmitMs": 78.39999999850988,
+      "renderCompleteMs": 78.39999999850988,
+      "frameMs": 79.19999999925494
+    },
+    {
+      "simulationMs": 0.7000000029802322,
+      "renderSubmitMs": 40.19999999925494,
+      "renderCompleteMs": 40.19999999925494,
+      "frameMs": 40.900000002235174
+    }
+  ],
+  "distributions": {
+    "simulationMs": {
+      "mean": 1.115000000409782,
+      "p50": 0.7000000029802322,
+      "p95": 5.300000000745058,
+      "max": 8.399999998509884,
+      "over50ms": 0
+    },
+    "renderSubmitMs": {
+      "mean": 54.458749999804425,
+      "p50": 40.5,
+      "p95": 117.59999999776483,
+      "max": 254.60000000149012,
+      "over50ms": 30
+    },
+    "renderCompleteMs": {
+      "mean": 54.53499999986961,
+      "p50": 40.600000001490116,
+      "p95": 117.59999999776483,
+      "max": 254.69999999925494,
+      "over50ms": 31
+    },
+    "frameMs": {
+      "mean": 55.6500000002794,
+      "p50": 41.80000000074506,
+      "p95": 118.30000000074506,
+      "max": 263.0999999977648,
+      "over50ms": 31
+    }
+  },
+  "cardStats": {
+    "pages": 3,
+    "cards": 48,
+    "pixels": 16318464,
+    "arrayCpuBytes": 0,
+    "cpuBytes": 2042624,
+    "gpuBytes": 87031808,
+    "allocatedMipBytes": 87031104,
+    "canvasBackingBytes": 3031040,
+    "maskBytes": 2039808,
+    "pendingMaskBytes": 0,
+    "pendingRgbaBytes": 0,
+    "rowScratchBytes": 2816,
+    "retiredGpuBytes": 0,
+    "ownedCpuBytes": 5073664,
+    "ownedGpuBytes": 91072448,
+    "peakPendingRgbaBytes": 1982464,
+    "peakOwnedCpuBytes": 7555840,
+    "peakOwnedGpuBytes": 175656256,
+    "peakRetiredGpuBytes": 84583808,
+    "rasterizations": 841,
+    "copiedLayers": 23,
+    "rasterStages": {
+      "paintMs": 327.2999999932945,
+      "flushMs": 2103.5999999903142,
+      "readbackMs": 562.5000000037253,
+      "pickMaskMs": 519.699999962002,
+      "rowFlipMs": 78.40000000223517,
+      "slotMs": 33.00000001117587
+    },
+    "rasterWorkWallMs": 3657.8999999649823,
+    "scratchTextures": 2,
+    "scratchCpuBytes": 3031040,
+    "scratchGpuBytes": 4041344,
+    "mipInitializedPages": 7,
+    "mipLayerUpdates": 841,
+    "mipCopyCalls": 8410,
+    "gpuCompactionLayers": 23,
+    "gpuCompactionCopyCalls": 230,
+    "arrayBaseUploadBytes": 0,
+    "scratchUploadBytes": 1291829248,
+    "gpuTransferSubmissionWallMs": 308.4000000283122
+  },
+  "measurement": "Same 80 frames at fixed viewport. Frame includes two simulation ticks, snapshot, renderer submission and gl.finish; excludes capture, PNG encoding and rAF. Software SwiftShader, not hardware GPU FPS.",
+  "actions": {
+    "wildling": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "mossGnawer": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "ancientStag": [
+      "attack",
+      "idle",
+      "walk"
+    ],
+    "spiderling": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "venomSpider": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "spiderQueen": [
+      "cast",
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "dragonWhelp": [
+      "idle",
+      "attack"
+    ],
+    "redDragon": [
+      "idle",
+      "attack",
+      "walk"
+    ],
+    "golem": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "rubbleGolem": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "rockGolem": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "graniteGolem": [
+      "cast",
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "stonebackBrute": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "ogreWarrior": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "ogreMage": [
+      "idle",
+      "attack",
+      "cast"
+    ],
+    "ogreLord": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "murlocPeon": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "murlocHunter": [
+      "idle",
+      "attack"
+    ],
+    "tidePriest": [
+      "idle",
+      "attack"
+    ],
+    "deepSnapper": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "spirit": [
+      "idle",
+      "walk",
+      "attack"
+    ]
+  },
+  "glError": 0,
+  "passed": true,
+  "method": "21 catalog creatures, real attack commands against paired soldiers, 160 simulation ticks. Attack/idle/walk modes are observed, not forced. Cast coverage is reviewed separately in painter sheets.",
+  "errors": [],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "method": "Exact captured 841-request GPU-miss trace; no prediction of future requests. CPU retention only; GPU domains unchanged. Replay counts do not imply wall time improvement.",
+  "requests": 841,
+  "unique": 434,
+  "results": [
+    {
+      "mib": 8,
+      "policy": "lru",
+      "hits": 0,
+      "stores": 841,
+      "bytes": 8373680
+    },
+    {
+      "mib": 8,
+      "policy": "admit2",
+      "hits": 3,
+      "stores": 404,
+      "bytes": 8316252
+    },
+    {
+      "mib": 8,
+      "policy": "lfu",
+      "hits": 21,
+      "stores": 820,
+      "bytes": 8303728
+    },
+    {
+      "mib": 16,
+      "policy": "lru",
+      "hits": 3,
+      "stores": 838,
+      "bytes": 16726628
+    },
+    {
+      "mib": 16,
+      "policy": "admit2",
+      "hits": 23,
+      "stores": 384,
+      "bytes": 16602044
+    },
+    {
+      "mib": 16,
+      "policy": "lfu",
+      "hits": 35,
+      "stores": 806,
+      "bytes": 16722820
+    },
+    {
+      "mib": 32,
+      "policy": "lru",
+      "hits": 96,
+      "stores": 745,
+      "bytes": 33303176
+    },
+    {
+      "mib": 32,
+      "policy": "admit2",
+      "hits": 59,
+      "stores": 348,
+      "bytes": 33475376
+    },
+    {
+      "mib": 32,
+      "policy": "lfu",
+      "hits": 95,
+      "stores": 746,
+      "bytes": 33431492
+    },
+    {
+      "mib": 48,
+      "policy": "lru",
+      "hits": 249,
+      "stores": 592,
+      "bytes": 50288792
+    },
+    {
+      "mib": 48,
+      "policy": "admit2",
+      "hits": 153,
+      "stores": 254,
+      "bytes": 46142108
+    },
+    {
+      "mib": 48,
+      "policy": "lfu",
+      "hits": 244,
+      "stores": 597,
+      "bytes": 50158348
+    },
+    {
+      "mib": 64,
+      "policy": "lru",
+      "hits": 402,
+      "stores": 439,
+      "bytes": 66960984
+    },
+    {
+      "mib": 64,
+      "policy": "admit2",
+      "hits": 153,
+      "stores": 254,
+      "bytes": 46142108
+    },
+    {
+      "mib": 64,
+      "policy": "lfu",
+      "hits": 402,
+      "stores": 439,
+      "bytes": 67069064
+    }
+  ]
+}

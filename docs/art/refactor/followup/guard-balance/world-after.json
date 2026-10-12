@@ -1,0 +1,5290 @@
+{
+  "fps": 20,
+  "cases": [
+    {
+      "label": "Right / up 60",
+      "expectedSide": 1,
+      "expectedAim": -4,
+      "actorId": "unit-player-lancer-1000",
+      "targetId": "unit-enemy-footman-1001",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": -4,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": -58.88972745734185
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Right / level",
+      "expectedSide": 1,
+      "expectedAim": 0,
+      "actorId": "unit-player-lancer-1002",
+      "targetId": "unit-enemy-footman-1003",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Right / down 60",
+      "expectedSide": 1,
+      "expectedAim": 4,
+      "actorId": "unit-player-lancer-1004",
+      "targetId": "unit-enemy-footman-1005",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 3,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 5,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": 1,
+          "aim": 4,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": 1,
+          "aim": 0,
+          "direction": {
+            "x": 34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 7,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Left / up 60",
+      "expectedSide": -1,
+      "expectedAim": -4,
+      "actorId": "unit-player-lancer-1006",
+      "targetId": "unit-enemy-footman-1007",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 0,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": -4,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": -58.88972745734179
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Left / level",
+      "expectedSide": -1,
+      "expectedAim": 0,
+      "actorId": "unit-player-lancer-1008",
+      "targetId": "unit-enemy-footman-1009",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 2,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -68,
+            "y": 0
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Left / down 60",
+      "expectedSide": -1,
+      "expectedAim": 4,
+      "actorId": "unit-player-lancer-1010",
+      "targetId": "unit-enemy-footman-1011",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 1,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 25,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 27,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 29,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 30,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 31,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 32,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 33,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 34,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 47,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 49,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 58,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 59,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 60,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 61,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 4,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 62,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -34,
+            "y": 58.88972745734179
+          }
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 69,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 71,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Hold / counterattack left",
+      "expectedSide": -1,
+      "expectedAim": 0,
+      "actorId": "unit-player-footman-1012",
+      "targetId": "unit-enemy-footman-1013",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 4,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 24,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 25,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 26,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 27,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 28,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 29,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 30,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 31,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 32,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 33,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 34,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 46,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 47,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 48,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 49,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 50,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 59,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 61,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 68,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 69,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 70,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 71,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 72,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    },
+    {
+      "label": "Hold / counterattack left",
+      "expectedSide": -1,
+      "expectedAim": 0,
+      "actorId": "unit-player-footman-1014",
+      "targetId": "unit-enemy-footman-1015",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 6,
+          "side": 1,
+          "aim": 0
+        },
+        {
+          "tick": 1,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 3,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 5,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 7,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 9,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 11,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 13,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 15,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 17,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 19,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 21,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 23,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 24,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 25,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 26,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 27,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 28,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 29,
+          "mode": "idle",
+          "frame": 1,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 30,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 31,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 32,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 33,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 34,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 35,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 37,
+          "mode": "idle",
+          "frame": 2,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 39,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 41,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 43,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 3,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 45,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 46,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 47,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 48,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 49,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 50,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 51,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 4,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 53,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 55,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 57,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 59,
+          "mode": "idle",
+          "frame": 5,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 61,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 63,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 65,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 6,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 67,
+          "mode": "attack",
+          "frame": 0,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 68,
+          "mode": "attack",
+          "frame": 1,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 69,
+          "mode": "attack",
+          "frame": 2,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 70,
+          "mode": "attack",
+          "frame": 3,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 71,
+          "mode": "attack",
+          "frame": 4,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 72,
+          "mode": "attack",
+          "frame": 5,
+          "side": -1,
+          "aim": 0,
+          "direction": {
+            "x": -40,
+            "y": 0
+          }
+        },
+        {
+          "tick": 73,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 7,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 75,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 77,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        },
+        {
+          "tick": 79,
+          "mode": "idle",
+          "frame": 0,
+          "side": -1,
+          "aim": 0
+        }
+      ],
+      "contactSeen": true,
+      "wrongSideAfterFirstRelease": 0
+    }
+  ],
+  "glError": 0,
+  "passed": true,
+  "method": "Eight independent hold-position duels. Six lancers target +/-60 and level in both facings; two swordsmen counterattack left. 80 real simulation ticks sampled every tick. No stats or hit timings changed. A failure is expected when run against the pre-fix facing tracker.",
+  "framePngSha256": [
+    "f155296112f7c5d4b255a26fb4fbe9944e9ed3ad4621c5460c304b358a74066d",
+    "67fd552c7acfde652878c5dee2b6c87ca92a4738cbb012da9063a9889f143651",
+    "755d9d1e92a1492206cc36e2cec0c4b701719e4cfd44f9a5dced668059b4a848",
+    "203cf6b0988e2c207a54378629b2a98eed843dd5c6cb969bfef7a03c12985a83",
+    "fb02dde7e3af0c262a58af3251f2964c7074e4628f7fd8e45cc58b56ee534fd6",
+    "dfb4da38c53cb335fbd7cec6e3344bd12f47ec4a7b70d21fc06b774b53a103b9",
+    "362a84ff1117c3ac15b2b75c9028294de0cb6db3f7c105da38a138b5c52f856f",
+    "20ce61a19a22ba709ced864c4db9c89e5c03933d4c884da9a20058fd68149a05",
+    "027383df72f1dece629bcdc12d3894961d9cab12aa18929d76b591e180128f06",
+    "cff5898c35f746d29fe3de92dc584bdba34213cfbcda19c9f51d5d77b0154176",
+    "fc9c81d97139169cd179c946c7a8c59adce5f4249648a9ec19cce7fb5f2bebd3",
+    "c5f58c15904db763fada034dd80ade8e0bc2b599db0ef37cbbb51401aa6e2fb2",
+    "cb0f2dc9e0dd3ac3359031fd34711fbf5d37fab76dfc5ca2baf25e257423b948",
+    "ad8b6fafec51405e46fd0b50317a471dc16c5790b60c3332479c82c49c7025c6",
+    "2223564a9d2eee77fedb598404f17139bcad76151f2d31cd6996fe6913fd7ab2",
+    "cc61fb3e60abb5ea7bdcc9ea0c08e8eee52ea48f497d45b8696e3c5fa34358dc",
+    "0a77fac3301e2e150fa3b83ee7fb80ea3435d4b6f4b46a2f36b6f3f4448fe5d8",
+    "c3e62257a032dc1b15753da87f44c0f08c7ea61fe606dfb6008051eaabc4824e",
+    "4049b80158e5029ed504e11429cbc19616f2d7e47f9287e40133098e1415fcb1",
+    "0769979fe374173f6cf67933dc5258bcb4c62e8b320609905c972c79b11bdeb7",
+    "3e46ccd648f57b5c020c33e2d06a005536a8acc476360c092e51f4de904feb83",
+    "c573e36bcb0489607f16030237b8cbabb0909c671f58cab56307dc46e89c8bf4",
+    "9b97a5fe935328e1268a8319bbeb5007a1d217799defcb385236b388bf3b2682",
+    "837112379b406be9cbfdb61211e06b4bb2db87001ea49f1ccf77f757b7af1203",
+    "99bff7b390b5a21fbffdbdfc566d61fca9457d2e40c275ee6ec24cd683a62383",
+    "92c694dafdac8e090d7c6f7da9a8ad490a17560034daa471c6d7956c7862e1ad",
+    "d75aaa4b6102f5ca2bec46c284b538767f34741f27abb9e6264c562d1f5c3e98",
+    "69e80aa2b9f91f521bd912d56a4c8ee5b25a5f758854a37fa514256ac0a8f14f",
+    "a6bcd0cb17bb3c6abb7daede02398b615f3f9591aa610070ebdbb0bfbe8cd6bd",
+    "560c1ec2ede62b68f70b4e2e4322a1758bbb08b253fba85cdfee33c275214285",
+    "23243f52718bfa6df6a8d5a0d5c15e830df39fe8f7e86a368345de90b9f321bd",
+    "128181017a8d7491b39375eac02b7d41a2b1a062b8d655cc3bea3e1f4bf5bef5",
+    "5c85b3bfbabb7fece92bb19e08554de431f3564c3fc70b3293d943224bcfc328",
+    "cc2be479d56f46f8e6b58f33c1d9affd348593787e46b4e6b741bf1a467ae094",
+    "4376afe101d6d4a910bcc2a671706036aac635f5fd56f755923fb1b71b36ca4f",
+    "d2ad82cef37fcc8a10b0e27eaa635b343cfac386a1945f3e69bee8acdb1fd839",
+    "9afff39fdd092f8dd86e928b0b1bf23fa8c433a9f43e0c6a217fa254ec9a0cbd",
+    "2e2061537f9836fedf3d6b46fc7a77c076a5a0caa7297ffcbbe7e2104739c607",
+    "4f1938fa8310c54306337263f9e7931b3f6772dc37f259e8aae91056f0c6c83a",
+    "d85eb11cb00188f2136e036e7948bf5a80057c019d9011c7bb421e878a05264c",
+    "549a922090513e70afef498118feb0cd258dcb58fa3a0fceb478270930b44994",
+    "3c63b2b6d96561a9c2326825164b60e46ea9f8fd17bc9948d4b608ddc1c54756",
+    "ca9bf4c82ee299abc6f4a33551c05d929296fcc9611c12d2c2d209875ee29762",
+    "47f6f38f619b9abcf47f198e5a565e92a47e253fa2804f6465d15696333c8d70",
+    "75084cd8e735393d07ce284ca33127add83c0ab1e8d836d8a8d81abe2f232b5c",
+    "5f8fe1e77ff59d80e16e767d928400e4c38c7168df540b3026ff533f071a9f55",
+    "ed8fd285797098bb81607c06d0b16bf0bc6a0ffcec3e9d72bfe2729faf44ce80",
+    "1e456dde7deca4e790dfc45f8f296581fcca68a66d14cc58a609144e2d110926",
+    "394b83612b132bace7ae1d3cc57dde81ce946a6fb7beb4a7acec3ca7eac576ac",
+    "59597d5cab0fe7e5faf1f6f1f6e90ccbc134ddda4717230876d4119aa1ed9c85",
+    "2c5ba0079ba171f6e2400acf0151bfded8052412fcbaeab7c9047c45dca5f9bd",
+    "6b38d7abb7fe9fe09f0bf9494125e6e36aa789c3374649ffc60b61285c31611b",
+    "7d3d992c5629a1ef2b419a78e25de9e3b713405d642dc87ea1c1ce5b9b6d6f3c",
+    "1ed10c11a2b35886ff50c93f01e92dbc3faa03f00a6c1b412bc5e6651c821567",
+    "c0486efacd01c03963dd21fb736808070de9efbe9fda2db829122a0e08fc5bd1",
+    "9f524859352cf9a81a8b799d47fa91588baba7aa2a5b8a7cd68428042334b65b",
+    "37f66f498d9fbfc81e968c1ff48df9bccc04d478419f809a7c6e467fd7e8af8b",
+    "89a41af97fe0b56c8b064841d1d5ead689dd479515bde752742bafe5335cf52f",
+    "e36395bda278c9aaa0fb57a9f61fc4bd5e402eb96b6d6dadc16edc8459a925ee",
+    "3b0216932dce686bd47c965debd3af1198101f48cce83a47a68c7e33007b608f",
+    "2f756991d32d34e0afb72801d084ff7eb449ac224e3f4c3e5e651b2bb704a2a8",
+    "2032af54452a7b8dd58434a153ce316333db4ad28d09051feff61fba5441a7c5",
+    "79582d1afb814b45bf083fca29288a9aa57f22930f928567e47e2bffde598267",
+    "1f9eecf6c8dc5ee037bc19b890f906e3434becbde13cab34aed5ec99ac209c96",
+    "6e646d96984fed265973fffda574e2e3cca40119d4c0608bb2621de4e55d46f9",
+    "3f2e5d92a64c658df55be1ed17a9b9690cd81712e82f2232f0a3e331784fb2ef",
+    "bd7ea003cfd5e3ff40e00cd5b7e4fb40823b95fcc2881e7232fa0f6422af7a8b",
+    "f1a2a6a48f66a927db6c5b8245e93dfe1878caa833a8131fdbfb52181072b494",
+    "0431030b8875b513cf0416a56464c42b3a532ee6676813b751d74c932b307e55",
+    "623baef1f98fd39a07b1c22f390255d9082d56a2ccabfde3b881c4f94bd250b8",
+    "c81eb08c61063d66600d63ff0f1614fef8d31821c58f7997351d2f90a1b54f3d",
+    "b1aec92c3476fc62cbc992dfeb2f1739a59a8427a2a5a4f3906357de9b0df60e",
+    "e0d4b046613e3fcf220fd9c0bc6e263d644fe79227ee6131127c7d729b23e649",
+    "cd8d1049047664a40e5840ab286de8cd712b713a9c0a1081c1f6df31402d3c7f",
+    "554cbc8e86af229c16bb9c1827cf563f5c2bb00ceceb73cd8c3f5434246c41af",
+    "b7fd1dee98ca60c181ad201d2b82bcbde78a748bcb72f73ba12960ad2caedd56",
+    "d51dbb5d06a8730264666f64a90d6985983cbec0d011993d6e66fbfe5dc58b96",
+    "3ade98da577de3092861e1521096f9319bd48d1a40b29418578903b0569d55b0",
+    "4fe5f702b83ace75c445528e8cddce38287934843b2f01369e59b7203852b89a",
+    "fa7254c231b43f0a985ba9081aa8c0bb7ad53dad60f06ffa7c2975e0f80ee22a"
+  ],
+  "errors": [],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

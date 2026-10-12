@@ -15,7 +15,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 it.each(cases)('$version deliberately retrieves books to grow and return a $race veteran (mirror=$mirror)', ({ version, race, mirror }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
   const kind = version === 'v9_archer' ? race === 'grove' ? 'archer' : 'sparkArcher'
-    : version === 'v9_summoner' ? race === 'grove' ? 'summoner' : 'pyreCaller'
+    : version === 'v9_summoner' ? 'summoner'
       : race === 'grove' ? 'knight' : 'ashChieftain';
   const books = Math.ceil(xpStarThresholds(UNIT_DEFS[kind])[2]! / EXPERIENCE_BOOK_XP);
   let scene = sketchScene('loot-veteran-return').map('bareDuel').replaceDefaults()

@@ -1,0 +1,91 @@
+{
+  "checks": {
+    "replay": true,
+    "visible": true,
+    "modes": true,
+    "cards": true,
+    "finalArt": true,
+    "decodedRGBA": true
+  },
+  "allChecks": true,
+  "fullCompletionWall": {
+    "meanMs": 6008.716666667101,
+    "p50Ms": 6107.5,
+    "p95Ms": 6794.300000000745,
+    "maxMs": 6794.300000000745
+  },
+  "cpuSubmission": {
+    "meanMs": 742.5416666668219,
+    "p50Ms": 731.2000000011176,
+    "p95Ms": 1041.0999999996275,
+    "maxMs": 1041.0999999996275
+  },
+  "means": {
+    "paintMs": 49.48333333184322,
+    "readbackMs": 480.46666666539386,
+    "boundsMs": 114.2749999971129,
+    "copyMs": 24.575000004221994,
+    "rendererMs": 49.0749999997206,
+    "texSubImage3DMs": 43.22499999978269,
+    "uploadBytes": 162998954.66666666,
+    "dirtyPages": 45.666666666666664,
+    "dirtyLayers": 248,
+    "generateMipmapMs": 0.05833333311602473,
+    "trueGpuTailMs": 5266.075000000186,
+    "textureInitSubmissionMs": null,
+    "textureInitTailMs": null,
+    "drawSubmissionMs": null,
+    "drawTailMs": null
+  },
+  "completionStatuses": [
+    {
+      "tick": 20,
+      "single": 37148
+    },
+    {
+      "tick": 21,
+      "single": 37148
+    },
+    {
+      "tick": 22,
+      "single": 37148
+    },
+    {
+      "tick": 23,
+      "single": 37148
+    },
+    {
+      "tick": 24,
+      "single": 37148
+    },
+    {
+      "tick": 25,
+      "single": 37148
+    },
+    {
+      "tick": 26,
+      "single": 37148
+    },
+    {
+      "tick": 27,
+      "single": 37148
+    },
+    {
+      "tick": 28,
+      "single": 37148
+    },
+    {
+      "tick": 29,
+      "single": 37148
+    },
+    {
+      "tick": 30,
+      "single": 37148
+    },
+    {
+      "tick": 31,
+      "single": 37148
+    }
+  ],
+  "note": "Asynchronous wait is a GPU-completion wall upper bound including scheduling overhead, not GPU duration. Instrumentation/CDP and deliberate serialization affect these diagnostic timings."
+}

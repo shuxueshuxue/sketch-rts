@@ -1,0 +1,26 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts
+
+ ✓ src/ai/bootstrap_1/ferry-return-summons.test.ts (24 tests) 585ms
+ ✓ scripts/painted-sprite-bounds.test.ts (4 tests) 5192ms
+   ✓ painted atlas bounds > keeps every ship steady across sailing frames while land siege wheels still turn 686ms
+   ✓ painted atlas bounds > fits every humanoid action and facing inside its production atlas domain 4298ms
+ ✓ src/ai/bootstrap_1/colony-recovery.test.ts (12 tests) 3173ms
+   ✓ 'v9_archer' builds paid 'grove' care for its separated island patient (mirror=false) 619ms
+   ✓ 'v9_archer' builds paid 'grove' care for its separated island patient (mirror=true) 377ms
+   ✓ 'v9_archer' builds paid 'ember' care for its separated island patient (mirror=false) 451ms
+   ✓ 'v9_archer' builds paid 'ember' care for its separated island patient (mirror=true) 497ms
+ ✓ src/sdk/package-boundaries.test.ts (7 tests) 5285ms
+   ✓ SDK package boundaries > does not carry banned cleanup-era naming in source or specs 5278ms
+
+ Test Files  4 passed (4)
+      Tests  47 passed (47)
+   Start at  04:32:29
+   Duration  9.11s (transform 3.24s, setup 0ms, collect 6.75s, tests 14.24s, environment 1ms, prepare 264ms)
+
+JSON report written to /tmp/art-merge-validation/integration-fixes.json
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

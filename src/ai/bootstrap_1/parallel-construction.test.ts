@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
-import { UNIT_DEFS, BUILDING_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { trainingBuildingFor, UNIT_DEFS, BUILDING_DEFS, requiredSupplyCap } from '../../shared/catalog';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
@@ -15,15 +15,15 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirrored
   const x = (value: number) => mirrored ? 4096 - value : value;
   const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
   const basic = race === 'grove' ? 'lancer' : 'emberRavager';
-  const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+  const healer = 'priest';
   let scene = sketchScene('concurrent-colony-and-tech').map('openClaims').replaceDefaults()
     .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
     .townHall('us', x(500), 500).goldMine('main', x(788), 500, 10000).townHall('foe', x(3500), 500)
     .townHall('us', x(500), 1500).goldMine('natural', x(788), 1500, 10000)
     .goldMine('colony-mine', x(3800), 3512, 10000)
-    .building('us', UNIT_DEFS[basic].trainedAt!, x(700), 800)
-    .building('us', UNIT_DEFS[heavy].trainedAt!, x(950), 800)
-    .building('us', UNIT_DEFS[healer].trainedAt!, x(1200), 800)
+    .building('us', trainingBuildingFor(race, basic)!, x(700), 800)
+    .building('us', trainingBuildingFor(race, heavy)!, x(950), 800)
+    .building('us', trainingBuildingFor(race, healer)!, x(1200), 800)
     .worker('us', x(500), 650, { id: 'colonist' });
   for (let i = 0; i < 6; i++) scene = scene.building('us', 'farm', x(400 + i * 64), 2400);
   for (let i = 0; i < 10; i++) scene = scene.worker('us', x(540), (i < 5 ? 520 : 1520) + i % 5 * 25,

@@ -1,0 +1,7 @@
+UI click [data-open-create]
+UI click [data-map-entries] [data-map-id="pineshade"]
+UI click [data-map-next]
+UI click .game-mode-switch label:has(input[value="multiplayer"])
+UI click [data-start-room]
+Shared unit gameplay: grove
+{"passed":false,"steps":["select-map","start-match"],"failure":"Error: TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.\n    at <anonymous>:1:136\n    at <anonymous>:1:386\n    at read (file:///workspace/sketch-rts/scripts/art-gameplay-proof.mjs:34:166)\n    at async focus (file:///workspace/sketch-rts/scripts/shared-unit-gameplay-proof.mjs:19:12)\n    at async runSharedUnitProof (file:///workspace/sketch-rts/scripts/shared-unit-gameplay-proof.mjs:60:4)\n    at async file:///workspace/sketch-rts/scripts/art-gameplay-proof.mjs:50:3","report":"/workspace/sketch-rts/docs/art/refactor/final-acceptance/shared-unit-gameplay/gameplay-proof.json"}

@@ -1,0 +1,12 @@
+{
+  "command": "npx tsx scripts/art-issued-item-review.ts",
+  "method": "Shared painter at native consumer sizes; metadata dispatch study, not DOM/drop gameflow proof. Existing source calls pass weaponKind.",
+  "sha256": {
+    "scripts/art-issued-item-review.ts": "a4abe442dcc1172ad0918f5931d0a67a624aa75f0ff02483862b48ed81ec408a",
+    "src/client/art/items.ts": "4482a151fb9399e70ce84784278f782bda52ccf365e29660cc6cc932056167b4",
+    "src/client/art/equipment.ts": "0bfffc0dbeef3dbbc078de37c9178dcd6db876e62427291e776b087ab9a8e743",
+    "src/client/main.ts": "1c319a38290b8ca5a3dc4416dc72c48bc2dbe092c7efe9fd5fa418b54a35aa50",
+    "src/client/equipment-panel.ts": "4e327bd84254d8127866981f352ebe8a5fecc579da358ba2f8026692353ee99a",
+    "src/client/world-renderer.ts": "233183d5e2ee3884244e41cbbab2315e98cf8a8d55295ca55c5ac532861dc0d9"
+  }
+}

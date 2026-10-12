@@ -1,0 +1,220 @@
+{
+  "suite": "shared-units",
+  "origin": "http://127.0.0.1:34616",
+  "startedAt": "2026-10-11T11:38:37.784Z",
+  "screenshots": [
+    "gameplay-map-selection.png",
+    "gameplay-room-setup.png",
+    "gameplay-started.png",
+    "gameplay-grove-priest-menu.png",
+    "gameplay-grove-priest-queue.png",
+    "gameplay-grove-summoner-menu.png",
+    "gameplay-grove-summoner-queue.png",
+    "gameplay-failure.png"
+  ],
+  "steps": [
+    {
+      "step": "select-map",
+      "state": {
+        "url": "http://127.0.0.1:34616/?map=pineshade&view=maps&seed=pool-pineshade-1&visibility=private&seats=human%3Affa%3Agrove%3A%2Cai%3Affa%3Arandom%3Arandom",
+        "selected": "pineshade"
+      }
+    },
+    {
+      "step": "start-match",
+      "status": "inMatch",
+      "mapId": "pineshade"
+    }
+  ],
+  "errors": [],
+  "commands": [
+    {
+      "type": "command",
+      "roomId": "room-80d1c1af-d7d3-4ee1-8d72-3d9469af5208",
+      "playerId": "player",
+      "clientSeq": 0,
+      "command": {
+        "type": "train",
+        "buildingId": "grove-priest-producer",
+        "unitKind": "priest"
+      },
+      "epoch": 1
+    },
+    {
+      "type": "command",
+      "roomId": "room-80d1c1af-d7d3-4ee1-8d72-3d9469af5208",
+      "playerId": "player",
+      "clientSeq": 1,
+      "command": {
+        "type": "train",
+        "buildingId": "grove-summoner-producer",
+        "unitKind": "summoner"
+      },
+      "epoch": 1
+    }
+  ],
+  "harnessAdjustments": [
+    "DOM controls invoke their native click handlers atomically; map Canvas uses CDP pointer input.",
+    "Hide pointer-lock invitation overlay after match entry (same adjustment as existing room UI proofs).",
+    "Seed a local authoritative bareDuel scenario through existing reset API after completing real map/setup/start UI.",
+    "Shared-unit suite seeds ordinary complete buildings, 10 farms and 5000 gold with the existing reset API; training runs at the normal simulation tick rate."
+  ],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "roomId": "room-80d1c1af-d7d3-4ee1-8d72-3d9469af5208",
+  "sharedUnits": {
+    "catalog": [
+      "worker",
+      "footman",
+      "archer",
+      "horseArcher",
+      "raider",
+      "lancer",
+      "ashWarden",
+      "emberRavager",
+      "cinderRunner",
+      "sparkArcher",
+      "ashHexer",
+      "knight",
+      "priest",
+      "summoner",
+      "witch",
+      "golem",
+      "ashChieftain",
+      "cinderRevenant",
+      "spirit",
+      "mercenary",
+      "contractArcher",
+      "fieldMedic",
+      "wildling",
+      "mossGnawer",
+      "thornSlinger",
+      "barkMender",
+      "stonebackBrute",
+      "gladeWitch",
+      "transport",
+      "warship",
+      "shipOfTheLine",
+      "cutter",
+      "bombardShip",
+      "fireShip",
+      "carrier",
+      "siegeRam",
+      "ballista",
+      "catapult",
+      "organGun",
+      "ancientStag",
+      "murlocPeon",
+      "murlocHunter",
+      "tidePriest",
+      "deepSnapper",
+      "rubbleGolem",
+      "rockGolem",
+      "graniteGolem",
+      "ogreWarrior",
+      "ogreMage",
+      "ogreLord",
+      "spiderling",
+      "venomSpider",
+      "spiderQueen",
+      "dragonWhelp",
+      "redDragon"
+    ],
+    "byRace": {
+      "grove": {
+        "race": "grove",
+        "producer": "sanctum",
+        "startedTick": 28,
+        "menu": [
+          {
+            "buildingId": "grove-priest-producer",
+            "commands": [
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Witch",
+                "hotkey": "C",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          },
+          {
+            "buildingId": "grove-summoner-producer",
+            "commands": [
+              {
+                "label": "Train Priest",
+                "hotkey": "P",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Summoner",
+                "hotkey": "U",
+                "disabled": "false"
+              },
+              {
+                "label": "Train Witch",
+                "hotkey": "C",
+                "disabled": "false"
+              },
+              {
+                "label": "Research Leadership",
+                "hotkey": "L",
+                "disabled": "false"
+              }
+            ]
+          }
+        ],
+        "training": [
+          {
+            "kind": "priest",
+            "job": {
+              "id": "training-1000",
+              "unitKind": "priest",
+              "remaining": 183,
+              "paidGold": 135
+            }
+          },
+          {
+            "kind": "summoner",
+            "job": {
+              "id": "training-1002",
+              "unitKind": "summoner",
+              "remaining": 208,
+              "paidGold": 180
+            }
+          }
+        ],
+        "rejections": [],
+        "portraits": {
+          "priest-command": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+          "priest-queue": "896150fe2df14585c21d6997eb3e490cd8de88abb8553951955aafa777a35517",
+          "summoner-command": "98484528620e5809e55c22c8d35185289f2e3c8900b4c9e91aa9cb4b3c01ffdf",
+          "summoner-queue": "98484528620e5809e55c22c8d35185289f2e3c8900b4c9e91aa9cb4b3c01ffdf"
+        }
+      }
+    },
+    "artworkHashes": {}
+  },
+  "passed": false,
+  "failure": "Error: grove normal-time shared unit training timed out\n    at until (file:///workspace/sketch-rts-units/scripts/art-gameplay-proof.mjs:17:204)\n    at async runSharedUnitProof (file:///workspace/sketch-rts-units/scripts/shared-unit-gameplay-proof.mjs:56:17)\n    at async file:///workspace/sketch-rts-units/scripts/art-gameplay-proof.mjs:50:3",
+  "failureDom": "185\n8/68\nConnecting to match...",
+  "finishedAt": "2026-10-11T11:40:59.631Z"
+}

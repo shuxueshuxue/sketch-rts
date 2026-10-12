@@ -1,3 +1,4 @@
+import { RULES_VERSION, assertCurrentRulesVersion } from "../shared/rules-version";
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
 import { createChatMessage } from "../shared/chat";
 import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
@@ -35,6 +36,7 @@ type RoomNetState = {
 
 export class RoomNetHub {
   private rooms = new Map<string, RoomNetState>();
+  private readonly compatibleSockets = new WeakSet<RoomNetSocket>();
 
   constructor(private readonly options: RoomNetHubOptions) {}
 
@@ -48,7 +50,7 @@ export class RoomNetHub {
         this.send(roomId, socket, { type: "error", roomId, message: errorMessage(error) });
       }
     });
-    socket.on("close", () => state.sockets.delete(socket));
+    socket.on("close", () => { state.sockets.delete(socket); this.compatibleSockets.delete(socket); });
   }
 
   tickRoom(roomId: string): CommandFrame | undefined {
@@ -115,10 +117,16 @@ export class RoomNetHub {
     const message = decodeClientNetMessage(raw);
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
+      this.compatibleSockets.delete(socket);
       const state = this.stateFor(message.roomId);
-      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.currentTick(message.roomId), epoch: state.epoch });
+      try { assertCurrentRulesVersion(message.rulesVersion, "Client"); }
+      catch (error) { state.sockets.delete(socket); throw error; }
+      state.sockets.add(socket);
+      this.compatibleSockets.add(socket);
+      this.send(message.roomId, socket, { type: "hello", rulesVersion: RULES_VERSION, roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.currentTick(message.roomId), epoch: state.epoch });
       return;
     }
+    if (!this.compatibleSockets.has(socket)) throw new Error("Join with matching rules version before sending game messages");
     if (message.type === "command") {
       try {
         this.acceptCommand(message);
@@ -200,7 +208,7 @@ export class RoomNetHub {
     const state = this.rooms.get(roomId);
     if (!state) return;
     this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
-    this.broadcast(roomId, { type: "frame", frame: event.frame, epoch: state.epoch });
+    this.broadcast(roomId, { type: "frame", rulesVersion: RULES_VERSION, frame: event.frame, epoch: state.epoch });
   }
 
   private publishLifecycleEvent(roomId: string, event: HostedRoomLifecycleEvent): void {
@@ -208,7 +216,7 @@ export class RoomNetHub {
     if (!state) return;
     if (event.checkpoint) this.resetLockstepSession(roomId, state);
     this.broadcast(roomId, { type: "room", room: event.room });
-    if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", checkpoint: event.checkpoint, epoch: state.epoch });
+    if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: event.checkpoint, epoch: state.epoch });
   }
 
   private createCoordinator(roomId: string): LockstepRoomCoordinator {
@@ -226,7 +234,10 @@ export class RoomNetHub {
   private broadcast(roomId: string, message: ServerNetMessage): void {
     const state = this.stateFor(roomId);
     const encoded = encodeNetMessage(message);
-    for (const socket of [...state.sockets]) this.trySend(state, socket, encoded);
+    for (const socket of [...state.sockets]) {
+      if ("rulesVersion" in message && !this.compatibleSockets.has(socket)) continue;
+      this.trySend(state, socket, encoded);
+    }
   }
 
   private send(roomId: string, socket: RoomNetSocket, message: ServerNetMessage): boolean {
@@ -240,6 +251,7 @@ export class RoomNetHub {
     } catch {
       // @@@room-net-stale-socket - A closed client connection is transport churn; remove it so one stale browser cannot stop the authoritative room ticker.
       state.sockets.delete(socket);
+      this.compatibleSockets.delete(socket);
       return false;
     }
   }
@@ -262,9 +274,9 @@ export class RoomNetHub {
       checkpointClass,
       ...(message.clientChecksum ? { clientChecksum: message.clientChecksum } : {}),
     });
-    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint: { ...checkpoint, reason, checkpointClass }, epoch: state.epoch })) return;
+    if (!this.send(roomId, socket, { type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: { ...checkpoint, reason, checkpointClass }, epoch: state.epoch })) return;
     for (const frame of this.options.roomHost.framesFrom(roomId, checkpoint.tick)) {
-      if (!this.send(roomId, socket, { type: "frame", frame, epoch: state.epoch })) return;
+      if (!this.send(roomId, socket, { type: "frame", rulesVersion: RULES_VERSION, frame, epoch: state.epoch })) return;
     }
   }
 
@@ -307,7 +319,7 @@ export class RoomNetHub {
       message: `Checksum mismatch at tick ${tick}`,
       checksums,
     });
-    this.broadcast(roomId, { type: "desync", roomId, tick, checksums, epoch: state.epoch });
+    this.broadcast(roomId, { type: "desync", rulesVersion: RULES_VERSION, roomId, tick, checksums, epoch: state.epoch });
   }
 
   private recordSyncEvent(roomId: string, event: RoomSyncEvent): void {

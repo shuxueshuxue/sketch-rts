@@ -209,7 +209,7 @@ describe("shorter ranged weapons", () => {
     ["archer", 399], ["sparkArcher", 360], ["priest", 252], ["summoner", 273], ["witch", 315],
     ["contractArcher", 441], ["fieldMedic", 263], ["warship", 390], ["bombardShip", 720],
     ["ballista", 590], ["catapult", 760], ["organGun", 380], ["murlocHunter", 150],
-    ["emberAcolyte", 240], ["ashHexer", 300], ["pyreCaller", 260], ["cutter", 330], ["fireShip", 180],
+    ["ashHexer", 300], ["cutter", 330], ["fireShip", 180],
     ["thornSlinger", 165], ["barkMender", 110], ["gladeWitch", 150], ["tidePriest", 200],
     ["ogreMage", 200], ["dragonWhelp", 180], ["redDragon", 220],
   ] as const)("%s has 80%% of its old basic range", (kind, previous) => {

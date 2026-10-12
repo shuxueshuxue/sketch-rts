@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { ABILITY_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../../shared/catalog";
+import { ABILITY_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, trainingBuildingFor } from "../../shared/catalog";
 import { createI18n } from "../i18n";
 import { ABILITY_CARDS } from "./abilities";
 import { BUILDING_CARDS } from "./buildings";
 import { TRAINED_UNIT_CARDS, UNIT_CARDS } from "./units";
 
 describe("content cards", () => {
+  it("defines shared casters once without merging the distinctive ember roster",()=>{
+    for(const kind of ['priest','summoner'] as const)expect(UNIT_CARDS[kind].art.faction).toBe('common');
+    for(const race of RACE_IDS)for(const kind of ['priest','summoner'] as const)expect(RACE_DEFS[race].trainableUnits).toContain(kind);
+    expect(UNIT_CARDS).not.toHaveProperty('emberAcolyte');expect(UNIT_CARDS).not.toHaveProperty('pyreCaller');
+    expect(TRAINED_UNIT_CARDS.sparkArcher.description.en).toContain('ignite');expect(UNIT_DEFS.ashHexer.abilities).toContain('ashCurse');
+  });
   it("has a card for every unit and building in the catalog, named in both languages", () => {
     expect(Object.keys(UNIT_CARDS).sort()).toEqual(Object.keys(UNIT_DEFS).sort());
     expect(Object.keys(BUILDING_CARDS).sort()).toEqual(Object.keys(BUILDING_DEFS).sort());
@@ -22,7 +28,7 @@ describe("content cards", () => {
   it("trains every trainable unit at a building its race can build", () => {
     for (const race of RACE_IDS) {
       for (const kind of RACE_DEFS[race].trainableUnits) {
-        const producer = UNIT_DEFS[kind].trainedAt!;
+        const producer = trainingBuildingFor(race, kind)!;
         expect(RACE_DEFS[race].buildableBuildings, `${race} ${kind} at ${producer}`).toContain(producer);
       }
     }

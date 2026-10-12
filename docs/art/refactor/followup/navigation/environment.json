@@ -1,0 +1,18 @@
+{
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "node": "v24.19.0",
+  "npm": "11.9.0",
+  "vitestPackage": "2.1.9",
+  "current": {
+    "path": "/workspace/sketch-rts",
+    "revision": "9de6820873367c06401cdfa4d8938aa17e78f199"
+  },
+  "baseline": {
+    "path": "/tmp/sketch-art-baseline",
+    "revision": "9819046b3820c9f843f0d57beaa198e7970fd5a7",
+    "nodeModulesRealpath": "/workspace/sketch-rts/node_modules"
+  },
+  "testPattern": "starts a forward recovery when traffic permits|brings six incoming friendly batteries|backs less than one hull length|marks a zero-margin reference",
+  "note": "Same host, Node, Vitest and node_modules. Runs are sequential; no performance sampling."
+}

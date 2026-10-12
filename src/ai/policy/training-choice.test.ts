@@ -91,7 +91,7 @@ describe("AI training choice", () => {
     // The spire would add a support caster; at a cap of 10 its casters are locked, so it makes spark archers.
     expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("sparkArcher");
     const teched = snapshotGame(scene.farmsPastTiers("v2", 150, 150).build().createGame());
-    expect(trainingChoice(teched, "v2", teched.buildings.find((building) => building.id === "spire")!, { version: "v2" })).toBe("emberAcolyte");
+    expect(trainingChoice(teched, "v2", teched.buildings.find((building) => building.id === "spire")!, { version: "v2" })).toBe("priest");
   });
 
   it("lets v2 add a second round of casters once the army reaches the late-game mix", () => {
@@ -205,7 +205,7 @@ describe("AI training choice", () => {
     const spire = snapshot.buildings.find((building) => building.id === "spire");
     if (!spire) throw new Error("missing cinder spire");
 
-    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
+    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("priest");
   });
 
   it("keeps a v5 ember spire on spark archers until six fighters stand, then adds one acolyte", () => {
@@ -222,6 +222,6 @@ describe("AI training choice", () => {
       return trainingChoice(snapshot, "v5", snapshot.buildings.find((building) => building.id === "spire")!, { version: "v2", requestedVersion: "v5" });
     };
     expect(spireChoice(3)).toBe("sparkArcher");
-    expect(spireChoice(6)).toBe("emberAcolyte");
+    expect(spireChoice(6)).toBe("priest");
   });
 });

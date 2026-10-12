@@ -16,7 +16,7 @@ it.each(cases)('$version preserves its $race island front while clearing a camp 
     .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
     .townHall('us', x(500), 500).townHall('foe', x(500), 3500)
     .unit('us', race === 'grove' ? 'lancer' : 'emberRavager', x(3000), 1800, { id: 'front' })
-    .unit('us', race === 'grove' ? 'priest' : 'emberAcolyte', x(2850), 1680, { id: 'healer' })
+    .unit('us', 'priest', x(2850), 1680, { id: 'healer' })
     .unit('neutral', 'deepSnapper', x(3210), 1700, { id: 'brute' })
     .unit('neutral', 'tidePriest', x(3100), 1700, { id: 'guard' });
   for (let index = 0; index < 4; index++) scene = scene.unit('us', race === 'grove' ? 'archer' : 'sparkArcher',

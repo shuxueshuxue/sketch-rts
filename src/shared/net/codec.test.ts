@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../rules-version";
 import { describe, expect, it } from "vitest";
 import { decodeClientNetMessage, decodeServerNetMessage, encodeNetMessage } from "./codec";
 import type { ClientNetMessage, ServerNetMessage } from "./types";
@@ -13,7 +14,7 @@ describe("net message codec", () => {
       command: { type: "move", unitIds: ["worker"], x: 100, y: 120 },
     };
     const server: ServerNetMessage = {
-      type: "frame",
+      type: "frame", rulesVersion: RULES_VERSION,
       epoch: 2,
       frame: {
         roomId: "room-1",

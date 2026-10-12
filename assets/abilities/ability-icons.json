@@ -6,8 +6,8 @@
   "sources": [
     {
       "file": "svg-sources/magic.mjs",
-      "bytes": 22892,
-      "sha256": "96de772033ce9b585c4ece957e3c281220329a818a554a4dc32f2a0233c7c34c"
+      "bytes": 18781,
+      "sha256": "ea273b98baf60ba05e16bb7d6caf51e7e572a6b668754d8cafac5624539450b1"
     },
     {
       "file": "svg-sources/physical.mjs",
@@ -21,10 +21,10 @@
     }
   ],
   "output": {
-    "count": 29,
+    "count": 27,
     "size": 128,
     "format": "svg",
-    "totalBytes": 91912,
+    "totalBytes": 84771,
     "runtimePath": "public/art/abilities",
     "reviewSheet": "ability-icons-review.svg"
   },
@@ -60,28 +60,6 @@
       "height": 128,
       "bytes": 3618,
       "sha256": "6fda68fab04e71313c8d42235440e948d70aa4f9738884c373f0d7a9cc6bf8e0",
-      "source": "svg-sources/magic.mjs"
-    },
-    {
-      "id": "emberMend",
-      "label": "Ember Mend",
-      "family": "magic",
-      "file": "art/abilities/emberMend.svg",
-      "width": 128,
-      "height": 128,
-      "bytes": 3888,
-      "sha256": "91d44521225caa25d619a2931e4650e248d462efc377a3c8d561d43be1258414",
-      "source": "svg-sources/magic.mjs"
-    },
-    {
-      "id": "cinderSoul",
-      "label": "Cinder Soul",
-      "family": "magic",
-      "file": "art/abilities/cinderSoul.svg",
-      "width": 128,
-      "height": 128,
-      "bytes": 3253,
-      "sha256": "8b42ba4bc90fa72c47046886faa11c4d8f036a5d7e165d225b4a3404cf87e853",
       "source": "svg-sources/magic.mjs"
     },
     {
