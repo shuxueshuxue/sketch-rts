@@ -1,0 +1,45 @@
+{
+  "pr": 340,
+  "revision": "e4bc05df239a5fa1baf631fa35b1f04cc1ac204f",
+  "run": 38251906522,
+  "attempt": 1,
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Run npm run build:production",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "conclusion": "success"
+    }
+  ],
+  "productionLatest": "e4bc05df239a5fa1baf631fa35b1f04cc1ac204f",
+  "ci": {
+    "run": 38251052865,
+    "attempt": 1,
+    "head": "bd3113c0bedefc0865db5eaa1411aa26c6decdfd",
+    "conclusion": "success"
+  },
+  "includedPR": 339,
+  "previousDeployFailure": {
+    "run": 38249120413,
+    "revision": "dccc8c5f9b6ee8266b61b45565dcb8ad50e48de5",
+    "step": "Test mounted shore clearance and recovery movement",
+    "test": "shopping.test.ts: full planner guardian scroll"
+  },
+  "fullAcceptance": "pending",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+}
