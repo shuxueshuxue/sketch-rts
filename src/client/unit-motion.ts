@@ -19,7 +19,9 @@ const MAX_GLIDE_TICKS = 10;
  */
 export class UnitMotionSmoother {
   private glides = new Map<string, Glide>();
+  private spareGlides = new Map<string, Glide>();
   private lastSeen = new Map<string, Point>();
+  private spareLastSeen = new Map<string, Point>();
   private lastTick: number | undefined;
 
   constructor(private readonly tickMs = 1000 / SIM_TICKS_PER_SECOND) {}
@@ -28,7 +30,8 @@ export class UnitMotionSmoother {
   update(snapshot: Pick<GameSnapshot, "tick" | "units">, now: number) {
     if (snapshot.tick === this.lastTick) return;
     const ticks = this.lastTick === undefined ? 0 : snapshot.tick - this.lastTick;
-    const glides = new Map<string, Glide>();
+    const glides = this.spareGlides;
+    glides.clear();
     if (ticks > 0 && ticks <= MAX_GLIDE_TICKS) {
       for (const unit of snapshot.units) {
         const dashing = unit.order.type === "charge" || unit.pushX !== undefined || Boolean(unit.deck) || Boolean(unit.sailing);
@@ -38,9 +41,29 @@ export class UnitMotionSmoother {
         glides.set(unit.id, { from: { ...from }, to: { x: unit.x, y: unit.y,...(unit.sailing?{heading:unit.sailing.heading}:{}) }, start: now, span: ticks * this.tickMs, dashing });
       }
     }
+    this.spareGlides = this.glides;
     this.glides = glides;
-    this.lastSeen = new Map(snapshot.units.map((unit) => [unit.id, { x: unit.x, y: unit.y,...(unit.sailing?{heading:unit.sailing.heading}:{}) }]));
+    const lastSeen = this.spareLastSeen;
+    lastSeen.clear();
+    // Finish reading all previous positions above before reusing their records.
+    // Glide endpoints own copies, so later snapshots cannot move an active glide.
+    for (const unit of snapshot.units) {
+      const point = this.lastSeen.get(unit.id) ?? { x: unit.x, y: unit.y };
+      point.x = unit.x;
+      point.y = unit.y;
+      if (unit.sailing) point.heading = unit.sailing.heading;
+      else delete point.heading;
+      lastSeen.set(unit.id, point);
+    }
+    this.spareLastSeen = this.lastSeen;
+    this.lastSeen = lastSeen;
     this.lastTick = snapshot.tick;
+  }
+
+  /** The current glide's full path, for broad-phase viewport queries. Endpoints
+   * are owned by the glide and remain valid until the next accepted tick. */
+  bounds(unit: Pick<Unit, 'id'>): Readonly<{ from: Point; to: Point }> | undefined {
+    return this.glides.get(unit.id);
   }
 
   /** Where to draw the unit at `now`. */

@@ -1,4 +1,4 @@
-import type { Unit, UnitOrder } from "../shared/types";
+import type { GameSnapshot, Unit, UnitOrder } from "../shared/types";
 
 type Point = { x: number; y: number; height?: number };
 
@@ -40,9 +40,35 @@ export class UnitFacingTracker {
   private states = new Map<string, FacingState>();
   private beforeUpdate = new Map<string,FacingState>();
   private actions = new Map<string,{direction:Point;facing:Facing}>();
+  private snapshot: Pick<GameSnapshot, 'tick' | 'units' | 'buildings'> | undefined;
+  private snapshotTick: number | undefined;
+  private snapshotUnits: readonly Unit[] | undefined;
+  private snapshotUnitCount = 0;
+  private snapshotBuildings: GameSnapshot['buildings'] | undefined;
+  private snapshotBuildingCount = 0;
+
+  /** Track every unit once per received snapshot. A new command snapshot can
+   * change targets without advancing its tick; recordings can advance a mutable
+   * snapshot in place. Repeated drawing frames retain actionFacing's turns. */
+  updateSnapshot(snapshot: Pick<GameSnapshot, 'tick' | 'units' | 'buildings'>, locate: (id: string) => Point | undefined) {
+    if (this.snapshot === snapshot && this.snapshotTick === snapshot.tick &&
+      this.snapshotUnits === snapshot.units && this.snapshotUnitCount === snapshot.units.length &&
+      this.snapshotBuildings === snapshot.buildings && this.snapshotBuildingCount === snapshot.buildings.length) return;
+    this.update(snapshot.units, locate);
+    this.snapshot = snapshot;
+    this.snapshotTick = snapshot.tick;
+    this.snapshotUnits = snapshot.units;
+    this.snapshotUnitCount = snapshot.units.length;
+    this.snapshotBuildings = snapshot.buildings;
+    this.snapshotBuildingCount = snapshot.buildings.length;
+  }
 
   update(units: readonly Unit[], locate: (id: string) => Point | undefined) {
-    const next = new Map<string, FacingState>();
+    // Direct callers may mutate orders/positions in place. This entry point
+    // always updates, and invalidates the snapshot fast path.
+    this.snapshot = undefined;
+    const next = this.beforeUpdate;
+    next.clear();
     for (const unit of units) {
       const targetId = interactionTargetId(unit.order);
       const aiming = unit.aim && (unit.order.type === "attack" || unit.order.type === "attackMove" || unit.order.type === "hold" || unit.order.type === "aim" || unit.order.type === "cast");

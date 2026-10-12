@@ -48,6 +48,67 @@ function setup(){
   return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('projects only viewport candidates while keeping exact offscreen positions available on demand',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.items=[];game.buildings=[];game.effects=[];
+    const visible=game.spawnUnit('player','footman',600,600);
+    for(let i=0;i<10000;i++)game.spawnUnit('player','footman',6000+i%100*40,6000+Math.floor(i/100)*40);
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
+    const poses=vi.spyOn(frame.animation!,'frame');layer.draw(frame);
+    expect(poses.mock.calls.map(call=>call[0].id)).toEqual([visible.id]);
+    expect(layer.viewStats()).toMatchObject({units:10001,candidates:1,posed:1,builds:1});
+    const hidden=frame.snapshot.units[8000]!;
+    expect(layer.positions.get(hidden.id)).toMatchObject({x:hidden.x,y:hidden.y,bodyY:hidden.y-17*unitGlyphScale(hidden.radius)});
+    poses.mockClear();layer.draw({...frame,now:16});
+    expect(poses.mock.calls).toHaveLength(1);expect(layer.viewStats().builds).toBe(1);
+    poses.mockClear();layer.draw({...frame,now:32,view:{x:30000,y:30000,width:1200,height:900}});
+    expect(poses).not.toHaveBeenCalled();expect(layer.viewStats()).toMatchObject({candidates:0,posed:0,positions:0});
+    layer.reset();expect(layer.positions.get(hidden.id)).toBeUndefined();layer.dispose();
+  });
+  it('retains offscreen release facing and ready direction through reentry and expiry without generating its frames',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.items=[];game.buildings=[];game.effects=[];
+    const unit=game.spawnUnit('player','lancer',6000,600);unit.order={type:'hold',x:unit.x,y:unit.y};
+    game.effects=[{id:'hidden-left-release',type:'melee',sourceId:unit.id,sourceKind:unit.kind,actionMode:'attack',actionTick:0,x:5900,y:500,fromX:6000,fromY:600,toX:5900,toY:500,duration:16,remaining:16}];
+    frame.view={x:0,y:0,width:1200,height:900};frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
+    const poses=vi.spyOn(frame.animation!,'frame'),original=JSON.stringify(frame.snapshot);layer.draw(frame);
+    expect(JSON.stringify(frame.snapshot)).toBe(original);expect(frame.facing.releaseFacing(unit.id)).toBe(-1);expect(poses).not.toHaveBeenCalled();
+    for(let tick=1;tick<=24;tick++){game.tick=tick;game.effects=[];frame.snapshot=snapshotGame(game);frame.now=tick*50;layer.draw(frame);}
+    expect(poses).not.toHaveBeenCalled();
+    const reentry={...frame,view:{x:5500,y:0,width:1200,height:900}};layer.draw(reentry);
+    expect(layer.positions.get(unit.id)!.facing).toBe(-1);expect(frame.animation!.frame(unit,frame.now).carryDirection?.x).toBeLessThan(0);
+    poses.mockClear();
+    for(let tick=25;tick<=80;tick++){game.tick=tick;frame.snapshot=snapshotGame(game);frame.now=tick*50;layer.draw(frame);}
+    expect(poses).not.toHaveBeenCalled();layer.draw({...frame,view:reentry.view});
+    expect(layer.positions.get(unit.id)!.facing).toBe(-1);expect(frame.animation!.frame(unit,frame.now).carryDirection).toBeUndefined();layer.dispose();
+  });
+  it('keeps vertical deck strikes on the crew heading when the release begins offscreen',async()=>{
+    for(const dy of [-100,100]){
+      const {game,ship,frame,layer}=setup();
+      const crew=game.units.find(unit=>unit.deck)!;
+      ship.sailing!.heading=Math.PI;
+      const foot=localToWorld(ship,crew.deck!);crew.x=foot.x;crew.y=foot.y;
+      crew.order={type:'hold',x:crew.x,y:crew.y};
+      game.units=[ship,crew];game.buildings=[];game.effects=[];
+      frame.view={x:6000,y:6000,width:800,height:600};
+      frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+      // The global side starts right; the rotated deck's stationary crew face
+      // left. A vertical release must keep that deck-side fallback.
+      expect(frame.facing.facing(crew.id)).toBe(1);
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      game.effects.push({id:`vertical-deck:${dy}`,type:'melee',x:crew.x,y:crew.y+dy,
+        duration:16,remaining:16,sourceId:crew.id,actionMode:'attack',actionTick:game.tick,
+        fromX:crew.x,fromY:crew.y,toX:crew.x,toY:crew.y+dy});
+      frame.snapshot=snapshotGame(game);layer.draw(frame);
+      expect(frame.animation!.frame(crew,frame.now)).toMatchObject({mode:'attack',direction:{x:0,y:dy}});
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      expect(frame.facing.releaseFacing(crew.id)).toBe(-1);
+      // Panning back during the same tick must expose the same contact pose.
+      frame.view={x:ship.x-200,y:ship.y-200,width:800,height:600};layer.draw(frame);
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      const cards=gpu.scene!.children.filter(object=>object.name==='PaintedCards'&&object.visible) as InstancedMesh[];
+      expect(cards.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count))).toContain(crew.id);
+      layer.dispose();
+    }
+  });
   it('retains context listeners across reset and removes them on final disposal',async()=>{
     const {frame,layer,canvas}=setup(),remove=vi.spyOn(canvas,'removeEventListener');
     await layer.prepare(frame.snapshot,'home');layer.draw(frame);

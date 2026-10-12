@@ -3,7 +3,8 @@ import type { UnitActionCue } from "../story/stage";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, Unit, WorldEffect } from "../shared/types";
 
-export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number; aim?: number; direction?: Readonly<{x:number;y:number;height?:number}>; carryDirection?: Readonly<{x:number;y:number;height?:number}>; carry?: number; carryAim?: number };
+export type UnitActionDirection = Readonly<{x:number;y:number;height?:number}>;
+export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number; variant?: number; aim?: number; direction?: UnitActionDirection; carryDirection?: UnitActionDirection; carry?: number; carryAim?: number };
 export const IDLE_FRAME: UnitAnimationFrame = Object.freeze({ mode: "idle", frame: 0 });
 const TICK_MS = 1000 / SIM_TICKS_PER_SECOND;
 const WALK_FRAMES = 8;
@@ -48,6 +49,9 @@ export class UnitAnimationTracker {
   private receivedAt = 0;
   private releaseEffects: readonly WorldEffect[] | undefined;
   private releaseEffectCount = -1;
+  // Active histories and one pending clear are enough to keep offscreen turns.
+  // Idle units never enter this set, and observing it does not generate poses.
+  private directionTracks = new Set<string>();
 
   update(snapshot: Pick<GameSnapshot, "tick" | "units"> & Partial<Pick<GameSnapshot, "effects">>, now: number, cues: readonly UnitActionCue[] = []) {
     const sameTick = snapshot.tick === this.tick;
@@ -82,6 +86,7 @@ export class UnitAnimationTracker {
         if(track.still||unit.hp<=0||unit.effects.some(effect=>effect.type==='stun')||track.action&&track.action.tick>release.tick)continue;
         track.action=release;
         if(track.canCarry&&release.mode==='attack'&&release.direction){track.carry=release;track.carryFrames=undefined;}else if(release.mode==='cast'){delete track.carry;delete track.carryFrames;}
+        this.queueDirection(unit.id,track,snapshot.tick);
       }
       this.applyCues(cues,snapshot.tick);return;
     }
@@ -132,6 +137,7 @@ export class UnitAnimationTracker {
         ...(previous?.cueTick !== undefined ? { cueTick: previous.cueTick } : {}),
       };
       next.set(unit.id, track);
+      this.queueDirection(unit.id,track,snapshot.tick);
     }
     this.tracks = next;
     this.tick = snapshot.tick;
@@ -148,7 +154,41 @@ export class UnitAnimationTracker {
       const direction=releaseDirection(cue);
       track.action = { mode: cue.mode, tick: cue.tick, ...(direction?{direction}:{}), ...(cue.mode === "attack" ? { variant: variantFor(cue.unitId, cue.tick) } : {}) };
       if(track.canCarry&&cue.mode==='attack'&&direction){track.carry=track.action;track.carryFrames=undefined;}else if(cue.mode==='cast'){delete track.carry;delete track.carryFrames;}
+      this.queueDirection(cue.unitId,track,tick);
     }
+  }
+
+  /** Maintain release facing for offscreen units without asking for their
+   * animation frames. The callback receives the same immutable vector as
+   * frame().direction/carryDirection, including one undefined clear after an
+   * interruption, expiry or removal. Work is proportional to active histories,
+   * not the population of idle units. Reduced motion clears facing locks while
+   * retaining live histories so switching it off can resume the current pose. */
+  observeDirections(now:number,observe:(unitId:string,direction:UnitActionDirection|undefined)=>void,reducedMotion=false):number {
+    const fraction=Math.max(0,Math.min(1,(now-this.receivedAt)/TICK_MS));
+    let visited=0;
+    for(const id of this.directionTracks){
+      const track=this.tracks.get(id);
+      const direction=track&&this.tick!==undefined?this.directionAt(track,this.tick,fraction):undefined;
+      observe(id,reducedMotion?undefined:direction);visited++;
+      if(!direction)this.directionTracks.delete(id);
+    }
+    return visited;
+  }
+
+  private queueDirection(id:string,track:Track,tick:number) {
+    if(this.directionAt(track,tick,0))this.directionTracks.add(id);
+    // A track already in the set remains there for its one clearing callback.
+  }
+
+  private directionAt(track:Track,tick:number,fraction:number):UnitActionDirection|undefined {
+    if(track.still)return;
+    if(track.action){
+      const duration=track.action.durationMs??(track.action.mode==='cast'?CAST_MS:ATTACK_MS);
+      const progress=(tick-track.action.tick+fraction)*TICK_MS/duration;
+      if(progress>=0&&(progress<1||track.action.mining))return track.action.direction;
+    }
+    if(track.carry&&(tick-track.carry.tick+fraction)*TICK_MS<ATTACK_MS+ATTACK_CARRY_MS+CARRY_RETURN_MS)return track.carry.direction;
   }
 
   frame(unit: Pick<Unit, "id">, now: number): UnitAnimationFrame {

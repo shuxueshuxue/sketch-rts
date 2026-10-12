@@ -1,4 +1,5 @@
 import {bloodSurfaceResolver} from '../combat-surfaces';
+import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from '../deck-remains';
 import { drawAtlasCorpse } from '../atlas-art';
@@ -39,9 +40,21 @@ import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
+class ActorPositions extends Map<string,ActorPosition>{
+  constructor(private locate:(id:string)=>ActorPosition|undefined){super();}
+  override get(id:string){return super.get(id)??this.locate(id);}
+}
 
 export class World3DLayer {
-  readonly positions=new Map<string,ActorPosition>();
+  /** Visible positions are eager; offscreen UI/effect lookups stay exact and
+   * are evaluated on demand instead of projecting the whole army each RAF. */
+  readonly positions=new ActorPositions(id=>this.offscreenPosition(id));
+  private viewIndex=new PresentationViewIndex();
+  private activeIndex=this.viewIndex;
+  private currentFrame:WorldFrame|undefined;
+  private posed=0;
+  private directionVisits=0;
+  viewStats(){return{...this.activeIndex.stats(),posed:this.posed,directionVisits:this.directionVisits,positions:this.positions.size};}
   readonly camera=new THREE.OrthographicCamera();
   private scene=new THREE.Scene();
   private water=new WaterSurface(this.scene);
@@ -150,7 +163,15 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  private offscreenPosition(id:string):ActorPosition|undefined{
+    const frame=this.currentFrame,unit=this.activeIndex.units.get(id);
+    if(!frame||!unit||unit.deck||isInCabin(unit)||shipProfile(unit))return undefined;
+    const at=frame.motion?.position(unit,frame.now)??unit,model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
+    const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-foot*scale;
+    const result={x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing:frame.facing.releaseFacing(id)};
+    this.positions.set(id,result);return result;
+  }
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
@@ -167,7 +188,7 @@ export class World3DLayer {
   }
   draw(frame:WorldFrame){
     const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
-    this.frame++;this.transformCount=0;this.view=frame.view;
+    this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
     // Commands can replace a snapshot without advancing its tick (for example
     // a crew member leaving shelter). Mutable recorder snapshots also advance
@@ -193,11 +214,14 @@ export class World3DLayer {
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
     frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
-    frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
+    frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);
+    this.activeIndex=frame.viewIndex??this.viewIndex;this.activeIndex.update(snapshot,frame.motion);
+    this.sailMotion.update({tick:snapshot.tick,units:this.activeIndex.sailing},now);
+    trackUnitFacing(frame.facing,snapshot,this.activeIndex.entities);
     frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion));
     if(snapshot.tick!==this.lastTick){
-      this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
-      for(const unit of snapshot.units)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
+      this.facing.update({units:this.activeIndex.crew});const continuous=snapshot.tick===this.lastTick+1;
+      for(const unit of this.activeIndex.crew)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
         this.deckMotion.set(unit.id,{shipId:unit.deck.shipId,x:unit.deck.x,y:unit.deck.y,fromX:start.x,fromY:start.y,at:now});}
       this.lastTick=snapshot.tick;this.at=now;
     }
@@ -208,6 +232,13 @@ export class World3DLayer {
       this.projectedDirection.set(direction.x,direction.height??0,direction.y).project(this.camera).sub(this.projectedOrigin);
       return{x:this.projectedDirection.x*frame.view.width/2,y:-this.projectedDirection.y*frame.view.height/2};
     };
+    this.directionVisits=frame.animation?.observeDirections(now,(id,direction)=>{
+      const unit=this.activeIndex.units.get(id);
+      // Crew use their deck heading as the fallback for vertical releases.
+      // They retain the exact pre-cull action path below; a ground-side lock
+      // here would steal that first release's correct mirror.
+      if(!unit?.deck&&!ships.has(id))frame.facing.actionFacing(id,direction,projectVector);
+    },frame.reducedMotion)??0;
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
     this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
@@ -231,7 +262,7 @@ export class World3DLayer {
       this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner, snapshot),!building.complete);
     }
     const revealedShips=new Set<string>();
-    for(const unit of snapshot.units)if(frame.selectedIds?.has(unit.id)){if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
+    for(const id of frame.selectedIds??[]){const unit=entities.get(id);if(!unit||!('order' in unit))continue;if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
     for(const ship of ships.values()){
       const at=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0,scale=shipScale(ship),profile=shipProfile(ship)!;
       const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
@@ -285,7 +316,7 @@ export class World3DLayer {
     }
     for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
-    for(const unit of snapshot.units){
+    for(const unit of this.activeIndex.query(frame.view)){
       if(ships.has(unit.id)||isInCabin(unit))continue;
       let at=frame.motion?.position(unit,now)??unit,height=0,facing=frame.facing.facing(unit.id);
       let bridge:ReturnType<typeof gangwayCrewVisualPose>;
@@ -299,12 +330,18 @@ export class World3DLayer {
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
       const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
-      const rawAnimation:UnitAnimationFrame=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
-      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
-      const animation=projectActionFrame(rawAnimation,facing,projectVector);
+      let rawAnimation:UnitAnimationFrame|undefined;
+      if(unit.deck){
+        rawAnimation=frame.reducedMotion?{mode:'idle',frame:0}:frame.animation?.frame(unit,now)??{mode:'idle',frame:0};
+        facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
+      }
       const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing});
       if(!visible(at.x,bodyY))continue;
+      rawAnimation??=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
+      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
+      const animation=projectActionFrame(rawAnimation,facing,projectVector);this.posed++;
+      this.positions.get(unit.id)!.facing=facing;
       this.combatAnchors.set(unit.id,{x:at.x,y:at.y,floor:height,facing,sourceX:unit.x,sourceY:unit.y});
       const selected=frame.selectedIds?.has(unit.id)??false;
       if(unit.hp>0 && (selected || frame.hoveredId===unit.id)){
@@ -367,7 +404,7 @@ export class World3DLayer {
       }
     }
     this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
-    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
+    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion,frame.view);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
     renderer.render(this.scene,this.camera);
   }
