@@ -1,0 +1,45 @@
+{
+  "pr": 334,
+  "revision": "697b84e3bfe168f34df1a64cc937387147ee43d6",
+  "run": 38224983247,
+  "attempt": 1,
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Run npm run build:production",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "conclusion": "success"
+    }
+  ],
+  "productionLatest": "697b84e3bfe168f34df1a64cc937387147ee43d6",
+  "ci": {
+    "run": 38224514580,
+    "attempt": 1,
+    "head": "76b69c46a579c9c9edee8265ffd19e9a34f56651",
+    "conclusion": "success"
+  },
+  "historyCorrection": {
+    "oldHead": "c8e2543c25d4c40519a0a651c3c86518bf1dd5eb",
+    "oldParent": "e3691af5d972394babf771bb8ec405b3e27f4391",
+    "newParent": "66dfd2d17f0e55933d1955027cb04246bd6dea57",
+    "unchangedTree": "425aae468f4447bd24a7093ec3de927f3747653f",
+    "oldHeadManualCi": 38224045026
+  },
+  "fullAcceptance": "pending",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+}
