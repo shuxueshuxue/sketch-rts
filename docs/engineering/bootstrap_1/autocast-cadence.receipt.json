@@ -1,0 +1,49 @@
+{
+  "parent": "ff49bf731c0f41f77dda5734da2a6b710d277d0c",
+  "mode": "One actual late default-duel checkpoint: 1200 exact world comparisons, 6000-tick local continuations, 3 warmups each, ABBA CPU order; native victory, no AI, not a full-duel CPU result",
+  "rows": [
+    {
+      "label": "parent",
+      "cpuMs": 813.503,
+      "hash": "fcb428d7",
+      "nextId": 4887
+    },
+    {
+      "label": "next",
+      "cpuMs": 457.861,
+      "hash": "fcb428d7",
+      "nextId": 4887
+    },
+    {
+      "label": "next",
+      "cpuMs": 490.031,
+      "hash": "fcb428d7",
+      "nextId": 4887
+    },
+    {
+      "label": "parent",
+      "cpuMs": 622.099,
+      "hash": "fcb428d7",
+      "nextId": 4887
+    }
+  ],
+  "runtimeDiff": {
+    "files": 1,
+    "additions": 3,
+    "deletions": 2
+  },
+  "sourceHashes": {
+    "src/shared/sim.ts": "9a861a1960da7fdd8d8c46c9cc04269b7b771bb813e265453be977babdafba58"
+  },
+  "functionalChecks": {
+    "passed": 95,
+    "failed": 0,
+    "report": "bootstrap_1-autocast-cadence-sdk.json"
+  },
+  "build": {
+    "node": "20.20.2",
+    "exitCode": 0,
+    "log": "bootstrap_1-autocast-cadence-build.log"
+  },
+  "fullAcceptanceComplete": false
+}
