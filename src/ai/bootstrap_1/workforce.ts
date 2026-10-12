@@ -5,12 +5,16 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { projectedSupplyUsed } from '../policy/world-model';
 import type { AiScript } from '../policy/types';
 import { towerRushConstructionCrew } from './tower-rush';
+import { longHaulInvestment } from './long-haul-investment';
 
 /** Fill a mining base while it rises, before competing army and technology purchases. */
 export const miningWorkforce: AiScript = {
   id: 'miningWorkforce',
   phase: 'economy',
-  run: (snapshot, owner, options) => planMiningWorkforce(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)),
+  run(snapshot, owner, options) {
+    const crew = towerRushConstructionCrew(snapshot, owner, options);
+    return [...planMiningWorkforce(snapshot, owner, crew), ...longHaulInvestment(snapshot, owner, options, crew)];
+  },
 };
 
 export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, constructionCrew = 1): GameCommand[] {
