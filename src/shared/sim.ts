@@ -1397,6 +1397,13 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     // strikes nor casts, and its order waits for it.
     if (unit.order.type !== "charge") {
       if ((unit.pushX !== undefined && isStaggered(unit)) || (unit.effects.length !== 0 && isStunned(unit))) continue;
+      // A commanded move cannot activate a queue, leash a player unit, repair
+      // a deck or autocast. Run its existing movement after the common clocks
+      // and control effects, including exact arrival and queued helm courses.
+      if (unit.owner !== "neutral" && unit.order.type === "move") {
+        advanceMoveOrder(game, unit, unit.order, navalUnitFrame);
+        continue;
+      }
       activateQueuedOrder(game,unit);
       if (updateNeutralLeash(game, unit)) continue;
       if (navalUnitFrame && autoRepairDeckShip(game, unit)) continue;
@@ -1407,9 +1414,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
         updateChargeOrder(game, unit);
         continue;
       case "move":
-        if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) continue;
-        moveToward(unit, unit.order.x, unit.order.y, game.map, game.units, navalUnitFrame);
-        if (walkEnded(game, unit, unit.order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, unit.order);
+        advanceMoveOrder(game, unit, unit.order, navalUnitFrame);
         continue;
       case "attackMove":
         updateAttackMoveOrder(game, unit, navalUnitFrame);
@@ -1497,6 +1502,12 @@ function deckGoal(unit: Unit, ship: Unit | undefined, goal: { x: number; y: numb
   if((order.type!=="move" && order.type!=="attackMove") || !order.deckPoint || order.x!==goal.x || order.y!==goal.y)return goal;
   const parent=units.find(unit=>unit.id===(order.deckShipId ?? ship?.id));
   return parent ? localToWorld(parent,order.deckPoint) : goal;
+}
+
+function advanceMoveOrder(game: Game, unit: Unit, order: Extract<UnitOrder, { type: "move" }>, navalFrame: boolean) {
+  if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) return;
+  moveToward(unit, order.x, order.y, game.map, game.units, navalFrame);
+  if (walkEnded(game, unit, order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, order);
 }
 
 function updateShipOwnership(game:Game) {

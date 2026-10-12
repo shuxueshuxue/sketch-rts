@@ -5,6 +5,24 @@ import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
 import { MOVE_ORDER_ARRIVAL_RANGE } from './movement-rules';
 
+/** A distance-limited prefix along the supplied road, including its exact endpoint. */
+export function routePrefix(from: Point, route: readonly Point[], length: number): [Point, ...Point[]] {
+  const prefix: [Point, ...Point[]] = [from];
+  let remaining = length;
+  for (const point of route) {
+    const previous = prefix[prefix.length - 1]!, gap = Math.hypot(point.x - previous.x, point.y - previous.y);
+    if (gap > remaining) {
+      prefix.push({ x: previous.x + (point.x - previous.x) * remaining / gap,
+        y: previous.y + (point.y - previous.y) * remaining / gap });
+      break;
+    }
+    prefix.push(point);
+    remaining -= gap;
+    if (remaining === 0) break;
+  }
+  return prefix;
+}
+
 /** Forecast a clear ground move using terrain pace and the move order's arrival radius.
  * Body detours, status effects and per-tick boundary rounding remain actual movement work. */
 export function groundMoveForecast(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, speed: number, ticks: number): Point {
