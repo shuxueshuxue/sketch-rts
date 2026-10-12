@@ -73,7 +73,7 @@ export function attackMargin(options: AiPolicyContext) {
 // Preserve the commander's existing large-army attack trigger independently of mining tax.
 const STALE_ARMY_SUPPLY = 81;
 const IDLE_TICKS = 90 * 20;
-const JOIN_RANGE = 700;
+export const JOIN_RANGE = 700;
 const WORN_SHARE = 0.5;
 // After a retreat the army regroups at home before it may set out again (AMAI heals its army between attacks).
 const REGROUP_TICKS = 30 * 20;

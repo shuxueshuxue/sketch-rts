@@ -25,7 +25,8 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror =
     for (let tick = 0; tick < 360; tick++) {
       if (tick % 15 === 0) {
         const commands = routeAssaultCampCommands(snapshotGame(game),
-          [{ type: 'attackMove', unitIds: ['fighter'], x: target.x, y: target.y }], ['fighter'], target);
+          [{ type: 'attackMove', unitIds: ['fighter'], x: target.x, y: target.y }], ['fighter'], target,
+          snapshotGame(game).units.filter(unit => unit.owner !== 'us'));
         expect(commands).toEqual([{ type: 'holdPosition', unitIds: ['fighter'] }]);
         issueCommandFrame(game, commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command })));
       }
