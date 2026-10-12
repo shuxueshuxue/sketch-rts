@@ -1,0 +1,31 @@
+{
+  "parentSource": "101cbf03c4a208fb72a5c53315b7ea95f5804b77",
+  "sourceHashes": {
+    "src/ai/bootstrap_1/damage-footprints.ts": "19d6bbddcf20bc055011774130f38d82f558e78fa357688cdc987731c3cd7e95",
+    "src/ai/bootstrap_1/front-recovery.ts": "43a0a7a889f0482729c1a25f1d06fe7eeb9981af7b9b8ab3dc2f8a1106669cf6"
+  },
+  "parentNewScenes": {
+    "passed": 4,
+    "failed": 12,
+    "source": "4744618d91f2efdb1505e521b08990c0c4a643fa",
+    "sameRuntimeSourceAsParent": true
+  },
+  "priorNarrowSdk": {
+    "passed": 148,
+    "failed": 0
+  },
+  "actualWindow": {
+    "mode": "native 5400->9600 recorded worlds/memories/hits/purchases equal before equipment predicate was added; not fresh acceptance",
+    "creepDeaths": 1,
+    "permanentNonWorker": 16
+  },
+  "withdrawnCombinedEscape": {
+    "creepDeaths": 2,
+    "published": false
+  },
+  "fullBootstrapAccepted": false,
+  "finalEquipmentSubsetSdk": {
+    "passed": 29,
+    "failed": 0
+  }
+}

@@ -6,6 +6,8 @@ import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { retreatV6Front, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { armedFoes, retreatLandTravelTicks, retreatThreatReach } from './safe-land-route';
+import { incomingItemDamage } from './damage-footprints';
+import { THINK_TICKS } from './mounted-micro';
 
 function safeHealingPosts(snapshot: GameSnapshot, owner: PlayerId, threats: readonly (Unit | Building)[]) {
   return snapshot.buildings.filter(building => building.owner === owner && building.hp > 0 && building.complete
@@ -42,7 +44,9 @@ export function postRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
   const foes = patients.length ? armedFoes(snapshot, owner, options) : [];
   const wells = patients.length ? safeHealingPosts(snapshot, owner, foes) : [];
   return patients.flatMap(patient => {
-    const posts = reachableCare(snapshot, patient, wells.filter(post => patient.hp < patient.maxHp * V7_WOUNDED_SHARE
+    const critical = patient.hp < patient.maxHp * V7_WOUNDED_SHARE
+      || incomingItemDamage(snapshot, patient, foes, THINK_TICKS) >= patient.hp;
+    const posts = reachableCare(snapshot, patient, wells.filter(post => critical
       || distance(patient, post) <= post.attackRange
       || patient.order.type === 'move' && patient.order.avoidCombat && distance(patient.order, post) <= post.attackRange), foes);
     const exposed = foes.some(foe => distance(patient, foe) <= retreatThreatReach(snapshot, foe, patient, 0));
