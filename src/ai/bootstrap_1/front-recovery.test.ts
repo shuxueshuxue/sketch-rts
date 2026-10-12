@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
-import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
+import { setBuildingBodies, snapToFootprint, walkDestination } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { planBootstrapGeneral } from './mine-defense';
 import { bootstrapPolicyContext } from './policy';
@@ -52,7 +52,7 @@ it.each(cases)('$version heals a genuinely wounded $race front soldier at its ex
     const snapshot = snapshotGame(game), memory = createAiPolicyMemory();
     const context = bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams });
     const commands = planBootstrapGeneral(snapshot, 'us', context);
-    expect(commands).toContainEqual({ type: 'move', unitIds: [patient.id], x: well.x, y: well.y });
+    expect(commands).toContainEqual({ type: 'move', unitIds: [patient.id], ...walkDestination(game.map, patient, well) });
     for (const command of commands) issuePlayerCommand(game, 'us', command);
     for (let tick = 0; tick < 1200; tick++) stepGame(game);
     expect(game.units).toContain(patient);
@@ -83,7 +83,7 @@ it.each(cases)('$version sends a wounded $race soldier to the shorter healing ro
   const context = bootstrapPolicyContext(snapshot, 'us', version, { memory: createAiPolicyMemory(), teams: game.teams });
   const hall = game.buildings.find(building => building.owner === 'us' && building.kind === 'townHall')!;
   const commands = recoverBootstrapFront(snapshot, 'us', [patient], hall, context);
-  expect(commands).toEqual([{ type: 'move', unitIds: [patient.id], x: well.x, y: well.y }]);
+  expect(commands).toEqual([{ type: 'move', unitIds: [patient.id], ...walkDestination(game.map, patient, well) }]);
   for (const command of commands) issuePlayerCommand(game, 'us', command);
   for (let tick = 0; tick < 1200; tick++) stepGame(game);
   expect(game.units).toContain(patient);

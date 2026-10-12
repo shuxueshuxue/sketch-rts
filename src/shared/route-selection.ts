@@ -1,5 +1,5 @@
 import type { Point } from './ship-geometry';
-import { groundSegmentAdvance, groundTravelCost, segmentWalkable, walkingDistance, walkRoute, type Mover } from './terrain';
+import { groundSegmentAdvance, groundTravelCost, segmentWalkable, steerPoint, walkingDistance, walkRoute, type Mover } from './terrain';
 import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
@@ -21,11 +21,41 @@ export function routeClearsDisks(points: readonly Point[], disks: readonly (Poin
     pointSegmentDistanceSquared(disk, points[index]!, point) > disk.radius * disk.radius));
 }
 
+/** Leave coverage already containing the start without moving deeper or entering it again. */
+export function routeLeavesDisks(points: readonly [Point, ...Point[]], disks: readonly (Point & { radius: number })[]): boolean {
+  return disks.every(disk => {
+    const radiusSquared = disk.radius * disk.radius;
+    let escaping = (points[0].x - disk.x) ** 2 + (points[0].y - disk.y) ** 2 <= radiusSquared;
+    const clear = points.slice(1).every((point, index) => {
+      const previous = points[index]!;
+      if (escaping) {
+        if ((previous.x - disk.x) * (point.x - previous.x) + (previous.y - disk.y) * (point.y - previous.y) < 0) return false;
+        escaping = (point.x - disk.x) ** 2 + (point.y - disk.y) ** 2 <= radiusSquared;
+        return true;
+      }
+      return pointSegmentDistanceSquared(disk, previous, point) > radiusSquared;
+    });
+    return clear && !escaping;
+  });
+}
+
 /** Terrain approach geometry uses a visible straight segment before terrain roads.
  * Building detours, body clearance and flow-field corner smoothing remain movement work. */
 export function groundApproachRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): Point[] | undefined {
   const ground = { ...map };
   return segmentWalkable(ground, from, goal, 'land') ? [goal] : walkRoute(ground, from, goal);
+}
+
+/** Native steering waypoints include building occupancy; downhill flow fields finish at their reachable endpoint. */
+export function groundSteeringRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): [Point, ...Point[]] {
+  const route: [Point, ...Point[]] = [from];
+  let point = from, next = steerPoint(map, point, goal);
+  while (next.x !== point.x || next.y !== point.y) {
+    route.push(next);
+    point = next;
+    next = steerPoint(map, point, goal);
+  }
+  return route;
 }
 
 /** Estimated terrain travel at a supplied speed; land includes ground pace costs.
