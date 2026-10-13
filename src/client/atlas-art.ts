@@ -1,7 +1,7 @@
 import { animationKey, actionPaintSize } from './art/action-direction';
 import { unitPaintKey } from './art/paint-identity';
 import type { UnitModel } from "../story/cast";
-import { appearanceKey } from "./art/unit-appearance";
+import { appearanceKey, isCatalogPresentation } from "./art/unit-appearance";
 import type { FigurePresentation } from "./art/rig";
 import { paintMine } from "./art/environment";
 import { drawModelPortrait } from './model-portraits';
@@ -24,10 +24,10 @@ const sprites = new RasterCache();
 export const canvasArtCacheStats = () => sprites.stats();
 export const clearCanvasArtCache = () => {sprites.clear();clearFittedPortraits();};
 
-/** Only unmodified catalog presentations use proven stock paint identities.
- * Custom appearance and detail painters keep their original cache inputs. */
+/** Internally frozen catalog kits and empty stock presentations use proven
+ * identities. Custom appearance and detail keep their original cache inputs. */
 function catalogPaintKey(kind:UnitKind,color:string,pose:UnitAnimationFrame,presentation:FigurePresentation){
-  return Object.getPrototypeOf(presentation)===Object.prototype&&Reflect.ownKeys(presentation).length===0
+  return isCatalogPresentation(presentation)||(Object.getPrototypeOf(presentation)===Object.prototype&&Reflect.ownKeys(presentation).length===0)
     ?unitPaintKey(kind,color,pose):undefined;
 }
 
