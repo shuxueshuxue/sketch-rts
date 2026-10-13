@@ -1,0 +1,34 @@
+{
+  "publicBase": "7ccd37548dced639b04d80944e5a0e72e5ac8537",
+  "runtimeDiff": "+5/-1; mercenary-control.ts",
+  "serializedFieldsAdded": 0,
+  "normalCostAndCadence": true,
+  "checks": {
+    "related": {
+      "numTotalTests": 133,
+      "numPassedTests": 133,
+      "numFailedTests": 0
+    },
+    "additional": {
+      "numTotalTests": 40,
+      "numPassedTests": 40,
+      "numFailedTests": 0
+    }
+  },
+  "same12NativeParentScenes": {
+    "numTotalTests": 12,
+    "numPassedTests": 0,
+    "numFailedTests": 12
+  },
+  "formal1620": "not run on this candidate",
+  "untouchedSeeds": "not run",
+  "productionBuild": "Node 20; exit 0",
+  "limits": "Safe return road must exist; both roads blocked and island return are not claimed solved",
+  "artifacts": {
+    "/tmp/bootstrap_1-mercenary-trip-release-sdk.json": "b2f290f3135113a9ed6174ba624d4b79cad2516ca1a3e1d9626999bcdb7db39a",
+    "/tmp/bootstrap_1-mercenary-trip-additional-sdk.json": "dda2df437c6714382c7a9ec9d78215074c67f9a6293bb3580e728fc0651b3a29",
+    "/tmp/bootstrap_1-mercenary-trip-roads-parent-sdk.json": "91de2b1a80be4f94ceaec2e378e4dd0be45f9a4ca4c89758ca085424301053db",
+    "/tmp/bootstrap_1-mercenary-trip-build.log": "98eb765edfa437e9fb5b60770c0d2fbbbd31f9eadf16096110f35760f7adc2f3"
+  },
+  "runtimeSha256": "e6934fcaedf5c77d6a4f03402749523a54481a7cf43a34f9bf7577d3b9846124"
+}
