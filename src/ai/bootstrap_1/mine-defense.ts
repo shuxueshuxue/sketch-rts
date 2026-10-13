@@ -4,7 +4,7 @@ import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { routeAssaultCampCommands } from './assault-camp-roads';
 import { armedFoes } from './safe-land-route';
-import { recoverBootstrapFront } from './front-recovery';
+import { postRecoveryAssignments, recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -189,6 +189,7 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   for (const id of lootRecoveryUnitIds(snapshot, owner, options)) crew.add(id);
   for (const id of shoppingUnitIds(snapshot, owner, options)) crew.add(id);
   for (const id of mobileCare.claimsUnits!(snapshot, owner, options)) crew.add(id);
+  for (const { patient, walk } of postRecoveryAssignments(snapshot, owner, options)) if (!walk) crew.add(patient.id);
   const army = intel.army.filter(unit => !crew.has(unit.id) && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
