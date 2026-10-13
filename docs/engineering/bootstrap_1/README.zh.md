@@ -1,5 +1,7 @@
 # bootstrap_1
 
+炮车截击与站位方案[保留为实验](./artillery-screen-held.receipt.json)：190项本地检查184通过、双炮车6失败；普通召唤师开发轨迹的后半局仍超时，累计永久损失44，线上父版本38。短窗口改善未转化为整局通过，因此没有开PR或部署。36k帧时七个金矿全部耗尽，11名闲置工人并非采矿故障。正在排查施法军队的集结、行军与残局资源使用。
+
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
 [实际采矿任务保护 #365](https://github.com/shuxueshuxue/sketch-rts/pull/365)已合并，366项SDK、72旧版命令与记忆检查、完整构建及首次CI通过。首次生产在文档命名检查失败，构建、上传和发布均跳过；[失败证明](./mining-job-defense-release-failure.receipt.json)。[检查前移修复 #366](https://github.com/shuxueshuxue/sketch-rts/pull/366)首次CI通过，已合并 `98cf8112ea7e2263fd858b41cc618920aaa991b5`，首次生产 `38415882986`成功，五个发布步骤和精确版本标签核验。[发布证明](./mining-job-defense-release.receipt.json)。真实36000至40000窗口新增永久死亡5→1、三名原矿工全部保住；[细节](./mining-job-defense.zh.md)。本批正常资源召唤师开发对局在48000帧超时，永久损失38，两个对手工人均为0；仍未获胜。固定召唤护卫原型[未发布](./mining-host-guard-held.receipt.json)。1620格与最终未见种子仍待验收。
