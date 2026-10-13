@@ -33,7 +33,7 @@ import { SHOP_PRIORITY, shopErrandCost } from "../v9/shop";
 // way: see @@@v9-shop).
 type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true; producer?: string };
 
-type Economy = {
+export type Economy = {
   snapshot: GameSnapshot;
   owner: PlayerId;
   options: AiPolicyContext;
@@ -50,7 +50,7 @@ type Economy = {
   threatened?: { hall: Building; threat: number };
 };
 
-const WORKER_CAP = 36;
+export const WORKER_CAP = 36;
 const MIN_WORKERS = 6;
 const WORKERS_PER_MINE = 5;
 const FARM_LIMIT = 15;
@@ -112,12 +112,12 @@ export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     isV9Policy(options) ? v9ExpansionMine : nextExpansionMine, wellGoals));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"], healingPosts: typeof wellGoals): Goal[] {
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"], capabilities: typeof wellGoals): Goal[] {
   const economy = readEconomy(snapshot, owner, options, construct, naval, prepareExpansion, chooseMine);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
-  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...healingPosts(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
+  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...capabilities(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Economy {
@@ -371,7 +371,7 @@ const V9_THREAT_CLEARANCE = 1_500;
 const V9_LATER_OUTPOST_TOWERS = 2;
 
 // The next expansion goes to the nearest free mine once its camp is cleared (the general clears it) and no enemy is near.
-function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
+export function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
   // A hall on a mined-out mine is no base: counting it left eleven workers idle when V6's main ran dry.
   const halls = economy.own.filter((building) => building.kind === "townHall");
   if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete)) return [];
