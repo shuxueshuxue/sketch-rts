@@ -103,4 +103,4 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/summoned-raids.test.ts src/ai/bootstrap_1/tower-rush.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/clinic-army-availability.test.ts
 
       - name: Verify ready free income before guarded mines
-        run: npx vitest run src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
+        run: npx vitest run src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts

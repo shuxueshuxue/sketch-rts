@@ -1,0 +1,39 @@
+{
+  "base": "3a4b02d3eeb9ba74eebc14742320b35fdbdf6b34",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "failedParentProduction": {
+    "id": 38328690091,
+    "attempt": 1,
+    "conclusion": "failure",
+    "failedStep": "Test research, recovery, regrouping and ordinary reinforcement commands",
+    "naturalOpeningFailures": 12,
+    "uploadSkipped": true,
+    "logsSha256": "06508a695f92820eb748a7cf40ede9a080a971cdcb6c6264b4404cede6b717ba"
+  },
+  "architecture": {
+    "runtimeFiles": 2,
+    "newPersistentState": 0,
+    "priorityCallback": "required numeric rank, both existing callsites explicit; zero for stock road ordering and the single working-base natural; ready free mine before guarded objectives for other economies",
+    "newDefaultOrCompatibilityPaths": 0
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/expansion-target.ts": "b4ec9b0a27f43084f2a2f2c37edca09c86ba96552eebbebe0e0d8abcfbf0c28c",
+    "src/ai/policy/v6/intel.ts": "70f0644fe3ac213071facb42e368e6143f38169ee6848fb8e99661b14824cb7a"
+  },
+  "unchangedOriginalAssertionSourceSha256": "c202995fdb1cf7b51a7bb6e0721f9dde73f5162167ec1ed39892a628bb647b2b",
+  "sdk": {
+    "passed": 465,
+    "failed": 0,
+    "suites": 39,
+    "scope": "Entire first failed production step, plus ready free mine / free expansion / two-income deposit checks",
+    "sha256": "a808ba6c8533ed82644fbd779e1d3a20f63bce7d7d1f8d77127fd81350b5654d"
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "command": "npm run build",
+    "logSha256": "fcc25b9918a6265c4f086f22cf8b15612344aee0b4aa69f75bf2b5d307b52588"
+  },
+  "nativeWindowStatus": "The earlier solo12000\u201316000 window starts with two completed halls. Its ready-first ordering is algebraically unchanged by this single-base rule; the whole window was not remeasured, and no new opponent win is claimed."
+}
