@@ -53,7 +53,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts src/ai/bootstrap_1/expansion-road-threat.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts src/ai/bootstrap_1/long-haul-investment.test.ts
 
       - name: Verify camp reinforcements and unsupported caster micro
-        run: npx vitest run src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
+        run: npx vitest run src/ai/bootstrap_1/summoner-staging.test.ts src/ai/bootstrap_1/summoner-support-reach.test.ts src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
 
       - name: Verify assault camp detours and closed roads
         run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts src/ai/bootstrap_1/assault-cohesion.test.ts
