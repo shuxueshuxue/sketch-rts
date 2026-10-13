@@ -7,7 +7,8 @@ import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
-import { planNavalTacticsWithAssignments } from '../policy/naval';
+import { cancelFerry, planNavalTacticsWithAssignments } from '../policy/naval';
+import { units } from '../policy/snapshot';
 import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { isEnemyOwner } from '../policy/ownership';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
@@ -104,6 +105,15 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   planRiderCrossing(snapshot, owner, options);
+  const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
+  if (ferries) for (const boat of units(snapshot, owner)) {
+    const mission = ferries[boat.id];
+    if (mission?.purpose === 'rebase' && mission.phase !== 'return'
+      && snapshot.resources.some(mine => mine.id === mission.targetId && mine.amount === 0)) {
+      // The ordinary ferry return owns the hull; cancellation releases its pending boarders.
+      cancelled.push(...cancelFerry(snapshot, boat, mission, options).filter(command => command.type === 'stop'));
+    }
+  }
   const mines = mountedMinePlan(snapshot, options.memory);
   const ports = transportRecovery(snapshot, owner, options);
   const { recovering, unmedicated, foes, posts } = recoveryAssignments(snapshot, owner, options);
@@ -111,12 +121,12 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
     ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
-  const commands = planNavalTacticsWithAssignments(snapshot, owner, options, {
+  const commands = [...cancelled, ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !shipNeedsRepair(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
-  });
+  })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
 
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
