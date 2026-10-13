@@ -50,9 +50,13 @@ export function returningMercenaries(snapshot: GameSnapshot, owner: PlayerId, op
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall' && building.complete);
   if (!home) return [];
   const courier = activeCourier(snapshot, owner, options);
+  const foes = courier ? armedFoes(snapshot, owner, options) : [];
+  const blockedTrip = courier !== undefined
+    && safeLandTravelTicks(snapshot, courier.unit, courier.camp, foes) === undefined
+    && safeLandTravelTicks(snapshot, courier.unit, home, foes) !== undefined;
   return mercenaryTravelers(snapshot, owner, options).filter(unit => {
     const order = unit.order;
-    if (courier && unit.id === courier.unit.id && (unit.hp < unit.maxHp || courier.camp.stock === 0
+    if (courier && unit.id === courier.unit.id && (blockedTrip || unit.hp < unit.maxHp || courier.camp.stock === 0
       || hiredMercenaryCount(snapshot, owner, courier.camp.hireKind) >= mercenaryRoleLimit(courier.camp.hireKind, options)))
       return distance(unit, home) > V7_GATHERED_RANGE;
     if (order.type === 'move' && order.avoidCombat && order.x === home.x && order.y === home.y)
