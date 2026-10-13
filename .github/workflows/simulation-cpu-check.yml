@@ -95,3 +95,6 @@ jobs:
 
       - name: Verify small armies pay for existing counters
         run: npx vitest run src/ai/bootstrap_1/early-counter-production.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
+
+      - name: Verify paid healing posts and actual resting-army availability
+        run: npx vitest run src/ai/bootstrap_1/summoner-healing-post.test.ts src/ai/bootstrap_1/clinic-army-availability.test.ts src/ai/bootstrap_1/front-recovery.test.ts src/ai/policy/v8/well.test.ts

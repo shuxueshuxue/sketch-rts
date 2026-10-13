@@ -5,7 +5,7 @@ import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKi
 import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -114,7 +114,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
     (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
-    (view, intel) => bootstrapExpansionMine(view, owner, intel, options));
+    (view, intel) => bootstrapExpansionMine(view, owner, intel, options), healingPostGoals);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
