@@ -79,7 +79,7 @@ jobs:
 
 
       - name: Verify research funding and retained first-medic reservation
-        run: npx vitest run src/ai/bootstrap_1/research-funding.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
+        run: npx vitest run src/ai/bootstrap_1/ready-production-capital.test.ts src/ai/bootstrap_1/research-funding.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
 
       - name: Verify independent riders use admitted roads and parallel objectives
         run: npx vitest run src/ai/bootstrap_1/mounted-global-field.test.ts src/ai/bootstrap_1/threat-roads.test.ts src/ai/bootstrap_1/mounted-detour-recruitment.test.ts src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
