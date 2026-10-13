@@ -1,14 +1,15 @@
 import { strikeGap } from '../../shared/combat-geometry';
 import { routeWithinDistance } from '../../shared/route-selection';
 import { walkingDistance } from '../../shared/terrain';
-import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
+import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { LOCAL_RANGE } from '../policy/v6/general';
-import { mountedMicro, mountedTargetOrder } from './mounted-micro';
+import { mountedMicro, mountedTargetOrder, mountedThreatReach } from './mounted-micro';
 import { availableMountedRiders, mountedFiringPoint } from './mounted-tasks';
 import { armedFoes } from './safe-land-route';
+import { threatLandRouter, threatRoadCommands } from './threat-roads';
 import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
 
 const allocations = new WeakMap<GameSnapshot, Map<PlayerId, ReadonlySet<string>>>();
@@ -25,14 +26,21 @@ export function mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rid
     && isOpponentOwner(snapshot, owner, building.owner, options));
   const enemies = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.kind !== 'worker'
     && isOpponentOwner(snapshot, owner, unit.owner, options));
-  return enemies.filter(target => strikeGap(rider, target) <= rider.attackRange
-    || routeWithinDistance(snapshot.map, rider, target, 'land', LOCAL_RANGE)
+  const engaged = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId !== undefined
-      && crew.has(target.order.targetId) && walkingDistance(snapshot.map, rider, target, 'land') !== undefined)
-    .filter(target => strikeGap(rider, target) <= rider.attackRange
-      || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId === rider.id
-      || mountedFiringPoint(snapshot, rider, target, towers, enemies) !== undefined)
-    .sort((a, b) => mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b));
+      && crew.has(target.order.targetId);
+  const local = enemies.filter(target => engaged(target)
+    || routeWithinDistance(snapshot.map, rider, target, 'land', LOCAL_RANGE));
+  const admitted = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
+    || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId === rider.id
+    || mountedFiringPoint(snapshot, rider, target, towers, enemies) !== undefined;
+  const nearby = local.filter(admitted);
+  // Fight the current front before evaluating an independent journey across the map.
+  const targets = nearby.length ? nearby : enemies.filter(target => !local.includes(target)
+    && target.speed < rider.speed && mountedThreatReach(snapshot, target, rider, rider.attackCooldown) < rider.attackRange)
+    .filter(admitted);
+  return targets.sort((a, b) => Number(engaged(b)) - Number(engaged(a))
+    || mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b));
 }
 
 /** Free cavalry can fight an exposed army without an available mine or neutral camp. */
@@ -58,7 +66,17 @@ export const mountedField: AiScript = {
     if (frame === undefined) allocations.set(snapshot, new Map([[owner, new Set(plans.map(plan => plan.rider.id))]]));
     else frame.set(owner, new Set(plans.map(plan => plan.rider.id)));
     const foes = armedFoes(snapshot, owner, options);
-    return plans.map(({ rider, target }) => mountedMicro(snapshot, rider, target, foes, { kind: 'field' }));
+    return plans.flatMap(({ rider, target }) => {
+      if (strikeGap(rider, target) > rider.attackRange
+        && !foes.some(foe => 'order' in foe && (foe.order.type === 'attack' || foe.order.type === 'attackMove')
+          && foe.order.targetId === rider.id)) {
+        const towers = foes.filter((foe): foe is Building => !('order' in foe));
+        const defenders = foes.filter((foe): foe is Unit => 'order' in foe && foe.owner !== 'neutral');
+        const point = mountedFiringPoint(snapshot, rider, target, towers, defenders)!;
+        return threatRoadCommands(rider, threatLandRouter(snapshot, rider, foes)(point)!);
+      }
+      return [mountedMicro(snapshot, rider, target, foes, { kind: 'field' })];
+    });
   },
 };
 
