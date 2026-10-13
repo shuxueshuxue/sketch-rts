@@ -5,7 +5,8 @@ import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } fr
 import { drawAtlasCorpse } from '../atlas-art';
 import { corpseAppearanceKey } from '../art/corpses';
 import type {UnitAnimationFrame} from '../unit-animation';
-import {animationKey,projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {unitPaintKey} from '../art/paint-identity';
 import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
@@ -358,7 +359,7 @@ export class World3DLayer {
         this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
       }
       const appearance=appearanceFor(snapshot,unit);
-      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animationKey(animation)}:${facing}:${density}:${appearanceKey(appearance)}:${unit.variant??''}`;
+      const density=zoom<.65?2:4,key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
       this.cards.add(key,density,ctx=>{
         ctx.scale(facing,1);

@@ -55,7 +55,7 @@ describe('painted card array batches',()=>{
     for(let i=0;i<64;i++)cards.add(`${i}`,4,painter,matrix,`${i}`,17);cards.finish(renderer);
     expect(cards.stats().pages).toBe(4);
     cards.begin();for(const i of [0,16,32,48])cards.add(`${i}`,4,painter,matrix,`${i}`,17);cards.finish(renderer);
-    expect(cards.stats()).toMatchObject({pages:1,cards:4,copiedLayers:4,rasterizations:64});expect(painter).toHaveBeenCalledTimes(64);
+    expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:64,mipInitializedPages:4});expect(painter).toHaveBeenCalledTimes(64);
     const mesh=cards.objects()[0]!;expect(mesh.count).toBe(4);expect(mesh.userData.ids).toEqual(['0','16','32','48']);
     for(let i=0;i<4;i++){expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(true);expect(mesh.userData.paintedHit(i,{x:0,y:0})).toBe(false);}cards.dispose();
   });
@@ -152,15 +152,54 @@ it('streams hundreds of misses with only one readback layer pending and retains 
  expect((cards as unknown as {pending:unknown[]}).pending).toHaveLength(0);cards.dispose();expect(cards.stats().ownedCpuBytes).toBe(0);
 });
 
-it('keeps all compaction sources alive and rolls back destination pages after a failed mip copy',()=>{
+it('keeps visible compaction sources alive and invalidates overwritten warm holes after a failed mip copy',()=>{
  const {cards}=setup();cards.begin();for(let i=0;i<64;i++)cards.add(String(i),4,fullPaint,matrix,String(i),17);cards.finish(renderer);
  const sources=cards.objects().map(mesh=>(mesh.material as THREE.MeshBasicMaterial).map!),disposed=sources.map(source=>vi.spyOn(source,'dispose'));
  cards.begin();for(const i of [0,16,32,48])cards.add(String(i),4,fullPaint,matrix,String(i),17);cards.add('new',4,fullPaint,matrix,'new',17);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture){for(const spy of disposed)expect(spy).not.toHaveBeenCalled();throw Error('compaction failure');}});
  expect(()=>cards.finish(renderer)).toThrow('compaction failure');expect(cards.stats()).toMatchObject({pages:4,retiredGpuBytes:0,pendingRgbaBytes:0});for(const spy of disposed)expect(spy).not.toHaveBeenCalled();
+ const cache=(cards as unknown as {cards:Map<string,unknown>}).cards;
+ for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128`)).toBe(true);
+ // These destinations may contain partially copied mip chains. Their warm
+ // identities must disappear even though visible sources remain retryable.
+ for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128`)).toBe(false);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture)for(const spy of disposed)expect(spy).not.toHaveBeenCalled();});
- cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:5,copiedLayers:5,rasterizations:65});for(const spy of disposed)expect(spy).toHaveBeenCalledTimes(1);
+ cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:65,mipInitializedPages:4});expect(disposed[0]).not.toHaveBeenCalled();for(const spy of disposed.slice(1))expect(spy).toHaveBeenCalledTimes(1);
  expect(cards.objects()[0]!.userData.ids).toEqual(expect.arrayContaining(['0','16','32','48','new']));cards.dispose();
+});
+
+it.each([160,ART_ACTION_SIZE])('keeps twenty recurring %ipx action poses warm within the unchanged allocated-pixel budget',tileSize=>{
+ const {cards}=setup(),painter=vi.fn(paint),size=tileSize*4;
+ for(let i=0;i<60;i++){
+  cards.begin();cards.add(`pose:${i%20}`,4,painter,matrix,'unit',17,tileSize);cards.finish(renderer);
+ }
+ const stats=cards.stats(),depths=(cards as unknown as {pages:{texture:THREE.DataArrayTexture}[]}).pages.map(page=>page.texture.image.depth);
+ expect(stats).toMatchObject({pages:2,cards:20,rasterizations:20,copiedLayers:0,mipInitializedPages:2,mipLayerUpdates:20});
+ // The twenty logical cards use identical test ink. The uploader can reuse
+ // that scratch raster while still copying twenty complete per-layer mips.
+ expect(stats).toMatchObject({scratchUploadBytes:size*size*4,scratchInitialUploadBytes:size*size*4,scratchUnchangedUploads:19,scratchPartialUploadBytes:0});expect(stats.pixels).toBeLessThanOrEqual(12*1024*1024);
+ expect(depths).toEqual([16,Math.floor((12*1024*1024-size*size*16)/(size*size))]);
+ expect(painter).toHaveBeenCalledTimes(20);cards.dispose();expect(cards.stats().pixels).toBe(0);
+});
+
+it('uses a tail page without evicting current poses when their full-resolution working set exceeds the budget',()=>{
+ const {cards}=setup();
+ for(let frame=0;frame<3;frame++){
+  cards.begin();for(let i=0;i<40;i++)cards.add(`${i}`,4,paint,matrix,`${i}`,17,ART_ACTION_SIZE);cards.finish(renderer);
+ }
+ expect(cards.stats()).toMatchObject({cards:40,rasterizations:40,copiedLayers:0});
+ expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(40);
+ expect(cards.stats().pixels).toBeGreaterThan(12*1024*1024);cards.dispose();
+});
+
+it('compacts into existing inactive holes without allocating a temporary GPU page',()=>{
+ const {cards}=setup();cards.begin();for(let i=0;i<64;i++)cards.add(`${i}`,4,paint,matrix,`${i}`,17);cards.finish(renderer);
+ const before=cards.stats(),first=(cards.objects()[0]!.material as THREE.MeshBasicMaterial).map;
+ cards.begin();for(const i of [0,16,32,48])cards.add(`${i}`,4,paint,matrix,`${i}`,17);cards.finish(renderer);
+ expect(cards.stats()).toMatchObject({mipInitializedPages:4,copiedLayers:3,peakOwnedGpuBytes:before.peakOwnedGpuBytes});
+ expect((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map).toBe(first);
+ // A retained warm card in the kept page also survives the move.
+ cards.begin();cards.add('12',4,paint,matrix,'warm',17);cards.finish(renderer);expect(cards.stats().rasterizations).toBe(64);cards.dispose();
 });
 
 it.each(['paint','upload'] as const)('releases transient data and request closures after a %s failure',stage=>{
