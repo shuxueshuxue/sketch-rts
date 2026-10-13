@@ -16,6 +16,7 @@ function binding(cards:PaintedCardBatches,id:string){
  return{mesh,index,texture};
 }
 function residentTextures(cards:PaintedCardBatches){return(cards as unknown as {pages:{texture:THREE.DataArrayTexture}[]}).pages.map(page=>page.texture);}
+function storedMipBytes(texture:THREE.DataArrayTexture){return(texture.mipmaps as {width:number;height:number}[]).reduce((sum,mip)=>sum+mip.width*mip.height*4*texture.image.depth,0);}
 const matrix=new THREE.Matrix4();
 const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
 const fullPaint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-62,-62,124,124);};
@@ -175,19 +176,45 @@ it('streams hundreds of misses with only one readback layer pending and retains 
  expect((cards as unknown as {pending:unknown[]}).pending).toHaveLength(0);cards.dispose();expect(cards.stats().ownedCpuBytes).toBe(0);
 });
 
+it('preserves every ownership peak sample without collecting public draw statistics during raster or failed promotion',()=>{
+ const {cards}=setup({}),internal=cards as unknown as {recordPeaks:()=>void;pages:{texture:THREE.DataArrayTexture;mipBytes:number;uploaded:boolean}[]};
+ const record=internal.recordPeaks.bind(internal),statsReads=vi.spyOn(cards,'stats');
+ const expected={peakPendingRgbaBytes:0,peakOwnedCpuBytes:0,peakOwnedGpuBytes:0,peakRetiredGpuBytes:0};
+ const samples=vi.spyOn(internal,'recordPeaks').mockImplementation(()=>{
+  const state=cards.stats(),reads=statsReads.mock.calls.length;
+  expected.peakPendingRgbaBytes=Math.max(expected.peakPendingRgbaBytes,state.pendingRgbaBytes);expected.peakOwnedCpuBytes=Math.max(expected.peakOwnedCpuBytes,state.ownedCpuBytes);expected.peakOwnedGpuBytes=Math.max(expected.peakOwnedGpuBytes,state.ownedGpuBytes);expected.peakRetiredGpuBytes=Math.max(expected.peakRetiredGpuBytes,state.retiredGpuBytes);
+  record();expect(statsReads).toHaveBeenCalledTimes(reads);
+ });
+ const check=()=>{
+  const state=cards.stats();expect(state).toMatchObject(expected);
+  for(const page of internal.pages)expect(page.mipBytes).toBe(storedMipBytes(page.texture));
+  expect(state.allocatedMipBytes).toBe(internal.pages.reduce((sum,page)=>sum+storedMipBytes(page.texture),0));
+  expect(state.ownedGpuBytes).toBe(state.scratchGpuBytes+internal.pages.reduce((sum,page)=>sum+(page.uploaded?storedMipBytes(page.texture):0),0));
+ };
+ cards.begin();cards.add('action',4,paint,matrix,'coarse',17,176,1,1);cards.add('body',4,paint,matrix,'body',17);cards.add('empty',4,()=>{},matrix,'empty',17);cards.finish(renderer);check();
+ expect(samples).toHaveBeenCalledTimes(9);
+ cards.begin();cards.add('action',4,paint,matrix,'coarse-warm',17,176,1,1);cards.add('action',4,paint,matrix,'fine',17,176);
+ renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,destination:THREE.Texture)=>{if(destination instanceof THREE.DataArrayTexture&&destination.image.width===704)throw Error('peak promotion failure');});
+ expect(()=>cards.finish(renderer)).toThrow('peak promotion failure');check();expect(samples).toHaveBeenCalledTimes(11);
+ renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('action',4,paint,matrix,'fine-retry',17,176);cards.add('body',4,paint,matrix,'body-warm',17);cards.finish(renderer);check();expect(samples).toHaveBeenCalledTimes(14);
+ expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['fine-retry','body-warm']);cards.dispose();expect(cards.stats()).toMatchObject({ownedCpuBytes:0,ownedGpuBytes:0,allocatedMipBytes:0});
+});
+
 it('keeps visible compaction sources alive and invalidates overwritten warm holes after a failed mip copy',()=>{
  const {cards}=setup();cards.begin();for(let i=0;i<64;i++)cards.add(String(i),4,fullPaint,matrix,String(i),17);cards.finish(renderer);
  const sources=residentTextures(cards),disposed=sources.map(source=>vi.spyOn(source,'dispose'));
  cards.begin();for(const i of [0,16,32,48])cards.add(String(i),4,fullPaint,matrix,String(i),17);cards.add('new',4,fullPaint,matrix,'new',17);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture){for(const spy of disposed)expect(spy).not.toHaveBeenCalled();throw Error('compaction failure');}});
  expect(()=>cards.finish(renderer)).toThrow('compaction failure');expect(cards.stats()).toMatchObject({pages:4,retiredGpuBytes:0,pendingRgbaBytes:0});for(const spy of disposed)expect(spy).not.toHaveBeenCalled();
+ const retiringBytes=sources.slice(1).reduce((sum,texture)=>sum+storedMipBytes(texture),0);
+ expect(cards.stats().peakRetiredGpuBytes).toBe(retiringBytes);
  const cache=(cards as unknown as {cards:Map<string,unknown>}).cards;
  for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128`)).toBe(true);
  // These destinations may contain partially copied mip chains. Their warm
  // identities must disappear even though visible sources remain retryable.
  for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128`)).toBe(false);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture)for(const spy of disposed)expect(spy).not.toHaveBeenCalled();});
- cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:65,mipInitializedPages:4});expect(disposed[0]).not.toHaveBeenCalled();for(const spy of disposed.slice(1))expect(spy).toHaveBeenCalledTimes(1);
+ cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:65,mipInitializedPages:4,retiredGpuBytes:0,peakRetiredGpuBytes:retiringBytes});expect(disposed[0]).not.toHaveBeenCalled();for(const spy of disposed.slice(1))expect(spy).toHaveBeenCalledTimes(1);
  expect(cards.objects()[0]!.userData.ids).toEqual(expect.arrayContaining(['0','16','32','48','new']));cards.dispose();
 });
 

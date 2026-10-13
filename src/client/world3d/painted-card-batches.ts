@@ -13,7 +13,7 @@ const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
 type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number;order:number};
 type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;baseMip:number;mask:Uint8Array};
 /** Cache allocation is independent of draw order. Pages own no render objects. */
-type Page={texture:THREE.DataArrayTexture;uploaded:boolean;cards:(Card|undefined)[];used:number};
+type Page={texture:THREE.DataArrayTexture;readonly mipBytes:number;uploaded:boolean;cards:(Card|undefined)[];used:number};
 type Instance={card:Card|undefined;matrix:THREE.Matrix4;id:string;foot:number;opacity:number;order:number};
 type DrawChunk={banks:THREE.DataArrayTexture[];pages:Page[];entries:Card[];ids:string[];feet:number[];orders:number[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh:THREE.InstancedMesh;capacity:number;used:number;refreshMaterials:(()=>void)[]};
 export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number};
@@ -69,7 +69,7 @@ export class PaintedCardBatches {
     for(const chunk of this.chunks)this.hideChunk(chunk);
   }
   private createPage(width:number,height:number,layers=LAYERS){
-    const page:Page={texture:createCardArray(width,height,layers,this.anisotropy),uploaded:false,cards:new Array(layers),used:this.frame};
+    const page:Page={texture:createCardArray(width,height,layers,this.anisotropy),mipBytes:cardTextureBytes(width,height,layers),uploaded:false,cards:new Array(layers),used:this.frame};
     this.pages.push(page);this.allocatedPixels+=width*height*layers;return page;
   }
   private slot(width:number,height:number,pendingLayers:number,empty=false){
@@ -375,13 +375,22 @@ export class PaintedCardBatches {
   // Canvas backing stores. cpuBytes excludes scratch for existing consumers.
   stats(){
     const pixels=this.allocatedPixels,transfer=this.mipUploader.stats();
-    const bytes=(page:Page)=>cardTextureBytes(page.texture.image.width,page.texture.image.height,page.texture.image.depth);
+    const bytes=(page:Page)=>page.mipBytes;
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const drawBufferBytes=this.chunks.reduce((sum,chunk)=>sum+chunk.mesh.instanceMatrix.array.byteLength+Object.values(chunk.geometry.attributes).reduce((total,attribute)=>total+attribute.array.byteLength,0)+(chunk.geometry.index?.array.byteLength??0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
     return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
-  private recordPeaks(){const s=this.stats();this.peakPendingRgbaBytes=Math.max(this.peakPendingRgbaBytes,s.pendingRgbaBytes);this.peakOwnedCpuBytes=Math.max(this.peakOwnedCpuBytes,s.ownedCpuBytes);this.peakOwnedGpuBytes=Math.max(this.peakOwnedGpuBytes,s.ownedGpuBytes);this.peakRetiredGpuBytes=Math.max(this.peakRetiredGpuBytes,s.retiredGpuBytes);}
+  private recordPeaks(){
+    // Sampling occurs several times per raster. Preserve the same ownership and
+    // sample points without rebuilding unrelated draw/Canvas/public counters.
+    const transfer=this.mipUploader.stats(),cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
+    const ownedCpuBytes=cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes;
+    let ownedGpuBytes=transfer.scratchGpuBytes,retiredGpuBytes=0;
+    for(const page of this.pages)if(page.uploaded)ownedGpuBytes+=page.mipBytes;
+    for(const page of this.retiring)if(page.uploaded)retiredGpuBytes+=page.mipBytes;
+    this.peakPendingRgbaBytes=Math.max(this.peakPendingRgbaBytes,this.pendingRgbaBytes);this.peakOwnedCpuBytes=Math.max(this.peakOwnedCpuBytes,ownedCpuBytes);this.peakOwnedGpuBytes=Math.max(this.peakOwnedGpuBytes,ownedGpuBytes);this.peakRetiredGpuBytes=Math.max(this.peakRetiredGpuBytes,retiredGpuBytes);
+  }
   private remove(page:Page){
     const sourceSizes=new Set(page.cards.flatMap(card=>card?[card.sourceSize]:[]));
     for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.cards.delete(card.key);this.maskBytes-=card.mask.byteLength;}
