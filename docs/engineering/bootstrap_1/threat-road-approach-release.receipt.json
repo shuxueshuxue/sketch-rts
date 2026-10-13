@@ -1,0 +1,71 @@
+{
+  "number": 361,
+  "url": "https://github.com/shuxueshuxue/sketch-rts/pull/361",
+  "head": "2affa2eed1ebef6ffe5e32267e5d4da18afda0a8",
+  "base": "99c2d5e6b642808f9dda819b91149c141ec465f9",
+  "failedHead": {
+    "head": "1dddbe7d279634abfebec2455723315509d57a91",
+    "ciRuns": [
+      {
+        "id": 38358736252,
+        "name": "Simulation CPU Check",
+        "head_sha": "1dddbe7d279634abfebec2455723315509d57a91",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_attempt": 1,
+        "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38358736252"
+      }
+    ]
+  },
+  "ciRuns": [
+    {
+      "id": 38359725651,
+      "name": "Simulation CPU Check",
+      "head_sha": "2affa2eed1ebef6ffe5e32267e5d4da18afda0a8",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38359725651"
+    }
+  ],
+  "merge": "ed22d4c4a7e9183be94fada10a1d0ae7ae2a9f84",
+  "production": [
+    {
+      "id": 38360183556,
+      "name": "Production Deploy",
+      "head_sha": "ed22d4c4a7e9183be94fada10a1d0ae7ae2a9f84",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38360183556"
+    }
+  ],
+  "requiredSteps": [
+    {
+      "name": "Run npm run build:production",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "releaseTagSha": "ed22d4c4a7e9183be94fada10a1d0ae7ae2a9f84"
+}
