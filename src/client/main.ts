@@ -63,6 +63,7 @@ import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMi
 import { WindMapDisplay, projectWindDirection } from './minimap-wind';
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
+import { MinimapPresentationCache } from './minimap-presentation-cache';
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
 import { Soundboard } from "./sound";
 import { soundCues, type SoundCue } from "./sound-cues";
@@ -106,7 +107,7 @@ import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
-import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
+import type { MapPresentationMark } from "../shared/presentation";
 import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
@@ -223,6 +224,7 @@ const soundPacksLoaded=servedSoundPacks(import.meta.env.BASE_URL,async(input)=>{
 }).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
 
 let snapshot: GameSnapshot | undefined;
+const minimapPresentation = new MinimapPresentationCache();
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
 let localPlayerId: PlayerId = "player";
@@ -1488,6 +1490,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch() {
+  minimapPresentation.reset();
   combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
@@ -3335,7 +3338,12 @@ function draw() {
   drawAttackMovePreview();
   drawSpellPreview();
   drawSelectionBox();
-  drawMinimap(createMapPresentation(snapshot));
+  // LocalGameAdapter publishes a copied view and replaces its identity before
+  // every command/step. Public lockstep snapshots are fresh on every read and
+  // checkpoints may replace the world at the same tick, so they take the live
+  // path rather than inferring a publication from tick or collection lengths.
+  const localView = currentRoomId && deploymentRuntime.isLocalRoom(currentRoomId);
+  drawMinimap(minimapPresentation.read(snapshot, localView ? snapshot : undefined));
 }
 
 // The build mode's preview stands where the sim will lay the building (see snapToFootprint), on the cells it would take:
