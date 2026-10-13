@@ -1,14 +1,19 @@
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 import { ABILITY_DEFS, UNIT_DEFS, MERCENARY_UNIT_KINDS, unitMover } from '../../shared/catalog';
-import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
+import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { friendlyUnitsAtMercenaryCamp, hiredMercenaryCount, mercenaryRoleLimit } from '../policy/mercenary-model';
 import { neutralUnitsNear } from '../policy/snapshot';
 import { canSupply } from '../policy/world-model';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { distance } from '../policy/spatial';
-import { routeTravelTicks } from '../../shared/route-selection';
+import { nearestByRoute, routeTravelTicks } from '../../shared/route-selection';
+
+function courierHome(snapshot: GameSnapshot, owner: PlayerId, unit: Unit) {
+  return nearestByRoute(snapshot.map, snapshot.buildings.filter(building => building.owner === owner
+    && building.kind === 'townHall' && building.complete), unit, 'land');
+}
 
 function expeditionUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land' && unit.kind !== 'worker'
@@ -22,13 +27,13 @@ function activeCourier(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   if (task === undefined) return undefined;
   const unit = snapshot.units.find(unit => unit.id === task.unitId && unit.owner === owner);
   const camp = snapshot.mercenaryCamps.find(camp => camp.id === task.campId);
-  const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall' && building.complete);
-  if (!unit || unit.deck || unit.order.type === 'board' || !camp || !home
-    || distance(unit, home) <= V7_GATHERED_RANGE && (unit.order.type === 'idle'
+  if (!unit || unit.deck || unit.order.type === 'board' || !camp) return undefined;
+  const home = courierHome(snapshot, owner, unit);
+  if (!home || distance(unit, home) <= V7_GATHERED_RANGE && (unit.order.type === 'idle'
       || unit.order.type === 'move' && unit.order.x === home.x && unit.order.y === home.y)) {
     return undefined;
   }
-  return { unit, camp };
+  return { unit, camp, home };
 }
 
 function mercenaryTravelers(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -38,26 +43,32 @@ function mercenaryTravelers(snapshot: GameSnapshot, owner: PlayerId, options: Ai
 }
 
 export function campVisitors(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall' && building.complete);
-  if (!home) return [];
-  return mercenaryTravelers(snapshot, owner, options).flatMap(unit => snapshot.mercenaryCamps.flatMap(camp => {
-    const order = unit.order, traveling = order.type === 'move' && order.avoidCombat && order.x === camp.x && order.y === camp.y;
-    const atCamp = unitControlsMercenaryCamp(unit, camp);
-    return atCamp && distance(unit, home) > V7_GATHERED_RANGE && (traveling || order.type === 'idle' || order.type === 'hold') ? [{ unit, camp, home }] : [];
-  }));
+  return mercenaryTravelers(snapshot, owner, options).flatMap(unit => {
+    const home = courierHome(snapshot, owner, unit);
+    if (!home) return [];
+    return snapshot.mercenaryCamps.flatMap(camp => {
+      const order = unit.order, traveling = order.type === 'move' && order.avoidCombat && order.x === camp.x && order.y === camp.y;
+      const atCamp = unitControlsMercenaryCamp(unit, camp);
+      return atCamp && distance(unit, home) > V7_GATHERED_RANGE && (traveling || order.type === 'idle' || order.type === 'hold') ? [{ unit, camp, home }] : [];
+    });
+  });
 }
 export function returningMercenaries(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall' && building.complete);
-  if (!home) return [];
   const courier = activeCourier(snapshot, owner, options);
-  return mercenaryTravelers(snapshot, owner, options).filter(unit => {
+  const foes = courier ? armedFoes(snapshot, owner, options) : [];
+  const blockedTrip = courier !== undefined
+    && safeLandTravelTicks(snapshot, courier.unit, courier.camp, foes) === undefined
+    && safeLandTravelTicks(snapshot, courier.unit, courier.home, foes) !== undefined;
+  return mercenaryTravelers(snapshot, owner, options).flatMap(unit => {
+    const home = courierHome(snapshot, owner, unit);
+    if (!home) return [];
     const order = unit.order;
-    if (courier && unit.id === courier.unit.id && (unit.hp < unit.maxHp || courier.camp.stock === 0
+    if (courier && unit.id === courier.unit.id && (blockedTrip || unit.hp < unit.maxHp || courier.camp.stock === 0
       || hiredMercenaryCount(snapshot, owner, courier.camp.hireKind) >= mercenaryRoleLimit(courier.camp.hireKind, options)))
-      return distance(unit, home) > V7_GATHERED_RANGE;
+      return distance(unit, home) > V7_GATHERED_RANGE ? [{ unit, home }] : [];
     if (order.type === 'move' && order.avoidCombat && order.x === home.x && order.y === home.y)
-      return distance(unit, home) > V7_GATHERED_RANGE;
-    return snapshot.mercenaryCamps.some(camp => {
+      return distance(unit, home) > V7_GATHERED_RANGE ? [{ unit, home }] : [];
+    const returning = snapshot.mercenaryCamps.some(camp => {
       const traveling = order.type === 'move' && order.avoidCombat && order.x === camp.x && order.y === camp.y;
       const atCamp = unitControlsMercenaryCamp(unit, camp);
       const mercenary = (MERCENARY_UNIT_KINDS as readonly string[]).includes(unit.kind) && order.type === 'idle';
@@ -65,7 +76,8 @@ export function returningMercenaries(snapshot: GameSnapshot, owner: PlayerId, op
       return traveling && (finished || unit.hp < unit.maxHp) || mercenary && atCamp && distance(unit, home) > V7_GATHERED_RANGE
         || !mercenary && atCamp && (order.type === 'idle' || order.type === 'hold') && (finished || unit.hp < unit.maxHp) && distance(unit, home) > V7_GATHERED_RANGE;
     });
-  }).map(unit => ({ unit, home }));
+    return returning ? [{ unit, home }] : [];
+  });
 }
 export function mercenaryAssignment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const courier = activeCourier(snapshot, owner, options);
@@ -78,6 +90,7 @@ export function mercenaryAssignment(snapshot: GameSnapshot, owner: PlayerId, opt
   if (!camps.length) return [];
   const returning = new Set([...returningMercenaries(snapshot, owner, options).map(({ unit }) => unit.id), ...campVisitors(snapshot, owner, options).map(({ unit }) => unit.id)]);
   const own = expeditionUnits(snapshot, owner, options).filter(unit => unit.kind !== 'horseArcher' && !returning.has(unit.id)
+    && courierHome(snapshot, owner, unit) !== undefined
     && !UNIT_DEFS[unit.kind].abilities.some(ability => ['heal', 'summon'].includes(ABILITY_DEFS[ability].behavior))
     && unit.hp === unit.maxHp && unit.attackDamage > 0 && ['idle', 'move', 'attackMove', 'hold'].includes(unit.order.type));
   const foes = armedFoes(snapshot, owner, options);

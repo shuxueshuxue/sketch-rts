@@ -1,0 +1,129 @@
+{
+  "publicBase": "94249620c262ef29d70417e199f7a29055e3228f",
+  "runtimeDiff": "13\t3\tsrc/ai/bootstrap_1/expedition-recovery.ts\n1\t1\tsrc/ai/policy/naval.ts",
+  "serializedFieldsAdded": 0,
+  "normalCostsAndCadence": true,
+  "checks": {
+    "numTotalTests": 178,
+    "numPassedTests": 178,
+    "numFailedTests": 0,
+    "success": true
+  },
+  "same48NativeParentScenes": {
+    "numTotalTests": 48,
+    "numPassedTests": 24,
+    "numFailedTests": 24,
+    "success": false
+  },
+  "depletion": "5 normal miners extract the20gold mine through native stepping; no amount is assigned after scene creation",
+  "aboardSetup": "Native boardUnit uses real deck slots; pending boarding uses an actual board command",
+  "sameOfficialSoloWindow": {
+    "from": 20400,
+    "to": 21600,
+    "commonInput": "same20400 snapshot, ID counter and complete memory from an existing normal-resource solo trajectory",
+    "parent": {
+      "tick": 21600,
+      "gold": 139.81,
+      "workers": 12,
+      "halls": 2,
+      "workingHalls": 1,
+      "islandHalls": 1,
+      "permanentArmy": 29,
+      "remainingCreeps": 30,
+      "creepsKilled": 0,
+      "ownPermanentDeaths": 0
+    },
+    "candidate": {
+      "tick": 21600,
+      "gold": 123.57,
+      "workers": 12,
+      "halls": 2,
+      "workingHalls": 1,
+      "islandHalls": 1,
+      "permanentArmy": 29,
+      "remainingCreeps": 30,
+      "creepsKilled": 0,
+      "ownPermanentDeaths": 0
+    },
+    "originalWorkers": {
+      "parent": [
+        {
+          "id": "unit-p0-worker-1",
+          "x": 5473.215187360743,
+          "y": 7817.944537957469,
+          "deck": {
+            "shipId": "unit-p0-transport-1078",
+            "x": -45.44000000000001,
+            "y": -28.800000000000004
+          },
+          "order": {
+            "type": "idle"
+          },
+          "hp": 70,
+          "maxHp": 70
+        },
+        {
+          "id": "unit-p0-worker-2",
+          "x": 5487.357322984474,
+          "y": 7789.660266710008,
+          "deck": {
+            "shipId": "unit-p0-transport-1078",
+            "x": -35.44000000000001,
+            "y": 1.1999999999999957
+          },
+          "order": {
+            "type": "idle"
+          },
+          "hp": 70,
+          "maxHp": 70
+        }
+      ],
+      "candidate": [
+        {
+          "id": "unit-p0-worker-1",
+          "x": 5392,
+          "y": 8784,
+          "deck": null,
+          "order": {
+            "type": "idle"
+          },
+          "hp": 70,
+          "maxHp": 70
+        },
+        {
+          "id": "unit-p0-worker-2",
+          "x": 5372,
+          "y": 8756,
+          "deck": null,
+          "order": {
+            "type": "idle"
+          },
+          "hp": 70,
+          "maxHp": 70
+        }
+      ]
+    },
+    "incomeGainClaimed": false
+  },
+  "formal1620": "not run on this candidate",
+  "untouchedSeeds": "not run",
+  "artifacts": {
+    "/tmp/bootstrap_1-depleted-ferry-release-sdk.json": "772bd8612e593ca4837013a0770f0eb946e65dd59a8acc472cf7664b0a6e6587",
+    "/tmp/bootstrap_1-depleted-ferry-parent-sdk.json": "82269467b8b8bc39398891d3477e0369598947ccafcdd6006a6259635dac021c",
+    "/tmp/bootstrap_1-solo-sapphire-colony-capital-parent-completion.json": "df44e7a550727d8074bdad7d81d07dc3f9828afbfd3d3b5a23694b89cf714662",
+    "/tmp/bootstrap_1-depleted-ferry-parent-window.json": "98489c034ea12d2d8fd935b6ad34719625ebdabfaa86b8971008c0ccbe718b96",
+    "/tmp/bootstrap_1-depleted-ferry-candidate-window.json": "899d3c310091b7597cf4a705892f3ff45782b54db312b1f6c69947a06781deca",
+    "/tmp/bootstrap_1-depleted-ferry-boundaries.json": "fb7e7b3158c4f564f79dfa1cdde4c70e01c3d0a90049de13f846a4804294a02e",
+    "/tmp/bootstrap_1-depleted-ferry-build.log": "c75a0560e17669245bb957fbac89687a1fab5bd2f296592ada3a82fa74495159"
+  },
+  "runtimeSha256": {
+    "src/ai/bootstrap_1/expedition-recovery.ts": "36927caff8764bfb627c3e56c24c8a743158d495ce15b77f85915601ddd6f4d9",
+    "src/ai/policy/naval.ts": "977bd8625f78b802367df7dbf85e6b892fe61fd65846441720b1bf6930e684a5"
+  },
+  "productionBuild": "Node20; exit0",
+  "packageBoundaries": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0
+  }
+}

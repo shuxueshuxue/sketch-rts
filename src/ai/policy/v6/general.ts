@@ -132,6 +132,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!isV6Policy(options)) return [];
   return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), {
     reinforcements: "rally", expansionBasis: "halls", pursue: () => true,
+    reserveExpansion: true,
     recovery: (wounded, point) => retreatV6Front(snapshot, owner, wounded, point, options),
     gatherAssault: true,
     chooseCamp: chooseV7Camp,
@@ -164,6 +165,7 @@ export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext
 type ArmyPlan = {
   reinforcements: "rally" | "siege";
   expansionBasis: "halls" | "mines";
+  reserveExpansion: boolean;
   pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
   recovery: (wounded: Unit[], point: Point) => GameCommand[];
   gatherAssault: boolean;
@@ -233,7 +235,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...recovery(wounded, intel.home)];
   }
   // Keep the screen at a rising expansion; another camp must not take it away before the hall can stand.
-  if ((miningFirst || constructing) && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
+  if ((constructing || miningFirst && plan.reserveExpansion) && escort) return order(snapshot, owner, memory, "hold", front, escort, options);
 
   // @@@v9-pursue - Intruders V9 has beaten are chased while they run, with the field edge it defends with, until they are
   // back by their own halls: V7's five summoners, their footmen dead, walked home from V9's natural and sent their spirits
@@ -684,10 +686,14 @@ function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
 }
 
 // Gather out of reach until most casters can summon (or the wait runs out), then strike; a new attack gathers again.
+export function v6AssaultStagePoint(target: Point, center: Point): Point {
+  return toward(target, center, STAGE_DISTANCE);
+}
+
 function pulseStage(snapshot: GameSnapshot, memory: V6PolicyMemory, group: Unit[], marching: Unit[], target: V6BaseIntel) {
   const current = memory.general?.mode === "attack" && memory.general.targetHallId === target.hall.id ? memory.general : undefined;
   const center = marching.length > 0 ? averagePoint(marching) : target.hall;
-  const point = toward(target.hall, center, STAGE_DISTANCE);
+  const point = v6AssaultStagePoint(target.hall, center);
   if (current?.stage === "strike") return { stage: "strike" as const, since: current.stageSince ?? snapshot.tick, point };
   const since = current?.stage === "gather" ? (current.stageSince ?? snapshot.tick) : snapshot.tick;
   const casters = group.filter(isSummoner);

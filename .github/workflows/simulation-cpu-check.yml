@@ -3,6 +3,7 @@ name: Simulation CPU Check
 on:
   pull_request:
     paths:
+      - docs/**
       - src/shared/**
       - src/ai/**
       - src/sdk/**
@@ -30,8 +31,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      - name: Test mining upkeep, cent settlement and presentation
-        run: npx vitest run src/ai/bootstrap_1/summoner-composition.test.ts src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
+      - name: Test release boundaries, mining upkeep and presentation
+        run: npx vitest run src/sdk/package-boundaries.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
       - name: Test empty-frame allocation and veteran transitions
         run: npx vitest run src/shared/sim/veteran-frame-gates.test.ts src/shared/veteran-integration.test.ts src/shared/veteran-runtime.test.ts src/shared/veteran-skills.test.ts src/shared/veteran-balance.test.ts src/shared/sim/veteran-command.test.ts src/shared/sim/command-frame-runtime.test.ts src/sdk/commands/frame.test.ts src/shared/sim/grounded-frame.test.ts src/shared/sim/grounded-combat-frame.test.ts src/shared/replay.test.ts src/shared/savegame.test.ts src/shared/sim/projectile-frame.test.ts src/shared/projectile-contact.test.ts src/shared/damage-integration.test.ts src/shared/sim/spatial-index.test.ts src/shared/sim/spatial-metadata-transfer.test.ts src/shared/sim/unit-separation.test.ts src/shared/ship-motion.test.ts src/shared/ship-collisions.test.ts src/shared/ship-cabin-movement-frame.test.ts src/shared/sim/team-spatial-index.test.ts
       - name: Test colony care, guardian coverage and ferry reuse
@@ -52,7 +53,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts src/ai/bootstrap_1/expansion-road-threat.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts src/ai/bootstrap_1/long-haul-investment.test.ts
 
       - name: Verify camp reinforcements and unsupported caster micro
-        run: npx vitest run src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
+        run: npx vitest run src/ai/bootstrap_1/summoner-staging.test.ts src/ai/bootstrap_1/summoner-support-reach.test.ts src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
 
       - name: Verify assault camp detours and closed roads
         run: npx vitest run src/ai/bootstrap_1/assault-camp-roads.test.ts src/ai/bootstrap_1/assault-camp-blocked.test.ts src/ai/bootstrap_1/assault-cohesion.test.ts
@@ -84,11 +85,17 @@ jobs:
       - name: Verify independent riders use admitted roads and parallel objectives
         run: npx vitest run src/ai/bootstrap_1/mounted-global-field.test.ts src/ai/bootstrap_1/threat-roads.test.ts src/ai/bootstrap_1/mounted-detour-recruitment.test.ts src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
 
+      - name: Verify depleted mining transfers and retained boarding ownership
+        run: npx vitest run src/ai/bootstrap_1/depleted-ferry-target.test.ts src/ai/bootstrap_1/ferry-preparation.test.ts src/ai/bootstrap_1/transport-recovery.test.ts src/ai/bootstrap_1/rider-crossing.test.ts
+
       - name: Verify landed riders retain zero-loss camp completion
         run: npx vitest run src/ai/bootstrap_1/mounted-expedition.test.ts --testNamePattern=v9_knight
 
       - name: Verify mobile patients and existing care ownership
         run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/care-road-progress.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts src/ai/bootstrap_1/front-post-continuity.test.ts src/ai/bootstrap_1/expedition-recovery.test.ts
+
+      - name: Verify mercenary trip roads and retained purchasing ownership
+        run: npx vitest run src/ai/bootstrap_1/island-mercenary-return.test.ts src/ai/bootstrap_1/mercenary-trip-roads.test.ts src/ai/bootstrap_1/mercenary-control.test.ts src/ai/bootstrap_1/mercenary-goals.test.ts src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
@@ -103,10 +110,13 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/summoned-raids.test.ts src/ai/bootstrap_1/tower-rush.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/clinic-army-availability.test.ts
 
       - name: Verify ready free income before guarded mines
-        run: npx vitest run src/ai/bootstrap_1/free-income-capital.test.ts src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
+        run: npx vitest run src/ai/bootstrap_1/landed-colony-capital.test.ts src/ai/bootstrap_1/free-income-capital.test.ts src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
 
       - name: Verify active mining jobs and transported worker credits
         run: npx vitest run src/ai/bootstrap_1/active-mining-jobs.test.ts src/ai/bootstrap_1/workforce.test.ts src/ai/bootstrap_1/transported-workforce.test.ts src/ai/bootstrap_1/island-workforce.test.ts
+
+      - name: Verify funded expansion escort and retained construction cover
+        run: npx vitest run src/ai/bootstrap_1/funded-expansion-escort.test.ts src/ai/bootstrap_1/mining-job-defense.test.ts src/ai/bootstrap_1/expansion-construction-escort.test.ts
 
       - name: Verify paid mounted field fights and retained camp and mining control
         run: npx vitest run src/ai/bootstrap_1/mounted-field-recruitment.test.ts src/ai/bootstrap_1/mounted-field.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts

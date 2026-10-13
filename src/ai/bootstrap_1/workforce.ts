@@ -9,6 +9,7 @@ import type { TeamPolicyOptions } from '../policy/ownership';
 import type { Point } from '../policy/spatial';
 import { towerRushConstructionCrew } from './tower-rush';
 import { longHaulInvestment } from './long-haul-investment';
+import { miningJobOrder } from './mining-jobs';
 
 /** Fill a mining base while it rises, before competing army and technology purchases. */
 export const miningWorkforce: AiScript = {
@@ -56,7 +57,7 @@ function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructio
   const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker');
   const queued = halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
   const outlying = snapshot.resources.filter(mine => mine.amount > 0
-    && workers.some(worker => worker.order.type === 'mine' && worker.order.resourceId === mine.id)
+    && workers.some(worker => miningJobOrder(worker)?.resourceId === mine.id)
     && !mining.some(hall => Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange)
     && !mineClaimedByAlly(snapshot, owner, mine, options));
   const origins: Point[] = [...mining, ...outlying];

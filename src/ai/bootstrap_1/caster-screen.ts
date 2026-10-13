@@ -5,7 +5,7 @@ import { units } from '../policy/snapshot';
 import type { AiPolicyContext } from '../policy/types';
 import { isBacklineKind, planCasterScreen, v6CasterPost } from '../policy/v6/backline';
 import { v6Memory } from '../policy/v6/memory';
-import { isV9Policy } from '../policy/versions';
+import { isV8Policy, isV9Policy } from '../policy/versions';
 import { mainBase } from '../policy/world-model';
 import { armedFoes } from './safe-land-route';
 import { mountedMicro, mountedTargetOrder, mountedThreatReach, THINK_TICKS } from './mounted-micro';
@@ -27,5 +27,5 @@ export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, option
 export function planBootstrapCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = mainBase(snapshot, owner), front = units(snapshot, owner).filter(unit => unit.kind !== 'worker' && !isBacklineKind(unit));
   return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front,
-    isV9Policy(options), casterMeleeMicro(snapshot, owner, options));
+    units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), casterMeleeMicro(snapshot, owner, options));
 }
