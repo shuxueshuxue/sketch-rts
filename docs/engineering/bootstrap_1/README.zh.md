@@ -2,7 +2,9 @@
 
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
-最新已验证线上版本为 #355 `19f53beda1bb8bc395d106e184ffa4a10517cd4a`，[精灵独立矿线任务](./summoned-mining-raids.zh.md) 的 184 项本地 SDK 检查、构建、首次 CI `38326816477` 与首次生产 `38327269372` 通过；五个发布步骤和精确版本标签均核验。[发布证明](./summoned-mining-raids-release.receipt.json)。十二个受控真实击杀场景保住宿主、零金币支出；真实残局仍未取得工人击杀或胜利，完整验收继续等待。
+最新已验证线上版本为 #357 `88273fc8e96c66b0f8d14091d97d021f9e6dbfc8`，[单基地自然矿顺序修正](./opening-mine-authority.zh.md) 的 465 项本地 SDK 检查、完整构建、首次 CI `38330318626` 与首次生产 `38331260163` 通过。五个发布步骤和精确版本标签均核验。[发布证明](./opening-mine-authority-release.receipt.json)。十二个原自然矿断言逐字保留，保留后续可建设空矿优先；#356 首次失败没有重跑，现由 #357 修复并部署。完整 1620 格与未见种子尚未验收。
+
+此前已验证线上版本为 #355 `19f53beda1bb8bc395d106e184ffa4a10517cd4a`，[精灵独立矿线任务](./summoned-mining-raids.zh.md) 的 184 项本地 SDK 检查、构建、首次 CI `38326816477` 与首次生产 `38327269372` 通过；五个发布步骤和精确版本标签均核验。[发布证明](./summoned-mining-raids-release.receipt.json)。十二个受控真实击杀场景保住宿主、零金币支出；真实残局仍未取得工人击杀或胜利，完整验收继续等待。
 
 可建设空矿 #356 已合并 `3a4b02d3eeb9ba74eebc14742320b35fdbdf6b34`，214 项本地 SDK、构建和首次 CI `38328110585` 通过，但首次生产 `38328690091` 在原自然矿开局的 12 项检查失败。上传、构建和发布步骤均跳过；线上与 production-latest 仍为已验证 #355，没有重跑这次失败。正在修正单基地附近自然矿与后续自由扩张的顺序，[失败证明](./ready-free-mines-first-release-failure.receipt.json)。
 
