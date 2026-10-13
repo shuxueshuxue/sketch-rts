@@ -13,7 +13,7 @@
     "scope": "Visibility graph uses corners of attack disks obstructing the native route and their connected disk component; every returned edge is admitted against all disks. It does not prove global optimality or completeness."
   },
   "runtimeHashes": {
-    "src/ai/bootstrap_1/mounted-tasks.ts": "1dbcdff2e6e6d8b8ae8b53bdc1ab335f39cd890e1bc6da330e717e2989b7a96d",
+    "src/ai/bootstrap_1/mounted-tasks.ts": "b62d98949eccdf8f7a97c2e5291a56f4a0a15892cd6077c20040581867150359",
     "src/ai/bootstrap_1/threat-roads.ts": "b7d9169d067198cd4f21a2a36ddc8599fde298119675da6c5e4114aacfa1031b"
   },
   "focusedSdk": {
@@ -47,5 +47,18 @@
     "knightStoredStates": "At 6000,12000,18000,24000 the unchanged old defeat snapshots still request no mounted reinforcement. Read-only diagnosis, not a replay victory.",
     "performance": "Edges and goals are cached; corner graph restricted to the obstruction component. No before/after whole-game CPU improvement is claimed. Exact-head CI retains existing CPU duel budget.",
     "matrix": "No new full matrix and no held-out seeds run."
+  },
+  "ownershipSdk": {
+    "passed": 79,
+    "failed": 0,
+    "suites": 6,
+    "sha256": "c62f71bd3b97d7752b6adabb1626d499601c78edccde19f1c9ca90f653304c50"
+  },
+  "firstHeadCiFailure": {
+    "head": "1dddbe7d279634abfebec2455723315509d57a91",
+    "run": 38358736252,
+    "attempt": 1,
+    "failure": "Two original archer-task-scope checks receive mountedTasks instead of mountedField because a newly reachable raid takes a pursued free rider; a camp member is also incorrectly claimed. Health/loss assertions pass.",
+    "correction": "Exclude actual assigned camp members from available riders; do not start a new sortie for a rider pursued by a nearby enemy. Original test assertions unchanged. No rerun of failed head."
   }
 }

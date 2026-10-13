@@ -74,6 +74,7 @@ export function nextMountedCamp(snapshot: GameSnapshot, rider: Unit, camps: read
 export function availableMountedRiders(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
     && unit.id !== options.memory.shopping?.unitId
+    && !options.memory.v6?.creep?.group.includes(unit.id)
     && !['board', 'cast', 'charge'].includes(unit.order.type)
     && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
 }
@@ -100,7 +101,9 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
   // Health gates a new sortie; an injured rider keeps its current fight until recovery takes command.
-  let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id));
+  let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id)
+    && !defenders.some(foe => distance(foe, unit) < THREAT_RANGE
+      && (foe.order.type === 'attack' || foe.order.type === 'attackMove') && foe.order.targetId === unit.id));
   for (const raid of active.filter(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3)) {
     const lead = byId.get(raid.unitIds[0]!)!;
     const recruits = riders.filter(unit => sameGround(snapshot.map, lead, unit)).slice(0, 3 - raid.unitIds.length);
