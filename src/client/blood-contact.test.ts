@@ -8,6 +8,24 @@ import {localToWorld,shipProfile} from '../shared/ship-geometry';
 const scene=()=>{const g=createGame('bareDuel',{aiPlayers:[]});g.units=[];return{g,near:g.spawnUnit('player','footman',122,100),far:g.spawnUnit('enemy','footman',400,100)};};
 const hit:WorldEffect={id:'spray',type:'hit',x:100,y:100,duration:14,remaining:14,unitId:'victim',damage:100,targetKind:'footman',targetHpAfter:0,targetMaxHp:180,targetRadius:18,targetUnitClass:'nonMechanical',fromX:50,fromY:100};
 describe('blood surface transfer',()=>{
+ it('lets neighboring blood pass through a spirit while preserving a physical receiver at the same location',()=>{
+  const {g,near}=scene(),spirit=g.spawnUnit('enemy','spirit',near.x,near.y);
+  g.units=[spirit,near];const resolved:string[]=[];
+  const surface:BloodSurfaceResolver=unit=>{resolved.push(unit.id);return{facing:1,floor:0,weapon:{key:unit.id,segments:[{a:[0,-30],b:[20,-30],width:2}]}};};
+  const contacts=new BloodContacts(g.units,surface,0);
+  const result=contacts.contact({x:100,y:100,z:34},{x:140,y:100,z:34},1,'victim',new Set());
+  expect(result?.unit.id).toBe(near.id);expect(resolved).not.toContain(spirit.id);
+  const isolated=new BloodContacts([spirit],surface,0);
+  expect(isolated.contact({x:100,y:100,z:34},{x:140,y:100,z:34},1,'victim',new Set())).toBeUndefined();
+  expect(resolved).not.toContain(spirit.id);
+  const before=JSON.stringify(g.units),tracker=new CombatPresentationTracker();let stained=false;
+  for(let tick=0;tick<=190;tick++){
+   tracker.update({tick,units:g.units,effects:tick===0?[hit]:[]},tick*50,surface);
+   const frame=tracker.frame(tick*50);stained||=frame.body.some(mark=>mark.unitId===near.id);
+   expect(frame.body.some(mark=>mark.unitId===spirit.id),`spirit transfer at ${tick}`).toBe(false);
+  }
+  expect(stained).toBe(true);expect(resolved).not.toContain(spirit.id);expect(JSON.stringify(g.units)).toBe(before);
+ });
  it('sweeps real flight paths into nearby bodies, excluding depth-separated or distant people',()=>{
   const {g,near,far}=scene(),contacts=new BloodContacts(g.units,undefined,0);
   const contact=contacts.contact({x:100,y:100,z:34},{x:140,y:100,z:34},1,'victim',new Set());

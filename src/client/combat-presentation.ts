@@ -27,10 +27,12 @@ const LIFE=9;
 const BODY_LIFE=6;
 export const COMBAT_PRESENTATION_LIMITS=Object.freeze({ bursts:48, residueBursts:96, dropletsPerBurst:10, speedLines:128, seenEvents:2048, transferredMarks:192 });
 
-/** Non-mechanical targets bleed only on a lethal or genuinely close-to-lethal
- * hit. Missing old-save metadata is not guessed from a later live unit. */
+/** Physical non-mechanical targets bleed only on a lethal or genuinely close-
+ * to-lethal hit. Spirits have no blood; their combat class remains unchanged.
+ * Missing old-save metadata is not guessed from a later live unit. */
 export function isBloodHit(effect:WorldEffect):boolean {
   return effect.type==='hit' && effect.targetUnitClass==='nonMechanical' && !!effect.targetKind
+    && effect.targetKind!=='spirit'
     && Number.isFinite(effect.damage) && effect.damage!>0
     && Number.isFinite(effect.targetHpAfter) && effect.targetHpAfter!<=effect.damage!*2
     && Number.isFinite(effect.targetMaxHp) && effect.targetMaxHp!>0;
