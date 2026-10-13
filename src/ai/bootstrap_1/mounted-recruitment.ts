@@ -11,9 +11,10 @@ import type { V6Want } from '../policy/v6/doctrine';
 import { neutralCamps } from '../policy/v7/creep';
 import { nextMountedCamp, nextMountedRaid } from './mounted-tasks';
 import { mountedThreatReach } from './mounted-micro';
+import { mountedFieldTargets } from './mounted-field';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 
-/** Fund one independent scout only when an existing factory can serve a safe camp or exposed mining line. */
+/** Fund one independent scout when its real factory exit can serve an admitted sortie. */
 export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Want[] {
   if (snapshot.players[owner]!.race !== 'grove' || activeMiningBaseCount(snapshot, owner) < 2) return [];
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.expiresTick === undefined);
@@ -36,6 +37,10 @@ export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, opti
     if (!spawn) continue;
     Object.assign(probe, spawn);
     if (nextMountedRaid(snapshot, owner, probe, towers, defenders, options)) return [{ unit: 'horseArcher', count: 1, priority: 59 }];
+    if (mountedFieldTargets(snapshot, owner, probe, new Set(), options).some(target => target.speed < probe.speed
+      && mountedThreatReach(snapshot, target, probe, probe.attackCooldown) < probe.attackRange)) {
+      return [{ unit: 'horseArcher', count: 1, priority: 59 }];
+    }
     const camp = nextMountedCamp(snapshot, probe, camps, occupied);
     if (!camp || options.memory.v6?.creep && distance(options.memory.v6.creep.center, camp.center) <= options.memory.v6.creep.reach) continue;
     if (!snapshot.resources.some(mine => mine.amount > 0 && distance(mine, camp.center) <= GOLD_MINE_RULES.baseRange

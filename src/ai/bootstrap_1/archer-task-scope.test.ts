@@ -39,9 +39,10 @@ it.each((['archer', 'sparkArcher', 'horseArcher'] as const).flatMap(kind =>
     for (let tick = 0; tick < 15; tick++) stepGame(game);
     const diagnostic = JSON.stringify({ entries, free: { x: free.x, y: free.y, hp: free.hp, order: free.order }, creep: memory.v6.creep });
     expect(free.hp, diagnostic).toBe(startingHp);
-    expect(entries.some(entry => entry.scriptId === 'skirmishPreservation' && 'unitIds' in entry.command
+    const micro = kind === 'horseArcher' ? 'mountedField' : 'skirmishPreservation';
+    expect(entries.some(entry => entry.scriptId === micro && 'unitIds' in entry.command
       && entry.command.unitIds.includes('free')), diagnostic).toBe(true);
-    expect(entries.some(entry => entry.scriptId === 'skirmishPreservation' && 'unitIds' in entry.command
+    expect(entries.some(entry => entry.scriptId === micro && 'unitIds' in entry.command
       && entry.command.unitIds.includes('camp-shooter')), diagnostic).toBe(false);
     expect(memory.v6.creep!.group).toContain('camp-shooter');
     expect(memory.v6.creep!.group).not.toContain('free');
