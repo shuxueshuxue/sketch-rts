@@ -323,3 +323,53 @@ it.each([-1,.5,NaN,8])('rejects invalid resident mip %s before painting or alloc
  expect(()=>cards.add('invalid',4,painter,matrix,'invalid',17,ART_ACTION_SIZE,1,baseMip)).toThrow('Invalid painted card resident mip');
  expect(painter).not.toHaveBeenCalled();expect(renderer.initTexture).not.toHaveBeenCalled();expect(cards.stats().pages).toBe(0);cards.dispose();
 });
+
+function fullWarmBudget(cards:PaintedCardBatches){
+ for(let i=0;i<48;i++)cards.add(`budget:${i}`,4,paint,matrix,`budget:${i}`,17,128);
+}
+
+it.each([1,2])('allocates only %i needed layers for a new over-budget resident size while protecting all visible warm cards',count=>{
+ const {cards}=setup();cards.begin();fullWarmBudget(cards);cards.finish(renderer);expect(cards.stats().pixels).toBe(12*1024*1024);
+ cards.begin();fullWarmBudget(cards);for(let i=0;i<count;i++)cards.add(`new:${i}`,4,paint,matrix,`new:${i}`,17,176,1,1);cards.finish(renderer);
+ const page=cards.objects().find(mesh=>mesh.userData.ids.includes('new:0'))!,texture=(page.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
+ expect(texture.image).toMatchObject({width:352,height:352,depth:count});expect(cards.stats()).toMatchObject({cards:48+count,rasterizations:48+count});
+ expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(48+count);cards.dispose();
+});
+
+it('sizes over-budget pages by unique finest demands sharing resident bins, including different original source sizes',()=>{
+ const {cards}=setup();cards.begin();fullWarmBudget(cards);cards.finish(renderer);
+ cards.begin();fullWarmBudget(cards);
+ for(const [key,density,tileSize,baseMip] of [['native256',2,128,0],['source512',4,128,1],['source704-a',4,176,1],['source704-b',4,176,1],['source640-a',4,160,1],['source640-b',4,160,1]] as const){
+  cards.add(key,density,paint,matrix,`${key}:a`,17,tileSize,1,baseMip);cards.add(key,density,paint,matrix,`${key}:b`,17,tileSize,1,baseMip+1);
+ }
+ cards.finish(renderer);
+ const textures=cards.objects().map(mesh=>(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture);
+ for(const width of [256,320,352])expect(textures.filter(texture=>texture.image.width===width).map(texture=>texture.image.depth)).toEqual([2]);
+ expect(cards.stats()).toMatchObject({cards:54,rasterizations:54,mipLayerUpdates:54});expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(60);
+ const shared=cards.objects().find(mesh=>mesh.userData.ids.includes('native256:a'))!;expect(shared.userData.ids).toEqual(['native256:a','native256:b','source512:a','source512:b']);cards.dispose();
+});
+
+it('counts duplicate pending tiers only once at their finest resident size above budget',()=>{
+ const {cards}=setup();cards.begin();fullWarmBudget(cards);cards.finish(renderer);cards.begin();fullWarmBudget(cards);
+ cards.add('same',4,paint,matrix,'coarse-first',17,176,1,1);cards.add('same',4,paint,matrix,'fine-later',17,176,1,0);cards.add('same',4,paint,matrix,'coarse-last',17,176,1,1);cards.finish(renderer);
+ const page=cards.objects().find(mesh=>mesh.userData.ids.includes('fine-later'))!,texture=(page.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
+ expect(texture.image).toMatchObject({width:704,height:704,depth:1});expect(page.userData.ids).toEqual(['coarse-first','fine-later','coarse-last']);expect(cards.stats()).toMatchObject({cards:49,rasterizations:49,mipLayerUpdates:49});cards.dispose();
+});
+
+it('uses one over-budget empty layer without consuming the pending native sixteen-pixel mip bin',()=>{
+ const {cards}=setup();cards.begin();fullWarmBudget(cards);cards.finish(renderer);cards.begin();fullWarmBudget(cards);
+ cards.add('empty704',4,()=>{},matrix,'empty',17,176,1,1);
+ cards.add('native16-a',2,paint,matrix,'native-a',17,128,1,4);cards.add('native16-b',2,paint,matrix,'native-b',17,128,1,4);cards.finish(renderer);
+ const empty=cards.objects().find(mesh=>mesh.userData.ids.includes('empty'))!,native=cards.objects().find(mesh=>mesh.userData.ids.includes('native-a'))!;
+ expect(((empty.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.depth).toBe(1);
+ expect(((native.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.depth).toBe(2);expect(native.userData.ids).toEqual(['native-a','native-b']);
+ expect(empty.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);expect(native.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);cards.dispose();
+});
+
+it('keeps normal sixteen-layer warm batching below budget for tiny and empty request sets',()=>{
+ const {cards}=setup();cards.begin();cards.add('small',4,paint,matrix,'small',17,128,1,1);cards.finish(renderer);
+ expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.depth).toBe(16);cards.dispose();
+ const empty=setup();empty.cards.begin();for(let i=0;i<32;i++)empty.cards.add(`empty:${i}`,4,()=>{},matrix,`${i}`,17,128,1,1);empty.cards.finish(renderer);
+ expect(empty.cards.stats()).toMatchObject({pages:2,cards:32});expect(empty.cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(32);
+ for(const mesh of empty.cards.objects())expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);empty.cards.dispose();
+});

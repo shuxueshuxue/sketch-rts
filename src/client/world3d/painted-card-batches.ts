@@ -72,7 +72,7 @@ export class PaintedCardBatches {
     const page:Page={texture,uploaded:false,cards:new Array(layers),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],orders:[],used:this.frame};
     this.pages.push(page);this.allocatedPixels+=width*height*layers;return page;
   }
-  private slot(width:number,height:number){
+  private slot(width:number,height:number,pendingLayers:number,empty=false){
     let oldest:Card|undefined;
     for(const page of this.pages){
       if(page.texture.image.width!==width||page.texture.image.height!==height)continue;
@@ -89,7 +89,10 @@ export class PaintedCardBatches {
     // a second sixteen-layer page crosses the 12MP budget and immediately
     // discards the first page. Use the remaining capacity as a smaller tail.
     // If all layers are visible, the required working set may exceed budget.
-    const layers=remainingLayers>0?Math.min(LAYERS,remainingLayers):LAYERS;
+    // Above the warm-cache budget, allocate only this frame's remaining
+    // unique demands for the bin. A new mip size may need just one or two
+    // layers; reserving sixteen can cost more than retaining the full chain.
+    const layers=remainingLayers>0?Math.min(LAYERS,remainingLayers):Math.min(empty?1:LAYERS,Math.max(1,pendingLayers));
     return{page:this.createPage(width,height,layers),layer:0};
   }
   add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){
@@ -135,7 +138,7 @@ export class PaintedCardBatches {
     // Mutate these arrays in place: mesh.userData.ids retains their identity.
     reorder(destination.ids);reorder(destination.entries);reorder(destination.matrices);reorder(destination.feet);reorder(destination.opacities);reorder(destination.orders);
   }
-  private raster({key,density,paint,matrix,id,foot,tileSize,opacity}:Request,renderer:CardTextureRenderer,baseMip:number){
+  private raster({key,density,paint,matrix,id,foot,tileSize,opacity}:Request,renderer:CardTextureRenderer,baseMip:number,pendingLayers:Map<number,number>){
     let card=this.cards.get(key);
     if(!card||card.baseMip>baseMip){
       const previous=card;
@@ -171,7 +174,7 @@ export class PaintedCardBatches {
         // rewrites transparent rows just to flip them a second time.
         if(!fromCache)this.rasterCache.put(key,rgba,size,size,paintMs);
         const slotStart=performance.now();this.rasterStages.cacheMs+=slotStart-flippedAt;
-        const {page,layer}=this.slot(retainedSize,retainedSize);this.recordPeaks();
+        const {page,layer}=this.slot(retainedSize,retainedSize,pendingLayers.get(retainedSize)??1,!painted);this.recordPeaks();
         this.rasterStages.slotMs+=performance.now()-slotStart;
         this.rasterWorkWallMs+=performance.now()-start;
         if(!painted&&this.emptyRgba.length===0)this.emptyRgba=new Uint8Array(16*16*4);
@@ -179,6 +182,10 @@ export class PaintedCardBatches {
         card={key,page,layer,used:this.frame,tileSize,sourceSize,baseMip:residentMip,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;
         if(previous){this.rebind(previous,card);previous.page.cards[previous.layer]=undefined;this.maskBytes-=previous.mask.byteLength;}
         this.rasterizations++;
+        // Empty drawings use a separate minimum domain. Consume the original
+        // planned demand once, rather than another request's 16px bin count.
+        const plannedSize=size/2**baseMip;
+        pendingLayers.set(plannedSize,Math.max(0,(pendingLayers.get(plannedSize)??1)-1));
       }finally{this.pendingRgbaBytes=this.pendingMaskBytes=0;}
     }
     this.instance(card,matrix,id,foot,opacity);
@@ -252,9 +259,16 @@ export class PaintedCardBatches {
   /** Complete the frame in one streaming pass. Callers provide the public GPU
    * transfer contract, including CPU-only tests. No render may precede finish. */
   finish(renderer:CardTextureRenderer){
-    const finest=new Map<string,number>();
-    for(const request of this.pending)finest.set(request.key,Math.min(finest.get(request.key)??request.baseMip,request.baseMip));
-    try{for(const request of this.pending)this.raster(request,renderer,finest.get(request.key)!);}finally{this.pending.length=0;}
+    const finest=new Map<string,{baseMip:number;size:number}>(),pendingLayers=new Map<number,number>();
+    for(const request of this.pending){
+      const previous=finest.get(request.key);
+      if(!previous||request.baseMip<previous.baseMip)finest.set(request.key,{baseMip:request.baseMip,size:request.tileSize*request.density/2**request.baseMip});
+    }
+    for(const [key,request] of finest){
+      const card=this.cards.get(key);if(card&&card.baseMip<=request.baseMip)continue;
+      pendingLayers.set(request.size,(pendingLayers.get(request.size)??0)+1);
+    }
+    try{for(const request of this.pending)this.raster(request,renderer,finest.get(request.key)!.baseMip,pendingLayers);}finally{this.pending.length=0;}
     this.compact(renderer);
     for(const page of [...this.pages]){
       const count=page.ids.length;
