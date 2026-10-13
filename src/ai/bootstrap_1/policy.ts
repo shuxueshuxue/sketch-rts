@@ -12,6 +12,7 @@ import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
 import { mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
+import { miningJobSafety } from './mining-job-defense';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
@@ -117,7 +118,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
         const recovering = expeditionRecoveryUnitIds(snapshot, owner, options);
         return navalUnitIds(snapshot, owner, options, unit => !riders.has(unit.id) || recovering.has(unit.id));
       },
-    }, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
+    }, miningJobSafety, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
   });
 }
 

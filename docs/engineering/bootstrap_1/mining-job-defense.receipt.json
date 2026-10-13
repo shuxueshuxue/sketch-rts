@@ -1,0 +1,64 @@
+{
+  "name": "mining-job-defense",
+  "base": "a644ae04c09829233ebd5885721f269440050da2",
+  "runtimeFiles": 7,
+  "newSerializedAiFields": 0,
+  "newSaveFields": 0,
+  "newCompatibilityOrDefaultDataPaths": 0,
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mine-defense.ts": "e3abf1f82087ff541715e053af11d08cf234ee4cfaaabdb69ef46402726056d4",
+    "src/ai/bootstrap_1/policy.ts": "7c7e15530346972192030cd877780d1c4e506da5e074605abe1dd294ad22f7da",
+    "src/ai/bootstrap_1/safe-land-route.ts": "4176c1fdfcaf353337b2bf2a3fc8f48c397610a644c87db1836a35f5ec040198",
+    "src/ai/bootstrap_1/workforce.ts": "b82973df09a5374a022fb64db453d6142a72866e368b5329752010bfc2415b08",
+    "src/ai/policy/v6/general.ts": "dd8c445d1a99e09ceda42cac50eccd5c55e1f7e065ac4509c022251b0ae076f1",
+    "src/ai/bootstrap_1/mining-job-defense.ts": "287a70c9a65214ca33d6e5cbe0563510dc0d973d1d8fdb8d053f0af0fe3a6a3b",
+    "src/ai/bootstrap_1/mining-jobs.ts": "b4f131ee2bc0a62cd1b58375700cc4c56702f4fc86a62c35e746eaf86065981e"
+  },
+  "sdk": {
+    "total": 366,
+    "passed": 366,
+    "failed": 0,
+    "reportSha256": "3b031449cb3e0a1c6388aca0904892a044504c086d1116d6d81bc67e0c56dd7c"
+  },
+  "identicalParent": {
+    "total": 48,
+    "passed": 24,
+    "failed": 24,
+    "reportSha256": "47c6556ba4a58103754af83f717a2cd24c5c990e8847127245f1b12ef2aa169c"
+  },
+  "legacyCommander": {
+    "cases": 72,
+    "identicalCommandsAndMemory": true,
+    "reportSha256": "a4f792ca48de81452d495b3ba320218eb100e86c216cc598d73ec93e7cf32890"
+  },
+  "build": {
+    "command": "npm run build",
+    "node": "20.20.2",
+    "exitCode": 0,
+    "logSha256": "9b5861026a51376ec14cdd45fef36799e99b87180dfd553c355e5bdf590ec163"
+  },
+  "nativeWindow": {
+    "from": 36000,
+    "to": 40000,
+    "originalPermanentDeaths": 36,
+    "parent": {
+      "newPermanentDeaths": 5,
+      "originalMinersSurvived": 0,
+      "workers": 0,
+      "army": 23,
+      "gold": 56.34
+    },
+    "candidate": {
+      "newPermanentDeaths": 1,
+      "originalMinersSurvived": 3,
+      "workers": 4,
+      "army": 24,
+      "gold": 11.1
+    },
+    "artifactSha256": "ab4c32fa8cfb96d44321d26149eee0296342a4a68d4ececa6336cfadc61b147d",
+    "input": "Experimental stranded-escort continuation; not an ordinary fresh current-head game or formal matrix cell."
+  },
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance1620": "pending",
+  "unseenSeeds": "untouched"
+}

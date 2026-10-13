@@ -6,12 +6,14 @@ import { routeAssaultCampCommands } from './assault-camp-roads';
 import { armedFoes } from './safe-land-route';
 import { postRecoveryAssignments, recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
-import { UNIT_DEFS } from '../../shared/catalog';
+import { miningJobDefenseTarget } from './mining-job-defense';
+import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute, routeArrivals, routeWithinDistance } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
+import { activeMiningBaseCount } from '../policy/expansion-model';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { groundFrontThreat, groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
@@ -132,6 +134,11 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   const commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
+    // Secure a working economy; an unfunded wish alone cannot reserve a stranded host.
+    reserveExpansion: activeMiningBaseCount(snapshot, owner) > 0
+      || snapshot.players[owner]!.gold >= BUILDING_DEFS.townHall.cost
+      || snapshot.units.some(unit => unit.owner === owner && unit.kind === 'worker'
+        && unit.order.type === 'build' && unit.order.buildingKind === 'townHall'),
     chooseCamp: (...args) => chooseBootstrapCamp(intel.home, ...args),
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
@@ -147,7 +154,11 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       const enemy = nearestByRoute(snapshot.map, world.enemies.flatMap(enemy => enemy.bases.map(base => base.hall)), point, 'land');
       return enemy === undefined || walkingDistance(snapshot.map, own, point, 'land')! < walkingDistance(snapshot.map, enemy, point, 'land')!;
     },
-    defenseTarget: coveredDefenseTarget,
+    defenseTarget: (view, world, context) => {
+      const mining = miningJobDefenseTarget(view, owner, world, context);
+      if (mining) return mining;
+      return coveredDefenseTarget(view, world);
+    },
     towerWaiting: holdCoveredPost,
     waitForTowers: waitsForTowers,
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
