@@ -2,7 +2,6 @@ import { detCos, detSin } from '../../shared/det-math';
 import { isOpenGround, isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import { retreatLandTravelTicks } from './safe-land-route';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
@@ -10,8 +9,14 @@ import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { neutralCamps, type Camp } from '../policy/v7/creep';
 import { THINK_TICKS, mountedEscape, mountedMicro, mountedTargetOrder, mountedThreatReach } from './mounted-micro';
+import { threatLandRouter, threatRoadCommands } from './threat-roads';
 
 const THREAT_RANGE = 750;
+
+function mountedRoadFoes(snapshot: GameSnapshot, towers: readonly Building[], defenders: readonly Unit[]) {
+  return [...towers, ...defenders, ...snapshot.units.filter(unit => unit.owner === 'neutral' && unit.attackDamage > 0 && !unit.deck),
+    ...snapshot.buildings.filter(building => building.owner === 'neutral' && building.complete && building.attackDamage > 0)];
+}
 
 export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
@@ -26,10 +31,11 @@ export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: 
         return gap >= THREAT_RANGE || gap > mountedThreatReach(snapshot, foe, { ...point, radius: rider.radius }, THINK_TICKS + rider.cooldown)
           + foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
       }));
-  if (distance(rider, worker) < THREAT_RANGE) return nearestByRoute(snapshot.map, points, rider, 'land');
-  return points.map(point => ({ point, road: walkingDistance(snapshot.map, rider, point, 'land')! }))
-    .sort((a, b) => a.road - b.road)
-    .find(({ point }) => retreatLandTravelTicks(snapshot, rider, point, [...towers, ...defenders]) !== undefined)?.point;
+  const route = threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders));
+  return points.flatMap(point => {
+    const road = route(point);
+    return road === undefined ? [] : [{ point, ticks: road.ticks }];
+  }).sort((a, b) => a.ticks - b.ticks)[0]?.point;
 }
 
 function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
@@ -68,6 +74,7 @@ export function nextMountedCamp(snapshot: GameSnapshot, rider: Unit, camps: read
 export function availableMountedRiders(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
     && unit.id !== options.memory.shopping?.unitId
+    && !options.memory.v6?.creep?.group.includes(unit.id)
     && !['board', 'cast', 'charge'].includes(unit.order.type)
     && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
 }
@@ -94,7 +101,9 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
   // Health gates a new sortie; an injured rider keeps its current fight until recovery takes command.
-  let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id));
+  let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id)
+    && !defenders.some(foe => distance(foe, unit) < THREAT_RANGE
+      && (foe.order.type === 'attack' || foe.order.type === 'attackMove') && foe.order.targetId === unit.id));
   for (const raid of active.filter(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3)) {
     const lead = byId.get(raid.unitIds[0]!)!;
     const recruits = riders.filter(unit => sameGround(snapshot.map, lead, unit)).slice(0, 3 - raid.unitIds.length);
@@ -150,7 +159,14 @@ export const mountedTasks: AiScript = {
           ? Number(distance(rider, b.target) <= rider.attackRange) - Number(distance(rider, a.target) <= rider.attackRange) : 0)
           || mountedTargetOrder(a.target, b.target) || distance(rider, a.target) - distance(rider, b.target));
         const choice = choices[0];
-        if (choice) return [mountedMicro(snapshot, rider, choice.target, [...local, ...towers], objective.kind === 'camp' ? { kind: 'camp' } : { kind: 'raid', station: choice.point })];
+        if (choice) {
+          if (objective.kind === 'raid' && distance(rider, choice.target) > rider.attackRange
+            && !pursuers.some(pursuer => pursuer.target === choice.target)) {
+            const road = threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders))(choice.point)!;
+            return threatRoadCommands(rider, road);
+          }
+          return [mountedMicro(snapshot, rider, choice.target, [...local, ...towers], objective.kind === 'camp' ? { kind: 'camp' } : { kind: 'raid', station: choice.point })];
+        }
         return towers.some(tower => distance(rider, tower) <= tower.attackRange)
           ? [mountedEscape(snapshot, rider, towers, 0, undefined, true)] : [{ type: 'holdPosition', unitIds: [rider.id] }];
       });
