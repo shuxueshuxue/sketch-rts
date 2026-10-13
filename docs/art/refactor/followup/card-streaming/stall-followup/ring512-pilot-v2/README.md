@@ -1,7 +1,7 @@
 # 512-square dual-scratch full-frame pilot
 
 This independent original→candidate pilot has one WorldPresentation lifetime
-per arm. Both captures exit 0; [strict analysis](analysis-strict/analysis.json)
+per arm. Both captures exit 0; [strict analysis](analysis-strict/analysis.json.gz)
 exits 0 with no violations. It is not balanced ABBA or production integration.
 Frozen source is `8345a0dcfeb96b6777ac3940ec64cba13816c851`, with unchanged
 16 MiB cache, one-level mip gate, one-bank implicit sampling, art and original
@@ -90,6 +90,22 @@ Snapshot construction, screenshot capture and GC are outside timed draws.
 This Chromium/ANGLE SwiftShader environment does not establish GPU timer-query
 duration, player hardware FPS or a general theorem about scratch reuse hazards.
 No production, simulation, quality or visible content change was made.
+
+The strict analysis JSON and the two selected optimized dependency snapshots
+are retained as exact gzip bytes: [original dependency](original-A/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz)
+and [candidate dependency](candidate-B/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz).
+Raw records retain their original filenames and SHA values. To validate stored
+captures, first restore the naming evidence, then both complete source snapshots,
+then use the original analyzer. From the repository root:
+
+```sh
+python3 scripts/art-naming-evidence-archive.py --materialize
+python3 scripts/art-card-stall-source-archive-v2.py --materialize --folder ring512-pilot-v2/original-A
+python3 scripts/art-card-stall-source-archive-v2.py --materialize --folder ring512-pilot-v2/candidate-B
+```
+
+[The archive index](../EVIDENCE-INDEX.md) records all 18 paths and the independent
+`--out` restore layout. Normal repository tests do not require these bare files.
 
 Reproduce serially in an owner-coordinated quiet window, with fresh directories:
 

@@ -1,0 +1,10 @@
+{
+  "time": "2026-10-13T15:09:12.822481+00:00",
+  "removedTemporaryRestore": "/tmp/art-queue-input-full-restore-42bd61c7",
+  "files": 143,
+  "bytes": 3124763195,
+  "priorFullShaValidation": "execution.json --materialize exit0 and restore-proof.log.gz",
+  "currentCheck": "Exact expected path set and byte sizes; original full-SHA proof remains prior record. Archive sidecar sizes remain present. No additional full-byte SHA pass is claimed.",
+  "originalArchivesPreserved": true,
+  "temporaryPathAbsent": true
+}

@@ -34,3 +34,24 @@ Validation checks every archived source against immutable 8345 Git blobs and sta
 All 24 PNG encoded hashes validate and corresponding decoded RGBA images match across all four arms. All eight captured fact SHA values match their corresponding cycle oracle; the capture harness removed raw pixelProof objects, so this is **not** a raw-fact field comparison. CPU tick arrays match exactly. Real-frame clocks follow the exact archived fixture; this capture has no per-frame real n telemetry. Independent camera correctness evidence is complementary, not additional performance samples.
 
 [analysis.json](analysis.json) retains every arm/cycle distribution, all endpoint resources, every permitted resource difference, source/provider provenance, PNG hashes and validation results. [run.log](run.log) records the first successful execution; [analyzer.py](analyzer.py) preserves its exact source. Original captures and prior failed v1 evidence were not modified.
+
+The four selected optimized dependency snapshots are now preserved as exact
+gzip copies: [production-A](../production-A/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz),
+[candidate-B](../candidate-B/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz),
+[candidate-B2](../candidate-B2/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz)
+and [production-A2](../production-A2/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz).
+The original capture filenames and SHA values remain unchanged. Before using
+the original source-archive checks or analyzer, restore the naming evidence,
+then the four source snapshots, from the repository root:
+
+```sh
+python3 scripts/art-naming-evidence-archive.py --materialize
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-abba-v2/production-A
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-abba-v2/candidate-B
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-abba-v2/candidate-B2
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-abba-v2/production-A2
+```
+
+[The archive index](../../EVIDENCE-INDEX.md) records the complete fixed set and
+independent `--out` restore paths. This compression does not change validation
+results, sample counts or the candidate's acceptance limits.

@@ -1,0 +1,163 @@
+[
+  {
+    "args": {
+      "src_file": "gpu/command_buffer/service/scheduler.cc",
+      "src_func": "RunNextTask",
+      "src_line": 654
+    },
+    "cat": "toplevel",
+    "dur": 423616,
+    "name": "ThreadControllerImpl::RunTask",
+    "ph": "X",
+    "pid": 88751,
+    "tdur": 754,
+    "tid": 88751,
+    "ts": 34432212521,
+    "tts": 1406901
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "dur": 423610,
+    "name": "Scheduler::RunTask",
+    "ph": "X",
+    "pid": 88751,
+    "tdur": 748,
+    "tid": 88751,
+    "ts": 34432212524,
+    "tts": 1406904
+  },
+  {
+    "args": {
+      "src_file": "gpu/command_buffer/service/scheduler.cc",
+      "src_func": "RunNextTask",
+      "src_line": 654
+    },
+    "cat": "toplevel",
+    "dur": 27300,
+    "name": "ThreadControllerImpl::RunTask",
+    "ph": "X",
+    "pid": 88751,
+    "tdur": 513,
+    "tid": 88751,
+    "ts": 34432637001,
+    "tts": 1408478
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "dur": 27293,
+    "name": "Scheduler::RunTask",
+    "ph": "X",
+    "pid": 88751,
+    "tdur": 507,
+    "tid": 88751,
+    "ts": 34432637005,
+    "tts": 1408481
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "id": 36298,
+    "name": "Scheduler::RunTask",
+    "ph": "s",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432212524
+  },
+  {
+    "args": {},
+    "bp": "e",
+    "cat": "gpu,toplevel.flow",
+    "id": 36298,
+    "name": "Scheduler::RunTask",
+    "ph": "f",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432636129
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "id": 36299,
+    "name": "Scheduler::ScheduleTask",
+    "ph": "s",
+    "pid": 88751,
+    "tid": 88765,
+    "ts": 34432206041
+  },
+  {
+    "args": {},
+    "bp": "e",
+    "cat": "gpu,toplevel.flow",
+    "id": 36299,
+    "name": "Scheduler::ScheduleTask",
+    "ph": "f",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432636164
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "id": 36302,
+    "name": "GpuChannel::Flush",
+    "ph": "s",
+    "pid": 88799,
+    "tid": 88817,
+    "ts": 34432208722
+  },
+  {
+    "args": {},
+    "bp": "e",
+    "cat": "gpu,toplevel.flow",
+    "id": 36302,
+    "name": "GpuChannel::Flush",
+    "ph": "f",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432636211
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "id": 36482,
+    "name": "Scheduler::ScheduleTask",
+    "ph": "s",
+    "pid": 88751,
+    "tid": 88764,
+    "ts": 34432389803
+  },
+  {
+    "args": {},
+    "bp": "e",
+    "cat": "gpu,toplevel.flow",
+    "id": 36482,
+    "name": "Scheduler::ScheduleTask",
+    "ph": "f",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432667596
+  },
+  {
+    "args": {},
+    "cat": "gpu,toplevel.flow",
+    "id": 36483,
+    "name": "GpuChannel::Flush",
+    "ph": "s",
+    "pid": 88799,
+    "tid": 88799,
+    "ts": 34432389708
+  },
+  {
+    "args": {},
+    "bp": "e",
+    "cat": "gpu,toplevel.flow",
+    "id": 36483,
+    "name": "GpuChannel::Flush",
+    "ph": "f",
+    "pid": 88751,
+    "tid": 88751,
+    "ts": 34432667598
+  }
+]

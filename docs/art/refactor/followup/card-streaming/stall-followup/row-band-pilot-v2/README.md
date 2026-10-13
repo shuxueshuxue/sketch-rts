@@ -10,7 +10,7 @@ view/row origin. The exact original/candidate/region SHA values remain
 `7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18`,
 `25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439`.
 
-Both captures exit 0 and [strict analysis](analysis-strict/analysis.json) exits
+Both captures exit 0 and [strict analysis](analysis-strict/analysis.json.gz) exits
 0 with no violations. [Original raw](original-A/raw.json),
 [candidate raw](candidate-B/raw.json), [original log](original-A.log),
 [candidate log](candidate-B.log), [analyzer log](analysis.log) retain the full
@@ -75,6 +75,22 @@ The new complete v2 driver SHA is
 old drivers and mock failure/pass records remain unchanged. No source, art,
 combat, simulation, visible content, mip quality or production upload behavior
 was changed.
+
+The strict analysis JSON and the two selected optimized dependency snapshots
+are retained as exact gzip bytes: [original dependency](original-A/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz)
+and [candidate dependency](candidate-B/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz).
+Raw records retain their original filenames and SHA values. To validate stored
+captures, first restore the naming evidence, then both complete source snapshots,
+then use the original analyzer. From the repository root:
+
+```sh
+python3 scripts/art-naming-evidence-archive.py --materialize
+python3 scripts/art-card-stall-source-archive-v2.py --materialize --folder row-band-pilot-v2/original-A
+python3 scripts/art-card-stall-source-archive-v2.py --materialize --folder row-band-pilot-v2/candidate-B
+```
+
+[The archive index](../EVIDENCE-INDEX.md) records all 18 paths and the independent
+`--out` restore layout. Normal repository tests do not require these bare files.
 
 Reproduce in an owner-coordinated quiet window, using fresh exclusive directories:
 

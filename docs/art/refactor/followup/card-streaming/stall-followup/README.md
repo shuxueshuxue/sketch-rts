@@ -1,10 +1,11 @@
 # 长停顿后续：证据索引与结论边界
 
-本目录延续 [上一轮完整集成验证](../latency-investigation/final-validation/report.md)。它记录当前版本的阻塞点诊断、独立候选的正确性与资源/时间对照，以及尚未完成的实验。**这些不同源版本、不同测量方法的结果不能拼成一份最终 pipeline 性能提升。** 本索引按 `d5c9bdccde4a807df813490c0f0820bc8e84af0d` 的静态审阅状态整理；后续实验应新增自己的完整证据，再更新结论。
+本目录延续 [上一轮完整集成验证](../latency-investigation/final-validation/report.md)。它记录当前版本的阻塞点诊断、独立候选的正确性与资源/时间对照，以及尚未完成的实验。**这些不同源版本、不同测量方法的结果不能拼成一份最终 pipeline 性能提升。** 旧候选保留自己的源 epoch；新增队列诊断冻结在证据 HEAD `42bd61c74934dc76f30d42b62e1e31eb5c5974ff`，其生产源与 `77a2c307` 相同。
 
 | 项目 | 已完成证据 | 当前结论 |
 | --- | --- | --- |
 | 当前版本长停顿诊断 | 两份带追踪的 8345 capture，原始样本、逐帧归因与像素/事实/时钟对照 | 新的 n135 阻塞定位到 `texSubImage2D` 内命令缓冲等待；不是 FPS 对照，旧 696.9 ms 停顿仍未归因 |
+| 当前源队列分段诊断 | 42bd 三策略、六生命周期；18 张图、事实、时钟、原生 GL 内容序列与实际工作计数严格一致 | 前置完成等待使上传阻塞迁移，后置完成还有约 0.93 s；没有速度收益，也没有唯一定位 mip/copy/staging 根因 |
 | 半级 mip 保守余量候选 | 31 相机位置严格正确性对照；完整 v2 ABBA 与严格分析 | 该软件 GPU 环境中 endpoint owned GPU bytes −34.59%，CPU mean +3.37%，完整 real mean 基本不变；未上线，跨 GPU 安全性未证明 |
 | Row-band CPU view 候选 | 已归档初次 mock 失败与 v2 mock 通过；原版/候选独立 native mip fixture 均通过；正式时间对照另行推进 | 仍是实验；native 证明限定矩阵像素等价，不能以短 CPU view 声称 GPU 传输、帧时间或游戏性能改善 |
 | Canvas 实际入口缓存身份 | 第一、二阶段实际 Atlas 路由严格像素对照、读取计数、测试和类型检查 | 已实现限定的缓存复用；读取次数不是 FPS 或内存测量，不解释 3D 长停顿 |
@@ -16,6 +17,7 @@
 | `8345a0dcfeb96b6777ac3940ec64cba13816c851` | 当前诊断的冻结生产源；半级 mip/row-band 独立候选的基础；Canvas 第一阶段的旧 Atlas 源 | 后续工作树补丁不是 8345 Git 源的一部分 |
 | `d07cda2c513ff055831c1995e4710fdada54d613` | 已提交 Canvas 第一阶段；Canvas 第二阶段对照的旧 Atlas/builder 源 | 第二阶段 proof 的基础 HEAD 不等于已提交第二阶段候选 |
 | `d5c9bdccde4a807df813490c0f0820bc8e84af0d` | 已提交 Canvas 第二阶段原对象身份登记与 Atlas 入口复用 | 没有在此整体源上进行新的完整 pipeline FPS/帧时间对照 |
+| `42bd61c74934dc76f30d42b62e1e31eb5c5974ff` | 当前队列 v3 诊断；包含新灵体、不流血和已验证局部复用，src 与 77a2c307 相同 | fence/query/完整 GL observer 会扰动排队；不是无观察器性能对照 |
 
 每组证据保存执行时 provider/helper/source 快照与 SHA。候选捕获中记录的基础 HEAD 与工作树补丁必须一起看；分析应使用归档字节，不能拿现在的工作树代替执行源。第一阶段捕获的候选 Atlas 与提交 d07 的 blob、第二阶段在 d07 工作树中捕获的候选 Atlas/builder 与提交 d5c9 的对应 blob，均已另外静态核对完整字节相同；原 proof/README 的历史来源描述不改写。这里没有把独立候选叠加为生产实现，也没有修改模拟、回放、AI、战斗或维护费规则。
 
@@ -31,9 +33,29 @@
 
 [cgroup 窗口快照](current-gl-trace/environment-cgroup.json)只提供整个诊断期间的环境背景，不能据累计 throttling/OOM 计数归因单帧。未采集完整 OS off-CPU stack 或命令依赖证明。[启动失败目录](current-gl-trace-startup-failure/)保留了初次输出目录冲突；该次没有启动性能捕获。
 
+## 当前源的前后完成边界：等待迁移，未解决长尾
+
+[旧轨迹的命令流关联](command-wait-offline/FINDINGS.md)显示，上传前已开始的 GPU-main task 跨越大部分 token 等待；紧邻该调用的 flush 在调用返回后才到达 GPU main。这个时间关系不能把 345×264 当前矩形当成全部等待成本。[同版本 Chromium 官方源核验](command-wait-offline/CHROMIUM-SOURCE.md)确认普通像素上传的暂存区不足时可能通过 pending token 回收旧块，但轨迹没有 route、分配块和 token 插入命令映射，实际调用栈仍未证明。
+
+新增 [v3 严格报告](queue-bracket-v3/analysis-strict-v3/REPORT.md)保留三策略各两个完整生命周期。只在 n135 添加观察器完成边界，prep/warm/CPU/real/empty/return 的原协议、模拟与所有可见内容不变。18 张 PNG 的完整 RGBA、所有事实和时钟、源及依赖身份、每生命周期 294,826 条原生 GL 内容命令的顺序/已记录参数与绑定均严格相同。上传 payload 字节没有被该 GL 描述器记录，不能把参数相同说成逐字 payload 验证。
+
+| n135 策略 | 前置完成等待 ms，两个生命周期 | 原 CPU draw ms | 后置完成等待 ms |
+| --- | --- | --- | --- |
+| control | 0 / 0 | 479.3 / 459.5 | 无新增完成边界 |
+| pre | 410.1 / 418.6 | 227.9 / 257.8 | 无新增完成边界 |
+| pre-post | 426.9 / 417.9 | 226.0 / 252.3 | 944.3 / 926.1 |
+
+pre 使约 226–228 ms 的长 `texSubImage2D` 调用消失，但之前新增了约 0.41 s 等待；pre-post 另显示尾部约 0.93 s 完成工作。control/pre 没有等待全部 n135 工作完成，三策略不能当作相同完成边界的正式帧时间对照。GPU query 全部 available/non-disjoint，命令边界 elapsed 约 0.9–1.1 s，包含命令到达/空闲，仍不能称为纯 mip 成本。
+
+n135 六次均为 53 miss/raster、53 layer updates、523 mip copies（报告字节 102,868,324）和 scratch upload 20,053,380 bytes，未增加驱逐或压缩；Canvas readback 仍约 152–165 ms。后续精确上传输入和逐阶段完成诊断必须另外提供实际 RGBA、初始 scratch/page 状态与完整 native mip 对照，不能靠 GL 参数推断。此处没有采用 async 等待作为生产优化，没有声称旧 696.9 ms 停顿已解决或硬件 GPU 提速。
+
+v1 的巨大 CDP 返回失败与 v2 的 V8 输出字符串超限分别保留；v3 使用完整分片导出和独立完整 profile，严格分析只使用 v3。归档/恢复说明见 [证据索引](EVIDENCE-INDEX.md)。当前 capture 保存原源与优化依赖字节，未保存转换后实际 runtime JS；这项来源限制保留在报告中。
+
 ## 半级 mip 候选：资源下降与时间代价分别报告
 
 候选仅将冻结 8345 gate 的一级余量 `-1` 改为半级余量 `-.5`，完整原始绘制域、shader、UV、采样、原生 mip 生成、uploader、cache 和模拟不变。[31 步相机对照](mip-half-camera/comparison.json)通过；每臂 62 张 PNG、原生/composite RGBA、拾取、实际事实与时钟严格相同。这里比较的是完整源参考与半级候选；它不是跨 GPU 安全性证明，也没有独立 packed shadow/depth texel 证明。
+
+相机的完整原 proof 字节以 [reference gzip](mip-half-camera/reference/proof.json.gz)与 [candidate gzip](mip-half-camera/candidate/proof.json.gz)保存；两臂的执行 harness 和 parent harness 同样精确压缩，完整路径见 [归档索引](EVIDENCE-INDEX.md)。原 proof 内记录的文件名、来源 SHA 和失败/成功状态保留。
 
 有效时间/资源结论只来自 [完整 v2 ABBA 报告](mip-half-abba-v2/analysis-strict/REPORT.md)与 [严格分析](mip-half-abba-v2/analysis-strict/analysis.json)：四臂依次 production-A/candidate-B/candidate-B2/production-A2，每臂两个生命周期；每种 policy 保留全部 240 个 CPU sample 与 48 个 real sample，没有丢弃慢帧。
 
@@ -82,8 +104,8 @@ v2 主 512 模式对照了两个完整 provider，其余模式使用明确的独
 
 本索引新增前，`stall-followup` 为 **12,757 个文件 / 804,938,592 bytes**，Canvas route identity 为 **25 个文件 / 74,385,672 bytes**；后续捕获会改变这些计数。已有本地 Markdown 证据链接未发现缺失目标。
 
-两份未压缩 trace 超过 GitHub 单文件限制：`current-trace/trace.json` 为 180,401,405 bytes，`current-gl-trace/trace.json` 为 180,497,570 bytes。对应 `.gz` 分别为 14,251,482 / 14,387,594 bytes。提交前需由归档负责人明确保留压缩原事件与可核验解压字节/SHA，避免把过大裸副本纳入 Git；本静态索引工作没有删除、移动、重写或重新打包任何执行证据。
+静态盘点时，两份未压缩 trace 超过 GitHub 单文件限制：`current-trace/trace.json` 为 180,401,405 bytes，`current-gl-trace/trace.json` 为 180,497,570 bytes。对应 `.gz` 分别为 14,251,482 / 14,387,594 bytes。以上数字保留该静态审阅时点；本轮命名证据归档沿用既有 gzip 的完整事件与解压 SHA，并在验证后清理这两个本地 ignored 裸副本，恢复步骤见 [归档索引](EVIDENCE-INDEX.md)。
 
 来源快照数量较多，归档大小和审阅成本应单独处理。归档整理不能改变执行 provider/helper/raw 内容、掩盖失败，或把尚未完成的实验标成已验证。
 
-[归档索引](EVIDENCE-INDEX.md)记录已完成 source-snapshot 的完整字节集合、去重边界与可复原路径。原 11 个 run 与后来完成的四个 row-band/ring512 pilot run 均逐解压文件 SHA 验证，共用一份 2,212,438-byte 压缩容器。两批先完整验证，再分别清理 12,320 和 4480 个裸快照文件；`current-trace` 与 `ring512-pilot-v2/candidate-B` 各 1120 文件均恢复到全新 `/tmp` 目录并逐 SHA 通过。原 raw/provider/helper 未改；原 analyzer 运行前需先按索引 materialize 所需快照。native、未来 formal 或其他活动捕获不纳入这两批固定清单。
+[归档索引](EVIDENCE-INDEX.md)记录已完成 source-snapshot 的完整字节集合、去重边界与可复原路径。原 11 个 run 与后来完成的四个 row-band/ring512 pilot run 均逐解压文件 SHA 验证，共用一份 2,212,438-byte 压缩容器。两批先完整验证，再分别清理 12,320 和 4480 个裸快照文件；`current-trace` 与 `ring512-pilot-v2/candidate-B` 各 1120 文件均恢复到全新 `/tmp` 目录并逐 SHA 通过。原 raw/provider/helper 字节保留；本轮另将 16 份命名匹配证据精确压缩为同路径 `.gz`，正常单测无需保留其裸副本。运行原 source-archive 校验/恢复、helper 或 analyzer 前，先执行 `python3 scripts/art-naming-evidence-archive.py --materialize`，再按索引 materialize 所需源码快照。native、未来 formal 或其他活动捕获不纳入这两批固定清单。

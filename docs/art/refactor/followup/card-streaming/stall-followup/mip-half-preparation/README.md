@@ -51,6 +51,23 @@ node --import tsx scripts/art-card-mip-half-camera-proof.mjs \
   --out docs/art/refactor/followup/card-streaming/stall-followup/mip-half-camera/comparison.json
 ```
 
+These historical capture commands retain their original paths. The completed
+camera records are preserved as [reference proof gzip](../mip-half-camera/reference/proof.json.gz)
+and [candidate proof gzip](../mip-half-camera/candidate/proof.json.gz); both arms'
+camera and parent harness bytes are also exact gzip copies. Before comparing
+the stored runs or checking them with the original helper/source-archive tools,
+restore the naming evidence first, then both source snapshots:
+
+```sh
+python3 scripts/art-naming-evidence-archive.py --materialize
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-camera/reference
+python3 scripts/art-card-stall-source-archive.py --materialize --folder mip-half-camera/candidate
+```
+
+[The archive index](../EVIDENCE-INDEX.md) lists the compressed harness paths and
+independent `--out` recovery layout. Original names and SHA values inside the
+proofs remain unchanged; new captures still require fresh exclusive directories.
+
 Comparison uses every native PNG RGBA byte, untouched WebGL drawing-buffer
 hash, full composite hash, physical dimensions, facts, clocks and picking.
 It checks first-frame zoom promotion and camera return without extra warmup.

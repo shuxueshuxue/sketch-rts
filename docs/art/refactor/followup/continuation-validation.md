@@ -1,6 +1,6 @@
 # 灵体与资源消耗：本轮收敛记录
 
-最新生产源为 `77a2c3078b1f14c02f1058dc22fd31a80f9dd314`，仍在独立 `perf/viewport-presentation` 分支和草稿 PR #346；未合并或部署。后续证据提交不改变这份生产源。本轮没有改变 shared、server、SDK、AI、战斗、经济、维护费或回放规则。
+最新生产源为 `cc85481`，仍在独立 `perf/viewport-presentation` 分支和草稿 PR #346；未合并或部署。最新改动只去重同次前端同步的选择集合与调试遍历。美术、命中表现和此前局部优化继续使用 `77a2c3078b1f14c02f1058dc22fd31a80f9dd314` 的实现；42bd 队列诊断冻结的是这份较早生产源，不能与最新同步改动混成一次整帧测量。本轮没有改变 shared、server、SDK、AI、战斗、经济、维护费或回放规则。
 
 ## 实际采用的改动
 
@@ -11,6 +11,7 @@
 | Canvas 目录配置复用 | Atlas 使用已有像素等价身份；内部原装备对象有私有品牌，自定义细节和配置保留各自身份。[两阶段完整源 RGBA 对照](card-streaming/latency-investigation/canvas-route-identity/README.md)及[真实装备覆盖](card-streaming/latency-investigation/canvas-route-identity/stage2/README.md)。读取次数降低不换算 FPS。 |
 | 障碍受击索引 | 障碍复用已有 first-hit 索引，避免每个屏外障碍再次扫描 effects。一行改动、26 项既有测试、六组实际 Canvas 全 RGBA 相等。[局部 renderer 证据](obstacle-hit-index/README.md)。 |
 | 本地小地图标记 | 仅缓存实际本地适配器发布的稳定视图；同 tick 新发布重新构造。公共房间和未知可变来源保持实时构造。每帧仍完整绘制小地图，relations、物品、舱内乘员、风和相机保持实时。[边界、测试、CPU 与 Chromium 证据](minimap-cache/README.md)。 |
+| 同次前端同步 | 共用已经生成的 live selection IDs；建造/物品模式的其他入口仍即时构造。调试输出把单位和建筑分别合为一次遍历，保留全部 ID 和顺序。[真实 main 函数与输出对照](frontend-sync-reuse/README.md)，不增加跨帧索引假设。 |
 
 灵体真实游戏的原版/新版各包含 80 WebGL 帧、17 Canvas 帧及六张 UI 图，覆盖六次召唤、左右 × 上 60°/水平/下 60°、攻击帧和变体、24 次实际拾取及六次原损伤管线死亡。完整模拟事实相同，四张非灵体 UI 原 RGBA 相同；世界差异限定在灵体、真实阴影、对应 UI 和遗骸范围。保留首版遗漏阴影边缘的失败，不声称重叠包络中的每个邻兵像素都独立相同。
 
@@ -26,6 +27,8 @@
 
 小地图 Chromium 证据动态运行真实本地 runtime/adapter 与生产 main 的标记读取、断开/启动生命周期；16 张同输入 Canvas 图的 3,379,200 RGBA 字节无差异。这不是完整页面交互或世界绘制 E2E。模型图片、实际游戏视频与局部 CPU 测量不是同一性能实验。
 
+最新同步改动的实际 main 函数子集对照有 27 组，另有 5 组完整 debug 对象与序列化输出对照，全部相同；选择集合构造次数 42→21。混合 9 单位/2 建筑的 debug 输入访问分别 32→9、5→2，map/filter 中间结果数组 6→0。输出数组仍完整；这些是实际调用/构造计数，不是 heap bytes、CPU 时间或 FPS。[原/新相关源与执行程序](frontend-sync-reuse/README.md)保留；停止发布时显式清除旧 live IDs 的真实适配器回归通过。
+
 ## 未采用的上传与存储候选
 
 全部候选冻结在原 `8345` 美术与运行源，并保存原生 GPU、输入、运行图、Three 身份、优化依赖首尾 SHA、像素与全部计时证据。不能把这些数据叠加成最新整体游戏提速。
@@ -36,13 +39,17 @@
 | 较短 CPU row-band view | 原生逐层像素通过；单 AB/一生命周期 complete real mean 417.36→431.93 ms。 | 无收益信号，不采用；不是完整 ABBA 结论。 |
 | 仅 512² 临时纹理双槽 | 每方案 10,684 原生 mip/layer 比较零差异；单 AB complete real mean 409.80→422.58 ms；额外 CPU 1 MiB/GPU 1.33 MiB，上传字节 +0.71%。 | CPU mean 虽降低 4.33%，真实整帧变慢且多占内存；不采用。 |
 
-[追踪与完整实验索引](card-streaming/stall-followup/README.md)保留负结果。最新诊断定位到 `texSubImage2D` 内 255/275 ms 命令缓冲等待；没有证明是哪条早前 GPU 命令造成等待，也未解释旧 696.9 ms 停顿。**该长尾仍未解决**，没有硬件 GPU 对照或通用 FPS 提升声明。
+[追踪与完整实验索引](card-streaming/stall-followup/README.md)保留负结果。旧源诊断定位到 `texSubImage2D` 内 255/275 ms 命令缓冲等待。当前 42bd 源的 [三策略严格队列对照](card-streaming/stall-followup/queue-bracket-v3/analysis-strict-v3/REPORT.md)中，六生命周期的源码、实际工作计数、18 张图、事实、时钟和原生 GL 内容命令一致：前置 410–427 ms 完成等待使约 226–228 ms 上传阻塞迁移，后置完成仍需 926–944 ms。各策略完成边界不同，不能用缩短的 CPU draw 声称提速。没有证明是哪条早前 GPU 命令造成等待，也未解释旧 696.9 ms 停顿。**该长尾仍未解决**，没有硬件 GPU 对照或通用 FPS 提升声明。
+
+[匹配 Chrome 版本的官方源码审阅](card-streaming/stall-followup/command-wait-offline/CHROMIUM-SOURCE.md)确认暂存区回收可等待旧 token，但没有从实际轨迹恢复 token→分配块→纹理/命令的映射。三策略保留失败 v1/v2 和全部完整导出，未把等待加入正式同步渲染路径；仍需精确输入的逐上传/阶段诊断。当前 `/dev/dri` 不存在，SwiftShader 测量不能泛化成硬件 GPU 成绩。
 
 ## 最终检查与剩余边界
 
-最新客户端/剧情测试 **132 文件 / 1066 tests 全通过**：[日志](spirit-no-blood/final-client-tests.log)。`build:production` 包含全局 TypeScript、Vite 和 server bundle，exit 0：[日志](spirit-no-blood/final-production-build.log)。源码冻结后完成真实灵体和小地图证明，原始失败及来源不改写。
+最新同步源的客户端/剧情测试 **132 文件 / 1067 tests 全通过**：[日志](frontend-sync-reuse/all-client-tests.log)。`build:production` 包含全局 TypeScript、Vite 和 server bundle，exit 0：[日志](frontend-sync-reuse/production-build.log)；[源首尾 SHA](frontend-sync-reuse/all-client-build-checks.json)一致。此前 77a2c307 的 1066 tests 和构建日志仍保留在 spirit-no-blood 目录，真实灵体和小地图证明在该源冻结后完成，原始失败及来源不改写。
 
 较早的 d7 全仓测试为 609 文件、6466 通过/5 失败：[完整日志](spirit-redraw/validation/full-tests.log)。四个船舶导航失败在冻结 8345 上完全复现，shared/SDK 树及工作区无变化；另一个文档命名门已在基线失败，但本轮证据新增匹配项（该次 22→34），不能把整个失败称为未变。[复现与精确树证据](spirit-redraw/validation/baseline-8345-comparison.json)。未修改这些规则或测试，也未宣称全仓全绿。
+
+新增证据归档前命名匹配一度到 40 项；完整输入逐字压缩、恢复校验和清理后，原 SDK 单测实际仍为 6 pass/1 fail、22 个匹配，名单严格等于冻结基线。[新增影响清零与未通过的原测试](naming-gate/README.md)分开报告；未修改测试、旧基线字节或检查标准。最新 fetch 的 main 为 `98cf811`，从共同基线 a644 的新增提交没有修改 client/shared/server/SDK；AI 与工作流的上游改动不由本车道重写。
 
 公共房间每次读取的快照复制与派生成本仍未优化。渲染器已在作画/提交前裁剪单位、建筑、船只、尸体、投射物和接触墨迹；地形仅保留可见 chunk。必要模拟、动作/血迹历史和完整小地图仍覆盖全世界，不能通过删去它们冒充渲染收益。
 
