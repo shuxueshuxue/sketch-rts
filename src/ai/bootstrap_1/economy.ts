@@ -135,7 +135,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
       && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
   // Fund the next recruitment wave before adding production infrastructure.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
-    ? own.filter(building => building.complete).reduce((total, building) => total
+    ? own.filter(building => building.complete && building.queue.length === 0).reduce((total, building) => total
       + Math.max(0, ...trainableUnitsAt(player.race, building.kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
   const threatenedHome = snapshot.units.some(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options)
@@ -149,8 +149,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
       const kind = goal.id.split(':')[1] as BuildingKind;
       const existing = own.filter(building => building.kind === kind);
       if (existing.length > 0 && trainableUnitsAt(player.race, kind).length > 0) {
-        productionReserve = Math.max(0, ...trainableUnitsAt(player.race, kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)) * existing.length;
-        if (productionReserve === 0) return [];
+        const recruits = trainableUnitsAt(player.race, kind).filter(unit => wanted.has(unit));
+        if (recruits.length === 0) return [];
+        productionReserve = Math.max(...recruits.map(unit => UNIT_DEFS[unit].cost))
+          * existing.filter(building => building.complete && building.queue.length === 0).length;
       }
     }
     if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id === 'engineering:workshop') {

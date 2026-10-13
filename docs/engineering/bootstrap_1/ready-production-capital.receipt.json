@@ -1,0 +1,102 @@
+{
+  "base": "e503095274b2e947a96ccb9629b1a93de46d8d40",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 1,
+    "runtimeDiffAdded": 5,
+    "runtimeDiffRemoved": 3,
+    "newSerializedFields": 0,
+    "newSerializedStructures": 0,
+    "newDefaultOrCompatibilityPaths": 0,
+    "changedStatsResourcesCountsPrioritiesOrCadence": 0,
+    "change": "Factory demand and current cash reserve are separate facts. Busy paid queues keep their demand but do not reserve another immediate training slot; ready queues and the first-healer commitment remain funded.",
+    "supplyForecastUnchanged": true
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/economy.ts": "820ca8336691c58f4fab7a50f6d0ff919ed518a5f7126451e4d575a4b12eb6b0"
+  },
+  "sdk": {
+    "passed": 202,
+    "failed": 0,
+    "suites": 12,
+    "sha256": "602a5a845a5a448a531c8b518319c5e0042a84ee7ecd4595f08db10d9ced89ec"
+  },
+  "identicalParent": {
+    "passed": 8,
+    "failed": 4,
+    "sameNewSdkCases": 12,
+    "testSourceSha256": "ebacedff2b131384075690efa1e482408b0654ecd7ec394cdbe5f401855c8cd0",
+    "sha256": "647730e67251e5a51b463d1d4bd82295059b19c5f3045d596be79e7c11749d89",
+    "failure": "Four busy paid-queue cases cannot fund the requested second factory. Eight idle-slot and first-healer controls pass."
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "logSha256": "a55309899d49ecd570747d8d63f3eae905298f626fa09abb8a3a092d28e67677"
+  },
+  "pairedNativeObservation": {
+    "match": "greystonePass/v9_summoner/v5+v7/ember/1",
+    "initialTick": 6000,
+    "endTick": 18000,
+    "initialWorldMemoryMatch": "One ordinary current362 opening; both sides restore the same6000 world and all three controller memories. Each12000 state continues independently to18000.",
+    "parent12000": {
+      "permanentCombatDeaths": 8,
+      "spiritCombatDeaths": 3,
+      "workers": 16,
+      "permanentArmy": 18,
+      "livingSpirits": 6,
+      "halls": 3,
+      "gold": 172.92,
+      "casters": 6,
+      "catapults": 0,
+      "sha256": "e4f15b068c113381733686049a510a5cd4b6f7227ba71722f0e977d7ee27349d"
+    },
+    "candidate12000": {
+      "permanentCombatDeaths": 7,
+      "spiritCombatDeaths": 5,
+      "workers": 17,
+      "permanentArmy": 16,
+      "livingSpirits": 2,
+      "halls": 3,
+      "gold": 142.7,
+      "casters": 4,
+      "catapults": 0,
+      "sha256": "15b73be48399dee197d11beee3d1908482580174e0f9b162a6e4e9954f01857d"
+    },
+    "parent18000": {
+      "permanentCombatDeaths": 14,
+      "spiritCombatDeaths": 31,
+      "workers": 11,
+      "permanentArmy": 23,
+      "livingSpirits": 12,
+      "halls": 2,
+      "gold": 43.71,
+      "casters": 16,
+      "catapults": 0,
+      "sha256": "f3bc3cc93d9bd46ed1bca083e55e482d49280e365a8401a5f427eb916c96903f"
+    },
+    "candidate18000": {
+      "permanentCombatDeaths": 7,
+      "spiritCombatDeaths": 31,
+      "workers": 17,
+      "permanentArmy": 25,
+      "livingSpirits": 9,
+      "halls": 3,
+      "gold": 179.51,
+      "casters": 13,
+      "catapults": 1,
+      "sha256": "9ef98600f4a0bb350f25e8300e6dac39bbe350a218dd9363dcff60a40dfa2d60"
+    },
+    "totalPermanentDeaths": {
+      "parent": 22,
+      "candidate": 14
+    },
+    "totalSpiritCombatDeaths": {
+      "parent": 34,
+      "candidate": 36
+    },
+    "classification": "Fatal-hit targets of kindspirit are the only expiring summoned unit in this native match; permanent deaths exclude them. EngineunitsLost includes both, so it is not a permanent casualty count.",
+    "scope": "No whole-game winner; no new full matrix or unseen seeds."
+  }
+}
