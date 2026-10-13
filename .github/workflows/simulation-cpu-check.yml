@@ -108,5 +108,8 @@ jobs:
       - name: Verify active mining jobs and transported worker credits
         run: npx vitest run src/ai/bootstrap_1/active-mining-jobs.test.ts src/ai/bootstrap_1/workforce.test.ts src/ai/bootstrap_1/transported-workforce.test.ts src/ai/bootstrap_1/island-workforce.test.ts
 
+      - name: Verify funded expansion escort and retained construction cover
+        run: npx vitest run src/ai/bootstrap_1/funded-expansion-escort.test.ts src/ai/bootstrap_1/mining-job-defense.test.ts src/ai/bootstrap_1/expansion-construction-escort.test.ts
+
       - name: Verify paid mounted field fights and retained camp and mining control
         run: npx vitest run src/ai/bootstrap_1/mounted-field-recruitment.test.ts src/ai/bootstrap_1/mounted-field.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
