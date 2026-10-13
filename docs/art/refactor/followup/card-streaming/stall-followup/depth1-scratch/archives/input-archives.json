@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "folder": "root",
+  "toolSha256": "984b41015b27d94dcef4312c7d2ba1020f2105796fb98e16cf8824f06530bf9d",
+  "files": [
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/candidate.ts",
+      "bytes": 11143,
+      "sha256": "2bfd78fa7260240fd151fbd3bff1bb0b20557d61ac387b7f3fddcd9643e46813",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/candidate.ts.gz",
+      "gzipBytes": 3442,
+      "gzipSha256": "17a3610a66ca8873321e11ad233d26fde977a7b13b4f34feafbbc15435e1d3ea",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/early-exact-check.json",
+      "bytes": 2127,
+      "sha256": "ecf6025b9be20881baae4ff959901d931e239ade8080aeb599c616cabcdc1cd6",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/early-exact-check.json.gz",
+      "gzipBytes": 384,
+      "gzipSha256": "226a719ad3e369b4bb5c5beb21b84552d4ff068c61ec57c932b178b1eb1c6897",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/executed-comparison-scripts/d54f6ee6360543985a76129a88c7dbf2d2249f59d2b88ca8fd0bb4f5656dad1e.mjs",
+      "bytes": 16759,
+      "sha256": "d54f6ee6360543985a76129a88c7dbf2d2249f59d2b88ca8fd0bb4f5656dad1e",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/executed-comparison-scripts/d54f6ee6360543985a76129a88c7dbf2d2249f59d2b88ca8fd0bb4f5656dad1e.mjs.gz",
+      "gzipBytes": 6273,
+      "gzipSha256": "134259533c8656b53ed1830d463ccbc3993f2ccc7a83a9e9d10057e66d184a4e",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-A1.log",
+      "bytes": 1089,
+      "sha256": "f8efecd89b856b12c048d5fc99939ef7e6d937102136da0679b3fde8fae00b08",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-A1.log.gz",
+      "gzipBytes": 439,
+      "gzipSha256": "4012024bee1049ebacb7eb73511f597aaab96753e733cd8a703310a9d790edf3",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-A2.log",
+      "bytes": 1069,
+      "sha256": "c1ee74ace6f27012b2907d42ab0d56bf0afb0cdf8725b9c2c84798d4c94357be",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-A2.log.gz",
+      "gzipBytes": 436,
+      "gzipSha256": "3008f7db5efdfb4ab3f42b5f61f2fe966a70bd3304731470066aada6c4e26c88",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-B1.log",
+      "bytes": 1026,
+      "sha256": "577a0e4854254943a6b76364dd21a4b923f0058f4eb86a06466d108a753c4aaf",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-B1.log.gz",
+      "gzipBytes": 431,
+      "gzipSha256": "855a98ae3871bc42ad43594bea535693bfae1fd72546f85ecf725f4755efe48a",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-B2.log",
+      "bytes": 1038,
+      "sha256": "69232cdb285c1d2de4141dc6d6e4171dad407119fdef5ba3970031effda53961",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-B2.log.gz",
+      "gzipBytes": 435,
+      "gzipSha256": "7ee2844c6442cedf4bbb13f4159379f52d04abea16d713b49e63180731c3e500",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-compare-v1.json",
+      "bytes": 2831973,
+      "sha256": "a26781c0f2655151642e50351a11782c8ebe2077b0c8fa8853edf81c2d5ac710",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-compare-v1.json.gz",
+      "gzipBytes": 154129,
+      "gzipSha256": "d6a04d3e9bfb54b50e29908bdcdccfe3a0a16b45a23198db42ece2c8f1a739ca",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-compare-v1.log",
+      "bytes": 124,
+      "sha256": "ac99ff8c3108b0fb75b4a8b388f807cddbdf7855f9b4f442a9e842c853ff9515",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-compare-v1.log.gz",
+      "gzipBytes": 123,
+      "gzipSha256": "41520e1ba97b248f50cd2bbf7fd46e184ce750fc9a8052d9692e0d67b2289803",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-candidate-v2.log",
+      "bytes": 4831,
+      "sha256": "0aff85a358dc97a97dd7ebb44d5d8b1388ebba2a83f32565fadabb5a84f326e8",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-candidate-v2.log.gz",
+      "gzipBytes": 957,
+      "gzipSha256": "f1049ff5e9fcd1b3b440f604c00b9f2ecc881107d573bb7be02fd63974ab7828",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-compare-v2.log",
+      "bytes": 129,
+      "sha256": "1a82649864579120e8c8430ebf379d4a3cddfdefea8560e869e197bd0f66626e",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-compare-v2.log.gz",
+      "gzipBytes": 124,
+      "gzipSha256": "1440bcff5bcca47cc899c49d16a0ff04e47fac58fb79fc301e37c90bc17ebb94",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-original-v1.log",
+      "bytes": 5156,
+      "sha256": "b5b6fd457bdbc9410337ee8ee5df29cec914194117d23acfd2449bc833067ddd",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-original-v1.log.gz",
+      "gzipBytes": 1048,
+      "gzipSha256": "71d5ee1b83ae527c404069745ceb4e0f3f309553ee52ca4e962e6a5d7909459d",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-original-v2.log",
+      "bytes": 4829,
+      "sha256": "0bb08bd454291084e1f5a02459ce06885e4cff7a2191288aff596297129763d6",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/native-original-v2.log.gz",
+      "gzipBytes": 964,
+      "gzipSha256": "015bea9c59bbdba151dd8fe907f5cd8c0934b203013215a9fb4cb6a5d68ac358",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/original.ts",
+      "bytes": 11129,
+      "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/original.ts.gz",
+      "gzipBytes": 3440,
+      "gzipSha256": "3b0f39012a4b0181f88be7da5de68e24625f4a9abaf598c91cc5891073eef2b3",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/provider-preservation.json",
+      "bytes": 917,
+      "sha256": "5ee0b1ee09afdeb6d11c323fdd0d9665b167971959cc0bebf891859b6eeb9f87",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/provider-preservation.json.gz",
+      "gzipBytes": 430,
+      "gzipSha256": "1b93e3f1751d75cb40a0f473763f955376eed58b9d28f66da9e73c66d483cb5a",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/region.ts",
+      "bytes": 2358,
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/region.ts.gz",
+      "gzipBytes": 1041,
+      "gzipSha256": "76d045f51cd372e714f3a507daad5a48df77328d276d75ecce79193af23e79e0",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/source.json",
+      "bytes": 1219,
+      "sha256": "470428afad9b63b95043ec2bed3265cb371eecd0fd29ff002c1b42f314deb969",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/source.json.gz",
+      "gzipBytes": 591,
+      "gzipSha256": "764d69b7435bbfc548e570c53d45bba267ec4e950a58ed939701e47be0348f45",
+      "originallyTracked": false
+    }
+  ],
+  "keptFiles": [
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/README.md",
+      "bytes": 12882,
+      "sha256": "465699f34fe81a1cf846ce8f0a500e2dad150ac37fb966bc3a724d71039cfd85",
+      "reason": "Uncompressed PNG or human Markdown"
+    }
+  ],
+  "sourceManifest": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/archives/source-archives.json",
+  "comparisonScripts": [
+    {
+      "report": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-compare-v1.json",
+      "reportSha256": "a26781c0f2655151642e50351a11782c8ebe2077b0c8fa8853edf81c2d5ac710",
+      "key": "analyzerSha256",
+      "script": "scripts/art-card-upload-depth1-frame-compare.mjs",
+      "sha256": "d54f6ee6360543985a76129a88c7dbf2d2249f59d2b88ca8fd0bb4f5656dad1e",
+      "snapshot": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/executed-comparison-scripts/d54f6ee6360543985a76129a88c7dbf2d2249f59d2b88ca8fd0bb4f5656dad1e.mjs"
+    }
+  ],
+  "meaning": "Exact actual output/helper/runtime/optimizer/provider bytes. Original failure and result fields remain unchanged. PNG/Markdown and manifests are not compressed."
+}

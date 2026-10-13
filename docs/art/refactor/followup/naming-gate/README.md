@@ -71,3 +71,9 @@ python3 scripts/art-queue-source-archive.py --materialize --folder queue-bracket
 v3 analyzer 还需要 `pre`、`pre-post` 两臂的源码；恢复它们后，用全新输出目录运行原 analyzer。独立 `--out` 的布局因工具而异，不能代替原位恢复，[Queue 归档说明](../card-streaming/stall-followup/queue-archives/README.md)列出准确路径。完成重审后再逐 SHA 清理临时裸输入/源码，source 清理指定实际恢复的 `--folder`，保留 `.gz` 与 manifest，然后运行未改写的原命名门。旧 22 项不是本次 queue 归档的删除目标。
 
 Replay 各阶段精确归档/清理全部结束后，[最终原 SDK 单测日志](final-replay-generation-single-test.log.gz)实测 **6 项通过 / 1 项失败 / 22.60 秒**，[最终逐项验证](final-replay-generation-validation.json)确认匹配路径严格等于原基线 **22 项**、新增零。[源码冻结记录](final-replay-generation-source-freeze.json)保存 source/public 测试前后 stat/diff 均无变化的证明。前面各时点日志与计数保持历史含义；最后结果仍保留原命名失败，不是单测或全仓全绿。
+
+## Depth-one scratch 本批最终检查
+
+[独立归档说明](../card-streaming/stall-followup/depth1-scratch/archives/README.md)保留固定范围、原文件名、首次排序失败与完整 SHA 恢复。799 份实际输入、7,875 个原源文件及 50 份 kept PNG/Markdown 已独立验证、恢复、清理；候选/provider/helper 不混入原 Git source map，原 native v1 EXIT1 和后续 v2 PASS 均不回写。
+
+全部包装、独立恢复和清理完成后，原 `npx vitest run src/sdk/package-boundaries.test.ts` **只执行一次**，实际 exit 1：[完整原日志 gzip](final-depth1-single-test.log.gz)为 **6 项通过 / 1 项失败 / 23.78 秒**。[逐项验证](final-depth1-validation.json)确认 22 个匹配与原基线逐项、有序完全相同，本批新增零；[测试前后源冻结](final-depth1-source-freeze.json)确认实际测试 HEAD `2aba1a26e18991a48a90d9adc2d1097795941a8c`、生产 cc 与历史 source 参考 docs 4e7e5e8 的 source/public 树相同、工作 diff 干净且原测试 SHA 未变。记录中的 `productionDocsCommit` 是历史比较参考，不是把 4e7e5e8 声称为当前 HEAD。[执行检查程序 gzip](final-depth1-executed-check.py.gz)及日志完整原/压缩 SHA 均保存，独立解压与原字节完全相同。验证程序 exit 0 仅表示准确识别未变的基线失败，没有把原测试 exit 1 改为通过，也没有缩小原检查或改旧 22 项。

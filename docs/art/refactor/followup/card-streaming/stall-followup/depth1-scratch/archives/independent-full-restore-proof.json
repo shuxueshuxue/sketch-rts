@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "restoredRoot": "/tmp/depth1-full-restore-v2",
+  "inputFiles": 799,
+  "keptFiles": 50,
+  "sourceFiles": 7875,
+  "scopes": [
+    {
+      "scope": "native-original-v1",
+      "inputs": 222,
+      "keptFiles": 1,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "native-original-v2",
+      "inputs": 222,
+      "keptFiles": 12,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "native-candidate-v2",
+      "inputs": 223,
+      "keptFiles": 12,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "frame-abba/A1",
+      "inputs": 28,
+      "keptFiles": 6,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "frame-abba/B1",
+      "inputs": 28,
+      "keptFiles": 6,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "frame-abba/B2",
+      "inputs": 28,
+      "keptFiles": 6,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "frame-abba/A2",
+      "inputs": 28,
+      "keptFiles": 6,
+      "sourceFiles": 1125,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": "native-compare-v2",
+      "inputs": 3,
+      "keptFiles": 0,
+      "sourceFiles": 0,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    },
+    {
+      "scope": ".",
+      "inputs": 17,
+      "keptFiles": 1,
+      "sourceFiles": 0,
+      "allFullShaSizeAndSourceGitBlobsExact": true
+    }
+  ],
+  "everyRestoredInputFullSizeAndShaExact": true,
+  "everyRestoredSourceFullSizeShaAndGitBlobExact": true,
+  "allManifestBytesExact": true,
+  "singleOriginalSourceContainerBytesExact": true,
+  "noProductionChanges": true
+}

@@ -117,3 +117,9 @@ v2 主 512 模式对照了两个完整 provider，其余模式使用明确的独
 来源快照数量较多，归档大小和审阅成本应单独处理。归档整理不能改变执行 provider/helper/raw 内容、掩盖失败，或把尚未完成的实验标成已验证。
 
 [归档索引](EVIDENCE-INDEX.md)记录已完成 source-snapshot 的完整字节集合、去重边界与可复原路径。原 11 个 run 与后来完成的四个 row-band/ring512 pilot run 均逐解压文件 SHA 验证，共用一份 2,212,438-byte 压缩容器。两批先完整验证，再分别清理 12,320 和 4480 个裸快照文件；`current-trace` 与 `ring512-pilot-v2/candidate-B` 各 1120 文件均恢复到全新 `/tmp` 目录并逐 SHA 通过。原 raw/provider/helper 字节保留；本轮另将 16 份命名匹配证据精确压缩为同路径 `.gz`，正常单测无需保留其裸副本。运行原 source-archive 校验/恢复、helper 或 analyzer 前，先执行 `python3 scripts/art-naming-evidence-archive.py --materialize`，再按索引 materialize 所需源码快照。native、未来 formal 或其他活动捕获不纳入这两批固定清单。
+
+## Depth-one public array scratch followup
+
+The previously unimplemented depth-one scratch candidate is now [implemented only as an isolated experiment, proved and rejected for production](depth1-scratch/README.md). It preserves all original source RGBA and native mips, all 19,080 actual picks, 303 game snapshots/checksums plus 12 native/gameplay image pairs and all 24 full-frame captures. The original failed test-assertion/provenance v1 stays preserved; subsequent original/candidate v2 proofs pass.
+
+Eight-lifetime full-frame ABBA in the same SwiftShader environment gives 435.723→428.171 ms complete-wall mean (−1.73%), effectively unchanged P95 (1,315.7→1,316 ms), and higher no-render CPU mean (40.925→42.034 ms, +2.71%). The marked native-generation phase remains essentially unchanged (828.187→826.465 ms). Owned card raster/mip and CPU bytes are identical. These mixed, small gains do not justify a production path change; no hardware benefit, exclusive mip algorithm cost or historical token-resource cause is claimed. No new production files change in this phase.

@@ -31,7 +31,7 @@
 
 ## 未采用的上传与存储候选
 
-全部候选冻结在原 `8345` 美术与运行源，并保存原生 GPU、输入、运行图、Three 身份、优化依赖首尾 SHA、像素与全部计时证据。不能把这些数据叠加成最新整体游戏提速。
+下表三项候选冻结在原 `8345` 美术与运行源，并保存原生 GPU、输入、运行图、Three 身份、优化依赖首尾 SHA、像素与全部计时证据。后续 depth-one scratch 实验单独冻结 `42bd61c74934dc76f30d42b62e1e31eb5c5974ff`；不同来源与成本域的数据不能叠加成最新整体游戏提速。
 
 | 独立候选 | 实测 | 决定 |
 | --- | --- | --- |
@@ -47,6 +47,12 @@
 
 [三段 v4 最终报告](card-streaming/stall-followup/exact-upload-replay/stage4-report.md)记录实际 EXIT0/PASS：159 个非 disjoint query 中，upload/到达命令段为 0.03892 ms、真实 native generation 命令段为 826.53367 ms、全部 tail copy 段为 95.01889 ms；CPU 提交分别为 32.8 / 0.4 / 9.0 ms。很短的 upload GPU 标记不表示 CPU 上传免费。总 envelope 1109.4 ms 包含 async completion/poll/marker；它是排空历史后的局部诊断，不是正式整帧优化对照。源上传矩形 20,053,380 bytes，完整 mip 复制 102,868,324 bytes；不能从较大的复制字节猜它最慢。生成命令段是当前软件环境的主要观察成本，但 marker 包含到达/等待，旧 token 的资源链仍未证明。真实 HTTP 转换后 JS 正文、原生像素、源/依赖和字段级初末态检查均通过；没有采用绕开原生 mip 或降低画质的方案。
 
+后续 [depth-one scratch 完整实验](card-streaming/stall-followup/depth1-scratch/README.md)仅在独立候选中把 GPU scratch 改为单层 `DataArrayTexture`，锁定四项纹理/向量/零层替换，原 CPU 来源、像素、native mip、ROI、LRU、同步上传和模拟规则均保留。最新生产源仍为 `cc854814473bb684e4444eb69719b9978b6dbdc6`；这次候选经验证后**不采用**，未写入生产 `src`。
+
+[严格原生与真实游戏对照](card-streaming/stall-followup/depth1-scratch/native-compare-v2/summary.json.gz)实际 PASS、差异零：原 53 份完整输入、523 个写入 mip、1,040 个最终驻留层级、12 对完整 RGBA 图、19,080 次拾取、303 份完整模拟快照及校验和均一致。灵体六次受击、五次反击、共十一 hit、死亡 tick112 和零血迹保持原规则；每个成功 run 的 202 份实际 HTTP 正文及 392/392 映射通过。1,125 个原 Git 源文件逐完整 SHA 与固定 `99aa634b…` 集合身份核验，执行候选另外保存。十个指定资源时钟仅从数学状态等价中排除，逐项实际值保留，没有宣称时钟相等。原 [native v1](card-streaming/stall-followup/depth1-scratch/native-original-v1/proof.json.gz)仍为 EXIT1；错误的 total-hit 断言及两处动态 import 映射问题只在后续 v2 helper 修正，没有改写过去记录。
+
+[完整帧 ABBA 对照](card-streaming/stall-followup/depth1-scratch/frame-compare-v1.json.gz)实际 PASS，24 张 battlefield/empty/return 图及资源结构差异零。A1/B1/B2/A2 每 arm 两个 renderer 生命周期，每侧 48 个真实三段绘制加 GPU completion 的 complete-wall 样本均值 **435.723→428.171 ms（−1.73%）**，P95 **1,315.700→1,316.000 ms** 基本不变；每侧 240 个关闭 `renderer.render` 的辅助 CPU 构造样本均值 **40.925→42.034 ms（+2.71%）**。应用 owned card CPU **7,787,776 bytes**、GPU **191,718,124 bytes** 完全相同，不是物理驱动内存。独立 query 的 generation 命令边界 **828.187→826.465 ms** 没有实质变化；它与完整帧不是同一个计时成本，不能相加。该场景是原 20-kind/100-visible-unit 资产输入，实际战斗另作等价验证；Chromium/ANGLE SwiftShader 结果不泛化为硬件 GPU、整应用 FPS 或已解决历史 token 长尾。
+
 ## 最终检查与剩余边界
 
 最新同步源的客户端/剧情测试 **132 文件 / 1067 tests 全通过**：[日志](frontend-sync-reuse/all-client-tests.log)。`build:production` 包含全局 TypeScript、Vite 和 server bundle，exit 0：[日志](frontend-sync-reuse/production-build.log)；[源首尾 SHA](frontend-sync-reuse/all-client-build-checks.json)一致。此前 77a2c307 的 1066 tests 和构建日志仍保留在 spirit-no-blood 目录，真实灵体和小地图证明在该源冻结后完成，原始失败及来源不改写。
@@ -54,6 +60,8 @@
 较早的 d7 全仓测试为 609 文件、6466 通过/5 失败：[完整日志](spirit-redraw/validation/full-tests.log)。四个船舶导航失败在冻结 8345 上完全复现，shared/SDK 树及工作区无变化；另一个文档命名门已在基线失败，但本轮证据新增匹配项（该次 22→34），不能把整个失败称为未变。[复现与精确树证据](spirit-redraw/validation/baseline-8345-comparison.json)。未修改这些规则或测试，也未宣称全仓全绿。
 
 新增证据归档前命名匹配一度到 40 项；完整输入逐字压缩、恢复校验和清理后，原 SDK 单测实际仍为 6 pass/1 fail、22 个匹配，名单严格等于冻结基线。[新增影响清零与未通过的原测试](naming-gate/README.md)分开报告；未修改测试、旧基线字节或检查标准。最新 fetch 的 main 为 `98cf811`，从共同基线 a644 的新增提交没有修改 client/shared/server/SDK；AI 与工作流的上游改动不由本车道重写。
+
+Depth-one 阶段随后完成 [全部输入与来源精确归档](card-streaming/stall-followup/depth1-scratch/archives/README.md)：799 份输入逐原 size/SHA 恢复，七组共 7,875 个源文件逐 Git blob 与完整 SHA 恢复，50 份原 PNG/Markdown、全部 manifest 及共享容器字节通过。首次打包排序校验失败完整保留，后续 verify/materialize/prune/final verify 实际通过；归档不重写 native v1 失败或候选否决结论。原 SDK 单测仅再运行一次，[新日志](naming-gate/final-depth1-single-test.log.gz)实测 **6 pass / 1 fail / 23.78 秒**，[新逐项验证](naming-gate/final-depth1-validation.json)仍严格等于原 22 项、新增零；[source/public 首尾冻结](naming-gate/final-depth1-source-freeze.json)证明生产树、工作 diff 与原测试 SHA 未变。最新 cc 源的 1067 个客户端测试和构建沿用前述原执行证明，本阶段没有重复运行或宣称全仓全绿。
 
 公共房间每次读取的快照复制与派生成本仍未优化。渲染器已在作画/提交前裁剪单位、建筑、船只、尸体、投射物和接触墨迹；地形仅保留可见 chunk。必要模拟、动作/血迹历史和完整小地图仍覆盖全世界，不能通过删去它们冒充渲染收益。
 
