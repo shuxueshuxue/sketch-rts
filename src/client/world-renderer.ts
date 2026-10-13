@@ -396,7 +396,7 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
 // Rocks and gates across their ways (see @@@obstacle-art), their health shown once they are struck.
 function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
   for (const obstacle of obstacles) {
-    const shake = hitFeedbackOffset(painter.snapshot, obstacle);
+    const shake = hitFeedbackOffset(painter.snapshot, obstacle,painter.viewIndex.hits);
     const point = worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
     if (!nearScreen(painter, point, obstacle.radius + 80)) continue;
     drawAtlasObstacle(painter.ctx, obstacle, point);
