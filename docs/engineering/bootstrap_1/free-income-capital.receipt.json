@@ -1,0 +1,56 @@
+{
+  "base": "4b8312922dc9057299aef16f3b40948c073cb49a",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 3,
+    "newSerializedFields": 0,
+    "newSerializedStructures": 0,
+    "newDefaultOrCompatibilityPaths": 0,
+    "requiredCollectorArgumentsUnchanged": 8,
+    "sharedExpansionPurchase": "baseGoal and v6ExpansionPoint",
+    "sameWorkerCap": 36,
+    "sameInvestmentPriority": 76,
+    "earlyRejection": "Pending mining halls and guarded mines return before site and builder-route evaluation."
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/economy.ts": "5ceb33048bf9a4a77c21e99b48b37f1c08eda333584a19e62f3446b77b2d6417",
+    "src/ai/policy/v6/economy.ts": "a700e54b5de0570ed8cd91bd8b68b8217b08f467bf3fec8eb868e40a7f80e7f4",
+    "src/ai/bootstrap_1/free-income-capital.ts": "5c6532238709a139210ab51b4aedeb7f01924501b49387baf834b4f2b62d9d52"
+  },
+  "focusedSdk": {
+    "passed": 64,
+    "failed": 0,
+    "suites": 3,
+    "sha256": "ed59944f0fcdaf99478f0c511881713e982f168de5e2a0aabe81afe3dd051599"
+  },
+  "relatedSdk": {
+    "passed": 128,
+    "failed": 0,
+    "suites": 9,
+    "sha256": "56c78c34da18647b5eae193da624a79fe14ce0594b1a28413c63ce9840aacb54"
+  },
+  "identicalParent": {
+    "passed": 24,
+    "failed": 12,
+    "sameNewSdkCases": 36,
+    "testSourceSha256": "c712c165a3d553b73480000d13a9a5e1d451597fcdef721a2fe96809cc461a65",
+    "failure": "Twelve free-mine cases never establish and deposit at the third mine;24 low-value and allied controls pass."
+  },
+  "stockPolicy": {
+    "cases": 72,
+    "identicalCommandsAndMemory": true,
+    "sha256": "8a47b6ecf59b9ff1f995a32f8b7085f10195c54a143104cba7da6ffd7d7275dd"
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "logSha256": "052ecaadc1f44aebdc303779d9518e6299f7b00bc00e20b1ab2754a337556a3a"
+  },
+  "observations": {
+    "fixedPineshade6000to10000": "Unchanged: two halls,11workers,14permanent troops,zero new losses. Not formal acceptance.",
+    "soloGrandEstuary16000to20000": "Unchanged. The main mine depletes; sixth hall is still constructing, and all hall-to-mine gaps remain210-to218.",
+    "soloGrandEstuary20000to24000": "Unchanged:6working halls,31workers,39permanent troops,15creep kills,one remaining creep,zero permanent losses. Existing quotas have not yet limited development.",
+    "scope": "The12 paid isolated investment cases prove missing free-income capability. These native windows show no whole-controller gain; no victory claim and no repeated fullmatrix."
+  }
+}
