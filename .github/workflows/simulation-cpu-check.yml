@@ -107,7 +107,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/summoned-raids.test.ts src/ai/bootstrap_1/tower-rush.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/clinic-army-availability.test.ts
 
       - name: Verify ready free income before guarded mines
-        run: npx vitest run src/ai/bootstrap_1/free-income-capital.test.ts src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
+        run: npx vitest run src/ai/bootstrap_1/landed-colony-capital.test.ts src/ai/bootstrap_1/free-income-capital.test.ts src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
 
       - name: Verify active mining jobs and transported worker credits
         run: npx vitest run src/ai/bootstrap_1/active-mining-jobs.test.ts src/ai/bootstrap_1/workforce.test.ts src/ai/bootstrap_1/transported-workforce.test.ts src/ai/bootstrap_1/island-workforce.test.ts
