@@ -13,7 +13,7 @@ import { THINK_TICKS, mountedEscape, mountedMicro, mountedTargetOrder, mountedTh
 
 const THREAT_RANGE = 750;
 
-function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
+export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
     ...Array.from({ length: 16 }, (_, index) => index * Math.PI / 8)];
@@ -37,7 +37,7 @@ function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
 }
 
 function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, hall: Building, towers: readonly Building[], defenders: readonly Unit[]) {
-  if (firingPoint(snapshot, rider, worker, towers, defenders)) return true;
+  if (mountedFiringPoint(snapshot, rider, worker, towers, defenders)) return true;
   if (worker.order.type !== 'mine') return false;
   const resourceId = worker.order.resourceId;
   const mine = snapshot.resources.find(resource => resource.id === resourceId && resource.amount > 0);
@@ -47,7 +47,7 @@ function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, ha
   const entry = { x: mine.x + (hall.x - mine.x) * GOLD_MINE_RULES.entryRange / gap,
     y: mine.y + (hall.y - mine.y) * GOLD_MINE_RULES.entryRange / gap };
   return isWalkable(snapshot.map, entry.x, entry.y) && sameGround(snapshot.map, worker, entry)
-    && firingPoint(snapshot, rider, entry, towers, defenders) !== undefined;
+    && mountedFiringPoint(snapshot, rider, entry, towers, defenders) !== undefined;
 }
 
 /** Prospective scouts and live raids use the same exposed line and admitted station. */
@@ -65,11 +65,15 @@ export function nextMountedCamp(snapshot: GameSnapshot, rider: Unit, camps: read
   return nearestByRoute(snapshot.map, choices.map(camp => ({ ...camp.center, camp })), rider, 'land')?.camp;
 }
 
-function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const available = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
+export function availableMountedRiders(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
     && unit.id !== options.memory.shopping?.unitId
     && !['board', 'cast', 'charge'].includes(unit.order.type)
     && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
+}
+
+function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const available = availableMountedRiders(snapshot, owner, options);
   const byId = new Map(available.map(unit => [unit.id, unit]));
   const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0 && isOpponentOwner(snapshot, owner, building.owner, options));
   const defenders = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && isOpponentOwner(snapshot, owner, unit.owner, options));
@@ -131,7 +135,7 @@ export const mountedTasks: AiScript = {
       const candidates = objective.kind === 'camp' ? snapshot.units.filter(unit => objective.ids.includes(unit.id))
         : raidWorkers(snapshot, objective.owner, snapshot.buildings.find(building => building.id === objective.hallId)!);
       return snapshot.units.filter(unit => assignment.unitIds.includes(unit.id)).flatMap(rider => {
-        const workers = candidates.map(target => ({ target, point: objective.kind === 'camp' ? target : firingPoint(snapshot, rider, target, towers, defenders) }))
+        const workers = candidates.map(target => ({ target, point: objective.kind === 'camp' ? target : mountedFiringPoint(snapshot, rider, target, towers, defenders) }))
           .filter((choice): choice is { target: Unit; point: Point } => choice.point !== undefined);
         const local = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.owner !== owner
           && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options))

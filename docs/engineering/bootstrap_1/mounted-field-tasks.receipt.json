@@ -1,0 +1,62 @@
+{
+  "base": "88273fc8e96c66b0f8d14091d97d021f9e6dbfc8",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 5,
+    "insertions": 78,
+    "deletions": 12,
+    "newSerializedStructures": 0,
+    "newSerializedFields": 0,
+    "snapshotAllocationWeakMaps": 1,
+    "reusedSelectors": [
+      "availableMountedRiders",
+      "mountedFiringPoint",
+      "mountedTargetOrder",
+      "mountedMicro"
+    ],
+    "newDefaultOrCompatibilityPaths": 0
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mine-defense.ts": "3c3372775624f1b730c9790a623e45427599adcff14b4e22e1747bd85177555c",
+    "src/ai/bootstrap_1/mounted-micro.ts": "c6daa3d87b9ff3779a5869bb481189afe1e3426dc256edf49670b327f417195c",
+    "src/ai/bootstrap_1/mounted-tasks.ts": "d9fa0313a542ab6fe5b05ff1328d93102b9b62eb50c8ce2c4e3b55ef1b1e269d",
+    "src/ai/bootstrap_1/policy.ts": "996155fd386ce326a82ca7e7225fd7b6beee244f143624611adc64dad42e4165",
+    "src/ai/bootstrap_1/mounted-field.ts": "194c749da85bcd359e6b739ac194b6fe826ddf50b6d97d17e265b9599735df3a"
+  },
+  "focusedSdk": {
+    "passed": 18,
+    "failed": 0,
+    "setups": "three families x two mirrors x (unupgraded footman, speed1 footman, speed1 EmberRavager)",
+    "normalStartingGold": 500,
+    "paidHorses": 300,
+    "paidSpeedLevel1": 185,
+    "allSixKilled": true,
+    "friendlyInjury": 0,
+    "reportSha256": "a99d143b47e6bde52db2369f5b2e7ef26015f8152303de702e11ed71ec80bb44"
+  },
+  "identicalParent": {
+    "passed": 0,
+    "failed": 18,
+    "reportSha256": "94818c0b183faacb6645e9f4e7a483e313629eb2d5a024a6cd36b99730d3d0c9",
+    "testSourceSha256": "6ee7b515c04a1668708c275fa33497307b51f1b8960e1d2eb09a7999a35b3d79"
+  },
+  "taskOwnershipRepair": {
+    "passed": 61,
+    "failed": 0,
+    "reportSha256": "c65db3eafc4257121e05a678ae16732b168a6f15f83650bb115c67cc007410e9",
+    "changedOriginalTest": "archer-task-scope: only expected executor name for horseArcher now mountedField; original health,camp membership and spending assertions retained"
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "logSha256": "6d5e75836e2482919702f410061483bdc8dd63abb6c619273c217668636a8f08"
+  },
+  "wholeGameLimit": "Existing fixed Pineshade knight defeat contains no horseArcher at6000/12000/18000/24000. No formal whole-game improvement measured; recruitment admission is the next gap, not a reason to run an irrelevant unchanged window.",
+  "relatedSdk": {
+    "passed": 265,
+    "failed": 0,
+    "suites": 25,
+    "reportSha256": "e8364fb37366d85e575511dcefa6990707a280e99db9bbc52f29ac79d19de1f7"
+  }
+}
