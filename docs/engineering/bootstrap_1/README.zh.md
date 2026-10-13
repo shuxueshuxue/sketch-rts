@@ -2,7 +2,9 @@
 
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
-最新已验证线上版本为 #354 `798f2bc53cb6a1a9dfea9023bae56c4ac4361b45`，[医疗能力与实际可出征部队](./healing-capability-readiness.zh.md) 的 370 项本地 SDK 检查、首次 CI `38325366339` 与首次生产 `38325745146` 通过。五个发布步骤和精确版本标签已核验。[发布证明](./healing-capability-readiness-release.receipt.json)。同一固定召唤师开局在 27400 tick 败北、永久损失 52，原 #353 为 13829 tick／28；不是强度验收通过。完整快照中的 24000 tick 有 15 个精灵，先前把永久单位统计误读成没有召唤物，现已纠正。[固定对局记录](./fresh-summoner-healing-readiness.receipt.json)。
+最新已验证线上版本为 #355 `19f53beda1bb8bc395d106e184ffa4a10517cd4a`，[精灵独立矿线任务](./summoned-mining-raids.zh.md) 的 184 项本地 SDK 检查、构建、首次 CI `38326816477` 与首次生产 `38327269372` 通过；五个发布步骤和精确版本标签均核验。[发布证明](./summoned-mining-raids-release.receipt.json)。十二个受控真实击杀场景保住宿主、零金币支出；真实残局仍未取得工人击杀或胜利，完整验收继续等待。
+
+此前已验证线上版本为 #354 `798f2bc53cb6a1a9dfea9023bae56c4ac4361b45`，[医疗能力与实际可出征部队](./healing-capability-readiness.zh.md) 的 370 项本地 SDK 检查、首次 CI `38325366339` 与首次生产 `38325745146` 通过。五个发布步骤和精确版本标签已核验。[发布证明](./healing-capability-readiness-release.receipt.json)。同一固定召唤师开局在 27400 tick 败北、永久损失 52，原 #353 为 13829 tick／28；不是强度验收通过。完整快照中的 24000 tick 有 15 个精灵，先前把永久单位统计误读成没有召唤物，现已纠正。[固定对局记录](./fresh-summoner-healing-readiness.receipt.json)。
 
 
 ## 当前记录（2026-10-13）

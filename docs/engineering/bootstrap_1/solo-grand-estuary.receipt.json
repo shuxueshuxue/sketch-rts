@@ -1,0 +1,184 @@
+{
+  "mode": "One solo sandbox observation on an unchanged official map. No opponents. Native scriptedVictory suppresses immediate single-team victory; ordinary resources/stats/cadence. Not acceptance or an opponent sweep.",
+  "revision": "798f2bc53cb6a1a9dfea9023bae56c4ac4361b45",
+  "match": {
+    "name": "grandEstuary/v9_knight/solo/grove/0",
+    "mapId": "grandEstuary",
+    "subject": "v9_knight",
+    "side": 0,
+    "seed": "bootstrap_1-solo-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_knight",
+        "versionLabel": "v9_knight",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      }
+    },
+    "maxTicks": 12000,
+    "thinkInterval": 15
+  },
+  "summary": {
+    "tick": 12000,
+    "gold": 230.72,
+    "workers": 11,
+    "halls": 2,
+    "workingHalls": 2,
+    "islandHalls": 0,
+    "permanentArmy": 17,
+    "remainingCreeps": 36,
+    "creepsKilled": 4,
+    "ownPermanentDeaths": 0,
+    "freeMines": [
+      {
+        "id": "gold-seat0-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat1-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat1-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat1-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat2-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat2-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat2-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat3-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat3-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat3-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat4-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat4-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat4-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat5-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat5-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat5-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat6-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat6-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat6-2",
+        "amount": 9500,
+        "island": false
+      },
+      {
+        "id": "gold-seat7-main",
+        "amount": 6000,
+        "island": false
+      },
+      {
+        "id": "gold-seat7-1",
+        "amount": 7500,
+        "island": false
+      },
+      {
+        "id": "gold-seat7-2",
+        "amount": 9500,
+        "island": false
+      }
+    ]
+  },
+  "checksum": "7cc2af30",
+  "reportSha256": "3b893223b2a5ea593a5138fa4c898a621fa3efbd645e9a73ebfd99ffb47c070f",
+  "nextWindow": [
+    {
+      "name": "parent",
+      "summary": {
+        "tick": 16000,
+        "gold": 438.18,
+        "workers": 16,
+        "halls": 3,
+        "workingHalls": 3,
+        "permanentArmy": 24,
+        "remainingCreeps": 23,
+        "ownPermanentDeaths": 0,
+        "creepsKilled": 13
+      },
+      "checksum": "4c61a9c1"
+    },
+    {
+      "name": "candidate",
+      "summary": {
+        "tick": 16000,
+        "gold": 7.22,
+        "workers": 16,
+        "halls": 4,
+        "workingHalls": 3,
+        "permanentArmy": 24,
+        "remainingCreeps": 21,
+        "ownPermanentDeaths": 0,
+        "creepsKilled": 15
+      },
+      "checksum": "873c068c"
+    }
+  ],
+  "windowReportSha256": "534ec6234d29b74619e2f888ffccadec575d7ad0c0b080d653bc5a0cc3ed2f94",
+  "islandProof": false,
+  "formalAcceptance": false
+}
