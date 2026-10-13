@@ -386,10 +386,15 @@ function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
 
 /** One ordinary expansion purchase, with the shared mine spacing and construction selector. */
 export function v6ExpansionGoal(economy: Economy, mine: Point, priority: number, target: number): Goal & { point: Point } {
-  const offset = expansionOffset(economy.snapshot, economy.owner);
-  const point = legalBuildPointNear(economy.snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
+  const point = v6ExpansionPoint(economy.snapshot, economy.owner, mine);
   return { ...goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true,
     (used) => economy.construct(economy, "townHall", point, used, "expand")), point };
+}
+
+/** Mine selection and the paid construction goal use the same legal hall site. */
+export function v6ExpansionPoint(snapshot: GameSnapshot, owner: PlayerId, mine: Point): Point {
+  const offset = expansionOffset(snapshot, owner);
+  return legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
 }
 
 function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priority: number): Goal[] {
