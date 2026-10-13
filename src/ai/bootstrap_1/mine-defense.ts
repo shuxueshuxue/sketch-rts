@@ -24,6 +24,7 @@ import { availableV6Army, planV6Army, retreatV6Front, V7_WOUNDED_SHARE, waitsFor
 import { activeCamp, neutralCamps, V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
+import { summonedMiningRaids } from './summoned-raids';
 import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 
@@ -190,6 +191,7 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   for (const id of shoppingUnitIds(snapshot, owner, options)) crew.add(id);
   for (const id of mobileCare.claimsUnits!(snapshot, owner, options)) crew.add(id);
   for (const { patient, walk } of postRecoveryAssignments(snapshot, owner, options)) if (!walk) crew.add(patient.id);
+  for (const { spirit } of summonedMiningRaids(snapshot, owner, options)) crew.add(spirit.id);
   const army = intel.army.filter(unit => !crew.has(unit.id) && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
