@@ -1,0 +1,12 @@
+file:///workspace/sketch-rts-viewport/scripts/art-minimap-cache-main-proof.mjs:18
+if (arg('--expect-commit') && commit !== arg('--expect-commit')) throw Error(`Wrong source ${commit}`);
+                                                                       ^
+
+Error: Wrong source 77a2c3078b1f14c02f1058dc22fd31a80f9dd314
+    at file:///workspace/sketch-rts-viewport/scripts/art-minimap-cache-main-proof.mjs:18:72
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.19.0

@@ -1,0 +1,16 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-viewport
+
+ ✓ src/client/atlas-art.test.ts (7 tests) 1061ms
+   ✓ catalog Canvas paint identities > reuses the proven idle pairs without changing fresh painter arguments, world shadows or cropped output 487ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  12:31:38
+   Duration  2.85s (transform 916ms, setup 0ms, collect 1.46s, tests 1.06s, environment 0ms, prepare 54ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

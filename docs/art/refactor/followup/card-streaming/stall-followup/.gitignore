@@ -1,0 +1,4 @@
+# Exact gzip archives are committed; materialize these large original inputs
+# before invoking the historical trace analyzer. See EVIDENCE-INDEX.md.
+/current-trace/trace.json
+/current-gl-trace/trace.json

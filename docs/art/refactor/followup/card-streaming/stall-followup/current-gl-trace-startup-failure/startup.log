@@ -1,0 +1,14 @@
+node:internal/fs/promises:916
+  return await PromisePrototypeThen(
+         ^
+
+Error: EEXIST: file already exists, mkdir '/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/current-gl-trace'
+    at async mkdir (node:internal/fs/promises:916:10)
+    at async file:///workspace/sketch-rts-viewport/scripts/art-card-current-gl-trace-proof.mjs:33:1 {
+  errno: -17,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: '/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/current-gl-trace'
+}
+
+Node.js v24.19.0

@@ -1,0 +1,9 @@
+Tool-only failed archive preparation; this is not a rendering or performance capture.
+Command: python3 scripts/art-card-stall-source-archive.py --archive
+Observed exit code: 1
+Observed final exception: RuntimeError: Member order/set
+Cause: Python Path component ordering differed from lexicographic POSIX member-name ordering required by validation.
+No source snapshot file, raw capture, provider, helper or metadata was modified or deleted. No run manifest had been written.
+Unreferenced deterministic container preserved: 7e0b769444fd5b950930b7564dd29c73921c85be51feefd8fba8303dd80f6404.tar.gz (2212465 bytes).
+Correction: explicitly sort manifest files by full name before hashing and packing; canonical file-set SHA is 468839ab37bee10734865f09d6364d9e04d2efa0e501ce97da8b2cc21ed53736.
+This note records the observed failure and diagnosis; it is not an original stdout/stderr transcript.

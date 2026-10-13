@@ -1,0 +1,1210 @@
+{
+  "passed": true,
+  "before": {
+    "file": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/spirit-no-blood/gameplay/before/proof.json",
+    "head": "d7c7f4bf93ffd8364a1ee6ef0c6170ca442657a8",
+    "proofSha256": "708e1579d3222e1641f20fa88e2e43ed43aeb2340172dabef0c3c0eeef144e2d"
+  },
+  "after": {
+    "file": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/spirit-no-blood/gameplay/after/proof.json",
+    "head": "77a2c3078b1f14c02f1058dc22fd31a80f9dd314",
+    "proofSha256": "2558492016d1fb786f26cfb56e47b936a2ff9f86c380019a08c73b41c21817e7"
+  },
+  "analyzerSha256": "56322b2ccf90bad91ba1ad32f6983c2d662efff34de634f004531a9662b8c109",
+  "checks": [
+    {
+      "name": "source.rulesTrees",
+      "identical": true,
+      "sha256Before": "fb40b44894da90168078cfb32ca5b1bbb9cdd7fa7bedd2bcd1aec35e78a209de",
+      "sha256After": "fb40b44894da90168078cfb32ca5b1bbb9cdd7fa7bedd2bcd1aec35e78a209de"
+    },
+    {
+      "name": "source.rulesDiffSha256",
+      "identical": true,
+      "sha256Before": "b4b16dad390bac4c7ce42014c594fa668910b49ec1b7771a17891c187d71e0ab",
+      "sha256After": "b4b16dad390bac4c7ce42014c594fa668910b49ec1b7771a17891c187d71e0ab"
+    },
+    {
+      "name": "fps",
+      "identical": true,
+      "sha256Before": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+      "sha256After": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d"
+    },
+    {
+      "name": "snapshotHashes",
+      "identical": true,
+      "sha256Before": "5e2537dbae56726076b1d034d0b80d295bbfe987399488d0841cd006fa20b713",
+      "sha256After": "5e2537dbae56726076b1d034d0b80d295bbfe987399488d0841cd006fa20b713"
+    },
+    {
+      "name": "summons",
+      "identical": true,
+      "sha256Before": "0c3d724f0007381166bbd361b066dca05b197d5338ecc101dc9dbf3eb01055ac",
+      "sha256After": "0c3d724f0007381166bbd361b066dca05b197d5338ecc101dc9dbf3eb01055ac"
+    },
+    {
+      "name": "commands",
+      "identical": true,
+      "sha256Before": "bbe60399b08496fab921ac402a6bfc92c8be8c7a4580fea84e04ee2619fd3ffd",
+      "sha256After": "bbe60399b08496fab921ac402a6bfc92c8be8c7a4580fea84e04ee2619fd3ffd"
+    },
+    {
+      "name": "actualDeaths",
+      "identical": true,
+      "sha256Before": "a54b936773844df61c89a9deb205c456b9ec97aae4ec20cefce58b18aaadf49b",
+      "sha256After": "a54b936773844df61c89a9deb205c456b9ec97aae4ec20cefce58b18aaadf49b"
+    },
+    {
+      "name": "drawMutations",
+      "identical": true,
+      "sha256Before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sha256After": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "glError",
+      "identical": true,
+      "sha256Before": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "sha256After": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "name": "Original hit facts",
+      "identical": true,
+      "sha256Before": "aebab35e9c022c091754d041e14a15d85cb08c0c1143d986fec4a94ebc8a5988",
+      "sha256After": "aebab35e9c022c091754d041e14a15d85cb08c0c1143d986fec4a94ebc8a5988"
+    },
+    {
+      "name": "All complete original simulation snapshots",
+      "identical": true,
+      "sha256Before": "4062a93d60bc5aa15e4137e2f6dbb192cc973153174ae9bf7760b68ec3dbc115",
+      "sha256After": "4062a93d60bc5aa15e4137e2f6dbb192cc973153174ae9bf7760b68ec3dbc115"
+    },
+    {
+      "name": "Captured phase/tick/clock sequence",
+      "identical": true,
+      "sha256Before": "c0cf99b27e1e1438ee94cd56cff29c14a583ec7491504024901808d9f2661ef1",
+      "sha256After": "c0cf99b27e1e1438ee94cd56cff29c14a583ec7491504024901808d9f2661ef1"
+    },
+    {
+      "name": "native-spirit original damage/death facts",
+      "identical": true,
+      "sha256Before": "79dafd97725a0d6b3549ec6943579509c42a272a1ac06d9125d6b6adb9f947aa",
+      "sha256After": "79dafd97725a0d6b3549ec6943579509c42a272a1ac06d9125d6b6adb9f947aa"
+    },
+    {
+      "name": "native-spirit original HP/position/tick sequence",
+      "identical": true,
+      "sha256Before": "3f2e8002343252f3ebd870296426e638171bd0ce2d008916ef96a1c5eeac4c74",
+      "sha256After": "3f2e8002343252f3ebd870296426e638171bd0ce2d008916ef96a1c5eeac4c74"
+    },
+    {
+      "name": "physical-controls original damage/death facts",
+      "identical": true,
+      "sha256Before": "40c8ddac45c02c653370ccc456325858ee547b79c8aadda75196fbf4f41d1994",
+      "sha256After": "40c8ddac45c02c653370ccc456325858ee547b79c8aadda75196fbf4f41d1994"
+    },
+    {
+      "name": "physical-controls original HP/position/tick sequence",
+      "identical": true,
+      "sha256Before": "876cb2eebbfe6ffa182be45e78ed5bda63906eefda6c0ef9c05ddc5c82e85cba",
+      "sha256After": "876cb2eebbfe6ffa182be45e78ed5bda63906eefda6c0ef9c05ddc5c82e85cba"
+    },
+    {
+      "name": "physical-controls complete presentation records",
+      "identical": true,
+      "sha256Before": "9a608e381cda994029ee01347293f1542792f8585a21a6fd4113e7428bfc61c9",
+      "sha256After": "9a608e381cda994029ee01347293f1542792f8585a21a6fd4113e7428bfc61c9"
+    },
+    {
+      "name": "physical-controls seen controls",
+      "identical": true,
+      "sha256Before": "ddee5405f5b590fb38a208da9bfa03f901c84271869f0f7e7edc8e613a9a940d",
+      "sha256After": "ddee5405f5b590fb38a208da9bfa03f901c84271869f0f7e7edc8e613a9a940d"
+    },
+    {
+      "name": "neighbor-transfer original damage/death facts",
+      "identical": true,
+      "sha256Before": "fadf8ee0ecb9357c34a7a06d70d6e664080d1f4660dfb40a7739ea5e32f4117e",
+      "sha256After": "fadf8ee0ecb9357c34a7a06d70d6e664080d1f4660dfb40a7739ea5e32f4117e"
+    },
+    {
+      "name": "neighbor-transfer original HP/position/tick sequence",
+      "identical": true,
+      "sha256Before": "436f32738b216b9c31ad386001429c08bf185d4a0b332bd6fe11398298bc48bc",
+      "sha256After": "436f32738b216b9c31ad386001429c08bf185d4a0b332bd6fe11398298bc48bc"
+    },
+    {
+      "name": "neighbor-transfer complete presentation records",
+      "identical": true,
+      "sha256Before": "366363934534b6a5d608a38e6dc1a5305ab293c57c1a9a72e0e14bf2fdd28121",
+      "sha256After": "366363934534b6a5d608a38e6dc1a5305ab293c57c1a9a72e0e14bf2fdd28121"
+    },
+    {
+      "name": "neighbor-transfer seen controls",
+      "identical": true,
+      "sha256Before": "944f4bec0810483866e707c03b0f537405f0bdbf89f363764743db9b587e698f",
+      "sha256After": "944f4bec0810483866e707c03b0f537405f0bdbf89f363764743db9b587e698f"
+    }
+  ],
+  "sourceChanges": [
+    "src/client/blood-contact.test.ts",
+    "src/client/combat-presentation.test.ts",
+    "src/client/combat-presentation.ts",
+    "src/client/main.ts",
+    "src/client/minimap-presentation-cache.test.ts",
+    "src/client/minimap-presentation-cache.ts",
+    "src/client/world-renderer.ts"
+  ],
+  "allowedSourceChanges": [
+    "src/client/blood-contact.test.ts",
+    "src/client/combat-presentation.test.ts",
+    "src/client/combat-presentation.ts",
+    "src/client/main.ts",
+    "src/client/minimap-presentation-cache.test.ts",
+    "src/client/minimap-presentation-cache.ts",
+    "src/client/world-renderer.ts"
+  ],
+  "images": [
+    {
+      "label": "WebGL 0",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 0
+    },
+    {
+      "label": "WebGL 1",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 1
+    },
+    {
+      "label": "WebGL 2",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 2
+    },
+    {
+      "label": "WebGL 3",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 102,
+      "changedChannels": 300,
+      "maxDifference": 127,
+      "phase": "native-spirit",
+      "tick": 68
+    },
+    {
+      "label": "WebGL 4",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 108,
+      "changedChannels": 316,
+      "maxDifference": 113,
+      "phase": "native-spirit",
+      "tick": 69
+    },
+    {
+      "label": "WebGL 5",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 121,
+      "changedChannels": 356,
+      "maxDifference": 107,
+      "phase": "native-spirit",
+      "tick": 70
+    },
+    {
+      "label": "WebGL 6",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 139,
+      "changedChannels": 409,
+      "maxDifference": 94,
+      "phase": "native-spirit",
+      "tick": 72
+    },
+    {
+      "label": "WebGL 7",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 234,
+      "changedChannels": 689,
+      "maxDifference": 104,
+      "phase": "native-spirit",
+      "tick": 76
+    },
+    {
+      "label": "WebGL 8",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 284,
+      "changedChannels": 849,
+      "maxDifference": 77,
+      "phase": "native-spirit",
+      "tick": 88
+    },
+    {
+      "label": "WebGL 9",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 338,
+      "changedChannels": 1013,
+      "maxDifference": 128,
+      "phase": "native-spirit",
+      "tick": 90
+    },
+    {
+      "label": "WebGL 10",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 380,
+      "changedChannels": 1129,
+      "maxDifference": 128,
+      "phase": "native-spirit",
+      "tick": 91
+    },
+    {
+      "label": "WebGL 11",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 367,
+      "changedChannels": 1099,
+      "maxDifference": 120,
+      "phase": "native-spirit",
+      "tick": 92
+    },
+    {
+      "label": "WebGL 12",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 420,
+      "changedChannels": 1252,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 94
+    },
+    {
+      "label": "WebGL 13",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 473,
+      "changedChannels": 1396,
+      "maxDifference": 104,
+      "phase": "native-spirit",
+      "tick": 98
+    },
+    {
+      "label": "WebGL 14",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 502,
+      "changedChannels": 1504,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 110
+    },
+    {
+      "label": "WebGL 15",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 606,
+      "changedChannels": 1816,
+      "maxDifference": 136,
+      "phase": "native-spirit",
+      "tick": 112
+    },
+    {
+      "label": "WebGL 16",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 656,
+      "changedChannels": 1967,
+      "maxDifference": 135,
+      "phase": "native-spirit",
+      "tick": 113
+    },
+    {
+      "label": "WebGL 17",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 654,
+      "changedChannels": 1958,
+      "maxDifference": 133,
+      "phase": "native-spirit",
+      "tick": 114
+    },
+    {
+      "label": "WebGL 18",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 678,
+      "changedChannels": 2029,
+      "maxDifference": 125,
+      "phase": "native-spirit",
+      "tick": 116
+    },
+    {
+      "label": "WebGL 19",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 693,
+      "changedChannels": 2073,
+      "maxDifference": 124,
+      "phase": "native-spirit",
+      "tick": 120
+    },
+    {
+      "label": "WebGL 20",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 132
+    },
+    {
+      "label": "WebGL 21",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 188
+    },
+    {
+      "label": "WebGL 22",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 101,
+      "phase": "native-spirit",
+      "tick": 210
+    },
+    {
+      "label": "WebGL 23",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 83,
+      "phase": "native-spirit",
+      "tick": 232
+    },
+    {
+      "label": "WebGL 24",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 432,
+      "changedChannels": 1296,
+      "maxDifference": 65,
+      "phase": "native-spirit",
+      "tick": 248
+    },
+    {
+      "label": "WebGL 25",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 432,
+      "changedChannels": 1293,
+      "maxDifference": 52,
+      "phase": "native-spirit",
+      "tick": 258
+    },
+    {
+      "label": "WebGL 26",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 202,
+      "changedChannels": 606,
+      "maxDifference": 35,
+      "phase": "native-spirit",
+      "tick": 270
+    },
+    {
+      "label": "WebGL 27",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 202,
+      "changedChannels": 603,
+      "maxDifference": 20,
+      "phase": "native-spirit",
+      "tick": 280
+    },
+    {
+      "label": "WebGL 28",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 292
+    },
+    {
+      "label": "WebGL 29",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 302
+    },
+    {
+      "label": "WebGL 30",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 0
+    },
+    {
+      "label": "WebGL 31",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 1
+    },
+    {
+      "label": "WebGL 32",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 2
+    },
+    {
+      "label": "WebGL 33",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 4
+    },
+    {
+      "label": "WebGL 34",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 8
+    },
+    {
+      "label": "WebGL 35",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 16
+    },
+    {
+      "label": "WebGL 36",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 30
+    },
+    {
+      "label": "WebGL 37",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 60
+    },
+    {
+      "label": "WebGL 38",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 120
+    },
+    {
+      "label": "WebGL 39",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 180
+    },
+    {
+      "label": "WebGL 40",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 190
+    },
+    {
+      "label": "WebGL 41",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 0
+    },
+    {
+      "label": "WebGL 42",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 1
+    },
+    {
+      "label": "WebGL 43",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 2
+    },
+    {
+      "label": "WebGL 44",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 4
+    },
+    {
+      "label": "WebGL 45",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 8
+    },
+    {
+      "label": "WebGL 46",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 16
+    },
+    {
+      "label": "WebGL 47",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 30
+    },
+    {
+      "label": "WebGL 48",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 60
+    },
+    {
+      "label": "WebGL 49",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 120
+    },
+    {
+      "label": "WebGL 50",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 180
+    },
+    {
+      "label": "WebGL 51",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 190
+    },
+    {
+      "label": "Canvas 0",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 0
+    },
+    {
+      "label": "Canvas 1",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 1
+    },
+    {
+      "label": "Canvas 2",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 2
+    },
+    {
+      "label": "Canvas 3",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 156,
+      "changedChannels": 467,
+      "maxDifference": 124,
+      "phase": "native-spirit",
+      "tick": 68
+    },
+    {
+      "label": "Canvas 4",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 214,
+      "changedChannels": 642,
+      "maxDifference": 126,
+      "phase": "native-spirit",
+      "tick": 69
+    },
+    {
+      "label": "Canvas 5",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 247,
+      "changedChannels": 741,
+      "maxDifference": 119,
+      "phase": "native-spirit",
+      "tick": 70
+    },
+    {
+      "label": "Canvas 6",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 250,
+      "changedChannels": 748,
+      "maxDifference": 102,
+      "phase": "native-spirit",
+      "tick": 72
+    },
+    {
+      "label": "Canvas 7",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 272,
+      "changedChannels": 816,
+      "maxDifference": 102,
+      "phase": "native-spirit",
+      "tick": 76
+    },
+    {
+      "label": "Canvas 8",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 313,
+      "changedChannels": 938,
+      "maxDifference": 89,
+      "phase": "native-spirit",
+      "tick": 88
+    },
+    {
+      "label": "Canvas 9",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 433,
+      "changedChannels": 1296,
+      "maxDifference": 119,
+      "phase": "native-spirit",
+      "tick": 90
+    },
+    {
+      "label": "Canvas 10",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 479,
+      "changedChannels": 1437,
+      "maxDifference": 125,
+      "phase": "native-spirit",
+      "tick": 91
+    },
+    {
+      "label": "Canvas 11",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 502,
+      "changedChannels": 1505,
+      "maxDifference": 125,
+      "phase": "native-spirit",
+      "tick": 92
+    },
+    {
+      "label": "Canvas 12",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 512,
+      "changedChannels": 1536,
+      "maxDifference": 114,
+      "phase": "native-spirit",
+      "tick": 94
+    },
+    {
+      "label": "Canvas 13",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 516,
+      "changedChannels": 1546,
+      "maxDifference": 119,
+      "phase": "native-spirit",
+      "tick": 98
+    },
+    {
+      "label": "Canvas 14",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 544,
+      "changedChannels": 1631,
+      "maxDifference": 119,
+      "phase": "native-spirit",
+      "tick": 110
+    },
+    {
+      "label": "Canvas 15",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 592,
+      "changedChannels": 1776,
+      "maxDifference": 141,
+      "phase": "native-spirit",
+      "tick": 112
+    },
+    {
+      "label": "Canvas 16",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 634,
+      "changedChannels": 1901,
+      "maxDifference": 139,
+      "phase": "native-spirit",
+      "tick": 113
+    },
+    {
+      "label": "Canvas 17",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 628,
+      "changedChannels": 1884,
+      "maxDifference": 135,
+      "phase": "native-spirit",
+      "tick": 114
+    },
+    {
+      "label": "Canvas 18",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 648,
+      "changedChannels": 1944,
+      "maxDifference": 132,
+      "phase": "native-spirit",
+      "tick": 116
+    },
+    {
+      "label": "Canvas 19",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 661,
+      "changedChannels": 1983,
+      "maxDifference": 132,
+      "phase": "native-spirit",
+      "tick": 120
+    },
+    {
+      "label": "Canvas 20",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 132
+    },
+    {
+      "label": "Canvas 21",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 103,
+      "phase": "native-spirit",
+      "tick": 188
+    },
+    {
+      "label": "Canvas 22",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 101,
+      "phase": "native-spirit",
+      "tick": 210
+    },
+    {
+      "label": "Canvas 23",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 682,
+      "changedChannels": 2046,
+      "maxDifference": 83,
+      "phase": "native-spirit",
+      "tick": 232
+    },
+    {
+      "label": "Canvas 24",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 432,
+      "changedChannels": 1296,
+      "maxDifference": 65,
+      "phase": "native-spirit",
+      "tick": 248
+    },
+    {
+      "label": "Canvas 25",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 432,
+      "changedChannels": 1293,
+      "maxDifference": 52,
+      "phase": "native-spirit",
+      "tick": 258
+    },
+    {
+      "label": "Canvas 26",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 202,
+      "changedChannels": 606,
+      "maxDifference": 35,
+      "phase": "native-spirit",
+      "tick": 270
+    },
+    {
+      "label": "Canvas 27",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 202,
+      "changedChannels": 603,
+      "maxDifference": 20,
+      "phase": "native-spirit",
+      "tick": 280
+    },
+    {
+      "label": "Canvas 28",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 292
+    },
+    {
+      "label": "Canvas 29",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "native-spirit",
+      "tick": 302
+    },
+    {
+      "label": "Canvas 30",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 0
+    },
+    {
+      "label": "Canvas 31",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 1
+    },
+    {
+      "label": "Canvas 32",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 2
+    },
+    {
+      "label": "Canvas 33",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 4
+    },
+    {
+      "label": "Canvas 34",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 8
+    },
+    {
+      "label": "Canvas 35",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 16
+    },
+    {
+      "label": "Canvas 36",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 30
+    },
+    {
+      "label": "Canvas 37",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 60
+    },
+    {
+      "label": "Canvas 38",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 120
+    },
+    {
+      "label": "Canvas 39",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 180
+    },
+    {
+      "label": "Canvas 40",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "physical-controls",
+      "tick": 190
+    },
+    {
+      "label": "Canvas 41",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 0
+    },
+    {
+      "label": "Canvas 42",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 1
+    },
+    {
+      "label": "Canvas 43",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 2
+    },
+    {
+      "label": "Canvas 44",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 4
+    },
+    {
+      "label": "Canvas 45",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 8
+    },
+    {
+      "label": "Canvas 46",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 16
+    },
+    {
+      "label": "Canvas 47",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 30
+    },
+    {
+      "label": "Canvas 48",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 60
+    },
+    {
+      "label": "Canvas 49",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 120
+    },
+    {
+      "label": "Canvas 50",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 180
+    },
+    {
+      "label": "Canvas 51",
+      "width": 1200,
+      "height": 800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maxDifference": 0,
+      "phase": "neighbor-transfer",
+      "tick": 190
+    }
+  ],
+  "failures": [],
+  "scope": "Both versions execute exactly the original simulation and commands. All complete snapshots, HP, tick, hit metadata and natural death facts must be identical. Before must reproduce actual spirit blood; after air/ground/body and native GPU ink are zero through the 303-tick scenario including 190 ticks after natural death. Independent footman/wildling positives, granite-golem negative and neighboring-blood transfer remain identical in complete tracker records and original PNG RGBA. Native frames with no before blood must also be pixel-identical. Bloodied native frames are expected to differ; no arbitrary pixel exclusion or performance claim is used."
+}
