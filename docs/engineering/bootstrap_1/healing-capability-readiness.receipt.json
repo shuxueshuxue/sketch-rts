@@ -1,0 +1,145 @@
+{
+  "base": "b806c8bbe437b5accba9828b2be8d8b3fd23dc74",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeDiff": {
+    "files": 3,
+    "insertions": 12,
+    "deletions": 6,
+    "newPersistentState": 0,
+    "requiredHealingGoalCallSites": 2
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/economy.ts": "c3b51460681dae7d06e289e80b4070c64380612d86d3c9189f38325ade92396d",
+    "src/ai/bootstrap_1/mine-defense.ts": "9dddaf0e4ffe09254d0475defdcc3c01a3807c35bfbadc4531e9c92b47d04221",
+    "src/ai/policy/v6/economy.ts": "5b4a77de808b60fb7b93f09ef04ea686f5c5ba6e9b825f4a965ebfa84ef4f392"
+  },
+  "sdk": {
+    "passed": 370,
+    "failed": 0,
+    "suites": 36,
+    "newCases": 11,
+    "reportSha256": "e4eb052d65752e41de1f31066f57a11c0820d66ea611c8422136db9fc5c888e3"
+  },
+  "parentControls": [
+    {
+      "passed": 1,
+      "failed": 4,
+      "reportSha256": "db30d93d0978355c18b7a6acf56187f7ae183496bcad466c19ce06c6fa582910",
+      "testSourceSha256": "068e61f13a0b8fa8c3ddf82cc51f94c39a84d59318a68245a148081a3d75fa75"
+    },
+    {
+      "passed": 0,
+      "failed": 6,
+      "reportSha256": "37fb5602112b13c5ebd8e53041287706518b6ebd69b9b09d849ffd6469a0e110",
+      "testSourceSha256": "86a0c83435df33e7af7adf621b337a9a84fc7611873c6c2bc86deedb2d314f7f"
+    }
+  ],
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "observed": "tsc completed and Vite built in 20.71s; process session already closed when resumed; exit status unavailable",
+    "logSha256": "95b43a279d86f57f0b43a14ccd982098f603685e381a2612a24b95b2c9a17eac"
+  },
+  "fixedOrdinaryGame": {
+    "match": {
+      "name": "greystonePass/v9_summoner/v5+v7/ember/1",
+      "mapId": "greystonePass",
+      "subject": "v9_summoner",
+      "side": 1,
+      "seed": "bootstrap_1-current-rules-observation",
+      "unseen": false,
+      "agents": {
+        "p0": {
+          "version": "v9_summoner",
+          "versionLabel": "v9_summoner",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v7",
+          "versionLabel": "v7",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 48000,
+      "thinkInterval": 15
+    },
+    "sourceInputsVerified": 221,
+    "parent": {
+      "revision": "b806c8bbe437b5accba9828b2be8d8b3fd23dc74",
+      "summary": {
+        "tick": 13829,
+        "winner": "p1",
+        "owners": {
+          "p0": {
+            "gold": 38,
+            "pop": 0,
+            "halls": 0,
+            "workers": 0,
+            "permanentArmy": 0
+          },
+          "p1": {
+            "gold": 50,
+            "pop": 34,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 11
+          },
+          "p2": {
+            "gold": 513.71,
+            "pop": 53,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 19
+          }
+        },
+        "subjectPermanentDeaths": 28
+      },
+      "checksum": "cbe94610",
+      "reportSha256": "008c8dacb77d5893811aa5cebf7551c8808ed1a0fdd886b72bacb2f44badb792"
+    },
+    "candidate": {
+      "summary": {
+        "tick": 27400,
+        "winner": "p1",
+        "owners": {
+          "p0": {
+            "gold": 33,
+            "pop": 0,
+            "halls": 0,
+            "workers": 0,
+            "permanentArmy": 0
+          },
+          "p1": {
+            "gold": 82.67,
+            "pop": 36,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 13
+          },
+          "p2": {
+            "gold": 150.84,
+            "pop": 61,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 25
+          }
+        },
+        "subjectPermanentDeaths": 52
+      },
+      "checksum": "df8ab3a6",
+      "reportSha256": "00c122dfbbbdf1eaf5fe7102c9c5ef8ea00a88151781d828d1b4f6c4b0f79471"
+    },
+    "interpretation": "Both lose. Later defeat with more permanent losses does not prove overall strength or acceptance."
+  }
+}
