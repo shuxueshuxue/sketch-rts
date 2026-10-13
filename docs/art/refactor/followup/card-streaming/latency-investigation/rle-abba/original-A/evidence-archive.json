@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "target": "rle-abba/original-A",
+  "kind": "png",
+  "fileSetSha256": "d2462f30c83485c9951c6c96b99e6a3a6ccf73ec98767b5e765ff3f00e843a64",
+  "fileSetHashDefinition": "SHA256 compact sorted-key JSON of sorted {name,size,sha256}; original encoded bytes.",
+  "sources": [
+    {
+      "name": "bank-variant.js",
+      "size": 2117,
+      "sha256": "bfb604d6829915717946c24f091ced65fb23db704846f70721e5d19737390b5b"
+    },
+    {
+      "name": "cache-loader.js",
+      "size": 1239,
+      "sha256": "7d48dae9e2ed35c22533360eee12d97bdfd25b8a44ea806f27451b88475d666d"
+    },
+    {
+      "name": "fact-fixture.js",
+      "size": 15860,
+      "sha256": "95ad464326b9d0643d2e6816ec430fc606cae3e72f9ae0b203fb9938823434c3"
+    },
+    {
+      "name": "fixture.js",
+      "size": 363,
+      "sha256": "98681a8fe8f559beb600299388c1aded960e595ff10b884f71603a7b2daa9644"
+    },
+    {
+      "name": "harness.mjs",
+      "size": 22827,
+      "sha256": "eb9bfbdc77e252afe0ab9a357a4a0f5fce886b8bf4889e8524f56f66e5e59075"
+    },
+    {
+      "name": "parent-harness.mjs",
+      "size": 13502,
+      "sha256": "e05d9e8eb8ca41d566d616028e2249c85b8a855d3d25ae0a80be7faef9102165"
+    },
+    {
+      "name": "raw.json",
+      "size": 770951,
+      "sha256": "943776bea6545e9f804605fb7b717cb246c11215b11e6072ac67d96c0790339f"
+    },
+    {
+      "name": "source-snapshot/baseline-card-raster-cache.ts",
+      "size": 4829,
+      "sha256": "78d5a3b3f653fc97cf6251504bb81b2f8e17d7a5220d7331249b3750733171a0"
+    },
+    {
+      "name": "source-snapshot/candidate-card-raster-cache.ts",
+      "size": 6348,
+      "sha256": "e3a413b9d586a1a9405c1def67825320de929d99b337d50dc0975ed14005a100"
+    },
+    {
+      "name": "source-snapshot/current-card-pick-mask.ts",
+      "size": 2674,
+      "sha256": "f968412c60a057452285291aa3001a702b22e3ba76ba6ab6606c353051de30fd"
+    },
+    {
+      "name": "source-snapshot/current-card-raster-cache.ts",
+      "size": 4829,
+      "sha256": "78d5a3b3f653fc97cf6251504bb81b2f8e17d7a5220d7331249b3750733171a0"
+    },
+    {
+      "name": "source-snapshot/current-painted-card-batches.ts",
+      "size": 31047,
+      "sha256": "f6b2da9c3f4dfd0e51b793e843bbed41bc0d457216f937f744b4a7158471e6c6"
+    },
+    {
+      "name": "viewport-metadata.js",
+      "size": 2149,
+      "sha256": "45b0ca53e3d16bc89153e4f49f71e307a481e44b9d65a3f2647fb9bc81e15a81"
+    }
+  ],
+  "files": [
+    {
+      "name": "aec09d62-hidden-0-cycle-0-battlefield.png",
+      "size": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "keep": false
+    },
+    {
+      "name": "aec09d62-hidden-0-cycle-0-empty.png",
+      "size": 271275,
+      "sha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "keep": false
+    },
+    {
+      "name": "aec09d62-hidden-0-cycle-0-returned.png",
+      "size": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "keep": false
+    },
+    {
+      "name": "aec09d62-hidden-0-cycle-1-battlefield.png",
+      "size": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "keep": false
+    },
+    {
+      "name": "aec09d62-hidden-0-cycle-1-empty.png",
+      "size": 271275,
+      "sha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "keep": false
+    },
+    {
+      "name": "aec09d62-hidden-0-cycle-1-returned.png",
+      "size": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "keep": false
+    }
+  ],
+  "archive": {
+    "file": "evidence-archives/png-blobs-7aea75122bc4c1a1.tar.gz",
+    "size": 1279339,
+    "sha256": "09142dcbd9c73b0b4c7f3ab581d0211fb75c5e4464390c8add1f188eff33059b",
+    "format": "png-blobs.tar.gz",
+    "members": [
+      {
+        "name": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a.png",
+        "size": 1011449,
+        "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a"
+      },
+      {
+        "name": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547.png",
+        "size": 271275,
+        "sha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547"
+      }
+    ]
+  },
+  "meaning": "Evidence storage only. Original JSON/RGBA/PNG bytes recover exactly; original proofs/helpers/results unchanged, including failures. Expanded payloads may be absent after verified prune.",
+  "supersededArchives": [
+    {
+      "file": "evidence-archives/png-rle-abba-original-A-d2462f30c83485c9.tar.gz",
+      "size": 4580519,
+      "sha256": "5ed403c26c9197610be57d6576340a2db54ee1fb9ec3071f21b2e162581126c8",
+      "format": "tar.gz"
+    }
+  ]
+}

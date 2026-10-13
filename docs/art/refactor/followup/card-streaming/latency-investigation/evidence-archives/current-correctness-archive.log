@@ -1,0 +1,156 @@
+Current correctness two targets. Full PNG encoded bytes restored; no decode or re-encode.
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-current-correctness-archive.py", "--archive", "--prune"]
+VERIFIED card-streaming/latency-investigation/current-correctness/camera files=62
+VERIFIED card-streaming/latency-investigation/current-correctness/merc files=49
+{
+  "operation": "archive",
+  "verifiedFolders": 2,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 111,
+  "originalPngBytes": 96498449,
+  "uniqueArchives": 2,
+  "archiveBytes": 96325866,
+  "largestArchiveBytes": 68627584,
+  "deletedFiles": 88,
+  "deletedBytes": 82986086,
+  "retainedFiles": 23,
+  "retainedBytes": 13512363,
+  "archives": [
+    {
+      "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+      "bytes": 68627584,
+      "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+    },
+    {
+      "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+      "bytes": 27698282,
+      "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+    }
+  ],
+  "folders": [
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/camera",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/merc",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes.",
+  "netPngPayloadBytesSaved": -13339780
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-current-correctness-archive.py", "--verify"]
+VERIFIED card-streaming/latency-investigation/current-correctness/camera files=62
+VERIFIED card-streaming/latency-investigation/current-correctness/merc files=49
+{
+  "operation": "verify",
+  "verifiedFolders": 2,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 111,
+  "originalPngBytes": 96498449,
+  "uniqueArchives": 2,
+  "archiveBytes": 96325866,
+  "largestArchiveBytes": 68627584,
+  "deletedFiles": 0,
+  "deletedBytes": 0,
+  "retainedFiles": 23,
+  "retainedBytes": 13512363,
+  "archives": [
+    {
+      "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+      "bytes": 68627584,
+      "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+    },
+    {
+      "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+      "bytes": 27698282,
+      "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+    }
+  ],
+  "folders": [
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/camera",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/merc",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-current-correctness-archive.py", "--materialize", "--folder", "card-streaming/latency-investigation/current-correctness/camera", "--out", "/tmp/card-current-budget-restore-j83wrp5v/card-streaming/latency-investigation/current-correctness/camera"]
+VERIFIED card-streaming/latency-investigation/current-correctness/camera files=62
+{
+  "operation": "materialize",
+  "verifiedFolders": 1,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 62,
+  "originalPngBytes": 68792864,
+  "uniqueArchives": 1,
+  "archiveBytes": 68627584,
+  "largestArchiveBytes": 68627584,
+  "deletedFiles": 0,
+  "deletedBytes": 0,
+  "retainedFiles": 8,
+  "retainedBytes": 9187426,
+  "archives": [
+    {
+      "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+      "bytes": 68627584,
+      "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+    }
+  ],
+  "folders": [
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/camera",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-current-correctness-archive.py", "--materialize", "--folder", "card-streaming/latency-investigation/current-correctness/merc", "--out", "/tmp/card-current-budget-restore-j83wrp5v/card-streaming/latency-investigation/current-correctness/merc"]
+VERIFIED card-streaming/latency-investigation/current-correctness/merc files=49
+{
+  "operation": "materialize",
+  "verifiedFolders": 1,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 49,
+  "originalPngBytes": 27705585,
+  "uniqueArchives": 1,
+  "archiveBytes": 27698282,
+  "largestArchiveBytes": 27698282,
+  "deletedFiles": 0,
+  "deletedBytes": 0,
+  "retainedFiles": 15,
+  "retainedBytes": 4324937,
+  "archives": [
+    {
+      "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+      "bytes": 27698282,
+      "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+    }
+  ],
+  "folders": [
+    {
+      "target": "card-streaming/latency-investigation/current-correctness/merc",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+}
+
+EXIT 0
+
+All111 original paths restored with exact encoded bytes/SHA; old summary/source/proof/raw/comparison unchanged; temp restores removed. HEAVY DONE.

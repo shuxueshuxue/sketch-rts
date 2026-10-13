@@ -1,0 +1,33 @@
+10:53:37 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-0p35
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-0p65
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-0p75
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-1
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-1p5
+CAMERA 1e03c5fa dpr-1-1280x720-zoom-2
+CAMERA 1e03c5fa dpr-1-640x360-zoom-0p35
+CAMERA 1e03c5fa dpr-1-640x360-zoom-0p65
+CAMERA 1e03c5fa dpr-1-640x360-zoom-0p75
+CAMERA 1e03c5fa dpr-1-640x360-zoom-1
+CAMERA 1e03c5fa dpr-1-640x360-zoom-1p5
+CAMERA 1e03c5fa dpr-1-640x360-zoom-2
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-0p35
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-0p65
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-0p75
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-1
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-1p5
+CAMERA 1e03c5fa dpr-2-1280x720-zoom-2
+CAMERA 1e03c5fa dpr-2-640x360-zoom-0p35
+CAMERA 1e03c5fa dpr-2-640x360-zoom-0p65
+CAMERA 1e03c5fa dpr-2-640x360-zoom-0p75
+CAMERA 1e03c5fa dpr-2-640x360-zoom-1
+CAMERA 1e03c5fa dpr-2-640x360-zoom-1p5
+CAMERA 1e03c5fa dpr-2-640x360-zoom-2
+CAMERA 1e03c5fa camera-battlefield
+CAMERA 1e03c5fa camera-empty
+CAMERA 1e03c5fa camera-returned-first
+CAMERA 1e03c5fa promotion-high-initial
+CAMERA 1e03c5fa promotion-low
+CAMERA 1e03c5fa promotion-high-first
+CAMERA 1e03c5fa promotion-high-repeat
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/current-correctness/camera/proof.json","sourceCommit":"1e03c5fa1ae1cf17276ee20e5fb005573af1e861","steps":31,"passed":true,"invariants":{"returnIdentical":true,"promotionFirstIdentical":true,"promotionRepeatIdentical":true}}

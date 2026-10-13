@@ -1,0 +1,10 @@
+10:15:07 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
+START aec09d62 hidden=0 cycle=0
+VIEWPORT cycle 0 0 3.943611111253914 158.1166666665425
+START aec09d62 hidden=9900 cycle=0
+VIEWPORT cycle 9900 0 10.608333333447161 145.7833333330022
+START aec09d62 hidden=0 cycle=1
+VIEWPORT cycle 0 1 4.568888888859915 164.0444444446928
+START aec09d62 hidden=9900 cycle=1
+VIEWPORT cycle 9900 1 10.9713888887316 170.07222222247057
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/rle-budget-canonical-abba/candidate-B2/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":360,"meanMs":3.943611111253914,"p50Ms":1.3999999985098839,"p95Ms":17.600000001490116,"p99Ms":34,"maxMs":43.69999999925494,"over16_67Ms":19,"over50Ms":0},"real":{"samples":18,"meanMs":158.1166666665425,"p50Ms":140.09999999776483,"p95Ms":366,"p99Ms":366,"maxMs":366,"over16_67Ms":18,"over50Ms":18}},{"hiddenCount":9900,"cycle":0,"cpu":{"samples":360,"meanMs":10.608333333447161,"p50Ms":2,"p95Ms":39.30000000074506,"p99Ms":49.900000002235174,"maxMs":58.69999999925494,"over16_67Ms":108,"over50Ms":3},"real":{"samples":18,"meanMs":145.7833333330022,"p50Ms":131.19999999925494,"p95Ms":336.80000000074506,"p99Ms":336.80000000074506,"maxMs":336.80000000074506,"over16_67Ms":18,"over50Ms":18}},{"hiddenCount":0,"cycle":1,"cpu":{"samples":360,"meanMs":4.568888888859915,"p50Ms":1.800000000745058,"p95Ms":18.899999998509884,"p99Ms":38.70000000298023,"maxMs":70,"over16_67Ms":25,"over50Ms":2},"real":{"samples":18,"meanMs":164.0444444446928,"p50Ms":137.39999999850988,"p95Ms":403.30000000074506,"p99Ms":403.30000000074506,"maxMs":403.30000000074506,"over16_67Ms":18,"over50Ms":18}},{"hiddenCount":9900,"cycle":1,"cpu":{"samples":360,"meanMs":10.9713888887316,"p50Ms":2.099999997764826,"p95Ms":40.100000001490116,"p99Ms":55.79999999701977,"maxMs":80.5,"over16_67Ms":108,"over50Ms":5},"real":{"samples":18,"meanMs":170.07222222247057,"p50Ms":158.10000000149012,"p95Ms":394.0999999977648,"p99Ms":394.0999999977648,"maxMs":394.0999999977648,"over16_67Ms":18,"over50Ms":18}}]}

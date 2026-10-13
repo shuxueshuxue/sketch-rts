@@ -10,19 +10,72 @@ old cache-dependent overlap order.
 
 Current verification and deliverables:
 
+- [Combined pipeline mixed ABBA](latency-investigation/pipeline-abba/report.md):
+  strict 24 PNGs / eight facts / 480 CPU clocks, all lifetimes and remaining
+  long-tail regressions retained. This is the latest combined policy evidence;
+  the formal source is `aec09d6`, not a relabelled final HEAD.
+- [Budget-only canonical work identity](latency-investigation/rle-budget-only-canonical/report.md):
+  the 16 MiB cap preserves all original work and resources below the cap; the
+  only resource-field change is the budget value.
 - [Final stable-order bank/mip comparison](bank-order/README.zh.md), with a
   corrected **same-source** one-bank/full-chain reference.
 - [135-case color/depth/distance GPU proof](bank-correctness.md).
 - [Exact idle drawing identities, including the new mercenary models](idle-identity/README.md).
 - [Three independent hired-company models](../mercenary-models/README.md).
 - [Homepage first-gesture audio proof](../../../../validation/homepage-audio/README.zh.md).
-- Final frozen client `0de509c`: **124 test files / 956 tests passed** and
+- Earlier frozen client `0de509c`: **124 test files / 956 tests passed** and
   production build passed; [test log](validation/client-final.log) and
   [build log](validation/build-final.log).
+- Promoted and upstream-integrated client `1e03c5f`: **133 test files / 1066
+  tests passed** and production build passed; [tests](latency-investigation/final-validation/tests.log),
+  [build](latency-investigation/final-validation/production-build.log),
+  [commands](latency-investigation/final-validation/commands.json).
 
 This follows the viewport work in draft PR #346. The accepted art, animation,
 camera, simulation and visible content stay unchanged. The work targets pose
 upload bandwidth and allocation peaks rather than eliminating world simulation.
+
+## Latest combined policy and remaining stalls
+
+The [combined same-source comparison](latency-investigation/pipeline-abba/report.md)
+uses one full-chain bank with frozen original peak/mask methods and a 48 MiB
+cache as reference; the candidate uses one native-mip bank, current peak/mask
+methods and the original cache with only its default budget changed to 16 MiB.
+It retains current artwork, upload implementation, allocator and corrected draw
+order. The four-run ABBA includes four complete lifetimes per policy, with no
+slow or cold samples removed. These are whole-policy measurements; they cannot
+be split into component gains or added to earlier phase percentages.
+
+| Mixed combined metric | Reference | Candidate |
+| --- | ---: | ---: |
+| CPU mean / p95 | 44.013 / 127.8 ms | 42.356 / 112.3 ms |
+| CPU maximum | 470.9 ms | **696.9 ms** |
+| Complete real-wall mean | 435.542 ms | 431.325 ms |
+| Subsequent real-wall mean / p95 | 348.745 / 1039.8 ms | 349.050 / 1068.8 ms |
+| First cold real mean | 1390.300 ms | 1336.350 ms |
+| Peak tracked CPU buffers | 60,720,132 B | 26,356,908 B |
+| Before-view owned card GPU textures | 210,914,668 B | 191,718,124 B |
+| Resident pages / draw chunks | 10 / 61 | 14 / 70 |
+| Fresh Canvas misses per lifetime | 1573 | 1723 |
+
+The covered resource reduction is substantial: peak tracked CPU buffers fall
+56.59% and before-view card texture ownership falls 9.10%, with exact visible
+RGBA and facts. Mean CPU improves 3.77%; complete-wall mean improves only 0.97%,
+and warm subsequent wall mean/p95 regress. The worst candidate lifetime has
+52.838 ms CPU mean and a 696.9 ms maximum. All real frames remain above 100 ms
+in this software-GPU fixture. More pages/draw segments and 150 extra Canvas
+misses are explicit costs. The remaining long stalls are not claimed solved.
+
+The production cache promoted at `37a8594` has the exact `f9c83…e78b` source
+bytes used by the candidate's external provider. The
+[upstream integration receipt](latency-investigation/upstream-integration.json)
+records unchanged client/shared/server trees from that promotion to `1e03c5f`.
+Final runtime validation is separate from the formal AEC measurement epoch.
+Reproduction of the old 48/16 driver requires frozen AEC, frozen 5b providers
+and archived candidate/harness bytes; current HEAD already has the 16 MiB
+default and cannot be passed off as the original source. Aggregate page/chunk
+snapshots do not independently prove every submitted instance or picking;
+real-camera correctness remains a separate check.
 
 ## Frozen sources and method
 
@@ -184,9 +237,20 @@ Use the [final phase method](bank-order/method.zh.md) for current reproduction.
 
 ## Validation and remaining limits
 
+The earlier phase-A test counts below belong to that historical source. For the
+final stable-order residency comparison, use
+[the final performance report](bank-order/final/performance.md). It records the
+mixed CPU +6.1% and complete-wall +3.1% regressions alongside lower card texture
+ownership. The [subsequent latency investigation](latency-investigation/README.md)
+keeps those results and separately measures focused peak-accounting and pick-mask
+fixes, rejects the unsuccessful cache/upload candidates, and reports the latest
+[combined policy](latency-investigation/pipeline-abba/report.md), including its
+696.9 ms maximum and subsequent real-wall regressions. Different source epochs
+and benchmark variants are not combined into a single speedup figure.
+
 120 client test files / 871 tests pass, plus the five paint-identity matrix
 tests (121 files / 876 tests total). Type checking and the production build pass.
-No AI, shared simulation, server, balance or upkeep rules are modified. No merge
-or deployment is performed. A large visible army still needs its full painted
+No own AI, shared simulation, server, balance or upkeep rules are modified. No PR
+merge or deployment is performed. A large visible army still needs its full painted
 pose working set; allocation counters do not imply a hard global memory cap.
 Real hardware memory and frame pacing remain unmeasured in this environment.
