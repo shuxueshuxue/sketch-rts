@@ -2,10 +2,10 @@
 
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
-最新已验证线上版本为 #353 `b806c8bbe437b5accba9828b2be8d8b3fd23dc74`，[小部队反制采购](./early-counter-production.zh.md) 的 242 项本地 SDK 检查、最终构建、首次 CI `38318265490` 与生产 `38318883946` 通过。五个发布步骤和精确版本标签已验证。[发布证明](./early-counter-production-release.receipt.json)。同一召唤师窗口 20→17 损失是局部结果；完整固定开局仍在 13829 tick 败北、28 次永久损失，未取得整局改善。
+最新已验证线上版本为 #354 `798f2bc53cb6a1a9dfea9023bae56c4ac4361b45`，[医疗能力与实际可出征部队](./healing-capability-readiness.zh.md) 的 370 项本地 SDK 检查、首次 CI `38325366339` 与首次生产 `38325745146` 通过。五个发布步骤和精确版本标签已核验。[发布证明](./healing-capability-readiness-release.receipt.json)。同一固定召唤师开局在 27400 tick 败北、永久损失 52，原 #353 为 13829 tick／28；不是强度验收通过。完整快照中的 24000 tick 有 15 个精灵，先前把永久单位统计误读成没有召唤物，现已纠正。[固定对局记录](./fresh-summoner-healing-readiness.receipt.json)。
 
 
-## 当前记录（2026-10-12）
+## 当前记录（2026-10-13）
 
 此前已合并为 #352 `ed6ee2b94ab03f01558424df148471823ab68327`，[伤兵道路推进与独立射手调度](./care-road-dispatch.zh.md) 的 419 项本地 SDK 检查、构建和首次 CI `38312588704` 通过。首次生产 `38313021360` 已成功，五个发布步骤、最终组合构建和精确提交的 production-latest 标签均核验。[发布证明](./care-road-dispatch-release.receipt.json)。期间的 401 曾阻止检查，随后代理访问恢复；环境 Secret 尚未保存绑定。[固定开局射手](./fresh-archer-care-dispatch.zh.md) 在当前规则的 Pineshade／Grove／方向 0 对两个冻结 v8，于 36962 tick 获胜、永久损失 24，原 #351 同配置败北、损失 85。另一[固定开局骑士](./fresh-knight-care-dispatch.zh.md) 在 28590 tick 败北、损失 53；一格胜利不能代替三路线完整验收。
 
