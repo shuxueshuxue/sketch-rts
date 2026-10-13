@@ -1,0 +1,41 @@
+{
+  "base": "c0230a2b074242df4ec0f80351d44c5e0da245c2",
+  "acceptance": "pending",
+  "runtimeFiles": 2,
+  "newSerializedFields": 0,
+  "newSerializedStructures": 0,
+  "newDefaultOrCompatibilityPaths": 0,
+  "sameScoutCount": 1,
+  "sameScoutPriority": 59,
+  "sameSpeedPriority": 57,
+  "sameRangePriority": 58,
+  "sameCatalogAndPrices": true,
+  "sameThinkTicks": 15,
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-field.ts": "7f18aa36eb7b82fe8d628f9ce67c3a3053d5f942417a297bc4bca77307ab4c04",
+    "src/ai/bootstrap_1/mounted-recruitment.ts": "7a23d5fc16ae6eb39f85fb403d4c070ed595de8bf40d27c60fd5083ba6b62c3e"
+  },
+  "scope": "Shared live field target admission at the actual unupgraded native factory exit. Only slower and shorter-range targets qualify; mirrors, allies, covered lines and ranged enemies are native SDK controls. No global whole-game win claim.",
+  "recruitmentSdk": {
+    "passed": 48,
+    "failed": 0,
+    "suites": 2,
+    "sha256": "72b59cc3c2ad634ae5ce67fd1967dbf13959f1ea796bc5515151deda8ff97f32"
+  },
+  "relatedSdk": {
+    "passed": 79,
+    "failed": 0,
+    "suites": 5,
+    "sha256": "cc0c7c5636a7569f9fb8a842465bb9baf14d83ad3ae06cd81ebad4a1e0a13c24"
+  },
+  "identicalParentRecruitment": {
+    "passed": 18,
+    "failed": 6,
+    "sameTestSourceSha256": "d1ca30db413afb42611c9d4914e8ebc5ab12737bb765de89b5cbde1272b0ca0a"
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "scope": "Final two runtime files match the tested/built recruitment stage. Mining-admission prototype restored completely; its41 passes do not count as this release evidence."
+  }
+}
