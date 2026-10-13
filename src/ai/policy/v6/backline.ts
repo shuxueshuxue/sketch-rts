@@ -48,11 +48,11 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   if (!isV6Policy(options)) return [];
   const home = mainBase(snapshot, owner);
   const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
-  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front, isV9Policy(options), () => undefined);
+  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front,
+    units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), () => undefined);
 }
 
-export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined): GameCommand[] {
-  const casters = units(snapshot, owner).filter(isBacklineKind);
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined): GameCommand[] {
   if (casters.length === 0) return [];
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
@@ -90,7 +90,7 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
       if (caster.order.type === "move") commands.push({ type: "stop", unitIds: [caster.id] });
       continue;
     }
-    const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, isV8Policy(options));
+    const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, close);
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
   }
