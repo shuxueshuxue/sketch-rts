@@ -106,4 +106,4 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/expansion-authority.test.ts src/ai/bootstrap_1/ready-free-mine.test.ts src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts
 
       - name: Verify paid mounted field fights and retained camp and mining control
-        run: npx vitest run src/ai/bootstrap_1/mounted-field.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
+        run: npx vitest run src/ai/bootstrap_1/mounted-field-recruitment.test.ts src/ai/bootstrap_1/mounted-field.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mine-defense.test.ts src/ai/bootstrap_1/front-recovery.test.ts
