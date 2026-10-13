@@ -10,6 +10,7 @@ import { creatures, figures } from './appearance';
 import { IDLE_FRAME } from '../unit-animation';
 import type { EquipmentKind } from './equipment';
 import { creatureAnatomy } from './painted-creatures';
+import { hasMercenaryModel, paintMercenaryRemains } from './painted-mercenaries';
 export interface CorpsePresentation {
   anatomy?: 'foot' | 'mounted' | 'beast' | 'construct' | 'wood' | 'spirit' | 'vessel';
   weapon?: EquipmentKind; shield?: boolean; shieldStyle?:'round'|'kite'; headwear?: boolean; robe?: boolean; cloth?: string; size?: number;
@@ -65,6 +66,7 @@ function weapon(b:Brush,equipment:EquipmentKind|undefined){
 }
 function fallenPerson(b:Brush,kind:UnitKind,options:CorpsePresentation,wild=false){
  const equipment=options.weapon??loadout(kind);
+ if(hasMercenaryModel(kind)){paintMercenaryRemains(b,kind,options);weapon(b,equipment);return;}
  const robe=options.robe??isStaff(loadout(kind)),heavy=kind.startsWith('ogre');
  b.save();if(heavy)b.scale(1.2,1.15);
  // Head remains attached to shoulder; the far arm folds underneath the body.

@@ -1,0 +1,94 @@
+{
+  "source": {
+    "head": "02197dc0a1e521f7580f5416bf53465441ce8d95",
+    "sha256": {
+      "src/client/art/painted-mercenaries.ts": "6d454ce8f7f36fe501185e2f19aef0a230bf6cd89c1dd8f0959a49f1a18b49bb",
+      "src/client/art/painted-units.ts": "ddb1548cadbbbde4d19ebc3ddf904631c36e0ff4c6e0c1af7b18cf678ae594f8",
+      "src/client/art/corpses.ts": "a8742a6fc3ad312b61e7ddac7dd375ea46e9848b413513818d56dbe9f7eca25a",
+      "src/client/art/rig.ts": "9d3a11bbf9795c037936bdc87a4a8a2105974a914a55dcbe468e025b1a56cf05",
+      "src/client/art/equipment.ts": "8458b07a3e07807b83c23670f10b11e22352b9a388f2599af0d765cc51e56193",
+      "scripts/art-mercenary-catalog.ts": "f912e39f89f8182017c38ff8ccf1cbc10ff8118dd72e09dcee378d8ac671dd33"
+    }
+  },
+  "previousPainter": {
+    "path": "/tmp/sketch-mip-residency-baseline/src/client/art/painted-units.ts",
+    "sha256": "727cc9300943fe8a8c565ce4f48c9f21fa70ff0a653f88ddb268bac5c9818431",
+    "head": "2a0d3a27608c9e56ca8de6949759c975ee06c1d9"
+  },
+  "assets": [
+    "mercenary",
+    "contractArcher",
+    "fieldMedic"
+  ],
+  "files": [
+    "lineup.png",
+    "actions.png",
+    "remains.png"
+  ],
+  "review": "CPU @napi-rs/canvas actual production models; not a WebGL battle or performance claim.",
+  "idleIdentity": {
+    "frames": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "densities": [
+      2,
+      4
+    ],
+    "facings": [
+      -1,
+      1
+    ],
+    "teams": [
+      "#6b7f68",
+      "#ad5c46"
+    ],
+    "carry": [
+      0,
+      1,
+      3,
+      6
+    ],
+    "carryAims": [
+      -6,
+      -4,
+      0,
+      4,
+      6
+    ],
+    "equipment": [
+      {},
+      {
+        "weapon": "greatSword"
+      },
+      {
+        "shield": true,
+        "shieldStyle": "round"
+      },
+      {
+        "weapon": "pike",
+        "shield": false
+      },
+      {
+        "weapon": "bow"
+      },
+      {
+        "weapon": "staff"
+      }
+    ],
+    "comparisons": 6912,
+    "comparedPixels": 2078023680,
+    "changedPixels": 0,
+    "changedChannels": 0
+  }
+}
