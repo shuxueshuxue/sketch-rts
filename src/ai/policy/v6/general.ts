@@ -686,10 +686,14 @@ function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
 }
 
 // Gather out of reach until most casters can summon (or the wait runs out), then strike; a new attack gathers again.
+export function v6AssaultStagePoint(target: Point, center: Point): Point {
+  return toward(target, center, STAGE_DISTANCE);
+}
+
 function pulseStage(snapshot: GameSnapshot, memory: V6PolicyMemory, group: Unit[], marching: Unit[], target: V6BaseIntel) {
   const current = memory.general?.mode === "attack" && memory.general.targetHallId === target.hall.id ? memory.general : undefined;
   const center = marching.length > 0 ? averagePoint(marching) : target.hall;
-  const point = toward(target.hall, center, STAGE_DISTANCE);
+  const point = v6AssaultStagePoint(target.hall, center);
   if (current?.stage === "strike") return { stage: "strike" as const, since: current.stageSince ?? snapshot.tick, point };
   const since = current?.stage === "gather" ? (current.stageSince ?? snapshot.tick) : snapshot.tick;
   const casters = group.filter(isSummoner);
