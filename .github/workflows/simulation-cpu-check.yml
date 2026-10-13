@@ -91,6 +91,9 @@ jobs:
       - name: Verify mobile patients and existing care ownership
         run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/care-road-progress.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts src/ai/bootstrap_1/front-post-continuity.test.ts src/ai/bootstrap_1/expedition-recovery.test.ts
 
+      - name: Verify mercenary trip roads and retained purchasing ownership
+        run: npx vitest run src/ai/bootstrap_1/mercenary-trip-roads.test.ts src/ai/bootstrap_1/mercenary-control.test.ts src/ai/bootstrap_1/mercenary-goals.test.ts src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 
