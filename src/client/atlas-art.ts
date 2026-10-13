@@ -1,4 +1,5 @@
 import { animationKey, actionPaintSize } from './art/action-direction';
+import { unitPaintKey } from './art/paint-identity';
 import type { UnitModel } from "../story/cast";
 import { appearanceKey } from "./art/unit-appearance";
 import type { FigurePresentation } from "./art/rig";
@@ -22,6 +23,13 @@ import { RasterCache } from "./art/raster-cache";
 const sprites = new RasterCache();
 export const canvasArtCacheStats = () => sprites.stats();
 export const clearCanvasArtCache = () => {sprites.clear();clearFittedPortraits();};
+
+/** Only unmodified catalog presentations use proven stock paint identities.
+ * Custom appearance and detail painters keep their original cache inputs. */
+function catalogPaintKey(kind:UnitKind,color:string,pose:UnitAnimationFrame,presentation:FigurePresentation){
+  return Object.getPrototypeOf(presentation)===Object.prototype&&Reflect.ownKeys(presentation).length===0
+    ?unitPaintKey(kind,color,pose):undefined;
+}
 
 function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false, tileSize=128) {
   const density = Math.max(2, Math.min(6, Math.ceil(scale * brushZoom(c) * 2)));
@@ -55,7 +63,9 @@ export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteMod
 
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME, presentation: FigurePresentation = {}) {
-    sprite(c, `painted:${kind}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`, point, scale, (b) => {
+    const shared=catalogPaintKey(kind,color,pose,presentation);
+    const key=shared===undefined?`painted:${kind}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`:`painted:${shared}:${facing}:${appearanceKey(presentation)}`;
+    sprite(c, key, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
       const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
       const feet = creatureShadow(kind);
@@ -72,10 +82,14 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string, presentation: FigurePresentation = {}) {
   if(isShipKind(kind) && drawModelPortrait(c,`ships/${kind}`,x,y,size,color))return;
   const bust=UNIT_CARDS[kind].art.bearing==='foot';
-  drawFittedPortrait(c,`portrait:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},x,y,size,size,bust,actionPaintSize(IDLE_FRAME,kind));
+  const shared=catalogPaintKey(kind,color,IDLE_FRAME,presentation);
+  const key=shared===undefined?`portrait:${kind}:${color}:${appearanceKey(presentation)}`:`portrait:${shared}:${appearanceKey(presentation)}`;
+  drawFittedPortrait(c,key,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},x,y,size,size,bust,actionPaintSize(IDLE_FRAME,kind));
 }
 export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:number,color:string,presentation:FigurePresentation={}){
-  drawFittedPortrait(c,`figure:${kind}:${color}:${appearanceKey(presentation)}`,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},0,0,width,height,false,actionPaintSize(IDLE_FRAME,kind));
+  const shared=catalogPaintKey(kind,color,IDLE_FRAME,presentation);
+  const key=shared===undefined?`figure:${kind}:${color}:${appearanceKey(presentation)}`:`figure:${shared}:${appearanceKey(presentation)}`;
+  drawFittedPortrait(c,key,b=>{paintFigure(b,kind,color,IDLE_FRAME,1,presentation);},0,0,width,height,false,actionPaintSize(IDLE_FRAME,kind));
 }
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
