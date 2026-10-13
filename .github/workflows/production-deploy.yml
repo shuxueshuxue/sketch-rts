@@ -107,7 +107,7 @@ jobs:
         run: npx vitest run src/ai/bootstrap_1/research-funding.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
 
       - name: Verify independent riders use admitted roads and parallel objectives
-        run: npx vitest run src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
+        run: npx vitest run src/ai/bootstrap_1/threat-roads.test.ts src/ai/bootstrap_1/mounted-detour-recruitment.test.ts src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
 
       - name: Verify mobile patients and existing care ownership
         run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/care-road-progress.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts
