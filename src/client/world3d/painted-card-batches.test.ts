@@ -159,10 +159,10 @@ it('keeps visible compaction sources alive and invalidates overwritten warm hole
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture){for(const spy of disposed)expect(spy).not.toHaveBeenCalled();throw Error('compaction failure');}});
  expect(()=>cards.finish(renderer)).toThrow('compaction failure');expect(cards.stats()).toMatchObject({pages:4,retiredGpuBytes:0,pendingRgbaBytes:0});for(const spy of disposed)expect(spy).not.toHaveBeenCalled();
  const cache=(cards as unknown as {cards:Map<string,unknown>}).cards;
- for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128:mip:0`)).toBe(true);
+ for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128`)).toBe(true);
  // These destinations may contain partially copied mip chains. Their warm
  // identities must disappear even though visible sources remain retryable.
- for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128:mip:0`)).toBe(false);
+ for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128`)).toBe(false);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture)for(const spy of disposed)expect(spy).not.toHaveBeenCalled();});
  cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:65,mipInitializedPages:4});expect(disposed[0]).not.toHaveBeenCalled();for(const spy of disposed.slice(1))expect(spy).toHaveBeenCalledTimes(1);
  expect(cards.objects()[0]!.userData.ids).toEqual(expect.arrayContaining(['0','16','32','48','new']));cards.dispose();
@@ -239,28 +239,68 @@ it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored g
  expect((transfer[2] as THREE.Box3).max.x).toBe(sourceSize/2);cards.dispose();
 });
 
-it('isolates GPU residency identities while reusing one full-resolution CPU raster and promoting before draw',()=>{
+it('promotes one original raster transactionally and reuses its finer resident chain for subsequent coarse requests',()=>{
  const {cards}=setup(),painter=vi.fn(paint);
  cards.begin();cards.add('shared',4,painter,matrix,'small',17,128,1,1);cards.finish(renderer);
  expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(256);
  cards.begin();cards.add('shared',4,painter,matrix,'large',17,128,1,0);cards.finish(renderer);
  const larger=cards.objects()[0]!;expect(larger.userData.ids).toEqual(['large']);expect(((larger.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);
- expect(cards.stats()).toMatchObject({cards:2,rasterizations:2,rasterCache:{entries:1,hits:1}});expect(painter).toHaveBeenCalledTimes(1);
- const cached=(cards as unknown as {cards:Map<string,unknown>}).cards;
- expect([...cached.keys()].sort()).toEqual(['shared:4:128:mip:0','shared:4:128:mip:1']);
+ expect(cards.stats()).toMatchObject({pages:1,cards:1,maskBytes:512*512/8,rasterizations:2,rasterCache:{entries:1,hits:1}});expect(painter).toHaveBeenCalledTimes(1);
+ const cached=(cards as unknown as {cards:Map<string,{baseMip:number}>}).cards;
+ expect([...cached.keys()]).toEqual(['shared:4:128']);expect(cached.get('shared:4:128')!.baseMip).toBe(0);
  cards.begin();cards.add('shared',4,painter,matrix,'small-again',17,128,1,1);cards.finish(renderer);
- expect(cards.stats().rasterizations).toBe(2);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);cards.dispose();
+ expect(cards.stats()).toMatchObject({cards:1,pages:1,rasterizations:2});expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);cards.dispose();
+});
+
+it('reuses an already finer card without another GPU slot, CPU recovery, mask or upload',()=>{
+ const {cards}=setup(),painter=vi.fn(paint);cards.begin();cards.add('fine',4,painter,matrix,'first',17,128,1,0);cards.finish(renderer);
+ const before=cards.stats(),texture=(cards.objects()[0]!.material as THREE.MeshBasicMaterial).map;
+ cards.begin();cards.add('fine',4,painter,matrix,'coarse-request',17,128,1,1);cards.finish(renderer);
+ expect(cards.stats()).toMatchObject({cards:1,pages:1,rasterizations:1,maskBytes:before.maskBytes,rasterCache:{hits:0}});
+ expect((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map).toBe(texture);expect(painter).toHaveBeenCalledTimes(1);cards.dispose();
+});
+
+it('uploads the finest pending mip once for all instances of an uncached original raster',()=>{
+ const {cards}=setup(),painter=vi.fn(paint);cards.begin();
+ cards.add('same',4,painter,matrix,'coarse-first',17,128,1,1);cards.add('same',4,painter,matrix,'fine-later',17,128,1,0);cards.finish(renderer);
+ expect(cards.stats()).toMatchObject({cards:1,pages:1,rasterizations:1,mipLayerUpdates:1,maskBytes:512*512/8});expect(painter).toHaveBeenCalledTimes(1);
+ const mesh=cards.objects()[0]!;expect(mesh.userData.ids).toEqual(['coarse-first','fine-later']);expect(((mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);cards.dispose();
+});
+
+it('moves all already bound coarse instances to the promoted card while preserving binding order and transforms',()=>{
+ const {cards}=setup();cards.begin();cards.add('promoted',4,paint,matrix,'seed-coarse',17,128,1,1);cards.add('other',4,paint,matrix,'seed-fine',17,128,1,0);cards.finish(renderer);
+ cards.begin();
+ cards.add('promoted',4,paint,new THREE.Matrix4().makeTranslation(10,0,0),'first-coarse',17,128,1,1);
+ cards.add('other',4,paint,new THREE.Matrix4().makeTranslation(20,0,0),'other-fine',17,128,1,0);
+ cards.add('promoted',4,paint,new THREE.Matrix4().makeTranslation(30,0,0),'second-coarse',17,128,1,1);
+ cards.add('promoted',4,paint,new THREE.Matrix4().makeTranslation(40,0,0),'fine-request',17,128,1,0);cards.finish(renderer);
+ expect(cards.stats()).toMatchObject({pages:1,cards:2,rasterizations:3,maskBytes:2*512*512/8});
+ const mesh=cards.objects()[0]!;expect(mesh.userData.ids).toEqual(['first-coarse','other-fine','second-coarse','fine-request']);expect(mesh.count).toBe(4);
+ for(let i=0;i<4;i++){const actual=new THREE.Matrix4();mesh.getMatrixAt(i,actual);expect(actual.elements[12]).toBe((i+1)*10);expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(true);}
+ expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(2));expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(3));cards.dispose();
+});
+
+it('keeps the original coarse card and mask after a failed promotion and retries before exposing a fine frame',()=>{
+ const {cards}=setup();cards.begin();cards.add('same',4,paint,matrix,'seed',17,128,1,1);cards.finish(renderer);
+ const cached=(cards as unknown as {cards:Map<string,{baseMip:number}>}).cards,previous=cached.get('same:4:128');
+ cards.begin();cards.add('same',4,paint,matrix,'warm-coarse',17,128,1,1);cards.add('same',4,paint,matrix,'fine',17,128,1,0);
+ renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,destination:THREE.Texture)=>{if(destination instanceof THREE.DataArrayTexture&&destination.image.width===512)throw Error('promotion transfer failed');});
+ expect(()=>cards.finish(renderer)).toThrow('promotion transfer failed');expect(cached.get('same:4:128')).toBe(previous);expect(previous!.baseMip).toBe(1);
+ expect(cards.stats()).toMatchObject({cards:1,rasterizations:1,maskBytes:512*512/8,pendingRgbaBytes:0,pendingMaskBytes:0});
+ renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('same',4,paint,matrix,'warm-coarse',17,128,1,1);cards.add('same',4,paint,matrix,'fine',17,128,1,0);cards.finish(renderer);
+ expect(cards.stats()).toMatchObject({cards:1,pages:1,rasterizations:2,maskBytes:512*512/8});expect(cached.get('same:4:128')!.baseMip).toBe(0);
+ const mesh=cards.objects()[0]!;expect(mesh.userData.ids).toEqual(['warm-coarse','fine']);expect(((mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);cards.dispose();
 });
 
 it.each([0,1])('keeps full-source scratch references when unused mip pages expire and mip %i remains',keptMip=>{
  const {cards}=setup();cards.begin();
- cards.add('source512',4,paint,matrix,'full',17,128,1,0);
- cards.add('source512',4,paint,matrix,'resident',17,128,1,1);
+ cards.add('source512-fine',4,paint,matrix,'full',17,128,1,0);
+ cards.add('source512-coarse',4,paint,matrix,'resident',17,128,1,1);
  // A native 256px source shares the 256px page with the resident 512px source.
  cards.add('source256',2,paint,matrix,'native',17,128,1,0);cards.finish(renderer);
  expect(cards.stats().scratchCpuBytes).toBe((512*512+256*256)*4);
  for(let frame=0;frame<121;frame++){
-  cards.begin();cards.add('source512',4,paint,matrix,'kept',17,128,1,keptMip);cards.finish(renderer);
+  cards.begin();cards.add(`source512-${keptMip===0?'fine':'coarse'}`,4,paint,matrix,'kept',17,128,1,keptMip);cards.finish(renderer);
  }
  const expectedSizes=keptMip===0?[512]:[512,256];
  expect(cards.stats().scratchTextures).toBe(expectedSizes.length);

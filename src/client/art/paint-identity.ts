@@ -14,6 +14,14 @@ const IDLE_KEY='idle:0:0:0';
 export function unitPaintKey(kind:UnitKind,team:string,pose:UnitAnimationFrame,variant?:string):string {
   let color=team,action=animationKey(pose);
   if(variant===undefined){
+    const stock=(!!figures[kind]||!!creatures[kind])&&!hasWarfareUnit(kind);
+    // The stock idle drawings render these breathing phases identically. Keep
+    // every other key field, and keep the original pose in the painter/tracker.
+    // Full-domain CPU proofs and the observed trace inputs cover these pairs.
+    if(stock&&pose.mode==='idle'){
+      const frame=pose.frame===4?0:pose.frame===3?1:pose.frame===7?5:pose.frame;
+      if(frame!==pose.frame)action=action.replace(`idle:${pose.frame}:`,`idle:${frame}:`);
+    }
     // CreatureLook carries team for the public composer contract, but the
     // stock creature bodies and equipment use their authored material colors.
     if(creatures[kind]&&!figures[kind]&&!hasWarfareUnit(kind))color='intrinsic';

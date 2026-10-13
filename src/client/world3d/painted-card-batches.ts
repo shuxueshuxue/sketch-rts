@@ -6,9 +6,9 @@ import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
-type Request={key:string;rasterKey:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number};
-type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;mask:Uint8Array};
-type Page={texture:THREE.DataArrayTexture;uploaded:boolean;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];used:number};
+type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number};
+type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;baseMip:number;mask:Uint8Array};
+type Page={texture:THREE.DataArrayTexture;uploaded:boolean;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];orders:number[];used:number};
 
 /** Each layer retains its original GPU mip samples: unlike a packed atlas,
  * filtering cannot borrow another pose's pixels. Stock cutout materials retain
@@ -37,6 +37,7 @@ export class PaintedCardBatches {
   private allocatedPixels=0;
   private cards=new Map<string,Card>();
   private frame=0;
+  private instanceOrder=0;
   private pending:Request[]=[];
   private rasterizations=0;
   private copiedLayers=0;
@@ -61,14 +62,14 @@ export class PaintedCardBatches {
   private rasterCache=new CardRasterCache();
   private rasterStages={paintMs:0,readbackMs:0,cacheMs:0,pickMaskMs:0,rowFlipMs:0,slotMs:0};
   constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){this.mipUploader=new CardMipUploader(anisotropy);}
-  begin(){this.frame++;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=page.opacities.length=0;}}
+  begin(){this.frame++;this.instanceOrder=0;this.pending.length=0;for(const page of this.pages){page.ids.length=page.entries.length=page.matrices.length=page.feet.length=page.opacities.length=page.orders.length=0;}}
   private createPage(width:number,height:number,layers=LAYERS){
     const texture=createCardArray(width,height,layers,this.anisotropy);
     const material=new THREE.MeshBasicMaterial({map:texture,alphaTest:this.policy.alphaTest??.4,side:THREE.DoubleSide,toneMapped:false,transparent:this.policy.transparent??false,depthWrite:this.policy.depthWrite??true,depthTest:true});
     const depth=new THREE.MeshDepthMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,depthPacking:THREE.RGBADepthPacking});
     const distance=new THREE.MeshDistanceMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide});
     for(const item of [material,depth,distance])configure(item,this.policy.transparent??false);
-    const page:Page={texture,uploaded:false,cards:new Array(layers),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],used:this.frame};
+    const page:Page={texture,uploaded:false,cards:new Array(layers),geometry:new THREE.PlaneGeometry(1,1),material,depth,distance,capacity:0,ids:[],entries:[],matrices:[],feet:[],opacities:[],orders:[],used:this.frame};
     this.pages.push(page);this.allocatedPixels+=width*height*layers;return page;
   }
   private slot(width:number,height:number){
@@ -94,23 +95,52 @@ export class PaintedCardBatches {
   add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){
     const size=tileSize*density,factor=2**baseMip;
     if(!Number.isInteger(baseMip)||baseMip<0||baseMip>0&&(!Number.isInteger(size)||size<1||size%factor!==0))throw new Error('Invalid painted card resident mip.');
-    const rasterKey=`${key}:${density}:${tileSize}`;key=`${rasterKey}:mip:${baseMip}`;
+    key=`${key}:${density}:${tileSize}`;
     const card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.
     // Otherwise one early cache miss can evict a later visible pose, cascading
     // into a full rerasterization of an army larger than the soft budget.
-    if(card){this.instance(card,matrix,id,foot,opacity);return;}
-    this.pending.push({key,rasterKey,density,paint,matrix,id,foot,tileSize,opacity,baseMip});
+    if(card){
+      card.used=card.page.used=this.frame;
+      // A finer resident chain already contains every requested lower mip.
+      // Residency is state of this original raster, not another asset identity.
+      if(card.baseMip<=baseMip){this.instance(card,matrix,id,foot,opacity);return;}
+    }
+    this.pending.push({key,density,paint,matrix,id,foot,tileSize,opacity,baseMip});
   }
   private instance(card:Card,matrix:THREE.Matrix4,id:string,foot:number,opacity:number){
     card.used=card.page.used=this.frame;
-    const page=card.page;page.ids.push(id);page.entries.push(card);page.matrices.push(matrix);page.feet.push(foot);page.opacities.push(Math.max(0,Math.min(1,opacity)));
+    const page=card.page;page.ids.push(id);page.entries.push(card);page.matrices.push(matrix);page.feet.push(foot);page.opacities.push(Math.max(0,Math.min(1,opacity)));page.orders.push(this.instanceOrder++);
   }
-  private raster({key,rasterKey,density,paint,matrix,id,foot,tileSize,opacity,baseMip}:Request,renderer:CardTextureRenderer){
+  /** Promotion keeps the binding order of already visible instances, including
+   * their order relative to other warm poses in the destination page. */
+  private rebind(previous:Card,current:Card){
+    const source=previous.page,destination=current.page;
+    const moved:{id:string;matrix:THREE.Matrix4;foot:number;opacity:number;order:number}[]=[];
+    let kept=0;
+    for(let i=0;i<source.entries.length;i++){
+      if(source.entries[i]===previous){moved.push({id:source.ids[i]!,matrix:source.matrices[i]!,foot:source.feet[i]!,opacity:source.opacities[i]!,order:source.orders[i]!});continue;}
+      source.ids[kept]=source.ids[i]!;source.entries[kept]=source.entries[i]!;source.matrices[kept]=source.matrices[i]!;source.feet[kept]=source.feet[i]!;source.opacities[kept]=source.opacities[i]!;source.orders[kept]=source.orders[i]!;kept++;
+    }
+    source.ids.length=source.entries.length=source.matrices.length=source.feet.length=source.opacities.length=source.orders.length=kept;
+    if(!moved.length)return;
+    const existing=destination.entries.length;
+    for(const row of moved){destination.ids.push(row.id);destination.entries.push(current);destination.matrices.push(row.matrix);destination.feet.push(row.foot);destination.opacities.push(row.opacity);destination.orders.push(row.order);}
+    const permutation:number[]=[];let a=0,b=existing;
+    while(a<existing||b<destination.entries.length){
+      if(b>=destination.entries.length||a<existing&&destination.orders[a]!<destination.orders[b]!)permutation.push(a++);
+      else permutation.push(b++);
+    }
+    const reorder=<T>(values:T[])=>{const old=values.slice();for(let i=0;i<permutation.length;i++)values[i]=old[permutation[i]!]!;};
+    // Mutate these arrays in place: mesh.userData.ids retains their identity.
+    reorder(destination.ids);reorder(destination.entries);reorder(destination.matrices);reorder(destination.feet);reorder(destination.opacities);reorder(destination.orders);
+  }
+  private raster({key,density,paint,matrix,id,foot,tileSize,opacity}:Request,renderer:CardTextureRenderer,baseMip:number){
     let card=this.cards.get(key);
-    if(!card){
+    if(!card||card.baseMip>baseMip){
+      const previous=card;
       const start=performance.now(),size=tileSize*density;
-      const cacheStart=performance.now();let rgba=this.rasterCache.get(rasterKey);
+      const cacheStart=performance.now();let rgba=this.rasterCache.get(key);
       this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
       if(!rgba){
         const paintStart=performance.now();
@@ -139,14 +169,16 @@ export class PaintedCardBatches {
         const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
         // Cached bytes already have GPU row orientation. Rehydration never
         // rewrites transparent rows just to flip them a second time.
-        if(!fromCache)this.rasterCache.put(rasterKey,rgba,size,size,paintMs);
+        if(!fromCache)this.rasterCache.put(key,rgba,size,size,paintMs);
         const slotStart=performance.now();this.rasterStages.cacheMs+=slotStart-flippedAt;
         const {page,layer}=this.slot(retainedSize,retainedSize);this.recordPeaks();
         this.rasterStages.slotMs+=performance.now()-slotStart;
         this.rasterWorkWallMs+=performance.now()-start;
         if(!painted&&this.emptyRgba.length===0)this.emptyRgba=new Uint8Array(16*16*4);
         this.mipUploader.uploadLayer(page,layer,painted?rgba:this.emptyRgba,renderer,{sourceWidth:sourceSize,sourceHeight:sourceSize,baseMip:residentMip});this.recordPeaks();
-        card={key,page,layer,used:this.frame,tileSize,sourceSize,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;this.rasterizations++;
+        card={key,page,layer,used:this.frame,tileSize,sourceSize,baseMip:residentMip,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;
+        if(previous){this.rebind(previous,card);previous.page.cards[previous.layer]=undefined;this.maskBytes-=previous.mask.byteLength;}
+        this.rasterizations++;
       }finally{this.pendingRgbaBytes=this.pendingMaskBytes=0;}
     }
     this.instance(card,matrix,id,foot,opacity);
@@ -209,7 +241,7 @@ export class PaintedCardBatches {
       for(const old of sources){
         for(let i=0;i<old.entries.length;i++){
           const card=moved.get(old.entries[i]!)!;const page=card.page;
-          page.ids.push(old.ids[i]!);page.entries.push(card);page.matrices.push(old.matrices[i]!);page.feet.push(old.feet[i]!);page.opacities.push(old.opacities[i]!);
+          page.ids.push(old.ids[i]!);page.entries.push(card);page.matrices.push(old.matrices[i]!);page.feet.push(old.feet[i]!);page.opacities.push(old.opacities[i]!);page.orders.push(old.orders[i]!);
         }
         this.remove(old);
       }
@@ -220,11 +252,13 @@ export class PaintedCardBatches {
   /** Complete the frame in one streaming pass. Callers provide the public GPU
    * transfer contract, including CPU-only tests. No render may precede finish. */
   finish(renderer:CardTextureRenderer){
-    try{for(const request of this.pending)this.raster(request,renderer);}finally{this.pending.length=0;}
+    const finest=new Map<string,number>();
+    for(const request of this.pending)finest.set(request.key,Math.min(finest.get(request.key)??request.baseMip,request.baseMip));
+    try{for(const request of this.pending)this.raster(request,renderer,finest.get(request.key)!);}finally{this.pending.length=0;}
     this.compact(renderer);
     for(const page of [...this.pages]){
       const count=page.ids.length;
-      if(!count){if(page.mesh){page.mesh.count=0;page.mesh.visible=false;}if(this.frame-page.used>120||this.allocatedPixels>PIXEL_BUDGET)this.remove(page);continue;}
+      if(!count){if(page.mesh){page.mesh.count=0;page.mesh.visible=false;}if(!page.cards.some(Boolean)||this.frame-page.used>120||this.allocatedPixels>PIXEL_BUDGET)this.remove(page);continue;}
       if(count>page.capacity){
         if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();page.geometry.dispose();}
         page.capacity=2**Math.ceil(Math.log2(count));
