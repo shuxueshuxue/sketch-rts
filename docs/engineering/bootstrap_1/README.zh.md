@@ -1,5 +1,7 @@
 # bootstrap_1
 
+[过期矿工运输 #371](https://github.com/shuxueshuxue/sketch-rts/pull/371)已合并并部署 `46cb95ac3096d73bf60eff4eb651fb178efd3f83`，运行时两文件+14/-4，复用普通取消与返航。178项本地SDK、完整构建及文档边界通过；同48场景父版24通过/24失败、新版全通过。[细节](./depleted-ferry-target.zh.md)。同20400至21600岛图世界，两名工人已回出发岛，父版仍载着他们驶向空矿；军队与基地数相同，均零新增损失。首次CI `38460017904`、首次生产 `38463166418`成功，五个发布步骤和精确标签核验。[发布证明](./depleted-ferry-target-release.receipt.json)。完整1620格及未见种子仍待验收。
+
 [已登陆殖民队预算 #370](https://github.com/shuxueshuxue/sketch-rts/pull/370)已合并并部署 `94249620c262ef29d70417e199f7a29055e3228f`，运行时单文件+4/-1，复用原有入侵判断保留应战购买。168项本地SDK、完整构建及文档边界通过；同48场景父版36通过/12失败、新版全通过。[细节](./landed-colony-capital.zh.md)。原生岛图同18000至20400世界，第三座基地完工、新矿采出90金，工作矿父版1座/新版2座，均零新增永久损失。首次CI `38456210865`、首次生产 `38457333383`成功，五个发布步骤和精确标签核验。[发布证明](./landed-colony-capital-release.receipt.json)。全部1620格及未见种子仍未验收。
 
 [海岛佣兵归队 #369](https://github.com/shuxueshuxue/sketch-rts/pull/369)已合并并部署 `901d144f4624755f2f206724312d58d44ab6c5b0`，运行时单文件+30/-21，无新序列化字段。90项本地SDK与7项文档边界通过；相同十四个正常付费原生场景父版本全部失败、新版全部通过。[细节](./island-mercenary-return.zh.md)。首次CI `38452001361`与首次生产 `38452708156`成功，五个发布步骤和精确标签核验。[发布证明](./island-mercenary-return-release.receipt.json)。跨岛运输与全部1620格仍待验收。
