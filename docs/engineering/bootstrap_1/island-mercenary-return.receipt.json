@@ -1,0 +1,34 @@
+{
+  "publicBase": "38f9422c48490110030f4275581464bdf8f2e625",
+  "runtimeDiff": "30\t21\tsrc/ai/bootstrap_1/mercenary-control.ts",
+  "serializedFieldsAdded": 0,
+  "normalCostsAndCadence": true,
+  "candidateChecks": {
+    "numTotalTests": 90,
+    "numPassedTests": 90,
+    "numFailedTests": 0,
+    "success": true
+  },
+  "same14NativeParentScenes": {
+    "numTotalTests": 14,
+    "numPassedTests": 0,
+    "numFailedTests": 14,
+    "success": false
+  },
+  "productionBuild": "Client and server bundle completed in log; original shell exit was not recovered",
+  "formal1620": "not run on this candidate",
+  "untouchedSeeds": "not run",
+  "limits": "Requires a complete reachable owned hall; cross-island transport and expedition without a home are not solved",
+  "artifacts": {
+    "/tmp/bootstrap_1-island-mercenary-sdk.json": "868270e7b534a1c2efa63e051426e102104d62065774705c0e5a72d2d096507e",
+    "/tmp/bootstrap_1-island-mercenary-final-parent-sdk.json": "bcad1365ba5f715a2a10c57a79e777cd6de28b98ab7d53029504e6073571a3b9",
+    "/tmp/bootstrap_1-island-mercenary-build.log": "0329a9f6a3fae7661531d3503a4542c657dbda1c649ff29e426a4782aad2ddfe",
+    "/tmp/bootstrap_1-island-mercenary-boundaries.json": "e01784b46ea94ae744f5abd80589b0d6d49462e1dcff261fb83a079fb969ff7f"
+  },
+  "runtimeSha256": "1b5b9be40ed84b467c07259764e25ac8486892e54a1a09dd6ba46bde2799a354",
+  "packageBoundaries": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0
+  }
+}
