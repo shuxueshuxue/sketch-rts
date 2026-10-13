@@ -1,0 +1,180 @@
+{
+  "base": "798f2bc53cb6a1a9dfea9023bae56c4ac4361b45",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "newPersistentState": 0,
+    "newRuntimeModuleLines": 49,
+    "existingIntegrationInsertions": 4,
+    "newFallbacks": 0,
+    "scope": "all three modern families; only idle temporary spirits; permanent host keeps command"
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/policy.ts": "b65342320ccb69adf5f2dcc09b22588ccfefe83f6f8f7c7be3592c2071fcd5f8",
+    "src/ai/bootstrap_1/mine-defense.ts": "c1a55518e3e7e9d587c24cda415a2fddd8c88e0be3c8c703c430a9b35d7e1743",
+    "src/ai/bootstrap_1/summoned-raids.ts": "d5e66d7a18128c46b8b8dcf427335703686e8a1c4413a1657edb454aa1ec13c4"
+  },
+  "sdk": {
+    "passed": 184,
+    "failed": 0,
+    "suites": 18,
+    "newCases": 22,
+    "reportSha256": "11fc0b853efdef2109f3c337c4344d9441cc2081f0610880e6928da28b58a3d3"
+  },
+  "parentControl": {
+    "passed": 10,
+    "failed": 12,
+    "reportSha256": "4cf30747e969934b45928eedf3d6410eb56d3a7c60727437158805e94b82e3e3",
+    "identicalTestSourceSha256": "6a62b260970fd86cc8f7578fc4d8e7e226881e358245e605bb2fc5d179f13863"
+  },
+  "nativeWindow": {
+    "from": 24000,
+    "to": 26400,
+    "match": {
+      "name": "greystonePass/v9_summoner/v5+v7/ember/1",
+      "mapId": "greystonePass",
+      "subject": "v9_summoner",
+      "side": 1,
+      "seed": "bootstrap_1-current-rules-observation",
+      "unseen": false,
+      "agents": {
+        "p0": {
+          "version": "v9_summoner",
+          "versionLabel": "v9_summoner",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v7",
+          "versionLabel": "v7",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 26400,
+      "thinkInterval": 15
+    },
+    "checkpointReportSha256": "00c122dfbbbdf1eaf5fe7102c9c5ef8ea00a88151781d828d1b4f6c4b0f79471",
+    "sourceInputsVerified": {
+      "parent": 221,
+      "candidate": 222
+    },
+    "reportSha256": "6177dba50aca09be4d1849c35838e83e0b4759aa2d3b38e333ab57a4949bffad",
+    "parent": {
+      "summary": {
+        "tick": 26400,
+        "winner": null,
+        "owners": {
+          "p0": {
+            "gold": 33,
+            "halls": 1,
+            "workers": 0,
+            "permanentArmy": 0,
+            "spirits": 0
+          },
+          "p1": {
+            "gold": 17.67,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 12,
+            "spirits": 0
+          },
+          "p2": {
+            "gold": 62.64,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 25,
+            "spirits": 22
+          }
+        },
+        "ownPermanentDeaths": 12,
+        "enemyWorkerDeaths": 0,
+        "raidCommands": 0
+      },
+      "checksum": "aad15447"
+    },
+    "candidate": {
+      "summary": {
+        "tick": 26400,
+        "winner": null,
+        "owners": {
+          "p0": {
+            "gold": 33,
+            "halls": 1,
+            "workers": 0,
+            "permanentArmy": 0,
+            "spirits": 0
+          },
+          "p1": {
+            "gold": 123.8,
+            "halls": 2,
+            "workers": 10,
+            "permanentArmy": 12,
+            "spirits": 0
+          },
+          "p2": {
+            "gold": 62.88,
+            "halls": 2,
+            "workers": 11,
+            "permanentArmy": 25,
+            "spirits": 22
+          }
+        },
+        "ownPermanentDeaths": 12,
+        "enemyWorkerDeaths": 0,
+        "raidCommands": 1
+      },
+      "checksum": "3c7a13f6"
+    },
+    "interpretation": "Same twelve permanent losses; no enemy worker kills; both retain one hall at endpoint. No improvement or acceptance win claimed."
+  },
+  "withdrawnPrototype": {
+    "reportSha256": "afce4b5f2eb8e3b98dd1771e37ef65d356cec46ab8701150c7d0ebd659cb814c",
+    "candidateSummary": {
+      "tick": 26400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 33,
+          "halls": 0,
+          "workers": 0,
+          "permanentArmy": 0,
+          "spirits": 0
+        },
+        "p1": {
+          "gold": 90.28,
+          "halls": 2,
+          "workers": 10,
+          "permanentArmy": 17,
+          "spirits": 0
+        },
+        "p2": {
+          "gold": 62.64,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 24,
+          "spirits": 44
+        }
+      },
+      "ownPermanentDeaths": 12,
+      "enemyWorkerDeaths": 0,
+      "raidCommands": 68
+    },
+    "interpretation": "Without a host-replacement check, 68 raid commands killed zero workers and lost the hall earlier; not published."
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "command": "npm run build",
+    "logSha256": "3f08771de2335351829f2913e0650463a48948ac72ef16cd5c82b65e2dd3eb04"
+  }
+}
