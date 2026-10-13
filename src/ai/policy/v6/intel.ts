@@ -178,11 +178,11 @@ const V9_ENEMY_HALL_CLEARANCE = 900;
 const V9_MINE_ENEMY_RANGE = 800;
 
 export function v9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel) {
-  return chooseV9ExpansionMine(snapshot, intel, snapshot.resources, enemyPowerNear, () => true);
+  return chooseV9ExpansionMine(snapshot, intel, snapshot.resources, enemyPowerNear, () => 0);
 }
 
 /** Rank an explicit candidate set with the same territory, strength and road rules. */
-export function chooseV9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel, mines: readonly ResourceNode[], powerNear: typeof enemyPowerNear, constructionReady: (mine: ResourceNode) => boolean) {
+export function chooseV9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel, mines: readonly ResourceNode[], powerNear: typeof enemyPowerNear, priority: (mine: ResourceNode) => number) {
   const halls = snapshot.buildings.filter((building) => building.kind === "townHall");
   const enemyHalls = intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall));
   const tolerance = v9ExpansionTolerance(intel);
@@ -190,9 +190,9 @@ export function chooseV9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel, mi
   return mines
     .filter((mine) => mine.amount > 0 && halls.every((hall) => distance(hall, mine) > 340) && enemyHalls.every((hall) => distance(hall, mine) > V9_ENEMY_HALL_CLEARANCE))
     .filter((mine) => powerNear(intel, mine, V9_MINE_ENEMY_RANGE) <= tolerance)
-    .map((mine) => ({ mine, walk: Math.min(...own.map((hall) => walkingDistance(snapshot.map, hall, mine) ?? Infinity)), ready: constructionReady(mine) }))
+    .map((mine) => ({ mine, walk: Math.min(...own.map((hall) => walkingDistance(snapshot.map, hall, mine) ?? Infinity)), priority: priority(mine) }))
     .filter((entry) => entry.walk < Infinity)
-    .sort((a, b) => Number(b.ready) - Number(a.ready) || a.walk - b.walk)[0]?.mine;
+    .sort((a, b) => a.priority - b.priority || a.walk - b.walk)[0]?.mine;
 }
 
 export function mineGuards(snapshot: GameSnapshot, mine: Point) {
