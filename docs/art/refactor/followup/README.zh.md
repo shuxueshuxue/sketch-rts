@@ -1,5 +1,7 @@
 # 9de6820 之后的持续验收
 
+以下正文是早期阶段的历史记录。较新的独立车道已补上[共享空间查询与视口工作](viewport-performance/README.md)、[原画上传与缓存](card-streaming/README.md)、[稳定绘序、原始 mip 驻留和最终同源对照](card-streaming/bank-order/README.zh.md)，以及[三类雇佣单位的独立模型与真实招募](mercenary-models/README.md)。首页首次点击音效的验证见[独立记录](../../../validation/homepage-audio/README.zh.md)。各报告保留自己的源码与规则阶段，不能将旧阶段的构建、失败或性能数据当作当前结论。
+
 本阶段仍在实施与验证，不是完成声明。保护先前提交和原始证据，未推送、合并或部署。
 
 当前已完成逐脏层 mip 生成的[正式同环境对照](performance/formal-completion/STAGE1-RESULTS.md)，并接入无 CPU 整页副本的卡片存储。后者的 45 项定向测试、全局类型检查、10 场景／20 次严格 GPU 比较及真实上下文恢复已通过，最终全量回归与同场景性能复测已完成，见[最终报告](../FINAL-REPORT.zh.md)：5270 项通过、6 项已归因失败，生产构建通过；动态 GPU 世界路径完成墙钟下降 58.48%，静态持平。以下性能归因保留为过程记录，不替代最新对照。

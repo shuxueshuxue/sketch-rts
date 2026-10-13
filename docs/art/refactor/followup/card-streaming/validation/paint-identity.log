@@ -1,0 +1,24 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-viewport
+
+stdout | src/client/art/paint-identity.test.ts > authored unit paint identities > proves exact whole-domain RGBA for every stock creature across three owner colors
+{"proof":"stock-creature owner-color identity","assets":["wildling","mossGnawer","ancientStag","spiderling","venomSpider","spiderQueen","dragonWhelp","redDragon","golem","rubbleGolem","rockGolem","graniteGolem","stonebackBrute","ogreWarrior","ogreMage","ogreLord","murlocPeon","murlocHunter","tidePriest","deepSnapper","spirit"],"poses":39,"densities":[2,4],"facings":[-1,1],"colors":["#b79048","#5d8e68","#ad5c46"],"comparisons":6552,"comparedPixels":1525248000,"maxChannelDifference":0}
+
+stdout | src/client/art/paint-identity.test.ts > authored unit paint identities > proves exact siege RGBA for all attack frames, three variants and thirteen aim bins
+{"proof":"stock-siege action identity","assets":["siegeRam","ballista","catapult","organGun"],"attackFrames":6,"variants":3,"aimBins":13,"densities":[2,4],"facings":[-1,1],"comparisons":4192,"comparedPixels":1207459840,"maxChannelDifference":0}
+
+ ✓ src/client/art/paint-identity.test.ts (7 tests) 34362ms
+   ✓ authored unit paint identities > preserves whole-domain stock idle RGBA for all current assets and representative carried equipment 2080ms
+   ✓ authored unit paint identities > proves exact whole-domain RGBA for every stock creature across three owner colors 29177ms
+   ✓ authored unit paint identities > proves exact siege RGBA for all attack frames, three variants and thirteen aim bins 3067ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  03:57:09
+   Duration  35.52s (transform 461ms, setup 0ms, collect 937ms, tests 34.36s, environment 0ms, prepare 50ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,6 +1,7 @@
 /** Real WebGL2 proof, never a mock. Run serially with other browser benchmarks.
  * node --import tsx scripts/card-streaming-gpu-proof.mjs --source ROOT --out proof.json
  * Add --require-skip for an optimized uploader that must avoid identical uploads.
+ * Add --require-tail for the production source-domain/tail options contract.
  */
 import {spawn,execFileSync} from 'node:child_process';
 import {mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
@@ -57,15 +58,16 @@ try{
  const {targetId}=await command('Target.createTarget',{url:'about:blank'});
  const {sessionId}=await command('Target.attachToTarget',{targetId,flatten:true});
  await command('Runtime.enable',{},sessionId);await command('Network.enable',{},sessionId);
- await command('Page.navigate',{url:`http://127.0.0.1:${server.httpServer.address().port}/?sizes=${arg('--sizes')??'256,320,512,640,704'}`},sessionId);
+ const requireTail=process.argv.includes('--require-tail');
+ await command('Page.navigate',{url:`http://127.0.0.1:${server.httpServer.address().port}/?sizes=${arg('--sizes')??'256,320,512,640,704'}&requireTail=${requireTail?'1':'0'}`},sessionId);
  const result=await command('Runtime.evaluate',{expression:`new Promise((resolve,reject)=>{const deadline=performance.now()+30000;function check(){if(window.cardStreamingProof)return window.cardStreamingProof().then(resolve,reject);if(performance.now()>deadline)return reject(new Error('Fixture timeout'));setTimeout(check,20)}check()})`,awaitPromise:true,returnByValue:true},sessionId);
  if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description??result.exceptionDetails.text);
  const proof=result.result.value;
  const requireSkip=process.argv.includes('--require-skip');
- const evidence={...metadata,...proof,errors,failures,requireSkip,
-  browser:await command('Browser.getVersion'),passed:proof.passed&&errors.length===0&&failures.length===0&&(!requireSkip||proof.identicalScratchUploadSkipped)};
+ const evidence={...metadata,...proof,errors,failures,requireSkip,requireTail,
+  browser:await command('Browser.getVersion'),passed:proof.passed&&errors.length===0&&failures.length===0&&(!requireSkip||proof.identicalScratchUploadSkipped)&&(!requireTail||proof.tailPassed)};
  await writeFile(output,JSON.stringify(evidence,null,2)+'\n');
- console.log(JSON.stringify({output,passed:evidence.passed,cases:evidence.cases.map(c=>({size:c.size,passed:c.passed,identicalScratchUploadSkipped:c.identicalScratchUploadSkipped})),context:{lost:evidence.context.lost,restored:evidence.context.restored,size:evidence.context.rebuilt.size,passed:evidence.context.passed},errors,failures}));
+ console.log(JSON.stringify({output,passed:evidence.passed,cases:evidence.cases.map(c=>({size:c.size,passed:c.passed,identicalScratchUploadSkipped:c.identicalScratchUploadSkipped})),tails:evidence.tailCases?.map(c=>({size:c.size,baseMip:c.baseMip,passed:c.passed})),context:{lost:evidence.context.lost,restored:evidence.context.restored,size:evidence.context.rebuilt.size,passed:evidence.context.passed},errors,failures}));
  if(!evidence.passed)process.exitCode=1;
 }catch(error){
  await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify({...metadata,errors,failures,passed:false,failure:String(error)},null,2)+'\n');throw error;

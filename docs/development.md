@@ -189,6 +189,23 @@ A unit or building lives in two places:
 
 TypeScript reports a missing card, and `src/client/content/cards.test.ts` checks both languages, that each unit is trained at a building its race can build, and that no menu repeats a hotkey.
 
+World card textures retain the author's full drawing domain and original mip
+samples. Cached texture pages are separate from draw chunks; submission order
+must survive cache misses, promotion and compaction. Ordinary draws use a single
+texture bank and implicit sampling. Wider bank configurations are supported for
+controlled profiling, but are not selected automatically from texture-unit
+capacity: measured explicit-gradient cost made them slower on the available
+software GPU. Nonempty new pages reserve only the frame's remaining unique
+requests; cheap empty cards share small pages.
+
+See the [renderer validation and measured tradeoffs](art/refactor/followup/card-streaming/bank-order/README.zh.md).
+Paint-cache sharing must follow exact current drawing equality. If a new detail,
+blink or raw idle-frame branch distinguishes currently shared frames, change the
+identity policy or opt out; do not restrict the artist's drawing to keep an old
+cache assumption. The [three hired-company models](art/refactor/followup/mercenary-models/README.md)
+are independently authored bodies and remains using the accepted pose/weapon
+grips, with unchanged recruitment and combat rules.
+
 ## Sound packs
 
 The build or hosted manifest can select a default sound pack. Players choose a different pack, volume or silence in **Settings → Sound pack**. A pack is a folder `audio-packs/<id>/` with a `pack.json` and the files it names:
@@ -205,6 +222,8 @@ The build or hosted manifest can select a default sound pack. Players choose a d
 ```
 
 Events and their types are defined in [`src/client/sound.ts`](../src/client/sound.ts). Menu navigation and button clicks are separate events. Combat sounds follow the actual attack presentation: arrows, cannon, mortar, bolts, flame, stone and magic do not share a generic cannon recording. Use one recording per interface operation; selection and order character voices are suppressed.
+
+Homepage preparation decodes only the selected pack's click and menu cues. Audio remains suspended until a real user gesture; the first cue waits for the context to resume. Packs without a menu cue use their click cue for navigation. Combat recordings are loaded on demand or during match preparation.
 
 A pack can provide a single recording or recordings by source unit `kinds`. `volume` scales the recording, `pitch` permits pitch variation, and `max` caps simultaneous playback. Missing events remain silent.
 

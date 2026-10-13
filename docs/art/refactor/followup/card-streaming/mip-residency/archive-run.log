@@ -1,0 +1,16 @@
+{
+  "operation": "--archive",
+  "preservationVerified": true,
+  "frames": 80,
+  "differences": {
+    "battle-after": [
+      8
+    ],
+    "battle-order-sort": [
+      4
+    ]
+  },
+  "removedFiles": 158,
+  "removedBytes": 82305657,
+  "meaning": "Evidence integrity only; historical pixel differences remain failures, not production acceptance."
+}

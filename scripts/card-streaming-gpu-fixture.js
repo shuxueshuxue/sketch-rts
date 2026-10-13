@@ -5,6 +5,7 @@ const {CardMipUploader,createCardArray}=await import(/* @vite-ignore */ `/@fs${_
 // never accesses renderer.properties or changes the production transfer path.
 const DEPTH=4,params=new URLSearchParams(location.search);
 const sizes=(params.get('sizes')??'256,320,512,640,704').split(',').map(Number);
+const requireTail=params.get('requireTail')==='1';
 const canvas=document.createElement('canvas');document.body.append(canvas);
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false});renderer.setSize(16,16);renderer.setPixelRatio(1);
 const gl=renderer.getContext(),anisotropy=renderer.capabilities.getMaxAnisotropy();
@@ -74,28 +75,29 @@ function readLayer(handle,n,level,layer){
 async function sha(bytes){const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');}
 async function parity(pair,label){
  await fence();const result=[];
- for(const {level,size} of mipSizes(pair.n)){
+ for(const {level,size} of mipSizes(pair.residentSize)){
   let maximum=0,changedChannels=0,changedPixels=0,transparentRGBChannels=0;const reference=[],candidate=[];
   for(let layer=0;layer<DEPTH;layer++){
-   const a=readLayer(pair.referenceHandle,pair.n,level,layer),b=readLayer(pair.candidateHandle,pair.n,level,layer);
+   const a=readLayer(pair.referenceHandle,pair.n,level+pair.baseMip,layer),b=readLayer(pair.candidateHandle,pair.residentSize,level,layer);
    for(let i=0;i<a.length;i+=4){let changed=false;for(let c=0;c<4;c++){
     const delta=Math.abs(a[i+c]-b[i+c]);maximum=Math.max(maximum,delta);if(delta){changedChannels++;changed=true;}
     if(c<3&&a[i+3]===0&&a[i+c]!==0)transparentRGBChannels++;
    }if(changed)changedPixels++;}
    reference.push(await sha(a));candidate.push(await sha(b));
   }
-  result.push({label,level,size,maximum,changedChannels,changedPixels,transparentRGBChannels,referenceSha256:reference,candidateSha256:candidate});
+  result.push({label,level,sourceLevel:level+pair.baseMip,size,maximum,changedChannels,changedPixels,transparentRGBChannels,referenceSha256:reference,candidateSha256:candidate});
  }
  assertGL(`parity ${label}`);return result;
 }
-function allocate(n,label){
+function allocate(n,label,baseMip=0){
  const data=new Uint8Array(n*n*4*DEPTH),bytes=n*n*4;
  data.set(pattern(n,1),bytes);data.set(pattern(n,2,{transparent:true}),bytes*2);data.set(pattern(n,3),bytes*3);
  const reference=configure(new THREE.DataArrayTexture(data,n,n,DEPTH));reference.generateMipmaps=true;reference.needsUpdate=true;
- const candidate=createCardArray(n,n,DEPTH,anisotropy),page={texture:candidate,uploaded:false},uploader=new CardMipUploader(anisotropy);
+ const residentSize=n/2**baseMip,options=baseMip?{sourceWidth:n,sourceHeight:n,baseMip}:undefined;
+ const candidate=createCardArray(residentSize,residentSize,DEPTH,anisotropy),page={texture:candidate,uploaded:false},uploader=new CardMipUploader(anisotropy);
  withLabel(`${label}:reference`,()=>renderer.initTexture(reference));
- withLabel(`${label}:candidate`,()=>{for(let layer=0;layer<DEPTH;layer++)uploader.uploadLayer(page,layer,data.subarray(layer*bytes,(layer+1)*bytes),renderer);});
- return{n,label,data,reference,candidate,page,uploader,referenceHandle:allocation(`${label}:reference`).handle,candidateHandle:allocation(`${label}:candidate`).handle,
+ withLabel(`${label}:candidate`,()=>{for(let layer=0;layer<DEPTH;layer++)uploader.uploadLayer(page,layer,data.subarray(layer*bytes,(layer+1)*bytes),renderer,options);});
+ return{n,label,baseMip,residentSize,options,data,reference,candidate,page,uploader,referenceHandle:allocation(`${label}:reference`).handle,candidateHandle:allocation(`${label}:candidate`).handle,
   dispose(){uploader.dispose();reference.dispose();candidate.dispose();const error=gl.isContextLost()?0:gl.getError();if(error)disposalErrors.push({label,error});}};
 }
 function callSummary(start){const slice=calls.slice(start),uploads=slice.filter(c=>c.name==='texSubImage2D');return{
@@ -109,13 +111,31 @@ function update(pair,layer,next){
  // independent full-domain oracle and never charged to the candidate.
  const start=calls.length,statsBefore=pair.uploader.stats();
  const target=new THREE.WebGLRenderTarget(8,8,{depthBuffer:false,stencilBuffer:false});renderer.setRenderTarget(target);
- try{pair.uploader.uploadLayer(pair.page,layer,next,renderer);
+ try{pair.uploader.uploadLayer(pair.page,layer,next,renderer,pair.options);
   if(renderer.getRenderTarget()!==target)throw new Error('Transfer did not restore caller render target');
  }finally{renderer.setRenderTarget(null);target.dispose();}
  return{...callSummary(start),statsBefore,statsAfter:pair.uploader.stats(),targetRestored:true};
 }
-async function proofCase(n,label){
- const pair=allocate(n,label),report={size:n,depth:DEPTH,steps:[],initial:null,compaction:null,disposed:null};
+async function recover(pair,phase,afterCalls){
+ const next=pattern(pair.n,phase,{shift:5}),before=pair.uploader.stats(),copy=renderer.copyTextureToTexture;
+ const target=new THREE.WebGLRenderTarget(8,8,{depthBuffer:false,stencilBuffer:false});renderer.setRenderTarget(target);
+ let actualCopies=0,injected=false,targetRestored=false;
+ renderer.copyTextureToTexture=function(...args){
+  const result=copy.apply(renderer,args);actualCopies++;
+  if(actualCopies===afterCalls)throw new Error('Injected test transfer interruption after real GPU copy');
+  return result;
+ };
+ try{pair.uploader.uploadLayer(pair.page,2,next,renderer,pair.options);}
+ catch(error){if(error.message!=='Injected test transfer interruption after real GPU copy')throw error;injected=true;targetRestored=renderer.getRenderTarget()===target;}
+ finally{renderer.copyTextureToTexture=copy;renderer.setRenderTarget(null);target.dispose();}
+ if(!injected||!targetRestored)throw new Error('Recovery interruption did not preserve caller target');
+ const transfer=update(pair,2,next),pixels=await parity(pair,`recovered-after-${afterCalls}-real-copies`);
+ const fullUpload=transfer.subImage2DCalls===1&&transfer.subImage2DBytes===pair.n*pair.n*4&&transfer.generatedMipmaps===1;
+ const fallbackCounted=transfer.statsAfter.scratchFullUploadFallbacks===before.scratchFullUploadFallbacks+1;
+ return{afterCalls,actualCopies,injected,targetRestored,fullUpload,fallbackCounted,transfer,parity:pixels,passed:fullUpload&&fallbackCounted&&pixels.every(p=>p.maximum===0&&p.changedChannels===0)};
+}
+async function proofCase(n,label,baseMip=0){
+ const pair=allocate(n,label,baseMip),report={size:n,residentSize:pair.residentSize,baseMip,depth:DEPTH,steps:[],initial:null,compaction:null,recovery:[],disposed:null};
  try{
   report.initial=await parity(pair,'initial-including-zero-first-source');
   const a=pattern(n,6),b=pattern(n,7,{shift:13}),transparent=b.slice();
@@ -127,17 +147,18 @@ async function proofCase(n,label){
    const transfer=update(pair,layer,next),pixels=await parity(pair,step);
    report.steps.push({step,layer,transfer,parity:pixels});
   }
+  if(baseMip){report.recovery.push(await recover(pair,29,1),await recover(pair,31,2));}
   // Full-chain GPU relocation must preserve all bytes, including untouched
   // layers and the 640 -> ... -> 5 -> 2 -> 1 NPOT tail.
   const compactDepth=n===512?3:n===640?7:n===704?14:4;
-  const compact=createCardArray(n,n,compactDepth,anisotropy),destination={texture:compact,uploaded:false};
+  const compact=createCardArray(pair.residentSize,pair.residentSize,compactDepth,anisotropy),destination={texture:compact,uploaded:false};
   const permutation=[2,0,3,1],oldHandle=pair.candidateHandle;
   try{
    withLabel(`${label}:compact`,()=>pair.uploader.copyLayers(Array.from({length:compactDepth},(_,destinationLayer)=>({source:pair.page,sourceLayer:permutation[destinationLayer%DEPTH],destination,destinationLayer})),renderer));
    const handle=allocation(`${label}:compact`).handle,levels=[];await fence();
-   for(const {level,size} of mipSizes(n)){let maximum=0,changedChannels=0;
+   for(const {level,size} of mipSizes(pair.residentSize)){let maximum=0,changedChannels=0;
     for(let layer=0;layer<compactDepth;layer++){
-     const a=readLayer(oldHandle,n,level,permutation[layer%DEPTH]),b=readLayer(handle,n,level,layer);
+     const a=readLayer(oldHandle,pair.residentSize,level,permutation[layer%DEPTH]),b=readLayer(handle,pair.residentSize,level,layer);
      for(let i=0;i<a.length;i++){const delta=Math.abs(a[i]-b[i]);maximum=Math.max(maximum,delta);if(delta)changedChannels++;}
     }levels.push({level,size,maximum,changedChannels});
    }
@@ -147,7 +168,7 @@ async function proofCase(n,label){
   report.identicalScratchUploadSkipped=identical.every(s=>s.transfer.subImage2DCalls===0&&s.transfer.generatedMipmaps===0);
   report.arrayCpuBaseNull=pair.candidate.image.data===null;
   report.productionStats=pair.uploader.stats();
-  report.passed=report.arrayCpuBaseNull&&[...report.initial,...report.steps.flatMap(s=>s.parity),...report.compaction.levels].every(p=>p.maximum===0&&p.changedChannels===0);
+  report.passed=report.arrayCpuBaseNull&&report.recovery.every(r=>r.passed)&&[...report.initial,...report.steps.flatMap(s=>s.parity),...report.compaction.levels].every(p=>p.maximum===0&&p.changedChannels===0);
  }finally{pair.dispose();report.disposed=pair.uploader.stats().scratchTextures===0;}
  return report;
 }
@@ -157,8 +178,9 @@ window.cardStreamingProof=async()=>{
   readback:'Raw encoded RGBA8 GPU storage, each array layer and every native mip, via test-only framebufferTextureLayer/readPixels. No shader color decode/re-encode or alpha masking. Full-domain DataArrayTexture generateMipmap is the independent oracle.',
   fixture:'Zero first input; gradients, thin lines, nonzero RGB at alpha 0; shifted marks, transparent RGB mutation, exact repeated input, full zero clearing, full dirty union, all mip compaction.',
   timing:'Correctness only; instrumentation and synchronous GPU readback deliberately exclude this script from performance comparisons.'},
-  device:{vendor:gl.getParameter(gl.VENDOR),renderer:gl.getParameter(gl.RENDERER),unmaskedRenderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null},cases:[],context:null};
+  device:{vendor:gl.getParameter(gl.VENDOR),renderer:gl.getParameter(gl.RENDERER),unmaskedRenderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null},cases:[],tailCases:[],context:null};
  for(const n of sizes)report.cases.push(await proofCase(n,`case-${n}`));
+ if(requireTail)for(const n of [256,640,704])for(const baseMip of [1,2])report.tailCases.push(await proofCase(n,`tail-${n}-${baseMip}`,baseMip));
  // Dispose/recreate without context loss catches stale scratch knowledge.
  report.recreate=await proofCase(320,'recreate-320');
  let lost=false,restored=false;
@@ -169,9 +191,11 @@ window.cardStreamingProof=async()=>{
   renderer.forceContextLoss();
  });
  const rebuilt=await proofCase(704,'context-restored-704');
- report.context={lost,restored,rebuilt,passed:lost&&restored&&rebuilt.passed&&rebuilt.disposed};
+ const tailRebuilt=requireTail?await proofCase(704,'context-restored-tail-704-2',2):null;
+ report.context={lost,restored,rebuilt,tailRebuilt,passed:lost&&restored&&rebuilt.passed&&rebuilt.disposed&&(!tailRebuilt||tailRebuilt.passed&&tailRebuilt.disposed)};
  report.glError=gl.getError();report.disposalErrors=disposalErrors;
- report.identicalScratchUploadSkipped=[...report.cases,report.recreate,rebuilt].every(c=>c.identicalScratchUploadSkipped);
- report.passed=[...report.cases,report.recreate].every(c=>c.passed&&c.disposed)&&report.context.passed&&report.glError===0&&disposalErrors.length===0;
+ report.tailPassed=!requireTail||report.tailCases.length===6&&report.tailCases.every(c=>c.passed&&c.disposed)&&tailRebuilt.passed;
+ report.identicalScratchUploadSkipped=[...report.cases,...report.tailCases,report.recreate,rebuilt,...(tailRebuilt?[tailRebuilt]:[])].every(c=>c.identicalScratchUploadSkipped);
+ report.passed=[...report.cases,report.recreate].every(c=>c.passed&&c.disposed)&&report.tailPassed&&report.context.passed&&report.glError===0&&disposalErrors.length===0;
  instrument=false;renderer.dispose();return report;
 };

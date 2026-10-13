@@ -1,0 +1,209 @@
+{
+  "kind": "viewport",
+  "sourceCommit": "e02b24ef8de3c96cec111a1178a7daf697fc8378",
+  "before": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/bank-order/canonical-reference/raw.json",
+  "after": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/bank-order/canonical-one-native/raw.json",
+  "beforeVariant": {
+    "name": "canonical-reference",
+    "maxBanks": 1,
+    "mips": "full",
+    "ordering": "production stable snapshot ordering",
+    "referenceOverrides": [
+      "residentMip returns 0"
+    ]
+  },
+  "afterVariant": {
+    "name": "canonical-one-native",
+    "maxBanks": 1,
+    "mips": "native",
+    "ordering": "production stable snapshot ordering",
+    "referenceOverrides": []
+  },
+  "selectedHiddenCounts": [
+    0,
+    9900
+  ],
+  "originalCounts": {
+    "before": [
+      0,
+      9900
+    ],
+    "after": [
+      0,
+      9900
+    ]
+  },
+  "method": "Same frozen production client, fact program and helper/harness; only explicit bank/mip configuration differs. Stable production snapshot order is the oracle. Legacy cache-dependent occlusion is historical failed evidence, not a claim of zero legacy-image change. Exact PNG verification with strict decoded RGBA comparison on any encoded mismatch; no tolerance.",
+  "images": [
+    {
+      "label": "0/0/battlefield",
+      "beforePngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "afterPngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "0/0/empty",
+      "beforePngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "afterPngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "0/0/returned",
+      "beforePngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "afterPngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/0/battlefield",
+      "beforePngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "afterPngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/0/empty",
+      "beforePngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "afterPngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/0/returned",
+      "beforePngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "afterPngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "0/1/battlefield",
+      "beforePngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "afterPngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "0/1/empty",
+      "beforePngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "afterPngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "0/1/returned",
+      "beforePngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "afterPngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/1/battlefield",
+      "beforePngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "afterPngSha256": "328d4af2a27ae9555c53862b810135431dbecfd2ab8d665764e01c52eb04d95e",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/1/empty",
+      "beforePngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "afterPngSha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    },
+    {
+      "label": "9900/1/returned",
+      "beforePngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "afterPngSha256": "3ddddc1fe7548a3ec11ea789c2e6642e9477ec5a1754e522b750c66a55e8904d",
+      "rgba": {
+        "identical": true,
+        "changedPixels": 0,
+        "changedChannels": 0,
+        "maximumChannelDelta": 0,
+        "method": "Byte-identical PNG is sufficient for exact decoded-pixel equality"
+      }
+    }
+  ],
+  "facts": [
+    {
+      "hiddenCount": 0,
+      "cycle": 0,
+      "sameFacts": true
+    },
+    {
+      "hiddenCount": 9900,
+      "cycle": 0,
+      "sameFacts": true
+    },
+    {
+      "hiddenCount": 0,
+      "cycle": 1,
+      "sameFacts": true
+    },
+    {
+      "hiddenCount": 9900,
+      "cycle": 1,
+      "sameFacts": true
+    }
+  ],
+  "validation": {
+    "passed": true,
+    "violations": []
+  }
+}

@@ -60,3 +60,46 @@ readback and counts real upload and mip-generation calls. It does not access
 `renderer.properties`. Synchronous readback and instrumentation deliberately
 make its elapsed time unsuitable for performance claims; use the separate
 fixed-scene benchmark for resource and frame-time comparisons.
+
+## Production original-mip tail contract
+
+The later `gpu-proof-tail-production.json` reruns all N0 cases and additionally
+calls the actual production uploader's `{sourceWidth,sourceHeight,baseMip}`
+options for 256, 640 and 704 domains at N1 and N2. It compares destination mip
+`L` directly with the independent full-domain oracle's original mip `N + L`.
+The smaller array never regenerates its own mip chain, so the oracle does not
+silently introduce a second filtering pass.
+
+All six source/drop combinations and a fresh 704 N2 reconstruction after
+context restoration passed. These extra tail cases alone provide **2,280
+layer/mip comparisons**, **529 compaction layer/mip comparisons** and
+**90,409,768 RGBA component comparisons**, all with zero changed channels.
+They retain the original complete source raster for partial upload comparison,
+transparent RGB updates, full clearing and identical-source suppression.
+
+Each tail case also executes two recovery checks. Test-only interruptions are
+thrown after a real public GPU copy has finished: first after the scratch's
+partial base upload, and then after the first array mip copy. Retrying the same
+RGBA must submit one full original-domain scratch upload, regenerate its
+original native mip chain, increment the fallback counter and restore all
+destination mip bytes. All **14 recovery checks** passed, including restoration
+of the caller's render target. This deliberately injected exception is not a
+claim of a natural driver failure or timing test.
+
+The production uploader SHA-256 tested was
+`3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295`.
+The production-tail run had no GL, console or network errors. Baseline source
+does not implement these new options; omit `--require-tail` when checking it.
+
+```sh
+node --import tsx scripts/card-streaming-gpu-proof.mjs \
+  --source /workspace/sketch-rts-viewport \
+  --out docs/art/refactor/followup/card-streaming/gpu-proof-tail-production.json \
+  --require-skip --require-tail
+```
+
+This verifies stored mip bytes and transfer recovery. It does not by itself
+verify that the per-frame residency gate chooses the right drop, that picking
+keeps the full-source mask, or that camera/DPR changes promote resources before
+drawing. Those require the separate full-presentation comparison and transition
+probe.

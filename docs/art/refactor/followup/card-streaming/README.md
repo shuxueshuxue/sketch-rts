@@ -1,4 +1,24 @@
-# Full-domain card streaming follow-up
+# Full-domain card streaming: Phase A evidence and follow-ups
+
+This page records the **historical Phase A** comparison (`f87c3b7` →
+`742d2b8`). Its source epochs, timing values and zero-difference captures are
+specific to that phase. The integrated renderer subsequently gained original
+mip-tail residency and stable ordered multi-bank draws; the three hired-company
+models were also independently redrawn. Do not interpret the historical 80
+matching battle images below as a claim that the final renderer matches the
+old cache-dependent overlap order.
+
+Current verification and deliverables:
+
+- [Final stable-order bank/mip comparison](bank-order/README.zh.md), with a
+  corrected **same-source** one-bank/full-chain reference.
+- [135-case color/depth/distance GPU proof](bank-correctness.md).
+- [Exact idle drawing identities, including the new mercenary models](idle-identity/README.md).
+- [Three independent hired-company models](../mercenary-models/README.md).
+- [Homepage first-gesture audio proof](../../../../validation/homepage-audio/README.zh.md).
+- Final frozen client `0de509c`: **124 test files / 956 tests passed** and
+  production build passed; [test log](validation/client-final.log) and
+  [build log](validation/build-final.log).
 
 This follows the viewport work in draft PR #346. The accepted art, animation,
 camera, simulation and visible content stay unchanged. The work targets pose
@@ -143,7 +163,7 @@ node --import tsx scripts/art-viewport-benchmark.mjs \
   --source /tmp/sketch-card-streaming-baseline --out /tmp/card-before/raw.json \
   --hidden 0,9900 --repeats 2 --cpu-frames 360 --real-frames 18 --paced --skip-simulation
 node --import tsx scripts/art-viewport-benchmark.mjs \
-  --source "$PWD" --out /tmp/card-after/raw.json \
+  --source /tmp/sketch-card-streaming-phase-a --out /tmp/card-after/raw.json \
   --hidden 0,9900 --repeats 2 --cpu-frames 360 --real-frames 18 --paced --skip-simulation
 node scripts/art-card-streaming-report.mjs \
   --before /tmp/card-before/raw.json --after /tmp/card-after/raw.json --out /tmp/card-comparison.json
@@ -156,6 +176,11 @@ use the same entry fixture on both sides; the canonical harness's legacy top
 level `method` wording does not describe mixed content. Its entry fixture hash,
 per-cycle scope and asset coverage take precedence. The cache diagnostic is
 intrusive/mock-backed and must never be used as a wall-time performance result.
+
+For the historical after side, create a detached checkout at `742d2b8` named
+`/tmp/sketch-card-streaming-phase-a` and link the same `node_modules`. Running
+current HEAD is the later integrated renderer, not this historical after side.
+Use the [final phase method](bank-order/method.zh.md) for current reproduction.
 
 ## Validation and remaining limits
 

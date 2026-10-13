@@ -1,0 +1,110 @@
+VERIFIED card-streaming/mip-residency/camera-before files=62
+VERIFIED card-streaming/mip-residency/camera-after files=62
+VERIFIED card-streaming/mip-residency/camera-after-coexisting files=62
+VERIFIED card-streaming/mip-residency/camera-after-one-source files=62
+VERIFIED card-streaming/bank-order/camera-before files=62
+VERIFIED card-streaming/bank-order/camera-after files=62
+VERIFIED card-streaming/bank-order/battle-before files=90
+VERIFIED card-streaming/bank-order/battle-after files=90
+VERIFIED card-streaming/bank-order/final/camera-reference files=62
+VERIFIED card-streaming/bank-order/final/camera-candidate files=62
+VERIFIED card-streaming/bank-order/final/battle-reference files=90
+VERIFIED card-streaming/bank-order/final/battle-candidate files=90
+VERIFIED mercenary-models/gameplay files=49
+VERIFIED mercenary-models/gameplay-final files=49
+{
+  "operation": "archive",
+  "verifiedFolders": 14,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 954,
+  "originalPngBytes": 792843206,
+  "uniqueArchives": 4,
+  "archiveBytes": 211643224,
+  "largestArchiveBytes": 68627707,
+  "deletedFiles": 788,
+  "deletedBytes": 673604772,
+  "retainedFiles": 166,
+  "retainedBytes": 119238434,
+  "archives": [
+    {
+      "file": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e.tar.gz",
+      "bytes": 68627707,
+      "sha256": "a1939c1716a00df0010abaa18cc17e33f4e80dcd5932745b947698ba3aacff9d"
+    },
+    {
+      "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+      "bytes": 68627584,
+      "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+    },
+    {
+      "file": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256.tar.gz",
+      "bytes": 46689651,
+      "sha256": "effa1df3c37bde98bfa7e09cef6645abbe572b497e34c3b30064c6e37532dfe7"
+    },
+    {
+      "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+      "bytes": 27698282,
+      "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+    }
+  ],
+  "folders": [
+    {
+      "target": "card-streaming/mip-residency/camera-before",
+      "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+    },
+    {
+      "target": "card-streaming/mip-residency/camera-after",
+      "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+    },
+    {
+      "target": "card-streaming/mip-residency/camera-after-coexisting",
+      "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+    },
+    {
+      "target": "card-streaming/mip-residency/camera-after-one-source",
+      "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+    },
+    {
+      "target": "card-streaming/bank-order/camera-before",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/bank-order/camera-after",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/bank-order/battle-before",
+      "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+    },
+    {
+      "target": "card-streaming/bank-order/battle-after",
+      "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+    },
+    {
+      "target": "card-streaming/bank-order/final/camera-reference",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/bank-order/final/camera-candidate",
+      "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+    },
+    {
+      "target": "card-streaming/bank-order/final/battle-reference",
+      "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+    },
+    {
+      "target": "card-streaming/bank-order/final/battle-candidate",
+      "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+    },
+    {
+      "target": "mercenary-models/gameplay",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    },
+    {
+      "target": "mercenary-models/gameplay-final",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes.",
+  "netPngPayloadBytesSaved": 461961548
+}

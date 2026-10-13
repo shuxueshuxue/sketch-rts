@@ -1,0 +1,974 @@
+{
+  "before": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/mip-residency/camera-before/proof.json",
+  "after": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/mip-residency/camera-after/proof.json",
+  "beforeCommit": "2a0d3a27608c9e56ca8de6949759c975ee06c1d9",
+  "afterCommit": "55d6b3b5e0c76aa1fbfac59a39dc5b5d941748d3",
+  "steps": [
+    {
+      "label": "dpr-1-1280x720-zoom-0p35",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "616f50c37a87fddf6e11dae108b233ed3ce0ccf1f0110e63e788d6d742b61ed2",
+          "afterRgbaSha256": "616f50c37a87fddf6e11dae108b233ed3ce0ccf1f0110e63e788d6d742b61ed2"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "adf4bfe040832ce1085a17ab918b1fbcc4c9717128a79a3e305f07b12f360e52",
+          "afterRgbaSha256": "adf4bfe040832ce1085a17ab918b1fbcc4c9717128a79a3e305f07b12f360e52"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-1280x720-zoom-0p65",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "a65bbd23bf6295b1e40626e8b37f8e112f22989a1e35e8dd018b0c6e4946c05b",
+          "afterRgbaSha256": "a65bbd23bf6295b1e40626e8b37f8e112f22989a1e35e8dd018b0c6e4946c05b"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "083ff2ede3c0d2b4c12bd42bded04658a51108463ec55e7281a6cb454b07741d",
+          "afterRgbaSha256": "083ff2ede3c0d2b4c12bd42bded04658a51108463ec55e7281a6cb454b07741d"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-1280x720-zoom-0p75",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95",
+          "afterRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9",
+          "afterRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-1280x720-zoom-1",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "ea517bb5e131e093a62ddb53cd27edc1a07e6d4d0bf4817549b88e9a5c0f2fa5",
+          "afterRgbaSha256": "ea517bb5e131e093a62ddb53cd27edc1a07e6d4d0bf4817549b88e9a5c0f2fa5"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "03d86c7da4e1e1f3ec630582b71633fd75396913a5db7300376318bb2bc2b873",
+          "afterRgbaSha256": "03d86c7da4e1e1f3ec630582b71633fd75396913a5db7300376318bb2bc2b873"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-1280x720-zoom-1p5",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "6385463872193c54fe2c1c485089d55cf9e835ea02b647a98289dc7155e37aac",
+          "afterRgbaSha256": "6385463872193c54fe2c1c485089d55cf9e835ea02b647a98289dc7155e37aac"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "7cef229e5c12cabde554a7002592985fcb262e262df21b939656cc20e25dc1cf",
+          "afterRgbaSha256": "7cef229e5c12cabde554a7002592985fcb262e262df21b939656cc20e25dc1cf"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-1280x720-zoom-2",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453",
+          "afterRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548",
+          "afterRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-0p35",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "d6921e9598c504ae28397f49bf6c3eb40e7b153753fae688c09956063c66863d",
+          "afterRgbaSha256": "d6921e9598c504ae28397f49bf6c3eb40e7b153753fae688c09956063c66863d"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "655a6369725623dee27cb905aec35c377a399897ed9e52a34d0f1b678a954309",
+          "afterRgbaSha256": "655a6369725623dee27cb905aec35c377a399897ed9e52a34d0f1b678a954309"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-0p65",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "81ce5652eea448765b16ec5f13eee9db55630b420a8784b37ab527b4b740527a",
+          "afterRgbaSha256": "81ce5652eea448765b16ec5f13eee9db55630b420a8784b37ab527b4b740527a"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "312994d899421844edbba38a8c0b0a42bb2b5de2bf4275331907bb6032078934",
+          "afterRgbaSha256": "312994d899421844edbba38a8c0b0a42bb2b5de2bf4275331907bb6032078934"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-0p75",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "75e84ac051ce5d815b39851fe213879024bf5cf296c424fa83431d45458b2cd0",
+          "afterRgbaSha256": "75e84ac051ce5d815b39851fe213879024bf5cf296c424fa83431d45458b2cd0"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "42827a97789adec63ee63540b7099e878fc74f1987d6e4c60f56db83fa297b32",
+          "afterRgbaSha256": "42827a97789adec63ee63540b7099e878fc74f1987d6e4c60f56db83fa297b32"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-1",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "eaf4bfd752ae2d0d1201e0fbd6e01f1d8697257f66444efe1007b3c8174ec918",
+          "afterRgbaSha256": "eaf4bfd752ae2d0d1201e0fbd6e01f1d8697257f66444efe1007b3c8174ec918"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "7e32666be7c579d03216bd4291c05ecfee2772c9ab9a75449ff649c23afc9199",
+          "afterRgbaSha256": "7e32666be7c579d03216bd4291c05ecfee2772c9ab9a75449ff649c23afc9199"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-1p5",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "f219aee90deaa0ae7683ddc4116d6cc3f53bb669b364566174a35a7ffa99999a",
+          "afterRgbaSha256": "f219aee90deaa0ae7683ddc4116d6cc3f53bb669b364566174a35a7ffa99999a"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "ea8c7f7f0c14d17b43fb862d1161afdacc1c5a4d314e38c2aa579aac8ab26c64",
+          "afterRgbaSha256": "ea8c7f7f0c14d17b43fb862d1161afdacc1c5a4d314e38c2aa579aac8ab26c64"
+        }
+      }
+    },
+    {
+      "label": "dpr-1-640x360-zoom-2",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "e2c17060a130903cc2502cc880b27b21dd13a4359a06a4d569d29202c1a8a155",
+          "afterRgbaSha256": "e2c17060a130903cc2502cc880b27b21dd13a4359a06a4d569d29202c1a8a155"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "5e3fd4a7af3f51bbd159223fbb9dffaed3d16949d8a8048b2b8cd03e5914b806",
+          "afterRgbaSha256": "5e3fd4a7af3f51bbd159223fbb9dffaed3d16949d8a8048b2b8cd03e5914b806"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-0p35",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "0b89f29050cd5fc669c639cca612207b161ce791da1f91f727ae5f04c271e630",
+          "afterRgbaSha256": "0b89f29050cd5fc669c639cca612207b161ce791da1f91f727ae5f04c271e630"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "c66e131016a5ddbe753944c6e70e5804d032689719cc39d0066e7ec6662f9c16",
+          "afterRgbaSha256": "c66e131016a5ddbe753944c6e70e5804d032689719cc39d0066e7ec6662f9c16"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-0p65",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "dab94ce69ecb5d766744f5f736a8f5edf7311c280ffeacacce520f02419ea6e1",
+          "afterRgbaSha256": "dab94ce69ecb5d766744f5f736a8f5edf7311c280ffeacacce520f02419ea6e1"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "4e64394b77a221501241dd2f542b2a0c168cf25bc7158f2cd5961f7df1ef78fd",
+          "afterRgbaSha256": "4e64394b77a221501241dd2f542b2a0c168cf25bc7158f2cd5961f7df1ef78fd"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-0p75",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "90b7b2868248e5df8f4a6f399c5f81b9000218c2e88b18bf804e1054d73ef87d",
+          "afterRgbaSha256": "90b7b2868248e5df8f4a6f399c5f81b9000218c2e88b18bf804e1054d73ef87d"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "569f7be1f6cc04fdcd3ef4175aee985435b8cb5185497cda9d6eef0fcf2e7d51",
+          "afterRgbaSha256": "569f7be1f6cc04fdcd3ef4175aee985435b8cb5185497cda9d6eef0fcf2e7d51"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-1",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "1fa3f53fd217f42abae38d5cbe2bede019b6ec2df82b3821e7a10b08a2028bc7",
+          "afterRgbaSha256": "1fa3f53fd217f42abae38d5cbe2bede019b6ec2df82b3821e7a10b08a2028bc7"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "1e6357ea5287fe7db1090ee0e7d9562a8cfa0f9a47121b2608635ed1cb434f2c",
+          "afterRgbaSha256": "1e6357ea5287fe7db1090ee0e7d9562a8cfa0f9a47121b2608635ed1cb434f2c"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-1p5",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "6560c16580d43208a11fabaa7a4006bfa8020eecffa5b8ce6a4f34f66fb4fd8f",
+          "afterRgbaSha256": "6560c16580d43208a11fabaa7a4006bfa8020eecffa5b8ce6a4f34f66fb4fd8f"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "7092dac3daf117470ec2fc0b8b7ba5d8c9aaab2ca6a8ac9c205675361b158724",
+          "afterRgbaSha256": "7092dac3daf117470ec2fc0b8b7ba5d8c9aaab2ca6a8ac9c205675361b158724"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-1280x720-zoom-2",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "93ce99956ae2d4378982398c9051ab23a969bc64b3765e93260f770e87093377",
+          "afterRgbaSha256": "93ce99956ae2d4378982398c9051ab23a969bc64b3765e93260f770e87093377"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "c522c3b63a5b94e16fb8b604fe64a8c63737bbb852f75ebe55c6f67325c3c1e7",
+          "afterRgbaSha256": "c522c3b63a5b94e16fb8b604fe64a8c63737bbb852f75ebe55c6f67325c3c1e7"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-0p35",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "cd0db39c603d93cac8dedbab1124e9571d79d2aa73c11df24aac7b1b3182c658",
+          "afterRgbaSha256": "cd0db39c603d93cac8dedbab1124e9571d79d2aa73c11df24aac7b1b3182c658"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "30a0884538f80a269b90ec50d47499e8f2dd6bf1c2f22b9c4d4b0d8c0bbd2838",
+          "afterRgbaSha256": "30a0884538f80a269b90ec50d47499e8f2dd6bf1c2f22b9c4d4b0d8c0bbd2838"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-0p65",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "d08c90f8e583fc78e67fd0a63781cdbbe70bfff0d8c4b6bd5d334c27cd4ed6e2",
+          "afterRgbaSha256": "d08c90f8e583fc78e67fd0a63781cdbbe70bfff0d8c4b6bd5d334c27cd4ed6e2"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "b4f8c70105ec44b1aca56f863fcf5cea926d358916adf150cc168d7c6e91a72e",
+          "afterRgbaSha256": "b4f8c70105ec44b1aca56f863fcf5cea926d358916adf150cc168d7c6e91a72e"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-0p75",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "6385463872193c54fe2c1c485089d55cf9e835ea02b647a98289dc7155e37aac",
+          "afterRgbaSha256": "6385463872193c54fe2c1c485089d55cf9e835ea02b647a98289dc7155e37aac"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "7cef229e5c12cabde554a7002592985fcb262e262df21b939656cc20e25dc1cf",
+          "afterRgbaSha256": "7cef229e5c12cabde554a7002592985fcb262e262df21b939656cc20e25dc1cf"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-1",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453",
+          "afterRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548",
+          "afterRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-1p5",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "bb83b3e4ffbf01c517f1be3f28fe68e60f62081ce358aaccf299c1cf4b11eaeb",
+          "afterRgbaSha256": "bb83b3e4ffbf01c517f1be3f28fe68e60f62081ce358aaccf299c1cf4b11eaeb"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "aa5ee7f38cea55ed687dee3012e30067cf26b2403e2855fb0f204aae49d78bb8",
+          "afterRgbaSha256": "aa5ee7f38cea55ed687dee3012e30067cf26b2403e2855fb0f204aae49d78bb8"
+        }
+      }
+    },
+    {
+      "label": "dpr-2-640x360-zoom-2",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "ca9f95b128a9021fa7747ac0146aa1d7c9929c45782d78f9c03eeba3df522338",
+          "afterRgbaSha256": "ca9f95b128a9021fa7747ac0146aa1d7c9929c45782d78f9c03eeba3df522338"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "a4435f43f3a4dd5b00bce3c0f2aeed70c31dfe9131cc49afee7fa086bc9620b2",
+          "afterRgbaSha256": "a4435f43f3a4dd5b00bce3c0f2aeed70c31dfe9131cc49afee7fa086bc9620b2"
+        }
+      }
+    },
+    {
+      "label": "camera-battlefield",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95",
+          "afterRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9",
+          "afterRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9"
+        }
+      }
+    },
+    {
+      "label": "camera-empty",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "0c660f2bd3eff3150dd0040789abe2291613b9af319df870203d4f77a4913a5f",
+          "afterRgbaSha256": "0c660f2bd3eff3150dd0040789abe2291613b9af319df870203d4f77a4913a5f"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "30edd5011a28ca427a0200a1ef716aa5b9e0d6a835d7dec0a3cdf5b0ff5d535b",
+          "afterRgbaSha256": "30edd5011a28ca427a0200a1ef716aa5b9e0d6a835d7dec0a3cdf5b0ff5d535b"
+        }
+      }
+    },
+    {
+      "label": "camera-returned-first",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95",
+          "afterRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9",
+          "afterRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9"
+        }
+      }
+    },
+    {
+      "label": "promotion-high-initial",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453",
+          "afterRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548",
+          "afterRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548"
+        }
+      }
+    },
+    {
+      "label": "promotion-low",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95",
+          "afterRgbaSha256": "9c37c3cf97d248bc805a769db1bd6dff24255b965d31a88737b3f55471f05b95"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9",
+          "afterRgbaSha256": "4629d7b2a97e5626eb12f18626988a4167e2cd429537b623dc300959d19088a9"
+        }
+      }
+    },
+    {
+      "label": "promotion-high-first",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453",
+          "afterRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548",
+          "afterRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548"
+        }
+      }
+    },
+    {
+      "label": "promotion-high-repeat",
+      "inputEqual": true,
+      "factsEqual": true,
+      "clockEqual": true,
+      "picksEqual": true,
+      "actorDrawingBufferEqual": true,
+      "compositeCaptureEqual": true,
+      "images": {
+        "actors": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453",
+          "afterRgbaSha256": "49819162ff9749dc99466788e591a7e57110b346475a544cd0f91459ca297453"
+        },
+        "composite": {
+          "identical": true,
+          "dimensionsEqual": true,
+          "changedPixels": 0,
+          "changedChannels": 0,
+          "maximumChannelDelta": 0,
+          "meanAbsoluteChannelDelta": 0,
+          "beforeRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548",
+          "afterRgbaSha256": "273650fa8e612e15407449b0ff61a37ad1782bc05d6a0a6095672f12f966c548"
+        }
+      }
+    }
+  ],
+  "validation": {
+    "passed": true,
+    "violations": []
+  },
+  "method": "Strict per-channel RGBA comparison of native-resolution browser PNGs using a noninterlaced PNG decoder, plus SHA equality of untouched WebGL readPixels drawing-buffer RGBA, browser composite RGBA, authoritative held snapshots, clocks and production alpha-mask picking probes. No tolerance or downsampling."
+}

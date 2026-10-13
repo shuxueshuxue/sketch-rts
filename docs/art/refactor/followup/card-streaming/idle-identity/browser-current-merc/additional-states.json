@@ -1,0 +1,20 @@
+[
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"native","appearance":{},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"greatSword","appearance":{"weapon":"greatSword"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"roundShield","appearance":{"shield":true,"shieldStyle":"round"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"pike-noShield","appearance":{"weapon":"pike","shield":false},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"bow","appearance":{"weapon":"bow"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"mercenary","appearanceLabel":"staff","appearance":{"weapon":"staff"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"native","appearance":{},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"greatSword","appearance":{"weapon":"greatSword"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"roundShield","appearance":{"shield":true,"shieldStyle":"round"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"pike-noShield","appearance":{"weapon":"pike","shield":false},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"bow","appearance":{"weapon":"bow"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"contractArcher","appearanceLabel":"staff","appearance":{"weapon":"staff"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"native","appearance":{},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"greatSword","appearance":{"weapon":"greatSword"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"roundShield","appearance":{"shield":true,"shieldStyle":"round"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"pike-noShield","appearance":{"weapon":"pike","shield":false},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"bow","appearance":{"weapon":"bow"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":-4}]},
+  {"scope":"mercenary-equipment-representative","kind":"fieldMedic","appearanceLabel":"staff","appearance":{"weapon":"staff"},"states":[{"carry":0,"carryAim":0},{"carry":6,"carryAim":4}]}
+]
