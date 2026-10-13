@@ -3,7 +3,7 @@ import { groundTravelCost } from '../../shared/terrain';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import type { Point } from '../policy/spatial';
+import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
@@ -11,6 +11,14 @@ import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micr
 export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
     && isEnemyOwner(snapshot, owner, foe.owner, options));
+}
+
+/** Earliest physical contact is a lower bound; a rescuer's road time is a separate measure. */
+export function earliestThreatContactTicks(snapshot: GameSnapshot, foe: Unit, unit: Unit) {
+  const closing = foe.speed + unit.speed;
+  const horizon = Math.ceil(Math.max(0, distance(foe, unit) - foe.attackRange) * SIM_TICKS_PER_SECOND / closing);
+  const reach = retreatThreatReach(snapshot, foe, unit, horizon + THINK_TICKS);
+  return Math.ceil(Math.max(0, distance(foe, unit) - reach) * SIM_TICKS_PER_SECOND / closing);
 }
 
 /** Terrain travel time, admitted only when every road segment clears known attack coverage. */
