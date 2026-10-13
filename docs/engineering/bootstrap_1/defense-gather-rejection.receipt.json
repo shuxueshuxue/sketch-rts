@@ -1,0 +1,26 @@
+{
+  "published": false,
+  "base": "4b8312922dc9057299aef16f3b40948c073cb49a",
+  "from": 12000,
+  "to": 12450,
+  "original": {
+    "permanentDeaths": 3,
+    "outpostHp": 690
+  },
+  "localForceOnly": {
+    "permanentDeaths": 4,
+    "outpostDestroyed": true,
+    "existingChecksPassed": 45
+  },
+  "rearAssembly": {
+    "permanentDeaths": 4,
+    "outpostHp": 805,
+    "existingChecksPassed": 40,
+    "existingChecksFailed": 5
+  },
+  "arrivalSideAssembly": {
+    "permanentDeaths": 4,
+    "outpostHp": 34
+  },
+  "decision": "All runtime changes withdrawn. Unit availability alone does not solve assembly, cover and worker placement together."
+}
