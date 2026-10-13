@@ -1,0 +1,317 @@
+{
+  "base": "19f53beda1bb8bc395d106e184ffa4a10517cd4a",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 3,
+    "insertions": 25,
+    "deletions": 8,
+    "newPersistentState": 0,
+    "requiredConstructionReadinessCallSites": 2,
+    "newCompatibilityOrDefaultPaths": 0,
+    "sharedSiteFunction": "v6ExpansionPoint"
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/expansion-target.ts": "9e40ef2d0904b46f446d40d4414ccd74efa63e75f7f7298d41916440e426471c",
+    "src/ai/policy/v6/economy.ts": "e05d53a54abb97db6319b8ff3577e2105299a0140794bfaad2608e6fb5c6d7fe",
+    "src/ai/policy/v6/intel.ts": "893644060bd75e36fb8afa653fd7c4aedb38bbe379e348217a9ba3a0df05896a"
+  },
+  "sdk": {
+    "passed": 214,
+    "failed": 0,
+    "suites": 12,
+    "newCases": 20,
+    "reportSha256": "ed77e34e5ea944bef17027063fe401a59b1c2683e1aaa70f38dccff7546bfbc3"
+  },
+  "parentControl": {
+    "passed": 8,
+    "failed": 12,
+    "reportSha256": "b030ebe634399cb8ff79ba4688cc6d95387801a93f151d435a2723fa69f40e0d",
+    "identicalTestSourceSha256": "dd42b685a86752e106c40d750050aacdf413fb79879c27e9ca1a27559aa9b9d4"
+  },
+  "soloObservation": {
+    "revision": "798f2bc53cb6a1a9dfea9023bae56c4ac4361b45",
+    "reportSha256": "3b893223b2a5ea593a5138fa4c898a621fa3efbd645e9a73ebfd99ffb47c070f",
+    "summary": {
+      "tick": 12000,
+      "gold": 230.72,
+      "workers": 11,
+      "halls": 2,
+      "workingHalls": 2,
+      "islandHalls": 0,
+      "permanentArmy": 17,
+      "remainingCreeps": 36,
+      "creepsKilled": 4,
+      "ownPermanentDeaths": 0,
+      "freeMines": [
+        {
+          "id": "gold-seat0-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat1-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat1-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat1-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat2-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat2-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat2-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat3-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat3-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat3-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat4-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat4-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat4-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat5-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat5-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat5-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat6-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat6-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat6-2",
+          "amount": 9500,
+          "island": false
+        },
+        {
+          "id": "gold-seat7-main",
+          "amount": 6000,
+          "island": false
+        },
+        {
+          "id": "gold-seat7-1",
+          "amount": 7500,
+          "island": false
+        },
+        {
+          "id": "gold-seat7-2",
+          "amount": 9500,
+          "island": false
+        }
+      ]
+    },
+    "note": "Grand Estuary mine sites all share land connectivity; this is not an island-development proof."
+  },
+  "sameWorldWindow": {
+    "from": 12000,
+    "to": 16000,
+    "match": {
+      "name": "grandEstuary/v9_knight/solo/grove/0",
+      "mapId": "grandEstuary",
+      "subject": "v9_knight",
+      "side": 0,
+      "seed": "bootstrap_1-solo-observation",
+      "unseen": false,
+      "agents": {
+        "p0": {
+          "version": "v9_knight",
+          "versionLabel": "v9_knight",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        }
+      },
+      "maxTicks": 16000,
+      "thinkInterval": 15
+    },
+    "checkpointReportSha256": "3b893223b2a5ea593a5138fa4c898a621fa3efbd645e9a73ebfd99ffb47c070f",
+    "reportSha256": "534ec6234d29b74619e2f888ffccadec575d7ad0c0b080d653bc5a0cc3ed2f94",
+    "sourceInputsVerified": {
+      "parent": 222,
+      "candidate": 222
+    },
+    "parent": {
+      "summary": {
+        "tick": 16000,
+        "gold": 438.18,
+        "workers": 16,
+        "halls": 3,
+        "workingHalls": 3,
+        "permanentArmy": 24,
+        "remainingCreeps": 23,
+        "ownPermanentDeaths": 0,
+        "creepsKilled": 13
+      },
+      "checksum": "4c61a9c1",
+      "rows": [
+        {
+          "tick": 13000,
+          "gold": 68.22,
+          "workers": 11,
+          "halls": 2,
+          "workingHalls": 2,
+          "permanentArmy": 19,
+          "remainingCreeps": 31,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 5
+        },
+        {
+          "tick": 14000,
+          "gold": 142.9,
+          "workers": 11,
+          "halls": 2,
+          "workingHalls": 2,
+          "permanentArmy": 22,
+          "remainingCreeps": 29,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 7
+        },
+        {
+          "tick": 15000,
+          "gold": 93.58,
+          "workers": 12,
+          "halls": 3,
+          "workingHalls": 2,
+          "permanentArmy": 24,
+          "remainingCreeps": 25,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 11
+        },
+        {
+          "tick": 16000,
+          "gold": 438.18,
+          "workers": 16,
+          "halls": 3,
+          "workingHalls": 3,
+          "permanentArmy": 24,
+          "remainingCreeps": 23,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 13
+        }
+      ]
+    },
+    "candidate": {
+      "summary": {
+        "tick": 16000,
+        "gold": 7.22,
+        "workers": 16,
+        "halls": 4,
+        "workingHalls": 3,
+        "permanentArmy": 24,
+        "remainingCreeps": 21,
+        "ownPermanentDeaths": 0,
+        "creepsKilled": 15
+      },
+      "checksum": "873c068c",
+      "rows": [
+        {
+          "tick": 13000,
+          "gold": 590.63,
+          "workers": 11,
+          "halls": 2,
+          "workingHalls": 2,
+          "permanentArmy": 19,
+          "remainingCreeps": 31,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 5
+        },
+        {
+          "tick": 14000,
+          "gold": 26.53,
+          "workers": 15,
+          "halls": 3,
+          "workingHalls": 3,
+          "permanentArmy": 20,
+          "remainingCreeps": 30,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 6
+        },
+        {
+          "tick": 15000,
+          "gold": 467.69,
+          "workers": 16,
+          "halls": 3,
+          "workingHalls": 3,
+          "permanentArmy": 21,
+          "remainingCreeps": 24,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 12
+        },
+        {
+          "tick": 16000,
+          "gold": 7.22,
+          "workers": 16,
+          "halls": 4,
+          "workingHalls": 3,
+          "permanentArmy": 24,
+          "remainingCreeps": 21,
+          "ownPermanentDeaths": 0,
+          "creepsKilled": 15
+        }
+      ]
+    },
+    "interpretation": "Both zero permanent losses, sixteen workers and twenty-four permanent army. Candidate has one additional hall still building, two extra creeps killed; third working hall appears by14000 while parent still only two at15000, at least50s earlier. No opponent win or greater total income claimed."
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "command": "npm run build",
+    "logSha256": "68ce3084353ad75bbad60414e153b745f5f8cfcb36f3b877b4bd9f3f070653e8"
+  }
+}
