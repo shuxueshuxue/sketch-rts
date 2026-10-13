@@ -1,0 +1,57 @@
+{
+  "number": 362,
+  "url": "https://github.com/shuxueshuxue/sketch-rts/pull/362",
+  "head": "f057403563a83611b80d2688e9f3433888e2da35",
+  "base": "ed22d4c4a7e9183be94fada10a1d0ae7ae2a9f84",
+  "ciRuns": [
+    {
+      "id": 38360719621,
+      "name": "Simulation CPU Check",
+      "head_sha": "f057403563a83611b80d2688e9f3433888e2da35",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38360719621"
+    }
+  ],
+  "merge": "e503095274b2e947a96ccb9629b1a93de46d8d40",
+  "production": [
+    {
+      "id": 38361361786,
+      "name": "Production Deploy",
+      "head_sha": "e503095274b2e947a96ccb9629b1a93de46d8d40",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38361361786"
+    }
+  ],
+  "requiredSteps": [
+    {
+      "name": "Run npm run build:production",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Pack production artifact",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload artifact and deploy script",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify public game endpoint",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish GitHub production release package",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "releaseTagSha": "e503095274b2e947a96ccb9629b1a93de46d8d40"
+}
