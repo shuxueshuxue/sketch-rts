@@ -69,3 +69,5 @@ python3 scripts/art-queue-source-archive.py --materialize --folder queue-bracket
 ```
 
 v3 analyzer 还需要 `pre`、`pre-post` 两臂的源码；恢复它们后，用全新输出目录运行原 analyzer。独立 `--out` 的布局因工具而异，不能代替原位恢复，[Queue 归档说明](../card-streaming/stall-followup/queue-archives/README.md)列出准确路径。完成重审后再逐 SHA 清理临时裸输入/源码，source 清理指定实际恢复的 `--folder`，保留 `.gz` 与 manifest，然后运行未改写的原命名门。旧 22 项不是本次 queue 归档的删除目标。
+
+Replay 各阶段精确归档/清理全部结束后，[最终原 SDK 单测日志](final-replay-generation-single-test.log.gz)实测 **6 项通过 / 1 项失败 / 22.60 秒**，[最终逐项验证](final-replay-generation-validation.json)确认匹配路径严格等于原基线 **22 项**、新增零。[源码冻结记录](final-replay-generation-source-freeze.json)保存 source/public 测试前后 stat/diff 均无变化的证明。前面各时点日志与计数保持历史含义；最后结果仍保留原命名失败，不是单测或全仓全绿。

@@ -43,6 +43,10 @@
 
 [匹配 Chrome 版本的官方源码审阅](card-streaming/stall-followup/command-wait-offline/CHROMIUM-SOURCE.md)确认暂存区回收可等待旧 token，但没有从实际轨迹恢复 token→分配块→纹理/命令的映射。三策略保留失败 v1/v2 和全部完整导出，未把等待加入正式同步渲染路径；仍需精确输入的逐上传/阶段诊断。当前 `/dev/dri` 不存在，SwiftShader 测量不能泛化成硬件 GPU 成绩。
 
+后续 [精确输入重放](card-streaming/stall-followup/exact-upload-replay/README.md)实际保存 n135 的 53 份完整 RGBA（85,458,944 bytes），保留 warm scratch 和全部页状态。独立验证逐次检查 523 个写入 mip，所有 1,040 个最终驻留 mip/layer（含未写层）匹配；全部输入、选定原生调用及完整源身份保持一致。首轮因 Vite JSON `?import` 映射失败而 EXIT1，原记录保留；独立离线审计只用已存 HTTP 正文和实际 import edge 补齐 199 bodies / 388 映射，未把旧失败改为成功。
+
+[三段 v4 最终报告](card-streaming/stall-followup/exact-upload-replay/stage4-report.md)记录实际 EXIT0/PASS：159 个非 disjoint query 中，upload/到达命令段为 0.03892 ms、真实 native generation 命令段为 826.53367 ms、全部 tail copy 段为 95.01889 ms；CPU 提交分别为 32.8 / 0.4 / 9.0 ms。很短的 upload GPU 标记不表示 CPU 上传免费。总 envelope 1109.4 ms 包含 async completion/poll/marker；它是排空历史后的局部诊断，不是正式整帧优化对照。源上传矩形 20,053,380 bytes，完整 mip 复制 102,868,324 bytes；不能从较大的复制字节猜它最慢。生成命令段是当前软件环境的主要观察成本，但 marker 包含到达/等待，旧 token 的资源链仍未证明。真实 HTTP 转换后 JS 正文、原生像素、源/依赖和字段级初末态检查均通过；没有采用绕开原生 mip 或降低画质的方案。
+
 ## 最终检查与剩余边界
 
 最新同步源的客户端/剧情测试 **132 文件 / 1067 tests 全通过**：[日志](frontend-sync-reuse/all-client-tests.log)。`build:production` 包含全局 TypeScript、Vite 和 server bundle，exit 0：[日志](frontend-sync-reuse/production-build.log)；[源首尾 SHA](frontend-sync-reuse/all-client-build-checks.json)一致。此前 77a2c307 的 1066 tests 和构建日志仍保留在 spirit-no-blood 目录，真实灵体和小地图证明在该源冻结后完成，原始失败及来源不改写。

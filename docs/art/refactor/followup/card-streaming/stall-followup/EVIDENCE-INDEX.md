@@ -176,3 +176,34 @@ python3 scripts/art-card-queue-bracket-analyze-v3.py --out /tmp/queue-v3-recheck
 ```
 
 前三类恢复命令不带 `--out`，供原 analyzer 按原文件名读取；分析输出必须为全新目录。v1/v2 失败重审也先还原 inputs，再以各自 `--folder` 恢复源码，不能改写失败或将它们补成完成 run。[Queue 归档说明](queue-archives/README.md)区分三种独立 `--out` 布局与临时复原后的清理步骤；[v3 报告](queue-bracket-v3/analysis-strict-v3/REPORT.md)、[严格分析 gzip](queue-bracket-v3/analysis-strict-v3/analysis.json.gz)、[工作量摘要 gzip](queue-bracket-v3/analysis-strict-v3/work-summary.json.gz)、[原 analyzer gzip](queue-bracket-v3/analysis-strict-v3/analyzer.py.gz)和 [原运行日志 gzip](queue-bracket-v3/analysis-strict-v3/run.log.gz)保留诊断结论。归档通过不表示性能改善，也不表示原 22 项命名基线已解决。
+
+## Exact upload replay：仅原 run-v1 的精确归档
+
+[原 run-v1 说明](exact-upload-replay/README.md)及 [原 proof gzip](exact-upload-replay/run-v1/proof.json.gz)仍保留整体 **EXIT1** 的 HTTP import-metadata 缺口；[独立 companion audit gzip](exact-upload-replay/run-v1/runtime-http-companion-audit.json.gz)保留其独立结果，不回写过去的 metadata。固定 [输入 manifest](exact-upload-replay/archives/input-archives.json)保存 **279 份输入 / 227,253,948 bytes**，同原路径 gzip 共 **10,076,386 bytes**、最大单个 **4,551,562 bytes**；其中 53 events 与 2 prior scratch 共 55 份 binary、199 份 runtime HTTP body 及执行 driver/helper 均精确压缩，原 1 张 PNG 未变。创建、独立验证、清理及全部 279 文件独立 `/tmp` 恢复四步实际 exit 0，逐完整原 size/SHA 通过；[创建报告](exact-upload-replay/archives/input-archive-create-report.json)、[执行证据](exact-upload-replay/archives/execution.json)与 [归档说明](exact-upload-replay/archives/README.md)保留各时点结果。
+
+这个 run 只有实际的 **`complete-source-snapshot/` 一套**，共 **1125 文件 / 9,687,156 bytes**，逐 Git `42bd61c74934dc76f30d42b62e1e31eb5c5974ff` blob 与完整 SHA 验证，复用上面的 `99aa634b…`、2,221,603-byte 容器。[run manifest](exact-upload-replay/run-v1/replay-source-archive.json)、[source 创建报告](../../source-archives/replay-v1-source-archive-report.json)、[清理报告](../../source-archives/replay-v1-source-archive-prune-report.json)、[1125 文件独立恢复证明](../../source-archives/replay-v1-source-archive-restore-fullsha-proof.json)与 [执行证据](../../source-archives/replay-v1-source-archive-execution-evidence.json)保留已完成的完整验证、清理与恢复证明，验证后的临时源码恢复目录已清理。没有为此 run 补造第二个 source 目录。
+
+重审此 run 的独立恢复顺序是 **replay inputs → replay source → 原 analyzer/driver**；从仓库根目录执行：
+
+```sh
+python3 scripts/art-replay-input-archive.py --materialize
+python3 scripts/art-replay-source-archive.py --materialize --folder exact-upload-replay/run-v1
+```
+
+旧 naming/queue materialize 命令适用于各自历史证据，不是 run-v1 的输入依赖。当前维护 replay scripts 已推进新阶段；复原只还原原 run-v1 snapshots，不能拿维护脚本补充或替代旧执行字节。源码快照是原 `src` 字节证据，不包含 `.git`、`public` 或 `package.json`，不是原可运行 checkout 的重建。该证明仍是软件 GPU 中的独立重放与原 20-kind 原生资产 probe，不扩展为全游戏或战斗验收。
+
+[输入临时恢复清理证明](exact-upload-replay/archives/temporary-restore-cleanup.json)记录全部 279 文件再次核原 size/SHA 后只清理该工具自己的临时副本，归档与 PNG 保留。全部归档/清理完成后，原 SDK 单测 [新日志](../../naming-gate/after-replay-v1-single-test.log.gz)实测 **6 pass / 1 fail / 22.60 秒**，[逐项验证](../../naming-gate/after-replay-v1-validation.json)确认路径严格等于原基线 **22 项**。这保留旧命名失败，不将归档成功描述为全仓全绿。
+
+## Replay stage：v2 启动失败与 v3 完整阶段诊断
+
+[Stage 原报告](exact-upload-replay/stage-report.md)保持原 query/验证范围。[v2 proof gzip](exact-upload-replay/stage-run-v2/proof.json.gz)与 [日志 gzip](exact-upload-replay/stage-run-v2/run.log.gz)是该 ENOENT 启动失败实际保存的仅两份输入（226,003 / 667 bytes）；浏览器启动前没有 helper/source 保存，不能补造 source manifest。[v3 proof gzip](exact-upload-replay/stage-run-v3/proof.json.gz)保留原 EXIT0/PASS、106 A/B queries 与 53 uploads 的独立诊断，不扩展为游戏 FPS。固定 [stage 输入 manifest](exact-upload-replay/stage-archives/input-archives.json)保存两 run 共 **222 输入 / 14,285,340 原 bytes → 3,156,783 gzip bytes**，最大单件 **343,741 bytes**；[创建报告](exact-upload-replay/stage-archives/input-archive-create-report.json)保持创建时点，[执行记录](exact-upload-replay/stage-archives/execution.json)证明创建、独立验证、清理、222 份完整原 SHA `/tmp` 恢复四步 exit 0，[临时清理证明](exact-upload-replay/stage-archives/temporary-restore-cleanup.json)记录再次逐原 SHA 后只清理自己的恢复树。原 v1 `capture.json.gz` 沿用，没有重新导出 corpus。
+
+源码仅为 v3 **一套 `complete-source-snapshot/` / 1125 文件 / 9,687,156 bytes**，逐 Git 42bd 与完整 SHA 核验，复用 `99aa634b…`、2,221,603-byte 容器。[v3 manifest](exact-upload-replay/stage-run-v3/replay-stage-source-archive.json)、[创建](../../source-archives/replay-stage-v3-source-archive-report.json)、[清理](../../source-archives/replay-stage-v3-source-archive-prune-report.json)、[1125 文件完整恢复证明](../../source-archives/replay-stage-v3-source-archive-restore-fullsha-proof.json)及 [执行证据](../../source-archives/replay-stage-v3-source-archive-execution-evidence.json)保留实际 source 核验、清理、恢复与自有临时目录清理。恢复原 v1 inputs（原工具读取该 corpus 时）→ stage inputs → v3 source → 原 driver/analyzer snapshots；准确命令与独立目录布局见 [stage 归档说明](exact-upload-replay/stage-archives/README.md)。当前维护代码不能补过去 helper/source。此批 SDK 单测 **deferred** 至下一阶段统一执行，上述 run-v1 的 22 项结果仅表示其历史时点。
+
+## Generation v4：原三段诊断输入与来源归档
+
+[v4 原报告](exact-upload-replay/stage4-report.md)、[proof gzip](exact-upload-replay/stage-run-v4/proof.json.gz)和 [summary gzip](exact-upload-replay/stage-run-v4/generation-summary.json.gz)保持原 EXIT0/PASS、teardown 与 159 queries 的独立诊断范围，原表格与 SHA 不改写。[固定输入 manifest](exact-upload-replay/generation-archives/input-archives.json)保存 **220 输入 / 14,099,124 原 bytes → 3,058,958 gzip bytes**，最大单件 **344,517 bytes**；[创建报告](exact-upload-replay/generation-archives/input-archive-create-report.json)保留创建时点，[执行记录](exact-upload-replay/generation-archives/execution.json)证明创建、独立验证、清理、全部 220 文件完整原 size/SHA `/tmp` 恢复四步 exit 0，[临时清理证明](exact-upload-replay/generation-archives/temporary-restore-cleanup.json)记录只在再次核原 SHA 后移除本工具自己的恢复树。原 v1 corpus gzip 仅沿用引用，没有重 dump；v1/v2/v3 记录与已执行工具不改写。
+
+来源仅 v4 的 **一套 `complete-source-snapshot/` / 1125 src 文件 / 9,687,156 bytes**，逐 Git 42bd 与完整原 SHA 核验，复用 `99aa634b…`、2,221,603-byte 容器。[v4 manifest](exact-upload-replay/stage-run-v4/replay-generation-source-archive.json)、[创建](../../source-archives/replay-generation-v4-source-archive-report.json)、[清理](../../source-archives/replay-generation-v4-source-archive-prune-report.json)、[1125 文件完整恢复证明](../../source-archives/replay-generation-v4-source-archive-restore-fullsha-proof.json)与 [执行证据](../../source-archives/replay-generation-v4-source-archive-execution-evidence.json)保存实际来源清理/独立恢复与自有临时恢复目录清理。它不是含 `.git`、`public`、`package.json` 的可运行 checkout 重建。恢复顺序为按需 v1 inputs → generation inputs → v4 source → 原 snapshot driver；[准确命令与独立目录布局](exact-upload-replay/generation-archives/README.md)不以当前维护代码补过去。
+
+最终原 SDK 单测 [实际日志](../../naming-gate/final-replay-generation-single-test.log.gz)为 **6 pass / 1 fail / 22.60 秒**，[逐项验证](../../naming-gate/final-replay-generation-validation.json)确认路径严格等于原基线 **22 项**、新增零。[源码冻结记录](../../naming-gate/final-replay-generation-source-freeze.json)保存测试前后 source/public stat/diff 均无变化的证明。这里只证明新增匹配归零与原源码未变，旧命名失败仍保留，不宣称全仓全绿。前述 stage 批次的 deferred 是其包装时点，最终单测由这里的新实际日志补全。

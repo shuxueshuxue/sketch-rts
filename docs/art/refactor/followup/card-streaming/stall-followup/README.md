@@ -51,6 +51,14 @@ n135 六次均为 53 miss/raster、53 layer updates、523 mip copies（报告字
 
 v1 的巨大 CDP 返回失败与 v2 的 V8 输出字符串超限分别保留；v3 使用完整分片导出和独立完整 profile，严格分析只使用 v3。归档/恢复说明见 [证据索引](EVIDENCE-INDEX.md)。当前 capture 保存原源与优化依赖字节，未保存转换后实际 runtime JS；这项来源限制保留在报告中。
 
+## 原像素输入的独立上传与生成命令诊断
+
+[实际输入与重放报告](exact-upload-replay/README.md)补齐 53 份完整 n135 RGBA、真实 warm scratch/page 状态和逐事件 native oracle。首轮整体 EXIT1（三个 JSON 的裸图 ID 与实际 `?import` 响应没有正确匹配）；199 个实际 HTTP 正文已全部保存，独立离线审计凭实际 literal import/graph edge 补齐 388 映射，旧失败元数据不改。之后新的阶段捕获直接通过实际 HTTP 守卫。523 个逐次写入 mip 和 1,040 个最终驻留层均与完整原生 sRGB 链匹配，选定原生内容命令和提交字节保持一致。
+
+[两段命令边界报告](exact-upload-replay/stage-report.md)先观察到 upload+generation 810.939 ms / tail copies 93.383 ms。[最后三区段 v4](exact-upload-replay/stage4-report.md)实际 EXIT0/PASS，159 个非 disjoint query：upload/到达 0.03892 ms，真实 generation 命令段 826.53367 ms，全部 tail copies 95.01889 ms；CPU 提交分别 32.8 / 0.4 / 9.0 ms。每层外部 completion、查询 markers、命令到达与空闲均影响结果，短 upload query 不能抹去实际 CPU 成本。gen 段是该 SwiftShader replay 的主要观察区段，而复制的 102.87 MB 不能直接当作瓶颈证明。此处未将结果当作独占 GPU 算法时间、正式游戏 FPS 或硬件预测，未改变生产 uploader。
+
+原输入、失败、真实转换后 JS、运行程序和所有计时保留并精确归档；恢复说明仍使用实际原 filename/SHA。硬件 GPU 验证和旧 token→资源因果链未完成，批处理或 depth-one array generation 只是后续可检验候选，尚未采用。
+
 ## 半级 mip 候选：资源下降与时间代价分别报告
 
 候选仅将冻结 8345 gate 的一级余量 `-1` 改为半级余量 `-.5`，完整原始绘制域、shader、UV、采样、原生 mip 生成、uploader、cache 和模拟不变。[31 步相机对照](mip-half-camera/comparison.json)通过；每臂 62 张 PNG、原生/composite RGBA、拾取、实际事实与时钟严格相同。这里比较的是完整源参考与半级候选；它不是跨 GPU 安全性证明，也没有独立 packed shadow/depth texel 证明。

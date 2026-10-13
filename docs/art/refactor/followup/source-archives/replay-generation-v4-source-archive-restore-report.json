@@ -1,0 +1,25 @@
+{
+  "operation": "materialize",
+  "sourceCommit": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "executionScriptSha256": "6278552bffd68175efa44889c9c37aff7ffcaff3376110f64c5dd604bc566e05",
+  "verifiedRuns": 1,
+  "verifiedSets": 1,
+  "verifiedFiles": 1125,
+  "originalSourceBytes": 9687156,
+  "uniqueArchives": 1,
+  "archiveBytes": 2221603,
+  "archives": [
+    {
+      "file": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0.tar.gz",
+      "bytes": 2221603,
+      "sha256": "4367770df4b0e80693571cd930574bda73701e91a04bb8e9b779863637e26ec2"
+    }
+  ],
+  "fileSetSha256": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0",
+  "deletedFiles": 0,
+  "restoredFiles": 1125,
+  "restoredRoot": "/tmp/replay-generation-v4-source-fullsha-restore-136817",
+  "everySourceFileSha256AndGitBlobVerified": true,
+  "rawHelperVendorFilesReadOrChanged": false,
+  "meaning": "Source byte preservation only; original v4 PASS and teardown evidence are independently preserved outside this archive. This is not a runnable checkout."
+}

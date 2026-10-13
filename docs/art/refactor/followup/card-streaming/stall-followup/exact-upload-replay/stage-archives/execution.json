@@ -1,0 +1,75 @@
+{
+  "tool": "scripts/art-replay-stage-input-archive.py",
+  "toolSha256": "c2bf71816deca35c74c170a661f7fd7362f0670540955c34e2d5d266b47a2426",
+  "manifestSha256": "f048090f42d5a298ac731cce23851618cff43f1a5476749020345a41924d13a1",
+  "commands": [
+    {
+      "args": [
+        "--archive"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify",
+        "--prune"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--materialize",
+        "--out",
+        "/tmp/art-replay-stage-input-fullsha-restore"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "verifiedInputs": 222,
+  "prunedOriginals": 222,
+  "restoredOriginalFullSizeAndSHA": 222,
+  "originalBytes": 14285340,
+  "gzipBytes": 3156783,
+  "largestGzipBytes": 343741,
+  "logs": [
+    {
+      "file": "create.log.gz",
+      "originalSha256": "7ca2054d06f7c9dbb3183ce8d0232df105c59e137847a06b90dbd7d95ba80f6c",
+      "gzipSha256": "9792a152db8db393613528bc6a06268ccabf07c3d7cce088cd8e3190e720b16e",
+      "originalBytes": 35179,
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "verify.log.gz",
+      "originalSha256": "78226af1b50ed91d10f97fb2447c414dce12b67fec3ca35a2b5d0cc8ecc96e83",
+      "gzipSha256": "69eab871210433ce816672a1614f29ebd0937a3787ef3152a5edc442e261bf11",
+      "originalBytes": 428,
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "prune.log.gz",
+      "originalSha256": "c90fc79db005c6f99b766aa00ff60b21a030b59e208f0b61bf913ff608c4c013",
+      "gzipSha256": "c835dc9ef940d8460ff5e3f90ae9dad587b4a218a5f9aa37e6524d33ccfbc060",
+      "originalBytes": 429,
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "restore-proof.log.gz",
+      "originalSha256": "a6bbe80f7d2164ef4470019b779771285f110b6c4324adaeaf31ffcc3e1d4632",
+      "gzipSha256": "bd6ca0697c7b9e86e0ebe4afd2416b24b2468bfbf4673792892c83440f0f4237",
+      "originalBytes": 435,
+      "decodedExactlyEqual": true
+    }
+  ],
+  "newSourceArchiveOnlyForV3": true,
+  "v2SourceSnapshotInvented": false,
+  "originalStatesRetained": "v2 pre-browser failure; v3 complete pass",
+  "v1CorpusReferencedAndUnmodified": true,
+  "SDKThisRound": "Deferred until v4 archives, as requested by root."
+}

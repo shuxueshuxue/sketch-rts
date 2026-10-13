@@ -1,0 +1,8 @@
+{
+  "root": "/tmp/art-replay-stage-input-fullsha-restore",
+  "removedFiles": 222,
+  "removedBytes": 14285340,
+  "allCurrentFullSHAAndSizesRechecked": true,
+  "removedOnlyOwnVerifiedMirror": true,
+  "archivesAndV1CorpusUntouched": true
+}

@@ -1,0 +1,73 @@
+{
+  "tool": "scripts/art-replay-generation-input-archive.py",
+  "toolSha256": "48a5425af01a5911cb1a23a0f81090bd4e593dfa12cde4a2a1b2c38fac91509d",
+  "manifestSha256": "af78d7b06cd74f347a9ec11ad339a738731c1157c966cf4789e3584d6fee32e0",
+  "commands": [
+    {
+      "args": [
+        "--archive"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify",
+        "--prune"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--materialize",
+        "--out",
+        "/tmp/art-replay-generation-input-fullsha-restore"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "verifiedInputs": 220,
+  "prunedOriginals": 220,
+  "restoredInputFullSizeAndSHAChecks": 220,
+  "originalBytes": 14099124,
+  "gzipBytes": 3058958,
+  "largestGzipBytes": 344517,
+  "logs": [
+    {
+      "file": "create.log.gz",
+      "originalBytes": 35018,
+      "originalSha256": "a83563ec90de6b875ce509e1b2b4b98e8f7da47954fc27c79b2651a1cf511106",
+      "gzipSha256": "b139a42067dd652b45bdadc5165a36c49a30762234960c89dcf237fdc1b6a591",
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "verify.log.gz",
+      "originalBytes": 428,
+      "originalSha256": "250b60c6e6d1370b51f18982ee3e650bddcd7c86cbf3011db90350ac33ce04ca",
+      "gzipSha256": "fd1c4b89b7b2827268399dcafaa62c9d67f2dcd83a503903449ade217bfc499e",
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "prune.log.gz",
+      "originalBytes": 429,
+      "originalSha256": "ea459bdf5810d264d39bf7935e000df75e8307f4d016fd828edcffe831cdc76a",
+      "gzipSha256": "97194a0e94cfe8137db229e5032a14da12848fdf0fb9c6ade4c87daf94f23c4e",
+      "decodedExactlyEqual": true
+    },
+    {
+      "file": "restore-proof.log.gz",
+      "originalBytes": 435,
+      "originalSha256": "4f588d9c8ae19aee7c40666efac83f9863dba66c4d9a60f2e4cf13648fc6e7b9",
+      "gzipSha256": "664888c1ac35ce7f2118f09a5609bdae3042e99701e4a4f32982a0dc6f9ee5eb",
+      "decodedExactlyEqual": true
+    }
+  ],
+  "originalV4PassPreserved": true,
+  "previousFailedAndPassedCapturesUnmodified": true,
+  "meaning": "Exact actual stage-run-v4 byte preservation and restore proof; no candidate/production/native re-run or changed marker interpretation."
+}
