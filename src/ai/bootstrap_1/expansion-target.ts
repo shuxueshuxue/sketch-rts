@@ -10,6 +10,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { chooseV9ExpansionMine, mineGuards, type V6Intel } from '../policy/v6/intel';
 import { v6ExpansionPoint } from '../policy/v6/economy';
 import { isReservedBuilder } from '../policy/world-model';
+import { activeMiningBaseCount } from '../policy/expansion-model';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 
 /** Share land and naval ownership facts before applying the common expansion geometry. */
@@ -17,12 +18,15 @@ export function bootstrapExpansionMine(snapshot: GameSnapshot, owner: PlayerId, 
   const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && !unit.deck
     && !isReservedBuilder(snapshot, owner, unit));
   const foes = armedFoes(snapshot, owner, options);
+  // Secure the nearby natural before sending the first economy on a long land detour.
+  const opening = intel.ownHalls.length === 1 && activeMiningBaseCount(snapshot, owner) === 1;
   return chooseV9ExpansionMine(snapshot, intel, snapshot.resources.filter(mine => !mineClaimedByAlly(snapshot, owner, mine, options)),
     (intel, point, range) => enemyExpansionPower(snapshot, intel, point, range), mine => {
-      if (mineGuards(snapshot, mine).length > 0) return false;
+      if (opening) return 0;
+      if (mineGuards(snapshot, mine).length > 0) return 1;
       const point = v6ExpansionPoint(snapshot, owner, mine);
       return isBuildPlacementClear(snapshot, 'townHall', point)
-        && workers.some(worker => retreatLandTravelTicks(snapshot, worker, point, foes) !== undefined);
+        && workers.some(worker => retreatLandTravelTicks(snapshot, worker, point, foes) !== undefined) ? 0 : 1;
     });
 }
 
