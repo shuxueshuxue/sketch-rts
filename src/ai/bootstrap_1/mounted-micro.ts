@@ -56,7 +56,7 @@ export function castThreatReach(snapshot: GameSnapshot, foe: Unit, rider: Pick<U
 }
 
 /** One ordinary command per think; ranges and cooldowns come from the live combatants. */
-export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, foes: readonly Threat[], goal: { kind: 'camp' } | { kind: 'raid'; station: Point }): GameCommand {
+export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, foes: readonly Threat[], goal: { kind: 'camp' } | { kind: 'raid'; station: Point } | { kind: 'field' }): GameCommand {
   if (goal.kind === 'camp') {
     const clearingTicks = foes.reduce((ticks, foe) => ticks + ('order' in foe && foe.owner === 'neutral'
       ? foe.hp * rider.attackCooldown / rider.attackDamage : 0), 0);
@@ -95,12 +95,12 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     if (!foes.some(foe => 'order' in foe && foe.order.type === 'attack' && foe.order.targetId === rider.id)) {
       const approach = 1 - rider.attackRange / distance(rider, target);
       const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
-      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))
+      if (goal.kind !== 'raid' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))
         && routeLeavesDisks(groundSteeringRoute(snapshot.map, rider, entry), foes.map(foe => ({ x: foe.x, y: foe.y,
           radius: mountedThreatReach(snapshot, foe, rider, horizon) })))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
-      return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station), false);
+      return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'raid' ? goal.station : target), false);
     }
     // Aim while a pursuer is outside weapon range, including during the weapon's cooldown.
     const prepared = (rider.attackRange - rider.radius) / distance(rider, target);
@@ -108,7 +108,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       y: rider.y + (target.y - rider.y) * prepared };
   }
   const edge = Math.min(rider.x, rider.y, snapshot.map.width - rider.x, snapshot.map.height - rider.y);
-  return mountedEscape(snapshot, rider, foes, shot, goal.kind === 'raid' && edge < rider.attackRange
+  return mountedEscape(snapshot, rider, foes, shot, goal.kind !== 'camp' && edge < rider.attackRange
     ? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 } : undefined, false);
 }
 

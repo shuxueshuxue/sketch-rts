@@ -29,6 +29,7 @@ import { campRecovery } from './camp-recovery';
 import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
+import { mountedField } from './mounted-field';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -96,7 +97,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
-    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, script];
+    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, mountedField, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
