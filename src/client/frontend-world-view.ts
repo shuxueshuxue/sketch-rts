@@ -14,10 +14,12 @@ export type FrontendWorldViewState = {
   controlGroups: ControlGroups;
 };
 
-export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorldViewState): FrontendWorldViewState {
+export type FrontendWorldViewProjection = FrontendWorldViewState & { liveIds: ReadonlySet<string> | undefined };
+
+export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorldViewState): FrontendWorldViewProjection {
   adapter.updateToRenderTime();
   const snapshot = adapter.currentSnapshot();
-  if (!snapshot) return { ...state, snapshot: undefined, selectedIds: new Set(), focusedSelectionId: undefined, selectedCampId: undefined };
+  if (!snapshot) return { ...state, snapshot: undefined, liveIds: undefined, selectedIds: new Set(), focusedSelectionId: undefined, selectedCampId: undefined };
 
   const liveIds = liveSelectionIds(snapshot, state.owner);
   const selectedIds = new Set([...state.selectedIds].filter((id) => liveIds.has(id)));
@@ -29,6 +31,7 @@ export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorld
   return {
     ...state,
     snapshot,
+    liveIds,
     selectedIds,
     focusedSelectionId: resolveFocusedSelectionId(snapshot, selectedIds, state.focusedSelectionId, state.owner),
     selectedCampId,

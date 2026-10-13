@@ -31,15 +31,15 @@ export function createSketchRtsDebugView(input: {
   if (!input.snapshot) return view;
 
   view.tick = input.snapshot.tick;
-  view.unitIds = input.snapshot.units.map((unit) => unit.id);
-  view.buildingIds = input.snapshot.buildings.map((building) => building.id);
-  view.localPlayerUnitIds = input.snapshot.units.filter((unit) => unit.owner === input.localPlayerId).map((unit) => unit.id);
-  view.localPlayerBuildingIds = input.snapshot.buildings.filter((building) => building.owner === input.localPlayerId).map((building) => building.id);
-
   const enemyOrders: Record<string, number> = {};
   for (const unit of input.snapshot.units) {
-    if (unit.owner === input.localPlayerId || !unit.order) continue;
-    enemyOrders[unit.order.type] = (enemyOrders[unit.order.type] ?? 0) + 1;
+    view.unitIds.push(unit.id);
+    if (unit.owner === input.localPlayerId) view.localPlayerUnitIds.push(unit.id);
+    else if (unit.order) enemyOrders[unit.order.type] = (enemyOrders[unit.order.type] ?? 0) + 1;
+  }
+  for (const building of input.snapshot.buildings) {
+    view.buildingIds.push(building.id);
+    if (building.owner === input.localPlayerId) view.localPlayerBuildingIds.push(building.id);
   }
   if (Object.keys(enemyOrders).length > 0) view.enemyOrders = enemyOrders;
 

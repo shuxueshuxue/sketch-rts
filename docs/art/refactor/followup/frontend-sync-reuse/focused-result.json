@@ -1,0 +1,22 @@
+{
+  "command": [
+    "npx",
+    "vitest",
+    "run",
+    "src/client/frontend-world-view.test.ts",
+    "src/client/debug-view.test.ts",
+    "src/client/selection-controls.test.ts",
+    "src/client/control-groups.test.ts",
+    "src/client/hud-model.test.ts",
+    "src/client/build-placement-controls.test.ts",
+    "src/client/item-controls.test.ts",
+    "src/client/ship-boarding-controls.test.ts",
+    "src/client/game-adapter.test.ts",
+    "src/client/net/local-adapter.test.ts",
+    "src/client/net/lockstep-client.test.ts"
+  ],
+  "startedAt": "2026-10-13T14:57:51.598644+00:00",
+  "endedAt": "2026-10-13T14:57:55.262289+00:00",
+  "seconds": 3.664,
+  "exitCode": 0
+}

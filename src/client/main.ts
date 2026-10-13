@@ -1524,7 +1524,7 @@ function syncActiveGameAdapterSnapshot() {
   focusedSelectionId = view.focusedSelectionId;
   selectedCampId = view.selectedCampId;
   syncDebugView();
-  pruneSelection();
+  pruneSelection(view.liveIds);
   updateHud();
   return true;
 }
@@ -2839,19 +2839,19 @@ function selectionRect(start: Point, end: Point): SelectionScreenRect {
   };
 }
 
-function pruneSelection() {
+function pruneSelection(projectedLiveIds?: ReadonlySet<string>) {
   if (!snapshot) return;
-  const liveIds = liveSelectionIds(snapshot, localPlayerId);
   if (commandMode?.type === 'boardShip') {
     const sources = commandMode.sourceIds.filter(id => snapshot!.units.some(ship => ship.id === id && ship.owner === localPlayerId && ship.hp > 0 && shipProfile(ship)));
     if (sources.length) commandMode.sourceIds = sources;
     else { commandMode = undefined; clearCommandModeClasses(); }
   }
-  if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
+  if (commandMode?.type === "build" && !(projectedLiveIds ?? liveSelectionIds(snapshot, localPlayerId)).has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
   }
   if (commandMode?.type === "item") {
+    const liveIds = projectedLiveIds ?? liveSelectionIds(snapshot, localPlayerId);
     const targeting = commandMode.targeting;
     if (!liveIds.has(targeting.unitId) || !snapshot.items.some((item) => item.id === targeting.itemId && item.carrierId === targeting.unitId)) {
       commandMode = undefined;

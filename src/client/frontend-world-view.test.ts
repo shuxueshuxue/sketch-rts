@@ -1,12 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import type { GameAdapter } from "./game-adapter";
+import { EmptyGameAdapter } from "./game-adapter";
 import { syncFrontendWorldView } from "./frontend-world-view";
 import type { ControlGroups } from "./control-groups";
 import { createGame, snapshotGame } from "../shared/sim";
 import type { GameCommand, GameSnapshot } from "../shared/types";
 
 describe("frontend world view", () => {
+  it('clears the prior projection live ids when an adapter no longer publishes a snapshot', () => {
+    const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: [] }));
+    const unit = snapshot.units.find(unit => unit.owner === 'player')!;
+    const prior = syncFrontendWorldView(new StaticSnapshotAdapter(snapshot), {
+      owner: 'player', snapshot: undefined, selectedIds: new Set([unit.id]), focusedSelectionId: unit.id,
+      selectedCampId: undefined, controlGroups: {},
+    });
+    expect(prior.liveIds?.has(unit.id)).toBe(true);
+
+    const stopped = syncFrontendWorldView(new EmptyGameAdapter(), prior);
+    expect(stopped.snapshot).toBeUndefined();
+    expect(stopped.liveIds).toBeUndefined();
+    expect(stopped.selectedIds.size).toBe(0);
+    expect(stopped.focusedSelectionId).toBeUndefined();
+    expect(prior.liveIds?.has(unit.id)).toBe(true);
+  });
   it('retains own cabin crew selection but clears an opponent who has disappeared into a cabin',()=>{
     const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];
     const own=game.spawnUnit('player','priest',600,600),enemy=game.spawnUnit('enemy','priest',650,600);

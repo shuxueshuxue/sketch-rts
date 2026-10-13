@@ -1,0 +1,2051 @@
+{
+  "passed": true,
+  "baseline": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "currentHead": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "scope": "Extracted exact production main function bodies, actual production selection/debug/rule helpers and real snapshotGame fixtures; UI/audio sinks are recorded stand-ins. Node subset correctness and construction counts, not full DOM/page, visual/GPU, heap-byte, render-time or FPS proof.",
+  "rows": [
+    {
+      "name": "sync/no-mode/same-tick-checkpoint",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "0b4bdad6e6eebb0effc7b8174d90a914026e8e7083e2763265987cdca595c2f6",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/build-valid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "02de031f05302f58275d01dd2d0533e8753af37bf50d7e78c9e1f914b5251ee9",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "commandMode": {
+          "type": "build",
+          "placement": {
+            "workerId": "unit-player-worker-1000"
+          }
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/build-missing",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "d91d865c1e74b6ce668297f2500f8f3db674aea6410cd811d7dda10174b4b580",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/item-valid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "779c61dd15961a2a664526c77a52f146a8edfd871e67bdbe15d257986d2380a2",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "commandMode": {
+          "type": "item",
+          "targeting": {
+            "unitId": "unit-player-worker-1000",
+            "itemId": "item-proof"
+          }
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/item-missing",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "d91d865c1e74b6ce668297f2500f8f3db674aea6410cd811d7dda10174b4b580",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/item-wrong-carrier",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "d91d865c1e74b6ce668297f2500f8f3db674aea6410cd811d7dda10174b4b580",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/item-missing-unit",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "d91d865c1e74b6ce668297f2500f8f3db674aea6410cd811d7dda10174b4b580",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/board-live-own-enemy-missing",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "202755cf24d081f85214783e326e82ca5a73a37397a6029260b5717bbcba0a9f",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "commandMode": {
+          "type": "boardShip",
+          "sourceIds": [
+            "unit-player-transport-1004"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/board-dead",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "4ba55a56100f1e2decb351c271342075fbea7e2681f0b2b2178aecc2f506dff0",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/cabin-own-and-enemy",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "3f552e37c7c8ffd8a87b664ece20629e57e8431997f0f790504627595cc311d6",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-priest-1006"
+        ],
+        "focusedSelectionId": "unit-player-priest-1006",
+        "controlGroups": {
+          "1": [
+            "unit-player-priest-1006"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-priest-1006"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-priest-1006",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-build-valid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "7b959f762e7ed87c960cf3dec4e038a97e20d0ee247145a9db0e2c3ff03c190f",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "openPalette": "build",
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-build-invalid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "485fbaf4d669e54063c8e54fe987cc8061d55bcc2be1ddf5fb619655998f5d90",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-enemy-footman-1003"
+        ],
+        "focusedSelectionId": "unit-enemy-footman-1003",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-enemy-footman-1003"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-enemy-footman-1003",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-stance-valid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "238f017fdfbd217d18906e098c6b7364b8027f57b8adff432e30da05e4b8ed0f",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-footman-1002"
+        ],
+        "focusedSelectionId": "unit-player-footman-1002",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "openPalette": "stance",
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-footman-1002"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-footman-1002",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-stance-invalid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "485fbaf4d669e54063c8e54fe987cc8061d55bcc2be1ddf5fb619655998f5d90",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-enemy-footman-1003"
+        ],
+        "focusedSelectionId": "unit-enemy-footman-1003",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-enemy-footman-1003"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-enemy-footman-1003",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-veteran-valid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "dbf026a01f2d311b8b5082ff83feb4358b7508f57ce9eabcba4ed418ca1d4ab7",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-footman-1008"
+        ],
+        "focusedSelectionId": "unit-player-footman-1008",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "openPalette": "veteran",
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-footman-1008"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-footman-1008",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-veteran-invalid",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "485fbaf4d669e54063c8e54fe987cc8061d55bcc2be1ddf5fb619655998f5d90",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-enemy-footman-1003"
+        ],
+        "focusedSelectionId": "unit-enemy-footman-1003",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-enemy-footman-1003"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-enemy-footman-1003",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/palette-veteran-pending",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "01f6d841ecee538e34b16dd77c3907f2a296f30a564217bbc61df122d6b1443c",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-footman-1008"
+        ],
+        "focusedSelectionId": "unit-player-footman-1008",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-footman-1008"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-footman-1008",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "sync/no-snapshot",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "180c4ce4a30ba9c2dc11c0aebae82dd7483d9e0063b24433600f8e6ffb3e5b32",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": []
+      }
+    },
+    {
+      "name": "sync/menu-open",
+      "action": "sync",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "180c4ce4a30ba9c2dc11c0aebae82dd7483d9e0063b24433600f8e6ffb3e5b32",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": []
+      }
+    },
+    {
+      "name": "command/same-tick-checkpoint",
+      "action": "project",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 2,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "d91d865c1e74b6ce668297f2500f8f3db674aea6410cd811d7dda10174b4b580",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000"
+        ],
+        "focusedSelectionId": "unit-player-worker-1000",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000"
+          ]
+        },
+        "debug": {
+          "unitIds": [
+            "unit-player-worker-1000",
+            "unit-enemy-worker-1001",
+            "unit-player-footman-1002",
+            "unit-enemy-footman-1003",
+            "unit-player-transport-1004",
+            "unit-enemy-transport-1005",
+            "unit-player-priest-1006",
+            "unit-enemy-priest-1007",
+            "unit-player-footman-1008"
+          ],
+          "buildingIds": [
+            "building-player-townhall",
+            "building-enemy-townhall"
+          ],
+          "selectedIds": [
+            "unit-player-worker-1000"
+          ],
+          "localPlayerUnitIds": [
+            "unit-player-worker-1000",
+            "unit-player-footman-1002",
+            "unit-player-transport-1004",
+            "unit-player-priest-1006",
+            "unit-player-footman-1008"
+          ],
+          "localPlayerBuildingIds": [
+            "building-player-townhall"
+          ],
+          "roomId": "room-proof",
+          "focusedSelectionId": "unit-player-worker-1000",
+          "tick": 12,
+          "enemyOrders": {
+            "idle": 4
+          }
+        },
+        "ledger": [
+          [
+            "cues",
+            []
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud"
+        ]
+      }
+    },
+    {
+      "name": "command/no-active-snapshot",
+      "action": "project",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 1,
+        "adapterUpdates": 1
+      },
+      "outputSha256": "b128a3a2497cc61fe8f7f3acc4f9aeb486a5eda1de7213519f9f91482e36d483",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": [
+          [
+            "invalid-command",
+            "status.noActiveMatch"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "prune/no-mode",
+      "action": "prune",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "ae4a6301fc0dafcbffa2249af89fdd0ed0dbb34b16b6cd3c4aa93990625fd75e",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": []
+      }
+    },
+    {
+      "name": "prune/board-without-projection",
+      "action": "prune",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "d00c21cdde78bc4f696316f29adcf20fd1c0958f04c53af621e2805e45a0ba8e",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "commandMode": {
+          "type": "boardShip",
+          "sourceIds": [
+            "unit-player-transport-1004"
+          ]
+        },
+        "ledger": []
+      }
+    },
+    {
+      "name": "prune/build-without-projection",
+      "action": "prune",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "59f2235939d8c7a992ed4c14e0a453092b063ab24afd9ede342fbb7aa54ee979",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": [
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "prune/item-without-projection",
+      "action": "prune",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "59f2235939d8c7a992ed4c14e0a453092b063ab24afd9ede342fbb7aa54ee979",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": [
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "activate/without-projection-no-mode",
+      "action": "activate",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 0,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "fe6b211c699956bbf36ddc58431c50f0bbb54a205a2af0e5f2a30802e6d6a8a3",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": [
+          "world-reset",
+          "minimap-reset",
+          "combat-reset",
+          "projectiles-reset",
+          "adapter-close",
+          "chat-close",
+          "wind-reset",
+          [
+            "wind-button",
+            "aria-pressed",
+            "false"
+          ],
+          "chat-subscribe",
+          "chat-reset",
+          [
+            "camera",
+            {
+              "x": 675,
+              "y": 575
+            }
+          ],
+          "hud",
+          "match-actions"
+        ]
+      }
+    },
+    {
+      "name": "activate/without-projection-build",
+      "action": "activate",
+      "exactStateAndSideEffectsEqual": true,
+      "beforeCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "afterCounts": {
+        "liveIdsBuilt": 1,
+        "adapterReads": 0,
+        "adapterUpdates": 0
+      },
+      "outputSha256": "ce2b2d3a58674ae6ece815dcb60472c2999cd9423bd802cba50b62a42ffd9e5c",
+      "resultingPresentation": {
+        "selectedIds": [
+          "unit-player-worker-1000",
+          "stale-id"
+        ],
+        "focusedSelectionId": "stale-id",
+        "controlGroups": {
+          "1": [
+            "unit-player-worker-1000",
+            "stale-id"
+          ],
+          "2": [
+            "stale-id"
+          ]
+        },
+        "ledger": [
+          "world-reset",
+          "minimap-reset",
+          "combat-reset",
+          "projectiles-reset",
+          "adapter-close",
+          "chat-close",
+          "wind-reset",
+          [
+            "wind-button",
+            "aria-pressed",
+            "false"
+          ],
+          "chat-subscribe",
+          "chat-reset",
+          [
+            "camera",
+            {
+              "x": 675,
+              "y": 575
+            }
+          ],
+          [
+            "class-remove",
+            "placement-active",
+            "targeting-active"
+          ],
+          "hud",
+          "match-actions"
+        ]
+      }
+    }
+  ],
+  "debugRows": [
+    {
+      "name": "mixed",
+      "exactObjectAndSerializedOutputEqual": true,
+      "keys": [
+        "unitIds",
+        "buildingIds",
+        "selectedIds",
+        "localPlayerUnitIds",
+        "localPlayerBuildingIds",
+        "roomId",
+        "focusedSelectionId",
+        "tick",
+        "enemyOrders"
+      ],
+      "output": {
+        "unitIds": [
+          "unit-player-worker-1000",
+          "unit-enemy-worker-1001",
+          "unit-player-footman-1002",
+          "unit-enemy-footman-1003",
+          "unit-player-transport-1004",
+          "unit-enemy-transport-1005",
+          "unit-player-priest-1006",
+          "unit-enemy-priest-1007",
+          "unit-player-footman-1008"
+        ],
+        "buildingIds": [
+          "building-player-townhall",
+          "building-enemy-townhall"
+        ],
+        "selectedIds": [
+          "stale-id",
+          "unit-player-worker-1000"
+        ],
+        "localPlayerUnitIds": [
+          "unit-player-worker-1000",
+          "unit-player-footman-1002",
+          "unit-player-transport-1004",
+          "unit-player-priest-1006",
+          "unit-player-footman-1008"
+        ],
+        "localPlayerBuildingIds": [
+          "building-player-townhall"
+        ],
+        "roomId": "proof",
+        "focusedSelectionId": "unit-player-worker-1000",
+        "tick": 12,
+        "enemyOrders": {
+          "idle": 4
+        }
+      },
+      "collectionCounts": {
+        "before": {
+          "units": {
+            "methodPasses": 3,
+            "iteratorPasses": 1,
+            "elementVisits": 32,
+            "methodResultArrays": 3
+          },
+          "buildings": {
+            "methodPasses": 3,
+            "iteratorPasses": 0,
+            "elementVisits": 5,
+            "methodResultArrays": 3
+          }
+        },
+        "after": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 9,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 2,
+            "methodResultArrays": 0
+          }
+        }
+      },
+      "countScope": "Proxy counts map/filter and iterator visits on input arrays and returned map/filter arrays, recorded immediately after the actual debug function. JSON output validation is outside the recorded counters. Counts are not allocator bytes, capacity growth, CPU timing, or all runtime allocations."
+    },
+    {
+      "name": "own-only",
+      "exactObjectAndSerializedOutputEqual": true,
+      "keys": [
+        "unitIds",
+        "buildingIds",
+        "selectedIds",
+        "localPlayerUnitIds",
+        "localPlayerBuildingIds",
+        "tick"
+      ],
+      "output": {
+        "unitIds": [
+          "unit-player-worker-1000",
+          "unit-player-footman-1002",
+          "unit-player-transport-1004",
+          "unit-player-priest-1006",
+          "unit-player-footman-1008"
+        ],
+        "buildingIds": [
+          "building-player-townhall",
+          "building-enemy-townhall"
+        ],
+        "selectedIds": [],
+        "localPlayerUnitIds": [
+          "unit-player-worker-1000",
+          "unit-player-footman-1002",
+          "unit-player-transport-1004",
+          "unit-player-priest-1006",
+          "unit-player-footman-1008"
+        ],
+        "localPlayerBuildingIds": [
+          "building-player-townhall"
+        ],
+        "tick": 12
+      },
+      "collectionCounts": {
+        "before": {
+          "units": {
+            "methodPasses": 3,
+            "iteratorPasses": 1,
+            "elementVisits": 20,
+            "methodResultArrays": 3
+          },
+          "buildings": {
+            "methodPasses": 3,
+            "iteratorPasses": 0,
+            "elementVisits": 5,
+            "methodResultArrays": 3
+          }
+        },
+        "after": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 5,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 2,
+            "methodResultArrays": 0
+          }
+        }
+      },
+      "countScope": "Proxy counts map/filter and iterator visits on input arrays and returned map/filter arrays, recorded immediately after the actual debug function. JSON output validation is outside the recorded counters. Counts are not allocator bytes, capacity growth, CPU timing, or all runtime allocations."
+    },
+    {
+      "name": "empty",
+      "exactObjectAndSerializedOutputEqual": true,
+      "keys": [
+        "unitIds",
+        "buildingIds",
+        "selectedIds",
+        "localPlayerUnitIds",
+        "localPlayerBuildingIds",
+        "tick"
+      ],
+      "output": {
+        "unitIds": [],
+        "buildingIds": [],
+        "selectedIds": [
+          "stale"
+        ],
+        "localPlayerUnitIds": [],
+        "localPlayerBuildingIds": [],
+        "tick": 12
+      },
+      "collectionCounts": {
+        "before": {
+          "units": {
+            "methodPasses": 3,
+            "iteratorPasses": 1,
+            "elementVisits": 0,
+            "methodResultArrays": 3
+          },
+          "buildings": {
+            "methodPasses": 3,
+            "iteratorPasses": 0,
+            "elementVisits": 0,
+            "methodResultArrays": 3
+          }
+        },
+        "after": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          }
+        }
+      },
+      "countScope": "Proxy counts map/filter and iterator visits on input arrays and returned map/filter arrays, recorded immediately after the actual debug function. JSON output validation is outside the recorded counters. Counts are not allocator bytes, capacity growth, CPU timing, or all runtime allocations."
+    },
+    {
+      "name": "undefined",
+      "exactObjectAndSerializedOutputEqual": true,
+      "keys": [
+        "unitIds",
+        "buildingIds",
+        "selectedIds",
+        "localPlayerUnitIds",
+        "localPlayerBuildingIds"
+      ],
+      "output": {
+        "unitIds": [],
+        "buildingIds": [],
+        "selectedIds": [
+          "stale"
+        ],
+        "localPlayerUnitIds": [],
+        "localPlayerBuildingIds": []
+      },
+      "collectionCounts": {
+        "before": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 0,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 0,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          }
+        },
+        "after": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 0,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 0,
+            "elementVisits": 0,
+            "methodResultArrays": 0
+          }
+        }
+      },
+      "countScope": "Proxy counts map/filter and iterator visits on input arrays and returned map/filter arrays, recorded immediately after the actual debug function. JSON output validation is outside the recorded counters. Counts are not allocator bytes, capacity growth, CPU timing, or all runtime allocations."
+    },
+    {
+      "name": "interleaved-orders",
+      "exactObjectAndSerializedOutputEqual": true,
+      "keys": [
+        "unitIds",
+        "buildingIds",
+        "selectedIds",
+        "localPlayerUnitIds",
+        "localPlayerBuildingIds",
+        "tick",
+        "enemyOrders"
+      ],
+      "output": {
+        "unitIds": [
+          "unit-player-footman-1008",
+          "unit-enemy-priest-1007",
+          "unit-player-priest-1006",
+          "unit-enemy-transport-1005",
+          "unit-player-transport-1004",
+          "unit-enemy-footman-1003",
+          "unit-player-footman-1002",
+          "unit-enemy-worker-1001",
+          "unit-player-worker-1000"
+        ],
+        "buildingIds": [
+          "building-enemy-townhall",
+          "building-player-townhall"
+        ],
+        "selectedIds": [],
+        "localPlayerUnitIds": [
+          "unit-player-priest-1006",
+          "unit-player-transport-1004",
+          "unit-player-worker-1000"
+        ],
+        "localPlayerBuildingIds": [
+          "building-player-townhall"
+        ],
+        "tick": 12,
+        "enemyOrders": {
+          "hold": 2,
+          "idle": 4
+        }
+      },
+      "collectionCounts": {
+        "before": {
+          "units": {
+            "methodPasses": 3,
+            "iteratorPasses": 1,
+            "elementVisits": 30,
+            "methodResultArrays": 3
+          },
+          "buildings": {
+            "methodPasses": 3,
+            "iteratorPasses": 0,
+            "elementVisits": 5,
+            "methodResultArrays": 3
+          }
+        },
+        "after": {
+          "units": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 9,
+            "methodResultArrays": 0
+          },
+          "buildings": {
+            "methodPasses": 0,
+            "iteratorPasses": 1,
+            "elementVisits": 2,
+            "methodResultArrays": 0
+          }
+        }
+      },
+      "countScope": "Proxy counts map/filter and iterator visits on input arrays and returned map/filter arrays, recorded immediately after the actual debug function. JSON output validation is outside the recorded counters. Counts are not allocator bytes, capacity growth, CPU timing, or all runtime allocations."
+    }
+  ],
+  "sourceSHA256": {
+    "src/client/main.ts": "0ea585784527c76332f28b3b84f89e3fd98761d9538c21f40b783ea85a3654da",
+    "src/client/frontend-world-view.ts": "bfb2748ea2f0a1319db4bc9e7f3b342765c65cfee75aa7b70dd5be7a6a0e568f",
+    "src/client/debug-view.ts": "b68adcbee9adf10add74ecc1b11641fdf00559b08da09b54877899cd690a7a9c",
+    "src/client/frontend-world-view.test.ts": "7785ed8d32df4248243b072bd52f8b16673ead4bb3bd02ce73f3817a64c09815",
+    "src/client/hud-model.ts": "95a39cf0ecf42de1ffd60c929e7d41ee8736ad5fcaf42b13d7378bd037cf6251",
+    "src/client/command-button-state.ts": "5ce06e4a0fedd0d37b407670666530d8cc7a841a7619e17d743bfdc3924ce9db",
+    "src/client/veteran-controls.ts": "050d298454a9fb74cbdf7ad9c11ca9d94a74c5c8a7762fb858714d46406b5318",
+    "src/client/control-groups.ts": "2e04ab9b8ad5b2cdced85cfc337b1c1c3de73600339d53356c5a62501a311039",
+    "src/client/sound-cues.ts": "144d7375d62ac1f46234f4e6f5a96280f5d4063e5ccbc100da8552376336b07c",
+    "src/client/net/local-adapter.ts": "08a9f90aa18797e5932a53999b204a2ef30f4643ca9ba41aa54c7d98ccc8d484",
+    "src/client/game-adapter.ts": "463469b6db039c60f19ea9ab0676bf67d0a1beb73ed1836d2f404e2b75fee110",
+    "src/shared/sim.ts": "e1183a6e3df2c0591d63fdb2a436c803cf616ddef92d1f1f693f431a77c1ed11",
+    "src/shared/ship-geometry.ts": "468fb007589bdfeb7223062f8de554265021013ebec88978dd7629af2af8d99f",
+    "src/shared/ship-cabin.ts": "fa363520cd78534655ca36954d50aff62c36136a8a074cde39c181715ffcbdb9"
+  },
+  "sourcesStableAtEnd": true,
+  "driverSHA256": "4af6c56323694078e1799d9b795b4d2abfddf36aa5ad3ccaeed540287b331d4f",
+  "summary": {
+    "mainCases": 27,
+    "mainCasesPassed": 27,
+    "debugCases": 5,
+    "debugCasesPassed": 5,
+    "liveIdsBefore": 42,
+    "liveIdsAfter": 21
+  }
+}
