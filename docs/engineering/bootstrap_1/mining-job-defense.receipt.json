@@ -26,7 +26,7 @@
     "failed": 24,
     "reportSha256": "47c6556ba4a58103754af83f717a2cd24c5c990e8847127245f1b12ef2aa169c"
   },
-  "legacyCommander": {
+  "stockCommander": {
     "cases": 72,
     "identicalCommandsAndMemory": true,
     "reportSha256": "a4f792ca48de81452d495b3ba320218eb100e86c216cc598d73ec93e7cf32890"
