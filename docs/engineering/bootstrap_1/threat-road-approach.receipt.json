@@ -1,0 +1,64 @@
+{
+  "base": "99c2d5e6b642808f9dda819b91149c141ec465f9",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 2,
+    "newSerializedFields": 0,
+    "newSerializedStructures": 0,
+    "defaultOrCompatibilityPaths": 0,
+    "changedStatsResourcesOrCadence": 0,
+    "sharedGeometry": "groundSteeringRoute, groundTravelCost, retreatThreatReach, routeLeavesDisks",
+    "cache": "One weak snapshot cache; router, native edge and goal results reused only within the same immutable snapshot.",
+    "scope": "Visibility graph uses corners of attack disks obstructing the native route and their connected disk component; every returned edge is admitted against all disks. It does not prove global optimality or completeness."
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-tasks.ts": "b62d98949eccdf8f7a97c2e5291a56f4a0a15892cd6077c20040581867150359",
+    "src/ai/bootstrap_1/threat-roads.ts": "b7d9169d067198cd4f21a2a36ddc8599fde298119675da6c5e4114aacfa1031b"
+  },
+  "focusedSdk": {
+    "passed": 42,
+    "failed": 0,
+    "suites": 3,
+    "sha256": "5f636df2261e533d9381d0fb6951e0e78415dec1cf77b6ae520bf4f3f569c279"
+  },
+  "relatedSdk": {
+    "passed": 150,
+    "failed": 0,
+    "suites": 7,
+    "sha256": "ec96ef6f48481a4ca0773be4fcb0a22a0ae87416c7543ef2e56dd577b5564de2"
+  },
+  "identicalParent": {
+    "passed": 6,
+    "failed": 6,
+    "samePaidCases": 12,
+    "testSourceSha256": "ef628541dca724a88e3ae702f8a742f12200c09b3be46840bade882c5466c38b",
+    "reportSha256": "16999fd2d903e81b5c5eab7426d977876fb1dff104e098322cdb0d39aaa7f3bf",
+    "failure": "All six open-detour cases fail to purchase their rider; all six closed-bank controls pass."
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "logSha256": "6cf820af2ef1abdbc445f89ad1d1f78ad45657232654247a54f017be7812ce14"
+  },
+  "testChange": "The original partially walled ambush was traversable. Split its categorical no-raid premise into open/detour/fully-closed roads; preserve the health, permanent-loss and gold assertions.",
+  "observations": {
+    "paidCases": "Normal 500 starting gold plus actual mining fund one 150-gold rider; unchanged pre-existing six-footman screen stays on its own front. All six detours kill the real worker with zero injury/loss and conserve gold. No normal-opening victory claim.",
+    "knightStoredStates": "At 6000,12000,18000,24000 the unchanged old defeat snapshots still request no mounted reinforcement. Read-only diagnosis, not a replay victory.",
+    "performance": "Edges and goals are cached; corner graph restricted to the obstruction component. No before/after whole-game CPU improvement is claimed. Exact-head CI retains existing CPU duel budget.",
+    "matrix": "No new full matrix and no held-out seeds run."
+  },
+  "ownershipSdk": {
+    "passed": 79,
+    "failed": 0,
+    "suites": 6,
+    "sha256": "c62f71bd3b97d7752b6adabb1626d499601c78edccde19f1c9ca90f653304c50"
+  },
+  "firstHeadCiFailure": {
+    "head": "1dddbe7d279634abfebec2455723315509d57a91",
+    "run": 38358736252,
+    "attempt": 1,
+    "failure": "Two original archer-task-scope checks receive mountedTasks instead of mountedField because a newly reachable raid takes a pursued free rider; a camp member is also incorrectly claimed. Health/loss assertions pass.",
+    "correction": "Exclude actual assigned camp members from available riders; do not start a new sortie for a rider pursued by a nearby enemy. Original test assertions unchanged. No rerun of failed head."
+  }
+}
