@@ -1,6 +1,6 @@
 # bootstrap_1
 
-[采购途中道路重评 #368](https://github.com/shuxueshuxue/sketch-rts/pull/368)已准备，运行时一文件+5/-1。173项本地SDK、完整构建和文档边界通过；十二场路上出现敌军的原生对照全部满血归队，父版本十二场全未通过，其中六名采购者死亡。[证明](./mercenary-trip-roads.zh.md)。首次CI等待核验，归途同时封锁、海岛返程及完整强度验收继续。
+[采购途中道路重评 #368](https://github.com/shuxueshuxue/sketch-rts/pull/368)已合并并部署 `38f9422c48490110030f4275581464bdf8f2e625`，运行时一文件+5/-1。173项本地SDK、完整构建和文档边界通过；十二场路上出现敌军的原生对照全部满血归队，父版本十二场全未通过，其中六名采购者死亡。[证明](./mercenary-trip-roads.zh.md)。首次CI `38447334875`和首次生产 `38448308573`成功，五个发布步骤和精确版本标签核验。[发布证明](./mercenary-trip-roads-release.receipt.json)。归途同时封锁、海岛返程及完整强度验收继续。
 
 [召唤军团集结与支援 #367](https://github.com/shuxueshuxue/sketch-rts/pull/367)已合并并部署 `7ccd37548dced639b04d80944e5a0e72e5ac8537`，170项相关SDK、144项旧策略命令／记忆同一性、生产构建、文档边界、首次CI `38443492770`和首次生产 `38444397907`通过；五个发布步骤和精确版本标签核验。[发布证明](./summoner-cohort-release.receipt.json)。[细节](./summoner-cohort.zh.md)。正常36000至48000续局仍超时，累计永久损失38，与已有旧轨迹相同；剩余敌方永久军队26→21。此为开发参考比较，完整1620格和最终未见种子仍未验收。
 
