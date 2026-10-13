@@ -7,6 +7,8 @@ export {patchCardBankShader as patchCardShader} from './card-bank-shader';
 import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
+/** Ordinary draws use implicit single-bank sampling; wider chunks are opt-in. */
+export const DEFAULT_CARD_BANKS=1;
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
 type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number;order:number};
 type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;baseMip:number;mask:Uint8Array};
@@ -55,7 +57,7 @@ export class PaintedCardBatches {
   private rasterCache=new CardRasterCache();
   private rasterStages={paintMs:0,readbackMs:0,cacheMs:0,pickMaskMs:0,rowFlipMs:0,slotMs:0};
   constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){
-    this.maxTextureBanks=policy.maxTextureBanks??MAX_CARD_BANKS;
+    this.maxTextureBanks=policy.maxTextureBanks??DEFAULT_CARD_BANKS;
     if(!Number.isInteger(this.maxTextureBanks)||this.maxTextureBanks<1||this.maxTextureBanks>MAX_CARD_BANKS)throw new Error('Invalid painted card bank count.');
     this.drawGroup.name='PaintedCardDraws';
     this.mipUploader=new CardMipUploader(anisotropy);
@@ -83,14 +85,13 @@ export class PaintedCardBatches {
     // frame. Large visible armies may legitimately exceed the soft budget.
     const remainingLayers=Math.floor((PIXEL_BUDGET-this.allocatedPixels)/(width*height));
     if(oldest&&remainingLayers<1){this.cards.delete(oldest.key);this.maskBytes-=oldest.mask.byteLength;oldest.page.cards[oldest.layer]=undefined;return{page:oldest.page,layer:oldest.layer};}
-    // A 640px action layer otherwise fits only sixteen warm poses: allocating
-    // a second sixteen-layer page crosses the 12MP budget and immediately
-    // discards the first page. Use the remaining capacity as a smaller tail.
-    // If all layers are visible, the required working set may exceed budget.
-    // Above the warm-cache budget, allocate only this frame's remaining
-    // unique demands for the bin. A new mip size may need just one or two
-    // layers; reserving sixteen can cost more than retaining the full chain.
-    const layers=remainingLayers>0?Math.min(LAYERS,remainingLayers):Math.min(empty?1:LAYERS,Math.max(1,pendingLayers));
+    // Reserve only this frame's remaining unique demands, even below budget.
+    // A new resident-size bin may need a few poses rather than sixteen warm
+    // slots. Current visible demands may still exceed the soft budget.
+    // Empty output has a cheap shared 16px domain. Keep its ordinary batching
+    // below budget: many single-layer textures save no pixels over one shared
+    // page. Above budget use one layer because future empty output is unknown.
+    const layers=empty?(remainingLayers>0?Math.min(LAYERS,remainingLayers):1):Math.min(LAYERS,Math.max(1,pendingLayers),remainingLayers>0?remainingLayers:LAYERS);
     return{page:this.createPage(width,height,layers),layer:0};
   }
   add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){

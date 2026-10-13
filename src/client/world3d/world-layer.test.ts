@@ -290,6 +290,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const remains=()=>paintedMeshes().find(object=>object.userData.ids?.includes(corpse.id));
     const mesh=remains()!;expect(mesh).toBeDefined();
     const material=mesh.material as MeshBasicMaterial;
+    expect(layer.cardStats().maxTextureBanks).toBe(1);expect(layer.remainsStats().maxTextureBanks).toBe(1);expect(material.customProgramCacheKey()).toBe('painted-card-banks-v1:1:true');
     expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});
     expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBeGreaterThan(-1);expect(mesh.renderOrder).toBeLessThan(0);
     expect(layer.positions.has(corpse.id)).toBe(false);

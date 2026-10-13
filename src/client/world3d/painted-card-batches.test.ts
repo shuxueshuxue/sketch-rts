@@ -6,7 +6,7 @@ import {PaintedCardBatches,patchCardShader,type PaintedCardPolicy} from './paint
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn()};
 afterEach(()=>{vi.unstubAllGlobals();renderer.initTexture.mockReset();renderer.copyTextureToTexture.mockReset();renderer.setRenderTarget.mockReset();});
-function setup(policy:PaintedCardPolicy={}){
+function setup(policy:PaintedCardPolicy={maxTextureBanks:8}){
   vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
   const scene=new THREE.Scene(),cards=new PaintedCardBatches(scene,8,policy);return{scene,cards};
 }
@@ -20,6 +20,23 @@ const matrix=new THREE.Matrix4();
 const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
 const fullPaint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-62,-62,124,124);};
 describe('painted card array batches',()=>{
+  it('defaults to ordered single-bank draws and the original implicit sampling in every pass',()=>{
+    const {cards}=setup({});cards.begin();
+    for(const [order,bank] of [0,1,0].entries())cards.add(`default:${bank}`,2,paint,matrix,`unit:${order}`,17,bank?160:128);cards.finish(renderer);
+    const meshes=cards.objects();expect(meshes).toHaveLength(3);expect(meshes.flatMap(mesh=>mesh.userData.ids)).toEqual(['unit:0','unit:1','unit:2']);
+    expect(cards.stats()).toMatchObject({maxTextureBanks:1,pages:2,cards:2,rasterizations:2});
+    expect(meshes[0]!.userData.banks[0]).toBe(meshes[2]!.userData.banks[0]);
+    for(const mesh of meshes){
+      expect(mesh.userData.banks).toHaveLength(1);expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);
+      for(const [index,material] of [mesh.material as THREE.MeshBasicMaterial,mesh.customDepthMaterial!,mesh.customDistanceMaterial!].entries()){
+        const source=[THREE.ShaderLib.basic,THREE.ShaderLib.depth,THREE.ShaderLib.distance][index]!,shader={vertexShader:source.vertexShader,fragmentShader:source.fragmentShader,uniforms:THREE.UniformsUtils.clone(source.uniforms)};
+        material.onBeforeCompile(shader as THREE.WebGLProgramParametersWithUniforms,{} as THREE.WebGLRenderer);
+        expect(shader.fragmentShader).toContain('diffuseColor *= texture(map, vec3(vMapUv, vCardLayer));');expect(shader.fragmentShader).not.toContain('textureGrad');expect(shader.fragmentShader).not.toContain('cardMap1');
+        expect(shader.uniforms.map!.value).toBe(mesh.userData.banks[0].texture);
+      }
+    }
+    cards.dispose();
+  });
   it('shares full-resolution color/facing/pose layers with separate instance IDs and feet',()=>{
     const {cards}=setup();cards.begin();
     for(let i=0;i<16;i++)cards.add(`pose:${i}`,4,paint,matrix,`unit:${i}`,i);
@@ -174,17 +191,17 @@ it('keeps visible compaction sources alive and invalidates overwritten warm hole
  expect(cards.objects()[0]!.userData.ids).toEqual(expect.arrayContaining(['0','16','32','48','new']));cards.dispose();
 });
 
-it.each([160,ART_ACTION_SIZE])('keeps twenty recurring %ipx action poses warm within the unchanged allocated-pixel budget',tileSize=>{
+it.each([160,ART_ACTION_SIZE])('keeps twenty recurring %ipx action poses warm without reserving unused layers',tileSize=>{
  const {cards}=setup(),painter=vi.fn(paint),size=tileSize*4;
  for(let i=0;i<60;i++){
   cards.begin();cards.add(`pose:${i%20}`,4,painter,matrix,'unit',17,tileSize);cards.finish(renderer);
  }
  const stats=cards.stats(),depths=(cards as unknown as {pages:{texture:THREE.DataArrayTexture}[]}).pages.map(page=>page.texture.image.depth);
- expect(stats).toMatchObject({pages:2,cards:20,rasterizations:20,copiedLayers:0,mipInitializedPages:2,mipLayerUpdates:20});
+ expect(stats).toMatchObject({pages:20,cards:20,rasterizations:20,copiedLayers:0,mipInitializedPages:20,mipLayerUpdates:20});
  // The twenty logical cards use identical test ink. The uploader can reuse
  // that scratch raster while still copying twenty complete per-layer mips.
  expect(stats).toMatchObject({scratchUploadBytes:size*size*4,scratchInitialUploadBytes:size*size*4,scratchUnchangedUploads:19,scratchPartialUploadBytes:0});expect(stats.pixels).toBeLessThanOrEqual(12*1024*1024);
- expect(depths).toEqual([16,Math.floor((12*1024*1024-size*size*16)/(size*size))]);
+ expect(depths).toEqual(new Array(20).fill(1));expect(stats.pixels).toBe(20*size*size);
  expect(painter).toHaveBeenCalledTimes(20);cards.dispose();expect(cards.stats().pixels).toBe(0);
 });
 
@@ -232,7 +249,7 @@ it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored g
  // would move or lose this hit, so this checks the original alpha contract.
  cards.begin();cards.add('one-pixel',4,ctx=>{ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
  const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
- expect(texture.image).toMatchObject({width:sourceSize/2,height:sourceSize/2,depth:16});expect(texture.generateMipmaps).toBe(false);
+ expect(texture.image).toMatchObject({width:sourceSize/2,height:sourceSize/2,depth:1});expect(texture.generateMipmaps).toBe(false);
  const uv={x:.5+7.375/tileSize,y:.5+13.125/tileSize};
  expect(mesh.userData.paintedHit(0,uv)).toBe(true);
  expect(mesh.userData.paintedHit(0,{x:uv.x+.25/tileSize,y:uv.y})).toBe(false);
@@ -280,10 +297,11 @@ it('moves all already bound coarse instances to the promoted card while preservi
  cards.add('other',4,paint,new THREE.Matrix4().makeTranslation(20,0,0),'other-fine',17,128,1,0);
  cards.add('promoted',4,paint,new THREE.Matrix4().makeTranslation(30,0,0),'second-coarse',17,128,1,1);
  cards.add('promoted',4,paint,new THREE.Matrix4().makeTranslation(40,0,0),'fine-request',17,128,1,0);cards.finish(renderer);
- expect(cards.stats()).toMatchObject({pages:1,cards:2,rasterizations:3,maskBytes:2*512*512/8});
+ expect(cards.stats()).toMatchObject({pages:2,cards:2,rasterizations:3,maskBytes:2*512*512/8});
  const mesh=cards.objects()[0]!;expect(mesh.userData.ids).toEqual(['first-coarse','other-fine','second-coarse','fine-request']);expect(mesh.count).toBe(4);
  for(let i=0;i<4;i++){const actual=new THREE.Matrix4();mesh.getMatrixAt(i,actual);expect(actual.elements[12]).toBe((i+1)*10);expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(true);}
- expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(2));expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(3));cards.dispose();
+ expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(2));expect(mesh.geometry.getAttribute('cardLayer').getX(0)).toBe(mesh.geometry.getAttribute('cardLayer').getX(3));
+ expect(mesh.geometry.getAttribute('cardBank').getX(0)).toBe(mesh.geometry.getAttribute('cardBank').getX(2));expect(mesh.geometry.getAttribute('cardBank').getX(0)).toBe(mesh.geometry.getAttribute('cardBank').getX(3));expect(mesh.geometry.getAttribute('cardBank').getX(0)).not.toBe(mesh.geometry.getAttribute('cardBank').getX(1));cards.dispose();
 });
 
 it('keeps the original coarse card and mask after a failed promotion and retries before exposing a fine frame',()=>{
@@ -371,12 +389,13 @@ it('uses one over-budget empty layer without consuming the pending native sixtee
  expect(empty.mesh.userData.paintedHit(empty.index,{x:.5,y:.5})).toBe(false);expect(native.mesh.userData.paintedHit(native.index,{x:.5,y:.5})).toBe(true);cards.dispose();
 });
 
-it('keeps normal sixteen-layer warm batching below budget for tiny and empty request sets',()=>{
+it('batches tiny empty domains below budget without losing their instance IDs or transparent masks',()=>{
  const {cards}=setup();cards.begin();cards.add('small',4,paint,matrix,'small',17,128,1,1);cards.finish(renderer);
- expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.depth).toBe(16);cards.dispose();
+ expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.depth).toBe(1);cards.dispose();
  const empty=setup();empty.cards.begin();for(let i=0;i<32;i++)empty.cards.add(`empty:${i}`,4,()=>{},matrix,`${i}`,17,128,1,1);empty.cards.finish(renderer);
- expect(empty.cards.stats()).toMatchObject({pages:2,cards:32});expect(empty.cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(32);
- for(const mesh of empty.cards.objects())expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);empty.cards.dispose();
+ expect(empty.cards.stats()).toMatchObject({pages:2,cards:32,pixels:32*16*16});expect(empty.cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(32);
+ expect(empty.cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(Array.from({length:32},(_,i)=>`${i}`));for(const texture of residentTextures(empty.cards))expect(texture.image).toMatchObject({width:16,height:16,depth:16});
+ for(const mesh of empty.cards.objects())for(let i=0;i<mesh.count;i++)expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(false);empty.cards.dispose();
 });
 
 it('keeps add order across warm and pending cards instead of raster completion or page order',()=>{
@@ -388,7 +407,7 @@ it('keeps add order across warm and pending cards instead of raster completion o
  cards.add('new704',4,paint,new THREE.Matrix4().makeTranslation(40,0,0),'pending-last',17,176);cards.finish(renderer);
  expect(cards.objects()).toHaveLength(1);const mesh=cards.objects()[0]!;
  expect(mesh.userData.ids).toEqual(['pending-first','warm-second','warm-third','pending-last']);expect(mesh.userData.orders).toEqual([0,1,2,3]);
- expect(Array.from(mesh.geometry.getAttribute('cardBank').array).slice(0,4)).toEqual([0,1,0,2]);
+ expect(Array.from(mesh.geometry.getAttribute('cardBank').array).slice(0,4)).toEqual([0,1,2,3]);
  for(let i=0;i<4;i++){const actual=new THREE.Matrix4();mesh.getMatrixAt(i,actual);expect(actual.elements[12]).toBe(10*(i+1));expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(true);}cards.dispose();
 });
 
@@ -467,4 +486,22 @@ it('keeps every painted chunk after earlier and later native meshes at the same 
   }
   cards.dispose();for(const native of [nativeBefore,nativeAfter]){scene.remove(native);native.geometry.dispose();native.material.dispose();}
  }
+});
+
+
+it.each([1,2,6])('allocates exactly %i unique finest layers below budget, protecting warm requests after an early miss',count=>{
+ const {cards}=setup({});cards.begin();const expected:string[]=[];
+ for(let i=0;i<count;i++){
+  cards.add(`few:${i}`,4,paint,matrix,`coarse:${i}`,17,176,1,2);cards.add(`few:${i}`,4,paint,matrix,`fine:${i}`,17,176,1,1);expected.push(`coarse:${i}`,`fine:${i}`);
+ }
+ cards.finish(renderer);const first=residentTextures(cards)[0]!;
+ expect(first.image).toMatchObject({width:352,height:352,depth:count});expect(cards.stats()).toMatchObject({pages:1,cards:count,pixels:352*352*count,rasterizations:count,mipLayerUpdates:count,maskBytes:count*704*704/8});
+ expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(expected);
+ for(const mesh of cards.objects())for(let i=0;i<mesh.count;i++)expect(mesh.userData.paintedHit(i,{x:.5,y:.5})).toBe(true);
+ cards.begin();cards.add('early-miss',4,paint,matrix,'early',17,176,1,1);
+ for(let i=0;i<count;i++)cards.add(`few:${i}`,4,paint,matrix,`warm:${i}`,17,176,1,1);cards.finish(renderer);
+ expect(residentTextures(cards)).toHaveLength(2);expect(residentTextures(cards)[0]).toBe(first);expect(residentTextures(cards).map(texture=>texture.image.depth)).toEqual([count,1]);
+ expect(cards.stats()).toMatchObject({cards:count+1,rasterizations:count+1,copiedLayers:0,pixels:352*352*(count+1)});
+ expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['early',...Array.from({length:count},(_,i)=>`warm:${i}`)]);
+ expect(cards.stats().pixels).toBeLessThan(12*1024*1024);cards.dispose();
 });

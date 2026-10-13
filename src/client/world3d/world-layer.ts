@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
-import { PaintedCardBatches } from './painted-card-batches';
+import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
 import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
@@ -126,7 +126,7 @@ export class World3DLayer {
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined){
-    const maxTextureBanks=Math.min(8,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
+    const maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
     this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks});
     this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks});
     this.flag.material.name='TeamColor';
