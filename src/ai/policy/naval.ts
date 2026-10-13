@@ -677,7 +677,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 function unitStrengthForFerry(unit: Unit) { return strengthOf([unit]); }
 
-function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string], options: AiPolicyContext): GameCommand[] {
+export function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string], options: AiPolicyContext): GameCommand[] {
     const boarding = snapshot.units.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     mission.phase = "return";
     mission.crewIds = [];

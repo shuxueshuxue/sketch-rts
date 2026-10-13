@@ -85,6 +85,9 @@ jobs:
       - name: Verify independent riders use admitted roads and parallel objectives
         run: npx vitest run src/ai/bootstrap_1/mounted-global-field.test.ts src/ai/bootstrap_1/threat-roads.test.ts src/ai/bootstrap_1/mounted-detour-recruitment.test.ts src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
 
+      - name: Verify depleted mining transfers and retained boarding ownership
+        run: npx vitest run src/ai/bootstrap_1/depleted-ferry-target.test.ts src/ai/bootstrap_1/ferry-preparation.test.ts src/ai/bootstrap_1/transport-recovery.test.ts src/ai/bootstrap_1/rider-crossing.test.ts
+
       - name: Verify landed riders retain zero-loss camp completion
         run: npx vitest run src/ai/bootstrap_1/mounted-expedition.test.ts --testNamePattern=v9_knight
 
