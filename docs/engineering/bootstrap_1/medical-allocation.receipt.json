@@ -1,0 +1,54 @@
+{
+  "base": "336288916ae0a231122a8f7e7ec7c253d559f926",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/medical-recovery.ts": "5dc8c61c9bb015e98ce17e3196ac283aff1f184f23efd54d397a5023df0848de",
+    "src/ai/bootstrap_1/weapon-targets.ts": "7fc08fcfef847298f20674517cc8a792e88effa14a62818bf23363a9e4a297ae"
+  },
+  "sdk": {
+    "passed": 386,
+    "failed": 0,
+    "sha256": "c68977b855bd44f60558169115c2653a1db4d2be956edaa7b5e0b7d8b59a8742",
+    "typeOnlyTestRecheck": {
+      "passed": 12,
+      "failed": 0,
+      "sha256": "2d1df53ff6f925077746faacb2dae24674cdd827a7f1ef04daf6b7e336bb772d"
+    },
+    "note": "First build found test-only catalog union typing errors; narrowed authored heal definition, kept all assertions, rechecked 12 cases. Runtime formatting only after broad check."
+  },
+  "parentControl": {
+    "revision": "28cb98f5577c857cd29ac8eaa693617194a3e7bc",
+    "passed": 0,
+    "failed": 12,
+    "sha256": "2af99b55612e4328eead647ba978d0c71a69a7945f7818c11c2bf05ac0ea899b"
+  },
+  "sameFrameEffectiveHealing": {
+    "healers": 3,
+    "patients": 3,
+    "groveBefore": 125,
+    "emberBefore": 98,
+    "after": 165,
+    "permanentLosses": 0,
+    "goldSpent": 0,
+    "scope": "All three full v9 combat stacks, both races, both mirrors, native SDK command issue and step."
+  },
+  "build": {
+    "exitCode": 0,
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "logSha256": "4c301768b914a261810e5ce2548f7439996279c3fa522d433758ed0828aa92ff"
+  },
+  "nativeWindow": {
+    "from": 12000,
+    "to": 12800,
+    "comparisonBase": "28cb98f5577c857cd29ac8eaa693617194a3e7bc",
+    "evaluatedRuntimeHashes": {
+      "src/ai/bootstrap_1/medical-recovery.ts": "f31820f801c1bf7e31842de5cf8ffa234916dfae251a03c4993fd9787b5851ce",
+      "src/ai/bootstrap_1/weapon-targets.ts": "7fc08fcfef847298f20674517cc8a792e88effa14a62818bf23363a9e4a297ae"
+    },
+    "beforeDeaths": 2,
+    "afterDeaths": 2,
+    "sha256": "1f7c61b374f4d7f5e60dd847249dcb7c77c79dee35b93038a197b7b8303c6e59",
+    "scope": "Same world, IDs and all controller memories; equal outcome, no campaign or win improvement claim. Final source only reformatted this evaluated runtime before build."
+  }
+}

@@ -17,6 +17,7 @@ import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 import { planBootstrapCasterScreen } from './caster-screen';
 import { planSummonerScreen } from './summoner-screen';
+import { mountedRecruitment } from './mounted-recruitment';
 import { mountedTasks } from './mounted-tasks';
 import { bootstrapAbilities } from './weapon-targets';
 import { medicalRecovery, recoveryPatients } from './medical-recovery';
@@ -27,6 +28,7 @@ import { mercenaryControl } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
 import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
+import { summonedRaids } from './summoned-raids';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -61,8 +63,14 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
       && (recovering || snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === trainingBuildingFor(snapshot.players[owner]!.race, healer))))
     ? [{ unit: healer, count: Math.min(2, Math.max(1, Math.floor(army.length / 5))), priority: 65 }] : [];
-  if (army.length < 10) return medical;
+  const mounted = mountedRecruitment(snapshot, owner, options);
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
+  const counters: V6Want[] = [];
+  if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) counters.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 67 });
+  if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
+    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
+      || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) counters.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
+  if (army.length < 10) return [...counters, ...medical, ...mounted];
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = trainingBuildingFor(snapshot.players[owner]!.race, main)!;
@@ -78,12 +86,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
   );
-  if (foes.filter(unit => unit.expiresTick !== undefined).length >= 4) wants.push({ unit: grove ? 'witch' : 'ashHexer', count: 3, priority: 65 });
-  if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
-    || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
-      || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) wants.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
-  wants.push(...medical);
+  wants.push(...counters, ...medical, ...mounted);
   return wants;
 }
 
@@ -94,16 +98,17 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
     if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
+      summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
     ];
-    if (script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery,
+    if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (script === AI_SCRIPT_LIBRARY.allySupport) return [mobileCare, mountedTasks, lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
-      ? [towerRushAbilities, summonerTowerRush] : [bootstrapAbilities];
+      ? [medicalRecovery, towerRushAbilities, summonerTowerRush] : [medicalRecovery, bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
     return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval,
       claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {

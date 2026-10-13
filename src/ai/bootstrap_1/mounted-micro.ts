@@ -87,7 +87,8 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       const following = { x: rider.x + detCos(angle) * travel, y: rider.y + detSin(angle) * travel, radius: rider.radius };
       const safeFollow = segmentWalkable(snapshot.map, rider, following) && foes.every(foe => distance(following, foe)
         > mountedThreatReach(snapshot, foe, following, horizon) + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0));
-      return goal.kind === 'camp' || target.order.type === 'attack' && target.order.targetId === rider.id || safeFollow
+      return goal.kind === 'camp' || target.order.type === 'idle' || target.order.type === 'hold'
+        || target.order.type === 'attack' && target.order.targetId === rider.id || safeFollow
         ? { type: 'attack', unitIds: [rider.id], targetId: target.id }
         : { type: 'aim', unitIds: [rider.id], x: target.x, y: target.y };
     }
@@ -96,7 +97,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
       if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > mountedThreatReach(snapshot, foe, rider, horizon))
         && routeLeavesDisks(groundSteeringRoute(snapshot.map, rider, entry), foes.map(foe => ({ x: foe.x, y: foe.y,
-          radius: mountedThreatReach(snapshot, foe, rider, horizon) + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0) })))) {
+          radius: mountedThreatReach(snapshot, foe, rider, horizon) })))) {
         return { type: 'attack', unitIds: [rider.id], targetId: target.id };
       }
       return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station), false);

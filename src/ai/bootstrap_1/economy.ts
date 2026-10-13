@@ -5,7 +5,7 @@ import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKi
 import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
@@ -114,7 +114,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
     (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
-    (view, intel) => bootstrapExpansionMine(view, owner, intel, options));
+    (view, intel) => bootstrapExpansionMine(view, owner, intel, options), healingPostGoals);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
@@ -131,7 +131,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
     && own.some(building => canTrainAt(player.race, building.kind, healer) && (building.queue.length > 0 || recovering)
       && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
-  // Keep one wanted recruitment wave funded, including busy queues whose next recruit goal does not exist yet.
+  // Fund the next recruitment wave before adding production infrastructure.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete).reduce((total, building) => total
       + Math.max(0, ...trainableUnitsAt(player.race, building.kind).filter(unit => wanted.has(unit)).map(unit => UNIT_DEFS[unit].cost)), 0) : 0;
@@ -151,7 +151,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
         if (productionReserve === 0) return [];
       }
     }
-    if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id.startsWith('upgrade:') || goal.id === 'engineering:workshop') {
+    if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:') || goal.id === 'engineering:workshop') {
       productionReserve = Math.max(productionReserve, waveReserve);
     }
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];

@@ -77,7 +77,7 @@ jobs:
         run: npx vitest run src/shared/route-prefix.test.ts src/ai/bootstrap_1/front-road-prefix.test.ts src/shared/sim/unit-update.test.ts src/shared/ship-queued-course.test.ts src/ai/policy/spatial.test.ts src/ai/policy/nearest-query-order.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/skirmish-retreat-memory.test.ts src/ai/policy/v5-ranged-core.test.ts src/ai/policy/humanized-combat.test.ts src/ai/policy/mechanical-healing.test.ts
 
       - name: Verify safe free mine capital and builder roads
-        run: npx vitest run src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts src/ai/bootstrap_1/expansion-road-threat.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts
+        run: npx vitest run src/ai/bootstrap_1/free-expansion.test.ts src/ai/bootstrap_1/two-income-expansion.test.ts src/ai/bootstrap_1/expansion-road-threat.test.ts src/ai/bootstrap_1/economy.test.ts src/ai/policy/v6/economy.test.ts src/ai/bootstrap_1/long-haul-investment.test.ts
 
       - name: Verify camp reinforcements and unsupported caster micro
         run: npx vitest run src/ai/bootstrap_1/camp-recruit-road.test.ts src/ai/bootstrap_1/caster-melee-micro.test.ts src/ai/bootstrap_1/camp-assembly.test.ts src/ai/policy/v6/backline.test.ts src/ai/bootstrap_1/summoner-screen.test.ts src/ai/bootstrap_1/mounted-micro.test.ts
@@ -102,11 +102,18 @@ jobs:
 
 
 
+
+      - name: Verify research funding and retained first-medic reservation
+        run: npx vitest run src/ai/bootstrap_1/research-funding.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
+
       - name: Verify independent riders use admitted roads and parallel objectives
-        run: npx vitest run src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts
+        run: npx vitest run src/ai/bootstrap_1/mounted-road-admission.test.ts src/ai/bootstrap_1/mounted-ground-assignments.test.ts src/ai/bootstrap_1/mounted-raids.test.ts src/ai/bootstrap_1/mounted-recruitment.test.ts
 
       - name: Verify mobile patients and existing care ownership
-        run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts
+        run: npx vitest run src/ai/bootstrap_1/mobile-care.test.ts src/ai/bootstrap_1/care-road-progress.test.ts src/ai/bootstrap_1/archer-task-scope.test.ts src/ai/bootstrap_1/mainland-medical-priority.test.ts src/ai/bootstrap_1/medical-roads.test.ts src/ai/bootstrap_1/medical-allocation.test.ts
+
+      - name: Verify small armies pay for existing counters
+        run: npx vitest run src/ai/bootstrap_1/early-counter-production.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/ai/bootstrap_1/tech-first-medic.test.ts
 
       - name: Verify executable assault targets and legacy commander
         run: npx vitest run src/ai/bootstrap_1/attack-target-eligibility.test.ts src/ai/policy/v6/general.test.ts src/ai/bootstrap_1/attack-reinforcements.test.ts

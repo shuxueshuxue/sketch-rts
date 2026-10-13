@@ -109,15 +109,15 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build, navalWant, () => [],
-    isV9Policy(options) ? v9ExpansionMine : nextExpansionMine));
+    isV9Policy(options) ? v9ExpansionMine : nextExpansionMine, wellGoals));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Goal[] {
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"], healingPosts: typeof wellGoals): Goal[] {
   const economy = readEconomy(snapshot, owner, options, construct, naval, prepareExpansion, chooseMine);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
-  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
+  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...healingPosts(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Economy {
@@ -225,6 +225,11 @@ function workerGoals(economy: Economy): Goal[] {
 // V8's well while nothing heals its wounded army (see v8-well), ahead of its soldiers.
 function wellGoals(economy: Economy): Goal[] {
   if (!isV8Policy(economy.options)) return [];
+  return healingPostGoals(economy);
+}
+
+/** A healing post is a spending capability independent of the army's doctrine family. */
+export function healingPostGoals(economy: Economy): Goal[] {
   const kind = v8WantsWell(economy.snapshot, economy.owner);
   if (!kind) return [];
   const point = legalBuildPointNear(economy.snapshot, kind, v8WellPoint(economy.intel));
@@ -381,10 +386,15 @@ function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
 
 /** One ordinary expansion purchase, with the shared mine spacing and construction selector. */
 export function v6ExpansionGoal(economy: Economy, mine: Point, priority: number, target: number): Goal & { point: Point } {
-  const offset = expansionOffset(economy.snapshot, economy.owner);
-  const point = legalBuildPointNear(economy.snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
+  const point = v6ExpansionPoint(economy.snapshot, economy.owner, mine);
   return { ...goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true,
     (used) => economy.construct(economy, "townHall", point, used, "expand")), point };
+}
+
+/** Mine selection and the paid construction goal use the same legal hall site. */
+export function v6ExpansionPoint(snapshot: GameSnapshot, owner: PlayerId, mine: Point): Point {
+  const offset = expansionOffset(snapshot, owner);
+  return legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
 }
 
 function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priority: number): Goal[] {

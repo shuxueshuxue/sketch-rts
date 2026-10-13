@@ -1,0 +1,60 @@
+{
+  "base": "28cb98f5577c857cd29ac8eaa693617194a3e7bc",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "fullAcceptance": "pending",
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-recruitment.ts": "6e0f4c20c1e975820c33b31ff7489c50699e57ceb87b05974f6c2c7852a49c5a",
+    "src/ai/bootstrap_1/mounted-micro.ts": "44fe432f9ce72ca591a7865528391f084d718af1bc0484e5a5ae9223fc0b0e1c",
+    "src/ai/bootstrap_1/mounted-tasks.ts": "659f40ea03e20791e5007f567a58fdd4be71a8abdfb7b826308c6a4656a26651",
+    "src/ai/bootstrap_1/policy.ts": "664ace5d45b4bf209a00eb59bdfa3d6bc9c1a0642bc48e3e6ceae9861b7b6f31"
+  },
+  "sdk": {
+    "reports": [
+      {
+        "file": "bootstrap_1-mounted-recruitment-final-sdk.json",
+        "passed": 212,
+        "failed": 4,
+        "sha256": "a67d5837dc6d863181a015405d1a0aa66ec4410e3e9abdbc6a41e701252e0d9a"
+      },
+      {
+        "file": "bootstrap_1-mounted-recruitment-import-sdk.json",
+        "passed": 42,
+        "failed": 0,
+        "sha256": "6960602380cd0b17b44b20350a88bb8757923d1399f2cf9b3f2bc01e99d75c49"
+      },
+      {
+        "file": "bootstrap_1-mounted-recruitment-merged-sdk.json",
+        "passed": 87,
+        "failed": 0,
+        "sha256": "e13766b4c47dd213c93ca8fb3a6856974d8abb1c64bcb63086f4f2dc3d2ec207"
+      }
+    ],
+    "distinctLatestPassed": 216,
+    "distinctLatestFailed": 0,
+    "note": "Initial broad run exposed a missing isWalkable import; affected 42 cases rechecked after correction. Post-merge 87-case economy/recruitment/shopping check passed. Not a single 216-case run."
+  },
+  "parentControl": {
+    "revision": "28cb98f5577c857cd29ac8eaa693617194a3e7bc",
+    "passed": 12,
+    "failed": 12,
+    "sha256": "b6c51c6ade406c98e3a6e4fee04197eb049d40321750c777a44ba5e0105cdce5",
+    "detail": "All blocked controls pass; all twelve admitted-objective cases fail to fund a rider."
+  },
+  "build": {
+    "command": "PATH=/tmp/node-v20.20.2-linux-x64/bin:$PATH npm run build",
+    "exitCode": 0,
+    "logSha256": "31f3479bb32020ffcf457e10dd3a277d40217f698e2f228fdbab814aa8bdd92f"
+  },
+  "nativeWindow": {
+    "from": 6000,
+    "to": 10000,
+    "comparisonBase": "b1e469362cd838d9668f30fad9d5f4b7e7122d2d",
+    "beforeDeaths": 0,
+    "afterDeaths": 0,
+    "beforeRiderPurchases": 0,
+    "afterRiderPurchases": 0,
+    "sha256": "430969f619b4f7a70c7c62338b2f786318728668f35527bf10afe17093f5c4ce",
+    "scope": "All controller memories unchanged; no stables initially, no eligible profitable camp at final checkpoint. No campaign strength or win claim."
+  },
+  "scenarioScope": "24 local production/sortie SDK cases: three families, mirrored camps/raids, safe/blocked roads; six-body screen held by local doctrine. Real purchases, zero rider damage, zero permanent losses and conserved gold including native NPC bounty. Not a full campaign or formal acceptance."
+}
