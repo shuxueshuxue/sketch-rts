@@ -1,5 +1,7 @@
 # `0de509c`：单 bank 最终配置正确性与资源计数
 
+本页的 `.gz` 数据链接保存原始输入的完整字节；解压恢复与校验方式见[归档说明](../../../release-readiness/README.md)。
+
 source `0de509cc01e47b91a3012d33d2e75a7106d3e4a5`，production default 为 **1 bank**。两侧使用同一稳定绘序、同一 source / paint / cache / nonempty page capacity 策略：reference 保留完整原 mip 链，candidate 使用 native residency gate。这次不改变 bank 数，不能沿用先前 `e02` 的 1→8 bank dispatch 收益。override 在 `World3DLayer.create` 后、prepare / first draw 前完成，不增加每帧 pose/key 计算。
 
 本轮只做正确性验证，允许 root 的正确性 tests / build 并行。**捕获、GPU fence 或编码 walltime 不是本报告的性能数据。** 正式时序须在独占窗口另行验证。
@@ -8,9 +10,9 @@ source `0de509cc01e47b91a3012d33d2e75a7106d3e4a5`，production default 为 **1 b
 
 [相机 comparison](camera-comparison.json)：同一 fixture 的 **31 步**全部通过，native actors/composite 的 decoded RGBA 每个通道相同，原始 WebGL RGBA（含透明区 RGB、alpha、真实阴影 alpha）、production picking、facts 与固定 now 全部相同，没有容差或 downsample。实际 CDP DPR 2 原生图为 2560×1440 / 1280×720；camera return / promotion 的 first frame 及 repeat 也相同，GL error 全为 0。
 
-[战斗 comparison](battle-comparison.json)：原 guard/blood 场景 **160 真实 ticks、80 captures**，两侧 80 个实际 PNG 文件字节 SHA 全部相同、80 个 simulation snapshot SHA 全部相同。真实身体与武器沾血、向后移动 / idle 预备持械、正确方向和 guard 到期的 self-validation 全部通过。tick 2 的空相机 probe 保留 tracker 的 30 个真实 airborne droplets，GPU 提交为 0 / cull 30；返回后提交 32（30 air + 2 body），图和模拟都不变。
+[战斗 comparison](battle-comparison.json.gz)：原 guard/blood 场景 **160 真实 ticks、80 captures**，两侧 80 个实际 PNG 文件字节 SHA 全部相同、80 个 simulation snapshot SHA 全部相同。真实身体与武器沾血、向后移动 / idle 预备持械、正确方向和 guard 到期的 self-validation 全部通过。tick 2 的空相机 probe 保留 tracker 的 30 个真实 airborne droplets，GPU 提交为 0 / cull 30；返回后提交 32（30 air + 2 body），图和模拟都不变。
 
-原始 [camera reference](camera-reference/proof.json)、[camera candidate](camera-candidate/proof.json)、[battle reference](battle-reference/proof.json)、[battle candidate](battle-candidate/proof.json) 保留完整 captures、输入脚本、source / client / helper / fact / harness SHA 与实际 variant setup。全部原始 PNG 的编码字节保存在[精确归档](../../../png-archives/README.md)，选定图像仍可直接浏览；按归档命令恢复后，可重跑原比较工具。
+原始 [camera reference](camera-reference/proof.json.gz)、[camera candidate](camera-candidate/proof.json.gz)、[battle reference](battle-reference/proof.json)、[battle candidate](battle-candidate/proof.json) 保留完整 captures、输入脚本、source / client / helper / fact / harness SHA 与实际 variant setup。全部原始 PNG 的编码字节保存在[精确归档](../../../png-archives/README.md)，选定图像仍可直接浏览；按归档命令恢复后，可重跑原比较工具。
 
 oracle 是同 source 的 corrected stable ordering，旧 `55` 的 cache-dependent overlap 差异与失败 ablation 继续归档；这里不声称与旧 80 帧零差异。20-kind camera 和 guard/blood 场景不包含新 3 个 merc，merc 的真实 hire / 造型验证使用独立证据。
 

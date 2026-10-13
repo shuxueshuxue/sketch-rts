@@ -1,8 +1,10 @@
 # 同 source 联合配置：真实战斗 80 帧通过
 
+本页的 `.gz` 数据链接保存原始输入的完整字节；解压恢复与校验方式见[归档说明](../../release-readiness/README.md)。
+
 生产 source `e02b24ef8de3c96cec111a1178a7daf697fc8378`，同一已修复的稳定绘序，reference 为 **1 bank + full original mip chain**，candidate 为 **8 banks + native gate**。配置在 `World3DLayer.create` 后、prepare / first draw 前设置；两侧 paint、source RGBA、几何、原密度策略、shadow 和模拟完全相同。
 
-[reference](battle-before/proof.json)、[candidate](battle-after/proof.json) 与 [严格比较](battle-comparison.json) 已完成：
+[reference](battle-before/proof.json)、[candidate](battle-after/proof.json) 与 [严格比较](battle-comparison.json.gz) 已完成：
 
 - 原 guard/blood 场景执行 **160 真实 simulation ticks、80 captures**；两侧 **80 个实际 PNG 文件字节 SHA 完全相同**，足以证明 decoded RGBA 零差异，没有图像容差或 MP4 比较。
 - 两侧 **80 个 simulation snapshot SHA 全部相同**。source/client/helper/harness/upstream 与 normalized fact-program SHA 核对一致；唯一差异是显式 bank/mip variant。

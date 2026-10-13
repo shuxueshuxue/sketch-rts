@@ -1,5 +1,7 @@
 # Exact stock idle drawing identities
 
+The `.gz` data links preserve the complete original bytes; see [archive restoration and verification](../../release-readiness/README.md).
+
 The stock figure and creature drawings were investigated before changing their
 cache identities. The proposed pairs are idle **0/4, 1/3 and 5/7**. This does not
 replace their animation frames: the tracker and painter retain the original
@@ -112,7 +114,7 @@ cannot establish the exact instantaneous peak.
 
 ## Observed request identities
 
-[trace-analysis.json](trace-analysis.json) parses the original gzip request keys
+[trace-analysis.json](trace-analysis.json.gz) parses the original gzip request keys
 and retains every field except the three confirmed stock idle frame pairs.
 
 | Frozen trace | Unique card identities | Idle identities | Instance requests | Requests whose key changes |

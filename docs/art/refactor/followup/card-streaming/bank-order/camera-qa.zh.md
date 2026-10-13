@@ -1,10 +1,12 @@
 # 最终 source 的稳定绘序相机对照
 
+本页的 `.gz` 数据链接保存原始输入的完整字节；解压恢复与校验方式见[归档说明](../../release-readiness/README.md)。
+
 同一生产 source `e02b24ef8de3c96cec111a1178a7daf697fc8378`，reference 为 **1 bank + full mip chain**，candidate 为 **8 banks + native residency gate**。两侧都使用已修复的稳定绘序、同一 paint/cache/完整几何/原密度策略和实际 2048px 阴影。配置只在 `World3DLayer.create` 后、prepare / first draw 前改变 cached bank 数和 reference mip override，没有每帧额外 pose/key 观察器。
 
 [严格比较](camera-comparison.json) 的 **31 步全部通过**：原生 actors 和三层 composite 每个 decoded RGBA 通道相同；原始 WebGL drawing-buffer RGBA（包括透明区 RGB、alpha 和实际阴影 alpha）、production picking、snapshot facts、固定 now 也全部相同，GL error 为 0。相机返回第一帧、high → low → high 晋升第一帧和 repeat 均相同。每步 posed 数一致，不用减少可见内容换取资源变化。source/client/helper/harness/underlying fact fixture SHA 全部核对相同，实际 setup 记录 cached bank 数为 1 / 8，prepare 前 pages/chunks 为 0。
 
-原始 [reference](camera-before/proof.json)、[candidate](camera-after/proof.json) 保留全部输入脚本；所有原 PNG 编码字节保存在[精确归档](../../png-archives/README.md)，选定图可直接浏览。DPR 2 通过真实 CDP 设置，原生图为 2560×1440 / 1280×720，没有降低 retina 分辨率。
+原始 [reference](camera-before/proof.json.gz)、[candidate](camera-after/proof.json.gz) 保留全部输入脚本；所有原 PNG 编码字节保存在[精确归档](../../png-archives/README.md)，选定图可直接浏览。DPR 2 通过真实 CDP 设置，原生图为 2560×1440 / 1280×720，没有降低 retina 分辨率。
 
 这个 oracle 是同 source 的 **corrected-order reference**，不是旧 `2a0` 或 `55` 的 cache-dependent 遮挡。旧 mixed/battle 失败记录和排序诊断继续保存；稳定绘序修复会有意改变旧的缓存相关遮挡，不能声称与旧 80 帧全部零差异。此相机 fixture 固定 20 种 / 100 单位，**不含新 3 个 merc 单位**；merc 的实际雇佣验证由独立证据覆盖。
 

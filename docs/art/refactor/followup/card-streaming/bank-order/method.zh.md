@@ -1,5 +1,7 @@
 # 稳定绘序的同源 bank / mip 对照方法
 
+本页的 `.gz` 数据链接保存原始输入的完整字节；解压恢复与校验方式见[归档说明](../../release-readiness/README.md)。
+
 最终冻结生产源为 **`0de509cc01e47b91a3012d33d2e75a7106d3e4a5`**，默认 **single-bank、原隐式纹理采样**。最终参考与候选都使用这一源树、单银行默认和按剩余唯一需求分配的新页策略，只改变 mip residency：**1-bank full → 1-bank native**。已完成的时序、容量及不利指标见[最终性能报告](final/performance.md)；实际命令由[当前正式运行脚本](../../../../../../scripts/art-card-bank-final-performance.sh)固定。
 
 较早 `e02b24e` 的 **1-bank full → 8-bank native** 是同时改变 bank 与 mip 的联合实验。相机与战斗正确性通过，但完成时间严重回退，8-bank 默认被拒绝，2/4-bank 诊断也未恢复。历史方法保留在下文，不能标成当前配置或拆称单一组件的性能收益。
@@ -91,7 +93,7 @@ bash scripts/art-card-bank-final-performance.sh \
 
 31 步相机及 guard/blood 的 160 ticks / 80 帧是独立正确性运行：使用同一 `SOURCE`，两侧同样分别为 **1-full / 1-native**，保留完整原 sample grid，DPR 2 使用真实 CDP 设置。采集入口使用 `node --import tsx scripts/art-card-bank-camera-proof.mjs` 或 `art-card-bank-battle-proof.mjs`；两侧显式传 `--source "$SOURCE" --max-banks 1 --mips full|native --variant NAME --out NEW_PATH`，camera 用自身 compare 参数，battle 用 compare 工具的 `--kind battle`。
 
-当前[最终 QA](final/qa.zh.md)、[camera comparison](final/camera-comparison.json)、[battle comparison](final/battle-comparison.json)均通过。相机二十类与 guard/blood 两种场景均不包含三个新雇佣单位，其[实际玩法证明](../../mercenary-models/gameplay-final/comparison.json)单列。正确性捕获、编码及 probe fence walltime 不混入正式性能样本。[最终性能报告](final/performance.md)与[汇总](final/performance-summary.json)记录当前配置的容量收益及 CPU/wall/尾部回退，不宣称全面加速。
+当前[最终 QA](final/qa.zh.md)、[camera comparison](final/camera-comparison.json)、[battle comparison](final/battle-comparison.json.gz)均通过。相机二十类与 guard/blood 两种场景均不包含三个新雇佣单位，其[实际玩法证明](../../mercenary-models/gameplay-final/comparison.json)单列。正确性捕获、编码及 probe fence walltime 不混入正式性能样本。[最终性能报告](final/performance.md)与[汇总](final/performance-summary.json)记录当前配置的容量收益及 CPU/wall/尾部回退，不宣称全面加速。
 
 ## 原始 PNG 与证据边界
 

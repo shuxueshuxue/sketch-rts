@@ -225,7 +225,7 @@ node --import tsx scripts/card-streaming-gpu-proof.mjs \
 ```
 
 See [mixed-fixture.md](mixed-fixture.md) for the separate 20-asset scene. It must
-use the same entry fixture on both sides; the canonical harness's legacy top
+use the same entry fixture on both sides; the canonical harness's earlier top
 level `method` wording does not describe mixed content. Its entry fixture hash,
 per-cycle scope and asset coverage take precedence. The cache diagnostic is
 intrusive/mock-backed and must never be used as a wall-time performance result.
@@ -234,6 +234,11 @@ For the historical after side, create a detached checkout at `742d2b8` named
 `/tmp/sketch-card-streaming-phase-a` and link the same `node_modules`. Running
 current HEAD is the later integrated renderer, not this historical after side.
 Use the [final phase method](bank-order/method.zh.md) for current reproduction.
+
+Some captured inputs are now stored as byte-exact gzip archives. See the
+[release evidence guide](../release-readiness/README.md) for verification and
+restoration before rerunning a historical comparison. The pre-edit version of
+this report is preserved there with its original full SHA.
 
 ## Validation and remaining limits
 

@@ -1,5 +1,7 @@
 # 稳定绘序与按需纹理驻留：最终单银行配置
 
+本页的 `.gz` 数据链接保存原始输入的完整字节；解压恢复与校验方式见[归档说明](../../release-readiness/README.md)。
+
 当前冻结源为 **`0de509cc01e47b91a3012d33d2e75a7106d3e4a5`**。生产默认使用 **1 bank、原隐式纹理采样**；非空新页按本帧剩余唯一请求分配，不在预算内一律预留十六层。多银行仍是同一有序绘制系统的显式可选能力，但此前默认 8 bank 候选已因严重完成时间回退被拒绝，2/4 bank 诊断也未解决问题。
 
 当前同源正确性、工程验证和独占正式实测已经完成。**单银行避开了多银行严重回退；canonical GPU 完成 wall 基本持平，mixed CPU/wall 仍变慢，不宣称整体帧时间或所有视图内存改善。** 参考与候选都使用 `0de509c`、同一单银行默认和同一页容量策略，仅比较 **完整原始 mip 链**与 **原始 mip 尾部的动态驻留**。这不是旧引擎与新版的版本比较，也不再是 `e02` 的 1→8 银行联合配置。
@@ -11,7 +13,7 @@
 | 客户端测试集 | **124 文件 / 956 项通过** | [client-final.log](../validation/client-final.log) |
 | 生产构建 | 通过；包括 TypeScript、Vite 和 server bundle，保留 Vite 大 chunk 提示 | [build-final.log](../validation/build-final.log) |
 | 同源 31 步相机 | 原生 actors/composite、raw WebGL RGBA/alpha/阴影逐通道零差异；picks/facts/now 相同 | [最终 QA](final/qa.zh.md)、[camera comparison](final/camera-comparison.json) |
-| 同源真实战斗 | **160 真实 ticks / 80 帧**，80 个原 PNG 文件 SHA 和 80 个模拟 snapshot SHA 全部相同 | [battle comparison](final/battle-comparison.json) |
+| 同源真实战斗 | **160 真实 ticks / 80 帧**，80 个原 PNG 文件 SHA 和 80 个模拟 snapshot SHA 全部相同 | [battle comparison](final/battle-comparison.json.gz) |
 | 三类实际雇佣单位 | e02 原玩法记录与 0de 最终 renderer 的 **40 个原生 PNG 全 RGBA/alpha、模拟与全部记录事实相同**；规则树和美术源相同 | [实际游戏 comparison](../../mercenary-models/gameplay-final/comparison.json) |
 
 客户端测试集通过不是整个仓库、AI 或所有服务器测试都通过。较早 `e02` 的 **952 项**与构建日志已另存为 [client-e02.log](../validation/client-e02.log) / [build-e02.log](../validation/build-e02.log)，不能把旧计数或其 source 标成当前验收。
@@ -20,7 +22,7 @@
 
 完整原始 PNG 以 **byte-exact tar.gz** 保留，选定 PNG 仍可直接查看；归档未解码、缩放或重新编码，原 PNG 字节 SHA 与历史通过/失败结果不变。需要运行旧 PNG-based comparison 时，先按[归档与恢复说明](../../png-archives/README.md)恢复对应目录；proof/source 文件保持原样，不能把目录内只留下选图理解为只验证了 keyframes。
 
-原始 [camera reference](final/camera-reference/proof.json)、[camera candidate](final/camera-candidate/proof.json)、[battle reference](final/battle-reference/proof.json)、[battle candidate](final/battle-candidate/proof.json)保留全部输入、时钟、captured files、source/client/helper/harness SHA 与实际 variant 设置。DPR 2 使用真实 CDP 设置及原生 2560×1440 / 1280×720 图像；没有降采样、透明区屏蔽或通道容差。首次返回、首次晋升与 repeat 都覆盖。
+原始 [camera reference](final/camera-reference/proof.json.gz)、[camera candidate](final/camera-candidate/proof.json.gz)、[battle reference](final/battle-reference/proof.json)、[battle candidate](final/battle-candidate/proof.json)保留全部输入、时钟、captured files、source/client/helper/harness SHA 与实际 variant 设置。DPR 2 使用真实 CDP 设置及原生 2560×1440 / 1280×720 图像；没有降采样、透明区屏蔽或通道容差。首次返回、首次晋升与 repeat 都覆盖。
 
 ## 为什么绘序必须独立于缓存
 
@@ -101,7 +103,7 @@
 
 已完成的正式比较将同 `0de` 的 **1-bank full** 与 **1-bank native**串行执行；两侧单银行、页容量、paint、完整 source、密度、几何、阴影、地面、HUD、事实时钟相同。full reference 只让驻留 gate 返回 N0，也跳过这项 SVD 成本，是有利于参考的控制；候选的 gate 成本必须计入结果。setup 在 prepare/first draw 前，不在 measured draw 内新增资产/key/cache 观察器或排序补丁。harness 的常规及嵌套计时一致，metadata 保存源与脚本身份。
 
-Canonical 保留 100 visible 加 0/9900 hidden、两次新生命周期、CPU360/real18；mixed 保留原二十类/100 visible、两次新生命周期、CPU60/real12及跳时后的首帧峰值。模拟与 snapshot 构造按 harness 放在 presentation 计时外；这些工作没有因此被从游戏删除。原始样本、合并后的经验分布、每生命周期、上传与分配、首帧/返回及所有不利指标见[最终性能报告](final/performance.md)与[汇总 JSON](final/performance-summary.json)。两个正式 comparison 全部通过，共 **18 张 battlefield/empty/returned PNG、6 组 facts/lifetime**，校验同源、脚本、时钟和完整 sample grid；见[canonical comparison](final/canonical-comparison.json)、[mixed comparison](final/mixed-comparison.json)。旧 e02 报告不能移称当前结果。
+Canonical 保留 100 visible 加 0/9900 hidden、两次新生命周期、CPU360/real18；mixed 保留原二十类/100 visible、两次新生命周期、CPU60/real12及跳时后的首帧峰值。模拟与 snapshot 构造按 harness 放在 presentation 计时外；这些工作没有因此被从游戏删除。原始样本、合并后的经验分布、每生命周期、上传与分配、首帧/返回及所有不利指标见[最终性能报告](final/performance.md)与[汇总 JSON](final/performance-summary.json)。两个正式 comparison 全部通过，共 **18 张 battlefield/empty/returned PNG、6 组 facts/lifetime**，校验同源、脚本、时钟和完整 sample grid；见[canonical comparison](final/canonical-comparison.json.gz)、[mixed comparison](final/mixed-comparison.json.gz)。旧 e02 报告不能移称当前结果。
 
 正式时间均值如下，单位 ms；完整 p50/p95/p99/max 和阈值计数在原始报告，不用平均各生命周期的分位数。
 

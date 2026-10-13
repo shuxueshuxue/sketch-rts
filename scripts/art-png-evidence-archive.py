@@ -36,6 +36,23 @@ def digest(file):
     with open(file, 'rb') as stream:
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
+def source_bytes(file, expected_sha256):
+    """Read the original source bytes, including a lossless sidecar archive.
+
+    A present raw source is authoritative: a changed or nonregular raw file
+    must fail even when its gzip sidecar contains the expected original bytes.
+    """
+    if file.exists() or file.is_symlink():
+        require(file.is_file() and not file.is_symlink(), 'Nonregular original source: ' + str(file))
+        data = file.read_bytes()
+    else:
+        archive = file.with_name(file.name + '.gz')
+        require(archive.is_file() and not archive.is_symlink(), 'Missing/nonregular original source archive: ' + str(archive))
+        with gzip.open(archive, 'rb') as stream:
+            data = stream.read()
+    require(hashlib.sha256(data).hexdigest() == expected_sha256, 'Original source changed: ' + file.name)
+    return data
+
 def canonical(value):
     return json.dumps(value, ensure_ascii=True, separators=(',', ':'), sort_keys=True).encode()
 
@@ -94,10 +111,14 @@ def validate_manifest(manifest, target):
         require(Path(f['name']).name == f['name'] and f['name'].endswith('.png'), 'Unsafe filename')
         require(f['keep'] == keep(target, f['name']), 'Keep policy mismatch')
     directory = BASE / target
+    proof_bytes = None
     for source in manifest['sources']:
         require(Path(source['name']).name == source['name'], 'Unsafe source name')
-        require(digest(directory / source['name']) == source['sha256'], 'Original source changed: ' + source['name'])
-    proof = json.loads((directory / 'proof.json').read_text())
+        data = source_bytes(directory / source['name'], source['sha256'])
+        if source['name'] == 'proof.json':
+            proof_bytes = data
+    require(proof_bytes is not None, 'Original proof missing from source manifest')
+    proof = json.loads(proof_bytes.decode('utf-8'))
     expected = checksums(proof)
     for f in files:
         require(f['proofEncodedSha256'] == expected.get(f['name']), 'Proof checksum mapping changed')
