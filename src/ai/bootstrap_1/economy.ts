@@ -54,7 +54,7 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
   for (const building of own) for (const kind of trainableUnitsAt(race, building.kind)) {
     if (goals.some(goal => goal.id === `engineering:${kind}`)) production.add(kind);
   }
-  if (missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)) > 0) production.add('worker');
+  if (missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) > 0) production.add('worker');
   return own.filter(building => building.complete).reduce((total, building) => {
     const kinds = [...trainableUnitsAt(race, building.kind).filter(kind => production.has(kind)), ...building.queue.map(job => job.unitKind)];
     return total + Math.max(0, ...kinds.map(kind => UNIT_DEFS[kind].supplyUsed));
@@ -161,7 +161,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
-    if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options)) <= 0) return false;
+    if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) <= 0) return false;
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
     if (goal.id === 'farm' && player.supplyCap - projectedSupplyUsed(snapshot, owner) > wave) return false;
     if (goal.id.startsWith('unit:')) return wanted.has(goal.id.slice(5) as TrainableUnitKind);

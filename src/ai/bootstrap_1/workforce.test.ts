@@ -16,7 +16,7 @@ describe('bootstrap_1 mining workforce', () => {
     const game = scene.build().createGame();
     let trained = 0;
     for (let tick = 0; tick < 1000; tick++) {
-      if (tick % 15 === 0) for (const command of planMiningWorkforce(snapshotGame(game), 'us')) {
+      if (tick % 15 === 0) for (const command of planMiningWorkforce(snapshotGame(game), 'us', 1, { teams: game.teams })) {
         issuePlayerCommand(game, 'us', command);
         trained++;
       }

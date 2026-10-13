@@ -1,0 +1,70 @@
+{
+  "name": "active-mining-jobs",
+  "base": "0a24e0f8fb425426e5c3d4a1a893d976beba5381",
+  "sdk": {
+    "total": 184,
+    "passed": 184,
+    "failed": 0,
+    "reportSha256": "660e72488879676a20d214966369235e8723878551784cc301a6ee7ee884c335"
+  },
+  "identicalParent": {
+    "total": 16,
+    "passed": 12,
+    "failed": 4,
+    "failures": "four active unbased mining jobs",
+    "reportSha256": "114e128c8042c93abe18a517ac2b831ded904e118b851f02cd5e8da03638c0ba"
+  },
+  "realWindow": {
+    "match": "greystonePass/v9_summoner/v5+v7/ember/1",
+    "from": 24000,
+    "to": 48000,
+    "result": "timeout (failure)",
+    "originalReportSha256": "fc21594212eddccff48400cd8e77d71796b54c3243b908da5772d2ee921360df",
+    "correction": {
+      "scriptPrior": 30,
+      "actualPrior": 26,
+      "windowPermanentDeaths": 9,
+      "rawTotal": 39,
+      "correctTotal": 35
+    },
+    "parent": {
+      "workers": 4,
+      "permanentArmy": 26,
+      "halls": 1,
+      "permanentDeaths": 35,
+      "gold": 104.18
+    },
+    "candidate": {
+      "workers": 6,
+      "permanentArmy": 26,
+      "halls": 1,
+      "permanentDeaths": 35,
+      "gold": 5.92
+    }
+  },
+  "constructionRecheck": {
+    "from": 48000,
+    "to": 48200,
+    "progress": {
+      "before": 41,
+      "after": 140
+    },
+    "complete": true,
+    "wallGap": 29.48213370507483,
+    "workReach": 32,
+    "engineChanges": 0
+  },
+  "acceptance1620": "pending",
+  "unseenSeeds": "untouched",
+  "build": {
+    "command": "npm run build",
+    "node": "20.20.2",
+    "exitCode": 0,
+    "logSha256": "da87af670021c3441c05c61086b1996092aa0903ecd8c06e60d0e1bc6c6677f8"
+  },
+  "frozen": {
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "verifiedFiles": 184,
+    "mismatches": 0
+  }
+}
