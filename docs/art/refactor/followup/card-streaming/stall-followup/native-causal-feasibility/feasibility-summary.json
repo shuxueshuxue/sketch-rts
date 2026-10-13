@@ -1,0 +1,29 @@
+{
+  "scope": "Read-only native causal feasibility only",
+  "productionSourceCommit": "cc854814473bb684e4444eb69719b9978b6dbdc6",
+  "evidenceStartHead": "1dd78d03c9cdf2ca82097eb2698340680bdee5b4",
+  "nativeCallerRecovered": false,
+  "contextRouteHelperRecovered": false,
+  "pendingAllocationRecovered": false,
+  "sharedMemoryPositionRecovered": false,
+  "tokenToDecodedCommandMapped": false,
+  "historicalWaitCauseEstablished": false,
+  "hardwareValidationCompleted": false,
+  "ownTaskPerfDescriptorAllowed": true,
+  "ownTrueChildStraceExit": 0,
+  "matchingDebugDataAvailableAtCheckedLocations": false,
+  "nativeDebuggerExecutableAvailable": false,
+  "ordinaryBrowserStartup": "SIGABRT before DevTools: SUID sandbox owner uid65534/mode4755",
+  "noSandboxDisablingFlags": true,
+  "noNewBuildInstallPermissionChangeOrHardwareAccess": true,
+  "noOldBenchmarkRepetition": true,
+  "fullCausalWorkloadAttempted": false,
+  "stockTraceReviewLimitedToRetainedFiles": true,
+  "requiredNextConditions": [
+    "matching binary Build-ID native symbols/types plus debugger or source-attested instrumented browser",
+    "usable authorized browser launch and scoped own-renderer/GPU observation",
+    "client-to-service route/helper/block/shmem/token/command identity capture"
+  ],
+  "separateHardwareCondition": "actual GPU-backed environment for same-device quality/performance validation",
+  "report": "README.md"
+}

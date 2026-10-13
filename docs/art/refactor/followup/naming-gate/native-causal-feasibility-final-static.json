@@ -1,0 +1,35 @@
+{
+  "scope": "Final static docs-link and naming verification after lossless stdout packaging; no runtime, browser, native capability, test or manifest rerun.",
+  "previousQaSnapshotsUnchanged": true,
+  "detectedBeforeCorrection": {
+    "checkedAtUtc": "2026-10-13T17:51:05.873090+00:00",
+    "documents": 13,
+    "localLinksChecked": 403,
+    "brokenLocalLinks": [
+      {
+        "document": "docs/art/refactor/followup/card-streaming/stall-followup/EVIDENCE-INDEX.md",
+        "label": "执行日志",
+        "target": "native-causal-feasibility/stock-browser-v1.log",
+        "exists": false
+      }
+    ]
+  },
+  "followupAfterRootCorrection": {
+    "checkedAtUtc": "2026-10-13T17:52:49.755Z",
+    "documents": 13,
+    "localLinksChecked": 403,
+    "brokenLocalLinks": [],
+    "allExist": true
+  },
+  "naming": {
+    "originalSdkPatternUsed": true,
+    "newNativeArtifactFiles": 58,
+    "newNativeArtifactBytes": 93368,
+    "newArtifactMatches": [],
+    "updatedIndexAndContinuationMatches": [],
+    "newImpactZero": true
+  },
+  "runtimeTestsOrProbesReexecuted": false,
+  "packagingManifestAndInternalReadmeNotEdited": true,
+  "passed": true
+}
