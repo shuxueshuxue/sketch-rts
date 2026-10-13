@@ -22,6 +22,7 @@ import { shoppingGoals } from './shopping';
 import { routeArrivals } from '../../shared/route-selection';
 import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
+import { freeIncomeCapitalGoals } from './free-income-capital';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -114,7 +115,8 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
     (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
-    (view, intel) => bootstrapExpansionMine(view, owner, intel, options), healingPostGoals);
+    (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
+    economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)]);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
