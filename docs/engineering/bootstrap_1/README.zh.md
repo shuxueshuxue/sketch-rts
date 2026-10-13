@@ -2,6 +2,8 @@
 
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
+[实际采矿任务保护 #365](https://github.com/shuxueshuxue/sketch-rts/pull/365)已准备，366项SDK、72旧版命令与记忆检查和完整构建通过，首次CI正在运行。真实36000至40000窗口新增永久死亡5→1、三名原矿工全部保住；[细节](./mining-job-defense.zh.md)。固定召唤护卫原型[未发布](./mining-host-guard-held.receipt.json)，正在观察本批从正常资源开局的召唤师完整对局；1620格与最终未见种子仍待验收。
+
 最新已验证线上版本为 [#364](https://github.com/shuxueshuxue/sketch-rts/pull/364) `a644ae04c09829233ebd5885721f269440050da2`，[实际采矿任务预算](./active-mining-jobs.zh.md)的184项相关SDK、完整构建、首次CI `38383911208`和首次生产 `38384537879`通过；五个发布步骤和精确版本标签核验。[发布证明](./active-mining-jobs-release.receipt.json)。真实残局工人4→6，仍超时，累计永久死亡同为35；原始观察脚本39的先前死亡偏移已单列纠正。放开全部未付费护送的原型在正常开局28679帧败北、65永久损失，[已撤回](./unfunded-escort-held.receipt.json)，正在验证仅断粮解除约束；1620格与未见种子尚未验收。
 
 此前已验证线上版本为 #363 `0a24e0f8fb425426e5c3d4a1a893d976beba5381`，[可用生产位军费](./ready-production-capital.zh.md)的202项本地SDK、完整构建、首次CI `38370503807`与首次生产 `38371580414`通过，五个发布步骤和精确版本标签核验。[发布证明](./ready-production-capital-release.receipt.json)。同源码12场景父版本8通过／4失败，新版全通过。真实召唤师6000至18000窗口永久死亡22→14，工人11→17、基地2→3；[完整后续轨迹](./ready-production-full-trajectory.receipt.json)父版本26558帧败北／59永久死亡，新版48000帧超时／35永久死亡，仍未获胜。最终26永久军队与30精灵停在集结点，正在排查策略代际与出征调度；1620格与未见种子仍未验收。
