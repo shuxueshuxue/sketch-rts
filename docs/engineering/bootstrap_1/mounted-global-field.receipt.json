@@ -1,0 +1,63 @@
+{
+  "base": "ed22d4c4a7e9183be94fada10a1d0ae7ae2a9f84",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "acceptance": "pending",
+  "architecture": {
+    "runtimeFiles": 1,
+    "newSerializedFields": 0,
+    "newDefaultOrCompatibilityPaths": 0,
+    "changedStatsResourcesOrCadence": 0,
+    "admission": "Live speed and attack reach; existing mounted firing point and admitted threat road.",
+    "execution": "Existing native queued roads until actual engagement; current contact prioritized before computing remote task roads."
+  },
+  "runtimeHashes": {
+    "src/ai/bootstrap_1/mounted-field.ts": "81790ef31a1446646a5abe4a206fb4e601fa0db7833eb662294dbb1590bb5092"
+  },
+  "sdk": {
+    "passed": 110,
+    "failed": 0,
+    "suites": 8,
+    "sha256": "5b4390304442a8b7dcfc5b72b996031444388cd0363c3f61762e189287b69912"
+  },
+  "identicalParent": {
+    "passed": 24,
+    "failed": 12,
+    "samePaidCases": 36,
+    "head": "2affa2eed1ebef6ffe5e32267e5d4da18afda0a8",
+    "testSourceSha256": "7a62ce8b79663bf243f0cb164fc00f125f1c8ee261cc514640f3f23a5111d32d",
+    "reportSha256": "24360cf4f9f97dc0dc1ebf31c052f4b83da9426b7b29c37ecba2b52015cb9e31",
+    "failure": "All12 remote or detour positives fail to purchase;24 covered, ranged, allied and closed-bank controls pass."
+  },
+  "build": {
+    "exitCode": 0,
+    "node": "20.20.2",
+    "logSha256": "0f5820f0e622102eae72d042a6cb91cb2edb31b8ee0673280c5ae996d1339404"
+  },
+  "observations": {
+    "window": "Original Pineshade knight defeat snapshot12000 to16000 with unchanged world, memories and frozen opponents. No fresh opening or acceptance cell.",
+    "parent": {
+      "permanentLosses": 9,
+      "gold": 294.13,
+      "mounted": 0,
+      "working": {
+        "workers": 16,
+        "halls": 3
+      }
+    },
+    "candidate": {
+      "permanentLosses": 9,
+      "gold": 398.17,
+      "mounted": 1,
+      "mountedHp": 125,
+      "mountedMaxHp": 125,
+      "mountedKills": 0,
+      "mountedXp": 0,
+      "working": {
+        "workers": 16,
+        "halls": 3
+      }
+    },
+    "resourceScope": "Candidate spent70 less gold and has one fewer knight and raider in the final permanent army; bank difference is not a claimed mining increase.",
+    "matrix": "No repeated matrix or untouched seeds run."
+  }
+}
