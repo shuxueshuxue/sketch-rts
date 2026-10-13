@@ -1,0 +1,24 @@
+{
+  "status": "withdrawn; no clinical or forecast changes retained",
+  "sdk": {
+    "focused": 160,
+    "related": 96,
+    "allSkillWindows": 238,
+    "failed": 0
+  },
+  "identicalParent": {
+    "paidOrHealingCases": 24,
+    "passed": 12,
+    "failed": 12
+  },
+  "window": {
+    "parentPermanentLosses": 3,
+    "candidatePermanentLosses": 4,
+    "allSkillWindowsPermanentLosses": 4,
+    "collinearQueuePrototypePermanentLosses": 4,
+    "parentOutpostHp": 690,
+    "candidateOutpostHp": 665
+  },
+  "reason": "The only-clinic detour cases heal without injury, but the existing real knight window loses an additional soldier. Increasing forecast horizons and simplifying queued collinear points do not resolve the clinical handoff. Original heal/gold/alive assertions remain; only command representation had been adapted during testing.",
+  "scope": "Native collinear command geometry can be assessed separately; no medical integration or compatibility branch is published."
+}
