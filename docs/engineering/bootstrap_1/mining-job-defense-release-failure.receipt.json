@@ -1,0 +1,27 @@
+{
+  "number": 365,
+  "url": "https://github.com/shuxueshuxue/sketch-rts/pull/365",
+  "head": "0090e8d338d69b05a3cadd2c3a8d8eab9626d4f0",
+  "merge": "4687014a63983d9d85c92d97e1177360714ad1c7",
+  "ci": {
+    "id": 38405567245,
+    "conclusion": "success",
+    "attempt": 1
+  },
+  "production": {
+    "id": 38409036138,
+    "conclusion": "failure",
+    "attempt": 1,
+    "failedStep": "Test release contracts and visual state",
+    "reason": "Proof JSON field name violates existing naming contract.",
+    "contractChecks": {
+      "total": 649,
+      "passed": 648,
+      "failed": 1
+    },
+    "allFivePublishingSteps": "skipped",
+    "originalLogZipSha256": "ccebcabaf4d888e1b9c6f8fa879c50070f4735f7612ba709e4a10c78bd17dd37"
+  },
+  "lastVerifiedRelease": "a644ae04c09829233ebd5885721f269440050da2",
+  "failedRunNotRepeated": true
+}
