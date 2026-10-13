@@ -133,7 +133,7 @@ it('isolates translucent remains policy and varies instance opacity without repa
  const scene=new THREE.Scene(),cards=new PaintedCardBatches(scene,8,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1}),painter=vi.fn(paint);
  cards.begin();cards.add('remains',2,painter,matrix,'one',0,128,.58);cards.finish(renderer);scene.updateMatrixWorld(true);
  const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial;
- expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBe(-1);
+ expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBeGreaterThan(-1);expect(mesh.renderOrder).toBeLessThan(0);
  expect(mesh.geometry.getAttribute('cardOpacity').getX(0)).toBeCloseTo(.58);expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);
  expect(new THREE.Raycaster(new THREE.Vector3(0,0,300),new THREE.Vector3(0,0,-1)).intersectObject(mesh)).toHaveLength(0);
  cards.begin();cards.add('remains',2,painter,matrix,'one',0,128,.4);cards.finish(renderer);expect(painter).toHaveBeenCalledTimes(1);expect(mesh.geometry.getAttribute('cardOpacity').getX(0)).toBeCloseTo(.4);
@@ -412,7 +412,7 @@ it('uses the same ordered chunk system with one bank, preserving arbitrary cross
  for(const [order,bank] of [0,1,0,1].entries())cards.add(`bank:${bank}`,2,paint,new THREE.Matrix4().makeTranslation(0,0,order*10),`unit:${order}`,17,bank?160:128);cards.finish(renderer);scene.updateMatrixWorld(true);
  const meshes=cards.objects();expect(meshes).toHaveLength(4);expect(meshes.flatMap(mesh=>mesh.userData.ids)).toEqual(['unit:0','unit:1','unit:2','unit:3']);
  expect(meshes[0]!.userData.banks[0]).toBe(meshes[2]!.userData.banks[0]);expect(meshes[1]!.userData.banks[0]).toBe(meshes[3]!.userData.banks[0]);expect(cards.stats().pages).toBe(2);
- for(let i=0;i<meshes.length;i++){expect(meshes[i]!.renderOrder).toBeGreaterThanOrEqual(-1);expect(meshes[i]!.renderOrder).toBeLessThan(-.999);if(i)expect(meshes[i]!.renderOrder).toBeGreaterThan(meshes[i-1]!.renderOrder);}
+ for(let i=0;i<meshes.length;i++){expect(meshes[i]!.renderOrder).toBeGreaterThan(-1);expect(meshes[i]!.renderOrder).toBeLessThan(-.999);if(i)expect(meshes[i]!.renderOrder).toBeGreaterThan(meshes[i-1]!.renderOrder);}
  expect(scene.children[0]!.children).toEqual(meshes);
  const hits=new THREE.Raycaster(new THREE.Vector3(0,17/Math.tan(SHIP_CAMERA.tilt),300),new THREE.Vector3(0,0,-1)).intersectObjects(meshes);
  expect(hits.map(hit=>hit.object.userData.ids[hit.instanceId!])).toEqual(['unit:3','unit:2','unit:1','unit:0']);expect(hits.map(hit=>hit.distance)).toEqual([270,280,290,300]);cards.dispose();
@@ -445,4 +445,26 @@ it('reuses chunk resources and clears every compiled color and shadow bank bindi
 
 it.each([0,-1,1.5,9,NaN])('rejects an invalid maximum bank count %s',maxTextureBanks=>{
  expect(()=>setup({maxTextureBanks})).toThrow('Invalid painted card bank count');
+});
+
+
+it('keeps every painted chunk after earlier and later native meshes at the same pass level for either bank limit',()=>{
+ for(const base of [-1,0])for(const maxTextureBanks of [1,8]){
+  const {cards,scene}=setup({maxTextureBanks,renderOrder:base});
+  const nativeBefore=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial());nativeBefore.renderOrder=base;scene.add(nativeBefore);
+  cards.begin();for(const [order,bank] of [0,1,0,1].entries())cards.add(`bank:${bank}`,2,paint,matrix,`unit:${order}`,17,bank?160:128);cards.finish(renderer);
+  const nativeAfter=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial());nativeAfter.renderOrder=base;scene.add(nativeAfter);
+  expect(nativeBefore.id).toBeLessThan(cards.objects()[0]!.id);expect(nativeAfter.id).toBeGreaterThan(cards.objects()[0]!.id);
+  for(let frame=0;frame<2;frame++){
+   if(frame){cards.begin();for(const [order,bank] of [1,0,1,0].entries())cards.add(`bank:${bank}`,2,paint,matrix,`returned:${order}`,17,bank?160:128);cards.finish(renderer);}
+   const meshes=cards.objects();expect(meshes).toHaveLength(maxTextureBanks===1?4:1);
+   for(const mesh of meshes){
+    expect(mesh.parent!.renderOrder).toBe(0);
+    expect(mesh.renderOrder).toBeGreaterThan(nativeBefore.renderOrder);expect(mesh.renderOrder).toBeGreaterThan(nativeAfter.renderOrder);
+    expect(mesh.renderOrder).toBeLessThan(base+.001);expect(mesh.renderOrder).toBeLessThan(base+1);
+   }
+   for(let i=1;i<meshes.length;i++)expect(meshes[i]!.renderOrder).toBeGreaterThan(meshes[i-1]!.renderOrder);
+  }
+  cards.dispose();for(const native of [nativeBefore,nativeAfter]){scene.remove(native);native.geometry.dispose();native.material.dispose();}
+ }
 });

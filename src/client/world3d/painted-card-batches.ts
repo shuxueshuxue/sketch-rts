@@ -275,8 +275,9 @@ export class PaintedCardBatches {
   private configureChunkMesh(chunk:DrawChunk,index:number){
     const mesh=chunk.mesh;
     // Keep chunk ordering within the caller's pass level, e.g. remains -1 and
-    // bodies 0. The bounded fraction cannot advance a later chunk into level 1.
-    mesh.name='PaintedCards';mesh.castShadow=this.policy.castShadow??true;mesh.renderOrder=(this.policy.renderOrder??0)+.001*index/(index+1);mesh.receiveShadow=true;mesh.customDepthMaterial=chunk.depth;mesh.customDistanceMaterial=chunk.distance;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // bodies 0. Every chunk follows native meshes at the same base level,
+    // irrespective of bank count, cache state or material creation order.
+    mesh.name='PaintedCards';mesh.castShadow=this.policy.castShadow??true;mesh.renderOrder=(this.policy.renderOrder??0)+.0001+.0009*index/(index+1);mesh.receiveShadow=true;mesh.customDepthMaterial=chunk.depth;mesh.customDistanceMaterial=chunk.distance;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mesh.raycast=(raycaster,intersections)=>this.raycast(chunk,raycaster,intersections);
     mesh.userData.ids=chunk.ids;mesh.userData.cards=chunk.entries;mesh.userData.feet=chunk.feet;mesh.userData.orders=chunk.orders;mesh.userData.banks=chunk.pages;
     mesh.userData.paintedHit=(instance:number,uv?:{x:number;y:number})=>this.hit(chunk,instance,uv);
