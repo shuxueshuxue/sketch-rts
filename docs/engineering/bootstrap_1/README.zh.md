@@ -2,7 +2,7 @@
 
 目标：冻结 v5、v7、v8，新增 v9_archer、v9_summoner、v9_knight。每种新策略在每张正式地图上都必须战胜 v5、v7、v8、v5+v7、v5+v8、v7+v8、v5+v5、v7+v7、v8+v8。
 
-[实际采矿任务保护 #365](https://github.com/shuxueshuxue/sketch-rts/pull/365)已准备，366项SDK、72旧版命令与记忆检查和完整构建通过，首次CI正在运行。真实36000至40000窗口新增永久死亡5→1、三名原矿工全部保住；[细节](./mining-job-defense.zh.md)。固定召唤护卫原型[未发布](./mining-host-guard-held.receipt.json)，正在观察本批从正常资源开局的召唤师完整对局；1620格与最终未见种子仍待验收。
+[实际采矿任务保护 #365](https://github.com/shuxueshuxue/sketch-rts/pull/365)已合并，366项SDK、72旧版命令与记忆检查、完整构建及首次CI通过。首次生产在文档命名检查失败，构建、上传和发布均跳过；[失败证明](./mining-job-defense-release-failure.receipt.json)。[检查前移修复 #366](https://github.com/shuxueshuxue/sketch-rts/pull/366)首次CI通过，已合并 `98cf8112ea7e2263fd858b41cc618920aaa991b5`，首次生产部署进行中。真实36000至40000窗口新增永久死亡5→1、三名原矿工全部保住；[细节](./mining-job-defense.zh.md)。本批正常资源召唤师开发对局在48000帧超时，永久损失38，两个对手工人均为0；仍未获胜。固定召唤护卫原型[未发布](./mining-host-guard-held.receipt.json)。1620格与最终未见种子仍待验收。
 
 最新已验证线上版本为 [#364](https://github.com/shuxueshuxue/sketch-rts/pull/364) `a644ae04c09829233ebd5885721f269440050da2`，[实际采矿任务预算](./active-mining-jobs.zh.md)的184项相关SDK、完整构建、首次CI `38383911208`和首次生产 `38384537879`通过；五个发布步骤和精确版本标签核验。[发布证明](./active-mining-jobs-release.receipt.json)。真实残局工人4→6，仍超时，累计永久死亡同为35；原始观察脚本39的先前死亡偏移已单列纠正。放开全部未付费护送的原型在正常开局28679帧败北、65永久损失，[已撤回](./unfunded-escort-held.receipt.json)，正在验证仅断粮解除约束；1620格与未见种子尚未验收。
 
