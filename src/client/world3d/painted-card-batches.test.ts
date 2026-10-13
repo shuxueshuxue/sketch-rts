@@ -159,10 +159,10 @@ it('keeps visible compaction sources alive and invalidates overwritten warm hole
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture){for(const spy of disposed)expect(spy).not.toHaveBeenCalled();throw Error('compaction failure');}});
  expect(()=>cards.finish(renderer)).toThrow('compaction failure');expect(cards.stats()).toMatchObject({pages:4,retiredGpuBytes:0,pendingRgbaBytes:0});for(const spy of disposed)expect(spy).not.toHaveBeenCalled();
  const cache=(cards as unknown as {cards:Map<string,unknown>}).cards;
- for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128`)).toBe(true);
+ for(const id of ['0','16','32','48','new'])expect(cache.has(`${id}:4:128:mip:0`)).toBe(true);
  // These destinations may contain partially copied mip chains. Their warm
  // identities must disappear even though visible sources remain retryable.
- for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128`)).toBe(false);
+ for(const id of ['2','3','4'])expect(cache.has(`${id}:4:128:mip:0`)).toBe(false);
  renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture)=>{if(source instanceof THREE.DataArrayTexture)for(const spy of disposed)expect(spy).not.toHaveBeenCalled();});
  cards.finish(renderer);expect(cards.stats()).toMatchObject({pages:1,cards:16,copiedLayers:3,rasterizations:65,mipInitializedPages:4});expect(disposed[0]).not.toHaveBeenCalled();for(const spy of disposed.slice(1))expect(spy).toHaveBeenCalledTimes(1);
  expect(cards.objects()[0]!.userData.ids).toEqual(expect.arrayContaining(['0','16','32','48','new']));cards.dispose();
@@ -218,4 +218,68 @@ it('recovers evicted GPU poses from exact compressed pixels without invoking the
  }
  expect(painter).toHaveBeenCalledTimes(70);expect(cards.stats().rasterCache.hits).toBeGreaterThan(0);
  cards.dispose();expect(cards.stats().rasterCache.ownedBytes).toBe(0);expect(cards.stats().ownedCpuBytes).toBe(0);
+});
+
+it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored geometry when %ipx artwork starts residency at mip one',tileSize=>{
+ const {cards,scene}=setup(),sourceSize=tileSize*4;
+ // Exactly one original source pixel. A reduced-resolution picking mask
+ // would move or lose this hit, so this checks the original alpha contract.
+ cards.begin();cards.add('one-pixel',4,ctx=>{ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
+ const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
+ expect(texture.image).toMatchObject({width:sourceSize/2,height:sourceSize/2,depth:16});expect(texture.generateMipmaps).toBe(false);
+ const uv={x:.5+7.375/tileSize,y:.5+13.125/tileSize};
+ expect(mesh.userData.paintedHit(0,uv)).toBe(true);
+ expect(mesh.userData.paintedHit(0,{x:uv.x+.25/tileSize,y:uv.y})).toBe(false);
+ expect(mesh.userData.paintedHit(0,{x:uv.x,y:uv.y+.25/tileSize})).toBe(false);
+ expect(cards.stats().maskBytes).toBe(sourceSize*sourceSize/8);expect(cards.stats().scratchCpuBytes).toBe(sourceSize*sourceSize*4);
+ const rect=mesh.geometry.getAttribute('cardRect');expect(rect.getX(0)).toBe(-tileSize/2);expect(rect.getZ(0)).toBe(tileSize/2);
+ expect(rect.getY(0)).toBeCloseTo((-tileSize/2+17)/Math.tan(SHIP_CAMERA.tilt),4);
+ const transfer=renderer.copyTextureToTexture.mock.calls.find(([source,destination])=>source instanceof THREE.DataTexture&&destination===texture)!;
+ expect((transfer[0] as THREE.DataTexture).image.width).toBe(sourceSize);expect(transfer[4]).toBe(1);expect(transfer[5]).toBe(0);
+ expect((transfer[2] as THREE.Box3).max.x).toBe(sourceSize/2);cards.dispose();
+});
+
+it('isolates GPU residency identities while reusing one full-resolution CPU raster and promoting before draw',()=>{
+ const {cards}=setup(),painter=vi.fn(paint);
+ cards.begin();cards.add('shared',4,painter,matrix,'small',17,128,1,1);cards.finish(renderer);
+ expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(256);
+ cards.begin();cards.add('shared',4,painter,matrix,'large',17,128,1,0);cards.finish(renderer);
+ const larger=cards.objects()[0]!;expect(larger.userData.ids).toEqual(['large']);expect(((larger.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);
+ expect(cards.stats()).toMatchObject({cards:2,rasterizations:2,rasterCache:{entries:1,hits:1}});expect(painter).toHaveBeenCalledTimes(1);
+ const cached=(cards as unknown as {cards:Map<string,unknown>}).cards;
+ expect([...cached.keys()].sort()).toEqual(['shared:4:128:mip:0','shared:4:128:mip:1']);
+ cards.begin();cards.add('shared',4,painter,matrix,'small-again',17,128,1,1);cards.finish(renderer);
+ expect(cards.stats().rasterizations).toBe(2);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);cards.dispose();
+});
+
+it.each([0,1])('keeps full-source scratch references when unused mip pages expire and mip %i remains',keptMip=>{
+ const {cards}=setup();cards.begin();
+ cards.add('source512',4,paint,matrix,'full',17,128,1,0);
+ cards.add('source512',4,paint,matrix,'resident',17,128,1,1);
+ // A native 256px source shares the 256px page with the resident 512px source.
+ cards.add('source256',2,paint,matrix,'native',17,128,1,0);cards.finish(renderer);
+ expect(cards.stats().scratchCpuBytes).toBe((512*512+256*256)*4);
+ for(let frame=0;frame<121;frame++){
+  cards.begin();cards.add('source512',4,paint,matrix,'kept',17,128,1,keptMip);cards.finish(renderer);
+ }
+ const expectedSizes=keptMip===0?[512]:[512,256];
+ expect(cards.stats().scratchTextures).toBe(expectedSizes.length);
+ expect(cards.stats().scratchCpuBytes).toBe(expectedSizes.reduce((sum,size)=>sum+size*size*4,0));
+ expect(((cards.objects()[0]!.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512/2**keptMip);
+ cards.dispose();expect(cards.stats().scratchTextures).toBe(0);
+});
+
+it('retains empty artwork in a sixteen-pixel mip-zero domain even when its request permits mip one',()=>{
+ const {cards}=setup();cards.begin();cards.add('empty',4,()=>{},matrix,'empty',17,ART_ACTION_SIZE,1,1);cards.finish(renderer);
+ const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
+ expect(texture.image).toMatchObject({width:16,height:16});expect(cards.stats()).toMatchObject({maskBytes:32,scratchCpuBytes:16*16*4});
+ const transfer=renderer.copyTextureToTexture.mock.calls.find(([,destination])=>destination===texture)!;
+ expect((transfer[0] as THREE.DataTexture).image.width).toBe(16);expect(transfer[4]).toBe(0);expect(transfer[5]).toBe(0);
+ expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);cards.dispose();
+});
+
+it.each([-1,.5,NaN,8])('rejects invalid resident mip %s before painting or allocating GPU resources',baseMip=>{
+ const {cards}=setup(),painter=vi.fn(paint);cards.begin();
+ expect(()=>cards.add('invalid',4,painter,matrix,'invalid',17,ART_ACTION_SIZE,1,baseMip)).toThrow('Invalid painted card resident mip');
+ expect(painter).not.toHaveBeenCalled();expect(renderer.initTexture).not.toHaveBeenCalled();expect(cards.stats().pages).toBe(0);cards.dispose();
 });

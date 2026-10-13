@@ -6,11 +6,11 @@ import * as THREE from 'three';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
-type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number};
-type Card={key:string;page:Page;layer:number;used:number;tileSize:number;mask:Uint8Array};
+type Request={key:string;rasterKey:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number};
+type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;mask:Uint8Array};
 type Page={texture:THREE.DataArrayTexture;uploaded:boolean;cards:(Card|undefined)[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh?:THREE.InstancedMesh;capacity:number;ids:string[];entries:Card[];matrices:THREE.Matrix4[];feet:number[];opacities:number[];used:number};
 
-/** Each layer has its own full-resolution mip chain: unlike a packed atlas,
+/** Each layer retains its original GPU mip samples: unlike a packed atlas,
  * filtering cannot borrow another pose's pixels. Stock cutout materials retain
  * Three's color handling, depth and shadow passes. */
 export function patchCardShader(shader:{vertexShader:string;fragmentShader:string}){
@@ -91,24 +91,26 @@ export class PaintedCardBatches {
     const layers=remainingLayers>0?Math.min(LAYERS,remainingLayers):LAYERS;
     return{page:this.createPage(width,height,layers),layer:0};
   }
-  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1){
-    key=`${key}:${density}:${tileSize}`;
+  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){
+    const size=tileSize*density,factor=2**baseMip;
+    if(!Number.isInteger(baseMip)||baseMip<0||baseMip>0&&(!Number.isInteger(size)||size<1||size%factor!==0))throw new Error('Invalid painted card resident mip.');
+    const rasterKey=`${key}:${density}:${tileSize}`;key=`${rasterKey}:mip:${baseMip}`;
     const card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.
     // Otherwise one early cache miss can evict a later visible pose, cascading
     // into a full rerasterization of an army larger than the soft budget.
     if(card){this.instance(card,matrix,id,foot,opacity);return;}
-    this.pending.push({key,density,paint,matrix,id,foot,tileSize,opacity});
+    this.pending.push({key,rasterKey,density,paint,matrix,id,foot,tileSize,opacity,baseMip});
   }
   private instance(card:Card,matrix:THREE.Matrix4,id:string,foot:number,opacity:number){
     card.used=card.page.used=this.frame;
     const page=card.page;page.ids.push(id);page.entries.push(card);page.matrices.push(matrix);page.feet.push(foot);page.opacities.push(Math.max(0,Math.min(1,opacity)));
   }
-  private raster({key,density,paint,matrix,id,foot,tileSize,opacity}:Request,renderer:CardTextureRenderer){
+  private raster({key,rasterKey,density,paint,matrix,id,foot,tileSize,opacity,baseMip}:Request,renderer:CardTextureRenderer){
     let card=this.cards.get(key);
     if(!card){
       const start=performance.now(),size=tileSize*density;
-      const cacheStart=performance.now();let rgba=this.rasterCache.get(key);
+      const cacheStart=performance.now();let rgba=this.rasterCache.get(rasterKey);
       this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
       if(!rgba){
         const paintStart=performance.now();
@@ -121,7 +123,7 @@ export class PaintedCardBatches {
       }
       this.pendingRgbaBytes=rgba.byteLength;this.recordPeaks();
       try{
-        const maskStart=performance.now(),painted=hasPaint(rgba),retainedSize=painted?size:16;
+        const maskStart=performance.now(),painted=hasPaint(rgba),sourceSize=painted?size:16,residentMip=painted?baseMip:0,retainedSize=sourceSize/2**residentMip;
         const mask=this.policy.pickable===false?new Uint8Array(0):painted?packCardPickMask(rgba,size,size,!fromCache):new Uint8Array(16*16/8);
         this.pendingMaskBytes=mask.byteLength;
         const flipStart=performance.now();this.rasterStages.pickMaskMs+=flipStart-maskStart;
@@ -137,14 +139,14 @@ export class PaintedCardBatches {
         const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
         // Cached bytes already have GPU row orientation. Rehydration never
         // rewrites transparent rows just to flip them a second time.
-        if(!fromCache)this.rasterCache.put(key,rgba,size,size,paintMs);
+        if(!fromCache)this.rasterCache.put(rasterKey,rgba,size,size,paintMs);
         const slotStart=performance.now();this.rasterStages.cacheMs+=slotStart-flippedAt;
         const {page,layer}=this.slot(retainedSize,retainedSize);this.recordPeaks();
         this.rasterStages.slotMs+=performance.now()-slotStart;
         this.rasterWorkWallMs+=performance.now()-start;
         if(!painted&&this.emptyRgba.length===0)this.emptyRgba=new Uint8Array(16*16*4);
-        this.mipUploader.uploadLayer(page,layer,painted?rgba:this.emptyRgba,renderer);this.recordPeaks();
-        card={key,page,layer,used:this.frame,tileSize,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;this.rasterizations++;
+        this.mipUploader.uploadLayer(page,layer,painted?rgba:this.emptyRgba,renderer,{sourceWidth:sourceSize,sourceHeight:sourceSize,baseMip:residentMip});this.recordPeaks();
+        card={key,page,layer,used:this.frame,tileSize,sourceSize,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;this.rasterizations++;
       }finally{this.pendingRgbaBytes=this.pendingMaskBytes=0;}
     }
     this.instance(card,matrix,id,foot,opacity);
@@ -273,8 +275,7 @@ export class PaintedCardBatches {
   }
   private hit(page:Page,index:number,uv?:{x:number;y:number}){
     const card=page.entries[index];if(this.policy.pickable===false||!card||!uv)return false;
-    const {width,height}=page.texture.image;
-    return cardMaskHit(card.mask,width,height,uv);
+    return cardMaskHit(card.mask,card.sourceSize,card.sourceSize,uv);
   }
   objects(){return this.pages.flatMap(page=>page.mesh?.visible?[page.mesh]:[]);}
   // Owned typed-array and texture storage estimates, not total process RSS or
@@ -288,9 +289,12 @@ export class PaintedCardBatches {
   }
   private recordPeaks(){const s=this.stats();this.peakPendingRgbaBytes=Math.max(this.peakPendingRgbaBytes,s.pendingRgbaBytes);this.peakOwnedCpuBytes=Math.max(this.peakOwnedCpuBytes,s.ownedCpuBytes);this.peakOwnedGpuBytes=Math.max(this.peakOwnedGpuBytes,s.ownedGpuBytes);this.peakRetiredGpuBytes=Math.max(this.peakRetiredGpuBytes,s.retiredGpuBytes);}
   private remove(page:Page){
+    const sourceSizes=new Set(page.cards.flatMap(card=>card?[card.sourceSize]:[]));
     for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.cards.delete(card.key);this.maskBytes-=card.mask.byteLength;}
     if(page.mesh){this.scene.remove(page.mesh);page.mesh.dispose();}page.geometry.dispose();page.texture.dispose();page.material.dispose();page.depth.dispose();page.distance.dispose();this.pages.splice(this.pages.indexOf(page),1);this.allocatedPixels-=page.texture.image.width*page.texture.image.height*page.texture.image.depth;
-    const {width,height}=page.texture.image;if(!this.pages.some(other=>other.texture.image.width===width&&other.texture.image.height===height))this.mipUploader.releaseSize(width,height);
+    // Resident arrays can be smaller than their full-resolution scratch, and
+    // different source sizes can share an identically sized resident page.
+    for(const size of sourceSizes)if(!this.pages.some(other=>other.cards.some(card=>card?.sourceSize===size)))this.mipUploader.releaseSize(size,size);
   }
   dispose(){
     this.rasterCache.clear();for(const page of [...this.pages])this.remove(page);this.retiring.clear();for(const canvas of this.canvases.values())canvas.width=canvas.height=1;this.canvases.clear();this.pending.length=0;this.pendingRgbaBytes=this.pendingMaskBytes=this.maskBytes=0;this.rowScratch=new Uint8Array(0);this.emptyRgba=new Uint8Array(0);this.mipUploader.dispose();this.rayProbe.geometry.dispose();this.rayProbe.material.dispose();}

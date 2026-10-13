@@ -13,6 +13,7 @@ import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
 import { PaintedCardBatches } from './painted-card-batches';
+import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
@@ -55,7 +56,8 @@ export class World3DLayer {
   private currentFrame:WorldFrame|undefined;
   private posed=0;
   private directionVisits=0;
-  viewStats(){return{...this.activeIndex.stats(),posed:this.posed,directionVisits:this.directionVisits,positions:this.positions.size};}
+  private cardMipBases=[0,0,0,0,0];
+  viewStats(){return{...this.activeIndex.stats(),posed:this.posed,directionVisits:this.directionVisits,positions:this.positions.size,cardMipBases:[...this.cardMipBases]};}
   readonly camera=new THREE.OrthographicCamera();
   private scene=new THREE.Scene();
   private water=new WaterSurface(this.scene);
@@ -107,6 +109,11 @@ export class World3DLayer {
   private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
+  private colorMipPass:CardMipPass={camera:this.camera,physicalWidth:0,physicalHeight:0};
+  private shadowMipPass:CardMipPass={camera:this.sun.shadow.camera,physicalWidth:0,physicalHeight:0};
+  private colorMipPasses=[this.colorMipPass];
+  private actorMipPasses=[this.colorMipPass,this.shadowMipPass];
+  private mipInput:CardMipResidencyInput={sourceSize:1,tileSize:1,foot:0,matrix:new THREE.Matrix4(),passes:this.actorMipPasses};
   private shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.24}));
   private ball=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshStandardMaterial({color:'#414945',roughness:1}));
   private bolt=new THREE.Mesh(new THREE.ConeGeometry(1.5,24,4).rotateZ(-Math.PI/2).translate(-9,0,0),new THREE.MeshStandardMaterial({color:'#c0b391',roughness:1}));
@@ -179,6 +186,10 @@ export class World3DLayer {
     this.transformCount++;
     return matrix.compose(this.transformPosition.set(x,height,y),rotation??this.transformRotation.setFromAxisAngle(UP,-heading),this.transformScale.setScalar(scale));
   }
+  private residentMip(tileSize:number,density:number,matrix:THREE.Matrix4,foot:number,castsShadow=true){
+    const input=this.mipInput;input.sourceSize=tileSize*density;input.tileSize=tileSize;input.matrix=matrix;input.foot=foot;input.passes=castsShadow?this.actorMipPasses:this.colorMipPasses;
+    const base=cardBaseMip(input);this.cardMipBases[base]!++;return base;
+  }
   private deckPosition(unit:Unit,now:number){
     const track=this.deckMotion.get(unit.id);
     // Returning from shelter can change a command snapshot before its next
@@ -189,10 +200,11 @@ export class World3DLayer {
   }
   draw(frame:WorldFrame){
     const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
-    this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;
+    this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;this.cardMipBases.fill(0);
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
-    const viewport=`${frame.view.width}:${frame.view.height}:${Math.min(devicePixelRatio,2)}`;
-    if(viewport!==this.viewport){renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
+    const pixelRatio=Math.min(devicePixelRatio,2),viewport=`${frame.view.width}:${frame.view.height}:${pixelRatio}`;
+    if(viewport!==this.viewport){renderer.setPixelRatio(pixelRatio);renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
+    this.colorMipPass.physicalWidth=Math.floor(frame.view.width*pixelRatio);this.colorMipPass.physicalHeight=Math.floor(frame.view.height*pixelRatio);
     configureWorldCamera(this.camera,frame.view);
     // Preloading match models may use the home snapshot. Only the frame being
     // rendered is allowed to bind scene terrain, including after a map change.
@@ -202,6 +214,10 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
+    // Evaluate the same public shadow camera the renderer will sample. A small
+    // color footprint alone is insufficient: the 2048px shadow can need detail.
+    this.sun.updateWorldMatrix(true,false);this.sun.target.updateWorldMatrix(true,false);this.sun.shadow.updateMatrices(this.sun);
+    this.shadowMipPass.physicalWidth=this.sun.shadow.mapSize.x;this.shadowMipPass.physicalHeight=this.sun.shadow.mapSize.y;
     frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
     frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);
     this.activeIndex=frame.viewIndex??this.viewIndex;this.activeIndex.update(snapshot,frame.motion);
@@ -361,11 +377,12 @@ export class World3DLayer {
       const appearance=appearanceFor(snapshot,unit);
       const density=zoom<.65?2:4,key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
+      const tileSize=model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind),baseMip=this.residentMip(tileSize,density,transform,foot);
       this.cards.add(key,density,ctx=>{
         ctx.scale(facing,1);
         if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing,appearance);
         else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
-      },transform,unit.id,foot,model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind));
+      },transform,unit.id,foot,tileSize,1,baseMip);
     }
     for(const [shipId,corpses] of deckRemainsByShip(snapshot.corpses)){
       const ship=this.shipPoses.get(shipId);if(!ship||ship.hp<=0)continue;
@@ -377,10 +394,11 @@ export class World3DLayer {
       const appearance=corpseAppearanceFor(snapshot,corpse),color=ownerInk(corpse.owner,snapshot),variant=remainsVariant(corpse.id);
       const key=`corpse:${corpse.kind}:${corpse.variant??''}:${color}:${corpseAppearanceKey(appearance)}:${variant}`;
       const transform=deckRemainsMatrix(this.pose(0,0,0),pose,scale);
-      this.remainsCards.add(key,zoom<.65?2:4,ctx=>{
+      const density=zoom<.65?2:4,baseMip=this.residentMip(128,density,transform,0,false);
+      this.remainsCards.add(key,density,ctx=>{
         // The fixed seven-pixel baseline is already in the world transform.
         drawAtlasCorpse(ctx,corpse.kind,{x:0,y:-7},1,variant,model,corpse.variant,color,appearance);
-      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick));
+      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick),baseMip);
       }
     }
     for(const id of this.deckMotion.keys())if(!liveCrew.has(id))this.deckMotion.delete(id);
