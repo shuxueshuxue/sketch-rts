@@ -17,6 +17,67 @@ function audioContext(){
 function effectPack(){return readSoundPack('demo',{name:'Demo',sounds:{melee:{file:'hit.ogg'}}},{'hit.ogg':'/hit.ogg'});}
 
 describe("on-demand audio", () => {
+  it('prepares only homepage cues before a gesture and plays the first cached cue after resume',async()=>{
+    const audio=audioContext();audio.context.state='suspended';
+    const fetcher=vi.fn(async(_input:RequestInfo|URL)=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);
+    const pack=readSoundPack('demo',{name:'Demo',sounds:{click:{file:'click.ogg'},menu:{file:'menu.ogg'},melee:{file:'hit.ogg'}}},{'click.ogg':'/click.ogg','menu.ogg':'/menu.ogg','hit.ogg':'/hit.ogg'});
+    const board=new Soundboard([pack],'demo');
+    await board.prepareHome();
+    expect(fetcher.mock.calls.map(([url])=>url)).toEqual(['/click.ogg','/menu.ogg']);
+    expect(audio.context.decodeAudioData).toHaveBeenCalledTimes(2);
+    expect(audio.context.resume).not.toHaveBeenCalled();expect(audio.sources).toHaveLength(0);
+    expect(resources.summary('home').ready).toBe(2);expect(resources.cacheStats().retainedBytes).toBe(0);
+    let resumed!:()=>void;
+    audio.context.resume.mockImplementation(()=>new Promise<void>(resolve=>{resumed=()=>{audio.context.state='running';resolve();};}));
+    board.unlock();board.unlock();board.play('menu');
+    expect(audio.context.resume).toHaveBeenCalledTimes(1);expect(audio.sources).toHaveLength(0);
+    resumed();await vi.waitFor(()=>expect(audio.sources).toHaveLength(1));
+    expect(audio.sources[0]!.buffer).not.toBeNull();expect(fetcher).toHaveBeenCalledTimes(2);
+    board.dispose();
+  });
+  it('resumes a context created by the first gesture and waits for both resume and decoding',async()=>{
+    const audio=audioContext();audio.context.state='suspended';
+    vi.stubGlobal('fetch',vi.fn(async()=>new Response(new Uint8Array(3))));
+    let resumed!:()=>void;
+    audio.context.resume.mockImplementation(()=>new Promise<void>(resolve=>{resumed=()=>{audio.context.state='running';resolve();};}));
+    const board=new Soundboard([effectPack()],'demo');board.unlock();board.play('melee');
+    await vi.waitFor(()=>expect(audio.context.decodeAudioData).toHaveBeenCalledTimes(1));
+    expect(audio.sources).toHaveLength(0);resumed();await vi.waitFor(()=>expect(audio.sources).toHaveLength(1));board.dispose();
+  });
+  it('expires delayed cues while the suspended audio clock is stopped',async()=>{
+    const audio=audioContext();audio.context.state='suspended';
+    vi.stubGlobal('fetch',vi.fn(async()=>new Response(new Uint8Array(3))));
+    const board=new Soundboard([effectPack()],'demo');
+    let resumed!:()=>void,now=0;vi.spyOn(performance,'now').mockImplementation(()=>now);
+    audio.context.resume.mockImplementation(()=>new Promise<void>(resolve=>{resumed=()=>{audio.context.state='running';resolve();};}));
+    board.unlock();board.play('melee');await vi.waitFor(()=>expect(audio.context.decodeAudioData).toHaveBeenCalledTimes(1));
+    now=400;resumed();await Promise.resolve();await Promise.resolve();await Promise.resolve();await Promise.resolve();
+    expect(audio.context.currentTime).toBe(0);expect(audio.sources).toHaveLength(0);board.play('melee');expect(audio.sources).toHaveLength(1);board.dispose();
+  });
+  it('keeps mute and pack changes effective while a homepage cue waits for resume',async()=>{
+    const audio=audioContext();audio.context.state='suspended';
+    vi.stubGlobal('fetch',vi.fn(async()=>new Response(new Uint8Array(3))));
+    const pack=readSoundPack('demo',{name:'Demo',sounds:{click:{file:'click.ogg'}}},{'click.ogg':'/click.ogg'}),board=new Soundboard([pack],'demo');
+    await board.prepareHome();let resumed!:()=>void;
+    audio.context.resume.mockImplementation(()=>new Promise<void>(resolve=>{resumed=()=>{audio.context.state='running';resolve();};}));
+    board.unlock();board.play('click');board.update({muted:true});resumed();
+    await Promise.resolve();await Promise.resolve();await Promise.resolve();await Promise.resolve();
+    expect(audio.sources).toHaveLength(0);
+    board.update({muted:false});audio.context.state='suspended';board.unlock();board.play('click');board.update({pack:'none'});resumed();
+    await Promise.resolve();await Promise.resolve();await Promise.resolve();await Promise.resolve();
+    expect(audio.sources).toHaveLength(0);board.play('click');expect(audio.sources).toHaveLength(0);board.dispose();
+  });
+  it('uses the existing click recording for homepage navigation in a pack without a menu cue',async()=>{
+    const audio=audioContext();vi.stubGlobal('fetch',vi.fn(async()=>new Response(new Uint8Array(3))));
+    const pack=readSoundPack('old',{name:'Old',sounds:{click:{file:'click.ogg'}}},{'click.ogg':'/click.ogg'}),board=new Soundboard([pack],'old');
+    await board.prepareHome();board.unlock();board.play('menu');expect(audio.sources).toHaveLength(1);board.dispose();
+  });
+  it('does not construct audio for silence and keeps unavailable browser audio optional',async()=>{
+    const audio=audioContext(),board=new Soundboard([effectPack()],'demo');board.settings.pack='none';
+    await board.prepareHome();expect(audio.construct).not.toHaveBeenCalled();
+    board.settings.pack='demo';audio.construct.mockImplementation(()=>{throw new Error('Audio unavailable');});
+    await expect(board.prepareHome()).resolves.toBeUndefined();board.unlock();board.play('melee');expect(audio.sources).toHaveLength(0);board.dispose();
+  });
   it("does not preload per-unit voices and shares overlapping downloads and decodes", async () => {
     const starts = vi.fn();
     const node = () => ({
