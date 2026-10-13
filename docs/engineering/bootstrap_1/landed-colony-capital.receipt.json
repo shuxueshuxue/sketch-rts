@@ -1,0 +1,84 @@
+{
+  "publicBase": "901d144f4624755f2f206724312d58d44ab6c5b0",
+  "runtimeDiff": "4\t1\tsrc/ai/bootstrap_1/economy.ts",
+  "serializedFieldsAdded": 0,
+  "normalCostsAndCadence": true,
+  "checks": {
+    "numTotalTests": 168,
+    "numPassedTests": 168,
+    "numFailedTests": 0,
+    "success": true
+  },
+  "same48NativeParentScenes": {
+    "numTotalTests": 48,
+    "numPassedTests": 36,
+    "numFailedTests": 12,
+    "success": false
+  },
+  "nativeCosts": {
+    "colonyHall": 400,
+    "constructionFollowupRepair": 1,
+    "retainedRaidRecruit": 190,
+    "retainedRaidTower": 125
+  },
+  "heldUnconditionalReservePrototype": "12 home-raid scenes failed initial recruitment; final uses the existing intrusion decision",
+  "sameOfficialSoloWindow": {
+    "map": "sapphireArchipelago",
+    "race": "grove",
+    "family": "v9_archer",
+    "side": 0,
+    "from": 18000,
+    "to": 20400,
+    "parentContinuation": "18000 row from the unchanged published trajectory through19600, then restored19600 world, counter and memory to20400",
+    "candidateContinuation": "Same18000 world, counter and memory restored and run to20400 with final source",
+    "parent": {
+      "tick": 20400,
+      "gold": 34.27,
+      "workers": 12,
+      "halls": 2,
+      "workingHalls": 1,
+      "islandHalls": 1,
+      "permanentArmy": 28,
+      "remainingCreeps": 30,
+      "creepsKilled": 0,
+      "ownPermanentDeaths": 0
+    },
+    "candidate": {
+      "tick": 20400,
+      "gold": 401.14,
+      "workers": 13,
+      "halls": 3,
+      "workingHalls": 2,
+      "islandHalls": 2,
+      "permanentArmy": 27,
+      "remainingCreeps": 30,
+      "creepsKilled": 0,
+      "ownPermanentDeaths": 0
+    },
+    "targetMineAmount": {
+      "parent": 6000,
+      "candidate": 5910
+    },
+    "formalWin": false
+  },
+  "productionBuild": "Node20; exit0",
+  "formal1620": "not run on this candidate",
+  "untouchedSeeds": "not run",
+  "artifacts": {
+    "/tmp/bootstrap_1-landed-colony-publish-sdk.json": "f17afec40626ae3e34b30892c6b17b223113f5a5d993e1ef8e60b3101062ae09",
+    "/tmp/bootstrap_1-landed-colony-publish-parent-sdk.json": "7fc14068adfcf8955ed93152ad312824d834f2fd96b82cd280158de4128a7673",
+    "/tmp/bootstrap_1-landed-colony-publish-build.log": "117d86d50939ff15d4a65d6da214035596f720843e1759a918f4f0aeaf57632e",
+    "/tmp/bootstrap_1-solo-sapphire-colony-capital-start.json": "7fb3c90a1c7b8095fc462f502b55c3f230fd0d29b72495972ebf8e6b57e0c6f0",
+    "/tmp/bootstrap_1-solo-sapphire-369-landing.json": "b0b0c2f87036c60f32f6cf556c12bd26937aedc29a2271fb938aae4b0c3efd6c",
+    "/tmp/bootstrap_1-solo-sapphire-colony-capital-parent-completion.json": "df44e7a550727d8074bdad7d81d07dc3f9828afbfd3d3b5a23694b89cf714662",
+    "/tmp/bootstrap_1-solo-sapphire-colony-capital-final.json": "69c449c214588ea6670235400a734893f080f951945e27eb1abe2b2cae20128f",
+    "/tmp/bootstrap_1-landed-colony-home-raid-prototype.json": "2635a8d745b8197f8587a829551608f6f56b3d63fb495f47b1f673f4d04a635f",
+    "/tmp/bootstrap_1-landed-colony-boundaries.json": "11c1d7cd087b786fca7f9099e2af500856d566edabb3fec3043fb054ff5b5c14"
+  },
+  "runtimeSha256": "35972230ae0a4f9dd68359c38ea1c0cbad5151961b8fa1c8b5ddc3f5af9a695a",
+  "packageBoundaries": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0
+  }
+}

@@ -7,6 +7,7 @@ import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
+import { readV6Intel } from '../policy/v6/intel';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
 import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
@@ -180,7 +181,9 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const player = snapshot.players[owner]!;
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
-  const navalReserve = navalBudgetReserve(snapshot, owner, options);
+  const navalReserve = Math.max(navalBudgetReserve(snapshot, owner, options),
+    ...goals.filter(goal => goal.id === 'naval:islandHall'
+      && readV6Intel(snapshot, owner, options).intrusion === undefined).map(goal => goal.cost));
   const builders = new Set<string>();
   const commands: GameCommand[] = [];
   const bought = new Set<string>();
