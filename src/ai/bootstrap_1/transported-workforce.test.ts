@@ -41,7 +41,7 @@ it.each(cases)('$version counts $race workers already aboard rather than buying 
   const snapshot = snapshotGame(game);
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: 'us', version, memory }, { teams: game.teams });
   expect(entries.filter(entry => entry.command.type === 'train' && entry.command.unitKind === 'worker'), JSON.stringify(entries)).toEqual([]);
-  expect(planMiningWorkforce(snapshot, 'us')).toEqual([]);
+  expect(planMiningWorkforce(snapshot, 'us', 1, { teams: game.teams })).toEqual([]);
   expect(entries.some(entry => ['build', 'train', 'research'].includes(entry.command.type))).toBe(true);
   sdk.issue(entries, {}, { checksum: false });
   stepGame(game);
@@ -52,7 +52,7 @@ it.each(cases)('$version counts $race workers already aboard rather than buying 
 it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ race, mirror }))))(
   '$race still pays to recruit for a rising mine when transported workers cannot fill it (mirror=$mirror)', ({ race, mirror }) => {
     const { game, sdk } = boardingScene(race, mirror, 2, true);
-    const commands = planMiningWorkforce(snapshotGame(game), 'us');
+    const commands = planMiningWorkforce(snapshotGame(game), 'us', 1, { teams: game.teams });
     expect(commands).toHaveLength(1);
     sdk.issue(commands.map(command => ({ playerId: 'us', scriptId: 'miningWorkforce', command })), {}, { checksum: false });
     for (let tick = 0; tick < 1000; tick++) stepGame(game);
