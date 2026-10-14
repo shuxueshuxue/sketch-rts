@@ -832,8 +832,23 @@ export type ShipRouteSearchState={
   entrances?:{cell:number;points:ShipPose[][]}[]; entranceCursor?:number;
   best?:number; bestGap?:number; visited?:number; path?:ShipPose[]; fallback?:ShipRouteSearchState; result?:RouteResult;
 };
+const livePlanningSearches=new WeakSet<ShipRouteSearchState>();
+/** Internal planner-only fresh state; decoded jobs never acquire this identity. */
+export function beginLiveShipRouteSearch():ShipRouteSearchState {
+  const state:ShipRouteSearchState={phase:'prepare'};
+  livePlanningSearches.add(state);return state;
+}
+/** Internal planner-only call. General callers keep the original construction. */
+export function advanceLiveShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
+  budget:number,voyage:boolean,state:ShipRouteSearchState):RouteResult|undefined {
+  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,livePlanningSearches.has(state));
+}
 export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
   budget:number,voyage:boolean,state:ShipRouteSearchState):RouteResult|undefined {
+  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false);
+}
+function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
+  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean):RouteResult|undefined {
   if(state.phase==='done')return state.result;
   // Fallback owns no active workspace. Resume it at this caller's depth,
   // retaining nested isolation only for a real reentrant traffic callback.
@@ -846,11 +861,11 @@ export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {headin
   }
   routeSearchDepth++;
   try {
-    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state);
+    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
     if(result){state.result=result;state.phase='done';}return result;
   }finally{routeSearchDepth--;}
 }
-function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState): RouteResult|undefined {
+function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
   // The real traffic provider declares an empty frozen obstacle set. Custom
   // callbacks without that declaration still receive every original check.
   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
@@ -940,7 +955,13 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   };
   const heuristic = (id: number, x: number, y: number) => basePotential(Math.floor(id/DIRECTIONS),x,y);
   const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
-  const reached=new Map(state?.nodes?.map(entry=>[entry.id,entry]));
+  let reached:Map<number,NonNullable<ShipRouteSearchState['nodes']>[number]>;
+  if(owned){
+    reached=new Map();
+    // Only ordinary packed arrays of local plain records reach this branch.
+    // Preserve the separate, subsequent values() replay below.
+    for(const entry of state?.nodes ?? [])reached.set(entry.id,entry);
+  }else reached=new Map(state?.nodes?.map(entry=>[entry.id,entry]));
   for(const entry of reached.values()){stamps[entry.id]=generation;costs[entry.id]=entry.cost;previous[entry.id]=entry.parent;}
   for(const [id,clear] of savedTraffic)trafficFits[id]=clear?generation:-generation;
   if(state?.heap)frontier.restore(state.heap);
