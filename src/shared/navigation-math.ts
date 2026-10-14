@@ -136,26 +136,27 @@ export function polygonSupportingPlanes(polygon: readonly Point[]): readonly Rea
 export function polygonPlanes(polygon: readonly Point[]) {
   const state = polygonPlaneState(polygon);
   polygonSupportingPlanes(polygon);
-  while (state.maxima < polygon.length) {
-    const i = state.maxima, plane = state.result[i]!, x = plane.x, y = plane.y;
-    let max = -Infinity;
-    if (state.scale !== undefined && i) {
-      max = projectionSupport(polygon, x, y, state.maxIndex, state.scale, false, state); state.maxIndex = state.index;
-    } else if (state.scale !== undefined) {
-      for (let j = 0; j < polygon.length; j++) {
-        const p = polygon[j]!, v = p.x * x + p.y * y;
-        if (v > max) state.maxIndex = j;
-        max = Math.max(max, v);
-      }
-    } else {
-      for (const p of polygon) {
-        const v = p.x * x + p.y * y;
-        max = Math.max(max, v);
-      }
-    }
-    plane.max = max; state.maxima++;
-  }
+  while (state.maxima < polygon.length) appendPlaneMaximum(polygon, state);
   return state.result;
+}
+function appendPlaneMaximum(polygon: readonly Point[], state: PlaneState) {
+  const i = state.maxima, plane = state.result[i]!, x = plane.x, y = plane.y;
+  let max = -Infinity;
+  if (state.scale !== undefined && i) {
+    max = projectionSupport(polygon, x, y, state.maxIndex, state.scale, false, state); state.maxIndex = state.index;
+  } else if (state.scale !== undefined) {
+    for (let j = 0; j < polygon.length; j++) {
+      const p = polygon[j]!, v = p.x * x + p.y * y;
+      if (v > max) state.maxIndex = j;
+      max = Math.max(max, v);
+    }
+  } else {
+    for (const p of polygon) {
+      const v = p.x * x + p.y * y;
+      max = Math.max(max, v);
+    }
+  }
+  plane.max = max; state.maxima++;
 }
 /** SAT projections are computed once per polygon, rather than once per cell. */
 export function polygonTouchesCell(axes: readonly Plane[], left: number, top: number, cell: number) {
@@ -164,6 +165,20 @@ export function polygonTouchesCell(axes: readonly Plane[], left: number, top: nu
     const max = min + cell * (Math.abs(p.x) + Math.abs(p.y));
     if (p.max <= min + 1e-7 || max <= p.min + 1e-7)
       return false;
+  }
+  return true;
+}
+/** A shoreline cell often separates on an early hull edge. Complete the same
+ * exact projections only through that edge; later cells or full-plane callers
+ * resume the independent minimum/maximum prefixes in their original order. */
+export function polygonTouchesCellForPolygon(polygon: readonly Point[], left: number, top: number, cell: number) {
+  const state = polygonPlaneState(polygon);
+  for (let i = 0; i < polygon.length; i++) {
+    const p = state.result[i] ?? appendSupportingPlane(polygon, state);
+    if (state.maxima === i) appendPlaneMaximum(polygon, state);
+    const min = (p.x >= 0 ? left : left + cell) * p.x + (p.y >= 0 ? top : top + cell) * p.y;
+    const max = min + cell * (Math.abs(p.x) + Math.abs(p.y));
+    if (p.max <= min + 1e-7 || max <= p.min + 1e-7) return false;
   }
   return true;
 }
