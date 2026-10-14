@@ -11,6 +11,17 @@ import { worldLabelsFor, type WorldFrame } from './world-renderer';
 const context = () => createCanvas(320, 180).getContext('2d') as unknown as CanvasRenderingContext2D;
 const labels = worldLabelsFor(createI18n('en'));
 const actors = (frame: WorldFrame) => frame.snapshot.units.map(unit => ({ id: unit.id, x: unit.x, y: unit.y, hp: unit.hp, owner: unit.owner }));
+const brightness = (ctx: CanvasRenderingContext2D) => {
+  const pixels = ctx.getImageData(0, 0, 320, 180).data;
+  let light = 0;
+  for (let index = 0; index < pixels.length; index += 4) light += pixels[index]! + pixels[index + 1]! + pixels[index + 2]!;
+  return light / (pixels.length / 4 * 3);
+};
+const paintVisibleWorld = (frames: WorldFrame[]) => (frame: WorldFrame) => {
+  frame.ctx.fillStyle = '#e8dfc1';
+  frame.ctx.fillRect(0, 0, 320, 180);
+  frames.push(frame);
+};
 
 describe('bounded home scenes using the world presentation', () => {
   it('passes only the selected pirate scene future asset recipe without adding it to the current world',()=>{
@@ -97,17 +108,56 @@ describe('bounded home scenes using the world presentation', () => {
     }
   });
 
+  it.each(MENU_SCENES.map((scene, index) => [scene.id, index] as const))(
+    'keeps the reduced-motion %s composition visible through its ending and after five minutes',
+    (_id, index) => {
+      const scene = MENU_SCENES[index]!, run = scene.create();
+      const create = vi.spyOn(scene, 'create');
+      try {
+        const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
+        const end = run.length! * 1000;
+        backdrop.prepare(0);
+        for (const now of [0, 2_000, end - 1_500, end - 1_000, end - 100, end, end + 100, end + 1_500, end * 2, 300_000]) {
+          backdrop.draw(ctx, 320, 180, now, true, paintVisibleWorld(frames));
+          const frame = frames.at(-1)!;
+          expect(brightness(ctx), `visible at ${now}ms`).toBeGreaterThan(80);
+          expect(frame.snapshot.tick).toBe(Math.floor(run.stillSecond! * SIM_TICKS_PER_SECOND));
+          expect(actors(frame)).toEqual(actors(frames[0]!));
+          expect(frame.view).toEqual(frames[0]!.view);
+        }
+        expect(create).toHaveBeenCalledOnce();
+        backdrop.draw(ctx, 320, 180, 300_100, false, paintVisibleWorld(frames));
+        expect(brightness(ctx)).toBeLessThan(16);
+        backdrop.draw(ctx, 320, 180, 300_200, false, paintVisibleWorld(frames));
+        expect(frames.at(-1)!.snapshot.tick).toBe(0);
+        expect(frames.at(-1)!.animation).not.toBe(frames[0]!.animation);
+        expect(brightness(ctx)).toBeLessThan(16);
+        expect(create).toHaveBeenCalledTimes(2);
+        backdrop.draw(ctx, 320, 180, 302_200, false, paintVisibleWorld(frames));
+        expect(frames.at(-1)!.snapshot.tick).toBe(2 * SIM_TICKS_PER_SECOND);
+        expect(brightness(ctx)).toBeGreaterThan(80);
+      } finally { create.mockRestore(); }
+    },
+  );
+
   it('fades and creates a clean new cast when a bounded scene finishes', () => {
     for (let index = 0; index < MENU_SCENES.length; index++) {
       const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
       const length = MENU_SCENES[index]!.create().length!;
       backdrop.prepare(0);
-      backdrop.draw(ctx, 320, 180, 0, false, frame => frames.push(frame));
-      backdrop.draw(ctx, 320, 180, length * 1000 + 1, false, frame => frames.push(frame));
-      backdrop.draw(ctx, 320, 180, length * 1000 + 100, false, frame => frames.push(frame));
-      expect(frames[2]!.snapshot.tick).toBe(0);
-      expect(actors(frames[2]!)).toEqual(actors(frames[0]!));
-      expect(frames[2]!.snapshot.effects).toEqual(frames[0]!.snapshot.effects);
+      backdrop.draw(ctx, 320, 180, 0, false, paintVisibleWorld(frames));
+      expect(brightness(ctx)).toBeLessThan(16);
+      backdrop.draw(ctx, 320, 180, length * 1000 - 1500, false, paintVisibleWorld(frames));
+      expect(brightness(ctx)).toBeGreaterThan(80);
+      backdrop.draw(ctx, 320, 180, length * 1000 + 1, false, paintVisibleWorld(frames));
+      expect(brightness(ctx)).toBeLessThan(16);
+      backdrop.draw(ctx, 320, 180, length * 1000 + 100, false, paintVisibleWorld(frames));
+      expect(brightness(ctx)).toBeLessThan(16);
+      expect(frames[3]!.snapshot.tick).toBe(0);
+      expect(actors(frames[3]!)).toEqual(actors(frames[0]!));
+      expect(frames[3]!.snapshot.effects).toEqual(frames[0]!.snapshot.effects);
+      backdrop.draw(ctx, 320, 180, length * 1000 + 2100, false, paintVisibleWorld(frames));
+      expect(brightness(ctx)).toBeGreaterThan(80);
     }
   });
 });

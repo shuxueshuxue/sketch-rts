@@ -1,0 +1,951 @@
+{
+  "label": "after",
+  "scene": "capital",
+  "width": 390,
+  "height": 844,
+  "requestedAge": 300,
+  "tag": "age300",
+  "paint": {
+    "now": 4616.600000008941,
+    "age": 300,
+    "reduced": true,
+    "created": 1,
+    "runAlive": true
+  },
+  "state": {
+    "scene": "capital",
+    "age": 300.01209999999406,
+    "submittedAge": 300,
+    "submittedTick": 300,
+    "tick": 300,
+    "view": {
+      "x": 1495.467319808468,
+      "y": 752.8368879368279,
+      "width": 390,
+      "height": 844,
+      "zoom": 0.93
+    },
+    "reducedMotion": true,
+    "presentation": true,
+    "unitCount": 24,
+    "buildingCount": 3,
+    "effectTypes": [],
+    "ships": [],
+    "crew": [],
+    "props": [
+      {
+        "id": 1,
+        "kind": "capital-paving",
+        "x": 780,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 2,
+        "kind": "capital-paving",
+        "x": 780,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 3,
+        "kind": "capital-paving",
+        "x": 1065,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 4,
+        "kind": "capital-paving",
+        "x": 1065,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 5,
+        "kind": "capital-paving",
+        "x": 1350,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 6,
+        "kind": "capital-paving",
+        "x": 1350,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 7,
+        "kind": "capital-paving",
+        "x": 1635,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 8,
+        "kind": "capital-paving",
+        "x": 1635,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 9,
+        "kind": "capital-paving",
+        "x": 1920,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 10,
+        "kind": "capital-paving",
+        "x": 1920,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 11,
+        "kind": "capital-paving",
+        "x": 2205,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 12,
+        "kind": "capital-paving",
+        "x": 2205,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 13,
+        "kind": "capital-paving",
+        "x": 2490,
+        "y": 1110,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 14,
+        "kind": "capital-paving",
+        "x": 2490,
+        "y": 1232,
+        "scale": 2.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 15,
+        "kind": "capital-paving",
+        "x": 1180,
+        "y": 1250,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "square"
+      },
+      {
+        "id": 16,
+        "kind": "capital-paving",
+        "x": 1400,
+        "y": 1250,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "square"
+      },
+      {
+        "id": 17,
+        "kind": "capital-paving",
+        "x": 1620,
+        "y": 1250,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "square"
+      },
+      {
+        "id": 18,
+        "kind": "capital-paving",
+        "x": 1840,
+        "y": 1250,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "square"
+      },
+      {
+        "id": 19,
+        "kind": "capital-paving",
+        "x": 2060,
+        "y": 1250,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "square"
+      },
+      {
+        "id": 20,
+        "kind": "capital-house",
+        "x": 820,
+        "y": 916,
+        "scale": 1.75,
+        "flip": false,
+        "since": 0,
+        "state": "ochre"
+      },
+      {
+        "id": 21,
+        "kind": "capital-house",
+        "x": 1040,
+        "y": 929,
+        "scale": 1.85,
+        "flip": false,
+        "since": 0,
+        "state": "shop"
+      },
+      {
+        "id": 22,
+        "kind": "capital-house",
+        "x": 1275,
+        "y": 929,
+        "scale": 1.75,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 23,
+        "kind": "capital-house",
+        "x": 1510,
+        "y": 876,
+        "scale": 1.85,
+        "flip": false,
+        "since": 0,
+        "state": "shop"
+      },
+      {
+        "id": 24,
+        "kind": "capital-house",
+        "x": 1910,
+        "y": 899,
+        "scale": 1.9,
+        "flip": false,
+        "since": 0,
+        "state": "ochre"
+      },
+      {
+        "id": 25,
+        "kind": "capital-house",
+        "x": 2140,
+        "y": 924,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 26,
+        "kind": "capital-house",
+        "x": 970,
+        "y": 1452,
+        "scale": 1.7,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 27,
+        "kind": "capital-house",
+        "x": 1210,
+        "y": 1473,
+        "scale": 1.9,
+        "flip": false,
+        "since": 0,
+        "state": "ochre"
+      },
+      {
+        "id": 28,
+        "kind": "capital-house",
+        "x": 2090,
+        "y": 1469,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0,
+        "state": "shop"
+      },
+      {
+        "id": 29,
+        "kind": "capital-tavern",
+        "x": 1740,
+        "y": 973,
+        "scale": 2.2,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 30,
+        "kind": "capital-market",
+        "x": 1160,
+        "y": 1015,
+        "scale": 1.25,
+        "flip": false,
+        "since": 0,
+        "state": "produce"
+      },
+      {
+        "id": 31,
+        "kind": "capital-market",
+        "x": 1370,
+        "y": 1012,
+        "scale": 1.25,
+        "flip": false,
+        "since": 0,
+        "state": "cloth"
+      },
+      {
+        "id": 32,
+        "kind": "capital-table",
+        "x": 1940,
+        "y": 1310,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "wares"
+      },
+      {
+        "id": 33,
+        "kind": "capital-table",
+        "x": 1640,
+        "y": 1313,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 34,
+        "kind": "capital-table",
+        "x": 1780,
+        "y": 1310,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 35,
+        "kind": "capital-bench",
+        "x": 1640,
+        "y": 1354,
+        "scale": 1.05,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 36,
+        "kind": "capital-bench",
+        "x": 1780,
+        "y": 1352,
+        "scale": 1.05,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 37,
+        "kind": "capital-barrels",
+        "x": 1850,
+        "y": 1028,
+        "scale": 1.25,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 38,
+        "kind": "capital-bundles",
+        "x": 1090,
+        "y": 1050,
+        "scale": 1,
+        "flip": false,
+        "since": 0,
+        "state": "sacks"
+      },
+      {
+        "id": 39,
+        "kind": "capital-bundles",
+        "x": 1420,
+        "y": 1045,
+        "scale": 1,
+        "flip": false,
+        "since": 0,
+        "state": "crates"
+      },
+      {
+        "id": 40,
+        "kind": "capital-bundles",
+        "x": 1920,
+        "y": 1355,
+        "scale": 1,
+        "flip": false,
+        "since": 0,
+        "state": "sacks"
+      },
+      {
+        "id": 41,
+        "kind": "capital-lamp",
+        "x": 900,
+        "y": 1027,
+        "scale": 1.15,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 42,
+        "kind": "capital-lamp",
+        "x": 1455,
+        "y": 1033,
+        "scale": 1.15,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 43,
+        "kind": "capital-lamp",
+        "x": 2000,
+        "y": 1031,
+        "scale": 1.15,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 44,
+        "kind": "capital-lamp",
+        "x": 1550,
+        "y": 1360,
+        "scale": 1.15,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 45,
+        "kind": "capital-lamp",
+        "x": 2020,
+        "y": 1350,
+        "scale": 1.15,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 46,
+        "kind": "capital-planter",
+        "x": 970,
+        "y": 989,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 47,
+        "kind": "capital-planter",
+        "x": 1460,
+        "y": 993,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "gold"
+      },
+      {
+        "id": 48,
+        "kind": "capital-planter",
+        "x": 1980,
+        "y": 985,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 49,
+        "kind": "capital-planter",
+        "x": 1530,
+        "y": 1475,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "gold"
+      },
+      {
+        "id": 50,
+        "kind": "capital-planter",
+        "x": 1885,
+        "y": 1475,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0,
+        "state": "rose"
+      },
+      {
+        "id": 51,
+        "kind": "capital-drain",
+        "x": 1035,
+        "y": 1168,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 52,
+        "kind": "capital-drain",
+        "x": 1520,
+        "y": 1168,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 53,
+        "kind": "capital-drain",
+        "x": 1970,
+        "y": 1168,
+        "scale": 1.1,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 54,
+        "kind": "cart",
+        "x": 2140,
+        "y": 1250,
+        "scale": 1.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 55,
+        "kind": "well",
+        "x": 1490,
+        "y": 1267,
+        "scale": 1.05,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 56,
+        "kind": "tree",
+        "x": 760,
+        "y": 1033,
+        "scale": 1.9,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 57,
+        "kind": "tree",
+        "x": 2240,
+        "y": 1335,
+        "scale": 2,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 58,
+        "kind": "tree",
+        "x": 1455,
+        "y": 1480,
+        "scale": 1.7,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 59,
+        "kind": "tree",
+        "x": 1880,
+        "y": 1495,
+        "scale": 1.7,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 63,
+        "kind": "banner",
+        "x": 1580,
+        "y": 783,
+        "scale": 1.2,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 64,
+        "kind": "banner",
+        "x": 1830,
+        "y": 774,
+        "scale": 1.2,
+        "flip": false,
+        "since": 0
+      }
+    ],
+    "preparedRemainsKeys": [],
+    "remainsCacheStats": {
+      "pages": 0,
+      "cards": 0,
+      "pixels": 0,
+      "drawChunks": 0,
+      "pooledDrawChunks": 0,
+      "drawCapacity": 0,
+      "drawBufferBytes": 0,
+      "maxTextureBanks": 1,
+      "arrayCpuBytes": 0,
+      "cpuBytes": 0,
+      "gpuBytes": 0,
+      "allocatedMipBytes": 0,
+      "canvasBackingBytes": 0,
+      "maskBytes": 0,
+      "pendingMaskBytes": 0,
+      "pendingRgbaBytes": 0,
+      "rowScratchBytes": 0,
+      "retiredGpuBytes": 0,
+      "rasterCache": {
+        "backoffs": 0,
+        "bypassRequests": 0,
+        "workMs": 0,
+        "avoidedPaintMs": 0,
+        "bytes": 0,
+        "scratchBytes": 0,
+        "ownedBytes": 0,
+        "entries": 0,
+        "hits": 0,
+        "misses": 0,
+        "evictions": 0,
+        "budget": 16777216
+      },
+      "ownedCpuBytes": 0,
+      "ownedGpuBytes": 0,
+      "peakPendingRgbaBytes": 0,
+      "peakOwnedCpuBytes": 0,
+      "peakOwnedGpuBytes": 0,
+      "peakRetiredGpuBytes": 0,
+      "rasterizations": 0,
+      "preparedRasters": 0,
+      "copiedLayers": 0,
+      "rasterStages": {
+        "paintMs": 0,
+        "readbackMs": 0,
+        "cacheMs": 0,
+        "pickMaskMs": 0,
+        "rowFlipMs": 0,
+        "slotMs": 0
+      },
+      "rasterWorkWallMs": 0,
+      "scratchTextures": 0,
+      "scratchCpuBytes": 0,
+      "scratchGpuBytes": 0,
+      "mipInitializedPages": 0,
+      "mipLayerUpdates": 0,
+      "mipCopyCalls": 0,
+      "mipCopyBytes": 0,
+      "gpuCompactionLayers": 0,
+      "gpuCompactionCopyCalls": 0,
+      "arrayBaseUploadBytes": 0,
+      "scratchUploadBytes": 0,
+      "scratchInitialUploadBytes": 0,
+      "scratchFullUploadBytes": 0,
+      "scratchPartialUploadBytes": 0,
+      "scratchPartialUploadPixels": 0,
+      "scratchPartialUploads": 0,
+      "scratchUnchangedUploads": 0,
+      "scratchFullUploadFallbacks": 0,
+      "gpuTransferSubmissionWallMs": 0
+    },
+    "units": [
+      {
+        "id": "menu-worker-65",
+        "kind": "worker",
+        "variant": "capital/merchant",
+        "owner": "townsfolk",
+        "x": 1160,
+        "y": 1029,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-66",
+        "kind": "worker",
+        "variant": "capital/cloth-seller",
+        "owner": "townsfolk",
+        "x": 1369,
+        "y": 1026,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-67",
+        "kind": "worker",
+        "variant": "capital/merchant",
+        "owner": "townsfolk",
+        "x": 1910,
+        "y": 1305,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-68",
+        "kind": "worker",
+        "variant": "capital/green-woman",
+        "owner": "townsfolk",
+        "x": 1411.0338885725819,
+        "y": 1147,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-69",
+        "kind": "worker",
+        "variant": "capital/blue-citizen",
+        "owner": "townsfolk",
+        "x": 1840,
+        "y": 1148.0000000000002,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-70",
+        "kind": "worker",
+        "variant": "capital/porter",
+        "owner": "townsfolk",
+        "x": 1748,
+        "y": 1189,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-71",
+        "kind": "worker",
+        "variant": "capital/porter",
+        "owner": "townsfolk",
+        "x": 1430,
+        "y": 1218,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-72",
+        "kind": "worker",
+        "variant": "capital/innkeeper",
+        "owner": "townsfolk",
+        "x": 1722,
+        "y": 1233.0869154657707,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-73",
+        "kind": "worker",
+        "variant": "capital/citizen",
+        "owner": "townsfolk",
+        "x": 1913.22167621838,
+        "y": 1158,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-74",
+        "kind": "worker",
+        "variant": "capital/blue-citizen",
+        "owner": "townsfolk",
+        "x": 1595,
+        "y": 1345,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-75",
+        "kind": "worker",
+        "variant": "capital/citizen",
+        "owner": "townsfolk",
+        "x": 1664,
+        "y": 1340,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-76",
+        "kind": "worker",
+        "variant": "capital/green-woman",
+        "owner": "townsfolk",
+        "x": 1748,
+        "y": 1338,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-77",
+        "kind": "worker",
+        "variant": "capital/merchant",
+        "owner": "townsfolk",
+        "x": 1811,
+        "y": 1336,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-78",
+        "kind": "worker",
+        "variant": "capital/woman",
+        "owner": "townsfolk",
+        "x": 1848.8476910057614,
+        "y": 1303.8913853965432,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-79",
+        "kind": "worker",
+        "variant": "capital/woman",
+        "owner": "townsfolk",
+        "x": 1896,
+        "y": 1380,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-80",
+        "kind": "worker",
+        "variant": "capital/citizen",
+        "owner": "townsfolk",
+        "x": 1790,
+        "y": 1420,
+        "hp": 70
+      },
+      {
+        "id": "menu-footman-81",
+        "kind": "footman",
+        "owner": "lion",
+        "x": 2010,
+        "y": 1152,
+        "hp": 145
+      },
+      {
+        "id": "menu-footman-82",
+        "kind": "footman",
+        "owner": "lion",
+        "x": 2041,
+        "y": 1152,
+        "hp": 145
+      },
+      {
+        "id": "menu-lancer-83",
+        "kind": "lancer",
+        "owner": "lion",
+        "x": 2080,
+        "y": 1278,
+        "hp": 130
+      },
+      {
+        "id": "menu-lancer-84",
+        "kind": "lancer",
+        "owner": "lion",
+        "x": 2113,
+        "y": 1278,
+        "hp": 130
+      },
+      {
+        "id": "menu-lancer-85",
+        "kind": "lancer",
+        "owner": "lion",
+        "x": 990,
+        "y": 1067,
+        "hp": 130
+      },
+      {
+        "id": "menu-lancer-86",
+        "kind": "lancer",
+        "owner": "lion",
+        "x": 2150,
+        "y": 1074,
+        "hp": 130
+      },
+      {
+        "id": "menu-worker-87",
+        "kind": "worker",
+        "variant": "capital/merchant",
+        "owner": "townsfolk",
+        "x": 1570,
+        "y": 1028,
+        "hp": 70
+      },
+      {
+        "id": "menu-worker-88",
+        "kind": "worker",
+        "variant": "capital/woman",
+        "owner": "townsfolk",
+        "x": 1605,
+        "y": 1063,
+        "hp": 70
+      }
+    ],
+    "menu": {
+      "x": 25,
+      "y": 561.6875,
+      "width": 340,
+      "height": 214.3125
+    },
+    "buttons": [
+      {
+        "text": "Play",
+        "x": 25,
+        "y": 612,
+        "width": 340,
+        "height": 48
+      },
+      {
+        "text": "Rooms",
+        "x": 25,
+        "y": 670,
+        "width": 340,
+        "height": 48
+      },
+      {
+        "text": "Settings",
+        "x": 25,
+        "y": 728,
+        "width": 340,
+        "height": 48
+      }
+    ],
+    "renderer": "WebGL2 stack",
+    "scrollWidth": 390,
+    "windowWidth": 390
+  },
+  "overlay": {
+    "canvas": {
+      "width": 390,
+      "height": 844
+    },
+    "pixels": 329160,
+    "alpha255": 0,
+    "fadeRGB": 0,
+    "fadeCoverRatio": 0,
+    "nearBlackRatio": 0,
+    "meanAlpha": 43.377737270628266,
+    "note": "Main overlay canvas, excludes separate ground/WebGL actors and DOM menu."
+  },
+  "capture": {
+    "file": "after-capital-390x844-age300.png",
+    "sha256": "efb657bd8ec89dca6cc6e86f3e158be5c37d6587fb1cf600b18f072c36f68e81",
+    "gpuCompletion": {
+      "available": true,
+      "waitMs": 54.70000000298023,
+      "polls": 20,
+      "status": 37148
+    }
+  }
+}

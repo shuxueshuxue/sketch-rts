@@ -1,21 +1,21 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-10-14T12:16:03.788509+00:00",
+  "generatedUtc": "2026-10-14T13:08:17.504305+00:00",
   "baseCommit": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
   "artCheckpoint": "a13878465d7de94311476c7c591b18fc3a39bcc4",
   "branch": "art/homepage-pirate-boarding",
   "captureCommitted": false,
   "rulesVersion": 2,
-  "sourceIdentity": "Every source capture contains source hashes. Final 1176 source/assets hashes match the current worktree; captures occurred before its final commit.",
-  "passingDistinctRelatedTests": 131,
+  "sourceIdentity": "Original final candidate photos, MP4s and native B source captures bind to runtime at8bbfea. Original A/B inventories retain their own source identity. Reduced-motion review fixes menu-scenes.ts and its test; separate real-browser start/end source captures, regression logs and byte-preserved historical evidence validate this update. Original1176-hash match statements are historical, not asserted for the updated source.",
+  "passingDistinctRelatedTests": 134,
   "passingSDKPackageTests": 7,
   "aiSharedPerformanceDiff": "empty",
   "rawDemoFrames": "1104 original PNG files remain external; all SHA256, tick and GPU fence entries plus encoded MP4s are retained.",
   "files": [
     {
       "path": "docs/validation/homepage-scenes/README.zh.md",
-      "bytes": 9712,
-      "sha256": "0fda60f85c9ee3734a46b1da5d6283a5ea0064d6a6993cd87d8e9e4e7c228853"
+      "bytes": 13212,
+      "sha256": "41669b2a0bbf6eeec678b2adf15bceb9896a8801752c7156e03cbe8d4cf7a22b"
     },
     {
       "path": "docs/validation/homepage-scenes/analysis/analyze-homepage-final-native.py",
@@ -1886,6 +1886,596 @@
       "path": "docs/validation/homepage-scenes/rejected-crop/core/proof.json",
       "bytes": 605932,
       "sha256": "24db05aee28b59de0ac5272a371ba8a61f76f2414751169c617f0f3849a6e867"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/after-focused.log.gz",
+      "bytes": 341,
+      "sha256": "04c7c476b2d364532ec56bed9d6cec24bb4f7d96a854c00673b358c47bd8318f"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/before-README.zh.md.gz",
+      "bytes": 5434,
+      "sha256": "c884c46f1e5f188aced1a788b51f498de320cfcedc0f3b8a5c04c2483f216cba"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/before-manifest.json.gz",
+      "bytes": 35645,
+      "sha256": "97e0e0c7d982acaf30937110e39e35ea252ad8c1bf121278f5770a8aef70cab3"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/before.log.gz",
+      "bytes": 879,
+      "sha256": "1a795a39a6f9e7d67626223390b87e8d8ff863edb4217397d4dcc77a5b4aa0e0"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age180.json",
+      "bytes": 19436,
+      "sha256": "e3f2f6b48cc0eb46cfbf7bd550ca4ae770671a59257dae14d0903399266ad66e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age180.png",
+      "bytes": 973462,
+      "sha256": "13d7d54d1bef59bc07b3e8167f36d72596612a01d08138111b697df80e1a622d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age300.json",
+      "bytes": 19422,
+      "sha256": "b196fc266223e664c29ac515c3b3cc3276b26dfbb431304535aaa6cfa1ff5fa1"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age300.png",
+      "bytes": 904797,
+      "sha256": "4f52106c24516177e112606d8128ab82a05be5a7f1c288ae732b0924779d2e20"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age89p9.json",
+      "bytes": 19441,
+      "sha256": "2fe70d64b9e065968d8bd4a1963ff0ebef690f82e1afcb6670ff4eb40851ac1b"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age89p9.png",
+      "bytes": 952663,
+      "sha256": "89d1627cb3d6a3167c56ee90e64d595ccc2d24104d65886890f0877d14cb91f7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age90.json",
+      "bytes": 19404,
+      "sha256": "f55a20d2678b675aae819b260be916a9dd012647ad229558b28bf76d8e1dd760"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age90.png",
+      "bytes": 952386,
+      "sha256": "6c1bc36c471af6903d504c83d33e40fa01195216ea5c3260be868041b04a577c"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age90p1.json",
+      "bytes": 19438,
+      "sha256": "f301b96d9c9100cb98f173238ed818b28d96f59e6f508287d9fd54c8d731d344"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-capital-1440x900-age90p1.png",
+      "bytes": 948960,
+      "sha256": "933609a9d730708d9b6b485be60d324556f1e1448ebc4f043eaea0d1bc9a7ff1"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-menu-scenes.ts",
+      "bytes": 16482,
+      "sha256": "3a7de7d2949d4df5df0d7528e78dc5d77b4afdcd35f5d0d03d7a98eef04de9f2"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/after-world-presentation.ts",
+      "bytes": 10277,
+      "sha256": "b0a162624ee0a151b7fbe7a3ef659d2b5284b333228d53bd352c1d955afde3b6"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-capital-1440x900-age300.json",
+      "bytes": 19425,
+      "sha256": "2059c3cc395b23b4f789938d78732196777b94159ef2e96005a233e634add4de"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-capital-1440x900-age300.png",
+      "bytes": 168453,
+      "sha256": "3a15995a9ffc1d0b3f57ba4f76ce3fbfacd8c32373c3def9e56a4ef627c8212e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-capital-390x844-age300.json",
+      "bytes": 19367,
+      "sha256": "bdb761ff4a656b9a846b68e1ca6de85fdb276dc44e8d7c1333de5a130f9ec838"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-capital-390x844-age300.png",
+      "bytes": 47892,
+      "sha256": "366f8c6576e829b1d56c1f98a9f33e84ef5a973ec2c80bb2c24acfc0de2abea4"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-fleet-1440x900-age300.json",
+      "bytes": 14735,
+      "sha256": "3644196c8929a368c86b8bcfe631b8e20f79fe665244a6872506e0ec95e57cf0"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-fleet-1440x900-age300.png",
+      "bytes": 169849,
+      "sha256": "66bce0308ab5f2be0c64dbe7ba6cc433bf41612be4f24c617d116c83e03096cf"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-fleet-390x844-age300.json",
+      "bytes": 14714,
+      "sha256": "f2eab930faf953706836cf12df53860e3c35069ed2db51c9e2bff8fad4698024"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-fleet-390x844-age300.png",
+      "bytes": 49349,
+      "sha256": "c1684b6e073099ac6a6094283c4cc67447a52e570830ffa2d45617a5cdb808b7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-menu-scenes.ts",
+      "bytes": 16464,
+      "sha256": "df1c240e8d681d3ed84a988b65d34c955ec98695cfe654735e06a96c81ffaf22"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-woods-1440x900-age300.json",
+      "bytes": 13284,
+      "sha256": "df351ef8b1ae85ded3f2c6f5c4033ddd8b333d461251fbcf2232470db93951b4"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-woods-1440x900-age300.png",
+      "bytes": 171209,
+      "sha256": "305a8a3a19abd2d5742f751f33343a1fbe899c3c443e9b01b23fd82df5ce7046"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-woods-390x844-age300.json",
+      "bytes": 13215,
+      "sha256": "26613bf86844552a0b9511031bd6ee2155d9a18df12997c67b0a4b1852d0f7ce"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-woods-390x844-age300.png",
+      "bytes": 50795,
+      "sha256": "373f424a50a973a8622c30552a554b8295b8deb75406c29ca1ccf5583f6f54a5"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/before-world-presentation.ts",
+      "bytes": 10277,
+      "sha256": "b0a162624ee0a151b7fbe7a3ef659d2b5284b333228d53bd352c1d955afde3b6"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/executed-tool.mjs",
+      "bytes": 24682,
+      "sha256": "c217fa76f01c9eb3fc2bea3a9740b563a58cbeaf508f436deeb3a1c4fd4f57af"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/failure.json",
+      "bytes": 510483,
+      "sha256": "0b53488bfe2502f6258490e5ccfff7eca7a3b0385ee3c6f25d992dc7b0085891"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/inputs.json",
+      "bytes": 268286,
+      "sha256": "e97f9ab015ac63a804214f27e5362e9e26f4e63370a6f184c49cb8fa24a18b4e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-attempt1/source-end-after-failure.json",
+      "bytes": 268081,
+      "sha256": "121c469ec1d85121b00097ed5420ed9a59d04192d318f77763a0ec44206a9958"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-1440x900-ordinary-age2.6.png",
+      "bytes": 1004983,
+      "sha256": "6d11050b54ab29631d5079e6cdc57246a2adc48a8c80fc5c2bc36eaa6340a341"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-1440x900-ordinary-restart.json",
+      "bytes": 42991,
+      "sha256": "5bfbb0d457c6fbbaf45bbd9b2650da63034f53bc2396fdbd05b35e56d99f60d5"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-1440x900-restart-age1.6.png",
+      "bytes": 984560,
+      "sha256": "3f2370448060adc74fddb3ebf1659c9a324a499f92eb5cc68acb75208d836ea8"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age180.json",
+      "bytes": 19371,
+      "sha256": "0908728b7e2456cb75db0d20cd6b93e9f8be1499d058daadcf385d481815948d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age180.png",
+      "bytes": 280658,
+      "sha256": "da0f1369037d33402a224d16bc2267a518a2d7b74ea16a2794e52e3db5fc7092"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age300.json",
+      "bytes": 19370,
+      "sha256": "ecedbd888c50bfd8edd752b0e630f9caa5c53ff0d8fbcbc7a35cfb82e98cdc47"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age300.png",
+      "bytes": 285854,
+      "sha256": "efb657bd8ec89dca6cc6e86f3e158be5c37d6587fb1cf600b18f072c36f68e81"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age89p9.json",
+      "bytes": 19375,
+      "sha256": "a9634178e35ff0cba28ddd98dc5de007578df0da7146c6d78b6130cf541d1004"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age89p9.png",
+      "bytes": 257457,
+      "sha256": "4b95214d02fd9db892347191acd99d2048282fe643f585d53eb71b8230af1a87"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age90.json",
+      "bytes": 19363,
+      "sha256": "d8f4de36486b40b6e2681ef92cf6afa3d4fb8dc8b917aa1ee0f7093e9fa41c79"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age90.png",
+      "bytes": 257852,
+      "sha256": "242e7a88b7d18caadcd8ead42cf0020e2fce9e157ae8194d5131ed4fb752b63d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age90p1.json",
+      "bytes": 19360,
+      "sha256": "f91de27be2cbf4c3841ae43a4bf676cf15d76f374f165ade4fb503b3b2d2e423"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-age90p1.png",
+      "bytes": 259085,
+      "sha256": "66eea606da3490addddc8d71f2fd941a8a9cf1e0c60c408ef32c5bd0fc414331"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-ordinary-age2.6.png",
+      "bytes": 290883,
+      "sha256": "3219c35ea69596e6958bc8066ee93314bf15be88cf42cb038e05cff16723c674"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-ordinary-restart.json",
+      "bytes": 42853,
+      "sha256": "26a07341a98d29a2a66ab312b64b0bbba1a4fccf275cfb3c0b98b6d6e50a4eee"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-capital-390x844-restart-age1.6.png",
+      "bytes": 289951,
+      "sha256": "beefb872b84d0963de48da2f38fe9851c87a60360c3aeebaf5d78fac46d61e3d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age120.json",
+      "bytes": 14768,
+      "sha256": "834118c158848197bb7853d30b33c182d1537e09bc9d5aa2e016d09ca006aedc"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age120.png",
+      "bytes": 1078047,
+      "sha256": "1b7d33585230afa3eafb85afb15baf3396630a9eeb490b9ed3c7af2bcad84ce9"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age300.json",
+      "bytes": 14758,
+      "sha256": "b8446fb8e54a1f18ec82ff5c25cd64b634615b3cb3566963d380cc9883ba4c26"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age300.png",
+      "bytes": 979046,
+      "sha256": "a0594bdce2961049a3e46f51d8c6b6a1136863eaa973601c64b027fd75edbb06"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age59p9.json",
+      "bytes": 14773,
+      "sha256": "5629218ab39f9d918f0018fb447b265ef7117a4f951e82a5c834ad9e5bfc04ba"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age59p9.png",
+      "bytes": 1080513,
+      "sha256": "11ce0cc1a3dfc3e749f148d5b9bcf61d9d468e23d8cac4b54eda01a8a57a5345"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age60.json",
+      "bytes": 14750,
+      "sha256": "ca669f3c5378792fa838bf2d59dbceb1c0d52b92d69a4335d050f05f67fa836c"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age60.png",
+      "bytes": 1079886,
+      "sha256": "41d0e3cedafae6f98bc6ae09a4ffd6fd706777f86c225d7546c75185b450ffb9"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age60p1.json",
+      "bytes": 14748,
+      "sha256": "9ff7a7fd6322c5e13b17c52aae9d72559a213f1c46e15bf363e60456df1c3477"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-age60p1.png",
+      "bytes": 1067823,
+      "sha256": "bcfb47260aada0b705f16add4771f079b5f6996dad0dcb6aa109a01850ed3fac"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-ordinary-age2.6.png",
+      "bytes": 1017324,
+      "sha256": "ec5105c3fbbbb1907eb72b0e4c2d413cb7edbeadbfcb4689677309a3c55affc9"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-ordinary-restart.json",
+      "bytes": 28881,
+      "sha256": "72b35891e832862221628283ff9972ed088c34c267cdd150c6007730ef12fa6e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-1440x900-restart-age1.6.png",
+      "bytes": 999609,
+      "sha256": "4423b73f4481b36cac172a2022343351de2fac769c63ce962ff7bf5653dbc44a"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age120.json",
+      "bytes": 14669,
+      "sha256": "20c4c97200a1f0959b6276c0a4866acc1cafdd4539cb85fae4fb080c10b95474"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age120.png",
+      "bytes": 396657,
+      "sha256": "93b7e6ecb6d54ce91ec678bbca975543ac494641888b45fa1b6451a0bd830c59"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age300.json",
+      "bytes": 14681,
+      "sha256": "1cbd001660c8dd21eb548534f8af8d0c36362b9a40e812e141ca5fc9db6b2215"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age300.png",
+      "bytes": 389250,
+      "sha256": "c32c1363872deb1df93f157e5f20a8b9ba9a060dcd6da8d20efcc8c27f58b2c3"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age59p9.json",
+      "bytes": 14701,
+      "sha256": "d7ad4f248fc6ea28bde9a1b91ad960b7d666d164b405576b32cc16bd959de9c3"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age59p9.png",
+      "bytes": 388980,
+      "sha256": "53eae7bd6c842632a03bf3b46fa30d88fa249fa25136995a2214fd83a1710708"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age60.json",
+      "bytes": 14689,
+      "sha256": "1642108458b1a627f98e1f85c1a5d614ac8b3e74c6e5b62eef00f69dc5b95357"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age60.png",
+      "bytes": 388817,
+      "sha256": "d06b19aa1330a9ce00ec2325e177a5873f6ef30907b1a222e6058eaf69a46834"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age60p1.json",
+      "bytes": 14688,
+      "sha256": "e431345834f423416749585f85d91ecc1da5cf85c076b7a2338507380f860ba1"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-age60p1.png",
+      "bytes": 389063,
+      "sha256": "861748cf59346e3275b94e5f22d89b04323b4c1e955148a2a5ff0b927e045de6"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-ordinary-age2.6.png",
+      "bytes": 351662,
+      "sha256": "9314b0f2f6b9c7f6cbea527a3794c9acfb20c2e8b054e51fde26fd01c432b008"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-ordinary-restart.json",
+      "bytes": 28765,
+      "sha256": "798c00ba25459d42a777bea565208bc2d081584f968cbff6509a3801e971b6ef"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-fleet-390x844-restart-age1.6.png",
+      "bytes": 348445,
+      "sha256": "6c67d02bdc09d83f1c01686536373c6684e21d11a4bb7a368b317e4110629ea7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-menu-scenes.ts",
+      "bytes": 16963,
+      "sha256": "8797a9113435880d421d845d962b885eca974dea7444945b1fbed3d16823dd55"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age104.json",
+      "bytes": 13284,
+      "sha256": "efb766073fd4b8335de3e3d5c38d7c628e01ff68f046b19696d85b4e6445c2d2"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age104.png",
+      "bytes": 1114428,
+      "sha256": "355872e16f4dd60e7262ee0297dab920ff00aea1792a976c7a88bbff15c5165f"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age300.json",
+      "bytes": 13284,
+      "sha256": "00fb2e8e3136865e3364f34ea5f883eecc7f85a0f790d137db2996cb49b76a50"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age300.png",
+      "bytes": 1052934,
+      "sha256": "a3518e6c26b84d80193514e71452b05e7a51a32885649e963b84ff2fb9358fba"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age51p9.json",
+      "bytes": 13277,
+      "sha256": "a25ddee0783a932542f1f49d9edcbda7d9025c83d6f0bbc3c59246b5fd95af5d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age51p9.png",
+      "bytes": 1133199,
+      "sha256": "c1d1501aa8208e49c6f3797b3218d2e76985567da1e4ccd4d7e88b914809f7e2"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age52.json",
+      "bytes": 13255,
+      "sha256": "6a5b0556086dbe02413075789eb15b70f40a6c3a79d5d07cdf78f69e58d910c8"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age52.png",
+      "bytes": 1132927,
+      "sha256": "64d03a115953b044bd28233d5c9a6f34bfb62f959e6f30df9ec3d1ae6dd3e773"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age52p1.json",
+      "bytes": 13288,
+      "sha256": "a0292eb494406d969cc23644e59a402bdcd186f596c7030e007a1ba8aa1ce7a7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-age52p1.png",
+      "bytes": 1142300,
+      "sha256": "b120bbce45cc0fc21ce83011f190e30d0d00dbdf94fa1e10df1133ff5b26b850"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-ordinary-age2.6.png",
+      "bytes": 1293891,
+      "sha256": "cead969ffc23e4659f35a3d1e09cbf2a9b871e50e19e2b2a05daaf660df99d4e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-ordinary-restart.json",
+      "bytes": 28335,
+      "sha256": "4a6a306c0446891ea5464b51b9234ba758600e78db4d11107f6914f85e4e4357"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-1440x900-restart-age1.6.png",
+      "bytes": 1285840,
+      "sha256": "e3a69306e66b8192de9f37d47839c523540de281ba76864b9f2d1a77409efe9a"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age104.json",
+      "bytes": 13215,
+      "sha256": "750d6d8a4601fc39103dc136fc2e3c5e400770a131b0f65d4046dcfc560853a5"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age104.png",
+      "bytes": 399157,
+      "sha256": "c3558d9cdcdde097a358f58155ac44444fa1b44c7340daf90cfdfa2b2b5a0e54"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age300.json",
+      "bytes": 13198,
+      "sha256": "1541198a2368620841830ab499425b7c0cd28d8dfe56c1827a85aefb2fa55b07"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age300.png",
+      "bytes": 400591,
+      "sha256": "77700d9567838abef75d90b7e0bcd7ee6525e073766ba14c058b7fc70a21255e"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age51p9.json",
+      "bytes": 13222,
+      "sha256": "8a46e990ad0755571b3709e24ae3bd3d242b3720c54e80dc46eebc0b064c429d"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age51p9.png",
+      "bytes": 398444,
+      "sha256": "e95a3782dacd2181d6b603e84623ef3f7af27fc5d8215795d8e30c3cbccb3adf"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age52.json",
+      "bytes": 13175,
+      "sha256": "4e0af3e65beebaef5633d4ae4f45e928358626b12a00311d4e7a4394b583cae9"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age52.png",
+      "bytes": 398114,
+      "sha256": "00bd4f70820dfe6a9eeaeb46b20b0d737b30155f3fe19cbe9517cebbdb90705b"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age52p1.json",
+      "bytes": 13220,
+      "sha256": "f40a1da8ff980c89f7732f72b44adf1abe49954016ee2c70f9172ad51c53357f"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-age52p1.png",
+      "bytes": 404095,
+      "sha256": "d7200f237f417749ece8b5ce5d84faa2fd03499b21060d272420dbc14e33e912"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-ordinary-age2.6.png",
+      "bytes": 431141,
+      "sha256": "cfc79ac2c7e2c08caf056a6cc69705af89bc7bb33e49654a990a99eb01765da7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-ordinary-restart.json",
+      "bytes": 28148,
+      "sha256": "8974042f45fad7c14af1489e498a3eafc75f73e460a3cab546d41cefac525a1c"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-woods-390x844-restart-age1.6.png",
+      "bytes": 431797,
+      "sha256": "e1b19917ca2c083ec4e0e0d54b8e2abbdcc2d44771054d2ceb8668fda01a1ebe"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/after-world-presentation.ts",
+      "bytes": 10758,
+      "sha256": "8ab3df77b653cce89bb5a345052dd4abae01e149974f2e9e8ec6cc9de5960f72"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/executed-tool.mjs",
+      "bytes": 26714,
+      "sha256": "5792bb8ade51b96dbc9d7a288b303708233d3be442e3c0c8732ce8d17c424f8f"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/inputs.json",
+      "bytes": 268458,
+      "sha256": "48b14a53178cbe9c439e848d3fa0d490a5a592e0ac0d55abc1390dce67b2d3b7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/partial-checks.json",
+      "bytes": 690480,
+      "sha256": "70d5f18b3b94f23901d5ee04eef1733845dd9c8eb9ceaa8ca155233e589c18dc"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/browser-completion/proof.json",
+      "bytes": 1226936,
+      "sha256": "695e21ac545e8bbc1b7c6a7aba40a51792643fe5590e8cc192a4423d05cda735"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/build.log.gz",
+      "bytes": 1179,
+      "sha256": "361905337ad5864bffc0c4841366556c55b4a6ad44834434bcd678a147fc1fcf"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/final-sdk.log.gz",
+      "bytes": 401,
+      "sha256": "80ecb21a931374ae73c4aa21318f6811c33d46e59c56ac050e653f82565ddbf7"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/historical-preservation.json",
+      "bytes": 136,
+      "sha256": "396bbeec6eff783c531c49090603d61079959677eceacbf095063f9e740e4dd5"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/receipt.json",
+      "bytes": 3258,
+      "sha256": "a47df4771b0efb42d3933b13ed8e028a517f2bf0b0d5d0e453b194fc12bb0eff"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/related.log.gz",
+      "bytes": 1104,
+      "sha256": "77a764c7c7422703408dded26c21c602db8500e0796dac49b55930d7cfb48503"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/sdk.log.gz",
+      "bytes": 398,
+      "sha256": "a3604f13d12890fed2a2ebabc0c9acb9e5956b338045581bb901263a24908c1a"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/verify-review-first-error-note.txt",
+      "bytes": 292,
+      "sha256": "435f4a64a2410a7e4e9971cf30095c1d8462a5e8f1f04a36c1918903b7a9559b"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/verify-review-first.py.gz",
+      "bytes": 1358,
+      "sha256": "c2555f53629f735797e5530250c27cac8c6ca58185a5405d54dfad399b568f85"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/verify-review.py",
+      "bytes": 3519,
+      "sha256": "39731cb26c8513e27c921df3a55abb122584b9876af6c3e6eb2ae0c0f30b14f5"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/review-reduced-motion/world-layer.log.gz",
+      "bytes": 553,
+      "sha256": "89984fb32c07f072a8b4f8af1b5484ba091350d8b05c45a3b6377d6ea07a01d3"
     },
     {
       "path": "docs/validation/homepage-scenes/tools/browser/capture-baseline-v1.mjs",
@@ -4334,5 +4924,15 @@
     0
   ],
   "mediaFramesVerified": 1104,
-  "archiveCorrection": "79 historical captured test inputs stored with byte-preserving gzip. First CI archive-discovery failure and original 855-file manifest retained. Active tests and source unchanged; exact first group 14 files / 202 tests passes locally."
+  "archiveCorrection": "79 historical captured test inputs stored with byte-preserving gzip. First CI archive-discovery failure and original 855-file manifest retained. Active tests and source unchanged; exact first group 14 files / 202 tests passes locally.",
+  "reducedMotionReview": {
+    "historicalCommit": "8bbfea787e9652109683c9c3fc167abb10e302d9",
+    "relatedDistinctTests": 134,
+    "screenshots": 48,
+    "reducedScreenshots": 36,
+    "ordinaryRestartScreenshots": 12,
+    "completedBrowserChecks": 207,
+    "historicalFilesProtected": 863,
+    "publication": "Paused by latest parent review instruction; draft only."
+  }
 }

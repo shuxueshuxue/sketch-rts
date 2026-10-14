@@ -171,8 +171,8 @@ export class MenuBackdrop {
     drawAir(ctx, width, height, age, run.air);
     drawGlows(ctx, run.glows.map(toScreen), age, zoom);
     this.drawMotes(ctx, run, width, height, elapsed / 1000, age, toScreen, waterAt, zoom);
-    // The scene fades in, and a scene with an end fades out before it begins again.
-    const fade = Math.max(0, 1 - age / FADE, run.length ? 1 - (run.length - age) / FADE : 0);
+    // A static composition stays visible; only a running scene fades and repeats.
+    const fade = reducedMotion ? 0 : Math.max(0, 1 - age / FADE, run.length ? 1 - (run.length - age) / FADE : 0);
     if (fade > 0) {
       ctx.fillStyle = `rgba(12, 7, 3, ${Math.min(1, fade)})`;
       ctx.fillRect(0, 0, width, height);

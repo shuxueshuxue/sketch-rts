@@ -1,0 +1,55 @@
+{
+  "beforeCommit": "8bbfea787e9652109683c9c3fc167abb10e302d9",
+  "scope": "Only reduced-motion fade plus regression tests; ordinary-mode fade and loop unchanged. Ambient effects preserve prior behavior.",
+  "failureClassification": "Actual implementation regression reproduced by three new Canvas pixel visibility checks; original six checks passed.",
+  "beforeRegressionVersion": "First regression sampled from2s through each ending, two cycles and300s. Final version additionally tests initial visibility and returning to ordinary motion.",
+  "oldSourceIdentity": "Earlier final candidate captures and MP4s correspond to runtime source at8bbfea. Native comparisons retain their separate original A/B source inventories (including a1387846). No original proof is rewritten and these measurements are not claimed as complete validation of the updated source.",
+  "relatedTests": {
+    "nineFiles": 113,
+    "worldLayerAdditionalFile": 21,
+    "distinct": 134
+  },
+  "checks": "Focused nine checks, all134 distinct related checks, strict TypeScript and production build pass. SDK/archive and CI results follow separately.",
+  "commandCorrection": "Related-test command initially named src/client/world-layer.test.ts instead of src/client/world3d/world-layer.test.ts. Vitest executed nine matched files and113 tests; the actual additional file then executed21 tests. No missing selector is counted as executed and assertions unchanged.",
+  "commands": [
+    {
+      "command": "npx vitest run src/client/menu-scenes.test.ts",
+      "phase": "before initial regression",
+      "exit": 1,
+      "log": "before.log.gz"
+    },
+    {
+      "command": "npx vitest run src/client/menu-scenes.test.ts",
+      "phase": "after final regression",
+      "exit": 0,
+      "log": "after-focused.log.gz"
+    },
+    {
+      "command": "npx vitest run src/client/menu-scenes.test.ts src/client/menu-presentation.test.ts src/client/menu-pirate-boarding.test.ts src/client/menu-capital-street.test.ts src/client/menu-forest-horde.test.ts src/client/art/raster-cache.test.ts src/client/atlas-art.test.ts src/client/world3d/painted-card-batches.test.ts src/client/world-layer.test.ts src/client/world-presentation.test.ts",
+      "exit": 0,
+      "log": "related.log.gz"
+    },
+    {
+      "command": "npx vitest run src/client/world3d/world-layer.test.ts",
+      "exit": 0,
+      "log": "world-layer.log.gz"
+    },
+    {
+      "command": "npm run build:production",
+      "exit": 0,
+      "log": "build.log.gz"
+    }
+  ],
+  "browser": {
+    "screenshots": 48,
+    "gpuFencedScreenshots": 48,
+    "reducedScreenshots": 36,
+    "ordinaryRestartScreenshots": 12,
+    "completedAssertions": 207,
+    "attempt1Exit": 1,
+    "attempt2Exit": 0,
+    "attempt1Failure": "Optional tool wait required an age<3 window and missed it; original11 screenshots/56 completed checks, failure and source closure retained. Completion tool checks observable real new-run and advancing-tick markers instead.",
+    "actualRuntime": "Chromium151 SwiftShader WebGL2+Canvas, seek-based visual age probes; no native five-minute or performance measurement."
+  },
+  "independentReview": "Production ordinary-mode formula and loop remain byte-identical; Canvas observation checks reviewed without blockers."
+}
