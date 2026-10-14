@@ -17,7 +17,7 @@ describe("naval combat query work", () => {
       .unit("enemy", "warship", 1600, 1300, { id: "local" })
       .unit("enemy", "warship", 2500, 1000, { id: "edge" })
       .unit("enemy", "warship", 3400, 1500, { id: "remote" }).build().createGame();
-    game.map.terrain = undefined;
+    delete game.map.terrain;
     const snapshot = snapshotGame(game), before = structuredClone(snapshot);
     const reach = vi.spyOn(naval, "canReach");
     expect(planNavalTactics(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() })).toContainEqual({

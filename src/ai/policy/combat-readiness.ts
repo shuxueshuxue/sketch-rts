@@ -7,10 +7,64 @@ import { distance } from "./spatial";
 import type { AiPolicyContext } from "./types";
 import { SHOOTER_UNIT_KINDS } from "./versions";
 
-function readinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): { commands: GameCommand[]; aimed: Set<string> } {
+type ReadinessCommand = Extract<GameCommand, { type: "aim" | "setStance" }>;
+type ReadinessResult = { commands: ReadinessCommand[]; aimed: Set<string> };
+type ReadinessEntry = {
+  snapshot: GameSnapshot;
+  owner: PlayerId;
+  teams: AiPolicyContext["teams"];
+  teamValues: Array<[PlayerId, string | undefined]>;
+  mode: string | undefined;
+  hasTarget: boolean;
+  targetX: number | undefined;
+  targetY: number | undefined;
+  result: ReadinessResult;
+};
+type ReadinessScope = { entry?: ReadinessEntry };
+
+const readinessScopes = new WeakMap<AiPolicyContext, ReadinessScope>();
+
+// The script runner owns this synchronous scope. It shares only one immutable
+// world frame (the existing @@@query-memo contract); memory and team options can
+// change between claims and execution, so readiness checks their values too.
+// Standalone calls have no scope. Even a retained context stops reusing results
+// when the runner returns or throws, and nested scopes restore their caller.
+export function withCombatReadinessReuse<T>(options: AiPolicyContext, run: () => T): T {
+  const previous = readinessScopes.get(options);
+  readinessScopes.set(options, {});
+  try {
+    return run();
+  } finally {
+    if (previous) readinessScopes.set(options, previous);
+    else readinessScopes.delete(options);
+  }
+}
+
+function readinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadinessResult {
+  const scope = readinessScopes.get(options);
+  if (!scope) return computeReadinessPlan(snapshot, owner, options);
+  const general = options.memory.v6?.general;
+  const entry = scope.entry;
+  const hasTarget = !!general?.target;
+  const targetX = general?.target?.x, targetY = general?.target?.y;
+  if (entry && entry.snapshot === snapshot && entry.owner === owner && entry.teams === options.teams
+    && entry.mode === general?.mode && entry.hasTarget === hasTarget
+    && Object.is(entry.targetX, targetX) && Object.is(entry.targetY, targetY)
+    && entry.teamValues.every(([id, team]) => Object.is(options.teams?.[id], team))) return entry.result;
+  const result = computeReadinessPlan(snapshot, owner, options);
+  // Capture all owners readiness tests, rather than just own keys of a partial
+  // team map. Deleting a mapping or changing an inherited value also matters.
+  const teamOwners = new Set<PlayerId>([owner]);
+  for (const unit of snapshot.units) teamOwners.add(unit.owner);
+  scope.entry = { snapshot, owner, teams: options.teams, mode: general?.mode, hasTarget, targetX, targetY,
+    teamValues: [...teamOwners].map((id): [PlayerId, string | undefined] => [id, options.teams?.[id]]), result };
+  return result;
+}
+
+function computeReadinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadinessResult {
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== "worker" && unitMover(unit.kind) === "land");
   const foes = snapshot.units.filter(unit => unit.kind !== "worker" && isOpponentOwner(snapshot, owner, unit.owner, options));
-  const commands: GameCommand[] = [];
+  const commands: ReadinessCommand[] = [];
   const aimed = new Set<string>();
   const stances = new Map<MeleeStance, string[]>();
   const general = options.memory.v6?.general;
@@ -45,9 +99,11 @@ function readinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 
 export function planCombatReadiness(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  return readinessPlan(snapshot, owner, options).commands;
+  const result = readinessPlan(snapshot, owner, options);
+  return readinessScopes.has(options) ? result.commands.map(command => ({ ...command, unitIds: [...command.unitIds] })) : result.commands;
 }
 
 export function readinessUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
-  return readinessPlan(snapshot, owner, options).aimed;
+  const result = readinessPlan(snapshot, owner, options);
+  return readinessScopes.has(options) ? new Set(result.aimed) : result.aimed;
 }
