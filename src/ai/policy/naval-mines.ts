@@ -21,7 +21,7 @@ export function chooseNavalMine(snapshot: GameSnapshot, owner: PlayerId, candida
   ];
   return candidates.map(candidate => {
     const origin = nearestByRoute(snapshot.map, [...fleet, candidate.departure], candidate.landing, 'sea')!;
-    const road = walkingDistance(snapshot.map, candidate.landing, origin, 'sea')!;
+    const road = walkingDistance(snapshot.map, origin, candidate.landing, 'sea')!;
     const threat = threats.filter(({ body }) => distance(body, candidate.mine) < 400)
       .reduce((score, { rating }) => score + rating, 0);
     return { candidate, threat, road };

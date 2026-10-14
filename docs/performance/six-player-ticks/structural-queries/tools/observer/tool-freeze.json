@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "freezeComplete": true,
+  "runtimeDependencies": {
+    "node_modulesSymlink": "/workspace/sketch-rts-six-player-perf/node_modules",
+    "installationPerformed": false
+  },
+  "validation": {
+    "contractExitCode": 0,
+    "strictTypecheckExitCode": 0,
+    "setupFailureContractExitCode": 1,
+    "setupFailureTypecheckExitCode": 2,
+    "note": "Initial standalone dependency resolution failed before simulation; existing repository modules linked for successful retry. Full original failed logs retained."
+  },
+  "inputs": {
+    "six-player-tick-probe.ts": {
+      "bytes": 37972,
+      "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+    },
+    "six-player-focused-instrumentation.ts": {
+      "bytes": 6672,
+      "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+    },
+    "package.json": {
+      "bytes": 18,
+      "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+    },
+    "runtime-usage-contract.ts": {
+      "bytes": 3875,
+      "sha256": "1ab1a9921c9ca4c1ed77608140adf1132b79b6b03d5e4b5a3d1047b7bd8078f4"
+    },
+    "source-origin.json": {
+      "bytes": 732,
+      "sha256": "2cf7349079dc426d7fc6cd7c2a24694161aafc58a318ec34aed2adbb168c26c5"
+    },
+    "contract-result.json": {
+      "bytes": 593,
+      "sha256": "103d99730d7bdfc707161c313a0d50bb4bb44dc377cc36b6087f1250d6e19844"
+    },
+    "contract.log": {
+      "bytes": 42548,
+      "sha256": "13ff4375b430cd04599e001e6c3ee15c3b947aa582a1d7f177333d5220741565"
+    },
+    "typecheck.log": {
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    "contract-setup-failure.log": {
+      "bytes": 1361,
+      "sha256": "a39cbe8553b6b6f4d54dd68925e24a8605e00d61b52ccfe35aab5ff7ea4ce0cb"
+    },
+    "typecheck-setup-failure.log": {
+      "bytes": 1366,
+      "sha256": "6a6900342b2a12ab26fbdb5af605d7923362d740f244d02a1b51f4ef08e12965"
+    }
+  },
+  "note": "Scratch probe type-only imports resolve existing repository types by absolute path; they are erased from executable code. Helper and module package match original frozen coarse-scoped tool. No production or published tool edits."
+}

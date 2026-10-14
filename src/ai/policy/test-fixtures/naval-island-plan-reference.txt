@@ -1,0 +1,46 @@
+function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): IslandPlan | undefined {
+    const map = snapshot.map;
+    if (!map.terrain || groundWholes(map) <= 1)
+        return undefined;
+    const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
+    if (!home)
+        return undefined;
+    if (localExpansionAvailable(snapshot, owner, options)) return undefined;
+    const ownedHalls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
+    const memory = navalMemory(options);
+    const settling = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return");
+    const localGold = snapshot.resources.filter(mine => mine.amount > 0 && ownedHalls.some(hall => sameGround(map, hall, mine) && distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((n, mine) => n + mine.amount, 0);
+    // Population gates a new expedition; casualties do not cancel a colony already loading or sailing.
+    if (!settling && ownedHalls.length < 2 && localGold > 1800 && playerState(snapshot, owner).supplyUsed < 20) return undefined;
+    const income = units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < GOLD_MINE_RULES.baseRange)));
+    if (!income && playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost)
+        return undefined;
+    let known = memory.island;
+    const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
+    if (known?.plan) {
+        const mine = snapshot.resources.find(mine => mine.id === known!.plan!.mineId);
+        if (!mine || mine.amount <= 0 || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
+            known = undefined;
+    }
+    const sailing = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === 'settle' && mission.phase === 'sailing');
+    if (!known || (!sailing && snapshot.tick - known.tick >= PLAN_RETRY)) {
+        // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
+        const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
+        const candidates = snapshot.resources
+            .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
+                && !mineClaimedByAlly(snapshot, owner, mine, options))
+            .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
+            .flatMap(entry => {
+                if (!isWalkable(map, entry.landing.x, entry.landing.y, 'sea')) return [];
+                const shore = shoreSpot(snapshot, owner, entry.landing, options, true);
+                const departure = shore && coastOnWater(snapshot, shore, entry.landing);
+                return departure ? [{ ...entry, departure }] : [];
+            });
+        const plan = chooseNavalMine(snapshot, owner, candidates, options);
+        known = { tick: snapshot.tick, ...(plan ? { plan: { mineId: plan.mine.id, landing: { x: plan.landing.x, y: plan.landing.y } } } : {}) };
+        memory.island = known;
+    }
+    const plan = known.plan;
+    const live = plan && snapshot.resources.find((mine) => mine.id === plan.mineId && mine.amount > 0);
+    return plan && live ? { mine: live, landing: plan.landing } : undefined;
+}

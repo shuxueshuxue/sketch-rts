@@ -1,0 +1,10 @@
+{
+  "originalToolDirectory": "/workspace/sketch-rts-six-player-perf/docs/performance/six-player-ticks/remaining-spikes/tools/profile-original",
+  "originalSourceSha256": {
+    "six-player-tick-probe.ts": "1d4d16a416d393b2b1f38557c6079e682e726c9bb85f35f81336d948d0695a62",
+    "six-player-focused-instrumentation.ts": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+    "package.json": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+  },
+  "runtimeTypeSource": "/workspace/sketch-rts-six-player-perf/src",
+  "note": "Copied frozen original low-density scopes. Only scratch probe receives optional per-selected-tick runtime usage observer; production and published tooling remain untouched."
+}

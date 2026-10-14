@@ -1,0 +1,1058 @@
+{
+  "schema": 1,
+  "method": "Read-only final archival preflight after experimental and analysis closure; no game/test execution",
+  "protectedCommit": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+  "protectedFileCount": 315,
+  "directories": [
+    {
+      "source": "/workspace/six-player-structural-runs",
+      "regularFiles": 79,
+      "files": {
+        "2088-observed-1/command-frames.jsonl.gz": {
+          "bytes": 7142,
+          "sha256": "90adc7cb6e17e0b18d41912037db3787a190512f5d99cf667e07584f9536ae7f"
+        },
+        "2088-observed-1/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "2088-observed-1/environment.json": {
+          "bytes": 49217,
+          "sha256": "6e5447fe2c7157bf7272854ac35337cb00aa05e54e233a318979dda0e69a04fe"
+        },
+        "2088-observed-1/focused-diagnostics.json.gz": {
+          "bytes": 63861,
+          "sha256": "70b249869384d05a90f4f8290024427c5450055c313e8719f963fb23ef3d9bfa"
+        },
+        "2088-observed-1/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "2088-observed-1/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "2088-observed-1/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "2088-observed-1/report.txt": {
+          "bytes": 22685,
+          "sha256": "1458de6fbc3c2b60815d033508a041b7af955b32bc50eedeab851826275e4847"
+        },
+        "2088-observed-1/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "2088-observed-1/runtime.mjs": {
+          "bytes": 2225938,
+          "sha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b"
+        },
+        "2088-observed-1/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "2088-observed-1/summary.json": {
+          "bytes": 31068,
+          "sha256": "849df64273ef7079f1a4c94481cbf59bb563012e0f6df1598421c263c7cecabe"
+        },
+        "2088-observed-1/ticks.json.gz": {
+          "bytes": 133665,
+          "sha256": "1659cdb5a2310203e8e22ddbbc5464bec0d74b8ca8a8e08bf1134b9ece50aa2f"
+        },
+        "2088-observed-2/command-frames.jsonl.gz": {
+          "bytes": 7142,
+          "sha256": "90adc7cb6e17e0b18d41912037db3787a190512f5d99cf667e07584f9536ae7f"
+        },
+        "2088-observed-2/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "2088-observed-2/environment.json": {
+          "bytes": 49217,
+          "sha256": "fa71ce8c788a4150266ea2a2e69e955b1eddb6e2a85bf2a27cdab0fee8358c00"
+        },
+        "2088-observed-2/focused-diagnostics.json.gz": {
+          "bytes": 63453,
+          "sha256": "4cfc8e069c31d041727ecd717c821433072dee53615cf2eec961d7710c2a6d1f"
+        },
+        "2088-observed-2/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "2088-observed-2/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "2088-observed-2/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "2088-observed-2/report.txt": {
+          "bytes": 21513,
+          "sha256": "d7ddddd8bc0866503e7cd48b102ae691d941631a692209b5a3431f86f600387e"
+        },
+        "2088-observed-2/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "2088-observed-2/runtime.mjs": {
+          "bytes": 2225938,
+          "sha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b"
+        },
+        "2088-observed-2/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "2088-observed-2/summary.json": {
+          "bytes": 29765,
+          "sha256": "3afa8e64252e49fa7594de79efd6c48667a42ae0c9df83f52bdb636799ecd8b5"
+        },
+        "2088-observed-2/ticks.json.gz": {
+          "bytes": 132791,
+          "sha256": "e851aa1a6ccac94c75de6cb94f0fe838b565ead279fd4008cd5ddb6cc30a1230"
+        },
+        "2088-observed-3/command-frames.jsonl.gz": {
+          "bytes": 7142,
+          "sha256": "90adc7cb6e17e0b18d41912037db3787a190512f5d99cf667e07584f9536ae7f"
+        },
+        "2088-observed-3/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "2088-observed-3/environment.json": {
+          "bytes": 49217,
+          "sha256": "5b7771fbb2d8e59703cfc484d77df0734718e2351c3ff4272af231280c08fbf7"
+        },
+        "2088-observed-3/focused-diagnostics.json.gz": {
+          "bytes": 63411,
+          "sha256": "3c50a46e489c8a73efdbd95e539beafe2d9de09690f7f30e2e10a5b3e4ab0cae"
+        },
+        "2088-observed-3/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "2088-observed-3/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "2088-observed-3/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "2088-observed-3/report.txt": {
+          "bytes": 19844,
+          "sha256": "26c76f76e140fc06711f4bfd390b2a5b8210e1f0efd02acbdb6d42063b0e10de"
+        },
+        "2088-observed-3/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "2088-observed-3/runtime.mjs": {
+          "bytes": 2225938,
+          "sha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b"
+        },
+        "2088-observed-3/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "2088-observed-3/summary.json": {
+          "bytes": 27966,
+          "sha256": "03435dc804bab391d61f548c9039707f9d0e074e4226d0d70c0274344be3cb59"
+        },
+        "2088-observed-3/ticks.json.gz": {
+          "bytes": 129853,
+          "sha256": "5a62ecec0890329e22c0daecbdce2b6f91ace4f216e1c5991b1be0bc9ddb1034"
+        },
+        "2088-observed-4/command-frames.jsonl.gz": {
+          "bytes": 7142,
+          "sha256": "90adc7cb6e17e0b18d41912037db3787a190512f5d99cf667e07584f9536ae7f"
+        },
+        "2088-observed-4/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "2088-observed-4/environment.json": {
+          "bytes": 49217,
+          "sha256": "a5119b4f8c8c37539d4fafc1db50d68664b28d63c293e86b8b2bf119e04d95f0"
+        },
+        "2088-observed-4/focused-diagnostics.json.gz": {
+          "bytes": 63699,
+          "sha256": "89a18fbf7b34e532d4f3b7be3320d92ea18d3c58301bb50a70d48af0aac71b90"
+        },
+        "2088-observed-4/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "2088-observed-4/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "2088-observed-4/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "2088-observed-4/report.txt": {
+          "bytes": 20387,
+          "sha256": "85f5d214c4a981988798d9c365d3cd7e6d013aa10c2c14635a4a127c95d472b0"
+        },
+        "2088-observed-4/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "2088-observed-4/runtime.mjs": {
+          "bytes": 2225938,
+          "sha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b"
+        },
+        "2088-observed-4/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "2088-observed-4/summary.json": {
+          "bytes": 28548,
+          "sha256": "b06b7d873e684e4bfe561b7d2ac8970b1b35a895955fb31602e0bdc3d7fca3b5"
+        },
+        "2088-observed-4/ticks.json.gz": {
+          "bytes": 130519,
+          "sha256": "5358a5cc4a9986a3bf6b41ccfef0f3f64d56e763c167be4d2651380d6ddde27c"
+        },
+        "2088-observed-5/command-frames.jsonl.gz": {
+          "bytes": 7142,
+          "sha256": "90adc7cb6e17e0b18d41912037db3787a190512f5d99cf667e07584f9536ae7f"
+        },
+        "2088-observed-5/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "2088-observed-5/environment.json": {
+          "bytes": 49217,
+          "sha256": "c8743f0061a8ee83e65b0cf22d1e9ab1e5eab46b9f9b87ca3df6f2a0b03c06cf"
+        },
+        "2088-observed-5/focused-diagnostics.json.gz": {
+          "bytes": 63303,
+          "sha256": "3214161d440fac428480f0caf770312658ca073d7c1abcf13f830695cff6e2a2"
+        },
+        "2088-observed-5/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "2088-observed-5/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "2088-observed-5/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "2088-observed-5/report.txt": {
+          "bytes": 20406,
+          "sha256": "ebf0049cdbb23c1753f902a550bff0557f13af3463a994d77922001a6c620c1e"
+        },
+        "2088-observed-5/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "2088-observed-5/runtime.mjs": {
+          "bytes": 2225938,
+          "sha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b"
+        },
+        "2088-observed-5/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "2088-observed-5/summary.json": {
+          "bytes": 28574,
+          "sha256": "e92eeab10253c52d59f4c7aa94c569761c733171cb43024ede904383c19c1196"
+        },
+        "2088-observed-5/ticks.json.gz": {
+          "bytes": 129518,
+          "sha256": "2107eda35865ba6638d8cd1f859f026b4f5170b33e64dc8edc5d09fca433d69a"
+        },
+        "shore-actual-0f31/command-frames.jsonl.gz": {
+          "bytes": 69478,
+          "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275"
+        },
+        "shore-actual-0f31/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "shore-actual-0f31/environment.json": {
+          "bytes": 48992,
+          "sha256": "16f351e4de2469dfd2387cb3db3f9ae70afe9a17b7f5689f12a8c71ef587f70e"
+        },
+        "shore-actual-0f31/focused-diagnostics.json.gz": {
+          "bytes": 437182,
+          "sha256": "dbfc37d08b6c83c24f100326d93e58199fcb5b4348f92ccb86f36c0bf5888543"
+        },
+        "shore-actual-0f31/focused-instrumentation-source.ts": {
+          "bytes": 8054,
+          "sha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7"
+        },
+        "shore-actual-0f31/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "shore-actual-0f31/probe-source.ts": {
+          "bytes": 35337,
+          "sha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df"
+        },
+        "shore-actual-0f31/report.txt": {
+          "bytes": 36339,
+          "sha256": "a8c561dc1d184bddd8acfb51eabc8801e6d258877152e93a01804f892153f96d"
+        },
+        "shore-actual-0f31/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "shore-actual-0f31/runtime.mjs": {
+          "bytes": 2226308,
+          "sha256": "b567bb206b9c86ee8b8dab8a26e5353c2c3b5821ac7fffbecb02d316df486f78"
+        },
+        "shore-actual-0f31/shore-inputs.jsonl.gz": {
+          "bytes": 40325,
+          "sha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a"
+        },
+        "shore-actual-0f31/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "shore-actual-0f31/summary.json": {
+          "bytes": 47858,
+          "sha256": "6d3989c98fb56ebb1e02b29e5cf3c5262bff2b27b273f55416199ae343e66b1a"
+        },
+        "shore-actual-0f31/ticks.json.gz": {
+          "bytes": 969458,
+          "sha256": "7da9b5b775d71195c91a884ebf8ffe44244abd1830b66ab33e81ffb3bd93f4e4"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-multi-source-proof",
+      "regularFiles": 3,
+      "files": {
+        "README.md": {
+          "bytes": 4981,
+          "sha256": "26da7d021d98c0198abb048a58878d1ce1ded5fb7accf930aaa21669c6cd180f"
+        },
+        "proof-summary.json": {
+          "bytes": 1716,
+          "sha256": "2ff622aa0056dc3f1f93a1a123a42fac09f69706d3de07d66a90592765083399"
+        },
+        "terrain-multi-source-tests.log": {
+          "bytes": 671,
+          "sha256": "3ce3fe8a56286914a796a1166c1f7d1d33b65d05112ce21d3bac1e5f9d12eac0"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration",
+      "regularFiles": 6,
+      "files": {
+        "calibration-exclusive-retry.log": {
+          "bytes": 2196,
+          "sha256": "73ea73138b82a2899820467d1d2b7f3884b3e64c471e88b880e9b94f33155130"
+        },
+        "calibration.log": {
+          "bytes": 2177,
+          "sha256": "36e930d89556a14de5112673c928e67c7ffa81ad529306230cbecb199d73196b"
+        },
+        "calibration.mjs": {
+          "bytes": 5612,
+          "sha256": "33be01d9323ee89a18dcdd840b077516e36271565218f8f2eb2fe85a0bf32fde"
+        },
+        "execution-notes.json": {
+          "bytes": 2062,
+          "sha256": "08a8c28124591537aa524d12930117ee7c1311eca8a353aeb09df8a7e6471a1a"
+        },
+        "result-exclusive-retry.json": {
+          "bytes": 75350,
+          "sha256": "a9f3f25752dc429e0abdf38540bcbed42626a73aae780aad937fefc18ea12362"
+        },
+        "result.json": {
+          "bytes": 75024,
+          "sha256": "e93ac72f2ea4aee88506d8c094ee82ee5bd72be3534957ef45f4733e5dac0b97"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration-clean",
+      "regularFiles": 4,
+      "files": {
+        "calibration.log": {
+          "bytes": 2196,
+          "sha256": "73ea73138b82a2899820467d1d2b7f3884b3e64c471e88b880e9b94f33155130"
+        },
+        "calibration.mjs": {
+          "bytes": 5612,
+          "sha256": "33be01d9323ee89a18dcdd840b077516e36271565218f8f2eb2fe85a0bf32fde"
+        },
+        "launcher-metadata.json": {
+          "bytes": 1357,
+          "sha256": "0867cb3124716f44710f2331c225248a3afeca143804dd27f7a025baa84e7354"
+        },
+        "result.json": {
+          "bytes": 75350,
+          "sha256": "a9f3f25752dc429e0abdf38540bcbed42626a73aae780aad937fefc18ea12362"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-structural-observer-tool",
+      "regularFiles": 46,
+      "files": {
+        "captures/default31/command-frames.jsonl.gz": {
+          "bytes": 613,
+          "sha256": "ce1ddb2064bb4511ab7dd77bb854d058f860d7f7f1b3566dcef72b60839972d8"
+        },
+        "captures/default31/entry.ts": {
+          "bytes": 455,
+          "sha256": "239a78aa83133f0b585aac81a6951e93a23d117f9cde3f1013eb23c14ae7ad36"
+        },
+        "captures/default31/environment.json": {
+          "bytes": 48721,
+          "sha256": "a5c352021316e3cdfa471679972a972274e76a1a7f026bfe7cdcc0c007eae585"
+        },
+        "captures/default31/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "captures/default31/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "captures/default31/report.txt": {
+          "bytes": 15457,
+          "sha256": "9b90200b8aedd4b033bc46fd79c76f704b6afac5138fe8a83f93e3262cb9ffb7"
+        },
+        "captures/default31/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "captures/default31/runtime.mjs": {
+          "bytes": 2209156,
+          "sha256": "6f6a0e6679a00c4a6ddde5c9b5e188b59ef4c9b75ebe3e0c548b2de023e40fa9"
+        },
+        "captures/default31/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "captures/default31/summary.json": {
+          "bytes": 21225,
+          "sha256": "8f5bf3e30db64ab115079765b237d5b6d1466e4333ba742380bbe3fcd58d8ce9"
+        },
+        "captures/default31/ticks.json.gz": {
+          "bytes": 2677,
+          "sha256": "a64afdcf9aafe9d6bb13e25563e26037c63192cc8fe208abf36c8398c28ae70c"
+        },
+        "captures/observed31/command-frames.jsonl.gz": {
+          "bytes": 613,
+          "sha256": "ce1ddb2064bb4511ab7dd77bb854d058f860d7f7f1b3566dcef72b60839972d8"
+        },
+        "captures/observed31/entry.ts": {
+          "bytes": 455,
+          "sha256": "239a78aa83133f0b585aac81a6951e93a23d117f9cde3f1013eb23c14ae7ad36"
+        },
+        "captures/observed31/environment.json": {
+          "bytes": 48957,
+          "sha256": "f4aae936743bd7cccc81669257f32ac6a113899dc66f190a0b1fb96af7d4b9e0"
+        },
+        "captures/observed31/focused-diagnostics.json.gz": {
+          "bytes": 26445,
+          "sha256": "fc0e85120772f6ff3666d1f1352cce088558b55927ac18ce7e3cc6678035c55c"
+        },
+        "captures/observed31/focused-instrumentation-source.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "captures/observed31/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "captures/observed31/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "captures/observed31/report.txt": {
+          "bytes": 15469,
+          "sha256": "3b43fba4c27fa26b04546b4820845336598b2aa237863ed2b2dd6f569e90bbc8"
+        },
+        "captures/observed31/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "captures/observed31/runtime.mjs": {
+          "bytes": 2214466,
+          "sha256": "5c706d3f2b358a9d8da5c7329e0e716f1bdeb924d6411cf9bf2264afdacdead3"
+        },
+        "captures/observed31/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "captures/observed31/summary.json": {
+          "bytes": 22952,
+          "sha256": "21119c73823601448881c400c074ad9ecaeb5c39c1f15a209bcd85cc78fc1fdc"
+        },
+        "captures/observed31/ticks.json.gz": {
+          "bytes": 2613,
+          "sha256": "d7c0bf5922ab882269d3bbc7f271eecbde4bc555bfa618e5965aee9ebaf2f481"
+        },
+        "captures/plain31/command-frames.jsonl.gz": {
+          "bytes": 613,
+          "sha256": "ce1ddb2064bb4511ab7dd77bb854d058f860d7f7f1b3566dcef72b60839972d8"
+        },
+        "captures/plain31/entry.ts": {
+          "bytes": 455,
+          "sha256": "239a78aa83133f0b585aac81a6951e93a23d117f9cde3f1013eb23c14ae7ad36"
+        },
+        "captures/plain31/environment.json": {
+          "bytes": 48738,
+          "sha256": "4364b3b56e47614c5f54953bf54b93e6af8c85e114155e598490d1f36c565f9d"
+        },
+        "captures/plain31/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "captures/plain31/probe-source.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "captures/plain31/report.txt": {
+          "bytes": 10817,
+          "sha256": "e125994f0008ab9c60ad59616235d7adf84ad62aa0d29d4f5c8be654ec38869f"
+        },
+        "captures/plain31/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "captures/plain31/runtime.mjs": {
+          "bytes": 2207949,
+          "sha256": "a254eb710e4bc8c3a3c0a0f3dfde2737355d6c90900b0f35237e0346e8d5fe29"
+        },
+        "captures/plain31/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "captures/plain31/summary.json": {
+          "bytes": 15504,
+          "sha256": "2d2ca9a1fdf19e525593cc7d099485ff0c39509eb86c419c2bebf803c651d88e"
+        },
+        "captures/plain31/ticks.json.gz": {
+          "bytes": 1590,
+          "sha256": "d651ddc2a308adf4b6d7da64a2526a67b9c2c575f00865b3989a6959184a7dfb"
+        },
+        "contract-result.json": {
+          "bytes": 593,
+          "sha256": "103d99730d7bdfc707161c313a0d50bb4bb44dc377cc36b6087f1250d6e19844"
+        },
+        "contract-setup-failure.log": {
+          "bytes": 1361,
+          "sha256": "a39cbe8553b6b6f4d54dd68925e24a8605e00d61b52ccfe35aab5ff7ea4ce0cb"
+        },
+        "contract.log": {
+          "bytes": 42548,
+          "sha256": "13ff4375b430cd04599e001e6c3ee15c3b947aa582a1d7f177333d5220741565"
+        },
+        "package.json": {
+          "bytes": 18,
+          "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+        },
+        "runtime-usage-contract.ts": {
+          "bytes": 3875,
+          "sha256": "1ab1a9921c9ca4c1ed77608140adf1132b79b6b03d5e4b5a3d1047b7bd8078f4"
+        },
+        "six-player-focused-instrumentation.ts": {
+          "bytes": 6672,
+          "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+        },
+        "six-player-tick-probe.ts": {
+          "bytes": 37972,
+          "sha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef"
+        },
+        "source-origin.json": {
+          "bytes": 732,
+          "sha256": "2cf7349079dc426d7fc6cd7c2a24694161aafc58a318ec34aed2adbb168c26c5"
+        },
+        "tool-freeze.json": {
+          "bytes": 2210,
+          "sha256": "ea9b0569b8b6ed8316d8dfdb874b4fd0fe2ab32b897cd01ebd0e2c02ff2977d9"
+        },
+        "typecheck-setup-failure.log": {
+          "bytes": 1366,
+          "sha256": "6a6900342b2a12ab26fbdb5af605d7923362d740f244d02a1b51f4ef08e12965"
+        },
+        "typecheck.log": {
+          "bytes": 208,
+          "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-tool",
+      "regularFiles": 36,
+      "files": {
+        "captures-xT1i8w/focused/command-frames.jsonl.gz": {
+          "bytes": 613,
+          "sha256": "ce1ddb2064bb4511ab7dd77bb854d058f860d7f7f1b3566dcef72b60839972d8"
+        },
+        "captures-xT1i8w/focused/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "captures-xT1i8w/focused/environment.json": {
+          "bytes": 48753,
+          "sha256": "ce5a9bf511967a6b5b2b3eeb50fae97db9cd91c460b92843cb06994663aa54a1"
+        },
+        "captures-xT1i8w/focused/focused-diagnostics.json.gz": {
+          "bytes": 25668,
+          "sha256": "21cc1a2b88ed60b177c0902f1a6a95c2d36e37eb8c1ec0c4d96e29d1b454fab8"
+        },
+        "captures-xT1i8w/focused/focused-instrumentation-source.ts": {
+          "bytes": 8054,
+          "sha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7"
+        },
+        "captures-xT1i8w/focused/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "captures-xT1i8w/focused/probe-source.ts": {
+          "bytes": 35337,
+          "sha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df"
+        },
+        "captures-xT1i8w/focused/report.txt": {
+          "bytes": 15490,
+          "sha256": "6425ee3448020a36e1b817f5496573df0effe27d4d2df2eec2964112b80679b8"
+        },
+        "captures-xT1i8w/focused/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "captures-xT1i8w/focused/runtime.mjs": {
+          "bytes": 2226308,
+          "sha256": "b567bb206b9c86ee8b8dab8a26e5353c2c3b5821ac7fffbecb02d316df486f78"
+        },
+        "captures-xT1i8w/focused/shore-inputs.jsonl.gz": {
+          "bytes": 201728,
+          "sha256": "d5360d54bcebcb22a2e5db0f07553fcfc52ce63c4cd21766f4113c243f264a62"
+        },
+        "captures-xT1i8w/focused/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "captures-xT1i8w/focused/summary.json": {
+          "bytes": 23008,
+          "sha256": "86b5eada855158aef3b05fd6d03c30628405b8606489531804d74f250e48e393"
+        },
+        "captures-xT1i8w/focused/ticks.json.gz": {
+          "bytes": 2619,
+          "sha256": "81d94c3a756128c9e43cabc1b9f94c483404cb02ab7e30f189163498b5fba934"
+        },
+        "captures-xT1i8w/plain/command-frames.jsonl.gz": {
+          "bytes": 613,
+          "sha256": "ce1ddb2064bb4511ab7dd77bb854d058f860d7f7f1b3566dcef72b60839972d8"
+        },
+        "captures-xT1i8w/plain/entry.ts": {
+          "bytes": 527,
+          "sha256": "b2d155925fc7c294c3789124fb83674637cf417a8a39119b26c8052dee574eed"
+        },
+        "captures-xT1i8w/plain/environment.json": {
+          "bytes": 48591,
+          "sha256": "0e013ff0a6ceca4127cc00d3b956f5339f06f2bf92262196872bef12af86d882"
+        },
+        "captures-xT1i8w/plain/initial-snapshot.json.gz": {
+          "bytes": 10007,
+          "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959"
+        },
+        "captures-xT1i8w/plain/probe-source.ts": {
+          "bytes": 35337,
+          "sha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df"
+        },
+        "captures-xT1i8w/plain/report.txt": {
+          "bytes": 10815,
+          "sha256": "370ad729ede67b3b4b34a73d9bf558b36571bb3388f3ce7b014539e4da0815f0"
+        },
+        "captures-xT1i8w/plain/room.json": {
+          "bytes": 2109,
+          "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c"
+        },
+        "captures-xT1i8w/plain/runtime.mjs": {
+          "bytes": 2219421,
+          "sha256": "b21e72141217ee0a9adf2c022d9cc90420e897ac3df3c42ffbac0111fae63982"
+        },
+        "captures-xT1i8w/plain/source-inputs.json.gz": {
+          "bytes": 652483,
+          "sha256": "99fd46d6c7528dd2245937c6559c85bcee051437cb34348434053ef5ab9caab1"
+        },
+        "captures-xT1i8w/plain/summary.json": {
+          "bytes": 15490,
+          "sha256": "09119bfd223af23c02528e60c7ff8ffaaadd48b72e74c4b1eeba2996250444be"
+        },
+        "captures-xT1i8w/plain/ticks.json.gz": {
+          "bytes": 1560,
+          "sha256": "562017e288eafd6db48834addd974d2198067153d8dfb9d2b17a60b69c59c4ae"
+        },
+        "contract-first.log": {
+          "bytes": 26867,
+          "sha256": "9ff85050ce3e88ed9d3d8b9b9f197dc87243c5db41d6a0906692cb497ebe37b0"
+        },
+        "contract-result.json": {
+          "bytes": 559,
+          "sha256": "e6381731d6d406a2d59569fce47341fadedfdf60516ddb018abc05bf6927c636"
+        },
+        "contract-verification.json": {
+          "bytes": 710,
+          "sha256": "9a2bef6ebbbd1d11529f77322d034f78c9382e4a39ff819589e9aae0a7839783"
+        },
+        "package.json": {
+          "bytes": 18,
+          "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+        },
+        "shore-capture-contract.ts": {
+          "bytes": 3887,
+          "sha256": "34c4218cce2942e9a740ced28d39ba8b24515d6730d12736401809e665ba392a"
+        },
+        "six-player-focused-instrumentation.ts": {
+          "bytes": 8054,
+          "sha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7"
+        },
+        "six-player-tick-probe.ts": {
+          "bytes": 35337,
+          "sha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df"
+        },
+        "source-origin.json": {
+          "bytes": 1227,
+          "sha256": "bcbbdb9dadc34457ecd2ea967a87b306a89f7eba64a81bea759d2466c2ee3e62"
+        },
+        "tool-freeze.json": {
+          "bytes": 2731,
+          "sha256": "7955177b67f8168077b3ef8d903db8af09e169fb0a343ea10de71d9c442c708b"
+        },
+        "tsconfig.json": {
+          "bytes": 464,
+          "sha256": "11d235935455c64ed9bb6b530b64ac41752aaf3cdd06ca75905843fefe3bb116"
+        },
+        "typecheck-first.log": {
+          "bytes": 208,
+          "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+        }
+      }
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-experiment",
+      "regularFiles": 71,
+      "files": {
+        "README.md": {
+          "bytes": 6735,
+          "sha256": "cc4e3b2a62e0fcf2627f8937be2558c76ab7b34c92df440806e22993e898152c"
+        },
+        "closure-verification.json": {
+          "bytes": 2597,
+          "sha256": "a4045fd59f1b958609712bbad1fc46fffb5698adcec1b760e7dceace2155ce01"
+        },
+        "counts-boundaries/A-counts-naval.ts.gz": {
+          "bytes": 22950,
+          "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+        },
+        "counts-boundaries/A-counts-terrain.ts.gz": {
+          "bytes": 20990,
+          "sha256": "68f06b3874e2848dbbab5a882630a5e8cd0cad79ba5a5956872b9af5c9f3264e"
+        },
+        "counts-boundaries/A-counts.cjs.gz": {
+          "bytes": 68772,
+          "sha256": "69cae2db89f0c5e2aee957969e82572b9cd8862e4148ee83065fc70de10d590f"
+        },
+        "counts-boundaries/A-timed-naval.ts.gz": {
+          "bytes": 22950,
+          "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+        },
+        "counts-boundaries/A-timed-terrain.ts.gz": {
+          "bytes": 20950,
+          "sha256": "4dd1a8c8463e99d4c41e80daf4d1230c3deda3a0ba3ac3178c7fe252cb4855f9"
+        },
+        "counts-boundaries/A-timed.cjs.gz": {
+          "bytes": 68729,
+          "sha256": "4a90bdabbd4e12b10c435be18e56e84930e2c012c7dd9ad5b192e7dd19f158d5"
+        },
+        "counts-boundaries/B-counts-naval.ts.gz": {
+          "bytes": 22991,
+          "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+        },
+        "counts-boundaries/B-counts-terrain.ts.gz": {
+          "bytes": 21349,
+          "sha256": "4041c7035b13320cef4e90ab70d6b41ff39d4aecb8f858897401e413ea1f4f44"
+        },
+        "counts-boundaries/B-counts.cjs.gz": {
+          "bytes": 69074,
+          "sha256": "af782346e121aa3d7db9ae66503085dbbc8395d25d3588848a0177f489002397"
+        },
+        "counts-boundaries/B-timed-naval.ts.gz": {
+          "bytes": 22991,
+          "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+        },
+        "counts-boundaries/B-timed-terrain.ts.gz": {
+          "bytes": 21288,
+          "sha256": "6f821748f8160f9f08f94b658ff047b0b999c2f688c2feef6883c3ac87683d54"
+        },
+        "counts-boundaries/B-timed.cjs.gz": {
+          "bytes": 69011,
+          "sha256": "a98a79d8303bfa8c18e980b589a1f1e303b52c7419437b473a02195360119f7e"
+        },
+        "counts-boundaries/captured-inputs.jsonl.gz": {
+          "bytes": 40325,
+          "sha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a"
+        },
+        "counts-boundaries/closed-manifest.json": {
+          "bytes": 3507,
+          "sha256": "3d5bfe63f7673976e650022903091eec279e0d30a1ae991f783223027da58cca"
+        },
+        "counts-boundaries/experiment-source.ts": {
+          "bytes": 16947,
+          "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+        },
+        "counts-boundaries/report.json": {
+          "bytes": 15121,
+          "sha256": "5925b91012f8d72f88d079405d40fb516190b0f0b918df2669346a0c07e77984"
+        },
+        "counts-boundaries/source-inputs.json.gz": {
+          "bytes": 419789,
+          "sha256": "23c2a1b3ee4132b4d88fcae510f2a64cda236ba46c6ad2785b999ae4a9991478"
+        },
+        "counts-boundaries/source-manifest.json": {
+          "bytes": 19521,
+          "sha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+        },
+        "counts-boundaries/summary.json": {
+          "bytes": 19692,
+          "sha256": "6b4b0210db0dd4dff889246030176059c1993bc3f56c2b303c06f03b9038918b"
+        },
+        "counts-boundaries/trials.json.gz": {
+          "bytes": 22,
+          "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034"
+        },
+        "counts-boundaries-first.log": {
+          "bytes": 79,
+          "sha256": "1cea6a968f702c8c05287011916c311bd98cca9398ff702b660718ababc4812b"
+        },
+        "evidence-manifest.json": {
+          "bytes": 20960,
+          "sha256": "610a3ab7cf4b93814c45dd062dba6cdb1fd93b94fe5398efa9021b61a96355c7"
+        },
+        "first-run.log": {
+          "bytes": 3252,
+          "sha256": "2f6370936e3dad83cf624a22e047ec9cb81b66693f08309979fd99a572ff4721"
+        },
+        "package.json": {
+          "bytes": 18,
+          "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+        },
+        "run1/A-counts-naval.ts.gz": {
+          "bytes": 22895,
+          "sha256": "83f48c7dee1da0aa782cf2888dc0a74aae3f60af9d995e5fd56d2568303dfcb3"
+        },
+        "run1/A-counts-terrain.ts.gz": {
+          "bytes": 20957,
+          "sha256": "e98b5255d1745a4cad49a6178fbc43b0f3e024f74bde39dc4ef221ef002e1535"
+        },
+        "run1/A-counts.cjs.gz": {
+          "bytes": 68687,
+          "sha256": "af3a194c4cfbc6dd3906f71ba8f5305e0278b818d80ff76d5a0cb55419db8dfd"
+        },
+        "run1/A-timed-naval.ts.gz": {
+          "bytes": 22895,
+          "sha256": "83f48c7dee1da0aa782cf2888dc0a74aae3f60af9d995e5fd56d2568303dfcb3"
+        },
+        "run1/A-timed-terrain.ts.gz": {
+          "bytes": 20938,
+          "sha256": "430b78e9ef45cbae862c24cc8bce1e89a943b2bc4f6d17e19565df8a01e1ad35"
+        },
+        "run1/A-timed.cjs.gz": {
+          "bytes": 68662,
+          "sha256": "1bcb63a695564fe9b8251ccc959f75fc99dc692b42ebc13233217b7dbb39d027"
+        },
+        "run1/B-counts-naval.ts.gz": {
+          "bytes": 22936,
+          "sha256": "1968b5ad1ffb05721c3d914104fa5a5268cdbdc50b89c21ba24fa96326fbb950"
+        },
+        "run1/B-counts-terrain.ts.gz": {
+          "bytes": 21315,
+          "sha256": "d2607c83c689ad4ded9706612a60f2d4785fecd0017cc3876b4029d59255f3f8"
+        },
+        "run1/B-counts.cjs.gz": {
+          "bytes": 68994,
+          "sha256": "38ea7cbf9932a8cfd27bc734cdf67ba232dd73d4c16252291612b2f20b72dd19"
+        },
+        "run1/B-timed-naval.ts.gz": {
+          "bytes": 22936,
+          "sha256": "1968b5ad1ffb05721c3d914104fa5a5268cdbdc50b89c21ba24fa96326fbb950"
+        },
+        "run1/B-timed-terrain.ts.gz": {
+          "bytes": 21278,
+          "sha256": "0566662cae88b48dfc0a7a9ebe8a76e3d88aaf724a5de8f6ef7d36853a155ae6"
+        },
+        "run1/B-timed.cjs.gz": {
+          "bytes": 68945,
+          "sha256": "4f74e3aef9710754345c0bcd55904058190d6a1795310dcf0a2b1e4cf950dc15"
+        },
+        "run1/captured-inputs.jsonl.gz": {
+          "bytes": 40325,
+          "sha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a"
+        },
+        "run1/closed-manifest.json": {
+          "bytes": 3510,
+          "sha256": "35b9eabad5e7b98174e35ccde91d0593681bb442ec713839d97fb238acc92e53"
+        },
+        "run1/experiment-source.ts": {
+          "bytes": 16069,
+          "sha256": "6b83dd816d951eb7aea692ab2c8ca882406a8a8e7fdaaddf15bdd006e4bff811"
+        },
+        "run1/report.json": {
+          "bytes": 16698,
+          "sha256": "cefdb66259a83331c725c1d148e18572997a7e6c9f0a991dabfcc21318d27e8a"
+        },
+        "run1/source-inputs.json.gz": {
+          "bytes": 418897,
+          "sha256": "a80d790626ba89884c37da8602a868857cde4b22f9c6d97d480a70a3026268aa"
+        },
+        "run1/source-manifest.json": {
+          "bytes": 19521,
+          "sha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+        },
+        "run1/summary.json": {
+          "bytes": 37660,
+          "sha256": "7af7c05f59619cc47adcd09d682ae5040a1572e931e8204a6bf45b832905e03c"
+        },
+        "run1/trials.json.gz": {
+          "bytes": 12025,
+          "sha256": "914f9db3ef2ad170e5602a48ab1e827eb6fe52660ed69672ec7393ddf1b6346e"
+        },
+        "run2/A-counts-naval.ts.gz": {
+          "bytes": 22950,
+          "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+        },
+        "run2/A-counts-terrain.ts.gz": {
+          "bytes": 20990,
+          "sha256": "68f06b3874e2848dbbab5a882630a5e8cd0cad79ba5a5956872b9af5c9f3264e"
+        },
+        "run2/A-counts.cjs.gz": {
+          "bytes": 68772,
+          "sha256": "69cae2db89f0c5e2aee957969e82572b9cd8862e4148ee83065fc70de10d590f"
+        },
+        "run2/A-timed-naval.ts.gz": {
+          "bytes": 22950,
+          "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+        },
+        "run2/A-timed-terrain.ts.gz": {
+          "bytes": 20950,
+          "sha256": "4dd1a8c8463e99d4c41e80daf4d1230c3deda3a0ba3ac3178c7fe252cb4855f9"
+        },
+        "run2/A-timed.cjs.gz": {
+          "bytes": 68729,
+          "sha256": "4a90bdabbd4e12b10c435be18e56e84930e2c012c7dd9ad5b192e7dd19f158d5"
+        },
+        "run2/B-counts-naval.ts.gz": {
+          "bytes": 22991,
+          "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+        },
+        "run2/B-counts-terrain.ts.gz": {
+          "bytes": 21349,
+          "sha256": "4041c7035b13320cef4e90ab70d6b41ff39d4aecb8f858897401e413ea1f4f44"
+        },
+        "run2/B-counts.cjs.gz": {
+          "bytes": 69074,
+          "sha256": "af782346e121aa3d7db9ae66503085dbbc8395d25d3588848a0177f489002397"
+        },
+        "run2/B-timed-naval.ts.gz": {
+          "bytes": 22991,
+          "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+        },
+        "run2/B-timed-terrain.ts.gz": {
+          "bytes": 21288,
+          "sha256": "6f821748f8160f9f08f94b658ff047b0b999c2f688c2feef6883c3ac87683d54"
+        },
+        "run2/B-timed.cjs.gz": {
+          "bytes": 69011,
+          "sha256": "a98a79d8303bfa8c18e980b589a1f1e303b52c7419437b473a02195360119f7e"
+        },
+        "run2/captured-inputs.jsonl.gz": {
+          "bytes": 40325,
+          "sha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a"
+        },
+        "run2/closed-manifest.json": {
+          "bytes": 3510,
+          "sha256": "9e2d025e06ed21d61fda91208243a0be18902b3d82a702caacb04e08dbb17282"
+        },
+        "run2/experiment-source.ts": {
+          "bytes": 16947,
+          "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+        },
+        "run2/report.json": {
+          "bytes": 18307,
+          "sha256": "8042df72381c44c3b3fc25615b9266cb44e52973be3da4fc1707a844c055b4a4"
+        },
+        "run2/source-inputs.json.gz": {
+          "bytes": 419572,
+          "sha256": "c9906e955ad839eb7e4eb1e04663d7107512a792ab9b13b39abfc6498e2714e6"
+        },
+        "run2/source-manifest.json": {
+          "bytes": 19521,
+          "sha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+        },
+        "run2/summary.json": {
+          "bytes": 39298,
+          "sha256": "af15246ace541de73d4ef97c0971c2bf098525083c6f86502df382f7332b39c3"
+        },
+        "run2/trials.json.gz": {
+          "bytes": 11955,
+          "sha256": "e0d88215892d3f178942ad83ac9125eb35dd0cecce840f15540b6123626592e4"
+        },
+        "second-run.log": {
+          "bytes": 3265,
+          "sha256": "d130cdaf666ae0104cb6f0795daf444faf21f7b558f607348b5938a92bb5c80d"
+        },
+        "shore-experiment.ts": {
+          "bytes": 16947,
+          "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+        },
+        "tsconfig.json": {
+          "bytes": 461,
+          "sha256": "9dbed7bb19673760a0fdb87031fb2339375683a8d1c0f87673621b2c986b2f31"
+        },
+        "typecheck-final.log": {
+          "bytes": 208,
+          "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+        },
+        "typecheck-first.log": {
+          "bytes": 208,
+          "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+        }
+      }
+    }
+  ],
+  "analysisClosedFileHashes": {
+    "six-player-structural-analysis.json": "7f31217ede85923c16784c61fb5c143b9d29a443c3535e272401fa2a16f9405a",
+    "analyze-six-player-structural-evidence.py": "420b71be63609316b553cae249b36741967ea58d77832972170bd960711d9f20"
+  },
+  "excludedSymlinkEntries": [
+    {
+      "captureRoot": "/workspace/six-player-structural-observer-tool",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    },
+    {
+      "captureRoot": "/workspace/six-player-structural-shore-tool",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    },
+    {
+      "captureRoot": "/workspace/six-player-structural-shore-experiment",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    }
+  ],
+  "preparationNote": "An earlier inline plan-preparation snippet had a syntax error before execution. It produced no archive or input mutation; that tool output is retained in the conversation, not reconstructed as a raw execution log."
+}

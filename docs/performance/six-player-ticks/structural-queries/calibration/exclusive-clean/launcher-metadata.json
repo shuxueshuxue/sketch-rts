@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "complete": true,
+  "exitCode": 0,
+  "startUtc": "2026-10-14 08:39:24 UTC",
+  "endUtc": "2026-10-14 08:39:26 UTC",
+  "execResult": {
+    "chunk_id": "f2646a",
+    "wall_time_seconds": 1.724944432,
+    "exit_code": 0
+  },
+  "originalFreshOutput": "/workspace/six-player-cpu-calibration/result-exclusive-retry.json",
+  "destinationNote": "Second clean run was already executed under the preceding explicit CPU idle instruction; copied byte-identically into newly requested dedicated folder. No third competing calibration was run after shore agent received the CPU window. Original possibly concurrent first run remains intact.",
+  "rootInstruction": "tsc已exit0 CPU空闲。请现在跑calibration约2s先，给shoreagent发已完成可跑contract+strict，不要同时测。",
+  "files": {
+    "calibration.mjs": {
+      "bytes": 5612,
+      "sha256": "33be01d9323ee89a18dcdd840b077516e36271565218f8f2eb2fe85a0bf32fde"
+    },
+    "calibration.log": {
+      "bytes": 2196,
+      "sha256": "73ea73138b82a2899820467d1d2b7f3884b3e64c471e88b880e9b94f33155130"
+    },
+    "result.json": {
+      "bytes": 75350,
+      "sha256": "a9f3f25752dc429e0abdf38540bcbed42626a73aae780aad937fefc18ea12362"
+    }
+  },
+  "interpretation": "Calibration only. Do not convert short signed CPU gaps into measured waiting or causal GC/scheduling attribution."
+}

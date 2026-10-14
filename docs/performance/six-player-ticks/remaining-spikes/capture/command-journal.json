@@ -1,0 +1,381 @@
+{
+  "schema": 1,
+  "chronologicalRuns": [
+    {
+      "argv": "npm run benchmark:six-player-ticks -- --source /workspace/sketch-rts-six-player-followup-before-086 --ticks 14400 --out /workspace/six-player-spike-runs/focused-before-086 --focus-ticks 0,1859,5280,6990,7560,8850,9000,9375,9900,10065,10860,10960,11085,11265,12480,12705,12885,12945,13500,13905,13920 --focus-radius 1 --cpu-prof-windows 1858:1860,5279:5281,6989:6991,10959:10961,12704:12706 --observe-gc",
+      "log": "/workspace/six-player-focused-full.log",
+      "exitCode": 1,
+      "status": "Failed before runtime bundle; sparse worktree had not materialized source. No tick measurements. Kept partial entry/output and complete tool log."
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-before-086",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/focused-before-086-run1",
+        "--focus-ticks",
+        "0,1859,5280,6990,7560,8850,9000,9375,9900,10065,10860,10960,11085,11265,12480,12705,12885,12945,13500,13905,13920",
+        "--focus-radius",
+        "1",
+        "--cpu-prof-windows",
+        "1858:1860,5279:5281,6989:6991,10959:10961,12704:12706",
+        "--observe-gc"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-before-086",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/focused-before-086-run1",
+        "focusTicks": [
+          0,
+          1859,
+          5280,
+          6990,
+          7560,
+          8850,
+          9000,
+          9375,
+          9900,
+          10065,
+          10860,
+          10960,
+          11085,
+          11265,
+          12480,
+          12705,
+          12885,
+          12945,
+          13500,
+          13905,
+          13920
+        ],
+        "focusRadius": 1,
+        "cpuProfWindows": [
+          {
+            "from": 1858,
+            "to": 1860
+          },
+          {
+            "from": 5279,
+            "to": 5281
+          },
+          {
+            "from": 6989,
+            "to": 6991
+          },
+          {
+            "from": 10959,
+            "to": 10961
+          },
+          {
+            "from": 12704,
+            "to": 12706
+          }
+        ],
+        "observeGc": true
+      },
+      "output": "/workspace/six-player-spike-runs/focused-before-086-run1",
+      "log": "/workspace/six-player-focused-full-run1.log",
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-before-086",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/focused-before-086-run2",
+        "--focus-ticks",
+        "0,1859,5280,6990,7560,8850,9000,9375,9900,10065,10860,10960,11085,11265,12480,12705,12885,12945,13500,13905,13920",
+        "--focus-radius",
+        "1",
+        "--observe-gc"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-before-086",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/focused-before-086-run2",
+        "focusTicks": [
+          0,
+          1859,
+          5280,
+          6990,
+          7560,
+          8850,
+          9000,
+          9375,
+          9900,
+          10065,
+          10860,
+          10960,
+          11085,
+          11265,
+          12480,
+          12705,
+          12885,
+          12945,
+          13500,
+          13905,
+          13920
+        ],
+        "focusRadius": 1,
+        "observeGc": true
+      },
+      "output": "/workspace/six-player-spike-runs/focused-before-086-run2",
+      "log": "/workspace/six-player-focused-full-run2.log",
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-before-086",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/cache-before-086",
+        "--focus-ticks",
+        "6990,12705",
+        "--focus-radius",
+        "0"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-before-086",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/cache-before-086",
+        "focusTicks": [
+          6990,
+          12705
+        ],
+        "focusRadius": 0
+      },
+      "output": "/workspace/six-player-spike-runs/cache-before-086",
+      "log": "/workspace/six-player-spike-cache-before.log",
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/six-player-spike-profile-probe-frozen/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-stage3-ded",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/focused-stage3-ded",
+        "--focus-ticks",
+        "0,1859,5280,6990,7560,8850,9000,9375,9900,10065,10860,10960,11085,11265,12480,12705,12885,12945,13500,13905,13920",
+        "--focus-radius",
+        "1",
+        "--cpu-prof-windows",
+        "1858:1860,5279:5281,6989:6991,10959:10961,12704:12706",
+        "--observe-gc"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-stage3-ded",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/focused-stage3-ded",
+        "focusTicks": [
+          0,
+          1859,
+          5280,
+          6990,
+          7560,
+          8850,
+          9000,
+          9375,
+          9900,
+          10065,
+          10860,
+          10960,
+          11085,
+          11265,
+          12480,
+          12705,
+          12885,
+          12945,
+          13500,
+          13905,
+          13920
+        ],
+        "focusRadius": 1,
+        "cpuProfWindows": [
+          {
+            "from": 1858,
+            "to": 1860
+          },
+          {
+            "from": 5279,
+            "to": 5281
+          },
+          {
+            "from": 6989,
+            "to": 6991
+          },
+          {
+            "from": 10959,
+            "to": 10961
+          },
+          {
+            "from": 12704,
+            "to": 12706
+          }
+        ],
+        "observeGc": true
+      },
+      "output": "/workspace/six-player-spike-runs/focused-stage3-ded",
+      "log": "/workspace/six-player-spike-focused-stage3-retry.log",
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-before-086",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/abba-A1-before",
+        "--out",
+        "/workspace/six-player-spike-runs/abba-A1-before"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-before-086",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/abba-A1-before"
+      },
+      "output": "/workspace/six-player-spike-runs/abba-A1-before",
+      "log": "/workspace/six-player-spike-abba-A1.log",
+      "exitCode": 0,
+      "acceptanceLabel": "A1"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-candidate",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/abba-B1-candidate"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-candidate",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/abba-B1-candidate"
+      },
+      "output": "/workspace/six-player-spike-runs/abba-B1-candidate",
+      "log": "/workspace/six-player-spike-abba-B1.log",
+      "exitCode": 0,
+      "acceptanceLabel": "B1"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-candidate",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/abba-B2-candidate"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-candidate",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/abba-B2-candidate"
+      },
+      "output": "/workspace/six-player-spike-runs/abba-B2-candidate",
+      "log": "/workspace/six-player-spike-abba-B2.log",
+      "exitCode": 0,
+      "acceptanceLabel": "B2"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-before-086",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/abba-A2-before"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-before-086",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/abba-A2-before"
+      },
+      "output": "/workspace/six-player-spike-runs/abba-A2-before",
+      "log": "/workspace/six-player-spike-abba-A2.log",
+      "exitCode": 0,
+      "acceptanceLabel": "A2"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+        "--source",
+        "/workspace/sketch-rts-six-player-followup-candidate",
+        "--ticks",
+        "14400",
+        "--out",
+        "/workspace/six-player-spike-runs/cache-candidate-09e",
+        "--focus-ticks",
+        "0,1859,5280,6990,7560,8850,9000,9375,9900,10065,10860,10960,11085,11265,12480,12705,12885,12945,13500,13905,13920",
+        "--focus-radius",
+        "1",
+        "--observe-gc"
+      ],
+      "options": {
+        "source": "/workspace/sketch-rts-six-player-followup-candidate",
+        "ticks": 14400,
+        "out": "/workspace/six-player-spike-runs/cache-candidate-09e",
+        "focusTicks": [
+          0,
+          1859,
+          5280,
+          6990,
+          7560,
+          8850,
+          9000,
+          9375,
+          9900,
+          10065,
+          10860,
+          10960,
+          11085,
+          11265,
+          12480,
+          12705,
+          12885,
+          12945,
+          13500,
+          13905,
+          13920
+        ],
+        "focusRadius": 1,
+        "observeGc": true
+      },
+      "output": "/workspace/six-player-spike-runs/cache-candidate-09e",
+      "log": "/workspace/six-player-spike-cache-candidate.log",
+      "exitCode": 0
+    }
+  ],
+  "toolFailures": [
+    {
+      "log": "/workspace/six-player-spike-focused-stage3.log",
+      "exitCode": 1,
+      "status": "Copied frozen .ts probe lacked package type:module; tsx stopped before entrypoint execution, output untouched. Restored isolated tool package context and reran unchanged bytes."
+    }
+  ]
+}

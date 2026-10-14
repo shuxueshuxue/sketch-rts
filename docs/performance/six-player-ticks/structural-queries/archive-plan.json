@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "captureReady": true,
+  "pendingInputs": [],
+  "capturedDirectories": [
+    {
+      "source": "/workspace/six-player-structural-runs",
+      "destination": "capture/runs"
+    },
+    {
+      "source": "/workspace/six-player-multi-source-proof",
+      "destination": "proof/multi-source"
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration",
+      "destination": "calibration/first-with-execution-notes"
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration-clean",
+      "destination": "calibration/exclusive-clean"
+    },
+    {
+      "source": "/workspace/six-player-structural-observer-tool",
+      "destination": "tools/observer",
+      "excludeSymlinks": [
+        "node_modules"
+      ]
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-tool",
+      "destination": "tools/shore",
+      "excludeSymlinks": [
+        "node_modules"
+      ]
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-experiment",
+      "destination": "experiment/shore",
+      "excludeSymlinks": [
+        "node_modules"
+      ]
+    },
+    {
+      "source": "/workspace/six-player-structural-archive-attempt1",
+      "destination": "archive-attempts/attempt1"
+    }
+  ],
+  "capturedFiles": [
+    {
+      "source": "/workspace/six-player-2088-observed-1.log",
+      "destination": "validation/six-player-2088-observed-1.log"
+    },
+    {
+      "source": "/workspace/six-player-2088-observed-2.log",
+      "destination": "validation/six-player-2088-observed-2.log"
+    },
+    {
+      "source": "/workspace/six-player-2088-observed-3.log",
+      "destination": "validation/six-player-2088-observed-3.log"
+    },
+    {
+      "source": "/workspace/six-player-2088-observed-4.log",
+      "destination": "validation/six-player-2088-observed-4.log"
+    },
+    {
+      "source": "/workspace/six-player-2088-observed-5.log",
+      "destination": "validation/six-player-2088-observed-5.log"
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-actual.log",
+      "destination": "validation/six-player-structural-shore-actual.log"
+    },
+    {
+      "source": "/workspace/six-player-structural-typecheck-proof.log",
+      "destination": "validation/six-player-structural-typecheck-proof.log"
+    },
+    {
+      "source": "/workspace/sketch-rts-six-player-perf/docs/performance/six-player-ticks/structural-queries/archive-evidence.py",
+      "destination": "tools/archive-source.py"
+    },
+    {
+      "source": "/workspace/six-player-structural-archive-preflight.json",
+      "destination": "validation/archive-preflight.json"
+    },
+    {
+      "source": "/workspace/six-player-structural-analysis.json",
+      "destination": "analyses/six-player-structural-analysis.json"
+    },
+    {
+      "source": "/workspace/analyze-six-player-structural-evidence.py",
+      "destination": "analyses/analyze-six-player-structural-evidence.py"
+    },
+    {
+      "source": "/workspace/six-player-structural-archive-final-preflight.json",
+      "destination": "validation/archive-final-preflight.json"
+    },
+    {
+      "source": "/workspace/six-player-structural-archive-preparation-attempt.json",
+      "destination": "validation/archive-preparation-attempt.json"
+    },
+    {
+      "source": "/workspace/six-player-structural-archive-attempt1.log",
+      "destination": "validation/archive-attempt1.log"
+    }
+  ],
+  "notes": [
+    "Preparation only: do not archive until captureReady=true and pendingInputs is empty.",
+    "Include both calibration execution attempts and their explanation; neither is replaced by the exclusive retry.",
+    "Include all tool-contract captures and setup failures; explicitly exclude only node_modules dependency symlinks.",
+    "Final plan must include experiment source, all captured inputs, outputs, execution logs and identity proof."
+  ],
+  "closureNotes": [
+    "Experiment owner confirmed final closure including closure-verification.json; original run1 source/input/log bytes preserved.",
+    "Analysis owner confirmed exact hashes for analysis JSON and reproduction script.",
+    "The first and second calibration attempts retain their original metadata and explanations.",
+    "First formal archive failed on an ordering-only helper defect. All 258 saved assets plus the failed plan, manifest, original wrapper and complete failure log are preserved in the attempt1 closed tree; the retry uses a corrected new-wrapper sort only."
+  ],
+  "archiverIdentity": {
+    "source": "/workspace/sketch-rts-six-player-perf/docs/performance/six-player-ticks/structural-queries/archive-evidence.py",
+    "sha256": "69e80168cb5d7d156ee446ae1027889bb109b2f2045c88217b1b30e2679f0021",
+    "previousFailedSourceSha256": "25c1431ac831c8be34acc7b88ec8607ee4728332f3617e94024d3cab15ccd3fa",
+    "delta": "Return closed file lists sorted by relative string paths, matching the pinned helper verify contract."
+  }
+}

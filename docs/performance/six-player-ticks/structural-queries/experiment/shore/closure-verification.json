@@ -1,0 +1,76 @@
+{
+  "complete": true,
+  "sourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+  "originalSourceInputsExactlyEqual": true,
+  "sourceInputFiles": 129,
+  "sourceManifestSha256": "37f81a0840c728102938f5b72ca3ae6fd719e7e14ed9ac6224fff7aaa990f8b4",
+  "scriptVersions": [
+    {
+      "run": "run1",
+      "bytes": 16069,
+      "sha256": "6b83dd816d951eb7aea692ab2c8ca882406a8a8e7fdaaddf15bdd006e4bff811"
+    },
+    {
+      "run": "run2",
+      "bytes": 16947,
+      "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    },
+    {
+      "run": "counts-boundaries",
+      "bytes": 16947,
+      "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    }
+  ],
+  "timedBodyEquality": [
+    {
+      "variant": "A",
+      "layer": "naval",
+      "timedBodyBytes": 4126,
+      "timedBodySha256": "dd0a38784d793bfaebb71175d089be4d159dc16be7a58cfd4df2239dfd50e80b",
+      "exactlySame": true
+    },
+    {
+      "variant": "A",
+      "layer": "terrain",
+      "timedBodyBytes": 74090,
+      "timedBodySha256": "986c43c5fed7af33f96909e7391d5d0a22c0c37e72790045009fbd89cac9209e",
+      "exactlySame": true
+    },
+    {
+      "variant": "B",
+      "layer": "naval",
+      "timedBodyBytes": 4222,
+      "timedBodySha256": "6ef4a033039fcc0eaeaab3699f2bfa004cfa103600adcfa22f584c8227c34d47",
+      "exactlySame": true
+    },
+    {
+      "variant": "B",
+      "layer": "terrain",
+      "timedBodyBytes": 980,
+      "timedBodySha256": "dda91cd1c774d83463919a1398e90fdf044a3aa20b2f9f616696f8b39d829f3f",
+      "exactlySame": true
+    }
+  ],
+  "denominatorTuples": [
+    {
+      "tick": 6990,
+      "walkingEntry": 10555,
+      "blockedEarlyReturn": 2484,
+      "exactFieldHit": 8071,
+      "grow": 0,
+      "shoreCandidates": 10430,
+      "validLandCenters": 7946
+    },
+    {
+      "tick": 12705,
+      "walkingEntry": 10540,
+      "blockedEarlyReturn": 2484,
+      "exactFieldHit": 8056,
+      "grow": 0,
+      "shoreCandidates": 10430,
+      "validLandCenters": 7946
+    }
+  ],
+  "toolDifference": "Second version adds counting-only exactField and original guard-early-return counters, diagnostic facts for land-walkable candidate centers, and a counts-only execution option. Complete timed shoreSpot and multi-source helper bodies are byte-identical; appended zero-valued metadata count properties and unused diagnostic facts differ, outside measured call logic. No production source is modified.",
+  "failures": "No execution or strict-typecheck failure occurred. The initial entry-vs-exactField counter interpretation was corrected; original run1 is preserved."
+}

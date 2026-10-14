@@ -1,0 +1,97 @@
+{
+  "roomInput": {
+    "id": "six-player-perf-512",
+    "host": {
+      "id": "six-player-probe-host",
+      "name": "Idle human"
+    },
+    "mapId": "sapphireArchipelago",
+    "humanCount": 1,
+    "aiCount": 5
+  },
+  "room": {
+    "id": "six-player-perf-512",
+    "name": "Idle human's Room",
+    "hostUserId": "six-player-probe-host",
+    "visibility": "public",
+    "mapId": "sapphireArchipelago",
+    "status": "inMatch",
+    "autoTick": true,
+    "slots": [
+      {
+        "id": "slot-1",
+        "playerId": "player",
+        "controller": "human",
+        "name": "Idle human",
+        "team": "ffa",
+        "race": "grove",
+        "ready": true,
+        "userId": "six-player-probe-host"
+      },
+      {
+        "id": "slot-2",
+        "playerId": "enemy",
+        "controller": "ai",
+        "name": "AI 1",
+        "team": "ffa",
+        "race": "random",
+        "aiVersion": "random",
+        "ready": true
+      },
+      {
+        "id": "slot-3",
+        "playerId": "enemy2",
+        "controller": "ai",
+        "name": "AI 2",
+        "team": "ffa",
+        "race": "random",
+        "aiVersion": "random",
+        "ready": true
+      },
+      {
+        "id": "slot-4",
+        "playerId": "player-4",
+        "controller": "ai",
+        "name": "AI 3",
+        "team": "ffa",
+        "race": "random",
+        "aiVersion": "random",
+        "ready": true
+      },
+      {
+        "id": "slot-5",
+        "playerId": "player-5",
+        "controller": "ai",
+        "name": "AI 4",
+        "team": "ffa",
+        "race": "random",
+        "aiVersion": "random",
+        "ready": true
+      },
+      {
+        "id": "slot-6",
+        "playerId": "player-6",
+        "controller": "ai",
+        "name": "AI 5",
+        "team": "ffa",
+        "race": "random",
+        "aiVersion": "random",
+        "ready": true
+      }
+    ]
+  },
+  "aiVersions": {
+    "enemy": "v9_archer",
+    "enemy2": "v9_archer",
+    "player-4": "v9_knight",
+    "player-5": "v9_summoner",
+    "player-6": "v9_knight"
+  },
+  "lobbyAiVersions": [
+    "random",
+    "random",
+    "random",
+    "random",
+    "random"
+  ]
+}

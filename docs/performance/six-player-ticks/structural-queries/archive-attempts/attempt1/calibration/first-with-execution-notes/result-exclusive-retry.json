@@ -1,0 +1,2774 @@
+{
+  "schema": 1,
+  "node": "v24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "sourceSha256": "33be01d9323ee89a18dcdd840b077516e36271565218f8f2eb2fe85a0bf32fde",
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/workspace/six-player-cpu-calibration/calibration.mjs",
+    "/workspace/six-player-cpu-calibration/result-exclusive-retry.json"
+  ],
+  "processWallMs": 1791.2393200000001,
+  "sentinel": -1552181128,
+  "warmup": {
+    "before": {
+      "before": {
+        "performanceMs": 28.893905,
+        "hrtimeUs": 109879173925.3
+      },
+      "after": {
+        "performanceMs": 28.982344,
+        "hrtimeUs": 109879174009.353
+      },
+      "observerOverheadMs": 0.08843900000000104,
+      "threadCpuUs": {
+        "user": 26484,
+        "system": 3669
+      },
+      "processCpuUs": {
+        "user": 29434,
+        "system": 4077
+      },
+      "resources": {
+        "voluntaryContextSwitches": 42,
+        "involuntaryContextSwitches": 3,
+        "minorPageFault": 8106,
+        "majorPageFault": 0
+      }
+    },
+    "workload": {
+      "startedMs": 29.02056,
+      "endedMs": 44.063177
+    },
+    "after": {
+      "before": {
+        "performanceMs": 44.07228,
+        "hrtimeUs": 109879189105.398
+      },
+      "after": {
+        "performanceMs": 44.102504,
+        "hrtimeUs": 109879189129.493
+      },
+      "observerOverheadMs": 0.030224000000004025,
+      "threadCpuUs": {
+        "user": 41571,
+        "system": 3682
+      },
+      "processCpuUs": {
+        "user": 45568,
+        "system": 8219
+      },
+      "resources": {
+        "voluntaryContextSwitches": 55,
+        "involuntaryContextSwitches": 3,
+        "minorPageFault": 9547,
+        "majorPageFault": 0
+      }
+    }
+  },
+  "method": {
+    "apiOrderMatchesFrozenObserver": true,
+    "scheduling": "8 rotated repeats of busy1/5/15/100ms and async wait100ms; one retained warmup15ms",
+    "rawDeltasNotClamped": true,
+    "interpretation": "Microsecond representation is not a validated microsecond error bound. A CPU delta above the entire archived wall bracket disproves precise short-window CPU/wait attribution for that sample; no correction is invented. Clean-process calibration does not prove the historical game stall cause."
+  },
+  "summaries": [
+    {
+      "kind": "busy",
+      "requestedMs": 1,
+      "samples": 8,
+      "wallMedianMs": 1.0073374999999487,
+      "threadCpuMedianMs": 0.022,
+      "signedWallMinusThreadCpuMinMs": 0.7443279999999703,
+      "signedWallMinusThreadCpuMaxMs": 1.0241655000000434,
+      "threadCpuAboveEntireWallBracketCount": 0,
+      "largestThreadCpuAboveEntireWallBracketMs": -0.7499909999999972
+    },
+    {
+      "kind": "busy",
+      "requestedMs": 5,
+      "samples": 8,
+      "wallMedianMs": 5.018271499999969,
+      "threadCpuMedianMs": 2.017,
+      "signedWallMinusThreadCpuMinMs": 0.41876849999997035,
+      "signedWallMinusThreadCpuMaxMs": 3.385271499999969,
+      "threadCpuAboveEntireWallBracketCount": 0,
+      "largestThreadCpuAboveEntireWallBracketMs": -0.4243769999999927
+    },
+    {
+      "kind": "busy",
+      "requestedMs": 15,
+      "samples": 8,
+      "wallMedianMs": 15.014945499999953,
+      "threadCpuMedianMs": 12.733,
+      "signedWallMinusThreadCpuMinMs": 0.18308300000000877,
+      "signedWallMinusThreadCpuMaxMs": 3.564571500000035,
+      "threadCpuAboveEntireWallBracketCount": 0,
+      "largestThreadCpuAboveEntireWallBracketMs": -0.18922700000007175
+    },
+    {
+      "kind": "busy",
+      "requestedMs": 100,
+      "samples": 8,
+      "wallMedianMs": 100.03735900000004,
+      "threadCpuMedianMs": 97.568,
+      "signedWallMinusThreadCpuMinMs": 0.23422099999991985,
+      "signedWallMinusThreadCpuMaxMs": 3.6123590000000405,
+      "threadCpuAboveEntireWallBracketCount": 0,
+      "largestThreadCpuAboveEntireWallBracketMs": -0.2606799999998515
+    },
+    {
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "samples": 8,
+      "wallMedianMs": 100.46342349999986,
+      "threadCpuMedianMs": 0.139,
+      "signedWallMinusThreadCpuMinMs": 100.20022700000004,
+      "signedWallMinusThreadCpuMaxMs": 100.3984475,
+      "threadCpuAboveEntireWallBracketCount": 0,
+      "largestThreadCpuAboveEntireWallBracketMs": -100.21322599999999
+    }
+  ],
+  "samples": [
+    {
+      "repeat": 0,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 44.112299,
+          "hrtimeUs": 109879189139.218
+        },
+        "after": {
+          "performanceMs": 44.121723,
+          "hrtimeUs": 109879189148.561
+        },
+        "observerOverheadMs": 0.009424000000002763,
+        "threadCpuUs": {
+          "user": 42588,
+          "system": 3772
+        },
+        "processCpuUs": {
+          "user": 45589,
+          "system": 8223
+        },
+        "resources": {
+          "voluntaryContextSwitches": 55,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9547,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 45.142039,
+          "hrtimeUs": 109879190169.319
+        },
+        "after": {
+          "performanceMs": 45.153226,
+          "hrtimeUs": 109879190180.115
+        },
+        "observerOverheadMs": 0.011186999999999614,
+        "threadCpuUs": {
+          "user": 42608,
+          "system": 3774
+        },
+        "processCpuUs": {
+          "user": 46462,
+          "system": 8381
+        },
+        "resources": {
+          "voluntaryContextSwitches": 55,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9547,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 44.127281,
+        "endedMs": 45.140006
+      },
+      "threadCpuMs": 0.022,
+      "intervalWallMs": 1.0306214999999987,
+      "wallLowerMs": 1.020315999999994,
+      "wallUpperMs": 1.0409269999999964,
+      "signedWallMinusThreadCpuMs": 1.0086214999999987,
+      "signedThreadCpuMinusWallUpperMs": -1.0189269999999964,
+      "processCpuMs": 1.031
+    },
+    {
+      "repeat": 0,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 45.173606,
+          "hrtimeUs": 109879190200.585
+        },
+        "after": {
+          "performanceMs": 45.188658,
+          "hrtimeUs": 109879190223.879
+        },
+        "observerOverheadMs": 0.015051999999997179,
+        "threadCpuUs": {
+          "user": 43556,
+          "system": 3857
+        },
+        "processCpuUs": {
+          "user": 46489,
+          "system": 8386
+        },
+        "resources": {
+          "voluntaryContextSwitches": 55,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9547,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 50.229302,
+          "hrtimeUs": 109879195257.923
+        },
+        "after": {
+          "performanceMs": 50.26217,
+          "hrtimeUs": 109879195288.768
+        },
+        "observerOverheadMs": 0.03286800000000056,
+        "threadCpuUs": {
+          "user": 45399,
+          "system": 3857
+        },
+        "processCpuUs": {
+          "user": 51446,
+          "system": 8505
+        },
+        "resources": {
+          "voluntaryContextSwitches": 55,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9551,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 45.212423,
+        "endedMs": 50.225246
+      },
+      "threadCpuMs": 1.843,
+      "intervalWallMs": 5.064603999999996,
+      "wallLowerMs": 5.040644,
+      "wallUpperMs": 5.088563999999998,
+      "signedWallMinusThreadCpuMs": 3.2216039999999957,
+      "signedThreadCpuMinusWallUpperMs": -3.245563999999998,
+      "processCpuMs": 5.076
+    },
+    {
+      "repeat": 0,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 50.273236,
+          "hrtimeUs": 109879195299.775
+        },
+        "after": {
+          "performanceMs": 50.281629,
+          "hrtimeUs": 109879195308.137
+        },
+        "observerOverheadMs": 0.008393000000005202,
+        "threadCpuUs": {
+          "user": 48578,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 51464,
+          "system": 8508
+        },
+        "resources": {
+          "voluntaryContextSwitches": 55,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9551,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 65.312868,
+          "hrtimeUs": 109879210341.91
+        },
+        "after": {
+          "performanceMs": 65.348511,
+          "hrtimeUs": 109879210375.099
+        },
+        "observerOverheadMs": 0.03564300000000742,
+        "threadCpuUs": {
+          "user": 61311,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 66578,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 56,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9607,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 50.285414,
+        "endedMs": 65.310244
+      },
+      "threadCpuMs": 12.733,
+      "intervalWallMs": 15.053257000000006,
+      "wallLowerMs": 15.031238999999992,
+      "wallUpperMs": 15.075275000000005,
+      "signedWallMinusThreadCpuMs": 2.320257000000005,
+      "signedThreadCpuMinusWallUpperMs": -2.3422750000000043,
+      "processCpuMs": 15.115
+    },
+    {
+      "repeat": 0,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 65.363082,
+          "hrtimeUs": 109879210389.68
+        },
+        "after": {
+          "performanceMs": 65.406145,
+          "hrtimeUs": 109879210432.653
+        },
+        "observerOverheadMs": 0.043062999999989415,
+        "threadCpuUs": {
+          "user": 63664,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 66632,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 56,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9608,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 165.470162,
+          "hrtimeUs": 109879310502.068
+        },
+        "after": {
+          "performanceMs": 165.574065,
+          "hrtimeUs": 109879310600.723
+        },
+        "observerOverheadMs": 0.10390300000000252,
+        "threadCpuUs": {
+          "user": 161306,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 166917,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 58,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9613,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 65.412955,
+        "endedMs": 165.462481
+      },
+      "threadCpuMs": 97.642,
+      "intervalWallMs": 100.13749999999999,
+      "wallLowerMs": 100.06401699999999,
+      "wallUpperMs": 100.21098299999998,
+      "signedWallMinusThreadCpuMs": 2.4954999999999927,
+      "signedThreadCpuMinusWallUpperMs": -2.5689829999999887,
+      "processCpuMs": 100.285
+    },
+    {
+      "repeat": 0,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 165.608485,
+          "hrtimeUs": 109879310635.034
+        },
+        "after": {
+          "performanceMs": 165.617959,
+          "hrtimeUs": 109879310644.437
+        },
+        "observerOverheadMs": 0.009474000000011529,
+        "threadCpuUs": {
+          "user": 163886,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 166972,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 58,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9613,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 266.337579,
+          "hrtimeUs": 109879411368.203
+        },
+        "after": {
+          "performanceMs": 266.363947,
+          "hrtimeUs": 109879411390.486
+        },
+        "observerOverheadMs": 0.026367999999990843,
+        "threadCpuUs": {
+          "user": 164276,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 167598,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 60,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9619,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 165.624268,
+        "endedMs": 266.332802
+      },
+      "threadCpuMs": 0.39,
+      "intervalWallMs": 100.73754100000004,
+      "wallLowerMs": 100.71961999999999,
+      "wallUpperMs": 100.755462,
+      "signedWallMinusThreadCpuMs": 100.34754100000004,
+      "signedThreadCpuMinusWallUpperMs": -100.365462,
+      "processCpuMs": 0.626
+    },
+    {
+      "repeat": 1,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 266.380081,
+          "hrtimeUs": 109879411406.629
+        },
+        "after": {
+          "performanceMs": 266.382495,
+          "hrtimeUs": 109879411408.963
+        },
+        "observerOverheadMs": 0.0024139999999874817,
+        "threadCpuUs": {
+          "user": 164541,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 167621,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 60,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9619,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 271.420655,
+          "hrtimeUs": 109879416448.475
+        },
+        "after": {
+          "performanceMs": 271.429458,
+          "hrtimeUs": 109879416455.956
+        },
+        "observerOverheadMs": 0.008803000000000338,
+        "threadCpuUs": {
+          "user": 169166,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 172667,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 60,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9619,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 266.383867,
+        "endedMs": 271.418732
+      },
+      "threadCpuMs": 4.625,
+      "intervalWallMs": 5.04376849999997,
+      "wallLowerMs": 5.038160000000005,
+      "wallUpperMs": 5.049376999999993,
+      "signedWallMinusThreadCpuMs": 0.41876849999997035,
+      "signedThreadCpuMinusWallUpperMs": -0.4243769999999927,
+      "processCpuMs": 5.046
+    },
+    {
+      "repeat": 1,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 271.443939,
+          "hrtimeUs": 109879416470.458
+        },
+        "after": {
+          "performanceMs": 271.446093,
+          "hrtimeUs": 109879416472.571
+        },
+        "observerOverheadMs": 0.002154000000018641,
+        "threadCpuUs": {
+          "user": 169608,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 172684,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 60,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9619,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 286.480297,
+          "hrtimeUs": 109879431508.898
+        },
+        "after": {
+          "performanceMs": 286.494417,
+          "hrtimeUs": 109879431520.976
+        },
+        "observerOverheadMs": 0.01411999999999125,
+        "threadCpuUs": {
+          "user": 181159,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 187762,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 62,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9620,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 271.446914,
+        "endedMs": 286.475339
+      },
+      "threadCpuMs": 11.551,
+      "intervalWallMs": 15.042340999999965,
+      "wallLowerMs": 15.034203999999988,
+      "wallUpperMs": 15.050477999999998,
+      "signedWallMinusThreadCpuMs": 3.4913409999999647,
+      "signedThreadCpuMinusWallUpperMs": -3.499477999999998,
+      "processCpuMs": 15.078
+    },
+    {
+      "repeat": 1,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 286.519965,
+          "hrtimeUs": 109879431546.473
+        },
+        "after": {
+          "performanceMs": 286.522208,
+          "hrtimeUs": 109879431548.686
+        },
+        "observerOverheadMs": 0.002242999999964468,
+        "threadCpuUs": {
+          "user": 184659,
+          "system": 3943
+        },
+        "processCpuUs": {
+          "user": 187791,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 62,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9620,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 386.567144,
+          "hrtimeUs": 109879531598.299
+        },
+        "after": {
+          "performanceMs": 386.594744,
+          "hrtimeUs": 109879531621.282
+        },
+        "observerOverheadMs": 0.02760000000000673,
+        "threadCpuUs": {
+          "user": 281032,
+          "system": 4062
+        },
+        "processCpuUs": {
+          "user": 287887,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 63,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9621,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 286.52329,
+        "endedMs": 386.561395
+      },
+      "threadCpuMs": 96.492,
+      "intervalWallMs": 100.05985749999999,
+      "wallLowerMs": 100.044936,
+      "wallUpperMs": 100.07477899999998,
+      "signedWallMinusThreadCpuMs": 3.567857499999988,
+      "signedThreadCpuMinusWallUpperMs": -3.5827789999999737,
+      "processCpuMs": 100.096
+    },
+    {
+      "repeat": 1,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 386.63256,
+          "hrtimeUs": 109879531659.118
+        },
+        "after": {
+          "performanceMs": 386.634803,
+          "hrtimeUs": 109879531661.301
+        },
+        "observerOverheadMs": 0.002242999999964468,
+        "threadCpuUs": {
+          "user": 284591,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 287930,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 63,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9621,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 487.071031,
+          "hrtimeUs": 109879632101.475
+        },
+        "after": {
+          "performanceMs": 487.094786,
+          "hrtimeUs": 109879632121.284
+        },
+        "observerOverheadMs": 0.023754999999994197,
+        "threadCpuUs": {
+          "user": 284840,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 288245,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 64,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9621,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 386.642074,
+        "endedMs": 487.065963
+      },
+      "threadCpuMs": 0.249,
+      "intervalWallMs": 100.44922700000004,
+      "wallLowerMs": 100.43622800000003,
+      "wallUpperMs": 100.46222599999999,
+      "signedWallMinusThreadCpuMs": 100.20022700000004,
+      "signedThreadCpuMinusWallUpperMs": -100.21322599999999,
+      "processCpuMs": 0.315
+    },
+    {
+      "repeat": 1,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 487.110689,
+          "hrtimeUs": 109879632137.197
+        },
+        "after": {
+          "performanceMs": 487.112852,
+          "hrtimeUs": 109879632139.37
+        },
+        "observerOverheadMs": 0.002162999999995918,
+        "threadCpuUs": {
+          "user": 284949,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 288266,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 64,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9621,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 488.152838,
+          "hrtimeUs": 109879633179.676
+        },
+        "after": {
+          "performanceMs": 488.157034,
+          "hrtimeUs": 109879633183.522
+        },
+        "observerOverheadMs": 0.004196000000035838,
+        "threadCpuUs": {
+          "user": 284968,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 289310,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 64,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9621,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 487.114374,
+        "endedMs": 488.151966
+      },
+      "threadCpuMs": 0.019,
+      "intervalWallMs": 1.0431655000000433,
+      "wallLowerMs": 1.039985999999999,
+      "wallUpperMs": 1.0463450000000307,
+      "signedWallMinusThreadCpuMs": 1.0241655000000434,
+      "signedThreadCpuMinusWallUpperMs": -1.0273450000000308,
+      "processCpuMs": 1.044
+    },
+    {
+      "repeat": 2,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 488.219906,
+          "hrtimeUs": 109879633246.414
+        },
+        "after": {
+          "performanceMs": 488.222139,
+          "hrtimeUs": 109879633248.587
+        },
+        "observerOverheadMs": 0.002233000000046559,
+        "threadCpuUs": {
+          "user": 286012,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 289376,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 64,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9622,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 503.268842,
+          "hrtimeUs": 109879648297.924
+        },
+        "after": {
+          "performanceMs": 503.283473,
+          "hrtimeUs": 109879648309.961
+        },
+        "observerOverheadMs": 0.014631000000008498,
+        "threadCpuUs": {
+          "user": 300839,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 304695,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 66,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9627,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 488.223772,
+        "endedMs": 503.264976
+      },
+      "threadCpuMs": 14.827,
+      "intervalWallMs": 15.055135000000035,
+      "wallLowerMs": 15.04670299999998,
+      "wallUpperMs": 15.063567000000035,
+      "signedWallMinusThreadCpuMs": 0.2281350000000355,
+      "signedThreadCpuMinusWallUpperMs": -0.2365670000000346,
+      "processCpuMs": 15.319
+    },
+    {
+      "repeat": 2,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 503.3221,
+          "hrtimeUs": 109879648348.628
+        },
+        "after": {
+          "performanceMs": 503.324323,
+          "hrtimeUs": 109879648350.801
+        },
+        "observerOverheadMs": 0.002223000000014963,
+        "threadCpuUs": {
+          "user": 301138,
+          "system": 4114
+        },
+        "processCpuUs": {
+          "user": 304738,
+          "system": 8509
+        },
+        "resources": {
+          "voluntaryContextSwitches": 66,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9627,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 603.366557,
+          "hrtimeUs": 109879748397.551
+        },
+        "after": {
+          "performanceMs": 603.394668,
+          "hrtimeUs": 109879748421.196
+        },
+        "observerOverheadMs": 0.02811100000008082,
+        "threadCpuUs": {
+          "user": 400811,
+          "system": 4142
+        },
+        "processCpuUs": {
+          "user": 404815,
+          "system": 8521
+        },
+        "resources": {
+          "voluntaryContextSwitches": 67,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 503.325024,
+        "endedMs": 603.3618
+      },
+      "threadCpuMs": 99.701,
+      "intervalWallMs": 100.057401,
+      "wallLowerMs": 100.04223399999995,
+      "wallUpperMs": 100.07256800000005,
+      "signedWallMinusThreadCpuMs": 0.3564010000000053,
+      "signedThreadCpuMinusWallUpperMs": -0.3715680000000532,
+      "processCpuMs": 100.089
+    },
+    {
+      "repeat": 2,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 603.427156,
+          "hrtimeUs": 109879748453.724
+        },
+        "after": {
+          "performanceMs": 603.43005,
+          "hrtimeUs": 109879748456.518
+        },
+        "observerOverheadMs": 0.002894000000082997,
+        "threadCpuUs": {
+          "user": 401218,
+          "system": 4146
+        },
+        "processCpuUs": {
+          "user": 404852,
+          "system": 8521
+        },
+        "resources": {
+          "voluntaryContextSwitches": 67,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 703.887052,
+          "hrtimeUs": 109879848917.977
+        },
+        "after": {
+          "performanceMs": 703.914112,
+          "hrtimeUs": 109879848940.68
+        },
+        "observerOverheadMs": 0.027060000000005857,
+        "threadCpuUs": {
+          "user": 401355,
+          "system": 4148
+        },
+        "processCpuUs": {
+          "user": 405176,
+          "system": 8528
+        },
+        "resources": {
+          "voluntaryContextSwitches": 68,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 603.4439,
+        "endedMs": 703.884529
+      },
+      "threadCpuMs": 0.139,
+      "intervalWallMs": 100.47197899999998,
+      "wallLowerMs": 100.45700199999999,
+      "wallUpperMs": 100.48695600000008,
+      "signedWallMinusThreadCpuMs": 100.33297899999998,
+      "signedThreadCpuMinusWallUpperMs": -100.34795600000008,
+      "processCpuMs": 0.331
+    },
+    {
+      "repeat": 2,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 703.928313,
+          "hrtimeUs": 109879848954.861
+        },
+        "after": {
+          "performanceMs": 703.930816,
+          "hrtimeUs": 109879848957.295
+        },
+        "observerOverheadMs": 0.0025030000000469954,
+        "threadCpuUs": {
+          "user": 401584,
+          "system": 4150
+        },
+        "processCpuUs": {
+          "user": 405197,
+          "system": 8529
+        },
+        "resources": {
+          "voluntaryContextSwitches": 68,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 704.967477,
+          "hrtimeUs": 109879849994.136
+        },
+        "after": {
+          "performanceMs": 704.970081,
+          "hrtimeUs": 109879849996.559
+        },
+        "observerOverheadMs": 0.0026040000000193686,
+        "threadCpuUs": {
+          "user": 401602,
+          "system": 4150
+        },
+        "processCpuUs": {
+          "user": 406215,
+          "system": 8550
+        },
+        "resources": {
+          "voluntaryContextSwitches": 68,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 703.932239,
+        "endedMs": 704.967057
+      },
+      "threadCpuMs": 0.018,
+      "intervalWallMs": 1.0392145000000141,
+      "wallLowerMs": 1.036660999999981,
+      "wallUpperMs": 1.0417680000000473,
+      "signedWallMinusThreadCpuMs": 1.0212145000000141,
+      "signedThreadCpuMinusWallUpperMs": -1.0237680000000473,
+      "processCpuMs": 1.039
+    },
+    {
+      "repeat": 2,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 704.973386,
+          "hrtimeUs": 109879849999.854
+        },
+        "after": {
+          "performanceMs": 704.975068,
+          "hrtimeUs": 109879850001.526
+        },
+        "observerOverheadMs": 0.0016819999999597712,
+        "threadCpuUs": {
+          "user": 402631,
+          "system": 4161
+        },
+        "processCpuUs": {
+          "user": 406220,
+          "system": 8550
+        },
+        "resources": {
+          "voluntaryContextSwitches": 68,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9628,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 710.031175,
+          "hrtimeUs": 109879855058.134
+        },
+        "after": {
+          "performanceMs": 710.036864,
+          "hrtimeUs": 109879855063.322
+        },
+        "observerOverheadMs": 0.005689000000074884,
+        "threadCpuUs": {
+          "user": 404648,
+          "system": 4161
+        },
+        "processCpuUs": {
+          "user": 411744,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 70,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9638,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 705.019223,
+        "endedMs": 710.030024
+      },
+      "threadCpuMs": 2.017,
+      "intervalWallMs": 5.059792500000015,
+      "wallLowerMs": 5.056106999999997,
+      "wallUpperMs": 5.063478000000032,
+      "signedWallMinusThreadCpuMs": 3.0427925000000147,
+      "signedThreadCpuMinusWallUpperMs": -3.046478000000032,
+      "processCpuMs": 5.549
+    },
+    {
+      "repeat": 3,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 710.043734,
+          "hrtimeUs": 109879855070.202
+        },
+        "after": {
+          "performanceMs": 710.045516,
+          "hrtimeUs": 109879855071.994
+        },
+        "observerOverheadMs": 0.001782000000048356,
+        "threadCpuUs": {
+          "user": 407690,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 411753,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 70,
+          "involuntaryContextSwitches": 3,
+          "minorPageFault": 9638,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 810.056504,
+          "hrtimeUs": 109879955088.771
+        },
+        "after": {
+          "performanceMs": 810.085527,
+          "hrtimeUs": 109879955112.055
+        },
+        "observerOverheadMs": 0.029022999999938293,
+        "threadCpuUs": {
+          "user": 504623,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 512479,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 73,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9646,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 710.046217,
+        "endedMs": 810.052699
+      },
+      "threadCpuMs": 96.933,
+      "intervalWallMs": 100.02639049999993,
+      "wallLowerMs": 100.010988,
+      "wallUpperMs": 100.04179299999998,
+      "signedWallMinusThreadCpuMs": 3.093390499999927,
+      "signedThreadCpuMinusWallUpperMs": -3.1087929999999773,
+      "processCpuMs": 100.726
+    },
+    {
+      "repeat": 3,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 810.109352,
+          "hrtimeUs": 109879955135.89
+        },
+        "after": {
+          "performanceMs": 810.111545,
+          "hrtimeUs": 109879955138.013
+        },
+        "observerOverheadMs": 0.0021930000000338623,
+        "threadCpuUs": {
+          "user": 507722,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 512508,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 73,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9646,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 910.642424,
+          "hrtimeUs": 109880055672.808
+        },
+        "after": {
+          "performanceMs": 910.669153,
+          "hrtimeUs": 109880055695.681
+        },
+        "observerOverheadMs": 0.026729000000045744,
+        "threadCpuUs": {
+          "user": 507946,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 512952,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 75,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9646,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 810.112296,
+        "endedMs": 910.640571
+      },
+      "threadCpuMs": 0.224,
+      "intervalWallMs": 100.54534000000001,
+      "wallLowerMs": 100.53087900000003,
+      "wallUpperMs": 100.5598010000001,
+      "signedWallMinusThreadCpuMs": 100.32134,
+      "signedThreadCpuMinusWallUpperMs": -100.3358010000001,
+      "processCpuMs": 0.444
+    },
+    {
+      "repeat": 3,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 910.682593,
+          "hrtimeUs": 109880055709.121
+        },
+        "after": {
+          "performanceMs": 910.684786,
+          "hrtimeUs": 109880055711.254
+        },
+        "observerOverheadMs": 0.0021930000000338623,
+        "threadCpuUs": {
+          "user": 508174,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 512973,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 75,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9646,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 911.751451,
+          "hrtimeUs": 109880056779.01
+        },
+        "after": {
+          "performanceMs": 911.760584,
+          "hrtimeUs": 109880056787.152
+        },
+        "observerOverheadMs": 0.00913300000001982,
+        "threadCpuUs": {
+          "user": 508502,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 514256,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 75,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9702,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 910.74879,
+        "endedMs": 911.750069
+      },
+      "threadCpuMs": 0.328,
+      "intervalWallMs": 1.0723279999999704,
+      "wallLowerMs": 1.0666649999999436,
+      "wallUpperMs": 1.0779909999999973,
+      "signedWallMinusThreadCpuMs": 0.7443279999999703,
+      "signedThreadCpuMinusWallUpperMs": -0.7499909999999972,
+      "processCpuMs": 1.283
+    },
+    {
+      "repeat": 3,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 911.769477,
+          "hrtimeUs": 109880056796.055
+        },
+        "after": {
+          "performanceMs": 911.772101,
+          "hrtimeUs": 109880056798.589
+        },
+        "observerOverheadMs": 0.0026239999999688735,
+        "threadCpuUs": {
+          "user": 509267,
+          "system": 4169
+        },
+        "processCpuUs": {
+          "user": 514269,
+          "system": 8575
+        },
+        "resources": {
+          "voluntaryContextSwitches": 75,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9702,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 916.776252,
+          "hrtimeUs": 109880061804.372
+        },
+        "after": {
+          "performanceMs": 916.787528,
+          "hrtimeUs": 109880061814.066
+        },
+        "observerOverheadMs": 0.011275999999952546,
+        "threadCpuUs": {
+          "user": 509267,
+          "system": 7439
+        },
+        "processCpuUs": {
+          "user": 519169,
+          "system": 12576
+        },
+        "resources": {
+          "voluntaryContextSwitches": 76,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 911.773012,
+        "endedMs": 916.774859
+      },
+      "threadCpuMs": 3.27,
+      "intervalWallMs": 5.01110099999994,
+      "wallLowerMs": 5.004150999999979,
+      "wallUpperMs": 5.0180509999999,
+      "signedWallMinusThreadCpuMs": 1.7411009999999396,
+      "signedThreadCpuMinusWallUpperMs": -1.7480509999999003,
+      "processCpuMs": 8.901
+    },
+    {
+      "repeat": 3,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 916.796892,
+          "hrtimeUs": 109880061823.45
+        },
+        "after": {
+          "performanceMs": 916.799125,
+          "hrtimeUs": 109880061825.593
+        },
+        "observerOverheadMs": 0.002233000000046559,
+        "threadCpuUs": {
+          "user": 510142,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 519182,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 76,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 931.801412,
+          "hrtimeUs": 109880076828.962
+        },
+        "after": {
+          "performanceMs": 931.807051,
+          "hrtimeUs": 109880076833.549
+        },
+        "observerOverheadMs": 0.005638999999973748,
+        "threadCpuUs": {
+          "user": 524336,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 534189,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 76,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 916.800137,
+        "endedMs": 931.800321
+      },
+      "threadCpuMs": 14.194,
+      "intervalWallMs": 15.006223000000034,
+      "wallLowerMs": 15.002287000000024,
+      "wallUpperMs": 15.010159000000044,
+      "signedWallMinusThreadCpuMs": 0.8122230000000332,
+      "signedThreadCpuMinusWallUpperMs": -0.8161590000000434,
+      "processCpuMs": 15.007
+    },
+    {
+      "repeat": 4,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 931.814221,
+          "hrtimeUs": 109880076840.679
+        },
+        "after": {
+          "performanceMs": 931.816084,
+          "hrtimeUs": 109880076842.542
+        },
+        "observerOverheadMs": 0.0018630000000712243,
+        "threadCpuUs": {
+          "user": 525162,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 534199,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 76,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1032.295491,
+          "hrtimeUs": 109880177326.185
+        },
+        "after": {
+          "performanceMs": 1032.321709,
+          "hrtimeUs": 109880177348.378
+        },
+        "observerOverheadMs": 0.026217999999971653,
+        "threadCpuUs": {
+          "user": 525257,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 534565,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 77,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 931.816775,
+        "endedMs": 1032.293748
+      },
+      "threadCpuMs": 0.095,
+      "intervalWallMs": 100.4934475,
+      "wallLowerMs": 100.47940700000004,
+      "wallUpperMs": 100.50748800000008,
+      "signedWallMinusThreadCpuMs": 100.3984475,
+      "signedThreadCpuMinusWallUpperMs": -100.41248800000008,
+      "processCpuMs": 0.366
+    },
+    {
+      "repeat": 4,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 1032.343111,
+          "hrtimeUs": 109880177369.839
+        },
+        "after": {
+          "performanceMs": 1032.347277,
+          "hrtimeUs": 109880177373.775
+        },
+        "observerOverheadMs": 0.004166000000168424,
+        "threadCpuUs": {
+          "user": 525541,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 534594,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 77,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9831,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1033.350078,
+          "hrtimeUs": 109880178377.357
+        },
+        "after": {
+          "performanceMs": 1033.354985,
+          "hrtimeUs": 109880178381.493
+        },
+        "observerOverheadMs": 0.004907000000002881,
+        "threadCpuUs": {
+          "user": 525567,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 535779,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1032.348649,
+        "endedMs": 1033.348816
+      },
+      "threadCpuMs": 0.026,
+      "intervalWallMs": 1.0073374999999487,
+      "wallLowerMs": 1.002800999999863,
+      "wallUpperMs": 1.0118740000000344,
+      "signedWallMinusThreadCpuMs": 0.9813374999999487,
+      "signedThreadCpuMinusWallUpperMs": -0.9858740000000343,
+      "processCpuMs": 1.185
+    },
+    {
+      "repeat": 4,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 1033.359331,
+          "hrtimeUs": 109880178385.83
+        },
+        "after": {
+          "performanceMs": 1033.361114,
+          "hrtimeUs": 109880178387.572
+        },
+        "observerOverheadMs": 0.0017829999999321444,
+        "threadCpuUs": {
+          "user": 526575,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 535786,
+          "system": 12577
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1038.373216,
+          "hrtimeUs": 109880183401.898
+        },
+        "after": {
+          "performanceMs": 1038.383772,
+          "hrtimeUs": 109880183410.29
+        },
+        "observerOverheadMs": 0.010555999999951382,
+        "threadCpuUs": {
+          "user": 528208,
+          "system": 8321
+        },
+        "processCpuUs": {
+          "user": 540797,
+          "system": 12587
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1033.361575,
+        "endedMs": 1038.369912
+      },
+      "threadCpuMs": 1.633,
+      "intervalWallMs": 5.018271499999969,
+      "wallLowerMs": 5.0121019999999135,
+      "wallUpperMs": 5.024440999999797,
+      "signedWallMinusThreadCpuMs": 3.385271499999969,
+      "signedThreadCpuMinusWallUpperMs": -3.391440999999797,
+      "processCpuMs": 5.021
+    },
+    {
+      "repeat": 4,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 1038.392314,
+          "hrtimeUs": 109880183418.793
+        },
+        "after": {
+          "performanceMs": 1038.394538,
+          "hrtimeUs": 109880183421.016
+        },
+        "observerOverheadMs": 0.0022240000000692817,
+        "threadCpuUs": {
+          "user": 531599,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 540808,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1053.401291,
+          "hrtimeUs": 109880198431.305
+        },
+        "after": {
+          "performanceMs": 1053.415452,
+          "hrtimeUs": 109880198441.97
+        },
+        "observerOverheadMs": 0.014161000000058266,
+        "threadCpuUs": {
+          "user": 544198,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 555828,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1038.395309,
+        "endedMs": 1053.395533
+      },
+      "threadCpuMs": 12.599,
+      "intervalWallMs": 15.014945499999953,
+      "wallLowerMs": 15.00675299999989,
+      "wallUpperMs": 15.023138000000017,
+      "signedWallMinusThreadCpuMs": 2.4159454999999532,
+      "signedThreadCpuMinusWallUpperMs": -2.424138000000017,
+      "processCpuMs": 15.02
+    },
+    {
+      "repeat": 4,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1053.431516,
+          "hrtimeUs": 109880198458.374
+        },
+        "after": {
+          "performanceMs": 1053.435862,
+          "hrtimeUs": 109880198462.551
+        },
+        "observerOverheadMs": 0.004345999999941341,
+        "threadCpuUs": {
+          "user": 546631,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 555849,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1153.452957,
+          "hrtimeUs": 109880298488.568
+        },
+        "after": {
+          "performanceMs": 1153.488599,
+          "hrtimeUs": 109880298515.157
+        },
+        "observerOverheadMs": 0.035642000000052576,
+        "threadCpuUs": {
+          "user": 644199,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 655901,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1053.437064,
+        "endedMs": 1153.437794
+      },
+      "threadCpuMs": 97.568,
+      "intervalWallMs": 100.03708899999981,
+      "wallLowerMs": 100.01709499999993,
+      "wallUpperMs": 100.05708299999992,
+      "signedWallMinusThreadCpuMs": 2.469088999999812,
+      "signedThreadCpuMinusWallUpperMs": -2.4890829999999227,
+      "processCpuMs": 100.052
+    },
+    {
+      "repeat": 5,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 1153.515909,
+          "hrtimeUs": 109880298542.427
+        },
+        "after": {
+          "performanceMs": 1153.518182,
+          "hrtimeUs": 109880298544.651
+        },
+        "observerOverheadMs": 0.0022730000000592554,
+        "threadCpuUs": {
+          "user": 646705,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 655934,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1154.519812,
+          "hrtimeUs": 109880299546.39
+        },
+        "after": {
+          "performanceMs": 1154.523036,
+          "hrtimeUs": 109880299549.495
+        },
+        "observerOverheadMs": 0.003224000000045635,
+        "threadCpuUs": {
+          "user": 646736,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 656939,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1153.519014,
+        "endedMs": 1154.519271
+      },
+      "threadCpuMs": 0.031,
+      "intervalWallMs": 1.0043785000000298,
+      "wallLowerMs": 1.0016299999999774,
+      "wallUpperMs": 1.0071270000000823,
+      "signedWallMinusThreadCpuMs": 0.9733785000000298,
+      "signedThreadCpuMinusWallUpperMs": -0.9761270000000822,
+      "processCpuMs": 1.005
+    },
+    {
+      "repeat": 5,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 1154.525841,
+          "hrtimeUs": 109880299552.319
+        },
+        "after": {
+          "performanceMs": 1154.527623,
+          "hrtimeUs": 109880299554.111
+        },
+        "observerOverheadMs": 0.001782000000048356,
+        "threadCpuUs": {
+          "user": 647741,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 656944,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1159.530202,
+          "hrtimeUs": 109880304557.261
+        },
+        "after": {
+          "performanceMs": 1159.535339,
+          "hrtimeUs": 109880304561.827
+        },
+        "observerOverheadMs": 0.005137000000104308,
+        "threadCpuUs": {
+          "user": 652205,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 661951,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1154.528054,
+        "endedMs": 1159.528329
+      },
+      "threadCpuMs": 4.464,
+      "intervalWallMs": 5.006038500000045,
+      "wallLowerMs": 5.002578999999969,
+      "wallUpperMs": 5.0094980000001215,
+      "signedWallMinusThreadCpuMs": 0.5420385000000447,
+      "signedThreadCpuMinusWallUpperMs": -0.545498000000121,
+      "processCpuMs": 5.007
+    },
+    {
+      "repeat": 5,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 1159.539926,
+          "hrtimeUs": 109880304566.374
+        },
+        "after": {
+          "performanceMs": 1159.541528,
+          "hrtimeUs": 109880304568.016
+        },
+        "observerOverheadMs": 0.001602000000048065,
+        "threadCpuUs": {
+          "user": 652753,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 661958,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1174.546338,
+          "hrtimeUs": 109880319575.511
+        },
+        "after": {
+          "performanceMs": 1174.560259,
+          "hrtimeUs": 109880319586.727
+        },
+        "observerOverheadMs": 0.013920999999982087,
+        "threadCpuUs": {
+          "user": 664201,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 676975,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1159.542059,
+        "endedMs": 1174.542323
+      },
+      "threadCpuMs": 11.448,
+      "intervalWallMs": 15.012571500000035,
+      "wallLowerMs": 15.004810000000134,
+      "wallUpperMs": 15.020333000000164,
+      "signedWallMinusThreadCpuMs": 3.564571500000035,
+      "signedThreadCpuMinusWallUpperMs": -3.572333000000164,
+      "processCpuMs": 15.017
+    },
+    {
+      "repeat": 5,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1174.573338,
+          "hrtimeUs": 109880319599.806
+        },
+        "after": {
+          "performanceMs": 1174.575832,
+          "hrtimeUs": 109880319602.3
+        },
+        "observerOverheadMs": 0.0024940000000697182,
+        "threadCpuUs": {
+          "user": 667777,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 676992,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1274.593507,
+          "hrtimeUs": 109880419629.059
+        },
+        "after": {
+          "performanceMs": 1274.630381,
+          "hrtimeUs": 109880419656.91
+        },
+        "observerOverheadMs": 0.03687399999989793,
+        "threadCpuUs": {
+          "user": 764202,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 777045,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1174.576393,
+        "endedMs": 1274.578345
+      },
+      "threadCpuMs": 96.425,
+      "intervalWallMs": 100.03735900000004,
+      "wallLowerMs": 100.01767500000005,
+      "wallUpperMs": 100.05704300000002,
+      "signedWallMinusThreadCpuMs": 3.6123590000000405,
+      "signedThreadCpuMinusWallUpperMs": -3.6320430000000243,
+      "processCpuMs": 100.053
+    },
+    {
+      "repeat": 5,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1274.655919,
+          "hrtimeUs": 109880419682.457
+        },
+        "after": {
+          "performanceMs": 1274.658392,
+          "hrtimeUs": 109880419684.851
+        },
+        "observerOverheadMs": 0.0024730000000090513,
+        "threadCpuUs": {
+          "user": 767849,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 777077,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 78,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1375.109062,
+          "hrtimeUs": 109880520138.785
+        },
+        "after": {
+          "performanceMs": 1375.132096,
+          "hrtimeUs": 109880520158.594
+        },
+        "observerOverheadMs": 0.0230340000000524,
+        "threadCpuUs": {
+          "user": 768066,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 777407,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1274.659354,
+        "endedMs": 1375.10758
+      },
+      "threadCpuMs": 0.217,
+      "intervalWallMs": 100.46342349999986,
+      "wallLowerMs": 100.45066999999995,
+      "wallUpperMs": 100.476177,
+      "signedWallMinusThreadCpuMs": 100.24642349999986,
+      "signedThreadCpuMinusWallUpperMs": -100.25917700000001,
+      "processCpuMs": 0.33
+    },
+    {
+      "repeat": 6,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 1375.147529,
+          "hrtimeUs": 109880520174.047
+        },
+        "after": {
+          "performanceMs": 1375.150223,
+          "hrtimeUs": 109880520176.691
+        },
+        "observerOverheadMs": 0.002694000000019514,
+        "threadCpuUs": {
+          "user": 768211,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 777429,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1380.153132,
+          "hrtimeUs": 109880525180.381
+        },
+        "after": {
+          "performanceMs": 1380.157809,
+          "hrtimeUs": 109880525184.277
+        },
+        "observerOverheadMs": 0.004677000000128828,
+        "threadCpuUs": {
+          "user": 772064,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 782436,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1375.151194,
+        "endedMs": 1380.151449
+      },
+      "threadCpuMs": 3.853,
+      "intervalWallMs": 5.006594499999778,
+      "wallLowerMs": 5.002908999999818,
+      "wallUpperMs": 5.010279999999966,
+      "signedWallMinusThreadCpuMs": 1.153594499999778,
+      "signedThreadCpuMinusWallUpperMs": -1.157279999999966,
+      "processCpuMs": 5.007
+    },
+    {
+      "repeat": 6,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 1380.164168,
+          "hrtimeUs": 109880525190.636
+        },
+        "after": {
+          "performanceMs": 1380.166331,
+          "hrtimeUs": 109880525192.799
+        },
+        "observerOverheadMs": 0.0021629999998822314,
+        "threadCpuUs": {
+          "user": 773238,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 782445,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1395.17027,
+          "hrtimeUs": 109880540198.661
+        },
+        "after": {
+          "performanceMs": 1395.180395,
+          "hrtimeUs": 109880540206.873
+        },
+        "observerOverheadMs": 0.010125000000016371,
+        "threadCpuUs": {
+          "user": 788065,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 797457,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1380.166912,
+        "endedMs": 1395.167085
+      },
+      "threadCpuMs": 14.827,
+      "intervalWallMs": 15.010083000000009,
+      "wallLowerMs": 15.003939000000173,
+      "wallUpperMs": 15.016227000000072,
+      "signedWallMinusThreadCpuMs": 0.18308300000000877,
+      "signedThreadCpuMinusWallUpperMs": -0.18922700000007175,
+      "processCpuMs": 15.012
+    },
+    {
+      "repeat": 6,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1395.188767,
+          "hrtimeUs": 109880540215.275
+        },
+        "after": {
+          "performanceMs": 1395.191061,
+          "hrtimeUs": 109880540217.529
+        },
+        "observerOverheadMs": 0.0022939999998925487,
+        "threadCpuUs": {
+          "user": 788260,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 797470,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1495.206823,
+          "hrtimeUs": 109880640241.493
+        },
+        "after": {
+          "performanceMs": 1495.257447,
+          "hrtimeUs": 109880640284.035
+        },
+        "observerOverheadMs": 0.05062399999997069,
+        "threadCpuUs": {
+          "user": 888068,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 897519,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1395.191601,
+        "endedMs": 1495.193022
+      },
+      "threadCpuMs": 99.808,
+      "intervalWallMs": 100.04222099999993,
+      "wallLowerMs": 100.015762,
+      "wallUpperMs": 100.06867999999986,
+      "signedWallMinusThreadCpuMs": 0.23422099999991985,
+      "signedThreadCpuMinusWallUpperMs": -0.2606799999998515,
+      "processCpuMs": 100.049
+    },
+    {
+      "repeat": 6,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1495.283205,
+          "hrtimeUs": 109880640309.733
+        },
+        "after": {
+          "performanceMs": 1495.285778,
+          "hrtimeUs": 109880640312.247
+        },
+        "observerOverheadMs": 0.0025729999999839492,
+        "threadCpuUs": {
+          "user": 888322,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 897566,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 79,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1595.678785,
+          "hrtimeUs": 109880740709.279
+        },
+        "after": {
+          "performanceMs": 1595.704283,
+          "hrtimeUs": 109880740730.801
+        },
+        "observerOverheadMs": 0.02549799999997049,
+        "threadCpuUs": {
+          "user": 888455,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 897848,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1495.28673,
+        "endedMs": 1595.676842
+      },
+      "threadCpuMs": 0.133,
+      "intervalWallMs": 100.4070425000001,
+      "wallLowerMs": 100.39300700000013,
+      "wallUpperMs": 100.42107800000008,
+      "signedWallMinusThreadCpuMs": 100.2740425000001,
+      "signedThreadCpuMinusWallUpperMs": -100.28807800000008,
+      "processCpuMs": 0.282
+    },
+    {
+      "repeat": 6,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 1595.721748,
+          "hrtimeUs": 109880740748.287
+        },
+        "after": {
+          "performanceMs": 1595.724092,
+          "hrtimeUs": 109880740750.56
+        },
+        "observerOverheadMs": 0.0023439999999936845,
+        "threadCpuUs": {
+          "user": 888654,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 897873,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1596.725701,
+          "hrtimeUs": 109880741752.199
+        },
+        "after": {
+          "performanceMs": 1596.728034,
+          "hrtimeUs": 109880741754.492
+        },
+        "observerOverheadMs": 0.00233299999990777,
+        "threadCpuUs": {
+          "user": 888675,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 898877,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1595.725193,
+        "endedMs": 1596.72535
+      },
+      "threadCpuMs": 0.021,
+      "intervalWallMs": 1.0039475000000948,
+      "wallLowerMs": 1.001609000000144,
+      "wallUpperMs": 1.0062860000000455,
+      "signedWallMinusThreadCpuMs": 0.9829475000000948,
+      "signedThreadCpuMinusWallUpperMs": -0.9852860000000455,
+      "processCpuMs": 1.004
+    },
+    {
+      "repeat": 7,
+      "kind": "busy",
+      "requestedMs": 15,
+      "before": {
+        "before": {
+          "performanceMs": 1596.731309,
+          "hrtimeUs": 109880741757.787
+        },
+        "after": {
+          "performanceMs": 1596.733242,
+          "hrtimeUs": 109880741759.71
+        },
+        "observerOverheadMs": 0.0019330000000081782,
+        "threadCpuUs": {
+          "user": 889679,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 898882,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1611.740676,
+          "hrtimeUs": 109880756771.861
+        },
+        "after": {
+          "performanceMs": 1611.758191,
+          "hrtimeUs": 109880756784.71
+        },
+        "observerOverheadMs": 0.017515000000003056,
+        "threadCpuUs": {
+          "user": 903933,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 913905,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1596.733763,
+        "endedMs": 1611.734046
+      },
+      "threadCpuMs": 14.254,
+      "intervalWallMs": 15.017157999999881,
+      "wallLowerMs": 15.007433999999876,
+      "wallUpperMs": 15.026881999999887,
+      "signedWallMinusThreadCpuMs": 0.7631579999998817,
+      "signedThreadCpuMinusWallUpperMs": -0.7728819999998873,
+      "processCpuMs": 15.023
+    },
+    {
+      "repeat": 7,
+      "kind": "busy",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1611.773684,
+          "hrtimeUs": 109880756800.182
+        },
+        "after": {
+          "performanceMs": 1611.776058,
+          "hrtimeUs": 109880756802.526
+        },
+        "observerOverheadMs": 0.0023739999999179418,
+        "threadCpuUs": {
+          "user": 904708,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 913926,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 5,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1711.793572,
+          "hrtimeUs": 109880856829.114
+        },
+        "after": {
+          "performanceMs": 1711.827562,
+          "hrtimeUs": 109880856854.13
+        },
+        "observerOverheadMs": 0.033989999999903375,
+        "threadCpuUs": {
+          "user": 1003927,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1013968,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1611.776658,
+        "endedMs": 1711.77824
+      },
+      "threadCpuMs": 99.219,
+      "intervalWallMs": 100.03569600000003,
+      "wallLowerMs": 100.01751400000012,
+      "wallUpperMs": 100.05387799999994,
+      "signedWallMinusThreadCpuMs": 0.8166960000000358,
+      "signedThreadCpuMinusWallUpperMs": -0.8348779999999465,
+      "processCpuMs": 100.042
+    },
+    {
+      "repeat": 7,
+      "kind": "asyncWait",
+      "requestedMs": 100,
+      "before": {
+        "before": {
+          "performanceMs": 1711.852739,
+          "hrtimeUs": 109880856879.317
+        },
+        "after": {
+          "performanceMs": 1711.855163,
+          "hrtimeUs": 109880856881.631
+        },
+        "observerOverheadMs": 0.0024240000000190776,
+        "threadCpuUs": {
+          "user": 1004771,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1013998,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 80,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1812.231274,
+          "hrtimeUs": 109880957261.738
+        },
+        "after": {
+          "performanceMs": 1812.26928,
+          "hrtimeUs": 109880957295.798
+        },
+        "observerOverheadMs": 0.038005999999995765,
+        "threadCpuUs": {
+          "user": 1004889,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1014283,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 81,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1711.856044,
+        "endedMs": 1812.229551
+      },
+      "threadCpuMs": 0.118,
+      "intervalWallMs": 100.39632600000016,
+      "wallLowerMs": 100.37611100000004,
+      "wallUpperMs": 100.41654100000005,
+      "signedWallMinusThreadCpuMs": 100.27832600000016,
+      "signedThreadCpuMinusWallUpperMs": -100.29854100000006,
+      "processCpuMs": 0.285
+    },
+    {
+      "repeat": 7,
+      "kind": "busy",
+      "requestedMs": 1,
+      "before": {
+        "before": {
+          "performanceMs": 1812.287857,
+          "hrtimeUs": 109880957314.345
+        },
+        "after": {
+          "performanceMs": 1812.29015,
+          "hrtimeUs": 109880957316.638
+        },
+        "observerOverheadMs": 0.0022930000000087603,
+        "threadCpuUs": {
+          "user": 1005088,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1014308,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 81,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1813.29188,
+          "hrtimeUs": 109880958318.558
+        },
+        "after": {
+          "performanceMs": 1813.294333,
+          "hrtimeUs": 109880958320.811
+        },
+        "observerOverheadMs": 0.0024530000000595464,
+        "threadCpuUs": {
+          "user": 1005110,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1015313,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 81,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1812.291232,
+        "endedMs": 1813.291339
+      },
+      "threadCpuMs": 0.022,
+      "intervalWallMs": 1.0041029999999864,
+      "wallLowerMs": 1.0017299999999523,
+      "wallUpperMs": 1.0064760000000206,
+      "signedWallMinusThreadCpuMs": 0.9821029999999864,
+      "signedThreadCpuMinusWallUpperMs": -0.9844760000000206,
+      "processCpuMs": 1.005
+    },
+    {
+      "repeat": 7,
+      "kind": "busy",
+      "requestedMs": 5,
+      "before": {
+        "before": {
+          "performanceMs": 1813.297047,
+          "hrtimeUs": 109880958323.495
+        },
+        "after": {
+          "performanceMs": 1813.2987,
+          "hrtimeUs": 109880958325.168
+        },
+        "observerOverheadMs": 0.0016530000000329892,
+        "threadCpuUs": {
+          "user": 1006114,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1015317,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 81,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "after": {
+        "before": {
+          "performanceMs": 1818.301698,
+          "hrtimeUs": 109880963329.068
+        },
+        "after": {
+          "performanceMs": 1818.357921,
+          "hrtimeUs": 109880963384.509
+        },
+        "observerOverheadMs": 0.05622300000004543,
+        "threadCpuUs": {
+          "user": 1007905,
+          "system": 8326
+        },
+        "processCpuUs": {
+          "user": 1020375,
+          "system": 12588
+        },
+        "resources": {
+          "voluntaryContextSwitches": 81,
+          "involuntaryContextSwitches": 6,
+          "minorPageFault": 9833,
+          "majorPageFault": 0
+        }
+      },
+      "workload": {
+        "startedMs": 1813.29909,
+        "endedMs": 1818.299385
+      },
+      "threadCpuMs": 1.791,
+      "intervalWallMs": 5.031935999999973,
+      "wallLowerMs": 5.002997999999934,
+      "wallUpperMs": 5.0608740000000125,
+      "signedWallMinusThreadCpuMs": 3.2409359999999734,
+      "signedThreadCpuMinusWallUpperMs": -3.2698740000000126,
+      "processCpuMs": 5.058
+    }
+  ]
+}

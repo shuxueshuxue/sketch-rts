@@ -5,7 +5,7 @@ import { detCos, detSin } from "./det-math";
 import { shipProfile, type Point } from "./ship-geometry";
 import { CELL_GROUND, isWalkable, sameGround, walkableGoal } from "./terrain";
 import type { GameMap, Unit } from "./types";
-import { convexHull, expandConvex, polygonPlanes, polygonRadius, polygonTouchesCell } from './navigation-math';
+import { convexHull, expandConvex, polygonRadius, polygonTouchesCellForPolygon } from './navigation-math';
 import preparedMasks from './generated/ship-navigation-masks.json';
 import preparedMasks64 from './generated/ship-navigation-masks-64.json';
 import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
@@ -95,11 +95,10 @@ function clearOutline(map: SeaMap, polygon: readonly Point[]) {
   if (openWaterBox(map, left, top, right, bottom))
     return true;
   const cell = terrain.cell;
-  let axes: ReturnType<typeof polygonPlanes> | undefined;
   for (let row = Math.floor(top / cell); row <= Math.floor((bottom - 1e-7) / cell); row++)
     for (let col = Math.floor(left / cell); col <= Math.floor((right - 1e-7) / cell); col++) {
       const char = col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? undefined : terrain.cells[row * terrain.cols + col];
-      if (!CELL_GROUND[char ?? "."]?.sea && polygonTouchesCell(axes ??= polygonPlanes(polygon), col * cell, row * cell, cell))
+      if (!CELL_GROUND[char ?? "."]?.sea && polygonTouchesCellForPolygon(polygon, col * cell, row * cell, cell))
         return false;
     }
   return true;

@@ -1,0 +1,35 @@
+{
+  "schema": "terrain-multi-source-proof-v1",
+  "production_commit": "0f31f16c",
+  "production_terrain_sha256": "2cec6f19af72d0f08e749c974123cf1fa5560650c23b94520bd78a4933aa0638",
+  "terrain_matches_committed_0f31f16c": true,
+  "proof_test_sha256": "1471fb5fddcdfe82265647dee24c219643184c14ec06560b892187dd6742026a",
+  "test_log_sha256": "3ce3fe8a56286914a796a1166c1f7d1d33b65d05112ce21d3bac1e5f9d12eac0",
+  "command": "npx vitest run src/shared/terrain-multi-source.test.ts --maxWorkers=1 --minWorkers=1",
+  "result": {
+    "exit_code": 0,
+    "tests_passed": 9,
+    "random_cases": 500,
+    "tests_ms": 461
+  },
+  "scope": "Actual private grow/createRuntime/runtime/exactField through a test-only esbuild bundle. No production edits or benchmark claim.",
+  "validated": [
+    "valid-source minimum at every padded cell",
+    "same-distance ties and duplicates",
+    "empty/blocked/off-map/NaN filtering",
+    "land/sea connectivity and corner restrictions",
+    "uniform 5/7 road cost on grass/mud/shallow",
+    "changed normalized base-cell sets",
+    "exact public walkingDistance floating conversion",
+    "new-Terrain identity refresh and preserved old in-place cells mutation behavior",
+    "copied single-source oracle before spare reuse",
+    "single cached field buffer recycled after 128-field LRU while owned uncached field remains unchanged"
+  ],
+  "limitations": [
+    "No production multi-source API implemented.",
+    "No throughput/allocation/cold-warm performance measured.",
+    "No in-place Terrain.cells cache fix.",
+    "No weighted-travel or selected-base/path-identity equivalence claimed.",
+    "Type checking will be part of root validation if the proof test is retained in the PR."
+  ]
+}

@@ -648,6 +648,7 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
+  const localOffsets = [1, columns, -1, -columns, columns + 1, columns - 1, -columns - 1, -columns + 1];
   const origin = box.top * width + box.left;
   const { dist, next } = arrays;
   dist.fill(UNREACHED);
@@ -675,13 +676,17 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
       const col = index % columns;
       const row = (index - col) / columns;
       const at = origin + row * width + col;
+      // Box boundaries remove the same directions for every neighbour of this cell.
+      let directions = 0xff;
+      if (col === 0) directions &= ~0x64; // W, SW, NW
+      if (col === columns - 1) directions &= ~0x91; // E, SE, NE
+      if (row === 0) directions &= ~0xc8; // N, NW, NE
+      if (row === rows - 1) directions &= ~0x32; // S, SE, SW
       for (let direction = 0; direction < 8; direction += 1) {
-        const stepCol = col + STEP_COLS[direction]!;
-        const stepRow = row + STEP_ROWS[direction]!;
-        if (stepCol < 0 || stepRow < 0 || stepCol >= columns || stepRow >= rows) continue;
+        if ((directions & (1 << direction)) === 0) continue;
         const step = at + offsets[direction]!;
         if (walk[step] !== 1) continue;
-        const there = stepRow * columns + stepCol;
+        const there = index + localOffsets[direction]!;
         const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[step]!;
         if (reached >= dist[there]! || !stepAllowed(state, at, direction)) continue;
         dist[there] = reached;
@@ -792,18 +797,27 @@ function reachableTarget(state: TerrainRuntime, ground: TerrainRuntime, tiles: T
   const row = Math.floor(target / width) - 1;
   let best = near;
   let bestDistance = Infinity;
+  const consider = (c: number, r: number) => {
+    if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) return;
+    const at = pad(state, c, r);
+    if (tiles.island[at] !== island) return;
+    const gap = (c - col) ** 2 + (r - row) ** 2;
+    if (gap < bestDistance || (gap === bestDistance && at < best)) {
+      bestDistance = gap;
+      best = at;
+    }
+  };
   for (let ring = 1; ring <= Math.max(terrain.cols, terrain.rows) && ring * ring <= bestDistance; ring += 1) {
-    for (let r = row - ring; r <= row + ring; r += 1) {
-      for (let c = col - ring; c <= col + ring; c += 1) {
-        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring || c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
-        const at = pad(state, c, r);
-        if (tiles.island[at] !== island) continue;
-        const gap = (c - col) ** 2 + (r - row) ** 2;
-        if (gap < bestDistance || (gap === bestDistance && at < best)) {
-          bestDistance = gap;
-          best = at;
-        }
-      }
+    // Only the 8r border cells belong to this ring; the interior was visited in earlier rings.
+    // The minimum (squared distance, padded index) is independent of traversal order.
+    const top = row - ring, bottom = row + ring;
+    for (let c = col - ring; c <= col + ring; c += 1) {
+      consider(c, top);
+      consider(c, bottom);
+    }
+    for (let r = top + 1; r < bottom; r += 1) {
+      consider(col - ring, r);
+      consider(col + ring, r);
     }
   }
   if (tiles.nearest.size > 4_096) tiles.nearest.clear();

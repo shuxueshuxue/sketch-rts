@@ -1,0 +1,27 @@
+{
+  "sourceDirectory": "/workspace/six-player-spike-tool-profile-original-capture",
+  "sourceIdentity": {
+    "toolGitHead": "2c782d3a4a0f64fbc4a8f09518372ed4b31ffd0f",
+    "executedFrom": "/workspace/six-player-spike-profile-probe-frozen",
+    "sha256": {
+      "six-player-tick-probe.ts": "1d4d16a416d393b2b1f38557c6079e682e726c9bb85f35f81336d948d0695a62",
+      "six-player-focused-instrumentation.ts": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+      "package.json": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+    },
+    "context": "Frozen original run1 scope/CPU probe, restored module package context before profiling candidate stage ded19d3. Same original probe/helper bytes, without later cache counters."
+  },
+  "copiedFiles": {
+    "six-player-tick-probe.ts": {
+      "bytes": 33976,
+      "sha256": "1d4d16a416d393b2b1f38557c6079e682e726c9bb85f35f81336d948d0695a62"
+    },
+    "six-player-focused-instrumentation.ts": {
+      "bytes": 6672,
+      "sha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+    },
+    "package.json": {
+      "bytes": 18,
+      "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+    }
+  }
+}

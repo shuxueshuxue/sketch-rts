@@ -1,0 +1,84 @@
+{
+  "toolDirectory": "/workspace/six-player-structural-shore-tool",
+  "complete": true,
+  "frozenSourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+  "evidenceFileNames": [
+    "six-player-tick-probe.ts",
+    "six-player-focused-instrumentation.ts",
+    "package.json",
+    "source-origin.json",
+    "shore-capture-contract.ts",
+    "tsconfig.json",
+    "contract-result.json",
+    "contract-verification.json",
+    "contract-first.log",
+    "typecheck-first.log"
+  ],
+  "excludedDependencyLink": "node_modules",
+  "verification": {
+    "complete": true,
+    "strictTypecheckExitCode": 0,
+    "contractExitCode": 0,
+    "capturedInputRecords": 20,
+    "capturedTicks": [
+      0,
+      15,
+      30
+    ],
+    "capturedOwners": [
+      "enemy",
+      "enemy2",
+      "player-4",
+      "player-5",
+      "player-6"
+    ],
+    "closedSequences": true,
+    "actualInputPayloadSha256": "68258b5d09d6ae7e13c0ef9e181e853fcf9aed28c334fd454335cba72aa933f4",
+    "fullNativeFramesBytes": 4085,
+    "fullNativeFramesSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+    "checksum": "b8473a1c",
+    "scope": "Synthetic selected return/throw/capture contract and two full 31-tick native probes; actual capture has 20 native shoreSpot calls. Not performance evidence."
+  },
+  "sha256": {
+    "six-player-tick-probe.ts": {
+      "bytes": 35337,
+      "sha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df"
+    },
+    "six-player-focused-instrumentation.ts": {
+      "bytes": 8054,
+      "sha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7"
+    },
+    "package.json": {
+      "bytes": 18,
+      "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+    },
+    "source-origin.json": {
+      "bytes": 1227,
+      "sha256": "bcbbdb9dadc34457ecd2ea967a87b306a89f7eba64a81bea759d2466c2ee3e62"
+    },
+    "shore-capture-contract.ts": {
+      "bytes": 3887,
+      "sha256": "34c4218cce2942e9a740ced28d39ba8b24515d6730d12736401809e665ba392a"
+    },
+    "tsconfig.json": {
+      "bytes": 464,
+      "sha256": "11d235935455c64ed9bb6b530b64ac41752aaf3cdd06ca75905843fefe3bb116"
+    },
+    "contract-result.json": {
+      "bytes": 559,
+      "sha256": "e6381731d6d406a2d59569fce47341fadedfdf60516ddb018abc05bf6927c636"
+    },
+    "contract-verification.json": {
+      "bytes": 710,
+      "sha256": "9a2bef6ebbbd1d11529f77322d034f78c9382e4a39ff819589e9aae0a7839783"
+    },
+    "contract-first.log": {
+      "bytes": 26867,
+      "sha256": "9ff85050ce3e88ed9d3d8b9b9f197dc87243c5db41d6a0906692cb497ebe37b0"
+    },
+    "typecheck-first.log": {
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    }
+  }
+}
