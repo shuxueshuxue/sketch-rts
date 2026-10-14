@@ -4,6 +4,7 @@ import { gunzipSync } from "node:zlib";
 import { transformSync } from "esbuild";
 import { describe, expect, it, vi } from "vitest";
 import { distribution, instrumentProbeSource, runProbe } from "./six-player-tick-probe";
+import { FocusedScopes, instrumentFocusedSource } from "./six-player-focused-instrumentation";
 
 describe("six-player production-path probe", () => {
   it("uses nearest-rank percentiles and retains single-tick spikes", () => {
@@ -32,6 +33,63 @@ describe("six-player production-path probe", () => {
     expect(() => instrumentProbeSource("/test/src/ai/runtime.ts", "export function unrelated() {}"))
       .toThrow("Probe boundary changed");
   });
+
+  it("retains callback receiver, argument order, optional undefined and thrown values", () => {
+    const source = `function unitClaims(snapshot,owner,scripts,options){return scripts.map(script=>script.claimsUnits?.(snapshot,owner,options));}
+      exports.run=(snapshot,owner,script,options)=>script.run(snapshot,owner,options);
+      exports.claims=unitClaims;`;
+    const result = instrumentFocusedSource("/test/src/ai/policy/script-runner.ts", source);
+    const scopes = new FocusedScopes(new Set([0]));
+    const module = { exports: {} as { run(...args: unknown[]): unknown; claims(...args: unknown[]): unknown } };
+    new Function("exports", "globalThis", result.contents)(module.exports, { __sketchSixPlayerFocus: scopes });
+    const observed: unknown[] = [], snapshot = {}, owner = "enemy", options = {}, value = {}, error = new Error("native");
+    const script = { id: "x", run(...args: unknown[]) { observed.push(this, ...args); return value; },
+      claimsUnits(...args: unknown[]) { observed.push(this, ...args); return value; } };
+    scopes.begin(0);
+    expect(module.exports.run(snapshot, owner, script, options)).toBe(value);
+    expect(module.exports.claims(snapshot, owner, [script, { id: "absent" }], options)).toEqual([value, undefined]);
+    expect(observed).toEqual([script, snapshot, owner, options, script, snapshot, owner, options]);
+    expect(() => module.exports.run(snapshot, owner, { id: "throw", run() { throw error; } }, options)).toThrow(error);
+    scopes.end();
+    expect(scopes.ticks[0]?.scopes.filter(scope => scope.name === "script.run").reduce((sum, scope) => sum + scope.calls, 0)).toBe(2);
+    expect(scopes.ticks[0]?.scopes.every(scope => scope.exclusiveMs >= 0)).toBe(true);
+  });
+
+  it("collects nested exclusive wall time only on selected external ticks", () => {
+    const clock = vi.spyOn(performance, "now");
+    clock.mockReturnValueOnce(1).mockReturnValueOnce(2).mockReturnValueOnce(3).mockReturnValueOnce(5).mockReturnValueOnce(8).mockReturnValueOnce(9);
+    try {
+      const scopes = new FocusedScopes(new Set([4]));
+      scopes.begin(3); expect(scopes.enter("unused")).toBeUndefined(); scopes.end();
+      scopes.begin(4); const parent = scopes.enter("parent", "enemy"), child = scopes.enter("child");
+      scopes.leave(child); scopes.leave(parent); scopes.end();
+      expect(scopes.ticks).toEqual([{ tick: 4, startedMs: 1, endedMs: 9, scopes: [
+        { name: "child", owner: "enemy", calls: 1, inclusiveMs: 2, exclusiveMs: 2, maxMs: 2 },
+        { name: "parent", owner: "enemy", calls: 1, inclusiveMs: 6, exclusiveMs: 4, maxMs: 6 },
+      ] }]);
+    } finally { clock.mockRestore(); }
+  });
+
+  it("keeps focused scopes and narrow inspector windows transparent to the complete frame log", async () => {
+    const directory = await mkdtemp("/workspace/six-player-focused-contract-");
+    const quiet = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      const focusedDir = join(directory, "focused"), plainDir = join(directory, "plain");
+      const focused = await runProbe({ source: process.cwd(), ticks: 31, out: focusedDir,
+        focusTicks: [0, 15, 30], focusRadius: 1, cpuProfWindows: [{ from: 0, to: 1 }, { from: 29, to: 30 }], observeGc: true });
+      const plain = await runProbe({ source: process.cwd(), ticks: 31, out: plainDir, plain: true });
+      expect(focused.finalChecksum).toBe(plain.finalChecksum);
+      expect(focused.commandLogSha256).toBe(plain.commandLogSha256);
+      expect(gunzipSync(await readFile(join(focusedDir, "command-frames.jsonl.gz"))))
+        .toEqual(gunzipSync(await readFile(join(plainDir, "command-frames.jsonl.gz"))));
+      const diagnostics = JSON.parse(gunzipSync(await readFile(join(focusedDir, "focused-diagnostics.json.gz"))).toString());
+      expect(diagnostics.clocks).toHaveLength(31);
+      expect(diagnostics.scopedTicks.map((tick: { tick: number }) => tick.tick)).toEqual([0, 1, 14, 15, 16, 29, 30]);
+      expect(diagnostics.profileWindows).toHaveLength(2);
+      expect(diagnostics.profileWindows.every((window: { clockVerified: unknown }) => typeof window.clockVerified === "boolean")).toBe(true);
+      expect(diagnostics.scopedTicks[0].scopes.some((scope: { name: string }) => scope.name === "script.run")).toBe(true);
+    } finally { quiet.mockRestore(); await rm(directory, { recursive: true, force: true }); }
+  }, 30_000);
 
   it("keeps all native frame bytes and final state identical to unmodified source", async () => {
     const directory = await mkdtemp("/workspace/six-player-probe-contract-");

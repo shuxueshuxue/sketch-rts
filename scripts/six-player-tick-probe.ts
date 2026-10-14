@@ -13,11 +13,13 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { Session } from "node:inspector";
+import { PerformanceObserver } from "node:perf_hooks";
 import { build, version as esbuildVersion } from "esbuild";
 import ts from "typescript";
 import type { Game } from "../src/shared/sim";
 import type { CommandFrame } from "../src/shared/net/types";
 import type { GameSnapshot, RoomState } from "../src/shared/types";
+import { FOCUS_HOOK, FocusedScopes, instrumentFocusedSource } from "./six-player-focused-instrumentation";
 
 const HOOK = "__sketchSixPlayerProbe";
 export const PROBE_ROOM_ID = "six-player-perf-512";
@@ -98,19 +100,37 @@ type BundleApi = {
   RULES_VERSION: number;
 };
 
-export type ProbeOptions = { source: string; ticks: number; out: string; plain?: boolean; cpuProfFrom?: number };
+export type ProbeOptions = { source: string; ticks: number; out: string; plain?: boolean; cpuProfFrom?: number;
+  focusTicks?: number[]; focusRadius?: number; cpuProfWindows?: { from: number; to: number }[]; observeGc?: boolean };
 export async function runProbe(options: ProbeOptions) {
   const source = resolve(options.source), out = resolve(options.out);
   if (!Number.isSafeInteger(options.ticks) || options.ticks < 1) throw new Error("--ticks must be a positive integer");
   if (options.cpuProfFrom !== undefined && (!Number.isSafeInteger(options.cpuProfFrom) || options.cpuProfFrom < 0 || options.cpuProfFrom >= options.ticks)) {
     throw new Error("--cpu-prof-from must be within the requested tick range");
   }
+  const focusRadius = options.focusRadius ?? 0;
+  if (!Number.isSafeInteger(focusRadius) || focusRadius < 0) throw new Error("--focus-radius must be a nonnegative integer");
+  if (options.focusTicks?.some(tick => !Number.isSafeInteger(tick) || tick < 0 || tick >= options.ticks)) throw new Error("--focus-ticks must be within the requested tick range");
+  if (options.plain && options.focusTicks?.length) throw new Error("--plain cannot insert focused scopes");
+  const windows = [...(options.cpuProfWindows ?? [])].sort((a, b) => a.from - b.from);
+  if (options.cpuProfFrom !== undefined && windows.length) throw new Error("Choose --cpu-prof-from or --cpu-prof-windows");
+  windows.forEach((window, index) => {
+    if (![window.from, window.to].every(Number.isSafeInteger) || window.from < 0 || window.to < window.from || window.to >= options.ticks
+      || index && windows[index - 1]!.to >= window.from) throw new Error("CPU profile windows must be disjoint inclusive tick ranges within the run");
+  });
+  const focused = options.focusTicks?.length ? new FocusedScopes(new Set(options.focusTicks.flatMap(tick =>
+    Array.from({ length: focusRadius * 2 + 1 }, (_, offset) => tick - focusRadius + offset).filter(value => value >= 0 && value < options.ticks)))) : undefined;
+  const diagnosticClocks = !!focused || !!options.observeGc || !!windows.length;
   try { await access(out); throw new Error(`Refusing to overwrite output ${out}`); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
   await mkdir(out, { recursive: true });
   const initialGitHead = git(source, "rev-parse", "HEAD");
+  const initialProbeBytes = await readFile(scriptPath);
+  const focusedModulePath = join(dirname(scriptPath), "six-player-focused-instrumentation.ts");
+  const initialFocusedBytes = diagnosticClocks ? await readFile(focusedModulePath) : undefined;
   const originalInputs = new Map<string, string>();
   const hookManifest: { path: string; functions: string[] }[] = [];
+  const focusedHookManifest: { path: string; functions: string[] }[] = [];
   const bundlePath = join(out, "runtime.mjs");
   const entry = [
     ["StaticSoloDeploymentRuntime", "src/client/deployment/static-runtime.ts"],
@@ -127,7 +147,9 @@ export async function runProbe(options: ProbeOptions) {
         originalInputs.set(relative(source, args.path), original);
         const transformed = options.plain ? { contents: original, hooks: [] } : instrumentProbeSource(args.path, original);
         if (transformed.hooks.length) hookManifest.push({ path: relative(source, args.path), functions: transformed.hooks });
-        return { contents: transformed.contents, loader: "ts" };
+        const focusedSource = focused ? instrumentFocusedSource(args.path, transformed.contents) : { contents: transformed.contents, hooks: [] };
+        if (focusedSource.hooks.length) focusedHookManifest.push({ path: relative(source, args.path), functions: focusedSource.hooks });
+        return { contents: focusedSource.contents, loader: "ts" };
       });
     } }],
   });
@@ -147,10 +169,14 @@ export async function runProbe(options: ProbeOptions) {
       throw new Error(`Source changed after bundle: ${input.path}`);
     }
     if (git(source, "rev-parse", "HEAD") !== initialGitHead) throw new Error("Source HEAD changed during probe");
+    if (sha(await readFile(scriptPath)) !== sha(initialProbeBytes)) throw new Error("Probe source changed during run");
+    if (initialFocusedBytes && sha(await readFile(focusedModulePath)) !== sha(initialFocusedBytes)) throw new Error("Focused instrumentation changed during run");
   };
   await verifyFrozenInputs();
   await writeFile(join(out, "source-inputs.json.gz"), gzipSync(JSON.stringify(Object.fromEntries([...originalInputs].sort(([a], [b]) => a.localeCompare(b))))));
-  await writeFile(join(out, "probe-source.ts"), await readFile(scriptPath));
+  await writeFile(join(out, "probe-source.ts"), initialProbeBytes);
+  if (diagnosticClocks) await writeFile(join(out, "focused-instrumentation-source.ts"),
+    initialFocusedBytes!);
   await writeFile(join(out, "entry.ts"), entry);
   let sample: TickSample | undefined, aiDepth = 0, capturedFrame: CommandFrame | undefined;
   const hooks: Hooks = {
@@ -173,6 +199,7 @@ export async function runProbe(options: ProbeOptions) {
     },
   };
   (globalThis as unknown as Record<string, Hooks>)[HOOK] = hooks;
+  if (focused) (globalThis as unknown as Record<string, FocusedScopes>)[FOCUS_HOOK] = focused;
   const api = await import(pathToFileURL(bundlePath).href) as BundleApi;
   // An external observer of the actual runtime's returned frame, with no frame/options mutation.
   // This also works with --plain, whose bundle has no AST edits at all.
@@ -191,6 +218,23 @@ export async function runProbe(options: ProbeOptions) {
     session!.post(method, (error, result) => error ? reject(error) : done(result as Record<string, unknown>));
   });
   const ticks: TickSample[] = [];
+  const clocks: { tick: number; startedMs: number; endedMs: number; startedHrUs: number; endedHrUs: number }[] = [];
+  const clockAnchor = () => ({ performanceMs: performance.now(), hrtimeUs: Number(process.hrtime.bigint()) / 1000 });
+  const profileWindows: Record<string, unknown>[] = [];
+  let activeWindow: { from: number; to: number; beforeStart: ReturnType<typeof clockAnchor>; afterStart: ReturnType<typeof clockAnchor> } | undefined;
+  const gcEntries: { startTime: number; duration: number; detail: unknown; deliveredAtMs: number }[] = [];
+  const focusedFacts: Record<string, unknown>[] = [];
+  const shipFacts = (game: Game) => game.units.filter(unit => unit.sailing).map(unit => ({ id: unit.id, kind: unit.kind, owner: unit.owner,
+    x: unit.x, y: unit.y, orderJson: JSON.stringify(unit.order), sailing: unit.sailing ? { heading: unit.sailing.heading, speed: unit.sailing.speed,
+      route: unit.sailing.route ? { age: unit.sailing.route.age, blockedTicks: unit.sailing.route.blockedTicks,
+        goalX: unit.sailing.route.goalX, goalY: unit.sailing.route.goalY, points: unit.sailing.route.points.length } : null,
+      planningRequestedAtTick: unit.sailing.planningRequestedAtTick } : null }));
+  const gcObserver = options.observeGc ? new PerformanceObserver(list => {
+    const deliveredAtMs = performance.now();
+    for (const entry of list.getEntries()) gcEntries.push({ startTime: entry.startTime, duration: entry.duration,
+      detail: (entry as unknown as { detail?: unknown }).detail ?? null, deliveredAtMs });
+  }) : undefined;
+  gcObserver?.observe({ entryTypes: ["gc"] });
   const commandLog: string[] = [];
   const commandHash = createHash("sha256");
   const runStarted = performance.now();
@@ -211,23 +255,42 @@ export async function runProbe(options: ProbeOptions) {
     await writeFile(join(out, "initial-snapshot.json.gz"), gzipSync(JSON.stringify(initialSnapshot)));
     await writeFile(join(out, "room.json"), JSON.stringify({ roomInput, room: startedRoom, aiVersions, lobbyAiVersions: actualVersions }, null, 2));
     for (let index = 0; index < options.ticks; index += 1) {
+      const window = windows.find(candidate => candidate.from === index);
+      if (window) {
+        session = new Session(); session.connect(); await inspectorPost("Profiler.enable");
+        const beforeStart = clockAnchor(); await inspectorPost("Profiler.start");
+        activeWindow = { ...window, beforeStart, afterStart: clockAnchor() };
+      }
       if (options.cpuProfFrom === index) {
         session = new Session(); session.connect();
         await inspectorPost("Profiler.enable"); await inspectorPost("Profiler.start");
       }
       const tick = finalGame.tick;
+      const beforeFacts = focused?.includes(tick) ? { unitIds: new Set(finalGame.units.map(unit => unit.id)),
+        buildingIds: new Set(finalGame.buildings.map(building => building.id)), ships: shipFacts(finalGame) } : undefined;
       sample = { tick, tickAfter: tick, mod15: tick % 15, wholeMs: 0, frameMs: 0, simMs: 0, aiMs: 0,
         aiSnapshotMs: 0, otherSnapshotMs: 0, renderSnapshotMs: 0, observerMs: 0, ownerPlans: [], units: 0, buildings: 0 };
       capturedFrame = undefined;
       runtimeNow += 50;
+      focused?.begin(tick);
       const started = performance.now();
+      const startedHrUs = diagnosticClocks ? Number(process.hrtime.bigint()) / 1000 : 0;
       const changed = match.adapter.updateToRenderTime();
-      sample.wholeMs = performance.now() - started;
+      const ended = performance.now(); sample.wholeMs = ended - started;
+      if (diagnosticClocks) clocks.push({ tick, startedMs: started, endedMs: ended, startedHrUs,
+        endedHrUs: Number(process.hrtime.bigint()) / 1000 });
+      focused?.end();
       if (!changed || finalGame.tick !== tick + 1) throw new Error(`Expected one real adapter tick at ${tick}, got ${finalGame.tick}; winner=${finalGame.match.winner}`);
       const snapshotStarted = performance.now();
       const snapshot = match.adapter.currentSnapshot();
       sample.renderSnapshotMs = performance.now() - snapshotStarted;
       sample.tickAfter = snapshot.tick; sample.units = snapshot.units.length; sample.buildings = snapshot.buildings.length;
+      if (beforeFacts) focusedFacts.push({ tick, tickAfter: snapshot.tick,
+        spawnedUnits: snapshot.units.filter(unit => !beforeFacts.unitIds.has(unit.id)).map(unit => ({ id: unit.id, kind: unit.kind,
+          owner: unit.owner, x: unit.x, y: unit.y, order: unit.order })),
+        newBuildings: snapshot.buildings.filter(building => !beforeFacts.buildingIds.has(building.id)).map(building => ({ id: building.id,
+          kind: building.kind, owner: building.owner, x: building.x, y: building.y, complete: building.complete })),
+        shipsBefore: beforeFacts.ships, shipsAfter: shipFacts(finalGame) });
       // Native frame fields/order and null for an empty tick are retained; never sort/drop commands.
       const observerStarted = performance.now();
       const line = JSON.stringify({ tick, frame: capturedFrame ?? null }) + "\n";
@@ -235,12 +298,43 @@ export async function runProbe(options: ProbeOptions) {
       if (index % 1200 === 0 || index === options.ticks - 1) sample.memory = process.memoryUsage();
       sample.observerMs = performance.now() - observerStarted;
       ticks.push(sample); sample = undefined;
+      if (activeWindow?.to === index) {
+        const beforeStop = clockAnchor(); const result = await inspectorPost("Profiler.stop"); const afterStop = clockAnchor();
+        const profile = result.profile as { startTime: number; endTime: number };
+        const file = `cpu-window-${activeWindow.from}-${activeWindow.to}.cpuprofile.gz`;
+        await writeFile(join(out, file), gzipSync(JSON.stringify(profile)));
+        const clockVerified = profile.startTime >= activeWindow.beforeStart.hrtimeUs && profile.startTime <= activeWindow.afterStart.hrtimeUs
+          && profile.endTime >= beforeStop.hrtimeUs && profile.endTime <= afterStop.hrtimeUs;
+        profileWindows.push({ ...activeWindow, beforeStop, afterStop, file, profileStartUs: profile.startTime, profileEndUs: profile.endTime,
+          clockVerified, note: clockVerified ? "Profiler start/end empirically fall inside process.hrtime microsecond call brackets; use raw hrtime tick anchors for sample alignment."
+            : "Profiler clock failed hrtime bracket validation: no tick-level CPU sample attribution is justified." });
+        session!.disconnect(); session = undefined; activeWindow = undefined;
+      }
     }
     if (session) {
       const profile = await inspectorPost("Profiler.stop"); session.disconnect(); session = undefined;
       await writeFile(join(out, "cpu-profile.cpuprofile.gz"), gzipSync(JSON.stringify(profile.profile)));
     }
     await verifyFrozenInputs();
+    if (gcObserver) {
+      // Delivery is asynchronous. No yield is inserted inside measured ticks;
+      // flush after the complete synchronous run and retain delivery timestamps.
+      await new Promise<void>(done => setImmediate(done));
+      await new Promise<void>(done => setImmediate(done));
+      const deliveredAtMs = performance.now();
+      for (const entry of gcObserver.takeRecords()) gcEntries.push({ startTime: entry.startTime, duration: entry.duration,
+        detail: (entry as unknown as { detail?: unknown }).detail ?? null, deliveredAtMs });
+    }
+    if (diagnosticClocks) await writeFile(join(out, "focused-diagnostics.json.gz"), gzipSync(JSON.stringify({ schema: 1,
+      hooks: focusedHookManifest, focusTicks: options.focusTicks ?? [], focusRadius, clocks, scopedTicks: focused?.ticks ?? [], profileWindows,
+      gcEntries, focusedFacts, method: {
+        tickConvention: "Tick before LocalGameAdapter advances; stepGame increments game.tick inside its prelude.",
+        exclusiveMeaning: "Inclusive wall time minus instrumented child scopes; includes uninstrumented children and any GC or scheduler pause. Scope overhead is not subtracted.",
+        callbackMeaning: "script.claimsUnits is an attempted optional-call scope, including undefined callbacks; script.run preserves native receiver and args. No script function identity or memory writes are changed.",
+        gcMeaning: "Node PerformanceObserver asynchronous GC entries, startTime/duration share performance.now timeline; intersection with tick is association, not proof of exclusive script CPU. Delivery timestamps and post-run flush are retained.",
+        clockMeaning: "Profiler absolute microsecond clock is accepted only if start/end lie within measured hrtime brackets. Performance and hrtime anchors are both archived; no assumed clock offset.",
+        benchmarkMeaning: "Focused scopes, callback closures, GC observer and inspector perturb execution. Use this run for attribution and separate unprofiled repeated runs for performance acceptance."
+      } })));
     const finalChecksum = api.checksumGame(finalGame);
     const commandLogSha256 = commandHash.digest("hex");
     const commandBytes = commandLog.join("");
@@ -280,10 +374,12 @@ export async function runProbe(options: ProbeOptions) {
         aiIncludes: "planPresetAiRuntimeCommands including shared snapshot and all due owners; no-owner calls also timed",
         simIncludes: "stepGame; frameMs additionally includes admission/planning/apply",
         otherSnapshotIncludes: "All snapshotGame calls outside AI, including the separately timed render currentSnapshot; these are overlapping diagnostics, not additive costs.", hooks: hookManifest,
-        incompleteAttachmentReproduction: "Attachment omitted room id/races; this fixed real room resolves the reported owner/preset order, with its complete initial state archived. It is a controlled scenario, not proof of the attachment's exact original match." },
+        incompleteAttachmentReproduction: "Attachment omitted room id/races; this fixed real room resolves the reported owner/preset order, with its complete initial state archived. It is a controlled scenario, not proof of the attachment's exact original match.",
+        ...(diagnosticClocks ? { diagnosticOutput: "focused-diagnostics.json.gz", focusedHooks: focusedHookManifest } : {}) },
     };
     const environment = { recordedAt: new Date().toISOString(), source, gitHead: initialGitHead, gitStatus: git(source, "status", "--short"),
-      sourceInputs: inputs, sourceManifestSha256: sha(JSON.stringify(inputs.map(({ esbuildBytes: _bytes, ...input }) => input))), probeSha256: sha(await readFile(scriptPath)),
+      sourceInputs: inputs, sourceManifestSha256: sha(JSON.stringify(inputs.map(({ esbuildBytes: _bytes, ...input }) => input))), probeSha256: sha(initialProbeBytes),
+      ...(diagnosticClocks ? { focusedInstrumentationSha256: sha(initialFocusedBytes!) } : {}),
       bundleSha256: sha(await readFile(bundlePath)), argv: process.argv, node: process.version, v8: process.versions.v8,
       esbuild: esbuildVersion, typescript: ts.version, platform: platform(), release: release(), cpus: cpus(), totalMemory: totalmem(), freeMemory: freemem(),
       processExecArgv: process.execArgv, options };
@@ -329,14 +425,17 @@ export async function runProbe(options: ProbeOptions) {
       await writeFile(join(out, "failure.json"), JSON.stringify(failure, null, 2));
       await writeFile(join(out, "ticks.json.gz"), gzipSync(JSON.stringify(ticks)));
       await writeFile(join(out, "command-frames.jsonl.gz"), gzipSync(commandBytes));
+      if (diagnosticClocks) await writeFile(join(out, "partial-focused-diagnostics.json.gz"), gzipSync(JSON.stringify({ clocks, scopedTicks: focused?.ticks ?? [], profileWindows, gcEntries, focusedFacts, activeWindow })));
     } catch (persistenceError) {
       throw new AggregateError([error, persistenceError], "Probe failed and could not fully persist its partial evidence");
     }
     throw error;
   } finally {
+    gcObserver?.disconnect();
     session?.disconnect(); runtime.close();
     api.CommandFrameRuntime.prototype.tick = originalTick;
     delete (globalThis as unknown as Record<string, Hooks>)[HOOK];
+    if (focused) delete (globalThis as unknown as Record<string, FocusedScopes>)[FOCUS_HOOK];
   }
 }
 
@@ -345,12 +444,16 @@ function parseArguments(args: string[]): ProbeOptions {
   for (let i = 0; i < args.length; i += 1) {
     const flag = args[i];
     if (flag === "--plain") { options.plain = true; continue; }
-    if (!["--source", "--ticks", "--out", "--cpu-prof-from"].includes(flag!)) throw new Error(`Unknown argument ${flag}`);
+    if (flag === "--observe-gc") { options.observeGc = true; continue; }
+    if (!["--source", "--ticks", "--out", "--cpu-prof-from", "--focus-ticks", "--focus-radius", "--cpu-prof-windows"].includes(flag!)) throw new Error(`Unknown argument ${flag}`);
     const value = args[++i]; if (!value || value.startsWith("--")) throw new Error(`Missing value for ${flag}`);
     if (flag === "--source") options.source = value;
     else if (flag === "--out") options.out = value;
     else if (flag === "--ticks") options.ticks = Number(value);
-    else options.cpuProfFrom = Number(value);
+    else if (flag === "--cpu-prof-from") options.cpuProfFrom = Number(value);
+    else if (flag === "--focus-radius") options.focusRadius = Number(value);
+    else if (flag === "--focus-ticks") options.focusTicks = value.split(",").map(Number);
+    else options.cpuProfWindows = value.split(",").map(range => { const [from, to, extra] = range.split(":"); if (extra !== undefined || to === undefined) throw new Error("Use --cpu-prof-windows FROM:TO,..."); return { from: Number(from), to: Number(to) }; });
   }
   if (!options.out) throw new Error("--out NEWDIR is required");
   return options;
