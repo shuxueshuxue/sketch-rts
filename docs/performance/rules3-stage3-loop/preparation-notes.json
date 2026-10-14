@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "complete": true,
+  "createdUtc": "2026-10-14T21:56:23.058760+00:00",
+  "payloads": 465,
+  "originalBytes": 168216635,
+  "storedBytes": 27045143,
+  "onlyDependenciesExcluded": true,
+  "oldClosedEvidenceUnchanged": true,
+  "newCandidatesBeyondUnrollNotIncluded": true,
+  "compression": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage3-loop-archive-tools/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop",
+      "--inputs",
+      "/workspace/whole-stage3-loop-archive-tools/inputs.json"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:48:33.451580+00:00",
+    "endedAt": "2026-10-14T21:48:35.192599+00:00",
+    "wallSeconds": 1.7410275939910207,
+    "exitCode": 0,
+    "childUserSeconds": 1.659747,
+    "childSystemSeconds": 0.080797,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/compress-01.stdout.log",
+      "bytes": 88,
+      "sha256": "b000a0b4342c5f14f0d23c9826deb7dd9d886222e6527e84915b48cc4439183e"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/compress-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "lateFrozenAppend": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage3-loop-archive-tools/append.py",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop",
+      "/workspace/whole-stage3-loop-archive-tools/append-frozen-inputs.json"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:50:52.405848+00:00",
+    "endedAt": "2026-10-14T21:50:52.892405+00:00",
+    "wallSeconds": 0.48656927898991853,
+    "exitCode": 0,
+    "childUserSeconds": 0.45420299999999997,
+    "childSystemSeconds": 0.03192,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/append-frozen-01.stdout.log",
+      "bytes": 3144,
+      "sha256": "b8aa55a422a5504acf15c45e611553971663b1bb69b188cbba464f24f8570dc1"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/append-frozen-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "initialWholeOriginalVerification": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop",
+      "--verify",
+      "--compare-originals"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:51:01.075578+00:00",
+    "endedAt": "2026-10-14T21:51:01.772736+00:00",
+    "wallSeconds": 0.6971664560260251,
+    "exitCode": 0,
+    "childUserSeconds": 0.572434,
+    "childSystemSeconds": 0.12415899999999999,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/verify-01.stdout.log",
+      "bytes": 132,
+      "sha256": "656300fd3b1f034048fb626e2f7f5313ca5e900f20a5de3db713e155a643d02c"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/verify-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "preSdkWholeOriginalVerification": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop",
+      "--verify",
+      "--compare-originals"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:54:05.577174+00:00",
+    "endedAt": "2026-10-14T21:54:06.282033+00:00",
+    "wallSeconds": 0.704868175991578,
+    "exitCode": 0,
+    "childUserSeconds": 0.616513,
+    "childSystemSeconds": 0.088,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/verify-pre-sdk-01.stdout.log",
+      "bytes": 132,
+      "sha256": "adb53df37353b9408fc54caff6baf1920d37f075593042d80c56bea81cce2133"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/verify-pre-sdk-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sourceClosureFailuresRetained": [
+    {
+      "schema": 1,
+      "argv": [
+        "python3",
+        "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/analyze-native.py",
+        "--repo",
+        "/workspace/sketch-rts-production-init-fix"
+      ],
+      "cwd": "/workspace/whole-stage3-loop-archive-tools",
+      "startedAt": "2026-10-14T21:48:42.379746+00:00",
+      "endedAt": "2026-10-14T21:48:43.688970+00:00",
+      "wallSeconds": 1.3092351609957404,
+      "exitCode": 1,
+      "childUserSeconds": 1.156502,
+      "childSystemSeconds": 0.159556,
+      "stdout": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/analyze-01.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/analyze-01.stderr.log",
+        "bytes": 633,
+        "sha256": "b6ba521a7d73c92c35a8d1a621a9decd3a04f8eed9eca279fb8aa044cd102f72"
+      }
+    },
+    {
+      "schema": 1,
+      "argv": [
+        "python3",
+        "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/analyze-native.py",
+        "--repo",
+        "/workspace/sketch-rts-production-init-fix"
+      ],
+      "cwd": "/workspace/whole-stage3-loop-archive-tools",
+      "startedAt": "2026-10-14T21:49:29.438195+00:00",
+      "endedAt": "2026-10-14T21:49:30.717545+00:00",
+      "wallSeconds": 1.279362120985752,
+      "exitCode": 1,
+      "childUserSeconds": 1.169673,
+      "childSystemSeconds": 0.118655,
+      "stdout": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/analyze-02.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/analyze-02.stderr.log",
+        "bytes": 535,
+        "sha256": "b582db6bad4f8e5d5c45ae8122d967e4acda23ced5315dcd51a040d52ee1d3d9"
+      }
+    }
+  ],
+  "sourceClosurePassed": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/analyze-native.py",
+      "--repo",
+      "/workspace/sketch-rts-production-init-fix"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:50:11.905159+00:00",
+    "endedAt": "2026-10-14T21:50:13.254356+00:00",
+    "wallSeconds": 1.3492039650154766,
+    "exitCode": 0,
+    "childUserSeconds": 1.2190189999999999,
+    "childSystemSeconds": 0.138078,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/analyze-03.stdout.log",
+      "bytes": 608,
+      "sha256": "ecf18322588c141786ffe80f92abffcf6ead191131281e10adc2fd83cca34685"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/analyze-03.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "productionClosure": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage3-loop/verify-production.py"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:53:22.268442+00:00",
+    "endedAt": "2026-10-14T21:53:22.424059+00:00",
+    "wallSeconds": 0.15562064701225609,
+    "exitCode": 0,
+    "childUserSeconds": 0.12330200000000001,
+    "childSystemSeconds": 0.031904,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/production-proof-01.stdout.log",
+      "bytes": 372,
+      "sha256": "964fbae4adff1014977857cf5b020e3ad99f95463b0d261b779e2ece828c6d58"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/production-proof-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "safeExtractionPathChecks": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage3-loop-archive-tools/safe-path-checks.py"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:53:22.868728+00:00",
+    "endedAt": "2026-10-14T21:53:22.907696+00:00",
+    "wallSeconds": 0.038970881985733286,
+    "exitCode": 0,
+    "childUserSeconds": 0.034475,
+    "childSystemSeconds": 0.004077,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/safe-paths-01.stdout.log",
+      "bytes": 379,
+      "sha256": "9b7fb1e4bac2778f92d02c88d427ab60fb62fc5bc4411da9803a32d770504303"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/safe-paths-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdkFirstCwdFailure": {
+    "schema": 1,
+    "argv": [
+      "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+      "--run",
+      "src/sdk/package-boundaries.test.ts",
+      "scripts/production-client-bootstrap.test.ts",
+      "scripts/sdk-agent-driver-boundary.test.ts",
+      "scripts/sdk-agent-planner-boundary.test.ts"
+    ],
+    "cwd": "/workspace/whole-stage3-loop-archive-tools",
+    "startedAt": "2026-10-14T21:54:06.703614+00:00",
+    "endedAt": "2026-10-14T21:54:06.921195+00:00",
+    "wallSeconds": 0.21758997699362226,
+    "exitCode": 1,
+    "childUserSeconds": 0.211685,
+    "childSystemSeconds": 0.058110999999999996,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-01.stdout.log",
+      "bytes": 58,
+      "sha256": "277fa45295118d40f2333a19b2dc054f2789839e498b4e32a329dc3a508d04fb"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-01.stderr.log",
+      "bytes": 455,
+      "sha256": "41001a8dd4719dd71e6a68cf08189962d1725c29c01b1f506449a00e40fa873a"
+    }
+  },
+  "sdkPass": {
+    "schema": 1,
+    "argv": [
+      "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+      "--run",
+      "src/sdk/package-boundaries.test.ts",
+      "scripts/production-client-bootstrap.test.ts",
+      "scripts/sdk-agent-driver-boundary.test.ts",
+      "scripts/sdk-agent-planner-boundary.test.ts"
+    ],
+    "cwd": "/workspace/sketch-rts-production-init-fix",
+    "startedAt": "2026-10-14T21:54:35.426065+00:00",
+    "endedAt": "2026-10-14T21:55:06.236858+00:00",
+    "wallSeconds": 30.81080642901361,
+    "exitCode": 0,
+    "childUserSeconds": 30.007858000000002,
+    "childSystemSeconds": 2.284382,
+    "stdout": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-02.stdout.log",
+      "bytes": 587,
+      "sha256": "1fdb7f6ec205173387f0f38a5d3f5c28ced8f59ade00a6ffffa08948f333c244"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-02.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdkScope": "Current full repo evidence branch553d, existing code49 plus complete new stage3 docs. This SDK/doc validation is not a new Map618 benchmark or new Map618 build.",
+  "archivePreparationWrapperHistory": "Original run-step.py was briefly edited for the second attempt after initial own-preparation capture; both exact versions preserved. Corrected version now saved as run-step-cwd-fixed.py and original path restored byte-for-byte. Game/native/local evidence and all old closed docs unchanged.",
+  "noIntermediate104MBRawCopy": true,
+  "v10DiagnosticNotStrictExclusivePerformanceAcceptance": true
+}

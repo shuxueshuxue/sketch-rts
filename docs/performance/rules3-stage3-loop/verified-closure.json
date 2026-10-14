@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "complete": true,
+  "closedUtc": "2026-10-14T21:56:23.058760+00:00",
+  "payloads": 465,
+  "originalBytes": 168216635,
+  "storedBytes": 27045143,
+  "losslessOriginalsVerified": true,
+  "nativeCommandLogs": 7,
+  "commandBytesPerLog": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "checksum": "7d94a5e8",
+  "nativeSourceRuns": 7,
+  "inputsPerRun": 241,
+  "runtimeMap31AndShipped618ByteEqual": true,
+  "officialTarRegularFiles": 91,
+  "officialTarFileBytes": 11327853,
+  "officialTarFullBytesEqualArchivedExtraction": true,
+  "sdk": {
+    "exitCode": 0,
+    "filesPassed": 4,
+    "testsPassed": 14,
+    "scope": "Current full repo evidence branch553d, existing code49 plus complete new stage3 docs. This SDK/doc validation is not a new Map618 benchmark or new Map618 build.",
+    "execution": {
+      "schema": 1,
+      "argv": [
+        "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+        "--run",
+        "src/sdk/package-boundaries.test.ts",
+        "scripts/production-client-bootstrap.test.ts",
+        "scripts/sdk-agent-driver-boundary.test.ts",
+        "scripts/sdk-agent-planner-boundary.test.ts"
+      ],
+      "cwd": "/workspace/sketch-rts-production-init-fix",
+      "startedAt": "2026-10-14T21:54:35.426065+00:00",
+      "endedAt": "2026-10-14T21:55:06.236858+00:00",
+      "wallSeconds": 30.81080642901361,
+      "exitCode": 0,
+      "childUserSeconds": 30.007858000000002,
+      "childSystemSeconds": 2.284382,
+      "stdout": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-02.stdout.log",
+        "bytes": 587,
+        "sha256": "1fdb7f6ec205173387f0f38a5d3f5c28ced8f59ade00a6ffffa08948f333c244"
+      },
+      "stderr": {
+        "path": "/workspace/whole-stage3-loop-archive-tools/final-sdk-02.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "targetPassed": false,
+  "unrollAdopted": false,
+  "startup": {
+    "passed": 56,
+    "total": 59,
+    "exitCode": 1,
+    "onlyFailures": "Three original audio-packs/served.json entity mismatches, unchanged from prior production."
+  },
+  "limitations": "One fixed 14400-tick scene, sparse memory, v10 diagnosis overlapped brief statistics, three startup screens only. No whole-target/FPS/allocation/audible-audio claim."
+}
