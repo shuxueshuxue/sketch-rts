@@ -1,0 +1,27 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ❯ src/client/menu-forest-horde.test.ts (6 tests | 1 failed) 3203ms
+   × army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent 11ms
+     → expected undefined to be defined
+   ✓ army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame 3171ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent
+AssertionError: expected undefined to be defined
+ ❯ src/client/menu-forest-horde.test.ts:50:29
+     48|       if(snapshot.tick-cue.tick<=4)expect(pose.mode).toBe('attack');
+     49|       const heldDirection=pose.direction??pose.carryDirection;
+     50|       expect(heldDirection).toBeDefined();expect(Math.sign(heldDirecti…
+       |                             ^
+     51|       contacts++;
+     52|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  09:55:16
+   Duration  4.56s (transform 890ms, setup 0ms, collect 1.16s, tests 3.20s, environment 0ms, prepare 46ms)
+

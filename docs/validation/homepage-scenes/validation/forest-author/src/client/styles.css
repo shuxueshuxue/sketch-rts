@@ -1,0 +1,890 @@
+@import './game-materials.css';
+
+/* @@@antique-ui - The look of an old campaign table, after Age of Empires: parchment panels in carved walnut frames,
+   dark brown ink and dark gold, serif letters. Every colour, surface and frame is a token below, so the menus and the
+   match's HUD read as one set. A frame is a 9-slice SVG (border-image, slice 16): its corners keep their nails, its edges
+   stretch. */
+
+/* @@@cinzel - The display face, Cinzel (Natanael Gama; SIL Open Font License 1.1, fonts/cinzel/OFL.txt): its Latin
+   letters, every weight from 400 to 900 in one file, served with the game, no font service. Text shows at once in the
+   fallbacks after it in --font-display and takes Cinzel when it arrives; other scripts (Chinese) never fetch it. It was
+   named first in --font-display but never loaded, so the English titles and buttons were set in Palatino. */
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("./fonts/cinzel/cinzel-latin-wght.woff2") format("woff2");
+  /* Its capitals in the middle of its line: the ascent it lays out with, less its descent, is its cap height (0.70 em),
+     the two adding to the 1.35 em of its own. With its own metrics a home button's capitals sat 2 px high in their
+     60 px (and a Chinese label, whose line takes Cinzel's metrics as the first font, 1 px high). */
+  ascent-override: 102.5%;
+  descent-override: 32.5%;
+  line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --font-display: "Cinzel", "Trajan Pro", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+  --font-body: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+
+  /* Parchment panels in walnut frames, dark brown ink, dark gold. */
+  --panel: var(--parchment);
+  --ink: #2e1d0e;
+  --ink-soft: #6a5133;
+  --title: #4d1d10;
+  --title-shadow: 0 1px 0 rgba(255, 246, 220, 0.7);
+  --accent: #8a6420;
+  --rule: rgba(90, 60, 25, 0.38);
+  --frame: var(--frame-walnut);
+  --inset: rgba(255, 249, 230, 0.45);
+  --inset-edge: rgba(90, 60, 25, 0.38);
+  --inset-ink: #2e1d0e;
+  --inset-ink-soft: #6a5133;
+  --selected: linear-gradient(90deg, rgba(150, 100, 30, 0.34), rgba(150, 100, 30, 0.06));
+  --selected-mark: #8a1f14;
+  --field: #faf2da;
+  --field-edge: #8a6a3e;
+  --field-ink: #2e1d0e;
+  --btn: linear-gradient(#7c5333, #4c2e16);
+  --btn-hover: linear-gradient(#90633d, #5c391c);
+  --btn-edge: #1c0f06;
+  --btn-ink: #f4e1ad;
+  --primary: linear-gradient(#e2c272, #a37b2d);
+  --primary-hover: linear-gradient(#efd38f, #b68b38);
+  --primary-edge: #4a300c;
+  --primary-ink: #2a1806;
+  --bar-value: #f3d07a;
+  --slot: linear-gradient(#f4e9cb, #dfcb9a);
+  --slot-edge: #3d230f;
+  --slot-ink: #3a2412;
+  --tip: var(--parchment);
+  --tip-ink: #2e1d0e;
+  --tip-soft: #6a5133;
+  --tip-title: #4d1d10;
+  /* Quiet lacquer and brass distinguish live controls from the paper map. */
+  --hud-panel: linear-gradient(145deg, #323a38, #202725);
+  --hud-ink: #e3decd;
+  --font-ui: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --scene-filter: saturate(0.96) brightness(0.98);
+  --shade: radial-gradient(ellipse at 62% 48%, rgba(40, 22, 8, 0) 25%, rgba(30, 16, 6, 0.6) 100%);
+  --danger: #8e2a1f;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #1a0f07;
+  color: var(--ink);
+  font-family: var(--font-body);
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Fields keep their focus stroke inside the frame, including in scrollable lists. */
+input:not([type="checkbox"]):not([type="range"]):focus-visible,
+select:focus-visible {
+  outline-offset: -2px;
+}
+
+input[type="checkbox"],
+input[type="range"] {
+  accent-color: #8a6420;
+}
+
+/* Scrollbars in the look's materials: a thin walnut track and a brass thumb. Chrome and Edge draw them from the
+   ::-webkit-scrollbar rules (which a scrollbar-color would switch off there), Firefox from scrollbar-color alone. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, #2a170b, #4a2c15 50%, #2a170b);
+  box-shadow: inset 0 0 0 1px #1a0e05;
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(180deg, #2a170b, #4a2c15 50%, #2a170b);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #2a170b;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(180deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #a77b2c, #f2d792 50%, #a77b2c);
+}
+
+::-webkit-scrollbar-corner {
+  background: #2a170b;
+}
+
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9a14f #3b2414;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.game-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1a0f07;
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.menu-open .game-canvas {
+  filter: var(--scene-filter);
+}
+
+.placement-active .game-canvas {
+  cursor: copy;
+}
+
+.targeting-active .game-canvas {
+  cursor: crosshair;
+}
+
+.pointer-locked .game-canvas {
+  cursor: none;
+}
+
+.virtual-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  z-index: 1000;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 0 rgba(20, 10, 4, 0.3));
+}
+
+.virtual-pointer::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  border: 2px solid #2e1d0e;
+  border-radius: 50%;
+  background: rgba(255, 244, 214, 0.45);
+}
+
+.virtual-pointer::after {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  content: "";
+  background: #2e1d0e;
+}
+
+.virtual-pointer.relation-cursor {
+  width: 18px;
+  height: 18px;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+}
+
+.virtual-pointer.relation-cursor::before,
+.virtual-pointer.relation-cursor::after { display: none; }
+
+/* Carved frames belong to the menu, separate from the battle HUD. */
+.menu-window, .pointer-lock-panel, .map-preview-frame {
+  border:12px solid transparent;
+  border-image:var(--frame) 16 / 12px stretch;
+}
+
+/* ---------------------------------------------------------------- menus */
+
+.main-menu {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 28px;
+  overflow: hidden;
+  background: var(--shade);
+  pointer-events: none;
+}
+
+.main-menu.hidden {
+  display: none;
+}
+
+.menu-window {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  gap: 14px;
+  width: min(1240px, calc(100vw - 56px));
+  max-height: calc(100dvh - 56px);
+  overflow: hidden;
+  padding: 18px 26px 22px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+.menu-title {
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  line-height: 1.1;
+  text-shadow: var(--title-shadow);
+}
+
+.menu-status {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.menu-status:empty {
+  display: none;
+}
+
+.map-list {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.room-section-title,
+.profile-id {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* The home screen: the game's name and three ways in down the left, nothing else; the scene (see @@@menu-scenes) plays
+   on the right, darkened and softened under the buttons. */
+.main-menu[data-menu-view="home"] {
+  place-items: center start;
+  padding-left: 9vw;
+  background:
+    linear-gradient(90deg, rgba(10, 5, 2, 0.9) 0%, rgba(10, 5, 2, 0.6) 30%, rgba(10, 5, 2, 0) 62%),
+    radial-gradient(ellipse 90% 80% at 65% 50%, rgba(8, 4, 1, 0) 50%, rgba(8, 4, 1, 0.7) 100%);
+}
+
+.main-menu[data-menu-view="home"]::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+}
+
+.main-menu[data-menu-view="home"] .menu-window {
+  z-index: 1;
+  width: auto;
+  max-height: none;
+  justify-items: start;
+  gap: 44px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-image: none;
+  background: none;
+  box-shadow: none;
+}
+
+.main-menu[data-menu-view="home"] .menu-title {
+  padding: 0;
+  border: 0;
+  background: linear-gradient(180deg, #fff4d2 0%, #ecd08c 46%, #a97f36 54%, #e0bf74 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(56px, 7vw, 104px);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow: none;
+  text-transform: uppercase;
+  filter: drop-shadow(0 3px 0 #1a0e05) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.75));
+}
+
+.main-menu[data-menu-view="home"] .map-list {
+  width: min(340px, calc(100vw - 56px));
+  gap: 16px;
+}
+
+.main-menu[data-menu-view="home"] .map-button {
+  align-items: center;
+  min-height: 60px;
+  padding: 0 24px;
+  border: 7px solid transparent;
+  border-image: var(--frame) 16 / 7px stretch;
+  background: var(--walnut);
+  color: #e9d29a;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.main-menu[data-menu-view="home"] .map-button:hover,
+.main-menu[data-menu-view="home"] .map-button:focus-visible {
+  outline: none;
+  background: var(--tex-wood), linear-gradient(180deg, #5a3a20, #3a2311);
+  color: #fff1c6;
+  text-shadow: 0 0 12px rgba(255, 214, 120, 0.6);
+}
+
+.main-menu[data-menu-view="home"] .map-button-name {
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+
+.main-menu[data-menu-view="home"] .map-button:first-child {
+  color: #f6dc94;
+}
+
+/* The scene's switch, bottom right of the home screen: the scene's name, a click for the next. */
+.scene-switch {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(214, 178, 101, 0.45);
+  border-radius: 2px;
+  background: rgba(20, 11, 4, 0.55);
+  color: #e9d29a;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: 0.15em;
+  pointer-events: auto;
+}
+
+.scene-switch:hover,
+.scene-switch:focus-visible {
+  background: rgba(40, 24, 10, 0.75);
+  color: #fff1c6;
+}
+
+.scene-switch-mark {
+  font-size: 15px;
+}
+
+.main-menu[data-menu-view="home"] .scene-switch {
+  display: inline-flex;
+}
+
+/* A menu entry: a board with its name and, where it helps, a line under it. */
+/* A button holds its label in its middle whatever the font: its lines in a column centred down the button, each 1.2
+   high. As a grid its one row filled the button and the label sat at the top of that row, under the top edge; and a
+   Latin font's own line (Palatino, Cinzel's fallback, is 1.37 high with a deep descent) lifted the capitals further. */
+.map-button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 2px;
+  background: var(--btn);
+  color: var(--btn-ink);
+  padding: 10px 14px;
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.map-button:hover,
+.map-button:focus-visible {
+  background: var(--btn-hover);
+}
+
+.map-button-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.map-button-note {
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0.82;
+}
+
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.menu-actions button,
+.pointer-lock-panel button,
+.match-action,
+.slot-actions button {
+  min-height: 34px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 2px;
+  background: var(--btn);
+  color: var(--btn-ink);
+  padding: 6px 16px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.menu-actions button:hover,
+.slot-actions button:hover,
+.match-action:hover {
+  background: var(--btn-hover);
+}
+
+.menu-actions button:first-child,
+.pointer-lock-panel button {
+  min-width: 140px;
+  border-color: var(--primary-edge);
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.menu-actions button:first-child:hover,
+.pointer-lock-panel button:hover {
+  background: var(--primary-hover);
+}
+
+.menu-actions button:disabled,
+.slot-actions button:disabled {
+  opacity: 0.45;
+}
+
+.slot-actions .danger-button {
+  color: #f4ab92;
+}
+
+.profile-form input:not([type="range"]):not([type="checkbox"]),
+.profile-form select,
+.create-game-form input:not([type="checkbox"]),
+.slot-row select,
+.slot-controller-badge {
+  box-sizing: border-box;
+  min-height: 32px;
+  border: 1px solid var(--field-edge);
+  border-radius: 2px;
+  background: var(--field);
+  color: var(--field-ink);
+  padding: 5px 9px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.profile-form,
+.create-game-form,
+.room-browser,
+.room-setup,
+.results-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-form label,
+.create-game-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.main-menu[data-menu-view="profile"] .menu-window {
+  width: min(520px, calc(100vw - 56px));
+}
+
+.sound-settings {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  border: 1px solid var(--inset-edge);
+  border-radius: 2px;
+  background: var(--inset);
+  padding: 10px 14px 12px;
+}
+
+.sound-settings legend {
+  padding: 0 6px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.sound-settings label:not(.checkbox-row) {
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+}
+
+/* Insets: the lists and notes sunk into a panel. */
+.map-browser,
+.map-info,
+.room-browser-list,
+.room-slot-pane,
+.results-panel .result-list,
+.room-list-note {
+  border: 1px solid var(--inset-edge);
+  border-radius: 2px;
+  background: var(--inset);
+  color: var(--inset-ink);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+
+.room-browser-list .map-button {
+  border-color: var(--inset-edge);
+  background: transparent;
+  color: var(--inset-ink);
+  box-shadow: none;
+}
+
+.room-browser-list .map-button:hover {
+  background: var(--selected);
+}
+
+.room-list-note {
+  padding: 16px;
+  color: var(--inset-ink-soft);
+  font-style: italic;
+}
+
+.slot-pane-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--inset-edge);
+}
+
+.slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.slot-actions button {
+  min-height: 28px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.slot-list {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--inset-edge);
+  font-size: 13px;
+}
+
+.slot-index {
+  flex: 0 0 22px;
+  color: var(--selected-mark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
+}
+
+.slot-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-row select,
+.slot-controller-badge {
+  flex: 0 0 92px;
+  min-height: 28px;
+  padding: 2px 6px;
+}
+
+.slot-row [data-slot-ai] {
+  flex-basis: 64px;
+}
+
+.slot-controller-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot-ready {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+/* The results. */
+.results-panel {
+  width: min(680px, 100%);
+}
+
+.result-winner {
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: var(--title-shadow);
+}
+
+.result-list {
+  display: grid;
+  max-height: min(42vh, 360px);
+  overflow: auto;
+}
+
+.result-head,
+.result-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 1.4fr) repeat(6, minmax(42px, 0.7fr));
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-head {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.result-row + .result-row {
+  border-top: 1px solid var(--inset-edge);
+}
+
+.chat-overlay {
+  position: absolute;
+  left: 24px;
+  top: 34vh;
+  width: min(360px, calc(100vw - 36px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.chat-messages {
+  display: flex;
+  min-height: 36px;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.chat-message {
+  max-width: 100%;
+  color: #fff3d6;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9);
+  transition: opacity 1.2s ease;
+}
+
+.chat-message.fading {
+  opacity: 0;
+}
+
+.chat-sender {
+  color: #f0c95e;
+  font-weight: 700;
+}
+
+.chat-input-row {
+  width: 100%;
+  pointer-events: auto;
+}
+
+.chat-input-row input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #9c7a34;
+  border-radius: 2px;
+  background: rgba(20, 11, 4, 0.82);
+  color: #fff3d6;
+  font-size: 14px;
+  outline: none;
+  padding: 8px 10px;
+}
+
+.pointer-lock-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 8, 3, 0.45);
+  pointer-events: auto;
+}
+
+.pointer-lock-panel {
+  display: grid;
+  width: min(440px, calc(100vw - 32px));
+  box-sizing: border-box;
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+.pointer-lock-panel h2 {
+  margin: 0;
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: 24px;
+  text-shadow: var(--title-shadow);
+}
+
+.pointer-lock-panel p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.pointer-lock-panel button {
+  justify-self: stretch;
+  min-height: 40px;
+}
+
+@media (max-width: 600px) {
+  .main-menu {
+    padding: 12px;
+  }
+
+  .main-menu[data-menu-view="home"] {
+    place-items: end center;
+    padding: 12px 12px 68px;
+    background: linear-gradient(0deg, rgba(10, 5, 2, .92), rgba(10, 5, 2, .65) 25%, rgba(10, 5, 2, 0) 58%);
+  }
+
+  .main-menu[data-menu-view="home"]::before {
+    -webkit-mask-image: linear-gradient(0deg, #000, #000 24%, transparent 53%);
+    mask-image: linear-gradient(0deg, #000, #000 24%, transparent 53%);
+  }
+
+  .main-menu[data-menu-view="home"] .menu-window {
+    gap: 16px;
+    justify-items: center;
+  }
+
+  .main-menu[data-menu-view="home"] .menu-title {
+    font-size: clamp(32px, 8.8vw, 42px);
+    white-space: nowrap;
+  }
+
+  .main-menu[data-menu-view="home"] .map-list {
+    width: min(340px, calc(100vw - 24px));
+    gap: 10px;
+  }
+
+  .main-menu[data-menu-view="home"] .map-button {
+    min-height: 48px;
+  }
+
+  .menu-window {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 14px 16px;
+  }
+}

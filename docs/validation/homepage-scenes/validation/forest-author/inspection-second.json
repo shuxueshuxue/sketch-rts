@@ -1,0 +1,155 @@
+{
+  "worst": {
+    "gap": -25.9999811095564,
+    "time": 6.633333333333334,
+    "ids": [
+      "menu-thornSlinger-45",
+      "menu-wildling-53"
+    ],
+    "kinds": [
+      "thornSlinger",
+      "wildling"
+    ]
+  },
+  "maxstep": 2.9922913484338216,
+  "pairs": [
+    {
+      "gap": -25.9999811095564,
+      "time": 6.633333333333334,
+      "ids": [
+        "menu-thornSlinger-45",
+        "menu-wildling-53"
+      ],
+      "kinds": [
+        "thornSlinger",
+        "wildling"
+      ]
+    }
+  ],
+  "sampled": [
+    {
+      "time": 0,
+      "units": 40,
+      "corpses": 0,
+      "effects": 0,
+      "cues": 0,
+      "fatal": []
+    },
+    {
+      "time": 6,
+      "units": 40,
+      "corpses": 0,
+      "effects": 4,
+      "cues": 4,
+      "fatal": []
+    },
+    {
+      "time": 8.15,
+      "units": 39,
+      "corpses": 1,
+      "effects": 2,
+      "cues": 0,
+      "fatal": [
+        [
+          "menu-wildling-49",
+          "menu-archer-31",
+          "archer"
+        ]
+      ]
+    },
+    {
+      "time": 10.35,
+      "units": 38,
+      "corpses": 2,
+      "effects": 2,
+      "cues": 0,
+      "fatal": [
+        [
+          "menu-venomSpider-52",
+          "menu-archer-34",
+          "archer"
+        ]
+      ]
+    },
+    {
+      "time": 13.3,
+      "units": 38,
+      "corpses": 2,
+      "effects": 4,
+      "cues": 4,
+      "fatal": []
+    },
+    {
+      "time": 16.7,
+      "units": 38,
+      "corpses": 2,
+      "effects": 10,
+      "cues": 8,
+      "fatal": []
+    },
+    {
+      "time": 17.6,
+      "units": 37,
+      "corpses": 3,
+      "effects": 18,
+      "cues": 8,
+      "fatal": [
+        [
+          "menu-wildling-16",
+          "menu-footman-15",
+          "footman"
+        ]
+      ]
+    },
+    {
+      "time": 24.6,
+      "units": 36,
+      "corpses": 4,
+      "effects": 10,
+      "cues": 8,
+      "fatal": [
+        [
+          "menu-venomSpider-24",
+          "menu-footman-23",
+          "footman"
+        ]
+      ]
+    },
+    {
+      "time": 31.6,
+      "units": 34,
+      "corpses": 6,
+      "effects": 6,
+      "cues": 5,
+      "fatal": [
+        [
+          "menu-lancer-17",
+          "menu-ogreWarrior-18",
+          "ogreWarrior"
+        ]
+      ]
+    },
+    {
+      "time": 35.4,
+      "units": 33,
+      "corpses": 7,
+      "effects": 10,
+      "cues": 7,
+      "fatal": [
+        [
+          "menu-lancer-21",
+          "menu-rockGolem-22",
+          "rockGolem"
+        ]
+      ]
+    },
+    {
+      "time": 45,
+      "units": 33,
+      "corpses": 7,
+      "effects": 0,
+      "cues": 0,
+      "fatal": []
+    }
+  ]
+}

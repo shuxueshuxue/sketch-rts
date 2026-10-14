@@ -1,0 +1,2 @@
+Exit1: verification helper used record["paint"] for ordinary/restart observations whose schema stores state instead. All preceding history/source/image/GPU checks passed. This is a helper schema error, not a production or browser assertion failure.
+KeyError: paint at reduced-list selection.

@@ -1,0 +1,17 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ✓ src/client/menu-capital-street.test.ts (4 tests) 4333ms
+   ✓ capital street presentation > can seek to a scene time without accumulated movement, and never teleports at route joins 3935ms
+   ✓ capital street presentation > looks across the street slowly, keeps its authored focus inside the map and retains a fixed reduced-motion view 354ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  09:51:04
+   Duration  6.01s (transform 913ms, setup 0ms, collect 1.44s, tests 4.33s, environment 0ms, prepare 52ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

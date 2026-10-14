@@ -1,0 +1,51 @@
+{
+  "status": "Browser lane complete. Original crop backing candidate rejected by exact RGBA proof; actual lossless future deck-remains cache preparation accepted for six native marine corpse cases. Matched native windows, complete fleet cycle, final-source18 screenshots, and three decoded/reviewed MP4s closed with source unchanged.",
+  "artVisuals": {
+    "final42": "/workspace/homepage-pirate-visual-final/proof.json",
+    "sourceCheckpoint": "a13878465d7de94311476c7c591b18fc3a39bcc4",
+    "sizes": [
+      "1440x900",
+      "1280x720",
+      "390x844"
+    ],
+    "actualWebGLFence": true,
+    "ui": "settings/profile-save/pointer/Enter scene switch/maps15/back/Rooms/back/reduced-motion-stable/resize passed",
+    "sourceUnchanged": true,
+    "captureCount": 45
+  },
+  "existingPerformance": {
+    "mainVsDifferentArt": "/workspace/homepage-pirate-native-abba/proof.json",
+    "newArtCycles": "/workspace/homepage-pirate-native-cycles/proof.json",
+    "focusedRepetitions": [
+      "/workspace/homepage-pirate-focused-profile1/proof.json",
+      "/workspace/homepage-pirate-focused-profile2/proof.json"
+    ],
+    "limit": "SwiftShader CPU submission and native scheduling observations only. Different authored content in original main-vs-art runs; no pure optimization claim."
+  },
+  "rejectedCandidate": {
+    "sourceDifference": "RasterCache crop reset(canvas)->reset(canvas,true) plus comment",
+    "coreParity": "/workspace/homepage-raster-pixel-parity-core-1/proof.json",
+    "pass": false,
+    "caseCount": 6,
+    "comparisons": 18,
+    "cropAllExact": true,
+    "outerDifferent": 12,
+    "sameSourceControl": "/workspace/homepage-raster-pixel-parity-original-control-1/proof.json",
+    "sameSourcePass": true,
+    "bytes": 9269532,
+    "originalRawPreserved": true
+  },
+  "pending": [],
+  "finalSourceVisuals": "/workspace/homepage-pirate-prewarm-final-visual/proof.json",
+  "warmCacheParity": "/workspace/homepage-raster-warm-parity-core-2/proof.json",
+  "matchedPerformanceSummary": "/workspace/homepage-pirate-prewarm-performance-summary.json",
+  "demoDelivery": "/workspace/homepage-final-demo-delivery.json",
+  "remainingLimits": [
+    "No real hardware GPU timing; SwiftShader native scheduling does not represent player FPS.",
+    "Fleet phase7–22 cold corpse peaks fall markedly; residual density-transition, first bridge and loop peaks remain. Full cycle draw max582.2ms, 3 frames>50ms.",
+    "Opening visible scene draw costs remain high; resource wall and opening phases are reported separately.",
+    "Original woods age>=7 observation did not match phases; replaced for comparison by one valid natural age20 four-window set, no indefinite retest.",
+    "Only six marine corpse parity cases are claimed; no universal all-browser or all-art byte equivalence claim.",
+    "Original art UI suite passed; final warm-source screenshot subset intentionally did not rerun that suite."
+  ]
+}

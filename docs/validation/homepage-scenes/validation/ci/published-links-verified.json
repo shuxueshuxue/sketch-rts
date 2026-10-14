@@ -1,0 +1,50 @@
+[
+  {
+    "path": "demo/fleet/fleet.mp4",
+    "status": 200,
+    "type": "application/octet-stream",
+    "bytes": 4727915,
+    "sha256": "551ff57f600a0fa80454cb287d0c46255b4cd863271b01940abb4efe8b7dab0c",
+    "matches_commit": true
+  },
+  {
+    "path": "demo/capital/capital.mp4",
+    "status": 200,
+    "type": "application/octet-stream",
+    "bytes": 9883650,
+    "sha256": "038f49b8a6f2d15dd5c8f848ca4c548e9f8263627d9e4ee521907864b0179cc9",
+    "matches_commit": true
+  },
+  {
+    "path": "demo/woods/woods.mp4",
+    "status": 200,
+    "type": "application/octet-stream",
+    "bytes": 3136658,
+    "sha256": "effd96576d186420c4e963a574cd74984481b1ab76be434f8d109f375787de39",
+    "matches_commit": true
+  },
+  {
+    "path": "visual/prewarm-final/fleet-1280x720-t32.png",
+    "status": 200,
+    "type": "image/png",
+    "bytes": 810077,
+    "sha256": "5022d74ea94a300fba5527ac0f51af7aa85bf758fca6c4b8a0df1c2f8858ebf8",
+    "matches_commit": true
+  },
+  {
+    "path": "visual/prewarm-final/capital-1280x720-t45.png",
+    "status": 200,
+    "type": "image/png",
+    "bytes": 733845,
+    "sha256": "71c30bd11bb89665bd8fcd24fef512f76a74c1fa096af594e3bc422d3224574b",
+    "matches_commit": true
+  },
+  {
+    "path": "visual/prewarm-final/woods-390x844-t16.7.png",
+    "status": 200,
+    "type": "image/png",
+    "bytes": 395475,
+    "sha256": "bac72600cdd66bd74082fb21ab7b529ceab18cef1f55b1648777e083e490be1d",
+    "matches_commit": true
+  }
+]

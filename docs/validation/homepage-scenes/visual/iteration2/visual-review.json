@@ -1,0 +1,55 @@
+{
+  "sourceUnchanged": true,
+  "phaseShots": 33,
+  "phaseMethod": "Each requested seek is acknowledged after native MenuBackdrop.draw; snapshot tick and WorldPresentation submitted tick agree; a WebGL fence completes before screenshot. This is presentation sampling, not native FPS measurement.",
+  "passedUI": [
+    "Settings pointer activation",
+    "Native profile input and Save persisted in isolated browser profile",
+    "Enter scene switch with complete trusted CDP key sequence",
+    "Play map menu and Back",
+    "Rooms menu and Back",
+    "Live resize completed actual submitted 390x844 frame"
+  ],
+  "unverifiedUI": {
+    "reducedMotion": "The first sample was before the reduced-motion frame: before reducedMotion=false/tick81, after true/tick700. The interval is invalid for freeze stability. Next tool waits for true and exact still tick before sampling."
+  },
+  "visualFindings": [
+    {
+      "scene": "fleet",
+      "status": "needs revision",
+      "evidence": [
+        "fleet-1440x900-t2.6.png",
+        "fleet-1440x900-t13.png",
+        "fleet-1440x900-t32.png",
+        "fleet-1440x900-t47.png",
+        "fleet-390x844-t32.png"
+      ],
+      "findings": [
+        "Two large multi-cannon warships are clearly identifiable.",
+        "Broadside events exist at exact t2.6 but muzzle/trajectory are hard to see.",
+        "Carpenters and hull scars are too subtle to distinguish repair.",
+        "Central rigging and masts obscure bridge and fighters.",
+        "Skull ensign and damage props are Canvas ground pieces covered by the subsequent 3D ship layer.",
+        "Mobile menu obscures central action."
+      ]
+    },
+    {
+      "scene": "capital",
+      "status": "needs revision",
+      "evidence": [
+        "capital-1440x900-t45.png",
+        "capital-390x844-t80.png"
+      ],
+      "findings": [
+        "Street, tavern sign and barrels are recognisable.",
+        "Two rear sentries appear to stand on roofs.",
+        "Late mobile framing moves tavern into dark or cropped left side.",
+        "A southern citizen overlaps planter."
+      ]
+    }
+  ],
+  "runtimeErrors": [],
+  "networkFailures": [],
+  "relatedFailedRun": "/workspace/homepage-pirate-visual-iteration1/closure-check.json",
+  "scope": "No production source changed by the browser lane; performance task and original baselines untouched."
+}

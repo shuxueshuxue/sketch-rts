@@ -1,0 +1,5 @@
+../forest-horde-work/src/client/menu-scene-world.ts(6,44): error TS2307: Cannot find module './world-renderer' or its corresponding type declarations.
+../forest-horde-work/src/story/cast.ts(1,41): error TS2307: Cannot find module '../client/art/rig' or its corresponding type declarations.
+../forest-horde-work/src/story/cast.ts(2,41): error TS2307: Cannot find module '../client/art/corpses' or its corresponding type declarations.
+../forest-horde-work/src/story/cast.ts(3,41): error TS2307: Cannot find module '../client/unit-animation' or its corresponding type declarations.
+../forest-horde-work/src/story/cast.ts(16,96): error TS2307: Cannot find module '../client/art/weapon-surface' or its corresponding type declarations.

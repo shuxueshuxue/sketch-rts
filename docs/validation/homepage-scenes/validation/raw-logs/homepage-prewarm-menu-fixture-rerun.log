@@ -1,0 +1,31 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ❯ src/client/menu-scenes.test.ts (6 tests | 1 failed) 164ms
+   × bounded home scenes using the world presentation > passes only the selected pirate scene future asset recipe without adding it to the current world 11ms
+     → Target cannot be null or undefined.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-scenes.test.ts > bounded home scenes using the world presentation > passes only the selected pirate scene future asset recipe without adding it to the current world
+AssertionError: Target cannot be null or undefined.
+ ❯ src/client/menu-scenes.test.ts:25:73
+     23|         expect(preparation?.models?.('menu/marine')).toBeDefined();
+     24|       }else expect(preparation).toBeUndefined();
+     25|       expect(backdrop.prepare(0)).toBe(current);expect(current.corpses…
+       |                                                                         ^
+     26|     }
+     27|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  11:14:56
+   Duration  2.14s (transform 1.13s, setup 0ms, collect 1.77s, tests 164ms, environment 0ms, prepare 51ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

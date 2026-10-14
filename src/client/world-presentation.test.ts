@@ -5,7 +5,7 @@ import type {WorldFrame} from './world-renderer';
 const mocks=vi.hoisted(()=>({
   warm:vi.fn(async(_key:string,_phase:string)=>{}),image:vi.fn(async(_key:string,_phase:string)=>{}),draw:vi.fn(),
   panel:{renderer:'',preparing:vi.fn()},
-  layer:{prepare:vi.fn(async()=>{}),reset:vi.fn(),dispose:vi.fn(),draw:vi.fn(),pick:vi.fn(),positions:new Map()},
+  layer:{prepare:vi.fn(async()=>{}),prepareRemains:vi.fn(),reset:vi.fn(),dispose:vi.fn(),draw:vi.fn(),pick:vi.fn(),positions:new Map()},
   create:vi.fn(),
 }));
 vi.mock('./resources',()=>({resources:{warm:mocks.warm},resourceText:(_zh:string,en:string)=>en}));
@@ -46,6 +46,32 @@ function actors(){return elements.find(element=>element.className==='world-actor
 function lose(){const event=new Event('webglcontextlost',{cancelable:true});actors().dispatchEvent(event);expect(event.defaultPrevented).toBe(true);}
 
 describe('current scene graphics recovery (GPU mocked)',()=>{
+  it('prepares finite home remains after reset and preserves the recipe through current-scene graphics recovery',async()=>{
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const artPreparation={corpses:[{id:'future-remains',unitId:'future-unit',kind:'footman' as const,owner:'player',x:0,y:0,radius:18,diedAtTick:60,deck:{shipId:'ship',x:0,y:0}}],models:()=>undefined};
+    const initial=snapshot();
+    await presentation.prepare(initial,'home',[],artPreparation);
+    expect(mocks.layer.prepareRemains).toHaveBeenCalledWith(initial,artPreparation);
+    expect(mocks.layer.reset.mock.invocationCallOrder[0]).toBeLessThan(mocks.layer.prepareRemains.mock.invocationCallOrder[0]!);
+    const current=snapshot('barracks');presentation.draw(frame(current),'home');
+    lose();actors().dispatchEvent(new Event('webglcontextrestored'));
+    await vi.waitFor(()=>expect(presentation.is3D).toBe(true));
+    expect(mocks.layer.prepareRemains).toHaveBeenLastCalledWith(current,artPreparation);
+    expect(mocks.layer.prepareRemains).toHaveBeenCalledTimes(2);
+    await presentation.prepare(snapshot(),'match',[],artPreparation);
+    expect(mocks.layer.prepareRemains).toHaveBeenCalledTimes(2);
+  });
+  it('never prepaints future remains from an obsolete preparation',async()=>{
+    let release!:()=>void;
+    mocks.layer.prepare.mockImplementationOnce(()=>new Promise<void>(resolve=>{release=resolve;}));
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const stale={corpses:[]};
+    const old=presentation.prepare(snapshot(),'home',[],stale);
+    await vi.waitFor(()=>expect(mocks.layer.prepare).toHaveBeenCalledOnce());
+    await presentation.prepare(snapshot('barracks'),'home');
+    release();await old;
+    expect(mocks.layer.prepareRemains).not.toHaveBeenCalled();expect(presentation.is3D).toBe(true);
+  });
   it('warms only current home scenery after context loss, then restores the latest scene instead of the initial scene',async()=>{
     const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
     await presentation.prepare(snapshot(),'home');

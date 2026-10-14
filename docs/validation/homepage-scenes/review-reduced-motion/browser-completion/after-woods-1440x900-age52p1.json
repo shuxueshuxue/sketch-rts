@@ -1,0 +1,637 @@
+{
+  "label": "after",
+  "scene": "woods",
+  "width": 1440,
+  "height": 900,
+  "requestedAge": 52.1,
+  "tag": "age52p1",
+  "paint": {
+    "now": 12491.70000000298,
+    "age": 52.1,
+    "reduced": true,
+    "created": 1,
+    "runAlive": true
+  },
+  "state": {
+    "scene": "woods",
+    "age": 52.13270000000298,
+    "submittedAge": 52.1,
+    "submittedTick": 334,
+    "tick": 334,
+    "view": {
+      "x": 1113.8472934063357,
+      "y": 728.4885687828616,
+      "width": 1440,
+      "height": 900,
+      "zoom": 0.9060786881273409
+    },
+    "reducedMotion": true,
+    "presentation": true,
+    "unitCount": 38,
+    "buildingCount": 0,
+    "effectTypes": [
+      "projectile",
+      "projectile",
+      "projectile",
+      "hit",
+      "hit",
+      "hit",
+      "hit",
+      "hit"
+    ],
+    "ships": [],
+    "crew": [],
+    "props": [
+      {
+        "id": 1,
+        "kind": "deadTree",
+        "x": 1460,
+        "y": 925,
+        "scale": 1.6,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 2,
+        "kind": "deadTree",
+        "x": 1670,
+        "y": 1575,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 3,
+        "kind": "deadTree",
+        "x": 2530,
+        "y": 1640,
+        "scale": 1.5,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 4,
+        "kind": "deadTree",
+        "x": 2800,
+        "y": 920,
+        "scale": 1.8,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 5,
+        "kind": "stone",
+        "x": 1540,
+        "y": 1560,
+        "scale": 1.5,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 6,
+        "kind": "stone",
+        "x": 1840,
+        "y": 875,
+        "scale": 1.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 7,
+        "kind": "stone",
+        "x": 2450,
+        "y": 875,
+        "scale": 1.6,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 8,
+        "kind": "stone",
+        "x": 2800,
+        "y": 1560,
+        "scale": 1.5,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 9,
+        "kind": "banner",
+        "x": 1730,
+        "y": 970,
+        "scale": 1.5,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 10,
+        "kind": "banner",
+        "x": 1735,
+        "y": 1542,
+        "scale": 1.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 11,
+        "kind": "cart",
+        "x": 1570,
+        "y": 1505,
+        "scale": 1.3,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 12,
+        "kind": "crate",
+        "x": 1575,
+        "y": 1536,
+        "scale": 1.2,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 13,
+        "kind": "cairn",
+        "x": 2700,
+        "y": 967,
+        "scale": 1.5,
+        "flip": false,
+        "since": 0
+      },
+      {
+        "id": 14,
+        "kind": "campfire",
+        "x": 2715,
+        "y": 1513,
+        "scale": 1,
+        "flip": false,
+        "since": 0,
+        "state": "out"
+      }
+    ],
+    "preparedRemainsKeys": [],
+    "remainsCacheStats": {
+      "pages": 0,
+      "cards": 0,
+      "pixels": 0,
+      "drawChunks": 0,
+      "pooledDrawChunks": 0,
+      "drawCapacity": 0,
+      "drawBufferBytes": 0,
+      "maxTextureBanks": 1,
+      "arrayCpuBytes": 0,
+      "cpuBytes": 0,
+      "gpuBytes": 0,
+      "allocatedMipBytes": 0,
+      "canvasBackingBytes": 0,
+      "maskBytes": 0,
+      "pendingMaskBytes": 0,
+      "pendingRgbaBytes": 0,
+      "rowScratchBytes": 0,
+      "retiredGpuBytes": 0,
+      "rasterCache": {
+        "backoffs": 0,
+        "bypassRequests": 0,
+        "workMs": 0,
+        "avoidedPaintMs": 0,
+        "bytes": 0,
+        "scratchBytes": 0,
+        "ownedBytes": 0,
+        "entries": 0,
+        "hits": 0,
+        "misses": 0,
+        "evictions": 0,
+        "budget": 16777216
+      },
+      "ownedCpuBytes": 0,
+      "ownedGpuBytes": 0,
+      "peakPendingRgbaBytes": 0,
+      "peakOwnedCpuBytes": 0,
+      "peakOwnedGpuBytes": 0,
+      "peakRetiredGpuBytes": 0,
+      "rasterizations": 0,
+      "preparedRasters": 0,
+      "copiedLayers": 0,
+      "rasterStages": {
+        "paintMs": 0,
+        "readbackMs": 0,
+        "cacheMs": 0,
+        "pickMaskMs": 0,
+        "rowFlipMs": 0,
+        "slotMs": 0
+      },
+      "rasterWorkWallMs": 0,
+      "scratchTextures": 0,
+      "scratchCpuBytes": 0,
+      "scratchGpuBytes": 0,
+      "mipInitializedPages": 0,
+      "mipLayerUpdates": 0,
+      "mipCopyCalls": 0,
+      "mipCopyBytes": 0,
+      "gpuCompactionLayers": 0,
+      "gpuCompactionCopyCalls": 0,
+      "arrayBaseUploadBytes": 0,
+      "scratchUploadBytes": 0,
+      "scratchInitialUploadBytes": 0,
+      "scratchFullUploadBytes": 0,
+      "scratchPartialUploadBytes": 0,
+      "scratchPartialUploadPixels": 0,
+      "scratchPartialUploads": 0,
+      "scratchUnchangedUploads": 0,
+      "scratchFullUploadFallbacks": 0,
+      "gpuTransferSubmissionWallMs": 0
+    },
+    "units": [
+      {
+        "id": "menu-footman-15",
+        "kind": "footman",
+        "owner": "court",
+        "x": 2110,
+        "y": 1054,
+        "hp": 145
+      },
+      {
+        "id": "menu-wildling-16",
+        "kind": "wildling",
+        "owner": "wilds",
+        "x": 2150,
+        "y": 1051,
+        "hp": 76
+      },
+      {
+        "id": "menu-lancer-17",
+        "kind": "lancer",
+        "owner": "court",
+        "x": 2102,
+        "y": 1110,
+        "hp": 130
+      },
+      {
+        "id": "menu-ogreWarrior-18",
+        "kind": "ogreWarrior",
+        "owner": "wilds",
+        "x": 2150,
+        "y": 1114,
+        "hp": 178
+      },
+      {
+        "id": "menu-footman-19",
+        "kind": "footman",
+        "owner": "court",
+        "x": 2110,
+        "y": 1166,
+        "hp": 145
+      },
+      {
+        "id": "menu-stonebackBrute-20",
+        "kind": "stonebackBrute",
+        "owner": "wilds",
+        "x": 2156,
+        "y": 1163,
+        "hp": 210
+      },
+      {
+        "id": "menu-lancer-21",
+        "kind": "lancer",
+        "owner": "court",
+        "x": 2102,
+        "y": 1222,
+        "hp": 130
+      },
+      {
+        "id": "menu-rockGolem-22",
+        "kind": "rockGolem",
+        "owner": "wilds",
+        "x": 2149,
+        "y": 1226,
+        "hp": 235
+      },
+      {
+        "id": "menu-footman-23",
+        "kind": "footman",
+        "owner": "court",
+        "x": 2110,
+        "y": 1278,
+        "hp": 145
+      },
+      {
+        "id": "menu-venomSpider-24",
+        "kind": "venomSpider",
+        "owner": "wilds",
+        "x": 2150,
+        "y": 1275,
+        "hp": 105
+      },
+      {
+        "id": "menu-lancer-25",
+        "kind": "lancer",
+        "owner": "court",
+        "x": 2102,
+        "y": 1334,
+        "hp": 130
+      },
+      {
+        "id": "menu-ogreLord-26",
+        "kind": "ogreLord",
+        "owner": "wilds",
+        "x": 2154,
+        "y": 1338,
+        "hp": 380
+      },
+      {
+        "id": "menu-footman-27",
+        "kind": "footman",
+        "owner": "court",
+        "x": 2110,
+        "y": 1390,
+        "hp": 145
+      },
+      {
+        "id": "menu-wildling-28",
+        "kind": "wildling",
+        "owner": "wilds",
+        "x": 2150,
+        "y": 1387,
+        "hp": 76
+      },
+      {
+        "id": "menu-lancer-29",
+        "kind": "lancer",
+        "owner": "court",
+        "x": 2102,
+        "y": 1446,
+        "hp": 130
+      },
+      {
+        "id": "menu-spiderQueen-30",
+        "kind": "spiderQueen",
+        "owner": "wilds",
+        "x": 2152,
+        "y": 1450,
+        "hp": 350
+      },
+      {
+        "id": "menu-archer-31",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1920,
+        "y": 1095,
+        "hp": 83
+      },
+      {
+        "id": "menu-archer-32",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1882,
+        "y": 1157,
+        "hp": 83
+      },
+      {
+        "id": "menu-archer-33",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1920,
+        "y": 1219,
+        "hp": 83
+      },
+      {
+        "id": "menu-archer-34",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1882,
+        "y": 1281,
+        "hp": 83
+      },
+      {
+        "id": "menu-archer-35",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1920,
+        "y": 1343,
+        "hp": 83
+      },
+      {
+        "id": "menu-archer-36",
+        "kind": "archer",
+        "owner": "court",
+        "x": 1882,
+        "y": 1405,
+        "hp": 83
+      },
+      {
+        "id": "menu-knight-37",
+        "kind": "knight",
+        "owner": "court",
+        "x": 2106,
+        "y": 972,
+        "hp": 220
+      },
+      {
+        "id": "menu-knight-38",
+        "kind": "knight",
+        "owner": "court",
+        "x": 2104,
+        "y": 1528,
+        "hp": 220
+      },
+      {
+        "id": "menu-priest-39",
+        "kind": "priest",
+        "owner": "court",
+        "x": 1815,
+        "y": 1220,
+        "hp": 90
+      },
+      {
+        "id": "menu-footman-40",
+        "kind": "footman",
+        "owner": "court",
+        "x": 2007,
+        "y": 1281,
+        "hp": 145
+      },
+      {
+        "id": "menu-graniteGolem-41",
+        "kind": "graniteGolem",
+        "owner": "wilds",
+        "x": 2161,
+        "y": 976,
+        "hp": 390
+      },
+      {
+        "id": "menu-ancientStag-42",
+        "kind": "ancientStag",
+        "owner": "wilds",
+        "x": 2171,
+        "y": 1529,
+        "hp": 360
+      },
+      {
+        "id": "menu-thornSlinger-43",
+        "kind": "thornSlinger",
+        "owner": "wilds",
+        "x": 2470.9261,
+        "y": 1096,
+        "hp": 83
+      },
+      {
+        "id": "menu-thornSlinger-44",
+        "kind": "thornSlinger",
+        "owner": "wilds",
+        "x": 2514.931392,
+        "y": 1243,
+        "hp": 83
+      },
+      {
+        "id": "menu-thornSlinger-45",
+        "kind": "thornSlinger",
+        "owner": "wilds",
+        "x": 2470.9261,
+        "y": 1390,
+        "hp": 83
+      },
+      {
+        "id": "menu-barkMender-46",
+        "kind": "barkMender",
+        "owner": "wilds",
+        "x": 2443,
+        "y": 1285,
+        "hp": 68
+      },
+      {
+        "id": "menu-mossGnawer-47",
+        "kind": "mossGnawer",
+        "owner": "wilds",
+        "x": 2252,
+        "y": 1007,
+        "hp": 54
+      },
+      {
+        "id": "menu-spiderling-48",
+        "kind": "spiderling",
+        "owner": "wilds",
+        "x": 2295,
+        "y": 1088,
+        "hp": 65
+      },
+      {
+        "id": "menu-ogreWarrior-50",
+        "kind": "ogreWarrior",
+        "owner": "wilds",
+        "x": 2289,
+        "y": 1218,
+        "hp": 178
+      },
+      {
+        "id": "menu-mossGnawer-51",
+        "kind": "mossGnawer",
+        "owner": "wilds",
+        "x": 2332,
+        "y": 1267,
+        "hp": 54
+      },
+      {
+        "id": "menu-wildling-53",
+        "kind": "wildling",
+        "owner": "wilds",
+        "x": 2326,
+        "y": 1397,
+        "hp": 76
+      },
+      {
+        "id": "menu-spiderling-54",
+        "kind": "spiderling",
+        "owner": "wilds",
+        "x": 2277,
+        "y": 1478,
+        "hp": 65
+      }
+    ],
+    "corpses": [
+      {
+        "id": "menu-forest-remains-menu-wildling-49",
+        "unitId": "menu-wildling-49",
+        "kind": "wildling",
+        "owner": "wilds",
+        "x": 2637.666905901882,
+        "y": 1137,
+        "radius": 15,
+        "diedAtTick": 163,
+        "equipmentCaptured": true,
+        "rightItemKind": "issuedWeapon",
+        "weaponKind": "wildling",
+        "ownerRace": "grove"
+      },
+      {
+        "id": "menu-forest-remains-menu-venomSpider-52",
+        "unitId": "menu-venomSpider-52",
+        "kind": "venomSpider",
+        "owner": "wilds",
+        "x": 2492.925027738966,
+        "y": 1348,
+        "radius": 15,
+        "diedAtTick": 207,
+        "equipmentCaptured": true,
+        "rightItemKind": "issuedWeapon",
+        "weaponKind": "venomSpider",
+        "ownerRace": "grove"
+      }
+    ],
+    "menu": {
+      "x": 129.59375,
+      "y": 271.59375,
+      "width": 710.953125,
+      "height": 356.796875
+    },
+    "buttons": [
+      {
+        "text": "Play",
+        "x": 129.59375,
+        "y": 416.390625,
+        "width": 340,
+        "height": 60
+      },
+      {
+        "text": "Rooms",
+        "x": 129.59375,
+        "y": 492.390625,
+        "width": 340,
+        "height": 60
+      },
+      {
+        "text": "Settings",
+        "x": 129.59375,
+        "y": 568.390625,
+        "width": 340,
+        "height": 60
+      }
+    ],
+    "renderer": "WebGL2 stack",
+    "scrollWidth": 1440,
+    "windowWidth": 1440
+  },
+  "overlay": {
+    "canvas": {
+      "width": 1440,
+      "height": 900
+    },
+    "pixels": 1296000,
+    "alpha255": 0,
+    "fadeRGB": 0,
+    "fadeCoverRatio": 0,
+    "nearBlackRatio": 0,
+    "meanAlpha": 56.92586033950617,
+    "note": "Main overlay canvas, excludes separate ground/WebGL actors and DOM menu."
+  },
+  "capture": {
+    "file": "after-woods-1440x900-age52p1.png",
+    "sha256": "b120bbce45cc0fc21ce83011f190e30d0d00dbdf94fa1e10df1133ff5b26b850",
+    "gpuCompletion": {
+      "available": true,
+      "waitMs": 275.70000000298023,
+      "polls": 67,
+      "status": 37148
+    }
+  }
+}

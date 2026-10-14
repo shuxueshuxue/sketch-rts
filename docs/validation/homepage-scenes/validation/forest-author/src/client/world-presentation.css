@@ -1,0 +1,1 @@
+.world-underlay{position:absolute;inset:0;z-index:0;pointer-events:none;isolation:isolate}.world-underlay[hidden]{display:none}.world-underlay canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.world-ground{z-index:0}.world-actors{z-index:1}.game-canvas{position:relative;z-index:0}.menu-open .world-underlay{filter:var(--scene-filter)}

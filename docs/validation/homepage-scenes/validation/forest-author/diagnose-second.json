@@ -1,0 +1,196 @@
+{
+  "scenery": {
+    "gap": 19.793101132511616,
+    "unit": "menu-ancientStag-42",
+    "prop": "deadTree:2530,1585",
+    "time": 8.133333333333333
+  },
+  "meleegaps": [
+    {
+      "source": "menu-footman-15",
+      "target": "menu-wildling-16",
+      "gap": 40.11234224026316,
+      "range": 48
+    },
+    {
+      "source": "menu-wildling-16",
+      "target": "menu-footman-15",
+      "gap": 40.11234224026316,
+      "range": 42
+    },
+    {
+      "source": "menu-lancer-17",
+      "target": "menu-ogreWarrior-18",
+      "gap": 48.166378315169176,
+      "range": 74
+    },
+    {
+      "source": "menu-ogreWarrior-18",
+      "target": "menu-lancer-17",
+      "gap": 48.166378315169176,
+      "range": 52
+    },
+    {
+      "source": "menu-footman-19",
+      "target": "menu-stonebackBrute-20",
+      "gap": 46.09772228646444,
+      "range": 48
+    },
+    {
+      "source": "menu-stonebackBrute-20",
+      "target": "menu-footman-19",
+      "gap": 46.09772228646444,
+      "range": 48
+    },
+    {
+      "source": "menu-lancer-21",
+      "target": "menu-rockGolem-22",
+      "gap": 47.16990566028302,
+      "range": 74
+    },
+    {
+      "source": "menu-rockGolem-22",
+      "target": "menu-lancer-21",
+      "gap": 47.16990566028302,
+      "range": 52
+    },
+    {
+      "source": "menu-footman-23",
+      "target": "menu-venomSpider-24",
+      "gap": 40.11234224026316,
+      "range": 48
+    },
+    {
+      "source": "menu-venomSpider-24",
+      "target": "menu-footman-23",
+      "gap": 40.11234224026316,
+      "range": 44
+    },
+    {
+      "source": "menu-lancer-25",
+      "target": "menu-ogreLord-26",
+      "gap": 52.15361924162119,
+      "range": 74
+    },
+    {
+      "source": "menu-ogreLord-26",
+      "target": "menu-lancer-25",
+      "gap": 52.15361924162119,
+      "range": 56
+    },
+    {
+      "source": "menu-footman-27",
+      "target": "menu-wildling-28",
+      "gap": 40.11234224026316,
+      "range": 48
+    },
+    {
+      "source": "menu-wildling-28",
+      "target": "menu-footman-27",
+      "gap": 40.11234224026316,
+      "range": 42
+    },
+    {
+      "source": "menu-lancer-29",
+      "target": "menu-spiderQueen-30",
+      "gap": 50.15974481593781,
+      "range": 74
+    },
+    {
+      "source": "menu-spiderQueen-30",
+      "target": "menu-lancer-29",
+      "gap": 50.15974481593781,
+      "range": 52
+    },
+    {
+      "source": "menu-archer-31",
+      "target": "menu-stonebackBrute-20",
+      "gap": 245.60130292814,
+      "range": 319.2
+    },
+    {
+      "source": "menu-archer-32",
+      "target": "menu-rockGolem-22",
+      "gap": 275.77164466275354,
+      "range": 319.2
+    },
+    {
+      "source": "menu-archer-33",
+      "target": "menu-venomSpider-24",
+      "gap": 236.7192429862853,
+      "range": 319.2
+    },
+    {
+      "source": "menu-archer-34",
+      "target": "menu-ogreLord-26",
+      "gap": 277.90825824361536,
+      "range": 319.2
+    },
+    {
+      "source": "menu-archer-35",
+      "target": "menu-wildling-28",
+      "gap": 234.17087777945403,
+      "range": 319.2
+    },
+    {
+      "source": "menu-archer-36",
+      "target": "menu-spiderQueen-30",
+      "gap": 273.72431386341987,
+      "range": 319.2
+    },
+    {
+      "source": "menu-knight-37",
+      "target": "menu-graniteGolem-41",
+      "gap": 55.14526271584895,
+      "range": 72
+    },
+    {
+      "source": "menu-knight-38",
+      "target": "menu-ancientStag-42",
+      "gap": 67.00746227100382,
+      "range": 72
+    },
+    {
+      "source": "menu-graniteGolem-41",
+      "target": "menu-knight-37",
+      "gap": 55.14526271584895,
+      "range": 58
+    },
+    {
+      "source": "menu-ancientStag-42",
+      "target": "menu-knight-38",
+      "gap": 67.00746227100382,
+      "range": 68
+    },
+    {
+      "source": "menu-thornSlinger-43",
+      "target": "menu-footman-15",
+      "gap": 363.3615962938435,
+      "range": 132
+    },
+    {
+      "source": "menu-thornSlinger-44",
+      "target": "menu-lancer-21",
+      "gap": 413.465034191596,
+      "range": 132
+    },
+    {
+      "source": "menu-thornSlinger-45",
+      "target": "menu-footman-27",
+      "gap": 360.92610000000013,
+      "range": 132
+    }
+  ]
+}
+{"time":0,"w":1440,"h":900,"min":621.335831381733,"max":1394.6641686182668}
+{"time":0,"w":1280,"h":720,"min":552.2985167837627,"max":1239.7014832162372}
+{"time":0,"w":390,"h":844,"min":17.50585480093676,"max":372.49414519906327}
+{"time":6,"w":1440,"h":900,"min":621.7876777251183,"max":1394.2123222748814}
+{"time":6,"w":1280,"h":720,"min":552.7001579778831,"max":1239.299842022117}
+{"time":6,"w":390,"h":844,"min":17.71327014218008,"max":372.2867298578199}
+{"time":16.7,"w":1440,"h":900,"min":635.2995245673219,"max":1269.4924420098255}
+{"time":16.7,"w":1280,"h":720,"min":588.1493841598746,"max":1111.992773330401}
+{"time":16.7,"w":390,"h":844,"min":23.91574220957574,"max":315.035372391516}
+{"time":31.8,"w":1440,"h":900,"min":635.2995245673219,"max":1268.648527568333}
+{"time":31.8,"w":1280,"h":720,"min":588.1493841598746,"max":1111.2956999493483}
+{"time":31.8,"w":390,"h":844,"min":23.91574220957574,"max":314.6479822877236}

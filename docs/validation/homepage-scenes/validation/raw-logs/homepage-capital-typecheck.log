@@ -1,0 +1,13 @@
+src/client/menu-scenes.ts(180,11): error TS2379: Argument of type '{ ctx: CanvasRenderingContext2D; snapshot: GameSnapshot; view: { width: number; height: number; zoom: number; x: number; y: number; }; now: number; facing: UnitFacingTracker; ... 10 more ...; story: StageView; }' is not assignable to parameter of type 'WorldFrame' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'buildingModels' are incompatible.
+    Type 'Readonly<Record<string, "shop" | "camp" | "well" | "beacon" | "citadel" | "statue" | "fort-lance" | "fort-flame" | "fort-mortar" | "fort-ward" | "fort-wall">> | undefined' is not assignable to type 'Readonly<Record<string, "shop" | "camp" | "well" | "beacon" | "citadel" | "statue" | "fort-lance" | "fort-flame" | "fort-mortar" | "fort-ward" | "fort-wall">>'.
+      Type 'undefined' is not assignable to type 'Readonly<Record<string, "shop" | "camp" | "well" | "beacon" | "citadel" | "statue" | "fort-lance" | "fort-flame" | "fort-mortar" | "fort-ward" | "fort-wall">>'.
+src/client/menu-scenes.ts(292,3): error TS2375: Type '{ tick: number; unitActions: readonly UnitActionCue[] | undefined; lines: never[]; objectives: never[]; letterbox: { on: false; since: number; }; fade: { from: number; to: number; start: number; end: number; }; ... 5 more ...; camera: { ...; }; }' is not assignable to type 'StageView' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'unitActions' are incompatible.
+    Type 'readonly UnitActionCue[] | undefined' is not assignable to type 'readonly UnitActionCue[]'.
+      Type 'undefined' is not assignable to type 'readonly UnitActionCue[]'.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

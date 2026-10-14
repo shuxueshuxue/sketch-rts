@@ -1,0 +1,26 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ✓ src/client/art/raster-cache.test.ts (10 tests) 4397ms
+   ✓ cropped artwork cache > preserves every pixel and the world anchor at original density 4210ms
+ ✓ src/client/world3d/painted-card-batches.test.ts (58 tests) 5358ms
+   ✓ keeps twenty recurring 160px action poses warm without reserving unused layers 338ms
+   ✓ keeps twenty recurring 176px action poses warm without reserving unused layers 741ms
+   ✓ uses a tail page without evicting current poses when their full-resolution working set exceeds the budget 652ms
+   ✓ recovers evicted GPU poses from exact compressed pixels without invoking their painters again 1182ms
+   ✓ preserves submitted order when sparse pages compact and never binds a retired source bank 309ms
+ ✓ src/client/atlas-art.test.ts (7 tests) 3112ms
+   ✓ catalog Canvas paint identities > reuses the proven idle pairs without changing fresh painter arguments, world shadows or cropped output 2142ms
+   ✓ catalog Canvas paint identities > shares real issued, two-handed and round-shield catalog kits without changing original pose, gear or game facts 327ms
+   ✓ catalog Canvas paint identities > keeps catalog-kit clones and custom details raw, and preserves equipment and Ember material identities across actual UI entries 309ms
+
+ Test Files  3 passed (3)
+      Tests  75 passed (75)
+   Start at  10:48:06
+   Duration  6.52s (transform 2.36s, setup 0ms, collect 4.38s, tests 12.87s, environment 1ms, prepare 167ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
