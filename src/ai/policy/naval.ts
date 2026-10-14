@@ -953,13 +953,21 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     if (!known || (!sailing && snapshot.tick - known.tick >= PLAN_RETRY)) {
         // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
         const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
+        // During this candidate scan, the same water whole has the same admitted shore.
+        // Keep failed searches too; the world and policy context remain fixed inside this invocation.
+        const coasts: { water: Point; shore: Point | undefined }[] = [];
         const candidates = snapshot.resources
             .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
                 && !mineClaimedByAlly(snapshot, owner, mine, options))
             .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
             .flatMap(entry => {
                 if (!isWalkable(map, entry.landing.x, entry.landing.y, 'sea')) return [];
-                const shore = shoreSpot(snapshot, owner, entry.landing, options, true);
+                let coast = coasts.find(candidate => sameGround(map, candidate.water, entry.landing, 'sea'));
+                if (!coast) {
+                    coast = { water: entry.landing, shore: shoreSpot(snapshot, owner, entry.landing, options, true) };
+                    coasts.push(coast);
+                }
+                const shore = coast.shore;
                 const departure = shore && coastOnWater(snapshot, shore, entry.landing);
                 return departure ? [{ ...entry, departure }] : [];
             });
