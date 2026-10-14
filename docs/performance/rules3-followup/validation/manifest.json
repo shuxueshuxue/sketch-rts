@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "identity": {
+    "check": "full SDK and production bootstrap package boundaries",
+    "mainHead": "49e07caa1657687247e6b58180c7b641911f6512",
+    "preparedEvidenceDirectoryExisted": true,
+    "testFilesPassed": 4,
+    "testsPassed": 14,
+    "exitCode": 0,
+    "durationSeconds": 29.24,
+    "exitCodeObservation": "Parent actual exec completion, chunk b5d076; log itself is stdout/stderr and does not independently encode process exit code.",
+    "timingScope": "test duration only, not a performance acceptance run",
+    "laterAdditions": "Only numbered compressed final-check log, identity metadata, final-delivery verification support and concise README evidence statement."
+  },
+  "files": [
+    {
+      "storedPath": "payloads/id0001.bin.gz",
+      "encoding": "gzip",
+      "originalPathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1mb2xsb3d1cC1maW5hbC1zZGsubG9n",
+      "originalBytes": 795,
+      "originalSha256": "8fc42e3c531f50c856e462d1fc1d692696c4477075294e56877c7acd48a950bd",
+      "storedBytes": 466,
+      "storedSha256": "8003b953c52cb3f95c950f77e61f21effade947dc04caac1bdc0c38a3e3c394e"
+    }
+  ]
+}

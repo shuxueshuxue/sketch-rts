@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "utc": "2026-10-14T19:51:32.985568+00:00",
+  "mainSha": "49e07caa1657687247e6b58180c7b641911f6512",
+  "sourceReportRewritten": false,
+  "sourceVisualReviewStillPending": true,
+  "rootInspection": {
+    "source": "Parent task message: root actually viewed all three captured PNGs",
+    "scope": "three startup compositions",
+    "reported": "Visible roles and compositions normal"
+  },
+  "independentInspection": {
+    "reviewerTask": "/root/followup_evidence_delivery/production_readonly_review",
+    "actuallyViewedImages": true,
+    "scope": "three startup compositions only",
+    "images": [
+      {
+        "scene": "fleet",
+        "relativePath": "media/fleet.png",
+        "originalPathBase64": "L3dvcmtzcGFjZS9wcjM3OC1wcm9kdWN0aW9uLXJldmlldy9wdWJsaWMtc3RhcnR1cC9mbGVldC1kZXNrdG9wLW5vcm1hbC1uYXRpdmUtYm9vdHN0cmFwLnBuZw==",
+        "bytes": 1028143,
+        "sha256": "c00c276aedfb84a68520ba0d4b06d57c1b53d9f8145e7ca7424bd2bd9084ce43",
+        "copiedBytesExactly": true,
+        "visibleObservation": "Two multi-cannon sailing ships, pirate flag, deck personnel and a single-frame muzzle flash/smoke."
+      },
+      {
+        "scene": "capital",
+        "relativePath": "media/capital.png",
+        "originalPathBase64": "L3dvcmtzcGFjZS9wcjM3OC1wcm9kdWN0aW9uLXJldmlldy9wdWJsaWMtc3RhcnR1cC9jYXBpdGFsLWRlc2t0b3Atbm9ybWFsLW5hdGl2ZS1ib290c3RyYXAucG5n",
+        "bytes": 1005308,
+        "sha256": "6378cbb6f48e87d964e90cd1831f79330e9b54b34dc8aba07abe14cee4917db8",
+        "copiedBytesExactly": true,
+        "visibleObservation": "Stone street, stalls, civilians and purple guards."
+      },
+      {
+        "scene": "woods",
+        "relativePath": "media/woods.png",
+        "originalPathBase64": "L3dvcmtzcGFjZS9wcjM3OC1wcm9kdWN0aW9uLXJldmlldy9wdWJsaWMtc3RhcnR1cC93b29kcy1kZXNrdG9wLW5vcm1hbC1uYXRpdmUtYm9vdHN0cmFwLnBuZw==",
+        "bytes": 1150703,
+        "sha256": "259d332d17d74a70414d9e236dafe96730a73475ad371c09eb7fa5e28ad9982d",
+        "copiedBytesExactly": true,
+        "visibleObservation": "Green shield infantry in front and archers behind, opposing golem, giant, wolf, spider and deer-like creatures."
+      }
+    ]
+  },
+  "limits": [
+    "Not full repair/boarding/capture phases",
+    "Not full slow-motion/cycle acceptance",
+    "Not hardware FPS or browser whole-match timing",
+    "No audio listening verification",
+    "UI navigation skipped"
+  ]
+}
