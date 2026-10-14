@@ -5,7 +5,7 @@ import { detCos, detSin } from "./det-math";
 import { shipProfile, type Point } from "./ship-geometry";
 import { CELL_GROUND, isWalkable, sameGround, walkableGoal } from "./terrain";
 import type { GameMap, Unit } from "./types";
-import { convexHull, expandConvex, polygonRadius, polygonTouchesCellForPolygon } from './navigation-math';
+import { convexHull, expandConvex, polygonRadius, polygonTouchesCellForPolygon, registerImmutableSupportCandidate } from './navigation-math';
 import preparedMasks from './generated/ship-navigation-masks.json';
 import preparedMasks64 from './generated/ship-navigation-masks-64.json';
 import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
@@ -78,7 +78,9 @@ export function headingDifference(from: number, to: number) {
 }
 function outline(hull: readonly Point[], pose: ShipPose) {
   const c = detCos(pose.heading), s = detSin(pose.heading);
-  return hull.map(p => ({ x: pose.x + p.x * c - p.y * s, y: pose.y + p.x * s + p.y * c }));
+  const polygon = hull.map(p => ({ x: pose.x + p.x * c - p.y * s, y: pose.y + p.x * s + p.y * c }));
+  registerImmutableSupportCandidate(polygon);
+  return polygon;
 }
 /** Exact convex polygon / cell intersection, including edges crossing a cell without a vertex inside it. */
 function clearOutline(map: SeaMap, polygon: readonly Point[]) {

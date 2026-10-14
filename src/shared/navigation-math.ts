@@ -21,6 +21,13 @@ type PlaneState = {
 const planes = new WeakMap<readonly Point[], PlaneState>();
 const supportCandidates = new WeakSet<readonly Point[]>();
 
+/** Register a newly generated ring whose caller keeps it immutable. This only
+ * admits the existing numeric guard on the first plane query; it never changes
+ * an already cached plane state or assumes the ring is strictly convex. */
+export function registerImmutableSupportCandidate(polygon: readonly Point[]) {
+  supportCandidates.add(polygon);
+}
+
 /** Only generated, numerically strict convex rings use support walking. The
  * robust turns and one angular wrap exclude flat, concave and winding rings.
  * Difficult scales keep the original complete projection scan. */
