@@ -1,6 +1,6 @@
 import { shipTraffic } from './ship-avoidance';
 import { isShipKind, shipProfile } from './ship-geometry';
-import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, advanceShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
+import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, beginLiveShipRouteSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
 import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
 import type { ShipCourseGoal } from './sailing';
 import type { GameMap, Unit } from './types';
@@ -27,7 +27,7 @@ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{rea
   if(job.phase!=='reference')return {ready:true,used:0,invalid:false};
   let state=reconstruction.get(job);
   if(!job.search){
-    job.search={phase:'prepare'};
+    job.search=beginLiveShipRouteSearch();
     state={remaining:job.searchSteps??0,invalid:false};
     reconstruction.set(job,state);
   }
@@ -40,7 +40,7 @@ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{rea
   let used=0;
   while(!state.invalid && state.remaining>0 && used<maxSlices){
     used++;
-    if(advanceShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyageReference(job),job.search)){
+    if(advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyageReference(job),job.search)){
       // Leave authoritative fields untouched during preparation. The normal
       // planner rejects this invalid cursor when the simulation next advances.
       state.invalid=true;
@@ -182,7 +182,7 @@ export function advanceShipPlanningJob(ship:Unit,map:GameMap):{points:ShipPose[]
     // Headless and direct simulation callers retain the synchronous contract;
     // browser callers can finish this exact reconstruction before advancing.
     if(prepareReferenceSearch(job,map,Infinity).invalid){cancelShipPlanningJob(ship);return;}
-    const reference=advanceShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyage,job.search!);
+    const reference=advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyage,job.search!);
     job.searchSteps=(job.searchSteps??0)+1;
     if(!reference){save(ship,job);return;}
     delete job.search;delete job.searchSteps;
