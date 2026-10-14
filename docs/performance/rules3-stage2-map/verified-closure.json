@@ -1,0 +1,198 @@
+{
+  "schema": 1,
+  "createdAt": "2026-10-14T21:21:03.568080+00:00",
+  "payloads": 1597,
+  "originalBytes": 144042209,
+  "storedBytes": 50673943,
+  "manifestSha256": "a84d0fa3f31a6e9e16f5f3d9aeff5c878909e6ba1ca26dccbe09535d5a9627f1",
+  "fullSourceByteComparisons": {
+    "runs": 19,
+    "inputsEach": 241,
+    "allMatchFixedGitBlobs": true,
+    "sourceHeadsPreserved": true
+  },
+  "nativeFullByteComparisons": {
+    "logs": 19,
+    "bytesEach": 618189,
+    "framesEach": 14400,
+    "nonEmptyFramesEach": 612,
+    "sha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8",
+    "rulesVersion": 3,
+    "checksumVersion": 18
+  },
+  "wholeTargetPassed": false,
+  "stage2OtherCandidatesAdopted": false,
+  "MapFormalMeanImprovementPercent": 1.116762179431566,
+  "allSpikesAndStartupPreserved": true,
+  "oldArchivesBytesUnchanged": true,
+  "safeDecoderChecks": [
+    "../escape.bin.gz",
+    "/tmp/escape.bin.gz",
+    "/workspace/../escape",
+    "relative/path",
+    "existing extraction root refused",
+    "real single-payload safe new-root extraction and byte check"
+  ],
+  "originalDirectoryInventory": [
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1jb250aW51YXRpb24tbWFwLXByb29m",
+      "files": 522,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1jb250aW51YXRpb24tbWFwLXByb29mLXYy",
+      "files": 560,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1jb250aW51YXRpb24tbWFwLXByb29mLXYyLXJldmlldw==",
+      "files": 6,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1jb250aW51YXRpb24tbWFwLXJldmlldw==",
+      "files": 20,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1mcm9udGllci1uYXRpdmUtbWljcm8=",
+      "files": 27,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1mcm9udGllci1wb3AtcHJvb2Y=",
+      "files": 10,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1tYXAtYWJiYS1yZXZpZXc=",
+      "files": 7,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1tYXAtaW5pdC1yZXZpZXc=",
+      "files": 4,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1tYXAtaW50ZWdyYXRpb24tcmV2aWV3",
+      "files": 2,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1tYXAtaW50ZWdyYXRpb24tdGVzdHM=",
+      "files": 18,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1uZXh0LXNpbS1yZXZpZXc=",
+      "files": 4,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1vdXRsaW5lLWVuZHBvaW50LXJldmlldw==",
+      "files": 3,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1hYmJhLTQ5LTMxZTQ=",
+      "files": 78,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1hYmJhLTQ5LWQwMDA=",
+      "files": 78,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1kaWFnbm9zdGljcy12NQ==",
+      "files": 3,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1kaWFnbm9zdGljcy12OA==",
+      "files": 18,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1lNTEtaW5wdXRzLXY4",
+      "files": 14,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1tYXBBLXNwaWtlcy12OQ==",
+      "files": 23,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1tYXBBLXNwaWtlcy12OS1jb25jdXJyZW5jeS1hZGRlbmR1bQ==",
+      "files": 5,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS1tYXBBLXNwaWtlcy12OS10b29scw==",
+      "files": 19,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1wZXJmb3JtYW5jZS10aHJlZS1hcm0tNDktNTk3LWQwMDA=",
+      "files": 93,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1yZWFjaC1yZWplY3Rpb24tcmV2aWV3",
+      "files": 3,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1zdGFnZTItYWJiYS1yZXZpZXc=",
+      "files": 13,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1zdGFnZTItZXZpZGVuY2UtcHJlcGFyYXRpb24=",
+      "files": 4,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS1zdGFnZTItdGhyZWUtYXJtLXJldmlldw==",
+      "files": 8,
+      "allOriginalFilesIncluded": true
+    },
+    {
+      "pathBase64": "L3dvcmtzcGFjZS93aG9sZS13aG9sZXMtZGVzdGluYXRpb24tcHJvb2Y=",
+      "files": 37,
+      "allOriginalFilesIncluded": true
+    }
+  ],
+  "fullStreamReadbackStatus": "Passed final CLI retry: original+stored full bytes/SHA, complete inventory, plaintext support pins and original evidence comparison.",
+  "finalSdk": {
+    "exitStatus": 0,
+    "observedToolChunk": "8931f4",
+    "sessionId": 94461,
+    "testFilesPassed": 4,
+    "testsPassed": 14,
+    "startedAt": "2026-10-14 21:21:05 UTC",
+    "durationSeconds": 32.19,
+    "scope": "Complete new directory/support files and payloads present; afterward only self-generated bytecode cleanup and numbered validation/status records added.",
+    "originalLogPayload": "payloads/id1597.bin.gz"
+  },
+  "firstVerifierFailurePreserved": true,
+  "finalStreamVerification": {
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage2-map/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage2-map",
+      "--verify",
+      "--compare-originals"
+    ],
+    "startedAt": "2026-10-14T21:23:18.067932+00:00",
+    "endedAt": "2026-10-14T21:23:18.855961+00:00",
+    "wallSeconds": 0.7880329179752152,
+    "exitCode": 0,
+    "stdoutSha256": "16bee30bc40e047ff98401f994df96432380d8f4fdd69c136f4486d86255f170",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
