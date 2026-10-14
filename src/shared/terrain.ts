@@ -682,13 +682,27 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
       if (col === columns - 1) directions &= ~0x91; // E, SE, NE
       if (row === 0) directions &= ~0xc8; // N, NW, NE
       if (row === rows - 1) directions &= ~0x32; // S, SE, SW
-      for (let direction = 0; direction < 8; direction += 1) {
+      let sides = 0;
+      for (let direction = 0; direction < 4; direction += 1) {
+        if ((directions & (1 << direction)) === 0) continue;
+        const step = at + offsets[direction]!;
+        if (walk[step] !== 1) continue;
+        sides |= 1 << direction;
+        const there = index + localOffsets[direction]!;
+        const reached = cost + STRAIGHT * weight[step]!;
+        if (reached >= dist[there]!) continue;
+        dist[there] = reached;
+        buckets[reached % BUCKETS]!.push(there);
+        pending += 1;
+      }
+      for (let direction = 4; direction < 8; direction += 1) {
         if ((directions & (1 << direction)) === 0) continue;
         const step = at + offsets[direction]!;
         if (walk[step] !== 1) continue;
         const there = index + localOffsets[direction]!;
-        const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[step]!;
-        if (reached >= dist[there]! || !stepAllowed(state, at, direction)) continue;
+        const reached = cost + DIAGONAL * weight[step]!;
+        const required = direction === 4 ? 0x3 : direction === 5 ? 0x6 : direction === 6 ? 0xc : 0x9;
+        if (reached >= dist[there]! || (sides & required) !== required) continue;
         dist[there] = reached;
         buckets[reached % BUCKETS]!.push(there);
         pending += 1;
