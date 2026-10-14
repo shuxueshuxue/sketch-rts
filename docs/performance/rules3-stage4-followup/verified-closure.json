@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "complete": true,
+  "closedUtc": "2026-10-14T22:46:07.461919+00:00",
+  "payloads": 385,
+  "originalBytes": 63963844,
+  "storedBytes": 26947803,
+  "nativeRuns": 10,
+  "completeNativeCommandLogsWithReference": 11,
+  "commandBytesPerLog": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "checksum": "7d94a5e8",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "sourceRuns": 11,
+  "sourceInputsPerRun": 241,
+  "allArchivedInputBytesEqualFixedGitBlobs": true,
+  "runtimeMap31AndProduction618BytesEqual": true,
+  "originalLocalManifests": {
+    "hoist": 80,
+    "component": 62,
+    "componentNativeCorrection": 9
+  },
+  "allOriginalLocalPayloadShaUnchanged": true,
+  "oracleBins": 24,
+  "decodedOracleBytes": 104515008,
+  "decodedOraclePairsByteEqual": 12,
+  "noRawBinsWritten": true,
+  "sdk": {
+    "filesPassed": 4,
+    "testsPassed": 14,
+    "exitCode": 0,
+    "execution": {
+      "schema": 1,
+      "argv": [
+        "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+        "--run",
+        "src/sdk/package-boundaries.test.ts",
+        "scripts/production-client-bootstrap.test.ts",
+        "scripts/sdk-agent-driver-boundary.test.ts",
+        "scripts/sdk-agent-planner-boundary.test.ts"
+      ],
+      "cwd": "/workspace/sketch-rts-production-init-fix",
+      "startedAt": "2026-10-14T22:44:56.678735+00:00",
+      "endedAt": "2026-10-14T22:45:28.526296+00:00",
+      "wallSeconds": 31.847571629012236,
+      "exitCode": 0,
+      "childUserSeconds": 30.882513,
+      "childSystemSeconds": 2.36902,
+      "stdout": {
+        "path": "/workspace/whole-stage4-followup-archive-tools/final-sdk-01.stdout.log",
+        "bytes": 587,
+        "sha256": "774b8d7d6a7ddab0b6ba3664b7cf9a097e5fe868a9671419ce3ef5e1d233e097"
+      },
+      "stderr": {
+        "path": "/workspace/whole-stage4-followup-archive-tools/final-sdk-01.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "scope": "Full repo evidence branch199596 existing code49 and complete new stage4 archive/docs; SDK validation is not a new production618 build or benchmark."
+  },
+  "wholeTargetPassed": false,
+  "candidatesAdopted": false,
+  "limitations": "One fixed14400tick scene, no stable pair improvement, unknown hoist startup tool-tail interval, sparse memory only, and no new rendering/FPS proof. Historical failed metadata assumptions corrected separately."
+}

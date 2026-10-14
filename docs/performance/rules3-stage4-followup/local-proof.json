@@ -1,0 +1,2020 @@
+{
+  "schema": 1,
+  "complete": true,
+  "localManifestClosure": [
+    {
+      "root": "/workspace/whole-unweighted-grow-hoist-v1",
+      "payloads": 80,
+      "allOriginalManifestBytesAndShaExact": true,
+      "originalManifestSha256": "17df65545550210d8156edfb96673b0b122248fe4bf2fad1235a75c104f9eb13"
+    },
+    {
+      "root": "/workspace/whole-component-cardinal-proof",
+      "payloads": 62,
+      "allOriginalManifestBytesAndShaExact": true,
+      "originalManifestSha256": "bc10eb2a794910e6a71dae88a1c6ef0a09e43f40d48132bc777c84349ceb4f3a"
+    },
+    {
+      "root": "/workspace/whole-component-cardinal-native-review",
+      "payloads": 9,
+      "allOriginalManifestBytesAndShaExact": true,
+      "originalManifestSha256": "8f5c2fbff06cd0a476f43354143a99e6472d00c8a14a2df13536b635eb0976bf"
+    }
+  ],
+  "oracleBins": [
+    {
+      "arm": "A",
+      "index": 0,
+      "decodedBytes": 4354792,
+      "decodedSha256": "8ab107bd2f83b29f2104bafc31f1c6db49e900ba002d54165cf1129ba7660f1f",
+      "storedBytes": 43709,
+      "storedSha256": "c2070f6c776109bb03baed656d403a1cf04e11ee21995171885d0cdf1ff1e2ea",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "9bb1991fd79b06e3b4f3a2699bdf6427c3221d05c9676c870f9a931ede44ef60"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "4e14844d052e8e915363dffc1e6d228e5df6509aa4cf55e391a0b9b5de240c6b"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "f423cfbf050b1f604c6621e7b89fcdb59a6baea42f0b872711f661b6ef603892"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "f27ee83ad8982768b4d072098e74a7d8fb25fe0628ca3da078aa75921573eb63"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "f24e32e50456392dbdfd32f639dfd72631765c95681ad37e9337b4ff4ac58b71"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "cbb3b124bc3d978eea946997263e8e5d0c2086d63f870c5dceb2dbd961bf5c9c"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "2de369316d674c9a3d052f1af8768a7033117d9b8f87b232936a7f18191270b7"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "2e1dc45886c6f8b74e6d07d39688ef45aaabbaa4364dae98245b2e2e6edd8440"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "9b08022c5526755b2ad4a544ded3da77b52ec0528c43c00232e5bbc50ad56e45"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 1,
+      "decodedBytes": 4354792,
+      "decodedSha256": "beef1265d6d97e183f47a5f5a70708c7aaa8777f3618f091e26974a7b6fde309",
+      "storedBytes": 42405,
+      "storedSha256": "3f0c391af737b252ec3669c2f0640d64bee5ecceb1dd2793d05ae61d5e4d77a5",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "c0b1bd696723bc7a0d5c4f5fb83ed9d2f255dd6f05bc69dc3b1cd15fed275dd2"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "a7ab5acb2e2f4228714ebee6395d457e13d97ca7362fdb5735fd3d361c6b3361"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "71c779edff7696a52c9f96d18b7f50f85a71fb1d93de5f7894fa1a2ba31ba1f0"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "328d147bc1d965db3cfeac31fa99758a61130da74d8b7c7da0a6bd2543603c5c"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "5605e8ffbdccd885190fcca366a216bc7cba12c6969b5ee7f64bd9601f3c02cc"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "d3ceb0e873e0f7231bd7c123e98b4557e8730d40105d425f9dd506fadbcec3f7"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "75c4abee12e2a135e643ecb34460d978918612564668058adac3523df46679be"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "04b25e23b938aef139426ee1f25eb75811f497185092583f8b23c43a02ba3207"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "10e4739320d0bafee861f8ca93adfdb85e1a270564738811020b215312e7b7fa"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 2,
+      "decodedBytes": 4354792,
+      "decodedSha256": "500182e166be7badf9f174452a5b4b4c566ec692192488572d25cb248303a567",
+      "storedBytes": 43011,
+      "storedSha256": "9ac4d0eec47daa888d7b6a5aec777da2a8cd55b809334ee10f58534b8335d48a",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "2cc1c132c7a5cc5cb32c6d58fcac46d15f42694d9aff86adb77e39a19346ab4e"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "81795ba2b39fda1d27659aebe335b448b23d555081710725751baf5cfc90fa77"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "caccbe9b453365a9330c79fa3a0311223e457a7786902306576d9852ac49add8"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "bf44af7a8b929647284108b5672b0aa8714a939ce05f432eb6578340d0015585"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "d8a8e20843486b8740d41e923bbe11000f9fd63446dcc640cb760be82a022763"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "2c4ec1d956305679a1cdf3597898e745608b7b44d473e920d94bf3c4da51aa06"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "2cf84bec9100496966e47e98e14a2cbb89e73e386c2b86d9cb8bd6ef4582763e"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "c2f83dc556927e32e310e19a9817ae4881c5b49c6a0abf647343cc90630b3d68"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "3d5b24f8567c1204c1674d018912010bbe5751bbed1f5ce142fdbd99bd7f46d0"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 3,
+      "decodedBytes": 4354792,
+      "decodedSha256": "7f340049d21f7aae6f30bba8470ef111a7debcd573b09a29638bfd6ded163481",
+      "storedBytes": 42681,
+      "storedSha256": "63122062bd1e7d3104b8c83be925111ebd1a1b5965e6b7c1dbd8bb4b1e3efea8",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "35fc43999a78e34d282fe233bf710cba88f182889af4b1a6404577c94e6bdc2b"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "3692b7f799cab60bc9e730db05cc2308695ed6c9acc4f20351d2dfe82e80c146"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "b938084edcd5f76165528bda00e2a8f95d4dcaba07248392db27194caac61859"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "c2d0e7a7b98a56e2fa245f7868258f572449a1a1a8760585a30bd501b6403700"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "b4519d26e3d688b4b3c5fb17c1cff19f3c05d00f744eb05808456c1486d94111"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "497c48e8e248bc16e4d8faf6227f71c9fd6ec4f893a0e358c2b43c2cc9e4b8d6"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "0cf70a2f019bcd7e39c2ad33b676ae821f37ee6c476e25a5f06abde0bc31e035"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "e7305186ac038067af764cafd19b8a5ee55ee67207d9c578df0c99b78685d8c7"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "725bef0a6e65c19642b2f490d69ff86ecc99d59bef224495a2b84e70f8e67b87"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 4,
+      "decodedBytes": 4354792,
+      "decodedSha256": "5562dce2600490d9eb2f02dd8f90512066e73213c75a604cb56760e201dcfbac",
+      "storedBytes": 44130,
+      "storedSha256": "54d12387d31a05989bf80b52c296c13c330e9fc750d47330d7d047a17cfd8e19",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "b3579b6f2cdcadd36c4769b7d65824c75e65162fce71820c4d3e93c43c570f2a"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "7dafa4baf7ed286e8d9f0a162bce8741790f3841aebebb85e181d84afdfd90ae"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "2eb9a6b627b9f95f40881ac23422c2e9c7a7255242f88fdf5d2ff7323397a30c"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "6aadb68dd2d80940b53e1aa44b03f4bc55a094da390d09caf2f26ccb775134ee"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "17777f0e4eaa7f510ac16efa8943027288a5aa827ecb4d512c33aa62b5786ad0"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "77e5538fcdae07f37609fa7d01c7afe701812e226487c4d76c5fec2127741851"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "d7bbc0e99ac67de459cb39ed768242ae2d164b001f7a01c450e912e72f688e35"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "2999cb2e7cda4c3dcc27c684d1b1f2372ca86b0313c74206ab63ece4f6ec959e"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "e7b95ea707f92750e89d622d6d86727bf511c78a463b2b5c9cd2b940a4b81c81"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 5,
+      "decodedBytes": 4354792,
+      "decodedSha256": "fe9611567fca6d10b7d0a214dafd2ca077b83ecb4cee8ccbf19eebcaac015874",
+      "storedBytes": 42637,
+      "storedSha256": "852791602468d051b9fbe9f5316c731ce291b4906b1fc229fc23356029180955",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "19c92261e8367f0c89250fb3014b8844ba607b41ba385bd3282176b39e3b0b19"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "1e6d177bb6e5dd50f275ec90f108eb808574abe2e1f646b35f80870fe19ba47e"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "cf48a8de832fdf2d0a3939471339a717a11b90afebbebb5d45eaaca672d6ddd7"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "8fc4cc32dbf78fcc3aec0e267a81e1825d076286402a7408cf19071674404442"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "19b38757bcd36f6aa777980a60eefa216e561d5a6b5649f9939bfffad8ff4834"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "2f0727bf511efba6f5c4b935d2b9faae5b707ccfda40b5a8e2607705aa59e412"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "c56ade593b2d87be673985c3b07f6d7ee60b974efd64d7c91e65858c12036a56"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "b0223348de4e0b666d43a6ea3e7a6e9c0c0d289f58266eb59c314be913aac4bc"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "12c3ea4dcadafde39945b21db0379e47716da088aa66ce763a46f9480aefec73"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 6,
+      "decodedBytes": 4354792,
+      "decodedSha256": "af194da2fa7749f516f449862d7e386462c9aa8bdcc3276fa987d3d898bf221a",
+      "storedBytes": 42925,
+      "storedSha256": "b56c1e2fb195b406ffc539bb5d6540eb0745e24ea7b02bc9d54aded5a3b38121",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "88b6b5b54daaa89302cd88ae19cb8f4730dfa60ba1ba3e52c92362c3c2597239"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f8a5b2c5084129ef6bbec56964deec99892a924ece8259b4eec648de0a5ccbfd"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "b8d9c60a4a1275c56a0e5d60e09573d51912881a3adc64bbc9c1ac1064d7915f"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "418b965dceb8d126b120564e79a1a2f9314bf00d6413cae909b6a9fa5905510c"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "7d7a8c3e9c28263c9ee9924878dae220b07196f670a43da6f6ed76f9acf81487"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "062bad91128300d3778b659559ea76155607e27c7032706c376f9b8477d517ed"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "070be814f29c053492fdeb60aaf631a3939fec0d1be36fd2b6e4244e50a1b116"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "e9651322549ede958eb3162eb3530231a2f9ffa6707c8559d7cb115bc424a1ac"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "0e1603af856c9f39322bc7ce830eee0e1dd56ec88ad517a62a4d9468f76d22a5"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 7,
+      "decodedBytes": 4354792,
+      "decodedSha256": "34d4f33d0154a3c980f8d72a935e520afd5a50b84e2b67398400d34048097a0d",
+      "storedBytes": 41777,
+      "storedSha256": "f1fcacac05bca5f2b0794d35651e9ff4202f108f71e0eb28a22ed992af4de812",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "af358bb36bbc3c583dcdf9e07c60a74217a4f6c1e43cc85dde753e8e5a16bc62"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "3ef0a65c7a93a673afb7f5f66b5eddc526598ba8deebab30e24e8d042af70bf4"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "d9b641096ee2cd7236b5b2a58a0e2d379130da3d839f334507e45e41beff5145"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "acd65bc37ad398c256860b626da2ba3c46bec4b699e2e5c947040c0f2f9d2766"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "09fe92629e6713faa3cef571bebc0850241c3fb885086466c794e806f53857b1"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "e8b3c80dcde3e9027a783c063c4f3dc13c58e1d51e963829e842090a317193a6"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "9ddfdab9021a68548861b1f9a2a0d2f899ffac6e87b37cd1c8492e6cfdfe61b4"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "0c11a8d42407832af220e92d33790f1470ac1546be47faacfea3b681e0f4edce"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "5ba4692917ce1f9e57b22ea48fdcb28cedb2a1002ead993b664f251c2e413163"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 8,
+      "decodedBytes": 4354792,
+      "decodedSha256": "988a5915bf891d67d6309842791345083aed6cd823fcf0299d853b91ba92bf50",
+      "storedBytes": 43850,
+      "storedSha256": "286c6d898c82d57c7b3cb1af2963f0e15dc120af2ababad4060e8f3e5bed92e6",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "8e25bc86ec504658b31f8e0f0da170da51c7bf749add67527290ef9302259615"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "b752de34c870413cfee5ffa1dd24157ee8d80c9834972c4a88bba45e91bd01a9"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "761b531769ee5102707ac4b68dea7b455f26b2c1c21a299aef9a9ac7db5a90d9"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "5fc2afa439330de2b242ae7f0428df2485d5d1d4c52733645a467de084b4b5ac"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "31108b0027aef4ca37fc794df4b9fc8ed3eae5c91279124d61d1f92e14945c18"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "1ca5590e4a411e3a84a77e648d7ffe03e63733de28e63c3381574415bc48d22f"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "dd9ce52b95ea961a19f2b2da746afa4c5e980c700ce79cf76d743f105f03e6cd"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "d218595b443fc0fafce71e001fefceaee0fa09d181afe88aec5e643ffccb7d9f"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "86b439605dfe92e167c95592943e9c2405907d62caf24379ac3db7384c582716"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 9,
+      "decodedBytes": 4354792,
+      "decodedSha256": "225dbb7f7577b60592e636fa430f7b3679e1e73c49c52d30ae1fd9136caf517c",
+      "storedBytes": 42814,
+      "storedSha256": "5eb0fa17c6ed29cc440479c85cde866dc132eb4a99bcb01c953398aa94aed574",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "7accfbf2483391d21d9d399647db9202eabb9c7a37f1e1310762d2b9386965d4"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f791f3235b3f3fe79644e6f953b4203360b90a9593e5b4fb35438b6264567301"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "d38c6af8879ff1b92b69455d92a9ab44b50a5f7c8463c54faf0722ae8f81737b"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "443c8bf84daa6bff0f05b52f64cd53380b1703c183d0d85515fc1fab8f52bc06"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "0250438aaa3cf16752e551d67bedc90072c89b161782049bf1f2a8a9188b8eb3"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "597476e977dc295285fcf2cbc51bdbefbe7972a43a4cee0b9678ae6fba4e60e1"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "fb095e692458c89d354751686f4b4416a2012964708a50fafb0016f9dca2a620"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "b1826994c53e4ce091e7766b407af87de1ec10e932e909c1a92035e0dcb9e39a"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "9231d6fcc8ccc62fbe9da2e4acf809acab487267f0252edb4e1b9d5b0032c45f"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 10,
+      "decodedBytes": 4354792,
+      "decodedSha256": "159cf8b6749f3619f912bfada4a6241aaeb065e20075afd0150ec2eb6655e51b",
+      "storedBytes": 42308,
+      "storedSha256": "ca994d2c2f97e96919fa5a05fcd5b3a59870126d5668b6a5a2632e116d0b9868",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "921227e0ec1bdeece4ea6146966cd1d3353d0153dbccf990ab060fd09c109812"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f96ccb28742e65cbec81a5a9745832ab9180561bcc0ca7c6546d52305ec9cb21"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "2327fdf680062636bf050637611c0722d15658c5f7baec73838ecedec59a2b66"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "8036badd24961623feb57df89b690af2905827a99ecf84743deaee18116ad8fa"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "f5362d8561b579319acd4ac2832a6d22040b6ed961ead853136dda560cecc824"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "b63019755f46ec562318fdff28a141700cb334fc1506802be2a02063b9896f5c"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "b4fca4fd24b1ae332d7f8973d0e41b79945eced405f048155395d2a3e2e78c6d"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "542abf1d2e8dd07ce2bc41621cb18a471c990fd751da669df7853bc420124bae"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "e3c242c56f171b03f9fcfcb96fd5623431e465b4b01b6923ad3687607a1de6c3"
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "index": 11,
+      "decodedBytes": 4354792,
+      "decodedSha256": "bba114321880edc24fd44207b8400c20cca4a2b7b4641434bc8dd42fb848534e",
+      "storedBytes": 42358,
+      "storedSha256": "f2446b4aeaad20f7c9de77629d7bcb462b31fa45a415941b97e5ed6b9abd25da",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "ef38fd3598c735490784261aa9e0d73adb54d863a969467ecda180885e47595b"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "45a86c3853fca4e88c3c8f021af538b3834c219cb5d41e3ef3bce00053574bbc"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "70365e1ad4ea64ac05bd433883f7abcffca0e61a3d9448b43e4536ee1d8c2fb8"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "1ea196ca3b28ce6750bea0c21f802bc80a5311cb5b97d722d79a4843e7e691c1"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "865639c9b2831c59d0a6fd5b3696664035f63f285af82222b02de04b8d918b80"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "c88adebd9fb06d8c2389ba1cd03d1b8eb7bcc424b078f05e464b916052686a3d"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "72d8b69365c31150a0040e220abceaa1c381b6452a4690b41d4c2d7bf7abd699"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "c9c3f1ea20a53ee69d1bf102e44348464c307f3bc26f77a848f17df3fe8de442"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "7ce0fa124030bb66d6e6661351b0ea10953dbb4c358d17202bab1a88a1bc7583"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 0,
+      "decodedBytes": 4354792,
+      "decodedSha256": "8ab107bd2f83b29f2104bafc31f1c6db49e900ba002d54165cf1129ba7660f1f",
+      "storedBytes": 43709,
+      "storedSha256": "c2070f6c776109bb03baed656d403a1cf04e11ee21995171885d0cdf1ff1e2ea",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "9bb1991fd79b06e3b4f3a2699bdf6427c3221d05c9676c870f9a931ede44ef60"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "4e14844d052e8e915363dffc1e6d228e5df6509aa4cf55e391a0b9b5de240c6b"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "f423cfbf050b1f604c6621e7b89fcdb59a6baea42f0b872711f661b6ef603892"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "f27ee83ad8982768b4d072098e74a7d8fb25fe0628ca3da078aa75921573eb63"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "f24e32e50456392dbdfd32f639dfd72631765c95681ad37e9337b4ff4ac58b71"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "cbb3b124bc3d978eea946997263e8e5d0c2086d63f870c5dceb2dbd961bf5c9c"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "2de369316d674c9a3d052f1af8768a7033117d9b8f87b232936a7f18191270b7"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "2e1dc45886c6f8b74e6d07d39688ef45aaabbaa4364dae98245b2e2e6edd8440"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "9b08022c5526755b2ad4a544ded3da77b52ec0528c43c00232e5bbc50ad56e45"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 1,
+      "decodedBytes": 4354792,
+      "decodedSha256": "beef1265d6d97e183f47a5f5a70708c7aaa8777f3618f091e26974a7b6fde309",
+      "storedBytes": 42405,
+      "storedSha256": "3f0c391af737b252ec3669c2f0640d64bee5ecceb1dd2793d05ae61d5e4d77a5",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "c0b1bd696723bc7a0d5c4f5fb83ed9d2f255dd6f05bc69dc3b1cd15fed275dd2"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "a7ab5acb2e2f4228714ebee6395d457e13d97ca7362fdb5735fd3d361c6b3361"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "71c779edff7696a52c9f96d18b7f50f85a71fb1d93de5f7894fa1a2ba31ba1f0"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "328d147bc1d965db3cfeac31fa99758a61130da74d8b7c7da0a6bd2543603c5c"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "5605e8ffbdccd885190fcca366a216bc7cba12c6969b5ee7f64bd9601f3c02cc"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "d3ceb0e873e0f7231bd7c123e98b4557e8730d40105d425f9dd506fadbcec3f7"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "75c4abee12e2a135e643ecb34460d978918612564668058adac3523df46679be"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "04b25e23b938aef139426ee1f25eb75811f497185092583f8b23c43a02ba3207"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "10e4739320d0bafee861f8ca93adfdb85e1a270564738811020b215312e7b7fa"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 2,
+      "decodedBytes": 4354792,
+      "decodedSha256": "500182e166be7badf9f174452a5b4b4c566ec692192488572d25cb248303a567",
+      "storedBytes": 43011,
+      "storedSha256": "9ac4d0eec47daa888d7b6a5aec777da2a8cd55b809334ee10f58534b8335d48a",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "2cc1c132c7a5cc5cb32c6d58fcac46d15f42694d9aff86adb77e39a19346ab4e"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "81795ba2b39fda1d27659aebe335b448b23d555081710725751baf5cfc90fa77"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "caccbe9b453365a9330c79fa3a0311223e457a7786902306576d9852ac49add8"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "bf44af7a8b929647284108b5672b0aa8714a939ce05f432eb6578340d0015585"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "d8a8e20843486b8740d41e923bbe11000f9fd63446dcc640cb760be82a022763"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "2c4ec1d956305679a1cdf3597898e745608b7b44d473e920d94bf3c4da51aa06"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "2cf84bec9100496966e47e98e14a2cbb89e73e386c2b86d9cb8bd6ef4582763e"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "c2f83dc556927e32e310e19a9817ae4881c5b49c6a0abf647343cc90630b3d68"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "3d5b24f8567c1204c1674d018912010bbe5751bbed1f5ce142fdbd99bd7f46d0"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 3,
+      "decodedBytes": 4354792,
+      "decodedSha256": "7f340049d21f7aae6f30bba8470ef111a7debcd573b09a29638bfd6ded163481",
+      "storedBytes": 42681,
+      "storedSha256": "63122062bd1e7d3104b8c83be925111ebd1a1b5965e6b7c1dbd8bb4b1e3efea8",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "35fc43999a78e34d282fe233bf710cba88f182889af4b1a6404577c94e6bdc2b"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "3692b7f799cab60bc9e730db05cc2308695ed6c9acc4f20351d2dfe82e80c146"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "b938084edcd5f76165528bda00e2a8f95d4dcaba07248392db27194caac61859"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "c2d0e7a7b98a56e2fa245f7868258f572449a1a1a8760585a30bd501b6403700"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "b4519d26e3d688b4b3c5fb17c1cff19f3c05d00f744eb05808456c1486d94111"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "497c48e8e248bc16e4d8faf6227f71c9fd6ec4f893a0e358c2b43c2cc9e4b8d6"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "0cf70a2f019bcd7e39c2ad33b676ae821f37ee6c476e25a5f06abde0bc31e035"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "e7305186ac038067af764cafd19b8a5ee55ee67207d9c578df0c99b78685d8c7"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "725bef0a6e65c19642b2f490d69ff86ecc99d59bef224495a2b84e70f8e67b87"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 4,
+      "decodedBytes": 4354792,
+      "decodedSha256": "5562dce2600490d9eb2f02dd8f90512066e73213c75a604cb56760e201dcfbac",
+      "storedBytes": 44130,
+      "storedSha256": "54d12387d31a05989bf80b52c296c13c330e9fc750d47330d7d047a17cfd8e19",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "b3579b6f2cdcadd36c4769b7d65824c75e65162fce71820c4d3e93c43c570f2a"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "7dafa4baf7ed286e8d9f0a162bce8741790f3841aebebb85e181d84afdfd90ae"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "2eb9a6b627b9f95f40881ac23422c2e9c7a7255242f88fdf5d2ff7323397a30c"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "6aadb68dd2d80940b53e1aa44b03f4bc55a094da390d09caf2f26ccb775134ee"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "17777f0e4eaa7f510ac16efa8943027288a5aa827ecb4d512c33aa62b5786ad0"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "77e5538fcdae07f37609fa7d01c7afe701812e226487c4d76c5fec2127741851"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "d7bbc0e99ac67de459cb39ed768242ae2d164b001f7a01c450e912e72f688e35"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "2999cb2e7cda4c3dcc27c684d1b1f2372ca86b0313c74206ab63ece4f6ec959e"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "e7b95ea707f92750e89d622d6d86727bf511c78a463b2b5c9cd2b940a4b81c81"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 5,
+      "decodedBytes": 4354792,
+      "decodedSha256": "fe9611567fca6d10b7d0a214dafd2ca077b83ecb4cee8ccbf19eebcaac015874",
+      "storedBytes": 42637,
+      "storedSha256": "852791602468d051b9fbe9f5316c731ce291b4906b1fc229fc23356029180955",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "19c92261e8367f0c89250fb3014b8844ba607b41ba385bd3282176b39e3b0b19"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "1e6d177bb6e5dd50f275ec90f108eb808574abe2e1f646b35f80870fe19ba47e"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "cf48a8de832fdf2d0a3939471339a717a11b90afebbebb5d45eaaca672d6ddd7"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "8fc4cc32dbf78fcc3aec0e267a81e1825d076286402a7408cf19071674404442"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "19b38757bcd36f6aa777980a60eefa216e561d5a6b5649f9939bfffad8ff4834"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "2f0727bf511efba6f5c4b935d2b9faae5b707ccfda40b5a8e2607705aa59e412"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "c56ade593b2d87be673985c3b07f6d7ee60b974efd64d7c91e65858c12036a56"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "b0223348de4e0b666d43a6ea3e7a6e9c0c0d289f58266eb59c314be913aac4bc"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "12c3ea4dcadafde39945b21db0379e47716da088aa66ce763a46f9480aefec73"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 6,
+      "decodedBytes": 4354792,
+      "decodedSha256": "af194da2fa7749f516f449862d7e386462c9aa8bdcc3276fa987d3d898bf221a",
+      "storedBytes": 42925,
+      "storedSha256": "b56c1e2fb195b406ffc539bb5d6540eb0745e24ea7b02bc9d54aded5a3b38121",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "88b6b5b54daaa89302cd88ae19cb8f4730dfa60ba1ba3e52c92362c3c2597239"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f8a5b2c5084129ef6bbec56964deec99892a924ece8259b4eec648de0a5ccbfd"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "b8d9c60a4a1275c56a0e5d60e09573d51912881a3adc64bbc9c1ac1064d7915f"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "418b965dceb8d126b120564e79a1a2f9314bf00d6413cae909b6a9fa5905510c"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "7d7a8c3e9c28263c9ee9924878dae220b07196f670a43da6f6ed76f9acf81487"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "062bad91128300d3778b659559ea76155607e27c7032706c376f9b8477d517ed"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "070be814f29c053492fdeb60aaf631a3939fec0d1be36fd2b6e4244e50a1b116"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "e9651322549ede958eb3162eb3530231a2f9ffa6707c8559d7cb115bc424a1ac"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "0e1603af856c9f39322bc7ce830eee0e1dd56ec88ad517a62a4d9468f76d22a5"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 7,
+      "decodedBytes": 4354792,
+      "decodedSha256": "34d4f33d0154a3c980f8d72a935e520afd5a50b84e2b67398400d34048097a0d",
+      "storedBytes": 41777,
+      "storedSha256": "f1fcacac05bca5f2b0794d35651e9ff4202f108f71e0eb28a22ed992af4de812",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "af358bb36bbc3c583dcdf9e07c60a74217a4f6c1e43cc85dde753e8e5a16bc62"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "3ef0a65c7a93a673afb7f5f66b5eddc526598ba8deebab30e24e8d042af70bf4"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "d9b641096ee2cd7236b5b2a58a0e2d379130da3d839f334507e45e41beff5145"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "acd65bc37ad398c256860b626da2ba3c46bec4b699e2e5c947040c0f2f9d2766"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "09fe92629e6713faa3cef571bebc0850241c3fb885086466c794e806f53857b1"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "e8b3c80dcde3e9027a783c063c4f3dc13c58e1d51e963829e842090a317193a6"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "9ddfdab9021a68548861b1f9a2a0d2f899ffac6e87b37cd1c8492e6cfdfe61b4"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "0c11a8d42407832af220e92d33790f1470ac1546be47faacfea3b681e0f4edce"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "5ba4692917ce1f9e57b22ea48fdcb28cedb2a1002ead993b664f251c2e413163"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 8,
+      "decodedBytes": 4354792,
+      "decodedSha256": "988a5915bf891d67d6309842791345083aed6cd823fcf0299d853b91ba92bf50",
+      "storedBytes": 43850,
+      "storedSha256": "286c6d898c82d57c7b3cb1af2963f0e15dc120af2ababad4060e8f3e5bed92e6",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "8e25bc86ec504658b31f8e0f0da170da51c7bf749add67527290ef9302259615"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "b752de34c870413cfee5ffa1dd24157ee8d80c9834972c4a88bba45e91bd01a9"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "761b531769ee5102707ac4b68dea7b455f26b2c1c21a299aef9a9ac7db5a90d9"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "5fc2afa439330de2b242ae7f0428df2485d5d1d4c52733645a467de084b4b5ac"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "31108b0027aef4ca37fc794df4b9fc8ed3eae5c91279124d61d1f92e14945c18"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "1ca5590e4a411e3a84a77e648d7ffe03e63733de28e63c3381574415bc48d22f"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "dd9ce52b95ea961a19f2b2da746afa4c5e980c700ce79cf76d743f105f03e6cd"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "d218595b443fc0fafce71e001fefceaee0fa09d181afe88aec5e643ffccb7d9f"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "86b439605dfe92e167c95592943e9c2405907d62caf24379ac3db7384c582716"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 9,
+      "decodedBytes": 4354792,
+      "decodedSha256": "225dbb7f7577b60592e636fa430f7b3679e1e73c49c52d30ae1fd9136caf517c",
+      "storedBytes": 42814,
+      "storedSha256": "5eb0fa17c6ed29cc440479c85cde866dc132eb4a99bcb01c953398aa94aed574",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "7accfbf2483391d21d9d399647db9202eabb9c7a37f1e1310762d2b9386965d4"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f791f3235b3f3fe79644e6f953b4203360b90a9593e5b4fb35438b6264567301"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "d38c6af8879ff1b92b69455d92a9ab44b50a5f7c8463c54faf0722ae8f81737b"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "443c8bf84daa6bff0f05b52f64cd53380b1703c183d0d85515fc1fab8f52bc06"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "0250438aaa3cf16752e551d67bedc90072c89b161782049bf1f2a8a9188b8eb3"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "597476e977dc295285fcf2cbc51bdbefbe7972a43a4cee0b9678ae6fba4e60e1"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "fb095e692458c89d354751686f4b4416a2012964708a50fafb0016f9dca2a620"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "b1826994c53e4ce091e7766b407af87de1ec10e932e909c1a92035e0dcb9e39a"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "9231d6fcc8ccc62fbe9da2e4acf809acab487267f0252edb4e1b9d5b0032c45f"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 10,
+      "decodedBytes": 4354792,
+      "decodedSha256": "159cf8b6749f3619f912bfada4a6241aaeb065e20075afd0150ec2eb6655e51b",
+      "storedBytes": 42308,
+      "storedSha256": "ca994d2c2f97e96919fa5a05fcd5b3a59870126d5668b6a5a2632e116d0b9868",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "921227e0ec1bdeece4ea6146966cd1d3353d0153dbccf990ab060fd09c109812"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "f96ccb28742e65cbec81a5a9745832ab9180561bcc0ca7c6546d52305ec9cb21"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "2327fdf680062636bf050637611c0722d15658c5f7baec73838ecedec59a2b66"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "8036badd24961623feb57df89b690af2905827a99ecf84743deaee18116ad8fa"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "f5362d8561b579319acd4ac2832a6d22040b6ed961ead853136dda560cecc824"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "b63019755f46ec562318fdff28a141700cb334fc1506802be2a02063b9896f5c"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "b4fca4fd24b1ae332d7f8973d0e41b79945eced405f048155395d2a3e2e78c6d"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "542abf1d2e8dd07ce2bc41621cb18a471c990fd751da669df7853bc420124bae"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "e3c242c56f171b03f9fcfcb96fd5623431e465b4b01b6923ad3687607a1de6c3"
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "index": 11,
+      "decodedBytes": 4354792,
+      "decodedSha256": "bba114321880edc24fd44207b8400c20cca4a2b7b4641434bc8dd42fb848534e",
+      "storedBytes": 42358,
+      "storedSha256": "f2446b4aeaad20f7c9de77629d7bcb462b31fa45a415941b97e5ed6b9abd25da",
+      "segments": [
+        {
+          "name": "walk",
+          "bytes": 103684,
+          "sha256": "4124529c22e75b8860b7dfb0f45bc608a3a976c4271b45fcd52d8a507a6e2907"
+        },
+        {
+          "name": "weight",
+          "bytes": 103684,
+          "sha256": "9272d5606645ae338e8a69a793565bf4a6119fa78adb1cc18784dea739b2ac16"
+        },
+        {
+          "name": "offsets",
+          "bytes": 32,
+          "sha256": "5c6a8394b172d26c7d07b688056dc7734b826f88dad2eea4bcb7796e10b6309c"
+        },
+        {
+          "name": "tops",
+          "bytes": 32,
+          "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        },
+        {
+          "name": "dist",
+          "bytes": 414736,
+          "sha256": "ef38fd3598c735490784261aa9e0d73adb54d863a969467ecda180885e47595b"
+        },
+        {
+          "name": "next",
+          "bytes": 414736,
+          "sha256": "8c765bf81c6ae1c3fecb6beb52e07400bcc2adbe28e327e5b62456ca2347c4a7"
+        },
+        {
+          "name": "bucket0",
+          "bytes": 414736,
+          "sha256": "45a86c3853fca4e88c3c8f021af538b3834c219cb5d41e3ef3bce00053574bbc"
+        },
+        {
+          "name": "bucket1",
+          "bytes": 414736,
+          "sha256": "70365e1ad4ea64ac05bd433883f7abcffca0e61a3d9448b43e4536ee1d8c2fb8"
+        },
+        {
+          "name": "bucket2",
+          "bytes": 414736,
+          "sha256": "1ea196ca3b28ce6750bea0c21f802bc80a5311cb5b97d722d79a4843e7e691c1"
+        },
+        {
+          "name": "bucket3",
+          "bytes": 414736,
+          "sha256": "865639c9b2831c59d0a6fd5b3696664035f63f285af82222b02de04b8d918b80"
+        },
+        {
+          "name": "bucket4",
+          "bytes": 414736,
+          "sha256": "c88adebd9fb06d8c2389ba1cd03d1b8eb7bcc424b078f05e464b916052686a3d"
+        },
+        {
+          "name": "bucket5",
+          "bytes": 414736,
+          "sha256": "72d8b69365c31150a0040e220abceaa1c381b6452a4690b41d4c2d7bf7abd699"
+        },
+        {
+          "name": "bucket6",
+          "bytes": 414736,
+          "sha256": "c9c3f1ea20a53ee69d1bf102e44348464c307f3bc26f77a848f17df3fe8de442"
+        },
+        {
+          "name": "bucket7",
+          "bytes": 414736,
+          "sha256": "7ce0fa124030bb66d6e6661351b0ea10953dbb4c358d17202bab1a88a1bc7583"
+        }
+      ]
+    }
+  ],
+  "oraclePairs": [
+    {
+      "index": 0,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 1,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 2,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 3,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 4,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 5,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 6,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 7,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 8,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 9,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 10,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    },
+    {
+      "index": 11,
+      "fullDecodedAAndBBytesEqual": true,
+      "bytesCompared": 4354792
+    }
+  ],
+  "decodedOracleBytes": 104515008,
+  "storedOriginalOracleBytes": 1029210,
+  "all24DecodedBinsAndEverySegmentShaExact": true,
+  "all12CompleteDecodedPairsByteEqual": true,
+  "noRawBinsWritten": true,
+  "largestReadChunkBytes": 1048576,
+  "scope": "Original local frozen payload identities and full stored/decoded oracle bytes; not new logical proof, benchmark, original cache/JIT restoration or performance acceptance.",
+  "execution": {
+    "startedAt": "2026-10-14T22:44:05.820629+00:00",
+    "endedAt": "2026-10-14T22:44:06.443021+00:00",
+    "wallSeconds": 0.6224004839896224
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "complete": true,
+  "closedUtc": "2026-10-14T22:46:07.461919+00:00",
+  "payloads": 385,
+  "originalBytes": 63963844,
+  "storedBytes": 26947803,
+  "oldClosedStage3AndPriorEvidenceUnchanged": true,
+  "onlyNewDirectoryWrittenInRepository": true,
+  "newIntegerOrWasmFeasibilityNotIncluded": true,
+  "initialCompression": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage4-followup-archive-tools/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage4-followup",
+      "--inputs",
+      "/workspace/whole-stage4-followup-archive-tools/inputs.json"
+    ],
+    "cwd": "/workspace/whole-stage4-followup-archive-tools",
+    "startedAt": "2026-10-14T22:42:48.129338+00:00",
+    "endedAt": "2026-10-14T22:42:49.943440+00:00",
+    "wallSeconds": 1.814113720000023,
+    "exitCode": 0,
+    "childUserSeconds": 1.66328,
+    "childSystemSeconds": 0.150411,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/compress-01.stdout.log",
+      "bytes": 87,
+      "sha256": "049bab73930bed81aa25b39ea737032ef131c64085478411981ddddc7fe2644d"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/compress-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sourceAndNativeClosure": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage4-followup/analyze-native.py",
+      "--repo",
+      "/workspace/sketch-rts-production-init-fix"
+    ],
+    "cwd": "/workspace/whole-stage4-followup-archive-tools",
+    "startedAt": "2026-10-14T22:42:54.310593+00:00",
+    "endedAt": "2026-10-14T22:42:56.492376+00:00",
+    "wallSeconds": 2.1817910699755885,
+    "exitCode": 0,
+    "childUserSeconds": 2.056186,
+    "childSystemSeconds": 0.13752599999999998,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/analyze-01.stdout.log",
+      "bytes": 687,
+      "sha256": "09cbaef5f0bddbc360837cd790124fa943c47640cbecfbcc6995b8aa84732ee7"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/analyze-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "localOriginalManifestAndOracleClosure": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage4-followup/verify-local.py"
+    ],
+    "cwd": "/workspace/whole-stage4-followup-archive-tools",
+    "startedAt": "2026-10-14T22:44:05.794312+00:00",
+    "endedAt": "2026-10-14T22:44:06.450012+00:00",
+    "wallSeconds": 0.6557119969802443,
+    "exitCode": 0,
+    "childUserSeconds": 0.632429,
+    "childSystemSeconds": 0.022869,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/local-proof-01.stdout.log",
+      "bytes": 919,
+      "sha256": "7d9e4a5a80c69d351c65622618516fbe5ccab9496f2bcbb92d9d16bb79d396d8"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/local-proof-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "safePathAndSmallExtractionChecks": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage4-followup-archive-tools/safe-path-checks.py"
+    ],
+    "cwd": "/workspace/whole-stage4-followup-archive-tools",
+    "startedAt": "2026-10-14T22:44:06.748878+00:00",
+    "endedAt": "2026-10-14T22:44:06.788632+00:00",
+    "wallSeconds": 0.03976329299621284,
+    "exitCode": 0,
+    "childUserSeconds": 0.027037999999999996,
+    "childSystemSeconds": 0.012355,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/safe-paths-01.stdout.log",
+      "bytes": 379,
+      "sha256": "7ec1b732790f8c22e925cb4360b0e503c35c77e69caeb802ee6e455b75aba7f6"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/safe-paths-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "wholeOriginalsPreSdkVerification": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage4-followup/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage4-followup",
+      "--verify",
+      "--compare-originals"
+    ],
+    "cwd": "/workspace/whole-stage4-followup-archive-tools",
+    "startedAt": "2026-10-14T22:44:56.059352+00:00",
+    "endedAt": "2026-10-14T22:44:56.388880+00:00",
+    "wallSeconds": 0.3295375010056887,
+    "exitCode": 0,
+    "childUserSeconds": 0.280545,
+    "childSystemSeconds": 0.048603,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/verify-pre-sdk-01.stdout.log",
+      "bytes": 131,
+      "sha256": "db09ba7f4980c1c2c15b2ba5bd48c003d3b1cc0582eb61ebbac128075163ca02"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/verify-pre-sdk-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdk": {
+    "schema": 1,
+    "argv": [
+      "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+      "--run",
+      "src/sdk/package-boundaries.test.ts",
+      "scripts/production-client-bootstrap.test.ts",
+      "scripts/sdk-agent-driver-boundary.test.ts",
+      "scripts/sdk-agent-planner-boundary.test.ts"
+    ],
+    "cwd": "/workspace/sketch-rts-production-init-fix",
+    "startedAt": "2026-10-14T22:44:56.678735+00:00",
+    "endedAt": "2026-10-14T22:45:28.526296+00:00",
+    "wallSeconds": 31.847571629012236,
+    "exitCode": 0,
+    "childUserSeconds": 30.882513,
+    "childSystemSeconds": 2.36902,
+    "stdout": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/final-sdk-01.stdout.log",
+      "bytes": 587,
+      "sha256": "774b8d7d6a7ddab0b6ba3664b7cf9a097e5fe868a9671419ce3ef5e1d233e097"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage4-followup-archive-tools/final-sdk-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdkScope": "Full repo evidence branch199596 existing code49 and complete new stage4 archive/docs; SDK validation is not a new production618 build or benchmark.",
+  "sdkFirstAttemptPassed": true,
+  "newArchiveToolFailures": [],
+  "historicalFailuresRetained": [
+    "Hoist native startup full apply_patch interval unknown; known last writes before wrapper but strict exclusivity not certified.",
+    "Old hoist Bplain minute nonplanning metadata category is disabled-hook artifact; separate correction, old result not edited.",
+    "Component post-native parser first exit1 requiring owner metrics on Bplain, original source/stdout/stderr retained then v2 original timed assertions preserved.",
+    "Both candidates have opposite paired mean directions; all10 targetfail; badA2/outliers/cold/setup/negative local blocks retained."
+  ],
+  "noRawTreeCopyOrFullExtraction": true,
+  "decodedOracleStreamReadBytes": 104515008,
+  "all12DecodedOraclePairsFullyByteEqual": true
+}
