@@ -1,0 +1,1543 @@
+{
+  "recordedAt": "2026-10-14T06:24:08.051Z",
+  "source": "/workspace/sketch-rts-six-player-perf",
+  "gitHead": "32ff4e96ebabe5461e28ac540fc13d0134077c77",
+  "gitStatus": "",
+  "sourceInputs": [
+    {
+      "path": "src/ai/bootstrap_1/archer-doctrine.ts",
+      "bytes": 2648,
+      "sha256": "31a10c060c86a362f7ece39a40c8b08a22189ffb0c5f7b5568eb44cc2fc9707a",
+      "esbuildBytes": 2648
+    },
+    {
+      "path": "src/ai/bootstrap_1/archer-micro.ts",
+      "bytes": 1154,
+      "sha256": "145fb4f19c738f846170887b3b4d339c9828b9170f074d4d2a5e95756731b3a2",
+      "esbuildBytes": 1154
+    },
+    {
+      "path": "src/ai/bootstrap_1/assault-camp-roads.ts",
+      "bytes": 7624,
+      "sha256": "b82c63cd52f8ce68e76f2b1f2601d114829e454c24393e51f4c3347d4ca7c478",
+      "esbuildBytes": 7624
+    },
+    {
+      "path": "src/ai/bootstrap_1/camp-geometry.ts",
+      "bytes": 3516,
+      "sha256": "f2368a2bafb9e30e6e0bd96774bab0fc0ad049e967d2a0649db64d101e9bff9a",
+      "esbuildBytes": 3516
+    },
+    {
+      "path": "src/ai/bootstrap_1/camp-recovery.ts",
+      "bytes": 4412,
+      "sha256": "9c0a5358fba6dae29de5bc1fc0da6e6cf066d39c8cc8fb47ae02d93c659f7051",
+      "esbuildBytes": 4412
+    },
+    {
+      "path": "src/ai/bootstrap_1/caster-screen.ts",
+      "bytes": 2080,
+      "sha256": "c234d105ebc0df598f2173f220aef5f291d78dde0cd8bc5c7070ae409f38c87d",
+      "esbuildBytes": 2080
+    },
+    {
+      "path": "src/ai/bootstrap_1/colony-recovery.ts",
+      "bytes": 3066,
+      "sha256": "0687f461242018a09cccb2800efc7e33cd81256a548c43e255f48ddc207799b5",
+      "esbuildBytes": 3066
+    },
+    {
+      "path": "src/ai/bootstrap_1/covered-defense.ts",
+      "bytes": 3500,
+      "sha256": "fe5afa8d5f16f134b0d2da75dbedcb611fee389394f2953f2aefb3de80be5e4d",
+      "esbuildBytes": 3500
+    },
+    {
+      "path": "src/ai/bootstrap_1/damage-footprints.ts",
+      "bytes": 2827,
+      "sha256": "19d6bbddcf20bc055011774130f38d82f558e78fa357688cdc987731c3cd7e95",
+      "esbuildBytes": 2827
+    },
+    {
+      "path": "src/ai/bootstrap_1/economy.ts",
+      "bytes": 14699,
+      "sha256": "35972230ae0a4f9dd68359c38ea1c0cbad5151961b8fa1c8b5ddc3f5af9a695a",
+      "esbuildBytes": 14699
+    },
+    {
+      "path": "src/ai/bootstrap_1/expansion-target.ts",
+      "bytes": 2653,
+      "sha256": "b4ec9b0a27f43084f2a2f2c37edca09c86ba96552eebbebe0e0d8abcfbf0c28c",
+      "esbuildBytes": 2653
+    },
+    {
+      "path": "src/ai/bootstrap_1/expedition-recovery.ts",
+      "bytes": 10417,
+      "sha256": "36927caff8764bfb627c3e56c24c8a743158d495ce15b77f85915601ddd6f4d9",
+      "esbuildBytes": 10417
+    },
+    {
+      "path": "src/ai/bootstrap_1/ferry-preparation.ts",
+      "bytes": 3708,
+      "sha256": "00ed9654027308710d7351903acef9a7a229827a9f92563de9484d03a5c4898c",
+      "esbuildBytes": 3708
+    },
+    {
+      "path": "src/ai/bootstrap_1/free-income-capital.ts",
+      "bytes": 1859,
+      "sha256": "5c6532238709a139210ab51b4aedeb7f01924501b49387baf834b4f2b62d9d52",
+      "esbuildBytes": 1859
+    },
+    {
+      "path": "src/ai/bootstrap_1/front-recovery.ts",
+      "bytes": 4720,
+      "sha256": "43a0a7a889f0482729c1a25f1d06fe7eeb9981af7b9b8ab3dc2f8a1106669cf6",
+      "esbuildBytes": 4720
+    },
+    {
+      "path": "src/ai/bootstrap_1/long-haul-investment.ts",
+      "bytes": 3881,
+      "sha256": "d8a2e3f611c93f318b970418f23495a6102117711f7af7b53a5afff92523e482",
+      "esbuildBytes": 3881
+    },
+    {
+      "path": "src/ai/bootstrap_1/loot-recovery.ts",
+      "bytes": 5738,
+      "sha256": "6f459820cbe708f97039d0f92a6df6e6a5041f443b8f972571e042ed49f3b8b4",
+      "esbuildBytes": 5738
+    },
+    {
+      "path": "src/ai/bootstrap_1/medical-recovery.ts",
+      "bytes": 3501,
+      "sha256": "5dc8c61c9bb015e98ce17e3196ac283aff1f184f23efd54d397a5023df0848de",
+      "esbuildBytes": 3501
+    },
+    {
+      "path": "src/ai/bootstrap_1/mercenary-control.ts",
+      "bytes": 8857,
+      "sha256": "1b5b9be40ed84b467c07259764e25ac8486892e54a1a09dd6ba46bde2799a354",
+      "esbuildBytes": 8857
+    },
+    {
+      "path": "src/ai/bootstrap_1/mercenary-goals.ts",
+      "bytes": 1550,
+      "sha256": "c0185242948760f849f9f1d68bbb56e95e23a6d77e1eba9d9ef6715a8bfe625c",
+      "esbuildBytes": 1550
+    },
+    {
+      "path": "src/ai/bootstrap_1/mine-defense.ts",
+      "bytes": 14955,
+      "sha256": "e3abf1f82087ff541715e053af11d08cf234ee4cfaaabdb69ef46402726056d4",
+      "esbuildBytes": 14955
+    },
+    {
+      "path": "src/ai/bootstrap_1/mining-assignments.ts",
+      "bytes": 2042,
+      "sha256": "ad47d059a1b99c70c1a28f4c3793b65ecdb807276c13fe9ecfcb636bd334cc6f",
+      "esbuildBytes": 2042
+    },
+    {
+      "path": "src/ai/bootstrap_1/mining-job-defense.ts",
+      "bytes": 6682,
+      "sha256": "287a70c9a65214ca33d6e5cbe0563510dc0d973d1d8fdb8d053f0af0fe3a6a3b",
+      "esbuildBytes": 6682
+    },
+    {
+      "path": "src/ai/bootstrap_1/mining-jobs.ts",
+      "bytes": 334,
+      "sha256": "b4f131ee2bc0a62cd1b58375700cc4c56702f4fc86a62c35e746eaf86065981e",
+      "esbuildBytes": 334
+    },
+    {
+      "path": "src/ai/bootstrap_1/mobile-care.ts",
+      "bytes": 1877,
+      "sha256": "f5c6c8dddcd692568b40350f904edcc982e81db592a8199174c90cb0d17d78e7",
+      "esbuildBytes": 1877
+    },
+    {
+      "path": "src/ai/bootstrap_1/mounted-field.ts",
+      "bytes": 5115,
+      "sha256": "81790ef31a1446646a5abe4a206fb4e601fa0db7833eb662294dbb1590bb5092",
+      "esbuildBytes": 5115
+    },
+    {
+      "path": "src/ai/bootstrap_1/mounted-micro.ts",
+      "bytes": 12191,
+      "sha256": "c6daa3d87b9ff3779a5869bb481189afe1e3426dc256edf49670b327f417195c",
+      "esbuildBytes": 12191
+    },
+    {
+      "path": "src/ai/bootstrap_1/mounted-recruitment.ts",
+      "bytes": 4039,
+      "sha256": "7a23d5fc16ae6eb39f85fb403d4c070ed595de8bf40d27c60fd5083ba6b62c3e",
+      "esbuildBytes": 4039
+    },
+    {
+      "path": "src/ai/bootstrap_1/mounted-tasks.ts",
+      "bytes": 12661,
+      "sha256": "b62d98949eccdf8f7a97c2e5291a56f4a0a15892cd6077c20040581867150359",
+      "esbuildBytes": 12661
+    },
+    {
+      "path": "src/ai/bootstrap_1/policy.ts",
+      "bytes": 9459,
+      "sha256": "7c7e15530346972192030cd877780d1c4e506da5e074605abe1dd294ad22f7da",
+      "esbuildBytes": 9459
+    },
+    {
+      "path": "src/ai/bootstrap_1/repair.ts",
+      "bytes": 3071,
+      "sha256": "3d48ba8fba4de24c754f690606513b4e6252875a7794b288d4878cea57d5067b",
+      "esbuildBytes": 3071
+    },
+    {
+      "path": "src/ai/bootstrap_1/rider-crossing.ts",
+      "bytes": 4982,
+      "sha256": "35e0255bd2e11550338685d883393e579d57701fcbc216da7d54bceb36f80a2a",
+      "esbuildBytes": 4982
+    },
+    {
+      "path": "src/ai/bootstrap_1/safe-land-route.ts",
+      "bytes": 4189,
+      "sha256": "4176c1fdfcaf353337b2bf2a3fc8f48c397610a644c87db1836a35f5ec040198",
+      "esbuildBytes": 4189
+    },
+    {
+      "path": "src/ai/bootstrap_1/shell-evasion.ts",
+      "bytes": 7822,
+      "sha256": "2c797ac81b25c873655b66e38272399d9f3a825530b057773d29ba053087d0ab",
+      "esbuildBytes": 7822
+    },
+    {
+      "path": "src/ai/bootstrap_1/shopping.ts",
+      "bytes": 6129,
+      "sha256": "b49ccc0cc1be44c5cc42f525b633aea1cd47944d8872b5c15609ab988eb5a8d3",
+      "esbuildBytes": 6129
+    },
+    {
+      "path": "src/ai/bootstrap_1/storm-point.ts",
+      "bytes": 1078,
+      "sha256": "813e322b226a418b18746e546f8a709212cf0335f813927cabce895cc29bb2e4",
+      "esbuildBytes": 1078
+    },
+    {
+      "path": "src/ai/bootstrap_1/summon-host.ts",
+      "bytes": 602,
+      "sha256": "547281151a45b03df6b03a0cbd7eb19a026da75d470f47d3117f19a7fe860e7a",
+      "esbuildBytes": 602
+    },
+    {
+      "path": "src/ai/bootstrap_1/summoned-raids.ts",
+      "bytes": 3469,
+      "sha256": "d5e66d7a18128c46b8b8dcf427335703686e8a1c4413a1657edb454aa1ec13c4",
+      "esbuildBytes": 3469
+    },
+    {
+      "path": "src/ai/bootstrap_1/summoner-screen.ts",
+      "bytes": 4886,
+      "sha256": "9fad91e4ed78d95e035f51b2d6c5440829f942e3887300e1eb91ef8bd2d83a63",
+      "esbuildBytes": 4886
+    },
+    {
+      "path": "src/ai/bootstrap_1/threat-roads.ts",
+      "bytes": 5103,
+      "sha256": "b7d9169d067198cd4f21a2a36ddc8599fde298119675da6c5e4114aacfa1031b",
+      "esbuildBytes": 5103
+    },
+    {
+      "path": "src/ai/bootstrap_1/tower-rush.ts",
+      "bytes": 14527,
+      "sha256": "85430beb723421f76f236539ee7d9d32847a62fc6bd93f264ed2a619a25ab84c",
+      "esbuildBytes": 14527
+    },
+    {
+      "path": "src/ai/bootstrap_1/transport-recovery.ts",
+      "bytes": 3934,
+      "sha256": "0902f742fc550a2a2e9bb5249a7d685d0bed9e247824cff39894234ecfe5caee",
+      "esbuildBytes": 3934
+    },
+    {
+      "path": "src/ai/bootstrap_1/weapon-targets.ts",
+      "bytes": 2486,
+      "sha256": "7fc08fcfef847298f20674517cc8a792e88effa14a62818bf23363a9e4a297ae",
+      "esbuildBytes": 2486
+    },
+    {
+      "path": "src/ai/bootstrap_1/workforce.ts",
+      "bytes": 5213,
+      "sha256": "b82973df09a5374a022fb64db453d6142a72866e368b5329752010bfc2415b08",
+      "esbuildBytes": 5213
+    },
+    {
+      "path": "src/ai/memory.ts",
+      "bytes": 4646,
+      "sha256": "118ce12288c2251702b9854e4ad362f874a9986f7848f145de57aab11188a79f",
+      "esbuildBytes": 4646
+    },
+    {
+      "path": "src/ai/planner-context.ts",
+      "bytes": 6016,
+      "sha256": "6512062bc03d517676f5cb95a468eed0a429cca20a413a70b4a594149d560938",
+      "esbuildBytes": 6189
+    },
+    {
+      "path": "src/ai/policy-v2prod/base-defense-model.ts",
+      "bytes": 4935,
+      "sha256": "2cbaf01df1ac9cac6f25663ae5ef709ce157c5b532ff08472b01fb3cf7eff656",
+      "esbuildBytes": 4935
+    },
+    {
+      "path": "src/ai/policy-v2prod/build-layout.ts",
+      "bytes": 7026,
+      "sha256": "f3b0bd33549cbbf86cf40cd8f12c610251c8661f1f171243b432fa04b6416c7f",
+      "esbuildBytes": 7026
+    },
+    {
+      "path": "src/ai/policy-v2prod/claims.ts",
+      "bytes": 13755,
+      "sha256": "c64e3f7894c521b5ee7d923b1429793b67a6781a5c2dc5ad04c251967a8869a5",
+      "esbuildBytes": 13755
+    },
+    {
+      "path": "src/ai/policy-v2prod/combat-math.ts",
+      "bytes": 493,
+      "sha256": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+      "esbuildBytes": 493
+    },
+    {
+      "path": "src/ai/policy-v2prod/commands.ts",
+      "bytes": 535,
+      "sha256": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+      "esbuildBytes": 535
+    },
+    {
+      "path": "src/ai/policy-v2prod/core.ts",
+      "bytes": 174657,
+      "sha256": "e4d177f085287bab23511605cd23ec10ea8d71fa9c7a41be7afed3e7628c46c1",
+      "esbuildBytes": 174657
+    },
+    {
+      "path": "src/ai/policy-v2prod/expansion-model.ts",
+      "bytes": 12059,
+      "sha256": "b98496273c459575bd753567eaade776d75b8a835391d580975b45c9a45695e6",
+      "esbuildBytes": 12059
+    },
+    {
+      "path": "src/ai/policy-v2prod/item-tactics.ts",
+      "bytes": 7053,
+      "sha256": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238",
+      "esbuildBytes": 7053
+    },
+    {
+      "path": "src/ai/policy-v2prod/ownership.ts",
+      "bytes": 1120,
+      "sha256": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+      "esbuildBytes": 1120
+    },
+    {
+      "path": "src/ai/policy-v2prod/playbook.ts",
+      "bytes": 658,
+      "sha256": "32c5d51db4c2a136b277e8e34eb14749f3f643d1cc526cd4752c44c71aa2ab62",
+      "esbuildBytes": 658
+    },
+    {
+      "path": "src/ai/policy-v2prod/production-model.ts",
+      "bytes": 5109,
+      "sha256": "912ee409b9a1a792a5fba105cc0d3338330824e117eab1369c1e70e0a27db7b9",
+      "esbuildBytes": 5109
+    },
+    {
+      "path": "src/ai/policy-v2prod/script-runner.ts",
+      "bytes": 4457,
+      "sha256": "ec51c8571f479260fb035f4f4802311dd3d2de4b12ff5f5352646a8d25fd0d83",
+      "esbuildBytes": 4457
+    },
+    {
+      "path": "src/ai/policy-v2prod/skirmish-tactics.ts",
+      "bytes": 10357,
+      "sha256": "72855d9b3afecfd5e27b3610443d096ae3daa7dc387a29db1b3b843bf825dc7e",
+      "esbuildBytes": 10357
+    },
+    {
+      "path": "src/ai/policy-v2prod/snapshot.ts",
+      "bytes": 4549,
+      "sha256": "9de9d896870b3139c954b3410775f1d64ad6e77e3307b0bcd5c5e719b30f09b6",
+      "esbuildBytes": 4549
+    },
+    {
+      "path": "src/ai/policy-v2prod/spatial.ts",
+      "bytes": 1333,
+      "sha256": "1a958780f43c4e32213118f4fe5bf0da20945f17fee5a289e2e1e877234351ac",
+      "esbuildBytes": 1333
+    },
+    {
+      "path": "src/ai/policy-v2prod/spell-tactics.ts",
+      "bytes": 9913,
+      "sha256": "588a1b34f9f7f2a253ebdf33647891ca81b2bff43ed5b162aa0cd26900252ed9",
+      "esbuildBytes": 9913
+    },
+    {
+      "path": "src/ai/policy-v2prod/telemetry.ts",
+      "bytes": 1089,
+      "sha256": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+      "esbuildBytes": 1089
+    },
+    {
+      "path": "src/ai/policy-v2prod/threats.ts",
+      "bytes": 1145,
+      "sha256": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+      "esbuildBytes": 1145
+    },
+    {
+      "path": "src/ai/policy-v2prod/training-choice.ts",
+      "bytes": 4332,
+      "sha256": "7b0b7ab8b9b26c2eb6a711f0f6c7431efa37552e2c46c2111dfbfce1c94ed7e9",
+      "esbuildBytes": 4332
+    },
+    {
+      "path": "src/ai/policy-v2prod/world-model.ts",
+      "bytes": 4463,
+      "sha256": "b1361f2b4b1001dbc15eca2d6998bcaa5d6169ee3e8b36bc38c9907a3f09e685",
+      "esbuildBytes": 4463
+    },
+    {
+      "path": "src/ai/policy.ts",
+      "bytes": 622,
+      "sha256": "2d43f6a5dd021f546769c2e1f89bd572e6ed082df44ce62a693432a9f01a373e",
+      "esbuildBytes": 622
+    },
+    {
+      "path": "src/ai/policy/adaptive-army.ts",
+      "bytes": 2202,
+      "sha256": "620e36491a435f798c7e2c57bdb20051dff26089af6cd6181bfd78df310769a7",
+      "esbuildBytes": 2202
+    },
+    {
+      "path": "src/ai/policy/ally-support.ts",
+      "bytes": 6415,
+      "sha256": "d1e7b6539cbbef4d65ae1687e3e558ae7f62a2d013deae2603b8ec340147a9a2",
+      "esbuildBytes": 6415
+    },
+    {
+      "path": "src/ai/policy/base-defense-model.ts",
+      "bytes": 5074,
+      "sha256": "8fe2b400e5c8f9acea361745f347f1e5d6178d0a57686e9b8ad9b4b225d9128d",
+      "esbuildBytes": 5074
+    },
+    {
+      "path": "src/ai/policy/base-pressure.ts",
+      "bytes": 3368,
+      "sha256": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3",
+      "esbuildBytes": 3368
+    },
+    {
+      "path": "src/ai/policy/battlefield.ts",
+      "bytes": 4902,
+      "sha256": "4772eadda29f9929ecf847bc39bf541b42e4840a8c0a9337dc80eaf9d3d5cbb2",
+      "esbuildBytes": 4902
+    },
+    {
+      "path": "src/ai/policy/build-layout.ts",
+      "bytes": 14323,
+      "sha256": "e29054d10b3f641b72c2f8e949a22c92c19e43ba6b29c43b3879f05804a9e76f",
+      "esbuildBytes": 14323
+    },
+    {
+      "path": "src/ai/policy/claims.ts",
+      "bytes": 14604,
+      "sha256": "045fdd30dab87f14370c7b024e1f822b5c5028e7842b2d77f2ccdb6055bf2e4e",
+      "esbuildBytes": 14604
+    },
+    {
+      "path": "src/ai/policy/combat-math.ts",
+      "bytes": 493,
+      "sha256": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+      "esbuildBytes": 493
+    },
+    {
+      "path": "src/ai/policy/combat-readiness.ts",
+      "bytes": 6536,
+      "sha256": "8c8549a2b5f2cbe295a12c4101369d48e2d7bba9be1e5475d6c19366d3d0edbe",
+      "esbuildBytes": 6536
+    },
+    {
+      "path": "src/ai/policy/commands.ts",
+      "bytes": 535,
+      "sha256": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+      "esbuildBytes": 535
+    },
+    {
+      "path": "src/ai/policy/convoy-load.ts",
+      "bytes": 1110,
+      "sha256": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
+      "esbuildBytes": 1110
+    },
+    {
+      "path": "src/ai/policy/core.ts",
+      "bytes": 301701,
+      "sha256": "1e26e8e5857e68c7dad1eb4877edc97168de5ce933e7bafbe36068b1504775ea",
+      "esbuildBytes": 301701
+    },
+    {
+      "path": "src/ai/policy/engagements.ts",
+      "bytes": 4378,
+      "sha256": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
+      "esbuildBytes": 4378
+    },
+    {
+      "path": "src/ai/policy/engineering.ts",
+      "bytes": 3415,
+      "sha256": "b98d5a468a9d901b6ed2cc63bb3914cc171db0d96a6c533889117ec506a5c350",
+      "esbuildBytes": 3415
+    },
+    {
+      "path": "src/ai/policy/expansion-model.ts",
+      "bytes": 18783,
+      "sha256": "34e74778c757876b776072bdbafdedf3bd30595a4b3da763f9dfaa9dbbbd439a",
+      "esbuildBytes": 18783
+    },
+    {
+      "path": "src/ai/policy/fleet-engagement.ts",
+      "bytes": 1919,
+      "sha256": "2cccb5e9a36df0827ee758d096cf1ff0d94490faa824df645c009720d1a2ff0e",
+      "esbuildBytes": 1919
+    },
+    {
+      "path": "src/ai/policy/fleet-formation.ts",
+      "bytes": 2769,
+      "sha256": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+      "esbuildBytes": 2769
+    },
+    {
+      "path": "src/ai/policy/ground-threat.ts",
+      "bytes": 2714,
+      "sha256": "fa73d60b377d2de349f966728f6177ae95dc48670eabbad1a6a27baeac796167",
+      "esbuildBytes": 2714
+    },
+    {
+      "path": "src/ai/policy/ground.ts",
+      "bytes": 2591,
+      "sha256": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
+      "esbuildBytes": 2591
+    },
+    {
+      "path": "src/ai/policy/item-tactics.ts",
+      "bytes": 10957,
+      "sha256": "7d0c94c5a14ef7ba0095568060365c20e52f85e74c0bd04d1064dd59680b4ea9",
+      "esbuildBytes": 10957
+    },
+    {
+      "path": "src/ai/policy/mechanical-repair.ts",
+      "bytes": 2007,
+      "sha256": "e3ddf0d2e899a6fe71b0406791e53f0f00a3b2ded56a4432aff705c1cbc37ff7",
+      "esbuildBytes": 2007
+    },
+    {
+      "path": "src/ai/policy/mercenary-model.ts",
+      "bytes": 1023,
+      "sha256": "3df092a36407a5bd1474ee7a11ebce323c9272af19c97f80245e414c79fd28b2",
+      "esbuildBytes": 1023
+    },
+    {
+      "path": "src/ai/policy/mine-claims.ts",
+      "bytes": 890,
+      "sha256": "a4f2767b2e65060068eb98ba214e249e585774e524278cac357d356b4cb3da41",
+      "esbuildBytes": 890
+    },
+    {
+      "path": "src/ai/policy/mounted-mine-plan.ts",
+      "bytes": 1769,
+      "sha256": "3b15acba37ad32f6cfd895f655edce32d45a839db9737c77685a910537475bfe",
+      "esbuildBytes": 1769
+    },
+    {
+      "path": "src/ai/policy/naval-mines.ts",
+      "bytes": 1971,
+      "sha256": "716b0c4547be28e6e76ef01a87fa9925a498bf046ce5ca6393fbbce08680e6f5",
+      "esbuildBytes": 1971
+    },
+    {
+      "path": "src/ai/policy/naval-services.ts",
+      "bytes": 6902,
+      "sha256": "0c1729565067e2dd3530e75d75ac7b1cb49e5358597ab1b135ff8a185539df83",
+      "esbuildBytes": 6902
+    },
+    {
+      "path": "src/ai/policy/naval.ts",
+      "bytes": 91803,
+      "sha256": "96202fad3ecc4115f9504f665cf09e53ff8620ea2810166c8dd5494147681fa0",
+      "esbuildBytes": 91803
+    },
+    {
+      "path": "src/ai/policy/ownership.ts",
+      "bytes": 1120,
+      "sha256": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+      "esbuildBytes": 1120
+    },
+    {
+      "path": "src/ai/policy/playbook.ts",
+      "bytes": 1078,
+      "sha256": "2670a9377f50cf3eaaf3f7c089ac7b984e284b8e6ea7bc4de11d322fccd1c622",
+      "esbuildBytes": 1078
+    },
+    {
+      "path": "src/ai/policy/production-model.ts",
+      "bytes": 8494,
+      "sha256": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
+      "esbuildBytes": 8494
+    },
+    {
+      "path": "src/ai/policy/script-runner.ts",
+      "bytes": 10931,
+      "sha256": "48041cb750c278136c366ecac617cf29e3c96e168405c7081feff45902ceefda",
+      "esbuildBytes": 10931
+    },
+    {
+      "path": "src/ai/policy/skirmish-tactics.ts",
+      "bytes": 22745,
+      "sha256": "438645049f69cec2ebc7c7d7ec2474307014c45faa8b28394c3820448c3e359b",
+      "esbuildBytes": 22745
+    },
+    {
+      "path": "src/ai/policy/snapshot.ts",
+      "bytes": 6021,
+      "sha256": "8ba125e9ef941edf150891ed733e88c6f18ea638b04967e63c2ddcda00d11644",
+      "esbuildBytes": 6021
+    },
+    {
+      "path": "src/ai/policy/spatial.ts",
+      "bytes": 5742,
+      "sha256": "eea7d9f4e1ffc64acd36a89a0699f15a45c9004a55925f4fd73d3c5ce988b364",
+      "esbuildBytes": 5742
+    },
+    {
+      "path": "src/ai/policy/spell-tactics.ts",
+      "bytes": 26851,
+      "sha256": "a2ee4d4bfe51347fe36c86ca310701032564cfaeded08ba8789febce5f3f172a",
+      "esbuildBytes": 26851
+    },
+    {
+      "path": "src/ai/policy/telemetry.ts",
+      "bytes": 1089,
+      "sha256": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+      "esbuildBytes": 1089
+    },
+    {
+      "path": "src/ai/policy/threats.ts",
+      "bytes": 1145,
+      "sha256": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+      "esbuildBytes": 1145
+    },
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "bytes": 9531,
+      "sha256": "e8c56c4a8e8b08f731b01b4d4d5404259cc3286da2342ee120a908c5e367e0f6",
+      "esbuildBytes": 9531
+    },
+    {
+      "path": "src/ai/policy/transfer-lanes.ts",
+      "bytes": 3040,
+      "sha256": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
+      "esbuildBytes": 3040
+    },
+    {
+      "path": "src/ai/policy/v6/backline.ts",
+      "bytes": 9404,
+      "sha256": "90d50c9223e7eec897bd6159848c939c529ba99260ada93c8adadcd892e256d6",
+      "esbuildBytes": 9404
+    },
+    {
+      "path": "src/ai/policy/v6/closeout.ts",
+      "bytes": 4959,
+      "sha256": "a23defb92af85a8059a20c7a8fc798f53fe9a1b60ab3712e6765216122f0c922",
+      "esbuildBytes": 4959
+    },
+    {
+      "path": "src/ai/policy/v6/doctrine.ts",
+      "bytes": 11732,
+      "sha256": "11a22617b459a0a85ad89062c23e476125dbebc001c0f2413ff703fcfb33ddc7",
+      "esbuildBytes": 11732
+    },
+    {
+      "path": "src/ai/policy/v6/economy.ts",
+      "bytes": 30975,
+      "sha256": "a700e54b5de0570ed8cd91bd8b68b8217b08f467bf3fec8eb868e40a7f80e7f4",
+      "esbuildBytes": 30975
+    },
+    {
+      "path": "src/ai/policy/v6/general.ts",
+      "bytes": 61097,
+      "sha256": "56e56b737b3c169ec18891625702765a5eea44b2b6431e2bf57e7d914bff70a6",
+      "esbuildBytes": 61097
+    },
+    {
+      "path": "src/ai/policy/v6/intel.ts",
+      "bytes": 12938,
+      "sha256": "70f0644fe3ac213071facb42e368e6143f38169ee6848fb8e99661b14824cb7a",
+      "esbuildBytes": 12938
+    },
+    {
+      "path": "src/ai/policy/v6/memory.ts",
+      "bytes": 481,
+      "sha256": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
+      "esbuildBytes": 481
+    },
+    {
+      "path": "src/ai/policy/v6/raid.ts",
+      "bytes": 8415,
+      "sha256": "4924a2b64cfa5a5e71b971a29c5bd18282b69ce7799338c9f8ded76a34bb38ec",
+      "esbuildBytes": 8415
+    },
+    {
+      "path": "src/ai/policy/v6/rng.ts",
+      "bytes": 1485,
+      "sha256": "b2fbac706071c48c9476b5968330affaffb7cdaa1c0d0415ff4db4f579b7bd62",
+      "esbuildBytes": 1485
+    },
+    {
+      "path": "src/ai/policy/v6/select.ts",
+      "bytes": 2244,
+      "sha256": "56c6ab5be29e38051da66b1ca35f7b9d28d73e69dca90492280e26afb8aab8ab",
+      "esbuildBytes": 2244
+    },
+    {
+      "path": "src/ai/policy/v6/strength.ts",
+      "bytes": 4700,
+      "sha256": "611e8271dc2005514b9c2704537c2085c5c6af293ace636b6931ef1d16765c77",
+      "esbuildBytes": 4700
+    },
+    {
+      "path": "src/ai/policy/v7/creep.ts",
+      "bytes": 15773,
+      "sha256": "2112b883e5bbc4122a7f2b89dd685a7dca54650d64baf5976ef270be5a4019d3",
+      "esbuildBytes": 15773
+    },
+    {
+      "path": "src/ai/policy/v7/discipline.ts",
+      "bytes": 3381,
+      "sha256": "9132b684e9fb71ce3aebdf58521c3aacd8690eb7c7a320bc2dd6e47544f1a910",
+      "esbuildBytes": 3381
+    },
+    {
+      "path": "src/ai/policy/v8/charge.ts",
+      "bytes": 4073,
+      "sha256": "d113ffd1cca8d615d68e80a1c74e5af32723a99718b6fa71d24a4e35b4eb89df",
+      "esbuildBytes": 4073
+    },
+    {
+      "path": "src/ai/policy/v8/doctrine.ts",
+      "bytes": 8031,
+      "sha256": "7f342d61820292651864f9f4198050699059830c29ac1768b571b5b588dcdf30",
+      "esbuildBytes": 8031
+    },
+    {
+      "path": "src/ai/policy/v8/well.ts",
+      "bytes": 2713,
+      "sha256": "955bbe13995d1a7df5d503ad364ab95f2c6e0b688d83024492a507c71c5052f0",
+      "esbuildBytes": 2713
+    },
+    {
+      "path": "src/ai/policy/v9/doctrine.ts",
+      "bytes": 4919,
+      "sha256": "c0ae229e6b37adc7bbb04961e64b5e1c6dc1f52cc4675ebaecee48401596a0c1",
+      "esbuildBytes": 4919
+    },
+    {
+      "path": "src/ai/policy/v9/front.ts",
+      "bytes": 5606,
+      "sha256": "99a05f60d3beab955cd390d286c05ac2d94379efa679ec7ae2d12856ca43352e",
+      "esbuildBytes": 5606
+    },
+    {
+      "path": "src/ai/policy/v9/march.ts",
+      "bytes": 4622,
+      "sha256": "1980f2ad2ce7240bffa84fccf9a6cb11811db80da3fd913c46bf6ac057f92931",
+      "esbuildBytes": 4622
+    },
+    {
+      "path": "src/ai/policy/v9/shop.ts",
+      "bytes": 8459,
+      "sha256": "31f4ff3d74ea45267fba6c6644726cc72459c9912dc6e65e85fd4bf03a90685e",
+      "esbuildBytes": 8459
+    },
+    {
+      "path": "src/ai/policy/versions.ts",
+      "bytes": 3533,
+      "sha256": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
+      "esbuildBytes": 3533
+    },
+    {
+      "path": "src/ai/policy/veterancy.ts",
+      "bytes": 920,
+      "sha256": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
+      "esbuildBytes": 920
+    },
+    {
+      "path": "src/ai/policy/world-model.ts",
+      "bytes": 6176,
+      "sha256": "dca52e1bc33518a30ef92a7baef0f089514a568f3504df1d91bd8d2d0b69b35e",
+      "esbuildBytes": 6176
+    },
+    {
+      "path": "src/ai/runtime.ts",
+      "bytes": 7631,
+      "sha256": "89e4ffc549528072f9e803aa83108d88a6e5cdba9f637c573f636661cf8d59e5",
+      "esbuildBytes": 7788
+    },
+    {
+      "path": "src/ai/veteran-skills.ts",
+      "bytes": 1982,
+      "sha256": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+      "esbuildBytes": 1982
+    },
+    {
+      "path": "src/client/deployment/static-runtime.ts",
+      "bytes": 7620,
+      "sha256": "edac527a19591379e1e45a5cf0e90816f54b32c65f6145c2b846403b775604cf",
+      "esbuildBytes": 7620
+    },
+    {
+      "path": "src/client/game-adapter.ts",
+      "bytes": 1299,
+      "sha256": "463469b6db039c60f19ea9ab0676bf67d0a1beb73ed1836d2f404e2b75fee110",
+      "esbuildBytes": 1299
+    },
+    {
+      "path": "src/client/net/local-adapter.ts",
+      "bytes": 3239,
+      "sha256": "08a9f90aa18797e5932a53999b204a2ef30f4643ca9ba41aa54c7d98ccc8d484",
+      "esbuildBytes": 3239
+    },
+    {
+      "path": "src/sdk/commands/intent.ts",
+      "bytes": 14506,
+      "sha256": "bb6f41a6cc92fb108c79f8e06d76e9530a66874af9e36e9b0924bc1384c63cc6",
+      "esbuildBytes": 14506
+    },
+    {
+      "path": "src/sdk/snapshot-query.ts",
+      "bytes": 34,
+      "sha256": "1c7f75e65d8324dec5048e5ae4df4c07e30dc9fd6e6c89145db41671beb9e025",
+      "esbuildBytes": 34
+    },
+    {
+      "path": "src/sdk/snapshot/query.ts",
+      "bytes": 14394,
+      "sha256": "a9da30710ad8516fae3ce9719931c85b827322b533a1d2818e2a2283eae1afd6",
+      "esbuildBytes": 14394
+    },
+    {
+      "path": "src/sdk/snapshot/range-index.ts",
+      "bytes": 3499,
+      "sha256": "a8b9f1a7665622baf38694226576fbcef4351ef775670f9ff4a0393cd47dfdf1",
+      "esbuildBytes": 3499
+    },
+    {
+      "path": "src/shared/ability-cooldowns.ts",
+      "bytes": 1982,
+      "sha256": "5e7ccee838e4cb1eb2fdd4993a13202367e0e873d95f86494ccfb399943218a9",
+      "esbuildBytes": 1982
+    },
+    {
+      "path": "src/shared/aiming.ts",
+      "bytes": 3531,
+      "sha256": "e44c1c27ba1cca0e69a1e7f5efe630c55a829fd5a59a3499e2720647d6ca375c",
+      "esbuildBytes": 3531
+    },
+    {
+      "path": "src/shared/archipelago-map.ts",
+      "bytes": 6733,
+      "sha256": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+      "esbuildBytes": 6733
+    },
+    {
+      "path": "src/shared/attack-presentation.ts",
+      "bytes": 725,
+      "sha256": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+      "esbuildBytes": 725
+    },
+    {
+      "path": "src/shared/autocast.ts",
+      "bytes": 1460,
+      "sha256": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+      "esbuildBytes": 1460
+    },
+    {
+      "path": "src/shared/build-placement.ts",
+      "bytes": 3421,
+      "sha256": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+      "esbuildBytes": 3421
+    },
+    {
+      "path": "src/shared/camps.ts",
+      "bytes": 7398,
+      "sha256": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+      "esbuildBytes": 7398
+    },
+    {
+      "path": "src/shared/catalog.ts",
+      "bytes": 43878,
+      "sha256": "754746876be0fdc68106396f8c37ce7c04c9fed8a6083082f46850c891d0a79e",
+      "esbuildBytes": 43878
+    },
+    {
+      "path": "src/shared/chat.ts",
+      "bytes": 1108,
+      "sha256": "fa0124ca978c67c0d0200dd9cc3c0bc2192b99d0edc500bb48540a07a2f21a63",
+      "esbuildBytes": 1108
+    },
+    {
+      "path": "src/shared/combat-capabilities.ts",
+      "bytes": 2537,
+      "sha256": "18229c99f1bb6b3b4bbc5a31680008edd1b6d2a214bf7b02210e3947c24b6095",
+      "esbuildBytes": 2537
+    },
+    {
+      "path": "src/shared/combat-geometry.ts",
+      "bytes": 3762,
+      "sha256": "03c9f8b2f0f48066ecfad8635b624e700acdc9311725d98f15977ee6eb645f4b",
+      "esbuildBytes": 3762
+    },
+    {
+      "path": "src/shared/combat-target.ts",
+      "bytes": 2127,
+      "sha256": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+      "esbuildBytes": 2127
+    },
+    {
+      "path": "src/shared/connected-decks.ts",
+      "bytes": 23055,
+      "sha256": "72a482fe362f7135ed602f8a5e2325b291ff4f4fdc87f844530ab23b3962e5f8",
+      "esbuildBytes": 23055
+    },
+    {
+      "path": "src/shared/construction.ts",
+      "bytes": 821,
+      "sha256": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+      "esbuildBytes": 821
+    },
+    {
+      "path": "src/shared/crew-rendezvous.ts",
+      "bytes": 10037,
+      "sha256": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+      "esbuildBytes": 10037
+    },
+    {
+      "path": "src/shared/damage-reduction.ts",
+      "bytes": 3733,
+      "sha256": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+      "esbuildBytes": 3733
+    },
+    {
+      "path": "src/shared/damage-types.ts",
+      "bytes": 6932,
+      "sha256": "74ab4ddc972cd30d055e4256e0ca097b247b7df695af484469155958116fed09",
+      "esbuildBytes": 6932
+    },
+    {
+      "path": "src/shared/damage.ts",
+      "bytes": 4082,
+      "sha256": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+      "esbuildBytes": 4082
+    },
+    {
+      "path": "src/shared/deck-combat.ts",
+      "bytes": 1448,
+      "sha256": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+      "esbuildBytes": 1448
+    },
+    {
+      "path": "src/shared/decks.ts",
+      "bytes": 11463,
+      "sha256": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+      "esbuildBytes": 11463
+    },
+    {
+      "path": "src/shared/det-math.ts",
+      "bytes": 4068,
+      "sha256": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+      "esbuildBytes": 4068
+    },
+    {
+      "path": "src/shared/environment/ecology.ts",
+      "bytes": 3393,
+      "sha256": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+      "esbuildBytes": 3393
+    },
+    {
+      "path": "src/shared/environment/fields.ts",
+      "bytes": 6335,
+      "sha256": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644",
+      "esbuildBytes": 6335
+    },
+    {
+      "path": "src/shared/environment/noise.ts",
+      "bytes": 1579,
+      "sha256": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+      "esbuildBytes": 1579
+    },
+    {
+      "path": "src/shared/equipment.ts",
+      "bytes": 16840,
+      "sha256": "3cc69d817de81dafe1aff2e877047a81809cbac6a1383e15746a91a8101806c3",
+      "esbuildBytes": 16840
+    },
+    {
+      "path": "src/shared/estuary-map.ts",
+      "bytes": 6225,
+      "sha256": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+      "esbuildBytes": 6225
+    },
+    {
+      "path": "src/shared/generated-map.ts",
+      "bytes": 123123,
+      "sha256": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+      "esbuildBytes": 123123
+    },
+    {
+      "path": "src/shared/generated/ship-geometry.json",
+      "bytes": 15997,
+      "sha256": "a9ad18f90d139fb1f0c5f5ffe98a03884ee166e0ccc4d7c90590acba95d0a0a1",
+      "esbuildBytes": 15997
+    },
+    {
+      "path": "src/shared/generated/ship-navigation-masks-64.json",
+      "bytes": 66671,
+      "sha256": "fcebf3558080a5d4206b40bba3e8cddb70e86aee9aefdaf9d41bd5f7b4681822",
+      "esbuildBytes": 66671
+    },
+    {
+      "path": "src/shared/generated/ship-navigation-masks.json",
+      "bytes": 119752,
+      "sha256": "fc5e54c8a4cae670c8a0c95d471d15c3c176ff03c55036b0b30bfe9f6ec1ede2",
+      "esbuildBytes": 119752
+    },
+    {
+      "path": "src/shared/gold.ts",
+      "bytes": 367,
+      "sha256": "ddf514c39622872429285bab6d78838e6bae2defe307ff47059b9d5debda5931",
+      "esbuildBytes": 367
+    },
+    {
+      "path": "src/shared/grid-flood.ts",
+      "bytes": 1949,
+      "sha256": "5c6043d3dc1744007b97799c85f3eac08e0b664750d213411e9feffd924c7715",
+      "esbuildBytes": 1949
+    },
+    {
+      "path": "src/shared/healing.ts",
+      "bytes": 394,
+      "sha256": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+      "esbuildBytes": 394
+    },
+    {
+      "path": "src/shared/hypot.ts",
+      "bytes": 736,
+      "sha256": "127dc80c93dc99a3374df4407ade7a63f3c7473ea8bbafcd278fab0c0ed578b1",
+      "esbuildBytes": 736
+    },
+    {
+      "path": "src/shared/item-index.ts",
+      "bytes": 1134,
+      "sha256": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+      "esbuildBytes": 1134
+    },
+    {
+      "path": "src/shared/item-rules.ts",
+      "bytes": 746,
+      "sha256": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+      "esbuildBytes": 746
+    },
+    {
+      "path": "src/shared/item-surfaces.ts",
+      "bytes": 1579,
+      "sha256": "495028bac93bd2932a1b3cb8bc6ed01bcaec84a4521c983007b193a6ee1430e0",
+      "esbuildBytes": 1579
+    },
+    {
+      "path": "src/shared/map-dressing.ts",
+      "bytes": 2650,
+      "sha256": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+      "esbuildBytes": 2650
+    },
+    {
+      "path": "src/shared/map-ids.ts",
+      "bytes": 1666,
+      "sha256": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+      "esbuildBytes": 1666
+    },
+    {
+      "path": "src/shared/map-pool.ts",
+      "bytes": 3820,
+      "sha256": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+      "esbuildBytes": 3820
+    },
+    {
+      "path": "src/shared/map.ts",
+      "bytes": 27872,
+      "sha256": "ebd5f6bb23881bbe35954a90d4cd22f3308891ffeabe662b99b2780e3dec0048",
+      "esbuildBytes": 27872
+    },
+    {
+      "path": "src/shared/mercenary-camp.ts",
+      "bytes": 448,
+      "sha256": "64799afb4e20b4bdad56b617b918a94de90440d1b4c74935740309e4500e531d",
+      "esbuildBytes": 448
+    },
+    {
+      "path": "src/shared/mining-site.ts",
+      "bytes": 2116,
+      "sha256": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+      "esbuildBytes": 2116
+    },
+    {
+      "path": "src/shared/mining.ts",
+      "bytes": 4176,
+      "sha256": "b2a7784d784f3d0d38abcbceb449aeeac319195a4b8faa41c34b08030cc8aa41",
+      "esbuildBytes": 4176
+    },
+    {
+      "path": "src/shared/movement-rules.ts",
+      "bytes": 133,
+      "sha256": "7b582ef772351405a053cb313dee755b4d1864ead2fa3f61deb23c9c0cbaec3c",
+      "esbuildBytes": 133
+    },
+    {
+      "path": "src/shared/naval.ts",
+      "bytes": 8158,
+      "sha256": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+      "esbuildBytes": 8158
+    },
+    {
+      "path": "src/shared/navigation-masks.ts",
+      "bytes": 2765,
+      "sha256": "7b59b7137a93a66a33c8cc1fe7db9b15451143e8854f7629712f223cec6d01a3",
+      "esbuildBytes": 2765
+    },
+    {
+      "path": "src/shared/navigation-math.ts",
+      "bytes": 13010,
+      "sha256": "b5cb56b95daf9a7d74d3b92577e28892ae112d13d15d1e9e1998b415d28ead2b",
+      "esbuildBytes": 13010
+    },
+    {
+      "path": "src/shared/obstacle.ts",
+      "bytes": 925,
+      "sha256": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+      "esbuildBytes": 925
+    },
+    {
+      "path": "src/shared/physical-body.ts",
+      "bytes": 1049,
+      "sha256": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+      "esbuildBytes": 1049
+    },
+    {
+      "path": "src/shared/player-colors.ts",
+      "bytes": 2987,
+      "sha256": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+      "esbuildBytes": 2987
+    },
+    {
+      "path": "src/shared/production-spawn.ts",
+      "bytes": 11304,
+      "sha256": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49",
+      "esbuildBytes": 11304
+    },
+    {
+      "path": "src/shared/purchase.ts",
+      "bytes": 3886,
+      "sha256": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+      "esbuildBytes": 3886
+    },
+    {
+      "path": "src/shared/push.ts",
+      "bytes": 8285,
+      "sha256": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+      "esbuildBytes": 8285
+    },
+    {
+      "path": "src/shared/room-lifecycle.ts",
+      "bytes": 5179,
+      "sha256": "ba995af814b8b4ecf088ba438dee903200201441dd2d5c0157fa661f9031569d",
+      "esbuildBytes": 5179
+    },
+    {
+      "path": "src/shared/room-schema.ts",
+      "bytes": 16836,
+      "sha256": "ca10604e7015e45df8680003712aa8426b672314fdabce4e0cc306a1c3b2a762",
+      "esbuildBytes": 16836
+    },
+    {
+      "path": "src/shared/room-slot-counts.ts",
+      "bytes": 1977,
+      "sha256": "4f0790dcfe6cf67f77eb9e5aeba064a8ce18142bcc52906afe2e5c03fdb38b7e",
+      "esbuildBytes": 1977
+    },
+    {
+      "path": "src/shared/rooms.ts",
+      "bytes": 15137,
+      "sha256": "d7199dcc142ea40c20c8cfc8b601e1171721dd2c7f5a37e1945a5f7be9e56690",
+      "esbuildBytes": 15137
+    },
+    {
+      "path": "src/shared/route-selection.ts",
+      "bytes": 5987,
+      "sha256": "d452f0b30ba75336154dc6cb07da349ab12297deac7f8e00289fb017a7bece17",
+      "esbuildBytes": 5987
+    },
+    {
+      "path": "src/shared/rules-version.ts",
+      "bytes": 898,
+      "sha256": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57",
+      "esbuildBytes": 898
+    },
+    {
+      "path": "src/shared/sailing.ts",
+      "bytes": 38230,
+      "sha256": "c34ba22e59728cbacfe49e425d9aa3fd707d3518117acaaf7054d0e17ce2270d",
+      "esbuildBytes": 38230
+    },
+    {
+      "path": "src/shared/ship-avoidance.ts",
+      "bytes": 32149,
+      "sha256": "fc7decf9246b3e6a143b78c4492f9c7e835231ecaac9262e1f291b4701738a0e",
+      "esbuildBytes": 32149
+    },
+    {
+      "path": "src/shared/ship-cabin-quota.ts",
+      "bytes": 2000,
+      "sha256": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+      "esbuildBytes": 2000
+    },
+    {
+      "path": "src/shared/ship-cabin.ts",
+      "bytes": 13176,
+      "sha256": "fa363520cd78534655ca36954d50aff62c36136a8a074cde39c181715ffcbdb9",
+      "esbuildBytes": 13176
+    },
+    {
+      "path": "src/shared/ship-collisions.ts",
+      "bytes": 20454,
+      "sha256": "81013c83e051792651211ebe5dc3a6eb868672d938d59903fbb144f85022ba21",
+      "esbuildBytes": 20454
+    },
+    {
+      "path": "src/shared/ship-defense.ts",
+      "bytes": 4798,
+      "sha256": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762",
+      "esbuildBytes": 4798
+    },
+    {
+      "path": "src/shared/ship-equipment.ts",
+      "bytes": 24055,
+      "sha256": "16b0fb7d3f57ac126f5bb8bb8a88ec47e50760fd42e6f63de98cc977711c3c32",
+      "esbuildBytes": 24055
+    },
+    {
+      "path": "src/shared/ship-fire-control.ts",
+      "bytes": 8218,
+      "sha256": "ea9b52dd7fa89825064e94add643c867580f1526daa5d3cbc5fcd8ac5c9b7585",
+      "esbuildBytes": 8218
+    },
+    {
+      "path": "src/shared/ship-gangway.ts",
+      "bytes": 14396,
+      "sha256": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+      "esbuildBytes": 14396
+    },
+    {
+      "path": "src/shared/ship-geometry.ts",
+      "bytes": 9606,
+      "sha256": "468fb007589bdfeb7223062f8de554265021013ebec88978dd7629af2af8d99f",
+      "esbuildBytes": 9606
+    },
+    {
+      "path": "src/shared/ship-guidance.ts",
+      "bytes": 15649,
+      "sha256": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+      "esbuildBytes": 15649
+    },
+    {
+      "path": "src/shared/ship-handling.ts",
+      "bytes": 2227,
+      "sha256": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+      "esbuildBytes": 2227
+    },
+    {
+      "path": "src/shared/ship-launch.ts",
+      "bytes": 12129,
+      "sha256": "91e3dab0d4f51136cdb0689f79ad84215a59e48c332b7c25a82902f78391bc47",
+      "esbuildBytes": 12129
+    },
+    {
+      "path": "src/shared/ship-motion.ts",
+      "bytes": 4614,
+      "sha256": "d12008d71681bfc456aa2e06a791fa7a172a43587a15e0a54d0c212eee797e72",
+      "esbuildBytes": 4614
+    },
+    {
+      "path": "src/shared/ship-navigation-potential.ts",
+      "bytes": 4375,
+      "sha256": "dd4f5a366637ce25657acc8a225639c6e23742d6fd81c229371e121230315fef",
+      "esbuildBytes": 4375
+    },
+    {
+      "path": "src/shared/ship-navigation.ts",
+      "bytes": 67102,
+      "sha256": "af6de742ca053f3c2f8ac664a569f8a32ece34533d4c98fffd650e20e81fef2d",
+      "esbuildBytes": 67102
+    },
+    {
+      "path": "src/shared/ship-planning-budget.ts",
+      "bytes": 6308,
+      "sha256": "1ecabca1169965605e0960d74fbd525161012ea72d569ae5559c12fa6636d0ed",
+      "esbuildBytes": 6308
+    },
+    {
+      "path": "src/shared/ship-planning-job.ts",
+      "bytes": 12523,
+      "sha256": "34f9ea62da5182351c7fdef4cd581f1631404999e689ca25c8801ea63edd3b6f",
+      "esbuildBytes": 12523
+    },
+    {
+      "path": "src/shared/ship-pursuit.ts",
+      "bytes": 21761,
+      "sha256": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+      "esbuildBytes": 21761
+    },
+    {
+      "path": "src/shared/ship-queued-course.ts",
+      "bytes": 6463,
+      "sha256": "13b12dcee549bd8ce168bbaf31adf4334bc28cf93da8dbbf0d83137ea45c1844",
+      "esbuildBytes": 6463
+    },
+    {
+      "path": "src/shared/ship-wind.ts",
+      "bytes": 7922,
+      "sha256": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+      "esbuildBytes": 7922
+    },
+    {
+      "path": "src/shared/shop.ts",
+      "bytes": 5406,
+      "sha256": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+      "esbuildBytes": 5406
+    },
+    {
+      "path": "src/shared/sim.ts",
+      "bytes": 259985,
+      "sha256": "e1183a6e3df2c0591d63fdb2a436c803cf616ddef92d1f1f693f431a77c1ed11",
+      "esbuildBytes": 260306
+    },
+    {
+      "path": "src/shared/sim/canonical.ts",
+      "bytes": 2696,
+      "sha256": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+      "esbuildBytes": 2696
+    },
+    {
+      "path": "src/shared/sim/checksum.ts",
+      "bytes": 2845,
+      "sha256": "ea82bd9fae1f4c96d77aa3cde1e048362808c9425bb00b360bb532639226a13f",
+      "esbuildBytes": 2845
+    },
+    {
+      "path": "src/shared/sim/command-frame-runtime.ts",
+      "bytes": 5344,
+      "sha256": "72876fcc91f5db7f4735e017f98701dcab5e83b5d818116be4bf96d5614c8448",
+      "esbuildBytes": 5344
+    },
+    {
+      "path": "src/shared/sim/command-validation.ts",
+      "bytes": 33861,
+      "sha256": "c4673e7c2af7c599f6271673552603435b1e2a8bf667c5d66ebcb1ddabda6f2e",
+      "esbuildBytes": 33861
+    },
+    {
+      "path": "src/shared/sim/frame.ts",
+      "bytes": 2151,
+      "sha256": "e0fa92deef57423c7c9a2d501aea3ca4913eed67790ee09481c64713f9c77472",
+      "esbuildBytes": 2151
+    },
+    {
+      "path": "src/shared/spark-fire.ts",
+      "bytes": 488,
+      "sha256": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+      "esbuildBytes": 488
+    },
+    {
+      "path": "src/shared/support-surface.ts",
+      "bytes": 4913,
+      "sha256": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+      "esbuildBytes": 4913
+    },
+    {
+      "path": "src/shared/terrain.ts",
+      "bytes": 73764,
+      "sha256": "b4d8f8e5bd009de10b1f604964a24eb775d4ec5774aa112185f1a482693f16dd",
+      "esbuildBytes": 73764
+    },
+    {
+      "path": "src/shared/time.ts",
+      "bytes": 316,
+      "sha256": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+      "esbuildBytes": 316
+    },
+    {
+      "path": "src/shared/transport-role.ts",
+      "bytes": 525,
+      "sha256": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+      "esbuildBytes": 525
+    },
+    {
+      "path": "src/shared/unit-abilities.ts",
+      "bytes": 648,
+      "sha256": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+      "esbuildBytes": 648
+    },
+    {
+      "path": "src/shared/unit-lookup.ts",
+      "bytes": 776,
+      "sha256": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+      "esbuildBytes": 776
+    },
+    {
+      "path": "src/shared/unit-repair.ts",
+      "bytes": 1240,
+      "sha256": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+      "esbuildBytes": 1240
+    },
+    {
+      "path": "src/shared/unit-targeting.ts",
+      "bytes": 1375,
+      "sha256": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+      "esbuildBytes": 1375
+    },
+    {
+      "path": "src/shared/unit-value.ts",
+      "bytes": 1005,
+      "sha256": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+      "esbuildBytes": 1005
+    },
+    {
+      "path": "src/shared/veteran-runtime.ts",
+      "bytes": 13543,
+      "sha256": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+      "esbuildBytes": 13543
+    },
+    {
+      "path": "src/shared/veteran-skills.ts",
+      "bytes": 12989,
+      "sha256": "c90400e7d186760209e96c100a223b85365801a43735a28eff9a7b2d959de85b",
+      "esbuildBytes": 12989
+    },
+    {
+      "path": "src/shared/veteran-stats.ts",
+      "bytes": 543,
+      "sha256": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+      "esbuildBytes": 543
+    },
+    {
+      "path": "src/shared/weapons.ts",
+      "bytes": 4362,
+      "sha256": "193cd5eecd5b53e1692363d4fea5b22984d4d9f8c0f70b8c45c6c7b852d213e4",
+      "esbuildBytes": 4362
+    },
+    {
+      "path": "src/shared/wind-field.ts",
+      "bytes": 3489,
+      "sha256": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c",
+      "esbuildBytes": 3489
+    }
+  ],
+  "sourceManifestSha256": "b66fe6648fa69ff19c1ae3a499e053405e7d19378ed6160ee0ed234178203810",
+  "probeSha256": "5874b7cd8b3f88340b4e3375e5533908b16ade542ecd161217d14d2d6b8c3268",
+  "bundleSha256": "2ccc4cea5f005eba3b1964e4cd507a257530449e69b59902520f3e72b57ed7b3",
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/workspace/sketch-rts-six-player-perf/scripts/six-player-tick-probe.ts",
+    "--source",
+    "/workspace/sketch-rts-six-player-perf",
+    "--ticks",
+    "14400",
+    "--out",
+    "/workspace/six-player-tick-runs/step3-border"
+  ],
+  "node": "v24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "esbuild": "0.28.0",
+  "typescript": "5.9.3",
+  "platform": "linux",
+  "release": "6.18.44",
+  "cpus": [
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 4789440,
+        "nice": 0,
+        "sys": 381550,
+        "idle": 96366190,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 4837010,
+        "nice": 0,
+        "sys": 385550,
+        "idle": 96310610,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 4877320,
+        "nice": 0,
+        "sys": 409240,
+        "idle": 96232800,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 4795070,
+        "nice": 0,
+        "sys": 396490,
+        "idle": 96341920,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5000150,
+        "nice": 0,
+        "sys": 404210,
+        "idle": 96120410,
+        "irq": 0
+      }
+    }
+  ],
+  "totalMemory": 18882699264,
+  "freeMemory": 8451436544,
+  "processExecArgv": [
+    "--require",
+    "/workspace/sketch-rts/node_modules/tsx/dist/preflight.cjs",
+    "--import",
+    "file:///workspace/sketch-rts/node_modules/tsx/dist/loader.mjs"
+  ],
+  "options": {
+    "source": "/workspace/sketch-rts-six-player-perf",
+    "ticks": 14400,
+    "out": "/workspace/six-player-tick-runs/step3-border"
+  }
+}
