@@ -1,0 +1,17 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-guardian-scroll
+
+ ✓ src/shared/unit-save-migration.test.ts (13 tests) 31ms
+ ✓ src/sdk/package-boundaries.test.ts (7 tests) 26095ms
+   ✓ SDK package boundaries > does not carry banned cleanup-era naming in source or specs 26086ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  09:56:57
+   Duration  26.35s (transform 851ms, setup 0ms, collect 1.13s, tests 26.13s, environment 0ms, prepare 100ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

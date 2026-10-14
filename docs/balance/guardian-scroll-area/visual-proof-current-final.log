@@ -1,0 +1,30 @@
+[
+  {
+    "name": "before",
+    "rulesVersion": 2,
+    "radius": 280,
+    "recipients": [
+      "carrier",
+      "east-inner",
+      "east-outer",
+      "north-inner",
+      "north-outer",
+      "south-inner",
+      "south-outer",
+      "west-inner",
+      "west-outer"
+    ]
+  },
+  {
+    "name": "after",
+    "rulesVersion": 3,
+    "radius": 180,
+    "recipients": [
+      "carrier",
+      "east-inner",
+      "north-inner",
+      "south-inner",
+      "west-inner"
+    ]
+  }
+]

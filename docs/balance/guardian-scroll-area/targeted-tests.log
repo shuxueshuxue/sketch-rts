@@ -1,0 +1,59 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-guardian-scroll
+
+ ✓ src/client/tooltips.test.ts (20 tests) 29ms
+ ✓ src/client/effect-renderer.test.ts (13 tests) 465ms
+   ✓ projectile looks > colors the same shared caster by shooter ownership in the real Canvas path 450ms
+ ✓ src/story/director.test.ts (12 tests) 190ms
+ ✓ src/client/world-presentation.test.ts (10 tests) 367ms
+ ✓ src/ai/policy/mechanical-healing.test.ts (22 tests) 43ms
+ ✓ src/shared/savegame.test.ts (7 tests) 395ms
+ ✓ src/server/room-net.test.ts (30 tests) 426ms
+ ✓ src/shared/unit-save-migration.test.ts (12 tests) 46ms
+ ❯ src/shared/guardian-scroll.test.ts (37 tests | 2 failed) 41ms
+   × guardian scroll area balance > still rejects a neutral carrier without consuming the item 13ms
+     → Unknown player item user carrier
+   × guardian balance rules boundary > imports a canonical rules-2 snapshot without recasting existing buffs or changing recorded field radius 1ms
+     → Only live room matches can be saved
+ ✓ src/shared/replay.test.ts (4 tests) 26ms
+ ✓ src/ai/bootstrap_1/guardian-local-force.test.ts (49 tests) 176ms
+ ✓ src/ai/policy/item-tactics.test.ts (5 tests) 11ms
+ ✓ src/client/world3d/projection.test.ts (1 test) 15ms
+ ✓ src/client/guardian-scroll-visual.test.ts (6 tests) 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/guardian-scroll.test.ts > guardian scroll area balance > still rejects a neutral carrier without consuming the item
+Error: Unknown player item user carrier
+ ❯ useItem src/shared/sim.ts:2367:20
+    2365| ) {
+    2366|   const unit = game.units.find((candidate) => candidate.id === unitId …
+    2367|   if (!unit) throw new Error(`Unknown ${owner} item user ${unitId}`);
+       |                    ^
+    2368|   const item = carriedItem(game, unit, itemId);
+    2369|   const previousHands=unit.hands ? {...unit.hands} : undefined;
+ ❯ issuePlayerCommand src/shared/sim.ts:747:5
+ ❯ Module.issueCommand src/shared/sim.ts:447:3
+ ❯ cast src/shared/guardian-scroll.test.ts:26:3
+ ❯ src/shared/guardian-scroll.test.ts:67:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/shared/guardian-scroll.test.ts > guardian balance rules boundary > imports a canonical rules-2 snapshot without recasting existing buffs or changing recorded field radius
+Error: Only live room matches can be saved
+ ❯ Module.createSaveGameRecord src/shared/savegame.ts:59:40
+
+ ❯ src/shared/guardian-scroll.test.ts:102:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed | 13 passed (14)
+      Tests  2 failed | 226 passed (228)
+   Start at  09:47:32
+   Duration  4.37s (transform 2.78s, setup 0ms, collect 7.61s, tests 2.24s, environment 2ms, prepare 649ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

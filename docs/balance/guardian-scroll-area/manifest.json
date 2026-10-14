@@ -1,0 +1,425 @@
+{
+  "schema": 1,
+  "generatedUtc": "2026-10-14T10:36:48.476800+00:00",
+  "baseCommit": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
+  "branch": "balance/guardian-scroll-area",
+  "candidateCommitted": false,
+  "rulesVersion": 3,
+  "baselineRulesVersion": 2,
+  "radiusBefore": 280,
+  "radiusAfter": 180,
+  "node": "v24.19.0",
+  "aiSourceDiff": "",
+  "performanceEvidenceDiff": "",
+  "trackedSourceDiffSha256": "93880376bb8f95f237c1f7ae7ebc7dcfee8ebf1cfe634150e3bb37310921d19d",
+  "distinctPassingTests": 240,
+  "testCountBasis": "228 initial related tests + 2 added arrow-boundary cases + 1 added rules-2 import rejection case + 1 added scroll/veteran-radius visual case + 1 existing simulation immunity case + 7 package-boundary cases; repeated cases counted once",
+  "previousManifest": {
+    "path": "docs/balance/guardian-scroll-area/browser/manifest-before-browser.json",
+    "sha256": "b65ad68aef5d09793b71a12e78091bf6f390f36576aa62ea65f09db41ec16a9e",
+    "protectedEntries": 39,
+    "allEntriesUnchangedAtBrowserCapture": true,
+    "unchangedAtCurrentOriginalPaths": 39,
+    "documentationEntryUpdated": "docs/balance/guardian-scroll-area/README.zh.md",
+    "historicalReadmeRecoveredSha256": "08309142beb794520bffeee2c35aea58fd16912006bc058aed99384f39f02eb8"
+  },
+  "browserSupplement": {
+    "readme": "docs/balance/guardian-scroll-area/browser/README.zh.md",
+    "captures": 2,
+    "width": 1280,
+    "height": 720,
+    "actualWebGL2": true,
+    "nativeModelSha256": "93ee5f135484a3ec8976a987f7406c3693f328b70d4e0a5885e4a0b2beb5d2c0",
+    "launcherExitCode": 1,
+    "artifactVerificationExitCode": 0,
+    "launcherFailure": "Chromium owned temporary-directory cleanup ENOTEMPTY after fully written captures; original log preserved; directory cleanup completed during verification",
+    "noAdditionalSimulationOrPerformanceBenchmark": true,
+    "sourcesUnchanged": true
+  },
+  "files": [
+    {
+      "path": "docs/balance/guardian-scroll-area/README.zh.md",
+      "bytes": 9032,
+      "sha256": "2c2eb4d9907ec500bd5634f9325da0b0a8ff1da6a990c1d4da5d47f2b57d454f"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/README.zh.md",
+      "bytes": 4624,
+      "sha256": "62cbccb6a007785264499fa900d48dad0ae6e401186ae1c3940b83b1f95efc1a"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/asset-hashes.json",
+      "bytes": 713,
+      "sha256": "ce484fb757208fb5752f437efd76109c5ee2a5dfca3c06f0202fc0aa0092d35e"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/after-1280x720.png",
+      "bytes": 241198,
+      "sha256": "e4be02403312f39fade53660ffe7303471c35e7a9e6f24d91cbc72ba0abfe254"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/after-capture.json",
+      "bytes": 15081,
+      "sha256": "0ab76b1f394554055bb3321cd092ae3091c3b82459b8e18eeb10729da17ead1b"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/after-snapshot.json",
+      "bytes": 5262,
+      "sha256": "2cceb67715d27220836d7e381cf4bab3651fca54490372e76f7e964a358edf44"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/before-1280x720.png",
+      "bytes": 241094,
+      "sha256": "fad0327555fea7ea9e80b689f412b20aea53fa17272fed94dbc94ae1a5618981"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/before-capture.json",
+      "bytes": 15167,
+      "sha256": "1bafaf70fe3c0776e94174ac3d167b168ad9de0cc5635fba921bc90d630b5d02"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/before-snapshot.json",
+      "bytes": 5402,
+      "sha256": "6bf46225fdf2edc17f4856412cacbaa4e0bf67072c3a8afbad8c28b926136543"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/capture.json",
+      "bytes": 35220,
+      "sha256": "a2563f067c16501e43bdeba9efdd4b8ed72773aa7f5669de3a29b912f51af0d5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture/chromium-stderr.log",
+      "bytes": 9528,
+      "sha256": "10c04ecc08af3cec1fd3380d664284288ac41b4d2f56d0cd1a0bfa154d94fd15"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/capture.log",
+      "bytes": 1757,
+      "sha256": "cdbdb06c4662d3a23cc08760ec2fca65a2dc5c5f2820e5b567b9ca030d635e45"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/commands.jsonl",
+      "bytes": 1022,
+      "sha256": "8027bc662efa2a80edd78b0b0fc65c1f20b796e10a1faabd5d0b25665282a71b"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/history/README-before-final-documentation.zh.md",
+      "bytes": 7636,
+      "sha256": "08309142beb794520bffeee2c35aea58fd16912006bc058aed99384f39f02eb8"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/history/README-root-webgl-addition.zh.md",
+      "bytes": 8335,
+      "sha256": "79b1b7c609f5e0a8ef1e550f9de77e1e74b26f62b2656c798867ea7cb3d6d420"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/history/manifest-before-final-documentation.json",
+      "bytes": 14652,
+      "sha256": "041070263d4bb40bfa675ec81bfc0cca719cc7d36db1eaecc72225c9eb19c402"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/manifest-before-browser.json",
+      "bytes": 8137,
+      "sha256": "b65ad68aef5d09793b71a12e78091bf6f390f36576aa62ea65f09db41ec16a9e"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/reproduce-tool-syntax.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/tools/capture-recorded.mjs",
+      "bytes": 7769,
+      "sha256": "e0d52521719046bc3d16fa832c6ef199502f9656e465cf16a0add5cb244ce737"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/tools/capture-reproduce.mjs",
+      "bytes": 8125,
+      "sha256": "898498ea34d7f6b94e440a9b9b285642fe99976341f438ccef9e7915bf91adeb"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/tools/fixture.mjs",
+      "bytes": 5332,
+      "sha256": "76fabc4c6ac867c55044ad1761d2fff833d0cb75032c6dea33d1702d6ff20156"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/tools/page.html",
+      "bytes": 985,
+      "sha256": "1207db4cf462b353e5f8899386ce752457e68de4f2a4f1971e4c9546dd3b6bc9"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/tools/verify.mjs",
+      "bytes": 4136,
+      "sha256": "9082b2e10b91e694a8c883d49f0dd2c71e7ca2335d82d820145b025fa47e62c5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/verification.json",
+      "bytes": 1104,
+      "sha256": "49867d09afc9c4034877eb3853b7b6534c2b1a00eaa0b5e8ca4f643b910976f2"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/browser/verification.log",
+      "bytes": 1104,
+      "sha256": "49867d09afc9c4034877eb3853b7b6534c2b1a00eaa0b5e8ca4f643b910976f2"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/commands.jsonl",
+      "bytes": 6874,
+      "sha256": "3b6cbc2bbcaabeb7cd8a82115dcc9300516fe823eb750ccb9506d68c8c1d90ec"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/compatibility-and-boundaries-final.log",
+      "bytes": 667,
+      "sha256": "2dadea2ea51d988bd03b63680fe79b397ec70d672013f25b67a1af569c7efd9f"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/existing-immunity-final.log",
+      "bytes": 518,
+      "sha256": "6590e2689daf4039c00e734c61bde043f3d299997d7b8c1513a91bcd17b2333f"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/final-documentation-closure.json",
+      "bytes": 1939,
+      "sha256": "a851b92f3633b49da6cbf7f5b683d73b1d677e5de4d2757002240482e4cfb2a9"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/final-post-browser-boundaries.log",
+      "bytes": 602,
+      "sha256": "251b9b5f7b87f67825936ad83a2f4db779965f01b6c748714a5ca21d15a8ee25"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/guardian-boundary-final.log",
+      "bytes": 564,
+      "sha256": "0693251215feaa8a6642c16daadd40a2173096235d70dd4a4e1f6c83047ed565"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/old-rules-0f31.log",
+      "bytes": 898,
+      "sha256": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/old-rules-3dc.log",
+      "bytes": 898,
+      "sha256": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/old-rules-a052.log",
+      "bytes": 898,
+      "sha256": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/production-build.log",
+      "bytes": 2855,
+      "sha256": "ff99b7660276028109514c65b068b7caab476a143c2101fa5e3592e9cbff2a32"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/protected-performance-evidence.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/targeted-tests-final.log",
+      "bytes": 1340,
+      "sha256": "5b95082ed865754c7f525d6a41e57b6554c78256f3eba918f8c3b1bf395038a0"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/targeted-tests.log",
+      "bytes": 3015,
+      "sha256": "6ace4737e9890be2c7a076ac40f372eb3fc7e65fb267c00cb1d71bbf9feb8b7a"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/typecheck-current-final.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/typecheck-final.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/typecheck-reviewed-final.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/unchanged-ai.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/after-ai-diagnostic.json",
+      "bytes": 15255,
+      "sha256": "67e7494b67b56eb02784bee6af6f4de605b659f08fd171eea19d6fdf37424c86"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/after-snapshot.json",
+      "bytes": 4970,
+      "sha256": "69b0603630aa6922476cd8b60166d24e543c4465702c14658a04c223e9ad4f3d"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/after.png",
+      "bytes": 245639,
+      "sha256": "bcb13c9a02dec7497c0a7b06777365fb8684bb4843606c198237f94a90e79364"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/before-ai-diagnostic.json",
+      "bytes": 15579,
+      "sha256": "dce63d2d7b7d7a8c808c4c7b84d08f32e3c4658cd30c6a6b842f84cead310119"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/before-snapshot.json",
+      "bytes": 5110,
+      "sha256": "31fc9856d65e889a3de04a30e5f1f4eb3a35a51bfd1a5775926c453b2992f30d"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/before.png",
+      "bytes": 249283,
+      "sha256": "fba23f87e03d72288d3c7182edc21e010cf02d2974d46cc2597893d155a84ba1"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual/visual-proof.json",
+      "bytes": 5766,
+      "sha256": "4f1eff4b9b5a413f5bdd275a1dfcb3941768e76234474a4f0a8bf2f78f753f12"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual-proof-current-final.log",
+      "bytes": 478,
+      "sha256": "4b57fda317642333af686fad53b52e23d668004ac3cc1a33d088608b28c730f5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual-proof-final.log",
+      "bytes": 478,
+      "sha256": "4b57fda317642333af686fad53b52e23d668004ac3cc1a33d088608b28c730f5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual-proof-reviewed-final.log",
+      "bytes": 478,
+      "sha256": "4b57fda317642333af686fad53b52e23d668004ac3cc1a33d088608b28c730f5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/visual-proof.log",
+      "bytes": 478,
+      "sha256": "4b57fda317642333af686fad53b52e23d668004ac3cc1a33d088608b28c730f5"
+    },
+    {
+      "path": "docs/balance/guardian-scroll-area/ward-signature-final.log",
+      "bytes": 505,
+      "sha256": "4a1b11143a28a1c6845045ff88d46c8a3340fe0e45c4eebbc228077e09e59f74"
+    },
+    {
+      "path": "public/art/world3d/buildings/townHall.glb",
+      "bytes": 25264,
+      "sha256": "93ee5f135484a3ec8976a987f7406c3693f328b70d4e0a5885e4a0b2beb5d2c0"
+    },
+    {
+      "path": "scripts/guardian-scroll-area-proof.mjs",
+      "bytes": 7219,
+      "sha256": "9d4e4e130e08eab32bab41c939b95bacbe8ee4d8a0f84d823b1c619027fbc0ac"
+    },
+    {
+      "path": "src/client/art/canvas-effects.ts",
+      "bytes": 25222,
+      "sha256": "9e470dd664866705a497fe9e01fc527babdfbe742df37b425a1f45b9519d33a0"
+    },
+    {
+      "path": "src/client/effect-renderer.ts",
+      "bytes": 10667,
+      "sha256": "f864da3180b0c19c83d59e4dcb4c777dcb0aff92bce5076c250f087c8d12b25a"
+    },
+    {
+      "path": "src/client/guardian-scroll-visual.test.ts",
+      "bytes": 4688,
+      "sha256": "72c7397e3211f18afef9523a8e254b806d21817f30a6bcb428379c67a482a137"
+    },
+    {
+      "path": "src/client/resources.ts",
+      "bytes": 10711,
+      "sha256": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97"
+    },
+    {
+      "path": "src/client/world-presentation.ts",
+      "bytes": 8686,
+      "sha256": "03da50d925848d80e45bb0548af77798ef2c554c17d78603f24e58710b946f6b"
+    },
+    {
+      "path": "src/client/world-renderer.ts",
+      "bytes": 42444,
+      "sha256": "19999d01f8ef7be44372a30a8cfde436f4b9aeb375b3a9193a04a3b84173a1ee"
+    },
+    {
+      "path": "src/client/world3d/model-library.ts",
+      "bytes": 4538,
+      "sha256": "5a93d63dba5c3c253bbc843e60d401e24f4de1491102fe2adb02e4266b1b3575"
+    },
+    {
+      "path": "src/client/world3d/projection.ts",
+      "bytes": 1432,
+      "sha256": "17dd588f2c07ecc6d9ab4b1bbb255068a2d8eb89e383cf11b32641df908d3ec2"
+    },
+    {
+      "path": "src/client/world3d/world-layer.ts",
+      "bytes": 37071,
+      "sha256": "92af1c4e2effd662e900921a56d67ae8a4309542c92a3a526f53933ba918e579"
+    },
+    {
+      "path": "src/sdk/scene.ts",
+      "bytes": 7426,
+      "sha256": "0fcdc3aca5b56c146a461c28e729530db90d4028142991dc73982ad5fa8f1112"
+    },
+    {
+      "path": "src/server/room-net.test.ts",
+      "bytes": 36213,
+      "sha256": "3ae4a66faf2656f93cb0c4528a2966ff68d53bfb17cc72935b018621a670f84c"
+    },
+    {
+      "path": "src/shared/guardian-scroll.test.ts",
+      "bytes": 7666,
+      "sha256": "c3cb440204adf0c69e08ea7ad9d78bccb88da9072b2ba97e647d11b0ff3c4006"
+    },
+    {
+      "path": "src/shared/item-rules.ts",
+      "bytes": 746,
+      "sha256": "79676caca9bbda62bd1f53b9b53dc44c92249220bec8458035b0132fa446c55c"
+    },
+    {
+      "path": "src/shared/rules-version.ts",
+      "bytes": 986,
+      "sha256": "e2babd61d66f2efdcfb0d992d4fc6382dcbf863430d52632d894180e27b9ed2f"
+    },
+    {
+      "path": "src/shared/savegame.ts",
+      "bytes": 9066,
+      "sha256": "39518c04af5ff06e026e370c18f6444e212a900e039cc27ec43e0b15abc3286e"
+    },
+    {
+      "path": "src/shared/sim.test.ts",
+      "bytes": 129870,
+      "sha256": "e55823c8e11158d7ab9db4c0a86ea6fc512dc0fe12ed605ca246b39f932ede0b"
+    },
+    {
+      "path": "src/shared/sim.ts",
+      "bytes": 259985,
+      "sha256": "e1183a6e3df2c0591d63fdb2a436c803cf616ddef92d1f1f693f431a77c1ed11"
+    },
+    {
+      "path": "src/shared/unit-save-migration.test.ts",
+      "bytes": 7058,
+      "sha256": "d3b6f7816c280d90b96931df3e7cb21cc6825712dcaf25b4b0b27a21c5973080"
+    },
+    {
+      "path": "src/story/director.test.ts",
+      "bytes": 11264,
+      "sha256": "c345b83613c43a02c0e870f9fc68aaf6812a452a688b18f680ce9330f41466f6"
+    }
+  ],
+  "documentationClosure": {
+    "path": "docs/balance/guardian-scroll-area/final-documentation-closure.json",
+    "historical70ManifestSha256": "041070263d4bb40bfa675ec81bfc0cca719cc7d36db1eaecc72225c9eb19c402",
+    "all69NonReadmeHistoricalEntriesUnchanged": true,
+    "readmeAmendedWithHistoryPreserved": true,
+    "sdkBoundaryRepeatPassed": 7,
+    "distinctPassingTestsStill": 240,
+    "ioOnly": true
+  }
+}

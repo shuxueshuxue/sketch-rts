@@ -1,0 +1,51 @@
+{
+  "generatedUtc": "2026-10-14T10:36:48.476800+00:00",
+  "historicalManifest": {
+    "path": "docs/balance/guardian-scroll-area/browser/history/manifest-before-final-documentation.json",
+    "bytes": 14652,
+    "sha256": "041070263d4bb40bfa675ec81bfc0cca719cc7d36db1eaecc72225c9eb19c402",
+    "entries": 70
+  },
+  "priorEntryComparison": {
+    "unchangedAtOriginalPaths": 69,
+    "changedAtOriginalPaths": [
+      "docs/balance/guardian-scroll-area/README.zh.md"
+    ],
+    "changeIsDocumentationOnly": true
+  },
+  "originalReadme": {
+    "path": "docs/balance/guardian-scroll-area/browser/history/README-before-final-documentation.zh.md",
+    "bytes": 7636,
+    "sha256": "08309142beb794520bffeee2c35aea58fd16912006bc058aed99384f39f02eb8",
+    "recovery": "Exact recovery from previously recorded text substitutions, accepted only after full prior SHA256 and byte count matched; not an original on-disk backup."
+  },
+  "rootReadmeAddition": {
+    "path": "docs/balance/guardian-scroll-area/browser/history/README-root-webgl-addition.zh.md",
+    "bytes": 8335,
+    "sha256": "79b1b7c609f5e0a8ef1e550f9de77e1e74b26f62b2656c798867ea7cb3d6d420"
+  },
+  "currentReadme": {
+    "path": "docs/balance/guardian-scroll-area/README.zh.md",
+    "bytes": 9032,
+    "sha256": "2c2eb4d9907ec500bd5634f9325da0b0a8ff1da6a990c1d4da5d47f2b57d454f"
+  },
+  "existingSdkBoundaryRepeat": {
+    "suppliedLogSource": "/workspace/guardian-final-post-browser-boundaries.log",
+    "archivedLog": "docs/balance/guardian-scroll-area/final-post-browser-boundaries.log",
+    "bytes": 602,
+    "sha256": "251b9b5f7b87f67825936ad83a2f4db779965f01b6c748714a5ca21d15a8ee25",
+    "passed": 7,
+    "addsDistinctTests": 0,
+    "exactOriginalArgvNotContainedInRawLog": true
+  },
+  "distinctPassingTests": 240,
+  "newExecutionDuringClosure": {
+    "tests": 0,
+    "builds": 0,
+    "browser": 0,
+    "compression": 0,
+    "gitPacking": 0,
+    "commits": 0,
+    "pushes": 0
+  }
+}

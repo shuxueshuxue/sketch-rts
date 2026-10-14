@@ -89,7 +89,9 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
   };
   const game = createGame(save.snapshot.map.id, options);
   const olderCombatRules = (save.runtime.checksumVersion ?? 1) < 8;
-  const migration = savedRulesVersion(save.rulesVersion) < RULES_VERSION ? canonicalizeSavedUnits(save.snapshot) : undefined;
+  // Renamed-unit import belongs to rules 1. Later area-balance revisions must
+  // not reinterpret canonical rules-2 snapshots or their paid queue prices.
+  const migration = savedRulesVersion(save.rulesVersion) < 2 ? canonicalizeSavedUnits(save.snapshot) : undefined;
   const canonical = migration?.snapshot ?? save.snapshot;
   assertCanonicalSavedKinds(canonical);
   const snapshot = olderCombatRules ? upgradeSavedCombat(canonical) : canonical;
