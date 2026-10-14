@@ -45,7 +45,7 @@
     "audit:crash-inventory": "tsx scripts/crash-inventory.ts",
     "build": "tsc --noEmit && vite build",
     "build:server-bundle": "node --import tsx scripts/build-server-bundle.ts",
-    "build:production": "npm run build && npm run build:server-bundle",
+    "build:production": "npm run build && npm run build:server-bundle && node --import tsx scripts/production-client-bootstrap.ts dist",
     "build:server": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=server vite build",
     "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build",
     "benchmark:six-player-ticks": "tsx scripts/six-player-tick-probe.ts"
