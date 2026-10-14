@@ -91,7 +91,7 @@ import { UnitAnimationTracker } from "./unit-animation";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
 import { VETERAN_SKILLS } from "../shared/veteran-skills";
-import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
+import { trainingProgressButtonsForSelection, trainingProgressText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { playerDisplayName } from "./player-name";
 import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
@@ -3169,24 +3169,27 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
 
 function renderTrainingProgressButton(progress: TrainingProgressButton, previous?: HTMLButtonElement) {
   const percent = Math.floor(progress.progress * 100);
-  const label = t(progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: labelKind(progress.unitKind) });
+  const { label, badge, hint } = trainingProgressText(progress, i18n);
   const button = previous ?? document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
   button.className = "command-button research-progress-button";
   button.classList.add("training-cancel-button");
+  button.classList.toggle("training-launch-waiting", progress.status === "awaitingLaunch");
   button.disabled = !progress.jobId;
   if (!previous) button.addEventListener("click", () => {
     if (progress.jobId) sendCommand({ type: "cancelTraining", buildingId: progress.buildingId, jobId: progress.jobId });
   });
   if (progress.jobId) button.dataset.jobId = progress.jobId;
   button.dataset.trainingProgress = progress.unitKind;
+  button.dataset.trainingState = progress.status;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
   const tooltip = unitTooltip(progress.unitKind, undefined, i18n, currentPlayerState()?.race);
   applyTooltip(button, {
     ...tooltip,
     title: `${label} · ${t("hud.cancelTraining")}`,
+    body: hint ?? tooltip.body,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${percent}%`);
@@ -3197,7 +3200,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
     <span class="research-progress-text"></span>
   `;
   drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
-  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? `${percent}%` : t("hud.productionQueueBadge");
+  button.querySelector(".research-progress-text")!.textContent = badge;
   return button;
 }
 

@@ -120,22 +120,32 @@ export function paintCorpse(b:Brush,kind:UnitKind,options:CorpsePresentation={})
   line(b,[[-26,-1],[-31,3],[-35,2]],INK,1.4);
   b.save();b.translate(-5,-4);b.scale(.72,.72);fallenPerson(b,kind,options);b.restore();
  }else if(bearing==='beast'){
-  const shape=creatures[kind]?.shape,spider=shape==='spider',dragon=shape==='dragon';
+  const shape=creatures[kind]?.shape,spider=shape==='spider',dragon=shape==='dragon',turtle=shape==='turtle';
+  if(turtle){
+   // Far folded limbs precede the shell; near limbs stay beneath its rim.
+   // Four roots remain identifiable without flattening the living stance.
+   limb(b,[[-12,-3],[-23,-6],[-27,-2]],1.5);
+   limb(b,[[6,-4],[13,-10],[20,-8]],1.5);
+  }
   sketch(b,[[-19,-2],[-12,-8],[4,-7],[15,-1],[11,6],[-5,8],[-17,4]],options.cloth??DARK);
   if(spider){
    for(const side of [-1,1])for(let i=0;i<4;i++)limb(b,[[-11+i*7,side*3],[-17+i*9,side*9],[-8+i*6,side*6]],1.1);
   }else{
-   sketch(b,[[12,-3],[21,-5],[26,-1],[23,3],[13,4]],WASH);
+   if(dragon)sketch(b,[[12,-3],[18,-7],[24,-4],[29,-1],[27,1],[20,2],[13,4]],WASH);
+   else if(turtle)sketch(b,[[12,-3],[18,-7],[24,-4],[28,0],[24,2],[18,3],[13,4]],WASH);
+   else sketch(b,[[12,-3],[21,-5],[26,-1],[23,3],[13,4]],WASH);
    for(const x of [-12,4])limb(b,[[x,4],[x+6,10],[x+11,9]],2);
    if(dragon){
     // Folded fingered wing and a long taper preserve the living dragon's identity.
     sketch(b,[[-14,-2],[-28,-17],[-22,-16],[-11,-10],[-7,-14],[0,-9],[7,-12],[12,1]],'#95927e');
     for(const tip of [[-22,-16],[-7,-14],[7,-12]])line(b,[[-14,-2],tip],LIGHT,.6);
     sketch(b,[[-16,3],[-29,2],[-38,6],[-48,4],[-39,9],[-26,8],[-15,6]],DARK);
-    sketch(b,[[20,-3],[18,-8],[23,-4]],LIGHT);
+    sketch(b,[[18,-5],[14,-11],[9,-13],[15,-8],[20,-4]],LIGHT);
+    sketch(b,[[21,-5],[20,-11],[16,-15],[21,-11],[24,-4]],LIGHT);
+    line(b,[[19,0],[27,0]],INK,.6);
    }
    if(kind==='ancientStag')for(const d of [0,4])line(b,[[20,-4],[16+d,-12],[13+d,-15],[18+d,-13],[21+d,-15]],INK,.9);
-   if(shape==='turtle'){
+   if(turtle){
     sketch(b,[[-19,-2],[-12,-9],[3,-8],[13,-2],[5,4],[-10,5]],'#9c9985');
     line(b,[[-12,-5],[-4,-2],[-2,3]],INK,.55);line(b,[[-4,-2],[4,-6]],INK,.55);
    }

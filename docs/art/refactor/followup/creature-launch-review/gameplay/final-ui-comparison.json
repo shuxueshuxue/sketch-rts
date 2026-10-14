@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "currentSourceHashes": {
+    "src/client/main.ts": "d450a40b13a70b4449ca08e882a382800287d416b42d7ce983663e5938a5f43f",
+    "src/client/i18n.ts": "a36d04c43381cd0d96bc5ef651413247c2f9d6cd91b206e99ce20f1851e372cd",
+    "src/client/training-queue.ts": "06d38198cf6fa827301e308b2d14058e0059daf1665e2935f723ee759fb10065",
+    "src/client/battle-hud.css": "6ae2bbba0c41472f4dba04779aecaf4bb59c2c3ba3dd8030473f0322cfd7e0dc",
+    "src/client/world-renderer.ts": "36c4e9c7de9492b4863deb7ba24783996cf18a079f12a6b421ec24fb95abf3db",
+    "src/client/art/creature-painters.ts": "ccf6ff8b7053ed240ac45f4c39176d459acd55a0f5ff4aafa81c408c0752c154",
+    "src/client/art/corpses.ts": "0f9ba3bd193c50e49e35dac8a4597d88c65c78d9a1c96c4ce2a2aa933a39eab2"
+  },
+  "earlierCreatureActorSourcesUnchanged": [
+    "src/client/art/creature-painters.ts",
+    "src/client/art/corpses.ts",
+    "src/client/world3d/world-layer.ts",
+    "src/client/unit-animation.ts"
+  ],
+  "blockedSnapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+  "clearedSnapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+  "cancelCallbacksIdentical": true,
+  "worldAnnotationChecks": [
+    {
+      "locale": "zh",
+      "state": "blocked",
+      "png": {
+        "file": "world-blocked-zh.png",
+        "sha256": "0ad28d0ecd0ec100eb81bb8309ebb3dfc029b5fc248986ec74dcd8c77b3e771d"
+      },
+      "text": [
+        {
+          "text": "\u8fd0\u8f93\u8239 x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "\u5f85\u4e0b\u6c34",
+          "x": 177,
+          "y": 438.8,
+          "ink": "#9a6a28"
+        }
+      ]
+    },
+    {
+      "locale": "zh",
+      "state": "cleared",
+      "png": {
+        "file": "world-cleared-zh.png",
+        "sha256": "e5f9be840d20fe480c31b87c52d0a673900d20cec6a3bc42e1245e66b1a294a5"
+      },
+      "text": [
+        {
+          "text": "\u8fd0\u8f93\u8239",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ]
+    },
+    {
+      "locale": "en",
+      "state": "blocked",
+      "png": {
+        "file": "world-blocked-en.png",
+        "sha256": "2394883cea0f562d439c444cf61eb668a40542d90007e05afdce0e617fdaa191"
+      },
+      "text": [
+        {
+          "text": "Transport x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "Awaiting launch",
+          "x": 177,
+          "y": 438.8,
+          "ink": "#9a6a28"
+        }
+      ]
+    },
+    {
+      "locale": "en",
+      "state": "cleared",
+      "png": {
+        "file": "world-cleared-en.png",
+        "sha256": "19f0fc0068c4b26fff7539be03b8869e58c978a1d153a82ad8b349b7b5fa44b0"
+      },
+      "text": [
+        {
+          "text": "Transport",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Full world screenshots use production Canvas fallback, not WebGL.",
+    "Original map decorative trees overlap the small yard annotation; text command presence proves state transition but does not establish unobstructed readability.",
+    "Earlier 40-frame creature WebGL evidence does not exercise the final yard overlay; actor source hashes remain identical."
+  ]
+}
