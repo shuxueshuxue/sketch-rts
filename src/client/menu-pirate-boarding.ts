@@ -8,7 +8,7 @@ import type { UnitModel, PropPainter } from '../story/cast';
 import type { UnitActionCue, PropView } from '../story/stage';
 import { storyFigure } from './art/story-rig';
 import { ellipse, line, polygon, type Point } from './art/kit';
-import { projectWorld } from './world3d/projection';
+import { projectWorld } from './world-projection';
 import { drawWarfareEffect } from './warfare-effects';
 import { cast, stage, terrainOf, type MenuSceneRun } from './menu-scene-world';
 
