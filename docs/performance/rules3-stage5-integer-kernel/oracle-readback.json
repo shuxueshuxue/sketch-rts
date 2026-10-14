@@ -1,0 +1,27 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "context": "fresh",
+      "decodedBytes": 13478984,
+      "segments": 36,
+      "decodedSha256": "18d12c8ed849b5fa35eae2ff52fd68239d354cb7e0621e6283d6032cc75658f5",
+      "allSegmentsExact": true
+    },
+    {
+      "context": "warm",
+      "decodedBytes": 13478984,
+      "segments": 36,
+      "decodedSha256": "18d12c8ed849b5fa35eae2ff52fd68239d354cb7e0621e6283d6032cc75658f5",
+      "allSegmentsExact": true
+    }
+  ],
+  "decodedBytes": 26957968,
+  "rawFilesWritten": false,
+  "largestReadChunkBytes": 1048576,
+  "execution": {
+    "startedAt": "2026-10-14T23:49:55.306969+00:00",
+    "endedAt": "2026-10-14T23:49:55.376332+00:00",
+    "wallSeconds": 0.06937457900494337
+  }
+}

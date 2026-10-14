@@ -1,0 +1,37 @@
+{
+  "complete": true,
+  "manifests": [
+    {
+      "manifest": "/workspace/whole-integer-kernel-feasibility-v1/EVIDENCE-MANIFEST.json",
+      "payloads": 39,
+      "allFullOriginalPayloadShaExact": true
+    },
+    {
+      "manifest": "/workspace/whole-integer-kernel-v2-tools/EVIDENCE-MANIFEST.json",
+      "payloads": 63,
+      "allFullOriginalPayloadShaExact": true
+    },
+    {
+      "manifest": "/workspace/whole-integer-kernel-v2-micro/EVIDENCE-MANIFEST.json",
+      "payloads": 34,
+      "allFullOriginalPayloadShaExact": true
+    },
+    {
+      "manifest": "/workspace/whole-performance-diagnostics-v12/closure-pins.json",
+      "payloads": 49,
+      "allFullOriginalPayloadShaExact": true
+    },
+    {
+      "manifest": "v11 closed original manifest",
+      "payloads": 54,
+      "allFullOriginalPayloadShaExact": true
+    }
+  ],
+  "candidateSnapshotFiles": 12,
+  "productionBinaryBytes": 684,
+  "execution": {
+    "startedAt": "2026-10-14T23:48:12.481970+00:00",
+    "endedAt": "2026-10-14T23:48:13.736686+00:00",
+    "wallSeconds": 1.2547244130109902
+  }
+}

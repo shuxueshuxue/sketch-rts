@@ -1,0 +1,208 @@
+{
+  "complete": true,
+  "closedUtc": "2026-10-14T23:51:59.960985+00:00",
+  "totals": {
+    "sourceFiles": 494,
+    "uniquePayloads": 357,
+    "aliases": 137,
+    "originalBytes": 63188059,
+    "storedBytes": 18587411
+  },
+  "budgetBytes": 19000000,
+  "initialBudgetDryRun": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage5-integer-archive-tools/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage5-integer-kernel",
+      "--inputs",
+      "/workspace/whole-stage5-integer-archive-tools/inputs.json",
+      "--dry-run"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:42:53.597572+00:00",
+    "endedAt": "2026-10-14T23:42:55.022220+00:00",
+    "wallSeconds": 1.424655384995276,
+    "exitCode": 0,
+    "childUserSeconds": 1.33997,
+    "childSystemSeconds": 0.08427699999999999,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/measure-compression-01.stdout.log",
+      "bytes": 176,
+      "sha256": "362be4210741667448043360c5461252fda24afc68a8f15e761a396d35f5c13b"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/measure-compression-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "initialBudgetExceededPreserved": true,
+  "allowedCompleteArchiveCreation": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage5-integer-archive-tools/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage5-integer-kernel",
+      "--inputs",
+      "/workspace/whole-stage5-integer-archive-tools/inputs.json",
+      "--budget",
+      "19000000"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:44:54.892766+00:00",
+    "endedAt": "2026-10-14T23:44:56.371609+00:00",
+    "wallSeconds": 1.4788562860048842,
+    "exitCode": 0,
+    "childUserSeconds": 1.353862,
+    "childSystemSeconds": 0.12446199999999999,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/compress-01.stdout.log",
+      "bytes": 176,
+      "sha256": "cf7dd4b30483ae8fb895f96380f1193ded9841fef85e5d8076d7fdd5f0128b09"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/compress-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "portableGitSourceAndAllLocalManifests": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage5-integer-kernel/analyze-native.py"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:48:12.460787+00:00",
+    "endedAt": "2026-10-14T23:48:13.848563+00:00",
+    "wallSeconds": 1.387785522005288,
+    "exitCode": 0,
+    "childUserSeconds": 1.3113249999999999,
+    "childSystemSeconds": 0.07602799999999998,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/analyze-01.stdout.log",
+      "bytes": 962,
+      "sha256": "e2aa2d0aaa3e4e53b7a62c4a037a08702d29fae89d7df249b54323bf2d361062"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/analyze-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "aliasAndPathGuardCases": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage5-integer-archive-tools/test-alias-and-path-guards.py"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:49:16.522328+00:00",
+    "endedAt": "2026-10-14T23:49:16.557069+00:00",
+    "wallSeconds": 0.03474379697581753,
+    "exitCode": 0,
+    "childUserSeconds": 0.034513999999999996,
+    "childSystemSeconds": 0.0,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/alias-path-guards-01.stdout.log",
+      "bytes": 576,
+      "sha256": "1539d7a53c6d85a5c6672db4a4fd436f89061b237c92e1d9dc2852a6e832df7b"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/alias-path-guards-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "full27MBOracleStreamRead": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/whole-stage5-integer-archive-tools/read-oracles.py"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:49:55.286880+00:00",
+    "endedAt": "2026-10-14T23:49:55.381635+00:00",
+    "wallSeconds": 0.09475853401818313,
+    "exitCode": 0,
+    "childUserSeconds": 0.082504,
+    "childSystemSeconds": 0.011923999999999999,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/oracle-readback-01.stdout.log",
+      "bytes": 611,
+      "sha256": "f5ab5f3b3a3c7f9eeb5996448fd298f41d288f5c84f23b501fb3e72371b03dc0"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/oracle-readback-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "wholeFullByteOriginalComparisonPreSdk": {
+    "schema": 1,
+    "argv": [
+      "python3",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage5-integer-kernel/verify.py",
+      "--out",
+      "/workspace/sketch-rts-production-init-fix/docs/performance/rules3-stage5-integer-kernel",
+      "--verify",
+      "--compare-originals"
+    ],
+    "cwd": "/workspace/whole-stage5-integer-archive-tools",
+    "startedAt": "2026-10-14T23:49:56.361687+00:00",
+    "endedAt": "2026-10-14T23:49:56.777185+00:00",
+    "wallSeconds": 0.415508106991183,
+    "exitCode": 0,
+    "childUserSeconds": 0.376098,
+    "childSystemSeconds": 0.038877999999999996,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/verify-pre-sdk-01.stdout.log",
+      "bytes": 173,
+      "sha256": "51ddb644bf79017be597d85125e9c7f1b0c03b0faab94cfff13b445bc3ed77aa"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/verify-pre-sdk-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdk": {
+    "schema": 1,
+    "argv": [
+      "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+      "--run",
+      "src/sdk/package-boundaries.test.ts",
+      "scripts/production-client-bootstrap.test.ts",
+      "scripts/sdk-agent-driver-boundary.test.ts",
+      "scripts/sdk-agent-planner-boundary.test.ts"
+    ],
+    "cwd": "/workspace/sketch-rts-production-init-fix",
+    "startedAt": "2026-10-14T23:50:20.924059+00:00",
+    "endedAt": "2026-10-14T23:50:53.050978+00:00",
+    "wallSeconds": 32.126926024997374,
+    "exitCode": 0,
+    "childUserSeconds": 31.128125999999998,
+    "childSystemSeconds": 2.4347659999999998,
+    "stdout": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/final-sdk-01.stdout.log",
+      "bytes": 588,
+      "sha256": "d55241371938b3485e70317d78ad796ea98d086c596e456dfb430bd7ef981dfb"
+    },
+    "stderr": {
+      "path": "/workspace/whole-stage5-integer-archive-tools/final-sdk-01.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sdkScope": "Complete existing evidence branchc548 code49 plus new stage5 docs/archive; SDK boundary/bootstrap tests, not a new candidate48e/production618 build, benchmark or remote SDK upload.",
+  "originalManifestsNotRewritten": true,
+  "oldC548AndAllPriorClosedDirectoriesUntouched": true,
+  "candidateNotAdoptedOrPublished": true,
+  "v12ActualCompletedEvidenceIncluded": true,
+  "onlyCompleteByteEqualPayloadsDeduplicated": true,
+  "noRawSourceTreeOrDecodedOracleFilesCopied": true,
+  "metadataCorrectionScope": "Stale integer stats limitations and legacy actual241 fieldname corrected separately, original files untouched. Light manifest reader scalar/list TypeError disclosed in independent original preparation note."
+}

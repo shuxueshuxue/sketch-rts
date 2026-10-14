@@ -1,0 +1,88 @@
+{
+  "complete": true,
+  "closedUtc": "2026-10-14T23:51:59.960985+00:00",
+  "totals": {
+    "sourceFiles": 494,
+    "uniquePayloads": 357,
+    "aliases": 137,
+    "originalBytes": 63188059,
+    "storedBytes": 18587411
+  },
+  "budgetBytes": 19000000,
+  "canonicalAndAliasOriginalFullBytesVerified": true,
+  "nativeCommandLogs": 9,
+  "commandBytesPerLog": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "checksum": "7d94a5e8",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "sourceCounts": [
+    241,
+    243,
+    243,
+    241,
+    243,
+    241,
+    241,
+    241,
+    243
+  ],
+  "sourceBlobComparisons": 2177,
+  "offlineGitCommitAndTreeObjectsAuthenticateAllSourceBytes": true,
+  "unpublishedCandidateCommitNotRequiredInLocalGit": true,
+  "candidateSourceFiles": 12,
+  "productionWasmBytes": 684,
+  "localOriginalManifestPayloads": [
+    39,
+    63,
+    34,
+    54,
+    49
+  ],
+  "decodedOracleBytes": 26957968,
+  "rawOracleFilesWritten": false,
+  "sdk": {
+    "filesPassed": 4,
+    "testsPassed": 14,
+    "exitCode": 0,
+    "execution": {
+      "schema": 1,
+      "argv": [
+        "/workspace/sketch-rts-production-init-fix/node_modules/.bin/vitest",
+        "--run",
+        "src/sdk/package-boundaries.test.ts",
+        "scripts/production-client-bootstrap.test.ts",
+        "scripts/sdk-agent-driver-boundary.test.ts",
+        "scripts/sdk-agent-planner-boundary.test.ts"
+      ],
+      "cwd": "/workspace/sketch-rts-production-init-fix",
+      "startedAt": "2026-10-14T23:50:20.924059+00:00",
+      "endedAt": "2026-10-14T23:50:53.050978+00:00",
+      "wallSeconds": 32.126926024997374,
+      "exitCode": 0,
+      "childUserSeconds": 31.128125999999998,
+      "childSystemSeconds": 2.4347659999999998,
+      "stdout": {
+        "path": "/workspace/whole-stage5-integer-archive-tools/final-sdk-01.stdout.log",
+        "bytes": 588,
+        "sha256": "d55241371938b3485e70317d78ad796ea98d086c596e456dfb430bd7ef981dfb"
+      },
+      "stderr": {
+        "path": "/workspace/whole-stage5-integer-archive-tools/final-sdk-01.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "scope": "Complete existing evidence branchc548 code49 plus new stage5 docs/archive; SDK boundary/bootstrap tests, not a new candidate48e/production618 build, benchmark or remote SDK upload."
+  },
+  "allFormalAndDiagnosticGoalsFailed": true,
+  "candidateAdopted": false,
+  "formalPooledRegressionPercent": 2.8499178493215944,
+  "pairedRegressionPercent": [
+    2.9209001252530915,
+    2.7793969145995834
+  ],
+  "v12OnlyLocalDifferentEpochNetGrowDeltaMs": 35.21537,
+  "v11GuaranteedErrorBound": null,
+  "historicalFailuresAndAllOutliersPreserved": true
+}
