@@ -63,4 +63,8 @@ node tools/browser/verify-startup.mjs perf \
 
 森林的最终有效组使用 `tools/browser/verify-startup-phase-v2.mjs`（具体记录工具名见native/woods-phase20/proof.json）与 `--start-age 20 --scene woods`。工具拒绝覆盖已有输出。目录中的 inputs/proof/executed-source 和 raw gzip 保留实际执行字节、参数、runtime、原生时钟与source SHA；绝对工作区路径只是采集时的位置。
 
-先前所有失败日志保留，不把工具导入或输入fixture错误算作运行时实现失败；撤销的crop hint则是已证明的实际像素差异。原始采集文件不修改；文档和清单单独生成。
+先前所有失败日志保留，不把工具导入或输入fixture错误算作运行时实现失败；撤销的crop hint则是已证明的实际像素差异。原始采集字节不修改；文档和清单单独生成。
+
+PR #375 首次 CI 的14个正式测试文件、202项检查全部通过，但 Vitest 的路径匹配额外收集了证据目录中的历史 hud-model 测试副本；副本配置引用采集机的绝对路径，在 runner 上无法解析，导致一个额外套件失败。这是本分支的归档集成错误，不是无关基线失败。现在将79个归档测试输入以 gzip 保存，逐一验证解压后的原字节与首次清单一致；正式测试、检查配置和断言均未修改。按原 CI 命令在本地重跑，恰好收集14个正式文件，202项全部通过。原 CI 日志、首次完整清单及转换映射保存在 [CI 归档修正](validation/ci/archive-discovery-correction.json)。还原这些输入时请使用独立目录，避免把历史副本作为当前测试收集。首次清单与本报告的旧字节可由该清单对应的 Git 提交恢复，旧报告也另外压缩保留。
+
+从仓库根目录执行 `python3 docs/validation/homepage-scenes/tools/verify-evidence.py` 可验证当前完整清单、79个压缩输入的原字节，以及首次855项清单的全部历史证据。

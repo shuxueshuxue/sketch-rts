@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-10-14T12:01:23.462341+00:00",
+  "generatedUtc": "2026-10-14T12:16:03.788509+00:00",
   "baseCommit": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
   "artCheckpoint": "a13878465d7de94311476c7c591b18fc3a39bcc4",
   "branch": "art/homepage-pirate-boarding",
@@ -14,8 +14,8 @@
   "files": [
     {
       "path": "docs/validation/homepage-scenes/README.zh.md",
-      "bytes": 8589,
-      "sha256": "ca21c71173632e5407f0c452808be299560d80f2fbe2d66c93c6c90faa19978b"
+      "bytes": 9712,
+      "sha256": "0fda60f85c9ee3734a46b1da5d6283a5ea0064d6a6993cd87d8e9e4e7c228853"
     },
     {
       "path": "docs/validation/homepage-scenes/analysis/analyze-homepage-final-native.py",
@@ -2003,6 +2003,11 @@
       "sha256": "258e342ad5c79cd05d89522acd7b8c719772c6f6eeca3e1ec11d829541ed8ecf"
     },
     {
+      "path": "docs/validation/homepage-scenes/tools/verify-evidence.py",
+      "bytes": 2272,
+      "sha256": "42776b6419ee637439780ddde98e0283c37a4273d7f84b59bc734bf5ccf2f8aa"
+    },
+    {
       "path": "docs/validation/homepage-scenes/validation/archive-history/homepage-pirate-prewarm-final-visual.log",
       "bytes": 7153,
       "sha256": "b9721e65a41354930d924dc435a73efa8f42966bd431b633583f10558721aa62"
@@ -2016,6 +2021,41 @@
       "path": "docs/validation/homepage-scenes/validation/before-media-closure-final-homepage-final-demo-delivery.json",
       "bytes": 2734,
       "sha256": "d1910ec54e42819520b4b39936a8ae293624902b3fad3a3ac4f3e86f6cace5a4"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/archive-discovery-correction.json",
+      "bytes": 38674,
+      "sha256": "057eaa6da6aa92d1cc3036338894027efa93c8e8577e4400188bc8ad198c76e9"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/attempt1-README.zh.md.gz",
+      "bytes": 4903,
+      "sha256": "c2082f36fa8de54af443e2da7ec85f512cf360ab4f80af9e698ae479e10cdd70"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/attempt1-job.log.gz",
+      "bytes": 8316,
+      "sha256": "f3f3b3f52e1b237cab2e151044491bc5107bc486aafe5d228ba2641fa973ceb8"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/attempt1-manifest.json.gz",
+      "bytes": 34969,
+      "sha256": "af2c5446eb6d59a5e94087921288b28feba4379224a7eb6f84f36b49cb705b7a"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/final-archive-sdk.log.gz",
+      "bytes": 401,
+      "sha256": "b5fc5a3496147cf0fb48759ca35fd9dc60f4867ef9fbd14a9a5ba6264a84a44b"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/first-group-corrected.log.gz",
+      "bytes": 1298,
+      "sha256": "e6e422e410286f7de3c7f6a72745213b3fc4a28eb4821eb2446fae7fb7b4be69"
+    },
+    {
+      "path": "docs/validation/homepage-scenes/validation/ci/published-links-verified.json",
+      "bytes": 1441,
+      "sha256": "5d55e4db4f4457c517307a92a584743f940f77da959767d79671b14db4979ca3"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/final-command-ledger.json",
@@ -2093,9 +2133,9 @@
       "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-effects.test.ts",
-      "bytes": 9430,
-      "sha256": "77b15fb16a210769875a19ff93813d05a5490c75b6a6f1b3f654192bfe8b7d5c"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-effects.test.ts.gz",
+      "bytes": 2642,
+      "sha256": "4a0115c89086b65a3acf3370caaf41e96349b4c6283e7aa13429712dd4634d2c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-effects.ts",
@@ -2103,9 +2143,9 @@
       "sha256": "7e6551116d38af1eafc264939b107e0a498ab780f95fbe1595b2dda9ecd3c97b"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-icons.test.ts",
-      "bytes": 4102,
-      "sha256": "74494eb899dffa0f6748b5cc98591a10b60f8c4396fecee5cc1c99ac72fa45ab"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-icons.test.ts.gz",
+      "bytes": 1592,
+      "sha256": "389333a049c85436f37ae3a39b988bdb1d3d7ecab449a920f6e8e63da5791708"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-icons.ts",
@@ -2113,9 +2153,9 @@
       "sha256": "338adbbd5ee777377f8fd689c16e457735a11fe63c228f8825386ffad924139f"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-targeting.test.ts",
-      "bytes": 10237,
-      "sha256": "3669eb0b3c6d1ca2ac63ad6e5fdda9241d72f9b98a5a5abc16878aa9b955ddaf"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-targeting.test.ts.gz",
+      "bytes": 2729,
+      "sha256": "1d359f4345203aab674df3974699016129b94831b589b0edc11a6d05bc791d87"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ability-targeting.ts",
@@ -2123,14 +2163,14 @@
       "sha256": "d64186a8ea8a7c2e38a280627ed95a8cfbd76f71efad73e92bb195c4525bf61d"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/appearance-integration.test.ts",
-      "bytes": 3478,
-      "sha256": "96276342f47a0832a2cdf65732d1e822b8e6ebdd196926d844515764991409ac"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/appearance-integration.test.ts.gz",
+      "bytes": 1224,
+      "sha256": "c044f0336f734c05430298120b1a015eb4d2ef131592ad29570cde0a7207b017"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/atlas-art.test.ts",
-      "bytes": 12558,
-      "sha256": "2683e1eedbd522fc769bcc9c71f88dbc358b0ba07f8d04ee0ffc09ddf0b621ec"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/atlas-art.test.ts.gz",
+      "bytes": 3439,
+      "sha256": "b814b717ec09a9b7a60768128d67935653d8aadaa4ffaec6ae2b328ff6c491fc"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/atlas-art.ts",
@@ -2138,9 +2178,9 @@
       "sha256": "fc530e5fef4559cd5874ce43078154c3d0c0ef87058b62a06f82d7d529f43d0d"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/autocast-ring.test.ts",
-      "bytes": 2663,
-      "sha256": "1546108b7c38e490e2d982080110fec13463c3e7c0542e9c3b73feecccbf7536"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/autocast-ring.test.ts.gz",
+      "bytes": 997,
+      "sha256": "7d7224a81d76397a7f3b3a0cf7b31142d86522f5044dada0ec98b28c04faeb03"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/battle-hud.css",
@@ -2153,9 +2193,9 @@
       "sha256": "60c98698687d47993d7a411f601c97dda30490824b6942583b394891fb97dea7"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/blood-contact.test.ts",
-      "bytes": 13064,
-      "sha256": "cb5b13c31dd682e2a4f26f98487ea494b7833ed18a520d0fc2c3d42768d2d9aa"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/blood-contact.test.ts.gz",
+      "bytes": 3595,
+      "sha256": "b21242c0609b5c0861cc9c0a77600251359a6cecec03f5c32ad00c916d972333"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/blood-contact.ts",
@@ -2168,9 +2208,9 @@
       "sha256": "9ae4d2b3d7a9554f83a4b0b77651faa054664007ec7975ae3e4008232c6f288d"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/build-placement-controls.test.ts",
-      "bytes": 3434,
-      "sha256": "1bbe982b4cff08f43497f35d039eb951f7cc936bb309651fb155505380fc6d46"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/build-placement-controls.test.ts.gz",
+      "bytes": 1026,
+      "sha256": "32d95a189d9afe0e7a9019e685d708b0f83a4b79c64fe794574a46309596fcdd"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/build-placement-controls.ts",
@@ -2178,9 +2218,9 @@
       "sha256": "e3d2d4bd98b87fd2deeebf7d3d4b883a9a8afc1c4d8bc70f7cbea221e829f34c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/building-glyphs.test.ts",
-      "bytes": 851,
-      "sha256": "95e79f45bc8050b4c9b16f20e569767575088db1937ad57091a56916bda0f52b"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/building-glyphs.test.ts.gz",
+      "bytes": 402,
+      "sha256": "946c963fe32e991bffc1cc56044ef0a7a9fae33bd22f2c6418d734c339408aa1"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/building-glyphs.ts",
@@ -2188,9 +2228,9 @@
       "sha256": "5ffa74c3be5da6b2374ead0ffb7cca98aa436b414888142271b481c2962c889a"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/cabin-controls.test.ts",
-      "bytes": 7995,
-      "sha256": "d5c4d2f3bd088bd4a628df6c00ec8d8a645402b72ac42692fc274cfebbcc27eb"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/cabin-controls.test.ts.gz",
+      "bytes": 2304,
+      "sha256": "c95d3e9e390a12a3bbd80b469a399118953d5498c3384d0011ec0bb6c2bb66d1"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/cabin-controls.ts",
@@ -2198,9 +2238,9 @@
       "sha256": "0bb30cec3d511dfecfbb7aabe05f76123de02404b3b52f4842db7d9e350287a0"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/charge-targeting.test.ts",
-      "bytes": 2557,
-      "sha256": "4909ad44dc0cd31c0f85014f2fb4a016ef177bfd7414d06fc50401ba600a406b"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/charge-targeting.test.ts.gz",
+      "bytes": 952,
+      "sha256": "e239775d2263eb6927c3c784aae4bc0fc66b75ea749989ee8896a9db33acf219"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/charge-targeting.ts",
@@ -2208,9 +2248,9 @@
       "sha256": "2326e1114b0b37e7222398b7f886374b422791ed6c3dbdf4cc62847656839d16"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/chat-controller.test.ts",
-      "bytes": 1675,
-      "sha256": "1e9c5e8c526e378e65b3d4325b8c7d06e2acc6dc471556c72d83f122ffb63d2e"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/chat-controller.test.ts.gz",
+      "bytes": 554,
+      "sha256": "4d7741739bcdab28f900671315798d859de4d70f1ff30ab3c3e1b20e195b62b7"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/chat-controller.ts",
@@ -2218,9 +2258,9 @@
       "sha256": "96816fa8e06966fd7229f9192007da3f86139f386002008fa1fd931cf2804229"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-presentation.test.ts",
-      "bytes": 18226,
-      "sha256": "435e38dbdd787958b8c15ceced6084d5569a859c5c6b4677a319109b66dfae90"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-presentation.test.ts.gz",
+      "bytes": 4484,
+      "sha256": "c7e9a9392c5d193dc96bb2be9e223d1ecc47312526ddb67b864ae8d0647581dc"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-presentation.ts",
@@ -2228,9 +2268,9 @@
       "sha256": "5fb5e3972e7585f9349d904bd6b1b930b53d21ed18c137e6442df6aa95acb2b2"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-surfaces.test.ts",
-      "bytes": 1426,
-      "sha256": "3268b12895bb760bc8276995e830bc43f0bfd355dfb5b6270d138c9d85900f1f"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-surfaces.test.ts.gz",
+      "bytes": 632,
+      "sha256": "ab1109a79ca3edcd3d9c92ac0d519653f615e20d6d670da8be0dfcaf7618007e"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/combat-surfaces.ts",
@@ -2238,9 +2278,9 @@
       "sha256": "0ea1e285b94c5ca31ba4a4dd82245e17088e49e9e63b7b62fe8be2aa371fbc3a"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-button-state.test.ts",
-      "bytes": 9746,
-      "sha256": "0b072004f28ec5a9f9ff64d7de7d39a146627bf7b27e615536062e6bf1e95e25"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-button-state.test.ts.gz",
+      "bytes": 2504,
+      "sha256": "6bf79d43f5449aa0d0494548d37a7e4a5b73f7401a6f727efa76600f6783c826"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-button-state.ts",
@@ -2248,9 +2288,9 @@
       "sha256": "5ce06e4a0fedd0d37b407670666530d8cc7a841a7619e17d743bfdc3924ce9db"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-feedback.integration.test.ts",
-      "bytes": 7623,
-      "sha256": "908555cc99176ed1fac365bc18a28e9d516fc82440641d6374ddb2d5119556c5"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-feedback.integration.test.ts.gz",
+      "bytes": 2124,
+      "sha256": "873835f8d2734aa15ba313597ac34ef28c7e76083ef51190423b0e6f1d7cc733"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/command-feedback.ts",
@@ -2263,9 +2303,9 @@
       "sha256": "154c223174cc8fc90ade24443f0ae7c1c4cbd2ec8b25744826598b2852072152"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/control-groups.test.ts",
-      "bytes": 2226,
-      "sha256": "63581932eadfdc94d1069a99d21bb93c5bf6816a13fb2a4337059d25b6098e5d"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/control-groups.test.ts.gz",
+      "bytes": 643,
+      "sha256": "08944718d498fdd6eac2356808f399d157105fcd1fe0df03d731a6d43d49ab6c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/control-groups.ts",
@@ -2273,9 +2313,9 @@
       "sha256": "2e04ab9b8ad5b2cdced85cfc337b1c1c3de73600339d53356c5a62501a311039"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/debug-view.test.ts",
-      "bytes": 1499,
-      "sha256": "ea8753a72321b9ca427724338c1aff9c859223ab5834452b196524c3fc5d9f6b"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/debug-view.test.ts.gz",
+      "bytes": 551,
+      "sha256": "c95fd8150acb7bcdc60c4f6b0aeeb3d543aed6ed18f8d696aae659f5827f2b00"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/debug-view.ts",
@@ -2283,9 +2323,9 @@
       "sha256": "b68adcbee9adf10add74ecc1b11641fdf00559b08da09b54877899cd690a7a9c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-plan-projection.test.ts",
-      "bytes": 1152,
-      "sha256": "3081b1b0a8a163172379bc9e8fbf04ca036897d1a0bb977dece8d1a097ded103"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-plan-projection.test.ts.gz",
+      "bytes": 519,
+      "sha256": "be9e6c507e2095af865e3df186bd2413448301e27146de2a4ee31a92f8ae41da"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-plan-projection.ts",
@@ -2293,9 +2333,9 @@
       "sha256": "333117842bb2453a5c397e8cb3d7b32ae5a5c6981c194671b3c2de4085a204f6"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-remains.test.ts",
-      "bytes": 2261,
-      "sha256": "f47c65d5d38d4f01913209bb642bdf50e5566f83bc236e3b62e967832eb0dfd7"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-remains.test.ts.gz",
+      "bytes": 879,
+      "sha256": "084e7806fb2a9a19512efc3163ba30b55e1a4824ae86f3a8df53b56b5ce5f24c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/deck-remains.ts",
@@ -2303,9 +2343,9 @@
       "sha256": "994c5b2ba800ec4813d1b1f435420751a415e104111c409ae5bfcdc17a7171d3"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/edge-scroll.test.ts",
-      "bytes": 1590,
-      "sha256": "5e6e459532f365ccf7dca0727b6f1c31e4b49ba199f559b29616c0013de36301"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/edge-scroll.test.ts.gz",
+      "bytes": 418,
+      "sha256": "d2dd36a7b883d58bc7914f84ad89589fb4546782773cac29cc24a3109e0f3605"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/edge-scroll.ts",
@@ -2313,9 +2353,9 @@
       "sha256": "b74f7aac6f668f9faba821d518d153647b538c6f23e15ffad740f7176dd464ab"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/effect-renderer.test.ts",
-      "bytes": 12865,
-      "sha256": "d7ed23adf11b48989c2bff191f9ad4e1d9b579da06c589c8e9ae501a353ec561"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/effect-renderer.test.ts.gz",
+      "bytes": 4034,
+      "sha256": "5fd76c71f851214398edc735ac5fb8f4b1c91d365445a592adf99eb85544c83b"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/effect-renderer.ts",
@@ -2333,9 +2373,9 @@
       "sha256": "4e327bd84254d8127866981f352ebe8a5fecc579da358ba2f8026692353ee99a"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/footprint-view.test.ts",
-      "bytes": 3637,
-      "sha256": "fa22a52e6a60864223066ac042c234756b96ce8037f443478878f49a4cdaf543"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/footprint-view.test.ts.gz",
+      "bytes": 1328,
+      "sha256": "7e3c7d9ebeb858212b1d960716540c670322ca133fc358ea62a5bb0556dda5f5"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/footprint-view.ts",
@@ -2343,9 +2383,9 @@
       "sha256": "d3a5c81d6650221497a4451d7027dd0fee150b6f99bc8eea16d58a61128a2b1d"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/format-mass.test.ts",
-      "bytes": 351,
-      "sha256": "2c827759501baa8a6bd715a2eee13cd485872b1354d00c77e84edaac569c9439"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/format-mass.test.ts.gz",
+      "bytes": 215,
+      "sha256": "848b045278f1bf5e33e9bab28c047257e50cce267f8807b2cbc4cb7c92f7cddb"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/format-mass.ts",
@@ -2353,9 +2393,9 @@
       "sha256": "04a26d072ad94326b0739b8ed9b379174360931ebb3e398982c258cd0edead63"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/frontend-world-view.test.ts",
-      "bytes": 4513,
-      "sha256": "7785ed8d32df4248243b072bd52f8b16673ead4bb3bd02ce73f3817a64c09815"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/frontend-world-view.test.ts.gz",
+      "bytes": 1592,
+      "sha256": "e4da878e0aa8a98dfd06728c70ef431360b5dd88c357a09d8512333e8ed7be6d"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/frontend-world-view.ts",
@@ -2363,9 +2403,9 @@
       "sha256": "bfb2748ea2f0a1319db4bc9e7f3b342765c65cfee75aa7b70dd5be7a6a0e568f"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/game-adapter.test.ts",
-      "bytes": 2997,
-      "sha256": "82d444a8237eb4077b19a88afdd9415103aa4cd21010c59705da042d2f1bba78"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/game-adapter.test.ts.gz",
+      "bytes": 1004,
+      "sha256": "76c57af87db17e97e4e62097f62c515dbd30c76481eab99f6acf64f423375010"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/game-adapter.ts",
@@ -2393,9 +2433,9 @@
       "sha256": "1cd22eaa5ef5f580c82b7e05d57a81d5b88ab7e693f6bd07a2e2449f02a5c395"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/glyphs.test.ts",
-      "bytes": 1065,
-      "sha256": "f585184aa76c8dd3e24592af8000f1a162a2cafa448748975b11f845af18612c"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/glyphs.test.ts.gz",
+      "bytes": 488,
+      "sha256": "4de6536a028bc431842ad771f170f8ce0feb397fd4696af9bc846ea50a64b9b8"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/glyphs.ts",
@@ -2403,9 +2443,9 @@
       "sha256": "4424881496aa74ff46f1f2cfd05e1223f85373e29b8d18bdb3c9f400ba84d634"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/health-bars.test.ts",
-      "bytes": 1868,
-      "sha256": "317ed378d8323f40baecc4a4ff1ab463770ecf42770ecd40dbb5eb87a3d659b3"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/health-bars.test.ts.gz",
+      "bytes": 714,
+      "sha256": "e908007dccd8f41d9ed159deebc7e97eef43653c8d89eac1564461299a197e9a"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/health-bars.ts",
@@ -2413,9 +2453,9 @@
       "sha256": "3adaca0e7983b95b53db722f2614b04625858cf1ae9323b86c97f2e59811329e"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/hud-model.test.ts",
-      "bytes": 7818,
-      "sha256": "44d095b5ab35578494a17f5161d0c046b332185a971073a5b60ae34add9d2699"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/hud-model.test.ts.gz",
+      "bytes": 2240,
+      "sha256": "9700fb5e563ed5cc45d145cc5c85646cf2c4e8e1b21add834ff7aa1bb82a74ff"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/hud-model.ts",
@@ -2423,14 +2463,14 @@
       "sha256": "95a39cf0ecf42de1ffd60c929e7d41ee8736ad5fcaf42b13d7378bd037cf6251"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/i18n-coverage.test.ts",
-      "bytes": 977,
-      "sha256": "c509ac2be5e6607fe2330f11dd5008d6d3bb0f37698bfcd215aa5c3ec285a9eb"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/i18n-coverage.test.ts.gz",
+      "bytes": 587,
+      "sha256": "e13b10ac8e1f546635a0377bc14f628ff111517a12cd38735ae1b2e5228b45f5"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/i18n.test.ts",
-      "bytes": 2016,
-      "sha256": "3e631888fbd3cbaf74329aff749c3722c92aaeae714bfd212b468949ff49326c"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/i18n.test.ts.gz",
+      "bytes": 708,
+      "sha256": "3cbc1ed9b29a3217134656fcbc0325c5b816e0420a55731ae5dc64045c93ec27"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/i18n.ts",
@@ -2438,9 +2478,9 @@
       "sha256": "a36d04c43381cd0d96bc5ef651413247c2f9d6cd91b206e99ce20f1851e372cd"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/item-controls.test.ts",
-      "bytes": 3206,
-      "sha256": "4a9ff94e3a5c77018a96d0963c9cb4653b16b087e571d80660e9beed81c26eb8"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/item-controls.test.ts.gz",
+      "bytes": 1074,
+      "sha256": "07a5689989a562bd08d0de77b3cc3cd4fa1213f418647b450bca81d84307da62"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/item-controls.ts",
@@ -2448,9 +2488,9 @@
       "sha256": "8e8092d4f96558edee47493d52274cab30c408f91db3b1b01c2ad285a98e588b"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/keybindings.test.ts",
-      "bytes": 2267,
-      "sha256": "470a05a250fc846312a31e7edb8024a7647fdb065de00fd2c2d55e66d875b307"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/keybindings.test.ts.gz",
+      "bytes": 667,
+      "sha256": "7aae00aaab56226aafb2b43df21c96c3ab2ec72cce9a6beb9edeb273d172f274"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/keybindings.ts",
@@ -2468,9 +2508,9 @@
       "sha256": "213b3073dd03a18804503a23a95603acb719250c6e63834a44fbfc612e863948"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/map-preview.test.ts",
-      "bytes": 7868,
-      "sha256": "ab5b6c3850d0471d7e44a0fad5711b8fdb52d9917f3e756f52372599b6a11838"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/map-preview.test.ts.gz",
+      "bytes": 2020,
+      "sha256": "e9567ea781b19c03676d9f4892c8985d9c50ae3f65411e38cac3194d495e65e9"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/map-preview.ts",
@@ -2483,9 +2523,9 @@
       "sha256": "e9349a63d58b3c3c3108922dfa4129e77c930e1e0b97d02368d706db2df28b5c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-capital-street.test.ts",
-      "bytes": 4714,
-      "sha256": "333378617a019fc2d36cb0a9b097a13ff4f3b6231b34b53597fd3abf09eadad2"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-capital-street.test.ts.gz",
+      "bytes": 1649,
+      "sha256": "b26b8e0fd64497ea90e860b30356adbf267fa3b98c865f2e53b9fb876f3db9a3"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-capital-street.ts",
@@ -2513,9 +2553,9 @@
       "sha256": "5374b0d2e5c06285d85d3d2eb9498652f5afcec243beef83f3d1eefd95ee1260"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-presentation.test.ts",
-      "bytes": 1832,
-      "sha256": "f74d4b977297bed26fdb642e2fc59997ec40b469ba0a3c567cf51d98b755c71f"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-presentation.test.ts.gz",
+      "bytes": 820,
+      "sha256": "1a52008a4d8d603a3167cef45430916f47c6bffbf88135b42faf87445c8415bd"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-scene-world.ts",
@@ -2523,9 +2563,9 @@
       "sha256": "2f5e14f33a31eddede1ead23b1b323e53bad20c4c50f062582f4c68c13eb5dd7"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-scenes.test.ts",
-      "bytes": 6565,
-      "sha256": "c277f912ff2b3210ffeb9b2d81d13fad8ae5057733aaea74489db0c331e05d65"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-scenes.test.ts.gz",
+      "bytes": 1972,
+      "sha256": "598ac3a52066d202a5c5a0c041e2824c38a9f60d14f0517c3e2fd741276265b3"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/menu-scenes.ts",
@@ -2538,9 +2578,9 @@
       "sha256": "7225b25a3b01fae53574528031ae35d4b33ee3af5e7c72bac40542a513dcc734"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-presentation-cache.test.ts",
-      "bytes": 5580,
-      "sha256": "76ed3df0ec651ddcefe58a482e5408c28cea7097e3e57f0088c30632450df264"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-presentation-cache.test.ts.gz",
+      "bytes": 1737,
+      "sha256": "4e0107d91c3e2e5c5692eca8cd51babdbd70af1612b9811330355c3da453eb5f"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-presentation-cache.ts",
@@ -2548,9 +2588,9 @@
       "sha256": "d97de39bdc67bba0560409f00dff1a5e0105bbe0e482d591db2fe45883056805"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-wind.test.ts",
-      "bytes": 7406,
-      "sha256": "e35a0a2da39466901b78651e7bbf25cf29432be7bc78e62f11063577d328d0e7"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-wind.test.ts.gz",
+      "bytes": 2293,
+      "sha256": "d44fa7d8968f3326a06c29bc2ab49ddf5049a9ce9b4b99d996c484c41760243e"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap-wind.ts",
@@ -2558,9 +2598,9 @@
       "sha256": "bdd45b556c1b7bb8199442ce9043ef14c481e3a04e4abb924542c599641e5f62"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap.test.ts",
-      "bytes": 1905,
-      "sha256": "6a1f21d38442173961073b79db83381784b76aa13962bd0e30073f87d9155fa2"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap.test.ts.gz",
+      "bytes": 635,
+      "sha256": "c4ee93eaa109c101e7d7277e440c93516b738d097f1f58d2ab5eef061beb0d6e"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/minimap.ts",
@@ -2573,14 +2613,14 @@
       "sha256": "c2c9639b1596c54b8a5d2e958e45f70492e046ba8b0b995cf9d62d9669668302"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/player-colors.test.ts",
-      "bytes": 1795,
-      "sha256": "06a91c20920b588c3440794b17be3e65a4720c0976a227ad1c4692572555a09c"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/player-colors.test.ts.gz",
+      "bytes": 782,
+      "sha256": "4f3a1eb70c2a035aa8ede0fdd5fde19e7ec39b30fd47902250c6ad192f53a1bd"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/player-name.test.ts",
-      "bytes": 916,
-      "sha256": "0e65201ae3790c1fce0859a3aedea4aada27c13ccd64fac6271f9ee5068fb2dd"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/player-name.test.ts.gz",
+      "bytes": 387,
+      "sha256": "421398eaea1294de138a18576415a2c8f9da03ba14dd36e2345b8bdc71006471"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/player-name.ts",
@@ -2588,9 +2628,9 @@
       "sha256": "0bd69233a5c96be3ca2ed69c35d1793ea25133690993f3f211dfb3dd10d73cae"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/pointer-lock.test.ts",
-      "bytes": 4953,
-      "sha256": "750d859603f10764f47385f985a77f7443f524b757c001be46af02193a16c1c9"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/pointer-lock.test.ts.gz",
+      "bytes": 1343,
+      "sha256": "b8c69f05029f238cad2a4d5f7b0322f2dc9f89241eb9bf95a6727174198bf57c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/pointer-lock.ts",
@@ -2598,9 +2638,9 @@
       "sha256": "2f9e486c341cd0ae9b48f2a7ea8b7a17eae74f48852a339e5018bfe64a0bfcb5"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/portrait-cache.test.ts",
-      "bytes": 2003,
-      "sha256": "7da287ccc7202e2f5e96d2a2a6d1fd693149820ad653a60acf1a55cb3d81578e"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/portrait-cache.test.ts.gz",
+      "bytes": 723,
+      "sha256": "d31f2fbea245a60e42ec304697e8862c9834624da13b872cf5c531f1c90905ca"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/portrait-cache.ts",
@@ -2608,9 +2648,9 @@
       "sha256": "444254808028e41af2413bad9cb66e6e87e307970f0988fbabdf07577f587ed1"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/presentation-view.test.ts",
-      "bytes": 6877,
-      "sha256": "64727acb3067f2bcd6113c56b18bf3e3a1de7b52ba646dc4c275e9d3a6652156"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/presentation-view.test.ts.gz",
+      "bytes": 2082,
+      "sha256": "9480d6b273eba602bcf4cd6cb3bfd342d1fa9e60852c24d45eb7fd55692de2cd"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/presentation-view.ts",
@@ -2618,9 +2658,9 @@
       "sha256": "21829226aa017eae2628a518ecdf5e51d78ad46b483bce538f4b7bda47045b5c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/projectile-origins.test.ts",
-      "bytes": 7967,
-      "sha256": "3e58315dd0fd274590cb6e5b473c9acec2a02b81093f6dfd3daecd1b08b64901"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/projectile-origins.test.ts.gz",
+      "bytes": 2406,
+      "sha256": "c8a442cc160b9dd8f59b8d68cc4c8e18e5dd9b8ff9a277906b2ba254634ad567"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/projectile-origins.ts",
@@ -2628,9 +2668,9 @@
       "sha256": "b277bd5664a450d459888b41210874034d389e6e1ab310e81595cf28abb1830c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/rally-visual.test.ts",
-      "bytes": 2115,
-      "sha256": "f78d203e2565b7c1f49f94a8a153f51ed34ef354c043e5ed963b1b95101b1ff0"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/rally-visual.test.ts.gz",
+      "bytes": 544,
+      "sha256": "1c4e18355dc29ba1f760e60e26331c093895d684be71e7a0478d7661dce74f81"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/rally-visual.ts",
@@ -2638,9 +2678,9 @@
       "sha256": "f42e13cc016131c956a73672fce1c1201eed36e645313e9a5f74a91dffa5ff11"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/relations.test.ts",
-      "bytes": 9895,
-      "sha256": "37d0bb271f92d16277ac45c831c6b768fb925eb6d10b8849d835cd09a8a1e5e7"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/relations.test.ts.gz",
+      "bytes": 2702,
+      "sha256": "9103232d4ad1857d87628de7e669cf3e23599c27f810f0504a35b7b69ad8c981"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/relations.ts",
@@ -2648,9 +2688,9 @@
       "sha256": "6cb20798d4b4b4f81e7356b84a3359e61c7b7e56c9b0dcaaf3f49f1df694b4bd"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/research-controls.test.ts",
-      "bytes": 5335,
-      "sha256": "3ef0cb6c461772f74a696ce188d2f132d9ce60711961805c53a6294427dc0c96"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/research-controls.test.ts.gz",
+      "bytes": 1314,
+      "sha256": "69cb051fda800ca56f880c387076c26fee5ead48f7b11b134d9d46229d2445c2"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/research-controls.ts",
@@ -2663,9 +2703,9 @@
       "sha256": "6ab4dbc2b930e0ca60ee1101b3fe7e2e6940682ff3890636a92f5644cae4e0a4"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resource-panel.test.ts",
-      "bytes": 5457,
-      "sha256": "b369cba6e8ac5fe055e08d423360910bd37ab72965bbf4cb45a661c2c03ab2b2"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resource-panel.test.ts.gz",
+      "bytes": 1903,
+      "sha256": "48ff1d6836997fa749c4a543d873401daf09cda2b1ab330088d2d74865e7bc2c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resource-panel.ts",
@@ -2673,9 +2713,9 @@
       "sha256": "85433a9adade7553094bcbb1b7a26178a84c8096d7ae0ae9a9f6e8cc01ff4f76"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resources.test.ts",
-      "bytes": 10123,
-      "sha256": "499057f65e2af89510f8d80b2a83523dab486df690ac5b57f24fff80a86a5372"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resources.test.ts.gz",
+      "bytes": 2656,
+      "sha256": "43aef59e3d09eee814afddad6f6d59adabf44c51fbd6ae64da320327747a5d89"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/resources.ts",
@@ -2683,9 +2723,9 @@
       "sha256": "c74a0b8f4ca4258e131cff9b9f9330700e9050c96293e1f96e8a25390d2ced97"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-browser-model.test.ts",
-      "bytes": 1191,
-      "sha256": "4ef3bda9c906d7cbce0a7219d19fb977bbfc2721f90881b0afbb44eed44c3ee6"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-browser-model.test.ts.gz",
+      "bytes": 471,
+      "sha256": "928ad960024c0afe78c50a8f89b0fbcc9d6a5d582eecdea113e8bbe83535e8ba"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-browser-model.ts",
@@ -2693,9 +2733,9 @@
       "sha256": "1c6f0983306e1b8d18759fe9e6c631e455523240a17fc7e024c09e5daa997f72"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-route.test.ts",
-      "bytes": 3232,
-      "sha256": "3f391b934da25d5fa239987a23dca3c7e597b2a114ede26aadb9e688f7a7f364"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-route.test.ts.gz",
+      "bytes": 1068,
+      "sha256": "1e9a47ac8ead470ae223c9cc8fa0176d4cf004cdaa8a9a7f975082abb45fec37"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-route.ts",
@@ -2703,9 +2743,9 @@
       "sha256": "740562f49a294cdec5dd4bcfb64d326f4bd3d59a86ee90e5b09412ab6e7d01a3"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-setup-session.test.ts",
-      "bytes": 11847,
-      "sha256": "c4cc5f0f67fe700400d13f87247963c6de45413d9462a2bc3bc1330ab465f922"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-setup-session.test.ts.gz",
+      "bytes": 2943,
+      "sha256": "51bd92777e0e16b084f2d9fada89a21a3150aa711150df77b1c89aacafdfa962"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-setup-session.ts",
@@ -2713,9 +2753,9 @@
       "sha256": "12e1860d9f1cb18a6a2508fbc2af6bcd13cbb6e235ce8a6d657f447b8ae8db43"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-view-state.test.ts",
-      "bytes": 500,
-      "sha256": "634e75a92940a2366f3694bfcf7dbcbd6e66bc9714bd3b9cb692d09ebc8e6f24"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-view-state.test.ts.gz",
+      "bytes": 294,
+      "sha256": "228363217af96901452552e0e6b5a806111218f5955ce7dc992edec47ab5ae53"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/room-view-state.ts",
@@ -2723,9 +2763,9 @@
       "sha256": "212ec324fa8a6d15194398b8c208b794de55c0980d9e4290cf1d6036b833e596"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/selection-controls.test.ts",
-      "bytes": 9339,
-      "sha256": "1d0b77a0d337f969c5ead179060f580cbddb7cba714272fbce23af55c4ee7eeb"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/selection-controls.test.ts.gz",
+      "bytes": 2624,
+      "sha256": "7d445066336c1ae6836f4155c68222fea4b5432a5ffb3f755b7342929597cda0"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/selection-controls.ts",
@@ -2733,9 +2773,9 @@
       "sha256": "26fb4fdffee9153d41a4bc53aa4e189cbb58af1fb2bb266266154a93bbd1625a"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-boarding-controls.test.ts",
-      "bytes": 7073,
-      "sha256": "9d40af5db47dd3d91a0b4e12786888d921843cbb36b605622b3eeb83362b60a4"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-boarding-controls.test.ts.gz",
+      "bytes": 1909,
+      "sha256": "6c081be8ea0096f1ed0ad62235295fa63a5cf2a87aedf4d72e25e07d6f969ed4"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-boarding-controls.ts",
@@ -2748,9 +2788,9 @@
       "sha256": "4382adaee18bb02aed321012415f03077125ea1c1f7c111ef3125a0c84cd1332"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-wakes.test.ts",
-      "bytes": 4004,
-      "sha256": "878868853642f6347ea7dbda524d194fc0e6e3bf5c879520a809a5ea9131e3c0"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-wakes.test.ts.gz",
+      "bytes": 1355,
+      "sha256": "261d06ae4ebac45207f9be19dcad8992f6d627b0a1d7ccaa00abd2a08c0b89f3"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/ship-wakes.ts",
@@ -2758,9 +2798,9 @@
       "sha256": "6de6cfb98710450b34a648fc233ae88dbca66bba0b66fc31d7d75b48ab6acd24"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-cues.test.ts",
-      "bytes": 6254,
-      "sha256": "258d0c0e28166408d7f67c8e406cef5ed3a05c3263c47012bcd105cb26f98378"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-cues.test.ts.gz",
+      "bytes": 1971,
+      "sha256": "e1ad62cebfd243b9b86140c33cad57e8b2b33028f5704afdd862fbf83fa07241"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-cues.ts",
@@ -2768,14 +2808,14 @@
       "sha256": "144d7375d62ac1f46234f4e6f5a96280f5d4063e5ccbc100da8552376336b07c"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-loading.test.ts",
-      "bytes": 11982,
-      "sha256": "41492505d8a6c9d6fe991c60890335ae5b2700981df085167f6d616d74368b0d"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-loading.test.ts.gz",
+      "bytes": 2713,
+      "sha256": "d0c8aab218d1689b3e745f06e74245bc383bda3760f196162e5cc6f9b7418aae"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-packs.test.ts",
-      "bytes": 3764,
-      "sha256": "788594875c178a95d68eac467bf61f8e6e458d7318b6896ec1bca9de4e4439d7"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-packs.test.ts.gz",
+      "bytes": 1280,
+      "sha256": "92e66e287bdfa93385879c70fcd7ff093d6a97c21ccf5ceaafce97e62f768614"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound-packs.ts",
@@ -2788,9 +2828,9 @@
       "sha256": "78200501a42ce42707c0dbadb6017d0191678053ebdc2506a7ae52ac78439886"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound.test.ts",
-      "bytes": 3558,
-      "sha256": "6bae1c24991422c0bb3d534623ebdd683a6338ccdf2c195304131f955bc594a4"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound.test.ts.gz",
+      "bytes": 1089,
+      "sha256": "ca9f885d9758d29e81599c47af94d51d423bc597f845788cc76ad7ae46d0a316"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/sound.ts",
@@ -2798,9 +2838,9 @@
       "sha256": "0371be3bed7dcc2abfb712449487a53e1937cde488288e1003d3e629566e02eb"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/status-presentation.test.ts",
-      "bytes": 8144,
-      "sha256": "b88dca3eda6ac8d14d1f9956b1377c95765225343c8054414834d0b115d37173"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/status-presentation.test.ts.gz",
+      "bytes": 2453,
+      "sha256": "e87ef6f4ceb228e64e821c421cf08474945073348799195e090f5c62308c07d3"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/status-presentation.ts",
@@ -2828,9 +2868,9 @@
       "sha256": "4b355122c24d198a6c8f5ad070a158774c7c34273396e0c438eff1f4e3ec89ea"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/terrain-texture.test.ts",
-      "bytes": 2587,
-      "sha256": "12edfe644984a1ecd4a039c7856f25281c463368f94753bb557f32a9f96042f3"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/terrain-texture.test.ts.gz",
+      "bytes": 892,
+      "sha256": "5efaef69242811c9e203ac60448b7ef1e80e0d640f2a9001729df15dc82ca323"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/terrain-texture.ts",
@@ -2838,9 +2878,9 @@
       "sha256": "52bdcd919baa02e7a30d5b7707f563255c34b85ddfea4fe2949007dd1351b535"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/tooltips.test.ts",
-      "bytes": 19389,
-      "sha256": "7724f39e6ae087d42a7213465bdb1a0baf0c7d3343fe2d9575821c9c822e1859"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/tooltips.test.ts.gz",
+      "bytes": 5740,
+      "sha256": "6f8dd04b674226d349d5feddaf03f613e3c73351eddaaae8b693990d928957d2"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/tooltips.ts",
@@ -2848,9 +2888,9 @@
       "sha256": "97bdbdd94dbc4025018c1d617f8b6db25fe9fc87cc21df3394a500dbf55ffd59"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/training-queue.test.ts",
-      "bytes": 5962,
-      "sha256": "1571a756501ed0ff974cf98ca0aaa57736be4666b13c67c6cd84ec6562f6f29a"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/training-queue.test.ts.gz",
+      "bytes": 2058,
+      "sha256": "aa1e2ebb4509a5eee20ae2cb5af60f4088f8b1be4f6832c01c02588db109fc5c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/training-queue.ts",
@@ -2858,9 +2898,9 @@
       "sha256": "06d38198cf6fa827301e308b2d14058e0059daf1665e2935f723ee759fb10065"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-animation.test.ts",
-      "bytes": 38385,
-      "sha256": "04043b0ce911e51ccab0f66133bb0e4049fd05d35c67b4bc6efacd69d7773354"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-animation.test.ts.gz",
+      "bytes": 8267,
+      "sha256": "324c3c687b693393a8912cc2c4c0f9a62cfb8fbec45944af8a2bc9a599812026"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-animation.ts",
@@ -2868,9 +2908,9 @@
       "sha256": "80085513dfbc19abb6f559a859b150ec2189355044e3258aba7391659347ef6d"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-art.test.ts",
-      "bytes": 2168,
-      "sha256": "746be02a75f1d3a68343515ac2d67f4ea5d65843d4eee26606ca10991cbf0d4e"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-art.test.ts.gz",
+      "bytes": 835,
+      "sha256": "bfee2744e26ef7439335ce3eaf15e7dee059d236abd1e5dfcc342495f0ac723b"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-art.ts",
@@ -2878,9 +2918,9 @@
       "sha256": "93d8f0f7eaa89481bc6323a76f01ba16cb69222fd13201de1009314df87df775"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-facing.test.ts",
-      "bytes": 11960,
-      "sha256": "74592f69dc1ae46a1f895c972fe43270f221bb5e1ce757598e5b3b3d7d3eae4d"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-facing.test.ts.gz",
+      "bytes": 2769,
+      "sha256": "4186352a08b7ab69bedc85aefb207c995a64e9eb2719ecdce0bff418b7e74371"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-facing.ts",
@@ -2888,9 +2928,9 @@
       "sha256": "d7998afd7de795ee4bec43068d83dd6f5a0d1844e199b3c7c95a12f166fe0386"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-cursor.test.ts",
-      "bytes": 8299,
-      "sha256": "54bb59ac6795598884d0060bfe9fa68303e8ce17ee55277d4e8e6af4a9ec6b52"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-cursor.test.ts.gz",
+      "bytes": 2239,
+      "sha256": "51cadb389524d3e2ebdcecd7c60972eabb33371d99202055f1bb8f0c8bcf344b"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-cursor.ts",
@@ -2898,9 +2938,9 @@
       "sha256": "e4ad7fcea5a38108c482197ea347236cbec1b3ff984dc5fd615a749b502083d3"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-target.test.ts",
-      "bytes": 4653,
-      "sha256": "14cfead671092fed016ea62ac319b3e9ccf20f008b5927bc9b1a2f6fc7271898"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-target.test.ts.gz",
+      "bytes": 1152,
+      "sha256": "9908aed886f0533f43b168658506e6d5dd7ec5b0d55fc49f768a3d2db042513b"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-hover-target.ts",
@@ -2908,9 +2948,9 @@
       "sha256": "b1ab181ebedbe2dfa105e8d479999df47099d8a139aef7203547b498ba48a6e6"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-motion.test.ts",
-      "bytes": 7528,
-      "sha256": "0fee52c5117c2bf9a03ab55d06e8e3739f9e80da4e22b925f45ff186f0f70a35"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-motion.test.ts.gz",
+      "bytes": 1862,
+      "sha256": "ca3be25d0341ec49260c68d2be84ce2878cabd299b0628024ae53956b89c566c"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/unit-motion.ts",
@@ -2923,9 +2963,9 @@
       "sha256": "ba7114d43b1c00341713ba20e16cfaf790e8937c81a090775a067137bc4da8b2"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/user-profile.test.ts",
-      "bytes": 888,
-      "sha256": "e12229ca297b4e33b358acbde6659a644afd1da7b5befa555c009427e8242472"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/user-profile.test.ts.gz",
+      "bytes": 473,
+      "sha256": "e594877b17bf7409b2d92fdb1cf01cce71abcaad37dbbac1c506859433eaa088"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/user-profile.ts",
@@ -2933,9 +2973,9 @@
       "sha256": "a9057e5185bbaa8615c94e9a2244d1bf5ae901e2e359a9f2adf0dca9249b386b"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/veteran-controls.test.ts",
-      "bytes": 4331,
-      "sha256": "bf88da4c9e8ec2086c7920aaa8e5d6a959fa83204eec04f916aa3f58fd4c6a86"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/veteran-controls.test.ts.gz",
+      "bytes": 1300,
+      "sha256": "aa612daa4b529a6125dcc0aff493b9759fd006d3139b840cae6cff5f39c5bbad"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/veteran-controls.ts",
@@ -2943,9 +2983,9 @@
       "sha256": "050d298454a9fb74cbdf7ad9c11ca9d94a74c5c8a7762fb858714d46406b5318"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/virtual-ui.test.ts",
-      "bytes": 2068,
-      "sha256": "c535a9c953a39e9b1f0b1aa45ff89394f6096d32d41c6b745cc9ac50e0ba9b75"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/virtual-ui.test.ts.gz",
+      "bytes": 687,
+      "sha256": "ae8a2a950dca5e71362e4409244b5de23cff6771f7c144a686b5ea0235763012"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/virtual-ui.ts",
@@ -2958,9 +2998,9 @@
       "sha256": "ed1dd69688c9284033c8a85c1c508fef76c3e3a168c7dbd791562ae8042f82e3"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-art.test.ts",
-      "bytes": 2221,
-      "sha256": "b2155600a6142ee840558062a819588cbb67ce77a5f9feb3db19f085757bc2da"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-art.test.ts.gz",
+      "bytes": 858,
+      "sha256": "3546b370843cb896fc9cbbb48697ba0c4153fd67dfc8a3d4f2f07450240ee761"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-art.ts",
@@ -2968,9 +3008,9 @@
       "sha256": "9b4cdb70ca3b12e8663e61a0832757e69ce42986d4801eaa3de0996008c289c1"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-field.test.ts",
-      "bytes": 3993,
-      "sha256": "db07a2172724415ea415020ddf051b7c37d46bf40fccbba14611a7a8900a7e0b"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-field.test.ts.gz",
+      "bytes": 1352,
+      "sha256": "8e40d145386219dc960e982d7a576121e406897fb76159718c0d14f20bddf14f"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/water-field.ts",
@@ -2988,9 +3028,9 @@
       "sha256": "b9beb11f3c26448c633b8a87646e85f526851c430e884796f701e9745671e7b0"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-presentation.test.ts",
-      "bytes": 12026,
-      "sha256": "0de03f6a6a1ad7baaab56c4d7ce2d522f14a716dff4e46dea35949f96effd138"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-presentation.test.ts.gz",
+      "bytes": 2738,
+      "sha256": "9d16f0b82f52adfd61228021ef2d4ceae3ce93fffcb4a2b6aed279ba993d2439"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-presentation.ts",
@@ -2998,9 +3038,9 @@
       "sha256": "d16356b84cf8fdb1b4126053b471eab0959e1849ee0f86d5eb7e6525fb4f84be"
     },
     {
-      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-renderer.test.ts",
-      "bytes": 29703,
-      "sha256": "def5bc5d6428f08b20b80707517ed9056d205985ab58d7b31da57f131ccf4171"
+      "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-renderer.test.ts.gz",
+      "bytes": 8575,
+      "sha256": "d03015f793f558fd2886fbe09c4f739ab2ee6326b37002c7aeb3ac70a97e5a2f"
     },
     {
       "path": "docs/validation/homepage-scenes/validation/forest-author/src/client/world-renderer.ts",
@@ -4293,5 +4333,6 @@
     0,
     0
   ],
-  "mediaFramesVerified": 1104
+  "mediaFramesVerified": 1104,
+  "archiveCorrection": "79 historical captured test inputs stored with byte-preserving gzip. First CI archive-discovery failure and original 855-file manifest retained. Active tests and source unchanged; exact first group 14 files / 202 tests passes locally."
 }
