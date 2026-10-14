@@ -1,0 +1,361 @@
+{
+  "version": 1,
+  "folder": "before",
+  "fileSetSha256": "e505ca8e241a39f2249bf71bfa8db8540942a134ac96feb14bf56d6ee5276999",
+  "files": [
+    {
+      "name": "frame-000.png",
+      "size": 484031,
+      "sha256": "65ab01eec8b25a2f4bb49326ce2d19111cc0065667a481575923d669ddc61513",
+      "keep": true
+    },
+    {
+      "name": "frame-001.png",
+      "size": 484212,
+      "sha256": "33ceb4cfa5344aedc0c32d3cf122c0764faa4211055f13f88c6ff0ac54e052d9",
+      "keep": false
+    },
+    {
+      "name": "frame-002.png",
+      "size": 483780,
+      "sha256": "5e8b8da0a2735e699287af4de25550e14a151a4516c00cfc5bd80861f7403b43",
+      "keep": false
+    },
+    {
+      "name": "frame-003.png",
+      "size": 484619,
+      "sha256": "5af6f195223cc63cac4a8aaded1d23c715dfed9c2f2d4aa161ed60e766ecd785",
+      "keep": false
+    },
+    {
+      "name": "frame-004.png",
+      "size": 535341,
+      "sha256": "3df850cf9378f3ecec972e1599b2797df6574ac304cb3b85d0c2a3ef2fb6a55f",
+      "keep": false
+    },
+    {
+      "name": "frame-005.png",
+      "size": 535137,
+      "sha256": "ac61f70695410c707b04bca86b0ee0c89cb14d25ff821a8d12a647abc1fd491d",
+      "keep": false
+    },
+    {
+      "name": "frame-006.png",
+      "size": 535305,
+      "sha256": "305fc7b40974fe3b8366aaf09ccc7d1540c7419b033f7f8e2f3463c9207e040c",
+      "keep": false
+    },
+    {
+      "name": "frame-007.png",
+      "size": 534894,
+      "sha256": "d8de77cf31a3829275bc5eaab02bcc1114838abac2f522d15f8318250935cca2",
+      "keep": false
+    },
+    {
+      "name": "frame-008.png",
+      "size": 535397,
+      "sha256": "dbb7d1f3c5b40b70ec58738060ef7fef30e57e0ad87ed8e2009e561942af0b56",
+      "keep": false
+    },
+    {
+      "name": "frame-009.png",
+      "size": 538509,
+      "sha256": "90e9b3ccc860ad549d773625ebc9c3c9c5c4e78fa7cfa9689700e749546eb876",
+      "keep": true
+    },
+    {
+      "name": "frame-010.png",
+      "size": 536710,
+      "sha256": "e024bb77679015861427a78f81d251751f00aefe098f9362da0343d008ee59d6",
+      "keep": false
+    },
+    {
+      "name": "frame-011.png",
+      "size": 535646,
+      "sha256": "60a54ea0c4b32e658ec9b580827e45f545401452266e736e1de3350c1d8cfea6",
+      "keep": false
+    },
+    {
+      "name": "frame-012.png",
+      "size": 524940,
+      "sha256": "1714d5e6ee8b78c968a38c3b9b29c83a27b2877c25ac408585e22a11ee2ee705",
+      "keep": false
+    },
+    {
+      "name": "frame-013.png",
+      "size": 524563,
+      "sha256": "d63d3bfeb3e47f2f90f9938d504c0c50ab98a652bb60262f90d4bf767ea36200",
+      "keep": false
+    },
+    {
+      "name": "frame-014.png",
+      "size": 528058,
+      "sha256": "d7cfcafd021e72d3f3543cc034356363cffda148be8b251e77878a9b4a4e66eb",
+      "keep": false
+    },
+    {
+      "name": "frame-015.png",
+      "size": 539618,
+      "sha256": "6e702c4fedb1430c587fa1d0a65b12a532f40c43b326dafd7f0f4f81721d2f05",
+      "keep": false
+    },
+    {
+      "name": "frame-016.png",
+      "size": 539593,
+      "sha256": "efe0342f9f7a2c274c6f5efd516aadfc1d6722b67165421281df4f3ef97fd004",
+      "keep": false
+    },
+    {
+      "name": "frame-017.png",
+      "size": 539150,
+      "sha256": "8def874f4f43727e57a3dcd71449f6cccd431d2abf0bf0b96e5ff90984f9c4ba",
+      "keep": false
+    },
+    {
+      "name": "frame-018.png",
+      "size": 539107,
+      "sha256": "ba06c88afb87efd6e48cd6e50848b62711ddb839ce554278c4bf3566dd952c4d",
+      "keep": false
+    },
+    {
+      "name": "frame-019.png",
+      "size": 538429,
+      "sha256": "c6e8050017cc4e29c4614fcdb14428673b6f8aaa206f65b990d4262d0444b157",
+      "keep": false
+    },
+    {
+      "name": "frame-020.png",
+      "size": 537488,
+      "sha256": "93f569ee63d1532a3f95fa735618cc21fc8bacf5130589ec5ad9a3d1f09dabc1",
+      "keep": true
+    },
+    {
+      "name": "frame-021.png",
+      "size": 537121,
+      "sha256": "1ae4cf82427a29bcf06bc792a6546f301a4116112c9b655f09986982301776da",
+      "keep": false
+    },
+    {
+      "name": "frame-022.png",
+      "size": 591743,
+      "sha256": "b773b8f67de5169819faed8f18735c02036b5d5d0fb5521f3a9cbc3ec67a076c",
+      "keep": false
+    },
+    {
+      "name": "frame-023.png",
+      "size": 590409,
+      "sha256": "70aa0e7d0ee45c02a056530b46253ab5ac414e35d0a4a38eb4f46e2852762f4f",
+      "keep": false
+    },
+    {
+      "name": "frame-024.png",
+      "size": 586553,
+      "sha256": "27c31510f6be612f145790115ac40c7f02966af069cf896ed6da92dbc63806ea",
+      "keep": false
+    },
+    {
+      "name": "frame-025.png",
+      "size": 585809,
+      "sha256": "d816c5e9e0b99cc7642fd6c0da00a52527ca06fa5235808c2793538d6c4e4ee1",
+      "keep": false
+    },
+    {
+      "name": "frame-026.png",
+      "size": 585701,
+      "sha256": "009bd1cb9dfb9a370624e987237bb8f5d35cb35cf7706d89ecea65d8215b602c",
+      "keep": false
+    },
+    {
+      "name": "frame-027.png",
+      "size": 575800,
+      "sha256": "14b6f9b00263b26033a75e9a0d1d58db71817bec25e5e738016bcfed370f5880",
+      "keep": false
+    },
+    {
+      "name": "frame-028.png",
+      "size": 576829,
+      "sha256": "4a87b01246dbaa380de35339df8c999438b07445f76360da38fb588b03794728",
+      "keep": false
+    },
+    {
+      "name": "frame-029.png",
+      "size": 576727,
+      "sha256": "ab9acaa6651f1ff05fc3d431601df4166682351a213f5db00bae6b627fc1b60e",
+      "keep": true
+    },
+    {
+      "name": "frame-030.png",
+      "size": 586888,
+      "sha256": "a9d223a1d8ed6d99544ec35568c9ad49ef5a16978465839316a80b14d06499c4",
+      "keep": false
+    },
+    {
+      "name": "frame-031.png",
+      "size": 587208,
+      "sha256": "c63b10dc4eb462607cc0444e0e6141dca77e887dfbe21cd896ecdf8403ccb23a",
+      "keep": false
+    },
+    {
+      "name": "frame-032.png",
+      "size": 587241,
+      "sha256": "3b12ce79bc6454626ab1dc5c2de01225d173f41de02b069919d0d63f3f8090d8",
+      "keep": false
+    },
+    {
+      "name": "frame-033.png",
+      "size": 587657,
+      "sha256": "d48c418adba72dfa4dbc9e919e8d9d7f75b27a27b663400a96df60111c6df415",
+      "keep": false
+    },
+    {
+      "name": "frame-034.png",
+      "size": 586736,
+      "sha256": "bcf22b858d444c0e7af53c6d7dfdf8927779e98bece06d177d6f97a9b2ba4061",
+      "keep": false
+    },
+    {
+      "name": "frame-035.png",
+      "size": 586790,
+      "sha256": "f6b800c85ccb5931320c0b5f9d44ea839fa6896a7cd4fc3bb236e9411ccd57aa",
+      "keep": false
+    },
+    {
+      "name": "frame-036.png",
+      "size": 586932,
+      "sha256": "9768bec15de066bb565e4a8938e5a8ffee456d627d64aa34ae044ed7ca4bf994",
+      "keep": false
+    },
+    {
+      "name": "frame-037.png",
+      "size": 586437,
+      "sha256": "2da3f78ab5a484a3df756e25f7ead0e0b88892e96e292645898bde506345ba34",
+      "keep": false
+    },
+    {
+      "name": "frame-038.png",
+      "size": 587177,
+      "sha256": "09655d276456b107d05cb0e35922c84c054877247d0772419351bb19269ca22a",
+      "keep": false
+    },
+    {
+      "name": "frame-039.png",
+      "size": 587883,
+      "sha256": "f97418ba6545d998aa96d4b1026f6347635eee6a93abe60a902e1cc94f77701f",
+      "keep": true
+    }
+  ],
+  "sources": [
+    {
+      "name": "deepSnapper-bodyPng.png",
+      "size": 9739,
+      "sha256": "ee8e76a4a39ba7d1d9fc96ab82dba32544f962b6f030ec6fb8f77e16a18aadc3"
+    },
+    {
+      "name": "deepSnapper-png.png",
+      "size": 9480,
+      "sha256": "a4bf8a85f98c8d1a87249047fa17505a1f407fc119b24ce0a9aff72e094f58d1"
+    },
+    {
+      "name": "dragonWhelp-bodyPng.png",
+      "size": 9662,
+      "sha256": "f045e854b93dafd02dba795aaff473d190867983569d4fda351caeda80d82c9a"
+    },
+    {
+      "name": "dragonWhelp-png.png",
+      "size": 9426,
+      "sha256": "d8d6bf98cabb2eadcb306066b5a5fd9acdd81b43546d9f843a1c1e02fc8819d0"
+    },
+    {
+      "name": "executed-harness.mjs",
+      "size": 10068,
+      "sha256": "81e14b4a9d4c74e49dd0cad658236582548e8e6e42c2c272c17d8c1a18f2d187"
+    },
+    {
+      "name": "fixture.ts",
+      "size": 6174,
+      "sha256": "fd82db2bee09637bf0ec9471bb726667d770434b23e70332b6c72c2e91695802"
+    },
+    {
+      "name": "gameplay.mp4",
+      "size": 165029,
+      "sha256": "cbbeb6e78aea3fd88ff6887378222e12ed3e2c57098b44dca6172f7aa5444450"
+    },
+    {
+      "name": "inputs.json",
+      "size": 125395,
+      "sha256": "001bbd49c60ffa40ce2403474c742277ad666c992b91c589286bb02034935b10"
+    },
+    {
+      "name": "original-fixture.ts",
+      "size": 5789,
+      "sha256": "acbb68d958b8d65d0de088a71a1b1f2f3bc6dd127b4480087491b8faf8449608"
+    },
+    {
+      "name": "proof.json",
+      "size": 336185,
+      "sha256": "64218a537444f96a932fe2f72e3b4040b6d2921f0cb671428d92021dc9e079e7"
+    },
+    {
+      "name": "redDragon-bodyPng.png",
+      "size": 9288,
+      "sha256": "d53475ce92602690c395bf538c52a4a7923647aaca7217254144f2c2dc8ad90f"
+    },
+    {
+      "name": "redDragon-png.png",
+      "size": 9043,
+      "sha256": "acd49929e79148e231b17f755b2c73fc6f47723a4ce3f929cf0c1a3db8f1e3fc"
+    },
+    {
+      "name": "snapshots.json",
+      "size": 540661,
+      "sha256": "700115ef91ab2e3f6a80ebb88e4e5b336226184de103cd33e35521ef4993538d"
+    },
+    {
+      "name": "source.tar.gz",
+      "size": 2233409,
+      "sha256": "fc926d457cdb18b40c4f4a30df66fc7c735bd450287ab2cc10abe7b9b14a1247"
+    }
+  ],
+  "retention": {
+    "frames": [
+      "frame-000.png",
+      "frame-009.png",
+      "frame-020.png",
+      "frame-029.png",
+      "frame-039.png"
+    ],
+    "allSmallPortraitAndBodyPng": true,
+    "gameplayMp4": true,
+    "existingSourceTarUnchanged": true
+  },
+  "meaning": "All original encoded frame PNG bytes retained exactly. Compression and selected direct files change evidence storage only, not image quality, simulation or game performance.",
+  "archive": {
+    "format": "xz",
+    "file": "e505ca8e241a39f2249bf71bfa8db8540942a134ac96feb14bf56d6ee5276999.tar.xz",
+    "bytes": 17674840,
+    "sha256": "a973a76d20fe36c1f6d8e8c96e97dd5743a4d91e4ac4b9592f7f64442e7de6b7"
+  },
+  "compressionComparison": [
+    {
+      "format": "gz",
+      "file": "e505ca8e241a39f2249bf71bfa8db8540942a134ac96feb14bf56d6ee5276999.tar.gz.tmp",
+      "bytes": 21823297,
+      "sha256": "319b6152e4092209f8fa3c6cb0495c1780ea4796afcc51e52f1879b80f6ac72d",
+      "retained": false
+    },
+    {
+      "format": "xz",
+      "file": "e505ca8e241a39f2249bf71bfa8db8540942a134ac96feb14bf56d6ee5276999.tar.xz.tmp",
+      "bytes": 17674840,
+      "sha256": "a973a76d20fe36c1f6d8e8c96e97dd5743a4d91e4ac4b9592f7f64442e7de6b7",
+      "retained": true
+    }
+  ],
+  "compression": {
+    "gzipLevel": 9,
+    "xzPreset": 6,
+    "xzDictionaryBytes": 16777216,
+    "originalPngEncodingUnchanged": true,
+    "sharedArchiveReuse": "Only identical complete encoded file sets qualify; before/after have separate sets."
+  }
+}

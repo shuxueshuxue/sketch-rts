@@ -121,6 +121,7 @@
 .item-cooldown[hidden] { display:none; }
 .research-progress-fill { position:absolute; z-index:2; left:0; bottom:0; height:3px; width:var(--research-progress); background:#91b76f; box-shadow:0 -1px #20311d; pointer-events:none; }
 .research-progress-text { position:absolute; z-index:2; top:2px; left:2px; padding:1px 3px; background:#302014f2; color:#fff3d1; font:600 11px/14px var(--font-ui); text-shadow:0 1px #000; pointer-events:none; }
+.training-launch-waiting .research-progress-fill { background:var(--battle-accent); }
 .training-cancel-button:hover::after { content:'×'; position:absolute; z-index:3; top:0; right:3px; color:#fff3d1; text-shadow:0 1px #000; font:18px/1 sans-serif; }
 @property --autocast-turn {
   syntax: "<angle>";

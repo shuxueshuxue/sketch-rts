@@ -1,0 +1,226 @@
+{
+  "scope": "Actual NAPI production painters with atlas world/portrait/remains controls; no simulation or hardware FPS inference",
+  "baselineSource": "de3a3823450e2188c5d9d8629f8c3f029dd36de3",
+  "afterSourceBase": "de3a3823450e2188c5d9d8629f8c3f029dd36de3",
+  "totalRasterStates": 2904,
+  "totalSurfaceStates": 63,
+  "allReleaseSocketsIdentical": true,
+  "unmodifiedCreatureKinds": 18,
+  "unmodifiedCreatureRgbaAllExact": true,
+  "changedKinds": [
+    "deepSnapper",
+    "dragonWhelp",
+    "redDragon"
+  ],
+  "details": [
+    {
+      "kind": "wildling",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "mossGnawer",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "ancientStag",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "spiderling",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "venomSpider",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "spiderQueen",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "dragonWhelp",
+      "rasterStates": 656,
+      "changedRgbaStates": 656,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 3
+    },
+    {
+      "kind": "redDragon",
+      "rasterStates": 656,
+      "changedRgbaStates": 656,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 3
+    },
+    {
+      "kind": "golem",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "rubbleGolem",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "rockGolem",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "graniteGolem",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "stonebackBrute",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "ogreWarrior",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "ogreMage",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "ogreLord",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "murlocPeon",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "murlocHunter",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "tidePriest",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    },
+    {
+      "kind": "deepSnapper",
+      "rasterStates": 656,
+      "changedRgbaStates": 656,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 3
+    },
+    {
+      "kind": "spirit",
+      "rasterStates": 52,
+      "changedRgbaStates": 0,
+      "releaseSocketsIdentical": true,
+      "surfaceStates": 3,
+      "changedPortraitAndRemainsStates": 0
+    }
+  ],
+  "coldRasterCpuBeforeMs": {
+    "method": "60 actual creature paints per sample; two warmup samples excluded, ten measured samples. Same canvas/poses/kinds. PNG/hash work and simulation excluded. Canvas/NAPI CPU fixture, not gameplay FPS.",
+    "paintsPerSample": 60,
+    "samplesMs": [
+      35.60948199999984,
+      39.17880800000057,
+      39.82150100000035,
+      37.82513199999994,
+      42.30228100000022,
+      35.154444000000694,
+      35.23661500000071,
+      35.48795400000017,
+      37.95842799999991,
+      37.50487299999986
+    ],
+    "meanMs": 37.60795180000023,
+    "p50Ms": 37.82513199999994,
+    "p95Ms": 42.30228100000022,
+    "maxMs": 42.30228100000022
+  },
+  "coldRasterCpuAfterMs": {
+    "method": "60 actual creature paints per sample; two warmup samples excluded, ten measured samples. Same canvas/poses/kinds. PNG/hash work and simulation excluded. Canvas/NAPI CPU fixture, not gameplay FPS.",
+    "paintsPerSample": 60,
+    "samplesMs": [
+      43.0011770000001,
+      44.91261000000031,
+      45.563013999999384,
+      48.65635300000031,
+      42.96345099999962,
+      41.732144999999946,
+      43.757635999999366,
+      46.306454999999914,
+      45.19642699999986,
+      52.11184200000025
+    ],
+    "meanMs": 45.420110999999906,
+    "p50Ms": 45.19642699999986,
+    "p95Ms": 52.11184200000025,
+    "maxMs": 52.11184200000025
+  },
+  "cpuInterpretation": "Two standalone uncached paint fixtures. More authored detail increases raster CPU work; these measurements are not complete-frame or cache-hit costs and do not establish gameplay performance."
+}

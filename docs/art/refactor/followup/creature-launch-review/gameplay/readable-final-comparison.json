@@ -1,0 +1,204 @@
+{
+  "passed": true,
+  "currentSourceHashes": {
+    "src/client/main.ts": "d450a40b13a70b4449ca08e882a382800287d416b42d7ce983663e5938a5f43f",
+    "src/client/i18n.ts": "a36d04c43381cd0d96bc5ef651413247c2f9d6cd91b206e99ce20f1851e372cd",
+    "src/client/training-queue.ts": "06d38198cf6fa827301e308b2d14058e0059daf1665e2935f723ee759fb10065",
+    "src/client/battle-hud.css": "6ae2bbba0c41472f4dba04779aecaf4bb59c2c3ba3dd8030473f0322cfd7e0dc",
+    "src/client/world-renderer.ts": "19999d01f8ef7be44372a30a8cfde436f4b9aeb375b3a9193a04a3b84173a1ee",
+    "src/client/art/creature-painters.ts": "ccf6ff8b7053ed240ac45f4c39176d459acd55a0f5ff4aafa81c408c0752c154",
+    "src/client/art/corpses.ts": "0f9ba3bd193c50e49e35dac8a4597d88c65c78d9a1c96c4ce2a2aa933a39eab2"
+  },
+  "sameBlockedAndClearedSnapshots": true,
+  "sameCancelCallbacks": true,
+  "actorSourcesUnchangedSinceWorldProof": [
+    "src/client/art/creature-painters.ts",
+    "src/client/art/corpses.ts",
+    "src/client/world3d/world-layer.ts",
+    "src/client/unit-animation.ts"
+  ],
+  "blockedSnapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+  "clearedSnapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+  "browserErrors": [],
+  "loadingFailures": [],
+  "sourceStable": true,
+  "captures": [
+    {
+      "locale": "zh",
+      "state": "blocked",
+      "pass": "full",
+      "snapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+      "texts": [
+        {
+          "text": "\u8fd0\u8f93\u8239 x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "\u5f85\u4e0b\u6c34",
+          "x": 177,
+          "y": 440.8,
+          "ink": "#704a20"
+        }
+      ],
+      "png": {
+        "file": "world-blocked-zh.png",
+        "sha256": "aba646d7f227b7d944142ba8c4ccb1aa1123ab5d77f7ad6ca000b05e4ccb3a35"
+      },
+      "scope": "Actual full production Canvas drawWorld with native model fallback and worldLabelsFor; unselected shipyard. Not WebGL."
+    },
+    {
+      "locale": "zh",
+      "state": "blocked",
+      "pass": "overlay",
+      "snapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+      "texts": [
+        {
+          "text": "\u8fd0\u8f93\u8239 x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "\u5f85\u4e0b\u6c34",
+          "x": 177,
+          "y": 440.8,
+          "ink": "#704a20"
+        }
+      ],
+      "png": {
+        "file": "world-blocked-zh-overlay.png",
+        "sha256": "3ed11fff12092a72737a8900d8b43701d4540988e4d79f6901f3bfcdd773940b"
+      },
+      "scope": "Actual production Canvas drawWorld overlay pass, transparent background, unselected shipyard. Not a complete WebGL frame."
+    },
+    {
+      "locale": "zh",
+      "state": "cleared",
+      "pass": "full",
+      "snapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+      "texts": [
+        {
+          "text": "\u8fd0\u8f93\u8239",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ],
+      "png": {
+        "file": "world-cleared-zh.png",
+        "sha256": "e5f9be840d20fe480c31b87c52d0a673900d20cec6a3bc42e1245e66b1a294a5"
+      },
+      "scope": "Actual full production Canvas drawWorld with native model fallback and worldLabelsFor; unselected shipyard. Not WebGL."
+    },
+    {
+      "locale": "zh",
+      "state": "cleared",
+      "pass": "overlay",
+      "snapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+      "texts": [
+        {
+          "text": "\u8fd0\u8f93\u8239",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ],
+      "png": {
+        "file": "world-cleared-zh-overlay.png",
+        "sha256": "97e6e86aa8ea46abe92b7e123673b036f9884600339b34c1f38b53e014d9140f"
+      },
+      "scope": "Actual production Canvas drawWorld overlay pass, transparent background, unselected shipyard. Not a complete WebGL frame."
+    },
+    {
+      "locale": "en",
+      "state": "blocked",
+      "pass": "full",
+      "snapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+      "texts": [
+        {
+          "text": "Transport x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "Awaiting launch",
+          "x": 177,
+          "y": 440.8,
+          "ink": "#704a20"
+        }
+      ],
+      "png": {
+        "file": "world-blocked-en.png",
+        "sha256": "158e2346dac6b6e2e4202fc2804d394478bf595f2e5e3d3373b9c71e67fe91ae"
+      },
+      "scope": "Actual full production Canvas drawWorld with native model fallback and worldLabelsFor; unselected shipyard. Not WebGL."
+    },
+    {
+      "locale": "en",
+      "state": "blocked",
+      "pass": "overlay",
+      "snapshotHash": "10dd2682bb29d22d18d948fca6b53a75584d4f7b278899edf97cc748f9c075dc",
+      "texts": [
+        {
+          "text": "Transport x2",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#9a6a28"
+        },
+        {
+          "text": "Awaiting launch",
+          "x": 177,
+          "y": 440.8,
+          "ink": "#704a20"
+        }
+      ],
+      "png": {
+        "file": "world-blocked-en-overlay.png",
+        "sha256": "2da5b1943c0bcc79a058e0990d763596dae3cc56b6c2d76e39e318a16e53644d"
+      },
+      "scope": "Actual production Canvas drawWorld overlay pass, transparent background, unselected shipyard. Not a complete WebGL frame."
+    },
+    {
+      "locale": "en",
+      "state": "cleared",
+      "pass": "full",
+      "snapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+      "texts": [
+        {
+          "text": "Transport",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ],
+      "png": {
+        "file": "world-cleared-en.png",
+        "sha256": "19f0fc0068c4b26fff7539be03b8869e58c978a1d153a82ad8b349b7b5fa44b0"
+      },
+      "scope": "Actual full production Canvas drawWorld with native model fallback and worldLabelsFor; unselected shipyard. Not WebGL."
+    },
+    {
+      "locale": "en",
+      "state": "cleared",
+      "pass": "overlay",
+      "snapshotHash": "f3acb8da32ddf7394267d2a6e7af81cdbf52625f0d968afa8fa277454b1be48a",
+      "texts": [
+        {
+          "text": "Transport",
+          "x": 177,
+          "y": 425.8,
+          "ink": "#315f87"
+        }
+      ],
+      "png": {
+        "file": "world-cleared-en-overlay.png",
+        "sha256": "cafe933b89527a7b075f56e401745b03544be79a4c0ef6213759e5a71c575d14"
+      },
+      "scope": "Actual production Canvas drawWorld overlay pass, transparent background, unselected shipyard. Not a complete WebGL frame."
+    }
+  ],
+  "visualReview": "At original size, paper backing and dark 10px text make the waiting line legible over trees in both locale review composites; both paper backing and waiting text disappear after launch. Review composites are full Canvas plus true overlay, not fresh full WebGL captures."
+}
