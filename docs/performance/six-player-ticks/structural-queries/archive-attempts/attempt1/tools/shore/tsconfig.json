@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "Bundler",
+    "strict": true, "noUncheckedIndexedAccess": true, "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true, "types": ["node"], "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowSyntheticDefaultImports": true, "resolveJsonModule": true
+  },
+  "include": ["six-player-tick-probe.ts", "six-player-focused-instrumentation.ts", "shore-capture-contract.ts"]
+}

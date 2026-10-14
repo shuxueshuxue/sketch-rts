@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "ticks": 31,
+  "checksum": "b8473a1c",
+  "commandLogSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+  "commandLogBytes": 4085,
+  "byteEquality": {
+    "observedVsPlain": true,
+    "observedVsDefault": true
+  },
+  "selectedTicks": [
+    0,
+    15,
+    30
+  ],
+  "observerCapabilities": {
+    "threadCpuUsage": true,
+    "cpuUsage": true,
+    "resourceUsage": true
+  },
+  "sourceSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+  "helperSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e"
+}

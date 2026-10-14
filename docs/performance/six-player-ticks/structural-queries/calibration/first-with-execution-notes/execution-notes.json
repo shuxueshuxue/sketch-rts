@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "firstRun": {
+    "complete": true,
+    "exitCode": 0,
+    "timing": "Calibration began after root declared five observer runs complete and CPU idle; root later reported starting tsc. No UTC endpoints captured, so overlap cannot be confirmed or excluded. Precision diagnostic only."
+  },
+  "exclusiveRetry": {
+    "complete": true,
+    "exitCode": 0,
+    "startUtc": "2026-10-14 08:39:24 UTC",
+    "endUtc": "2026-10-14 08:39:26 UTC",
+    "toolWaitWallSeconds": 1.724944432,
+    "scheduling": "Root explicitly confirmed tsc finished and reserved CPU; shore agent notified only after completion."
+  },
+  "filesBeforeThisNote": [
+    {
+      "name": "calibration-exclusive-retry.log",
+      "bytes": 2196,
+      "sha256": "73ea73138b82a2899820467d1d2b7f3884b3e64c471e88b880e9b94f33155130"
+    },
+    {
+      "name": "calibration.log",
+      "bytes": 2177,
+      "sha256": "36e930d89556a14de5112673c928e67c7ffa81ad529306230cbecb199d73196b"
+    },
+    {
+      "name": "calibration.mjs",
+      "bytes": 5612,
+      "sha256": "33be01d9323ee89a18dcdd840b077516e36271565218f8f2eb2fe85a0bf32fde"
+    },
+    {
+      "name": "result-exclusive-retry.json",
+      "bytes": 75350,
+      "sha256": "a9f3f25752dc429e0abdf38540bcbed42626a73aae780aad937fefc18ea12362"
+    },
+    {
+      "name": "result.json",
+      "bytes": 75024,
+      "sha256": "e93ac72f2ea4aee88506d8c094ee82ee5bd72be3534957ef45f4733e5dac0b97"
+    }
+  ],
+  "apiAuditSources": [
+    "https://nodejs.org/download/release/v24.19.0/docs/api/process.html#processthreadcpuusagepreviousvalue",
+    "https://github.com/nodejs/node/blob/v24.19.0/lib/internal/process/per_thread.js#L155",
+    "https://github.com/nodejs/node/blob/v24.19.0/src/node_process_methods.cc#L124",
+    "https://github.com/nodejs/node/blob/v24.19.0/deps/uv/src/unix/core.c#L1076"
+  ],
+  "conclusion": "API arithmetic/use is correct; microsecond units do not guarantee microsecond error/update bounds. Do not treat wall minus CPU as verified wait time at these short windows. No historical 99ms attribution is established."
+}

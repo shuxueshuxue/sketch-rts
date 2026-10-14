@@ -1,0 +1,24 @@
+{
+  "complete": true,
+  "strictTypecheckExitCode": 0,
+  "contractExitCode": 0,
+  "capturedInputRecords": 20,
+  "capturedTicks": [
+    0,
+    15,
+    30
+  ],
+  "capturedOwners": [
+    "enemy",
+    "enemy2",
+    "player-4",
+    "player-5",
+    "player-6"
+  ],
+  "closedSequences": true,
+  "actualInputPayloadSha256": "68258b5d09d6ae7e13c0ef9e181e853fcf9aed28c334fd454335cba72aa933f4",
+  "fullNativeFramesBytes": 4085,
+  "fullNativeFramesSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+  "checksum": "b8473a1c",
+  "scope": "Synthetic selected return/throw/capture contract and two full 31-tick native probes; actual capture has 20 native shoreSpot calls. Not performance evidence."
+}

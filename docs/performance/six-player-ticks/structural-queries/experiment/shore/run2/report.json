@@ -1,0 +1,798 @@
+{
+  "rows": [
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "A": {
+        "count": 10,
+        "median": 11.28753000000006,
+        "p95": 17.174101000000064,
+        "p99": 17.174101000000064,
+        "max": 17.174101000000064,
+        "mean": 12.224828000000002
+      },
+      "B": {
+        "count": 10,
+        "median": 13.385555999999951,
+        "p95": 32.39265399999999,
+        "p99": 32.39265399999999,
+        "max": 32.39265399999999,
+        "mean": 17.097067599999992
+      }
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "A": {
+        "count": 10,
+        "median": 1.5451450000000477,
+        "p95": 3.3575230000001284,
+        "p99": 3.3575230000001284,
+        "max": 3.3575230000001284,
+        "mean": 1.9310351000000536
+      },
+      "B": {
+        "count": 10,
+        "median": 2.873693000000003,
+        "p95": 7.281786999999895,
+        "p99": 7.281786999999895,
+        "max": 7.281786999999895,
+        "mean": 3.5611172000000577
+      }
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "A": {
+        "count": 400,
+        "median": 1.2698020000002543,
+        "p95": 1.948406999999861,
+        "p99": 2.3677010000001246,
+        "max": 3.158621000000039,
+        "mean": 1.3450565550000102
+      },
+      "B": {
+        "count": 400,
+        "median": 1.2607980000002499,
+        "p95": 1.8797159999999167,
+        "p99": 2.2141660000006596,
+        "max": 3.7931409999996504,
+        "mean": 1.335306069999988
+      }
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "A": {
+        "count": 10,
+        "median": 9.703366999999844,
+        "p95": 12.978409000000056,
+        "p99": 12.978409000000056,
+        "max": 12.978409000000056,
+        "mean": 10.376404900000011
+      },
+      "B": {
+        "count": 10,
+        "median": 10.50113599999986,
+        "p95": 13.174656000000141,
+        "p99": 13.174656000000141,
+        "max": 13.174656000000141,
+        "mean": 10.668041299999981
+      }
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "A": {
+        "count": 10,
+        "median": 1.4872799999998279,
+        "p95": 6.350760999999693,
+        "p99": 6.350760999999693,
+        "max": 6.350760999999693,
+        "mean": 2.3666298000000325
+      },
+      "B": {
+        "count": 10,
+        "median": 2.1511540000001332,
+        "p95": 5.916794999999638,
+        "p99": 5.916794999999638,
+        "max": 5.916794999999638,
+        "mean": 2.6557378000000424
+      }
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "A": {
+        "count": 400,
+        "median": 1.2838520000000244,
+        "p95": 2.028534999999465,
+        "p99": 2.364166999999725,
+        "max": 5.9883899999995265,
+        "mean": 1.3796204950000288
+      },
+      "B": {
+        "count": 400,
+        "median": 1.2878380000001926,
+        "p95": 2.235537999999906,
+        "p99": 2.9101769999997487,
+        "max": 5.127787999999782,
+        "mean": 1.4202707499999736
+      }
+    }
+  ],
+  "expected": [
+    "{\"x\":6160,\"y\":1392}",
+    "{\"x\":7408,\"y\":7312}"
+  ],
+  "diagnostics": [
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 6,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 2,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 1,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 0,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 6,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 2,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 1,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 0,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    }
+  ],
+  "trials": 120,
+  "totalMeasuredCalls": 1680
+}

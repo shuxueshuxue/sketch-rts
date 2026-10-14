@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "method": "Read-only archival preflight; no simulation/test execution or file copying",
+  "protectedCommit": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+  "protectedFileCount": 315,
+  "allProtectedCurrentBytesEqualCommittedBytes": true,
+  "captureDirectories": [
+    {
+      "source": "/workspace/six-player-structural-runs",
+      "regularFiles": 79,
+      "excludedSymlinks": [],
+      "sourceAndNativeChecks": [
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-1",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-1",
+            "comparison": "complete-prefix",
+            "frames": 2110,
+            "nativeCommandBytes": 68005,
+            "nativeCommandSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7a73a658",
+            "fullFinalChecksumEqual": null,
+            "prefixFinalChecksumEqual": true,
+            "prefixFinalChecksum": "7a73a658"
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-2",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-2",
+            "comparison": "complete-prefix",
+            "frames": 2110,
+            "nativeCommandBytes": 68005,
+            "nativeCommandSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7a73a658",
+            "fullFinalChecksumEqual": null,
+            "prefixFinalChecksumEqual": true,
+            "prefixFinalChecksum": "7a73a658"
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-3",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-3",
+            "comparison": "complete-prefix",
+            "frames": 2110,
+            "nativeCommandBytes": 68005,
+            "nativeCommandSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7a73a658",
+            "fullFinalChecksumEqual": null,
+            "prefixFinalChecksumEqual": true,
+            "prefixFinalChecksum": "7a73a658"
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-4",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-4",
+            "comparison": "complete-prefix",
+            "frames": 2110,
+            "nativeCommandBytes": 68005,
+            "nativeCommandSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7a73a658",
+            "fullFinalChecksumEqual": null,
+            "prefixFinalChecksumEqual": true,
+            "prefixFinalChecksum": "7a73a658"
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-5",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "28baffcb9585c95fa9194f7e202e866159946f98998b98d480a3af74eb77965b",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/2088-observed-5",
+            "comparison": "complete-prefix",
+            "frames": 2110,
+            "nativeCommandBytes": 68005,
+            "nativeCommandSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7a73a658",
+            "fullFinalChecksumEqual": null,
+            "prefixFinalChecksumEqual": true,
+            "prefixFinalChecksum": "7a73a658"
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-runs/shore-actual-0f31",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df",
+            "bundleSha256": "b567bb206b9c86ee8b8dab8a26e5353c2c3b5821ac7fffbecb02d316df486f78",
+            "focusedInstrumentationSha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-runs/shore-actual-0f31",
+            "comparison": "full",
+            "frames": 14400,
+            "nativeCommandBytes": 618189,
+            "nativeCommandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+            "byteEqual": true,
+            "reportedFinalChecksum": "7d94a5e8",
+            "fullFinalChecksumEqual": true
+          }
+        }
+      ]
+    },
+    {
+      "source": "/workspace/six-player-multi-source-proof",
+      "regularFiles": 3,
+      "excludedSymlinks": [],
+      "sourceAndNativeChecks": []
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration",
+      "regularFiles": 6,
+      "excludedSymlinks": [],
+      "sourceAndNativeChecks": []
+    },
+    {
+      "source": "/workspace/six-player-cpu-calibration-clean",
+      "regularFiles": 4,
+      "excludedSymlinks": [],
+      "sourceAndNativeChecks": []
+    },
+    {
+      "source": "/workspace/six-player-structural-observer-tool",
+      "regularFiles": 46,
+      "excludedSymlinks": [
+        "node_modules"
+      ],
+      "sourceAndNativeChecks": [
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/default31",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "?? src/shared/terrain-multi-source.test.ts",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "6f6a0e6679a00c4a6ddde5c9b5e188b59ef4c9b75ebe3e0c548b2de023e40fa9",
+            "focusedInstrumentationSha256": null,
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/default31",
+            "comparison": "complete-prefix",
+            "frames": 31,
+            "nativeCommandBytes": 4085,
+            "nativeCommandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+            "byteEqual": true,
+            "reportedFinalChecksum": "b8473a1c",
+            "fullFinalChecksumEqual": null
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/observed31",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "?? src/shared/terrain-multi-source.test.ts",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "5c706d3f2b358a9d8da5c7329e0e716f1bdeb924d6411cf9bf2264afdacdead3",
+            "focusedInstrumentationSha256": "f7c868ea43a220024de969d2285bb7dff529b71cd7edde5bd2e2519782d7859e",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/observed31",
+            "comparison": "complete-prefix",
+            "frames": 31,
+            "nativeCommandBytes": 4085,
+            "nativeCommandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+            "byteEqual": true,
+            "reportedFinalChecksum": "b8473a1c",
+            "fullFinalChecksumEqual": null
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/plain31",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "?? src/shared/terrain-multi-source.test.ts",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "266dc51c0c9fd271febf21ed6d7a50dddf10129a44e6ee66bc8626e4fa54d4ef",
+            "bundleSha256": "a254eb710e4bc8c3a3c0a0f3dfde2737355d6c90900b0f35237e0346e8d5fe29",
+            "focusedInstrumentationSha256": null,
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-observer-tool/captures/plain31",
+            "comparison": "complete-prefix",
+            "frames": 31,
+            "nativeCommandBytes": 4085,
+            "nativeCommandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+            "byteEqual": true,
+            "reportedFinalChecksum": "b8473a1c",
+            "fullFinalChecksumEqual": null
+          }
+        }
+      ]
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-tool",
+      "regularFiles": 36,
+      "excludedSymlinks": [
+        "node_modules"
+      ],
+      "sourceAndNativeChecks": [
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-shore-tool/captures-xT1i8w/focused",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df",
+            "bundleSha256": "b567bb206b9c86ee8b8dab8a26e5353c2c3b5821ac7fffbecb02d316df486f78",
+            "focusedInstrumentationSha256": "efd3e7f2aad9a19e010e23d06ee609fb0a7fa7744a66e3c8819ddbdd143b89e7",
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-shore-tool/captures-xT1i8w/focused",
+            "comparison": "complete-prefix",
+            "frames": 31,
+            "nativeCommandBytes": 4085,
+            "nativeCommandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+            "byteEqual": true,
+            "reportedFinalChecksum": "b8473a1c",
+            "fullFinalChecksumEqual": null
+          }
+        },
+        {
+          "sourceIdentity": {
+            "captureDirectory": "/workspace/six-player-structural-shore-tool/captures-xT1i8w/plain",
+            "gitHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+            "gitStatus": "",
+            "sourceInputCount": 241,
+            "sourceManifestSha256": "8df602cf1484dbac777c88e3763ebadcb1550d63fa6ca114b808cec029ac4ab4",
+            "probeSha256": "a4dbd2b7be12ea4638be64a6c7d2deaa004cc666416ad1cec51a5e62a29bf7df",
+            "bundleSha256": "b21e72141217ee0a9adf2c022d9cc90420e897ac3df3c42ffbac0111fae63982",
+            "focusedInstrumentationSha256": null,
+            "capturedSourceInputsVerified": true
+          },
+          "nativeOracle": {
+            "captureDirectory": "/workspace/six-player-structural-shore-tool/captures-xT1i8w/plain",
+            "comparison": "complete-prefix",
+            "frames": 31,
+            "nativeCommandBytes": 4085,
+            "nativeCommandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+            "byteEqual": true,
+            "reportedFinalChecksum": "b8473a1c",
+            "fullFinalChecksumEqual": null
+          }
+        }
+      ]
+    },
+    {
+      "source": "/workspace/six-player-structural-shore-experiment",
+      "regularFiles": 70,
+      "excludedSymlinks": [
+        "node_modules"
+      ],
+      "sourceAndNativeChecks": []
+    }
+  ],
+  "excludedSymlinkEntries": [
+    {
+      "captureRoot": "/workspace/six-player-structural-observer-tool",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    },
+    {
+      "captureRoot": "/workspace/six-player-structural-shore-tool",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    },
+    {
+      "captureRoot": "/workspace/six-player-structural-shore-experiment",
+      "relativePath": "node_modules",
+      "linkTarget": "/workspace/sketch-rts-six-player-perf/node_modules",
+      "resolvedTarget": "/workspace/sketch-rts/node_modules",
+      "purpose": "External installed dependencies; explicitly excluded from evidence payload"
+    }
+  ]
+}
