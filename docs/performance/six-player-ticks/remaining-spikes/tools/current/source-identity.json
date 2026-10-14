@@ -1,0 +1,9 @@
+{
+  "toolGitHead": "ad3cbd4d5b8748f86208ea9796aa7093b39d6e88",
+  "sha256": {
+    "scripts/six-player-tick-probe.ts": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "scripts/six-player-focused-instrumentation.ts": "912b864a3b23e81a7be742b778da838b6385296753bc1830af29b2714fefbd4f",
+    "scripts/six-player-tick-probe.test.ts": "9f2e8d2f691768765b746c221934791a4899c3f1fdf8375d60617387699adff9"
+  },
+  "purpose": "Full latest probe/module/test bytes; ABBA runs invoke the original workspace npm command and freeze identical tool bytes."
+}
