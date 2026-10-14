@@ -3,7 +3,7 @@ import { bodyMass } from "./physical-body";
 import { shipsIn, authoredShipScale, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { perTick } from "./time";
 import type { Unit } from "./types";
-import { capsuleClearsBodies, capsuleClearsCircles, diskInConvex, expandConvex } from './navigation-math';
+import { capsuleClearsBodies, capsuleClearsCircles, diskInConvex, expandConvex, polygonPlanes } from './navigation-math';
 import { isInCabin } from './ship-cabin';
 import { gangwayBetween, gangwayCrossingPosition } from './ship-gangway';
 
@@ -21,10 +21,23 @@ export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[
   const profile=shipProfile(ship);
   if(!profile)return undefined;
   if(deckPointFits(ship,passenger,preferred,units,occupied))return preferred;
+  // One synchronous placement reads the same floor and crew membership.
+  // Keep the preferred fast path, and prepare only the projections and crew
+  // reached by the original point checks; live crew fields remain per-point.
+  const axes=polygonPlanes(profile.deck), radius=passenger.radius+1, thresholds:number[]=[];
+  let crew:Unit[]|undefined;
+  const fits=(point:Point)=>{
+    if(!axes.every((axis,index)=>{
+      const threshold=index<thresholds.length ? thresholds[index]! : (thresholds[index]=axis.min+radius*Math.hypot(axis.x,axis.y)-1e-6);
+      return point.x*axis.x+point.y*axis.y>=threshold;
+    }))return false;
+    if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6))return false;
+    return !occupied || !(crew ??= shipPassengers(units,ship)).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
+  };
   let best:Point|undefined, score=Infinity;
   for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
     const point={x,y}, value=(x-preferred.x)**2+(y-preferred.y)**2;
-    if(value<score && deckPointFits(ship,passenger,point,units,occupied)){best=point;score=value;}
+    if(value<score && fits(point)){best=point;score=value;}
   }
   return best;
 }
