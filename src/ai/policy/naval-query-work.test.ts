@@ -1,11 +1,33 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { sketchScene } from "../../sdk/scene";
 import { snapshotGame } from "../../shared/sim";
 import { sameGround, type Terrain } from "../../shared/terrain";
 import { createAiPolicyMemory } from "../memory";
 import { planNavalTactics } from "./naval";
+import * as naval from "../../shared/naval";
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("naval combat query work", () => {
+  it("only asks combat reachability about targets strictly within the local search radius", () => {
+    const game = sketchScene("fleet-local-distance").map("bareDuel").replaceDefaults()
+      .player("player", { race: "grove" }).player("enemy", { race: "ember" })
+      .townHall("player", 300, 300).townHall("enemy", 3400, 3400)
+      .unit("player", "warship", 1600, 1000, { id: "gun" })
+      .unit("enemy", "warship", 1600, 1300, { id: "local" })
+      .unit("enemy", "warship", 2500, 1000, { id: "edge" })
+      .unit("enemy", "warship", 3400, 1500, { id: "remote" }).build().createGame();
+    game.map.terrain = undefined;
+    const snapshot = snapshotGame(game), before = structuredClone(snapshot);
+    const reach = vi.spyOn(naval, "canReach");
+    expect(planNavalTactics(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() })).toContainEqual({
+      type: "attackMove", unitIds: ["gun"], x: 1600, y: 1300,
+    });
+    expect(reach.mock.calls.map(call => call[2].id)).toContain("local");
+    expect(reach.mock.calls.some(call => ["edge", "remote"].includes(call[2].id))).toBe(false);
+    expect(snapshot).toEqual(before);
+  });
+
   it("still clears old combat, outfit and muster memory without a fleet or expedition", () => {
     const game = sketchScene("mainland-naval-cleanup").map("bareDuel").replaceDefaults()
       .player("player", { race: "grove" }).player("enemy", { race: "ember" })

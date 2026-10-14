@@ -394,7 +394,8 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             if (recruits.length) { commands.push({ type: "board", unitIds: recruits.map(unit=>unit.id), transportId: ship.id }); continue; }
         }
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
-        const local = foes.filter(target => canReach(snapshot.map, ship, target, snapshot.units, combatCapability(snapshot,ship).range) && distance(ship, target) < Math.max(900, combatCapability(snapshot,ship).range + 150));
+        const firingRange = combatCapability(snapshot, ship).range;
+        const local = foes.filter(target => distance(ship, target) < Math.max(900, firingRange + 150) && canReach(snapshot.map, ship, target, snapshot.units, firingRange));
         const danger = local.filter(target => "order" in target && combatCapability(snapshot,target).armed);
         const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
         if (ship.hp < ship.maxHp * HURT && home && distance(ship, home) > 250) {
