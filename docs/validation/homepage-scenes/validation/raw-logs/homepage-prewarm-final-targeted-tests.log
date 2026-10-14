@@ -1,0 +1,52 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ✓ src/client/world3d/painted-card-batches.test.ts (60 tests) 1825ms
+ ✓ src/client/world-presentation.test.ts (12 tests) 505ms
+ ✓ src/client/atlas-art.test.ts (7 tests) 1813ms
+   ✓ catalog Canvas paint identities > reuses the proven idle pairs without changing fresh painter arguments, world shadows or cropped output 891ms
+   ✓ catalog Canvas paint identities > shares real issued, two-handed and round-shield catalog kits without changing original pose, gear or game facts 394ms
+   ✓ catalog Canvas paint identities > keeps custom detail, appearance, motion and nonstandard presentations on their original identities 319ms
+stdout | src/client/world3d/world-layer.test.ts > production scene CPU integration (GPU renderer mocked) > batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit
+2,000 troops: 61.0 ms CPU scene preparation, 1 actor mesh; GPU timing not measured
+
+ ✓ src/client/world3d/world-layer.test.ts (21 tests) 1915ms
+   ✓ production scene CPU integration (GPU renderer mocked) > binds water to the rendered match rather than the smaller home snapshot used for preloading 591ms
+ ❯ src/client/menu-scenes.test.ts (6 tests | 1 failed) 374ms
+   × bounded home scenes using the world presentation > passes only the selected pirate scene future asset recipe without adding it to the current world 12ms
+     → Target cannot be null or undefined.
+ ✓ src/client/art/raster-cache.test.ts (10 tests) 3092ms
+   ✓ cropped artwork cache > preserves every pixel and the world anchor at original density 3019ms
+ ✓ src/client/menu-forest-horde.test.ts (6 tests) 4160ms
+   ✓ army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame 4068ms
+ ✓ src/client/menu-pirate-boarding.test.ts (4 tests) 1604ms
+   ✓ the authored pirate boarding menu scene > keeps every crew disk on actual deck or bridge geometry, clear of masts, guns and friendly bodies 1515ms
+ ✓ src/client/menu-presentation.test.ts (1 test) 58ms
+ ✓ src/client/menu-capital-street.test.ts (4 tests) 4736ms
+   ✓ capital street presentation > can seek to a scene time without accumulated movement, and never teleports at route joins 4313ms
+   ✓ capital street presentation > looks across the street slowly, keeps its authored focus inside the map and retains a fixed reduced-motion view 359ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-scenes.test.ts > bounded home scenes using the world presentation > passes only the selected pirate scene future asset recipe without adding it to the current world
+AssertionError: Target cannot be null or undefined.
+ ❯ src/client/menu-scenes.test.ts:19:31
+     17|     for(let index=0;index<MENU_SCENES.length;index++){
+     18|       const backdrop=new MenuBackdrop(labels,index),current=backdrop.p…
+     19|       expect(current.corpses).toHaveLength(0);expect(current.tick).toB…
+       |                               ^
+     20|       const preparation=backdrop.artPreparation;
+     21|       if(MENU_SCENES[index]!.id==='fleet'){
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  1 failed | 130 passed (131)
+   Start at  11:13:42
+   Duration  13.48s (transform 3.40s, setup 0ms, collect 9.95s, tests 20.08s, environment 1ms, prepare 759ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

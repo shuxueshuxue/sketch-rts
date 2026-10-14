@@ -1,0 +1,15 @@
+@import './game-materials.css';
+
+/* Menus, battle controls and the armory use the same engraved, physical frame. */
+.menu-title { letter-spacing:2px; font-weight:600; border-bottom-color:#78633e55; }
+.room-section-title { letter-spacing:1.5px; }
+.main-menu[data-menu-view="home"] .map-button {
+  border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; border-radius:1px;
+  background:var(--game-wood); box-shadow:var(--game-frame); color:#d9c18a;
+}
+.main-menu[data-menu-view="home"] .map-button:hover,
+.main-menu[data-menu-view="home"] .map-button:focus-visible { background:var(--game-grain),linear-gradient(110deg,#4b3f2a,#2a3022); border-color:#d5b678; }
+.main-menu[data-menu-view="home"] .map-button-name { font-size:20px; letter-spacing:.22em; }
+.map-button,.menu-actions button,.slot-actions button,.match-action { border-radius:1px; box-shadow:inset 0 1px #cdb57a55,inset 0 -2px #0005,0 2px 3px #0004; }
+.menu-window :is(input,select) { border-radius:1px; box-shadow:inset 0 1px 3px #58482540; }
+.scene-switch { border-radius:1px; background:var(--game-wood); box-shadow:var(--game-inset); }

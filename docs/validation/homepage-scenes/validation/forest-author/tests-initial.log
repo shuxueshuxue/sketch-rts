@@ -1,0 +1,75 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ❯ src/client/menu-forest-horde.test.ts (6 tests | 4 failed) 598ms
+   × army against a forest horde menu presentation > uses a bounded local cast with an army formation and genuine mixed creature silhouettes 15ms
+     → expected undefined to deeply equal []
+   × army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent 11ms
+     → expected 52.086466572421664 to be less than or equal to 49
+   × army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame 558ms
+     → expected 34.54083194562233 to be greater than 35
+   × army against a forest horde menu presentation > keeps both armies and contact inside the uncovered portrait region and desktop right field 3ms
+     → expected 1490.690778135048 to be less than 1440
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > uses a bounded local cast with an army formation and genuine mixed creature silhouettes
+AssertionError: expected undefined to deeply equal []
+
+- Expected: 
+Array []
+
++ Received: 
+undefined
+
+ ❯ src/client/menu-forest-horde.test.ts:15:69
+     13|   it('uses a bounded local cast with an army formation and genuine mix…
+     14|     const rules=JSON.stringify(UNIT_RULES),run=createForestHorde();
+     15|     expect(run.presentation).toBe(true); expect(run.game.aiPlayers).to…
+       |                                                                     ^
+     16|     expect(run.game.units).toHaveLength(40); expect(run.game.buildings…
+     17|     const army=run.game.units.filter(unit=>unit.owner==='court'),horde…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent
+AssertionError: expected 52.086466572421664 to be less than or equal to 49
+ ❯ src/client/menu-forest-horde.test.ts:46:63
+     44|       if(source.kind==='archer'||source.kind==='thornSlinger')continue;
+     45|       expect(cue.toX).toBe(target.x);expect(cue.toY).toBe(target.y);
+     46|       expect(Math.hypot(source.x-target.x,source.y-target.y)).toBeLess…
+       |                                                               ^
+     47|       const pose=animation.frame(source,16700);
+     48|       expect(pose.mode).toBe('attack');expect(Math.sign(pose.direction…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame
+AssertionError: expected 34.54083194562233 to be greater than 35
+ ❯ src/client/menu-forest-horde.test.ts:65:96
+     63|         maxStep=Math.max(maxStep,Math.hypot(unit.x-before.x,unit.y-bef…
+     64|         expect(terrain.cells[Math.floor(unit.y/terrain.cell)*terrain.c…
+     65|         for(const prop of blocking)expect(Math.hypot(prop.x-unit.x,pro…
+       |                                                                                                ^
+     66|       }
+     67|       for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > keeps both armies and contact inside the uncovered portrait region and desktop right field
+AssertionError: expected 1490.690778135048 to be less than 1440
+ ❯ src/client/menu-forest-horde.test.ts:111:49
+    109|         const screen=run.game.units.map(unit=>({x:(unit.x-view.focus.x…
+    110|         expect(Math.min(...screen.map(p=>p.x))).toBeGreaterThan(width<…
+    111|         expect(Math.max(...screen.map(p=>p.x))).toBeLessThan(width);
+       |                                                 ^
+    112|         expect(Math.min(...screen.map(p=>p.y))).toBeGreaterThan(65);
+    113|         expect(Math.max(...screen.map(p=>p.y))).toBeLessThan(width<700…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  09:52:54
+   Duration  1.93s (transform 863ms, setup 0ms, collect 1.11s, tests 598ms, environment 0ms, prepare 47ms)
+

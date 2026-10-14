@@ -13,6 +13,38 @@ const labels = worldLabelsFor(createI18n('en'));
 const actors = (frame: WorldFrame) => frame.snapshot.units.map(unit => ({ id: unit.id, x: unit.x, y: unit.y, hp: unit.hp, owner: unit.owner }));
 
 describe('bounded home scenes using the world presentation', () => {
+  it('passes only the selected pirate scene future asset recipe without adding it to the current world',()=>{
+    for(let index=0;index<MENU_SCENES.length;index++){
+      const backdrop=new MenuBackdrop(labels,index),current=backdrop.prepare(0);
+      expect(current.corpses??[]).toHaveLength(0);expect(current.tick).toBe(0);
+      const preparation=backdrop.artPreparation;
+      if(MENU_SCENES[index]!.id==='fleet'){
+        expect(preparation?.corpses).toHaveLength(7);
+        expect(preparation?.models?.('menu/marine')).toBeDefined();
+      }else expect(preparation).toBeUndefined();
+      expect(backdrop.prepare(0)).toBe(current);expect(current.corpses??[]).toHaveLength(0);
+    }
+  });
+  it('starts the opening at the first visible frame after slow preparation while retaining the same prepared cast',()=>{
+    const scene=MENU_SCENES[2]!,run=scene.create(),create=vi.spyOn(scene,'create').mockReturnValue(run);
+    try{
+      const backdrop=new MenuBackdrop(labels,2),frames:WorldFrame[]=[],ctx=context();
+      backdrop.prepare(9000);
+      const corpses=backdrop.artPreparation!.corpses,models=backdrop.artPreparation!.models;
+      const game=run.game;
+      backdrop.startPresentation(12000);
+      backdrop.draw(ctx,320,180,12000,false,frame=>frames.push(frame));
+      expect(frames[0]!.snapshot.tick).toBe(0);expect(frames[0]!.snapshot.corpses).toHaveLength(0);
+      expect(run.game).toBe(game);expect(backdrop.artPreparation!.corpses).toBe(corpses);
+      expect(backdrop.artPreparation!.models).toBe(models);expect(create).toHaveBeenCalledOnce();
+      backdrop.draw(ctx,320,180,40000,false,frame=>frames.push(frame));
+      backdrop.startPresentation(43000);
+      backdrop.draw(ctx,320,180,43000,false,frame=>frames.push(frame));
+      expect(frames[2]!.snapshot.tick).toBe(0);expect(frames[2]!.snapshot.corpses).toHaveLength(0);
+      expect(frames[2]!.facing).not.toBe(frames[1]!.facing);expect(frames[2]!.animation).not.toBe(frames[1]!.animation);
+      expect(frames[2]!.motion).not.toBe(frames[1]!.motion);expect(create).toHaveBeenCalledOnce();
+    }finally{create.mockRestore();}
+  });
   it('keeps the three independent scenes and spawns each cast on its support domain', () => {
     expect(MENU_SCENES.map(scene => scene.id)).toEqual(['capital', 'woods', 'fleet']);
     for (const scene of MENU_SCENES) {

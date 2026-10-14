@@ -1,0 +1,1900 @@
+{
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "runtime": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "hardwareConcurrency": 5,
+    "devicePixelRatio": 1,
+    "screen": {
+      "width": 1440,
+      "height": 900
+    },
+    "contextReset": "function",
+    "noGameLoop": true,
+    "noGpuRenderer": true,
+    "prepareRasterAvailable": true
+  },
+  "cases": [
+    {
+      "spec": {
+        "id": "corpse-marine-d2-v0",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 2,
+        "variant": 0,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3712,
+            "translucent": 584,
+            "transparent": 61240,
+            "sumAlpha": 1021216,
+            "bounds": {
+              "left": 70,
+              "top": 107,
+              "right": 215,
+              "bottom": 165
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v0-outputs-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "76712f9ef6da9bc0d1182d3e0547525701631ed9153ce75941427e98e6bb19e1"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3712,
+            "translucent": 584,
+            "transparent": 61240,
+            "sumAlpha": 1021216,
+            "bounds": {
+              "left": 70,
+              "top": 107,
+              "right": 215,
+              "bottom": 165
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v0-outputs-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "76712f9ef6da9bc0d1182d3e0547525701631ed9153ce75941427e98e6bb19e1"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3712,
+            "translucent": 584,
+            "transparent": 61240,
+            "sumAlpha": 1021216,
+            "bounds": {
+              "left": 70,
+              "top": 90,
+              "right": 215,
+              "bottom": 148
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v0-gpuBottom-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "f69b049c283fbebc9c7c861394da87723f934de9b377711e6a10f95a9fa9f5f0"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3712,
+            "translucent": 584,
+            "transparent": 61240,
+            "sumAlpha": 1021216,
+            "bounds": {
+              "left": 70,
+              "top": 90,
+              "right": 215,
+              "bottom": 148
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v0-gpuBottom-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "f69b049c283fbebc9c7c861394da87723f934de9b377711e6a10f95a9fa9f5f0"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 2,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 287,
+          "height": 127,
+          "anchor": {
+            "x": -28.75,
+            "y": -11.25,
+            "density": 4
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 15436,
+            "translucent": 1130,
+            "transparent": 19883,
+            "sumAlpha": 4084042,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 284,
+              "bottom": 124
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v0-crops-0.rgba.gz",
+            "bytes": 145796,
+            "sha256": "f24bd24df9b73e261f87ef47f3d18e4f968157fade07c478b0573f07b13225a4"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 4,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 2,
+          "hit": false,
+          "x": -28.75,
+          "y": -11.25,
+          "density": 4,
+          "width": 287,
+          "height": 127,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 36449,
+        "bytes": 145796,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 262144,
+        "scratchBytes": 1048576,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 1194372
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 1024,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.699999988079071,
+          "avoidedPaintMs": 672.2999999821186,
+          "bytes": 13352,
+          "scratchBytes": 32768,
+          "ownedBytes": 46120,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 47144,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 309288,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 61.69999998807907,
+          "readbackMs": 162.40000000596046,
+          "cacheMs": 1.8999999910593033,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.5,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 227,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    },
+    {
+      "spec": {
+        "id": "corpse-marine-d2-v1",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 2,
+        "variant": 1,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3706,
+            "translucent": 593,
+            "transparent": 61237,
+            "sumAlpha": 1020969,
+            "bounds": {
+              "left": 43,
+              "top": 106,
+              "right": 184,
+              "bottom": 167
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v1-outputs-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "8d6d01ca4dab3067b76fd879955bdf13f130497dc69baa62188abd48cdc48e9a"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3706,
+            "translucent": 593,
+            "transparent": 61237,
+            "sumAlpha": 1020969,
+            "bounds": {
+              "left": 43,
+              "top": 106,
+              "right": 184,
+              "bottom": 167
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v1-outputs-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "8d6d01ca4dab3067b76fd879955bdf13f130497dc69baa62188abd48cdc48e9a"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3706,
+            "translucent": 593,
+            "transparent": 61237,
+            "sumAlpha": 1020969,
+            "bounds": {
+              "left": 43,
+              "top": 88,
+              "right": 184,
+              "bottom": 149
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v1-gpuBottom-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "7b709b921f9ea1e32b6605e467686eb716f573024738b13d83d113d3c8d476be"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3706,
+            "translucent": 593,
+            "transparent": 61237,
+            "sumAlpha": 1020969,
+            "bounds": {
+              "left": 43,
+              "top": 88,
+              "right": 184,
+              "bottom": 149
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v1-gpuBottom-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "7b709b921f9ea1e32b6605e467686eb716f573024738b13d83d113d3c8d476be"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 3,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 287,
+          "height": 127,
+          "anchor": {
+            "x": -28.75,
+            "y": -11.25,
+            "density": 4
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 15436,
+            "translucent": 1130,
+            "transparent": 19883,
+            "sumAlpha": 4084042,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 284,
+              "bottom": 124
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v1-crops-0.rgba.gz",
+            "bytes": 145796,
+            "sha256": "f24bd24df9b73e261f87ef47f3d18e4f968157fade07c478b0573f07b13225a4"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 4,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 3,
+          "hit": false,
+          "x": -28.75,
+          "y": -11.25,
+          "density": 4,
+          "width": 287,
+          "height": 127,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 36449,
+        "bytes": 145796,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 262144,
+        "scratchBytes": 1048576,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 1194372
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 1024,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.7000000178813934,
+          "avoidedPaintMs": 30.900000035762787,
+          "bytes": 13088,
+          "scratchBytes": 32768,
+          "ownedBytes": 45856,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 46880,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 309024,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 2.2000000029802322,
+          "readbackMs": 8.100000008940697,
+          "cacheMs": 1.6000000089406967,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 11.900000005960464,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    },
+    {
+      "spec": {
+        "id": "corpse-marine-d2-v2",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 2,
+        "variant": 2,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3700,
+            "translucent": 582,
+            "transparent": 61254,
+            "sumAlpha": 1022124,
+            "bounds": {
+              "left": 71,
+              "top": 100,
+              "right": 208,
+              "bottom": 171
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v2-outputs-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "b893c5dbeaf1c0bc5f0783d69c624cca2755363cc9bc5676b1cdf5d049123763"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3700,
+            "translucent": 582,
+            "transparent": 61254,
+            "sumAlpha": 1022124,
+            "bounds": {
+              "left": 71,
+              "top": 100,
+              "right": 208,
+              "bottom": 171
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v2-outputs-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "b893c5dbeaf1c0bc5f0783d69c624cca2755363cc9bc5676b1cdf5d049123763"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3700,
+            "translucent": 582,
+            "transparent": 61254,
+            "sumAlpha": 1022124,
+            "bounds": {
+              "left": 71,
+              "top": 84,
+              "right": 208,
+              "bottom": 155
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v2-gpuBottom-0.rgba.gz",
+            "bytes": 262144,
+            "sha256": "db2df6633bb8ddc07ca773954cc6457202f14d1879ecb7578e3bebcb0006ca0d"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 256,
+          "height": 256,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 3700,
+            "translucent": 582,
+            "transparent": 61254,
+            "sumAlpha": 1022124,
+            "bounds": {
+              "left": 71,
+              "top": 84,
+              "right": 208,
+              "bottom": 155
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v2-gpuBottom-1.rgba.gz",
+            "bytes": 262144,
+            "sha256": "db2df6633bb8ddc07ca773954cc6457202f14d1879ecb7578e3bebcb0006ca0d"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 4,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 287,
+          "height": 127,
+          "anchor": {
+            "x": -28.75,
+            "y": -11.25,
+            "density": 4
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 15436,
+            "translucent": 1130,
+            "transparent": 19883,
+            "sumAlpha": 4084042,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 284,
+              "bottom": 124
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d2-v2-crops-0.rgba.gz",
+            "bytes": 145796,
+            "sha256": "f24bd24df9b73e261f87ef47f3d18e4f968157fade07c478b0573f07b13225a4"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 4,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 4,
+          "hit": false,
+          "x": -28.75,
+          "y": -11.25,
+          "density": 4,
+          "width": 287,
+          "height": 127,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 36449,
+        "bytes": 145796,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 262144,
+        "scratchBytes": 1048576,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 1194372
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 1024,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 0.20000000298023224,
+          "avoidedPaintMs": 13.5,
+          "bytes": 12896,
+          "scratchBytes": 32768,
+          "ownedBytes": 45664,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 46688,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 308832,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 2.2999999970197678,
+          "readbackMs": 2.2000000029802322,
+          "cacheMs": 0.29999999701976776,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.09999999403953552,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 4.899999991059303,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    },
+    {
+      "spec": {
+        "id": "corpse-marine-d4-v0",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 4,
+        "variant": 0,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15236,
+            "translucent": 1557,
+            "transparent": 245351,
+            "sumAlpha": 4085526,
+            "bounds": {
+              "left": 141,
+              "top": 215,
+              "right": 431,
+              "bottom": 330
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v0-outputs-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "3ae6bb03d33ea07ff8ad43230cf6e6bdc3aed914862c8af6b47c54dc9c81bb1e"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15236,
+            "translucent": 1557,
+            "transparent": 245351,
+            "sumAlpha": 4085526,
+            "bounds": {
+              "left": 141,
+              "top": 215,
+              "right": 431,
+              "bottom": 330
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v0-outputs-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "3ae6bb03d33ea07ff8ad43230cf6e6bdc3aed914862c8af6b47c54dc9c81bb1e"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15236,
+            "translucent": 1557,
+            "transparent": 245351,
+            "sumAlpha": 4085526,
+            "bounds": {
+              "left": 141,
+              "top": 181,
+              "right": 431,
+              "bottom": 296
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v0-gpuBottom-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "abc868fb91fe34db9a92be2fd8203075bd7fcdd04a857f02538fdf942fcbfe64"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15236,
+            "translucent": 1557,
+            "transparent": 245351,
+            "sumAlpha": 4085526,
+            "bounds": {
+              "left": 141,
+              "top": 181,
+              "right": 431,
+              "bottom": 296
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v0-gpuBottom-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "abc868fb91fe34db9a92be2fd8203075bd7fcdd04a857f02538fdf942fcbfe64"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 5,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 429,
+          "height": 188,
+          "anchor": {
+            "x": -28.5,
+            "y": -11,
+            "density": 6
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 35173,
+            "translucent": 1713,
+            "transparent": 43766,
+            "sumAlpha": 9193297,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 426,
+              "bottom": 185
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v0-crops-0.rgba.gz",
+            "bytes": 322608,
+            "sha256": "cd9c3ebef1ab99c0017a07bff5e84c818a140db164cbbf9cf9257e5f19e58523"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 6,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 5,
+          "hit": false,
+          "x": -28.5,
+          "y": -11,
+          "density": 6,
+          "width": 429,
+          "height": 188,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 80652,
+        "bytes": 322608,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 589824,
+        "scratchBytes": 2359296,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 2681904
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 2048,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 1048576,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 2048,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.100000023841858,
+          "avoidedPaintMs": 49.79999998211861,
+          "bytes": 38096,
+          "scratchBytes": 131072,
+          "ownedBytes": 169168,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 171216,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 1048576,
+        "peakOwnedCpuBytes": 1219792,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 4.700000002980232,
+          "readbackMs": 11.899999991059303,
+          "cacheMs": 0.7000000029802322,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.19999998807907104,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 17.399999991059303,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    },
+    {
+      "spec": {
+        "id": "corpse-marine-d4-v1",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 4,
+        "variant": 1,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15222,
+            "translucent": 1584,
+            "transparent": 245338,
+            "sumAlpha": 4086002,
+            "bounds": {
+              "left": 85,
+              "top": 213,
+              "right": 368,
+              "bottom": 335
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v1-outputs-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "516dbdf260ea86da6d823eebb22d20fe6dab9599d1bb4bf48e807932f4e005b9"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15222,
+            "translucent": 1584,
+            "transparent": 245338,
+            "sumAlpha": 4086002,
+            "bounds": {
+              "left": 85,
+              "top": 213,
+              "right": 368,
+              "bottom": 335
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v1-outputs-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "516dbdf260ea86da6d823eebb22d20fe6dab9599d1bb4bf48e807932f4e005b9"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15222,
+            "translucent": 1584,
+            "transparent": 245338,
+            "sumAlpha": 4086002,
+            "bounds": {
+              "left": 85,
+              "top": 176,
+              "right": 368,
+              "bottom": 298
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v1-gpuBottom-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "f16cea85624d7848be40637438090b05a07cbcc74aac4bea9da4dc5589c3a683"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15222,
+            "translucent": 1584,
+            "transparent": 245338,
+            "sumAlpha": 4086002,
+            "bounds": {
+              "left": 85,
+              "top": 176,
+              "right": 368,
+              "bottom": 298
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v1-gpuBottom-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "f16cea85624d7848be40637438090b05a07cbcc74aac4bea9da4dc5589c3a683"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 6,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 429,
+          "height": 188,
+          "anchor": {
+            "x": -28.5,
+            "y": -11,
+            "density": 6
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 35173,
+            "translucent": 1713,
+            "transparent": 43766,
+            "sumAlpha": 9193297,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 426,
+              "bottom": 185
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v1-crops-0.rgba.gz",
+            "bytes": 322608,
+            "sha256": "cd9c3ebef1ab99c0017a07bff5e84c818a140db164cbbf9cf9257e5f19e58523"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 6,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 6,
+          "hit": false,
+          "x": -28.5,
+          "y": -11,
+          "density": 6,
+          "width": 429,
+          "height": 188,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 80652,
+        "bytes": 322608,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 589824,
+        "scratchBytes": 2359296,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 2681904
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 2048,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 1048576,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 2048,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1,
+          "avoidedPaintMs": 27.600000008940697,
+          "bytes": 37580,
+          "scratchBytes": 131072,
+          "ownedBytes": 168652,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 170700,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 1048576,
+        "peakOwnedCpuBytes": 1219276,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 4.0999999940395355,
+          "readbackMs": 5.100000008940697,
+          "cacheMs": 0.5999999940395355,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.19999998807907104,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 9.899999991059303,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    },
+    {
+      "spec": {
+        "id": "corpse-marine-d4-v2",
+        "type": "corpse",
+        "modelKey": "menu/marine",
+        "kind": "footman",
+        "color": "#4f8581",
+        "density": 4,
+        "variant": 2,
+        "tileSize": 128,
+        "presentation": {}
+      },
+      "mode": "actual-prepareRaster-cache-recovery",
+      "outputs": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15220,
+            "translucent": 1549,
+            "transparent": 245375,
+            "sumAlpha": 4083637,
+            "bounds": {
+              "left": 142,
+              "top": 200,
+              "right": 418,
+              "bottom": 343
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v2-outputs-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "b58237f89987a628cbf4d780aff2235eaeadcd4ce25445f85daa5bd61912ab75"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15220,
+            "translucent": 1549,
+            "transparent": 245375,
+            "sumAlpha": 4083637,
+            "bounds": {
+              "left": 142,
+              "top": 200,
+              "right": 418,
+              "bottom": 343
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v2-outputs-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "b58237f89987a628cbf4d780aff2235eaeadcd4ce25445f85daa5bd61912ab75"
+          }
+        }
+      ],
+      "gpuBottom": [
+        {
+          "temperature": "cold",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15220,
+            "translucent": 1549,
+            "transparent": 245375,
+            "sumAlpha": 4083637,
+            "bounds": {
+              "left": 142,
+              "top": 168,
+              "right": 418,
+              "bottom": 311
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v2-gpuBottom-0.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "e9e562154e037666eb1fbbe08b1226a93bcaadcc4387878c960eb22a5fa18fb3"
+          }
+        },
+        {
+          "temperature": "warm",
+          "width": 512,
+          "height": 512,
+          "anchor": null,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": true
+          },
+          "alpha": {
+            "opaque": 15220,
+            "translucent": 1549,
+            "transparent": 245375,
+            "sumAlpha": 4083637,
+            "bounds": {
+              "left": 142,
+              "top": 168,
+              "right": 418,
+              "bottom": 311
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v2-gpuBottom-1.rgba.gz",
+            "bytes": 1048576,
+            "sha256": "e9e562154e037666eb1fbbe08b1226a93bcaadcc4387878c960eb22a5fa18fb3"
+          }
+        }
+      ],
+      "crops": [
+        {
+          "canvasId": 7,
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "width": 429,
+          "height": 188,
+          "anchor": {
+            "x": -28.5,
+            "y": -11,
+            "density": 6
+          },
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          },
+          "alpha": {
+            "opaque": 35173,
+            "translucent": 1713,
+            "transparent": 43766,
+            "sumAlpha": 9193297,
+            "bounds": {
+              "left": 2,
+              "top": 2,
+              "right": 426,
+              "bottom": 185
+            }
+          },
+          "rgba": {
+            "file": "candidate/corpse-marine-d4-v2-crops-0.rgba.gz",
+            "bytes": 322608,
+            "sha256": "cd9c3ebef1ab99c0017a07bff5e84c818a140db164cbbf9cf9257e5f19e58523"
+          }
+        }
+      ],
+      "trace": [
+        {
+          "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+          "requestedDensity": 6,
+          "tileSize": 128,
+          "cacheId": 1,
+          "canvasId": 7,
+          "hit": false,
+          "x": -28.5,
+          "y": -11,
+          "density": 6,
+          "width": 429,
+          "height": 188,
+          "contextAttributes": {
+            "alpha": true,
+            "colorSpace": "srgb",
+            "colorType": "unorm8",
+            "desynchronized": false,
+            "toneMapping": {
+              "mode": "standard"
+            },
+            "willReadFrequently": false
+          }
+        }
+      ],
+      "stats": {
+        "entries": 1,
+        "pixels": 80652,
+        "bytes": 322608,
+        "hits": 0,
+        "misses": 1,
+        "evictions": 0,
+        "scratchCanvases": 1,
+        "scratchPixels": 589824,
+        "scratchBytes": 2359296,
+        "spareCanvases": 0,
+        "sparePixels": 0,
+        "spareBytes": 0,
+        "retiredCanvases": 0,
+        "retiredPixels": 0,
+        "retiredBytes": 0,
+        "leasedCanvases": 0,
+        "leasedPixels": 0,
+        "leasedBytes": 0,
+        "ownedCanvasBytes": 2681904
+      },
+      "preparedStats": {
+        "pages": 0,
+        "cards": 0,
+        "pixels": 0,
+        "drawChunks": 0,
+        "pooledDrawChunks": 0,
+        "drawCapacity": 0,
+        "drawBufferBytes": 0,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 2048,
+        "gpuBytes": 0,
+        "allocatedMipBytes": 0,
+        "canvasBackingBytes": 1048576,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 2048,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.2000000029802322,
+          "avoidedPaintMs": 33.6000000089407,
+          "bytes": 37308,
+          "scratchBytes": 131072,
+          "ownedBytes": 168380,
+          "entries": 1,
+          "hits": 3,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 170428,
+        "ownedGpuBytes": 0,
+        "peakPendingRgbaBytes": 1048576,
+        "peakOwnedCpuBytes": 1219004,
+        "peakOwnedGpuBytes": 0,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 0,
+        "preparedRasters": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 4,
+          "readbackMs": 7.200000002980232,
+          "cacheMs": 0.9000000059604645,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.29999999701976776,
+          "slotMs": 0
+        },
+        "rasterWorkWallMs": 12.200000002980232,
+        "scratchTextures": 0,
+        "scratchCpuBytes": 0,
+        "scratchGpuBytes": 0,
+        "mipInitializedPages": 0,
+        "mipLayerUpdates": 0,
+        "mipCopyCalls": 0,
+        "mipCopyBytes": 0,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 0,
+        "scratchInitialUploadBytes": 0,
+        "scratchFullUploadBytes": 0,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0
+      }
+    }
+  ],
+  "errors": [],
+  "networkFailures": [],
+  "console": [
+    {
+      "type": "warning",
+      "args": [
+        {
+          "type": "string",
+          "value": "THREE.WARNING: Multiple instances of Three.js being imported."
+        }
+      ],
+      "executionContextId": 2,
+      "timestamp": 1791976707927.163,
+      "stackTrace": {
+        "callFrames": [
+          {
+            "functionName": "warn",
+            "scriptId": "149",
+            "url": "http://127.0.0.1:5173/@fs/workspace/homepage-raster-parity-VQ6CVx/vite/deps/chunk-FPMESZEU.js?v=3270a7ad",
+            "lineNumber": 301,
+            "columnNumber": 14
+          },
+          {
+            "functionName": "",
+            "scriptId": "149",
+            "url": "http://127.0.0.1:5173/@fs/workspace/homepage-raster-parity-VQ6CVx/vite/deps/chunk-FPMESZEU.js?v=3270a7ad",
+            "lineNumber": 31969,
+            "columnNumber": 4
+          }
+        ]
+      }
+    }
+  ]
+}

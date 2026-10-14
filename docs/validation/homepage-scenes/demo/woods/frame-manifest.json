@@ -1,0 +1,4545 @@
+{
+  "scene": "woods",
+  "fps": 6,
+  "width": 1280,
+  "height": 720,
+  "playbackDuration": 47,
+  "sampleStartSecond": 1.6,
+  "sampleEndSecond": 48.43333333333334,
+  "method": "Time sampled production homepage display, not a native FPS recording",
+  "frames": [
+    {
+      "frame": 0,
+      "second": 1.6,
+      "tick": 32,
+      "submittedTick": 32,
+      "capture": {
+        "file": "frames/frame-00000.png",
+        "sha256": "54c175b138c770ee4fd3206391bbe6e4bbf20ea962fa05e8aee0c47ab5c33e86",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1316.7000000029802,
+          "polls": 267,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 1,
+      "second": 1.7666666666666668,
+      "tick": 35,
+      "submittedTick": 35,
+      "capture": {
+        "file": "frames/frame-00001.png",
+        "sha256": "f41a33e0b1c1679f1a06f3e1dd18f65e158e24bc79c271e6eab1a6a539de3b4d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 327.5,
+          "polls": 77,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 2,
+      "second": 1.9333333333333333,
+      "tick": 38,
+      "submittedTick": 38,
+      "capture": {
+        "file": "frames/frame-00002.png",
+        "sha256": "0a0751a9a6e7e4decf9998cc9dffce09ceddaf991e820573c88c9aa0c59c4da8",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 412.5,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 3,
+      "second": 2.1,
+      "tick": 42,
+      "submittedTick": 42,
+      "capture": {
+        "file": "frames/frame-00003.png",
+        "sha256": "b76ce61cbfb3c53be149fe9815a918750b9e959e4017366f70c1d549e7bcfdbd",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 565.5999999940395,
+          "polls": 117,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 4,
+      "second": 2.2666666666666666,
+      "tick": 45,
+      "submittedTick": 45,
+      "capture": {
+        "file": "frames/frame-00004.png",
+        "sha256": "b5ed3e48c10838ac5ae745cc6c775753e3b8092221ac1e8852cc171f6b6d3e7d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 325.29999999701977,
+          "polls": 68,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 5,
+      "second": 2.4333333333333336,
+      "tick": 48,
+      "submittedTick": 48,
+      "capture": {
+        "file": "frames/frame-00005.png",
+        "sha256": "8120a5a70fac2957956e6ea7b1f766c2930e28bec704feb8be597928fa181df6",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 479.8999999910593,
+          "polls": 91,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 6,
+      "second": 2.6,
+      "tick": 52,
+      "submittedTick": 52,
+      "capture": {
+        "file": "frames/frame-00006.png",
+        "sha256": "5451d26fc107e428808ffe2f6f25d8280be829455e9252bf60db557d1df7313d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 546.2999999970198,
+          "polls": 105,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 7,
+      "second": 2.7666666666666666,
+      "tick": 55,
+      "submittedTick": 55,
+      "capture": {
+        "file": "frames/frame-00007.png",
+        "sha256": "bf03cd457eaea050ddfa191d93cea37fdf82b859e8bc96e8ee545029ce77fb01",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 389.40000000596046,
+          "polls": 82,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 8,
+      "second": 2.9333333333333336,
+      "tick": 58,
+      "submittedTick": 58,
+      "capture": {
+        "file": "frames/frame-00008.png",
+        "sha256": "e6113595f361035df28882f1a25cc627c35539c42cd4db6dc0aaa82f9e190d37",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 377.20000000298023,
+          "polls": 81,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 9,
+      "second": 3.1,
+      "tick": 62,
+      "submittedTick": 62,
+      "capture": {
+        "file": "frames/frame-00009.png",
+        "sha256": "2a5ab43a0bac27838811230d70d7715d1600ac1f8a71a3381239f9015d7cc85a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 351.20000000298023,
+          "polls": 74,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 10,
+      "second": 3.2666666666666666,
+      "tick": 65,
+      "submittedTick": 65,
+      "capture": {
+        "file": "frames/frame-00010.png",
+        "sha256": "0cf238f7427ce9309dd973ef14e8e1abbc9561d4cf90978d4b50a82085af8953",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 441.69999998807907,
+          "polls": 89,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 11,
+      "second": 3.4333333333333336,
+      "tick": 68,
+      "submittedTick": 68,
+      "capture": {
+        "file": "frames/frame-00011.png",
+        "sha256": "21374782a9af4111b40069adeb3f796614f6d4dc47fa223bb1d67feadf7d02f1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 426.5,
+          "polls": 79,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 12,
+      "second": 3.6,
+      "tick": 72,
+      "submittedTick": 72,
+      "capture": {
+        "file": "frames/frame-00012.png",
+        "sha256": "3f4821cef308752bfe4cba507377b80ea2a196f904ff2ab87a51ccb6c7ff8f1e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 463.90000000596046,
+          "polls": 92,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 13,
+      "second": 3.7666666666666666,
+      "tick": 75,
+      "submittedTick": 75,
+      "capture": {
+        "file": "frames/frame-00013.png",
+        "sha256": "588e3b3f4d305302c5639ce22457920cf8a809fac362a6901d9f9a8ae9d67844",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 547.1000000089407,
+          "polls": 108,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 14,
+      "second": 3.9333333333333336,
+      "tick": 78,
+      "submittedTick": 78,
+      "capture": {
+        "file": "frames/frame-00014.png",
+        "sha256": "693905803a4e5e4cda9f52dd3b771164a3f208b82dac5574911547c21aa8ccaf",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 487.6000000089407,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 15,
+      "second": 4.1,
+      "tick": 82,
+      "submittedTick": 82,
+      "capture": {
+        "file": "frames/frame-00015.png",
+        "sha256": "d2c0d423c1e153fc2776e7628579a919a8b2e7efc3afed421e82f18a50c0e6e2",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 336.1000000089407,
+          "polls": 75,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 16,
+      "second": 4.266666666666667,
+      "tick": 85,
+      "submittedTick": 85,
+      "capture": {
+        "file": "frames/frame-00016.png",
+        "sha256": "388d33f6ce8adfaa94051566eae7aacff16c03bd780a7c879ebb212bddc76071",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 576.7000000029802,
+          "polls": 111,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 17,
+      "second": 4.433333333333334,
+      "tick": 88,
+      "submittedTick": 88,
+      "capture": {
+        "file": "frames/frame-00017.png",
+        "sha256": "d457c814810147c16c41fa600624f023665f7a8ea46339c474a66802917606f3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 548.1999999880791,
+          "polls": 103,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 18,
+      "second": 4.6,
+      "tick": 92,
+      "submittedTick": 92,
+      "capture": {
+        "file": "frames/frame-00018.png",
+        "sha256": "bad8981bf8547de01e22314c60e5ff56fd14a4216a8c2bfa7d51cd3b4cf1f8e0",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 772.5,
+          "polls": 150,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 19,
+      "second": 4.766666666666667,
+      "tick": 95,
+      "submittedTick": 95,
+      "capture": {
+        "file": "frames/frame-00019.png",
+        "sha256": "f9e75eda35b915d992d0ae36317cf7c46324f2bee9e8467f2f61ec654351d836",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 591.8999999910593,
+          "polls": 110,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 20,
+      "second": 4.933333333333334,
+      "tick": 98,
+      "submittedTick": 98,
+      "capture": {
+        "file": "frames/frame-00020.png",
+        "sha256": "66d463a72a365efe32f11dbf0341ed0e79a90999c4e8d0c729d2f6c2ac41d780",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 401.19999998807907,
+          "polls": 92,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 21,
+      "second": 5.1,
+      "tick": 102,
+      "submittedTick": 102,
+      "capture": {
+        "file": "frames/frame-00021.png",
+        "sha256": "8c8ba5d998404fb75c30fa834dff92cb9cae480a61287249d7b9239531dfb544",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 359.29999999701977,
+          "polls": 76,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 22,
+      "second": 5.266666666666667,
+      "tick": 105,
+      "submittedTick": 105,
+      "capture": {
+        "file": "frames/frame-00022.png",
+        "sha256": "19637c90ae950007a4e0cde28d4a1b2ac41817c201a05387f40704a4cc601fbb",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 434.79999999701977,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 23,
+      "second": 5.433333333333334,
+      "tick": 108,
+      "submittedTick": 108,
+      "capture": {
+        "file": "frames/frame-00023.png",
+        "sha256": "8a093766dddc141b47c1c44e475561ae1ba4e9072121b6a465fc2ca080210826",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 483.1000000089407,
+          "polls": 101,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 24,
+      "second": 5.6,
+      "tick": 112,
+      "submittedTick": 112,
+      "capture": {
+        "file": "frames/frame-00024.png",
+        "sha256": "0d42b4b98b04c0dab77a8e7f3e1cf33359a0e26222715c67fcb2cb4854d3b038",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 691.8999999910593,
+          "polls": 126,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 25,
+      "second": 5.7666666666666675,
+      "tick": 115,
+      "submittedTick": 115,
+      "capture": {
+        "file": "frames/frame-00025.png",
+        "sha256": "2d8ce9f515face2d75fc2138e603fde3a62b1246685e8412ec79bacaaaf60e3b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 796.8000000119209,
+          "polls": 152,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 26,
+      "second": 5.933333333333334,
+      "tick": 118,
+      "submittedTick": 118,
+      "capture": {
+        "file": "frames/frame-00026.png",
+        "sha256": "6c48c21e28445c35c3af3440fc84dcb699667a2cbd5143a26247cc07945ab835",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 588.7000000029802,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 27,
+      "second": 6.1,
+      "tick": 122,
+      "submittedTick": 122,
+      "capture": {
+        "file": "frames/frame-00027.png",
+        "sha256": "1036e85bb0ff512373a5a817b2a3f8858022c9289adaaa330a37d40f7326f44d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 502.70000000298023,
+          "polls": 97,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 28,
+      "second": 6.2666666666666675,
+      "tick": 125,
+      "submittedTick": 125,
+      "capture": {
+        "file": "frames/frame-00028.png",
+        "sha256": "c34972e2e152a6dbfbca005c0f515efdb77834355a7c09bb98029d4a74479048",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 624.6000000089407,
+          "polls": 120,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 29,
+      "second": 6.433333333333334,
+      "tick": 128,
+      "submittedTick": 128,
+      "capture": {
+        "file": "frames/frame-00029.png",
+        "sha256": "f165085f1edc210b33aa70c2abc717883662c900aa1a68570bf47c457409171d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 608.0999999940395,
+          "polls": 122,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 30,
+      "second": 6.6,
+      "tick": 132,
+      "submittedTick": 132,
+      "capture": {
+        "file": "frames/frame-00030.png",
+        "sha256": "e528cb965e7f677d26880b61829f2f8da163a9c0fd4d6c5244c6c6e39dc57fa5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 526.2000000029802,
+          "polls": 96,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 31,
+      "second": 6.7666666666666675,
+      "tick": 135,
+      "submittedTick": 135,
+      "capture": {
+        "file": "frames/frame-00031.png",
+        "sha256": "2da21d53c4cd3c48d68c107c6c052f975e94a6943092474b1e19c2be506e77ac",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 682.1000000089407,
+          "polls": 126,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 32,
+      "second": 6.933333333333334,
+      "tick": 138,
+      "submittedTick": 138,
+      "capture": {
+        "file": "frames/frame-00032.png",
+        "sha256": "3d7ac8198c0f003514dd305d6cf3cadcf936f8599dac6b58eb6b8a5ed6ac7741",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 507.30000001192093,
+          "polls": 106,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 33,
+      "second": 7.1,
+      "tick": 142,
+      "submittedTick": 142,
+      "capture": {
+        "file": "frames/frame-00033.png",
+        "sha256": "7204d6a474f9b05e722db86307920f5a686044b878ad3ebe2fa84a21d078e1f3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 310,
+          "polls": 67,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 34,
+      "second": 7.2666666666666675,
+      "tick": 145,
+      "submittedTick": 145,
+      "capture": {
+        "file": "frames/frame-00034.png",
+        "sha256": "38c0ab2a32ae9161d20ac7a2d9a2f421e913350fca519432a0cf2b9f3640d8f8",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 418.8999999910593,
+          "polls": 79,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 35,
+      "second": 7.433333333333334,
+      "tick": 148,
+      "submittedTick": 148,
+      "capture": {
+        "file": "frames/frame-00035.png",
+        "sha256": "4a3e89c278ae5584211de37f295620dabfb9458ecf5dbfd7cfccc6a7c2e08173",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 481.5,
+          "polls": 105,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 36,
+      "second": 7.6,
+      "tick": 152,
+      "submittedTick": 152,
+      "capture": {
+        "file": "frames/frame-00036.png",
+        "sha256": "65d88024b4fef76fdb95a5ad7200702ce19d37409d038c23fe0613deba8d2841",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 232.20000000298023,
+          "polls": 56,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 37,
+      "second": 7.7666666666666675,
+      "tick": 155,
+      "submittedTick": 155,
+      "capture": {
+        "file": "frames/frame-00037.png",
+        "sha256": "253fe3a37c467979d78f3c20915d344cc747e2dbed35a582dfce89b2de9d007c",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 480,
+          "polls": 97,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 38,
+      "second": 7.933333333333334,
+      "tick": 158,
+      "submittedTick": 158,
+      "capture": {
+        "file": "frames/frame-00038.png",
+        "sha256": "e8cabe8226e546716ce84f6f8326c5e2c86d86414e83475bbf5577b34b220bf9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 594,
+          "polls": 127,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 39,
+      "second": 8.1,
+      "tick": 162,
+      "submittedTick": 162,
+      "capture": {
+        "file": "frames/frame-00039.png",
+        "sha256": "3a1a93e5667a0b451960255196f5d8bb73d8732b46ece2d6f03ab30929042a0b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 620.5999999940395,
+          "polls": 121,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 40,
+      "second": 8.266666666666667,
+      "tick": 165,
+      "submittedTick": 165,
+      "capture": {
+        "file": "frames/frame-00040.png",
+        "sha256": "be78e2e662f89766baccc3b701c397a144363c6b7ad689bf18572b051e563908",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 578.9000000059605,
+          "polls": 118,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 41,
+      "second": 8.433333333333334,
+      "tick": 168,
+      "submittedTick": 168,
+      "capture": {
+        "file": "frames/frame-00041.png",
+        "sha256": "0fc1919507d40237b97d984b617fe3fb82a844c43780e7498efd65ae2f7949fc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 358.30000001192093,
+          "polls": 73,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 42,
+      "second": 8.6,
+      "tick": 172,
+      "submittedTick": 172,
+      "capture": {
+        "file": "frames/frame-00042.png",
+        "sha256": "2b69d6a6cc7740a2b81267e61d5db91f27c553494705d2cb7d1e1b55b65ec7da",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 410.5,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 43,
+      "second": 8.766666666666667,
+      "tick": 175,
+      "submittedTick": 175,
+      "capture": {
+        "file": "frames/frame-00043.png",
+        "sha256": "2ee6ed02dffb424ac3d8cd106650a0210438a577a1100c7a628096c0ad9c1dbf",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 499.20000000298023,
+          "polls": 103,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 44,
+      "second": 8.933333333333334,
+      "tick": 178,
+      "submittedTick": 178,
+      "capture": {
+        "file": "frames/frame-00044.png",
+        "sha256": "4c7a1c5930f7cea036c29f74ce43471b1cb335f86cdff2b912437bb262777117",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 653.2999999970198,
+          "polls": 128,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 45,
+      "second": 9.1,
+      "tick": 182,
+      "submittedTick": 182,
+      "capture": {
+        "file": "frames/frame-00045.png",
+        "sha256": "82d76224e8c3bd5bc38de99cbe586d15dd553a9daa87be57f0b0d5c52ed33d52",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 474.30000001192093,
+          "polls": 101,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 46,
+      "second": 9.266666666666667,
+      "tick": 185,
+      "submittedTick": 185,
+      "capture": {
+        "file": "frames/frame-00046.png",
+        "sha256": "a9352179e681cc28c77d2b89b479baa3a0669c9eadb9087df6d98a53799f127a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 541.5999999940395,
+          "polls": 114,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 47,
+      "second": 9.433333333333334,
+      "tick": 188,
+      "submittedTick": 188,
+      "capture": {
+        "file": "frames/frame-00047.png",
+        "sha256": "c45f5ac974392c435a120b96df235e0ca689433be31ebb9c38792673f3750dc8",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 668.5,
+          "polls": 131,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 48,
+      "second": 9.6,
+      "tick": 192,
+      "submittedTick": 192,
+      "capture": {
+        "file": "frames/frame-00048.png",
+        "sha256": "bf7042907519bdd5dc9291747692de7e4ade9ab5f74c4ac9e999acde23b926f9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 848.3999999910593,
+          "polls": 180,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 49,
+      "second": 9.766666666666666,
+      "tick": 195,
+      "submittedTick": 195,
+      "capture": {
+        "file": "frames/frame-00049.png",
+        "sha256": "8cadf871645d0f92cace6d89d865baa1551d88faf6521ad4d8baf304af96068f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 901.1000000089407,
+          "polls": 164,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 50,
+      "second": 9.933333333333334,
+      "tick": 198,
+      "submittedTick": 198,
+      "capture": {
+        "file": "frames/frame-00050.png",
+        "sha256": "f8364ee62269d9d51b98ee53f67152b96e2bf46ab49c965247235db04429a730",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 866,
+          "polls": 166,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 51,
+      "second": 10.1,
+      "tick": 202,
+      "submittedTick": 202,
+      "capture": {
+        "file": "frames/frame-00051.png",
+        "sha256": "75df10146dff89d6f4ce2fa51837203d1f1dfda0bbce7312561e6b01d75c1e39",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 615.3999999910593,
+          "polls": 127,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 52,
+      "second": 10.266666666666666,
+      "tick": 205,
+      "submittedTick": 205,
+      "capture": {
+        "file": "frames/frame-00052.png",
+        "sha256": "52f0b9b87318d91734f38679ad9937c9f9d1f0e93fa04737cb45bc07251434b2",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 588.8000000119209,
+          "polls": 128,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 53,
+      "second": 10.433333333333334,
+      "tick": 208,
+      "submittedTick": 208,
+      "capture": {
+        "file": "frames/frame-00053.png",
+        "sha256": "763ecee546380fa7f8339f835d8cec7fa65d371a7b5b4ace46d1910e42c47bf0",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 516.2000000029802,
+          "polls": 113,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 54,
+      "second": 10.6,
+      "tick": 212,
+      "submittedTick": 212,
+      "capture": {
+        "file": "frames/frame-00054.png",
+        "sha256": "013f68f6d850a5f7e838ec2e8fde0019a278e0e6e8c432ab33503a92f0684eff",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 603.7000000029802,
+          "polls": 121,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 55,
+      "second": 10.766666666666666,
+      "tick": 215,
+      "submittedTick": 215,
+      "capture": {
+        "file": "frames/frame-00055.png",
+        "sha256": "6f2789e55682c179eb4b648a8bd4dce0c50531bf8bfa2bc4fa89bb296b3e6f68",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 654.4000000059605,
+          "polls": 137,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 56,
+      "second": 10.933333333333334,
+      "tick": 218,
+      "submittedTick": 218,
+      "capture": {
+        "file": "frames/frame-00056.png",
+        "sha256": "37426e23e26c4207f15a278498178f55c5bbc463fbac1caee472c69be4145686",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 883.0999999940395,
+          "polls": 170,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 57,
+      "second": 11.1,
+      "tick": 222,
+      "submittedTick": 222,
+      "capture": {
+        "file": "frames/frame-00057.png",
+        "sha256": "6d9701aa73180ad81299522091a2473fd3942a3b18cd8a6b325bd18184bd7e53",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 922.4000000059605,
+          "polls": 168,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 58,
+      "second": 11.266666666666666,
+      "tick": 225,
+      "submittedTick": 225,
+      "capture": {
+        "file": "frames/frame-00058.png",
+        "sha256": "ad7818d790c065631fd7afb5c9ad38025a47e9f0a23255000edfcb6b7e9909e8",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 783.5,
+          "polls": 157,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 59,
+      "second": 11.433333333333334,
+      "tick": 228,
+      "submittedTick": 228,
+      "capture": {
+        "file": "frames/frame-00059.png",
+        "sha256": "8eab78020e822624c5f74607b8febb14806cae27ff0cf8ca34dffcfc4a660fcb",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 600.2999999970198,
+          "polls": 133,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 60,
+      "second": 11.6,
+      "tick": 232,
+      "submittedTick": 232,
+      "capture": {
+        "file": "frames/frame-00060.png",
+        "sha256": "a235e6a75886f355618c14044275b7fd537dbdd57b965d3c4f6f8c3a0438435a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 964.4000000059605,
+          "polls": 186,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 61,
+      "second": 11.766666666666666,
+      "tick": 235,
+      "submittedTick": 235,
+      "capture": {
+        "file": "frames/frame-00061.png",
+        "sha256": "8e8abc1abbfc9b074515f5e80e427198291c64e9f980b6d4284d32fdbe6617f4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1079.5999999940395,
+          "polls": 210,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 62,
+      "second": 11.933333333333334,
+      "tick": 238,
+      "submittedTick": 238,
+      "capture": {
+        "file": "frames/frame-00062.png",
+        "sha256": "0f4ffca11d01c27e86f7e7ff1f7ae8efc6830f48d85b81df0a1488e40be383e9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 905.1000000089407,
+          "polls": 179,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 63,
+      "second": 12.1,
+      "tick": 242,
+      "submittedTick": 242,
+      "capture": {
+        "file": "frames/frame-00063.png",
+        "sha256": "bcb7f053e81a41058fe3ab8a0bc897a094063c2e0c43de27c285f5f9533383e0",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 992.9000000059605,
+          "polls": 205,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 64,
+      "second": 12.266666666666666,
+      "tick": 245,
+      "submittedTick": 245,
+      "capture": {
+        "file": "frames/frame-00064.png",
+        "sha256": "28fcba70f7432c7ae77f61b32df83072253bc93320a04843b772f87e4b8ca657",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 754.9000000059605,
+          "polls": 157,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 65,
+      "second": 12.433333333333334,
+      "tick": 248,
+      "submittedTick": 248,
+      "capture": {
+        "file": "frames/frame-00065.png",
+        "sha256": "032806dfa8b657cdb6b988aa4dc89b8bd1eb9d4be29dbcdb4d83789ce4503fce",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 545.4000000059605,
+          "polls": 120,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 66,
+      "second": 12.6,
+      "tick": 252,
+      "submittedTick": 252,
+      "capture": {
+        "file": "frames/frame-00066.png",
+        "sha256": "8e36e2215c68325714ea8a60d41b2c7a9de1fa8de0a8501d16bf16ebd4816939",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 552,
+          "polls": 113,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 67,
+      "second": 12.766666666666666,
+      "tick": 255,
+      "submittedTick": 255,
+      "capture": {
+        "file": "frames/frame-00067.png",
+        "sha256": "af2e889f8b913ba4e8cb472bb5c6417a584abf84070d7af10a66f3148dea8a02",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 737.0999999940395,
+          "polls": 159,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 68,
+      "second": 12.933333333333334,
+      "tick": 258,
+      "submittedTick": 258,
+      "capture": {
+        "file": "frames/frame-00068.png",
+        "sha256": "bd5dd83b2bf0a0d518e345358269708015fd2315abb04109fb815d9fda614b31",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 440.90000000596046,
+          "polls": 107,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 69,
+      "second": 13.1,
+      "tick": 262,
+      "submittedTick": 262,
+      "capture": {
+        "file": "frames/frame-00069.png",
+        "sha256": "10a3ebb28930700e4cf1970116cba1136f1b5618b3aa40cddc479cbc339d4fbd",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 600.2999999970198,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 70,
+      "second": 13.266666666666666,
+      "tick": 265,
+      "submittedTick": 265,
+      "capture": {
+        "file": "frames/frame-00070.png",
+        "sha256": "7706a71ba63b6b1763fd61439438a39cea95afaa5a7fc3aaf2a8561c3241c6dc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 813.7999999970198,
+          "polls": 183,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 71,
+      "second": 13.433333333333334,
+      "tick": 268,
+      "submittedTick": 268,
+      "capture": {
+        "file": "frames/frame-00071.png",
+        "sha256": "d97762bee653434499dc5927756331b09dc34d6aac2986a1278b682640a6e69b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 568.7000000029802,
+          "polls": 134,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 72,
+      "second": 13.6,
+      "tick": 272,
+      "submittedTick": 272,
+      "capture": {
+        "file": "frames/frame-00072.png",
+        "sha256": "6781377913e46a1d537c34e685c31e0d9ad98017ad753f5a5eefa6de79c26989",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 971.7000000029802,
+          "polls": 204,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 73,
+      "second": 13.766666666666666,
+      "tick": 275,
+      "submittedTick": 275,
+      "capture": {
+        "file": "frames/frame-00073.png",
+        "sha256": "66351290070c6f5671e5c6107186aed9dd6027f130f76b1ebd71e9ecaf1e6988",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 807.2999999970198,
+          "polls": 149,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 74,
+      "second": 13.933333333333334,
+      "tick": 278,
+      "submittedTick": 278,
+      "capture": {
+        "file": "frames/frame-00074.png",
+        "sha256": "bdee9a7b5cc87c45372a3e9f84ad14353cc792411ae2862cb9eae96001835a19",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 969.6000000089407,
+          "polls": 202,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 75,
+      "second": 14.1,
+      "tick": 282,
+      "submittedTick": 282,
+      "capture": {
+        "file": "frames/frame-00075.png",
+        "sha256": "a68b20d25a9d9a9faedc02542c1d97336024f2ad767eb37a5d4ec862c1fc5047",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 460.70000000298023,
+          "polls": 100,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 76,
+      "second": 14.266666666666666,
+      "tick": 285,
+      "submittedTick": 285,
+      "capture": {
+        "file": "frames/frame-00076.png",
+        "sha256": "e37a02c33baae8d386cccc3c7693da65f75839f21302f0ff5e1788011fa1f4d4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 915.7999999970198,
+          "polls": 186,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 77,
+      "second": 14.433333333333334,
+      "tick": 288,
+      "submittedTick": 288,
+      "capture": {
+        "file": "frames/frame-00077.png",
+        "sha256": "4296742c066b4e159f8934d908652db2c5dfe29cb030521669bf77020f36573a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 575.9000000059605,
+          "polls": 119,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 78,
+      "second": 14.6,
+      "tick": 292,
+      "submittedTick": 292,
+      "capture": {
+        "file": "frames/frame-00078.png",
+        "sha256": "e0a46e30a0bd715312e1e2a0eec0075bf871c8f0ccc9d2e93a3da90bf1efa45a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 922.2000000029802,
+          "polls": 181,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 79,
+      "second": 14.766666666666666,
+      "tick": 295,
+      "submittedTick": 295,
+      "capture": {
+        "file": "frames/frame-00079.png",
+        "sha256": "f78af15abb87a7d04a87e87b6298256aa9d57414187f2cd2e67aabb4ec745268",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 922.2000000029802,
+          "polls": 181,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 80,
+      "second": 14.933333333333334,
+      "tick": 298,
+      "submittedTick": 298,
+      "capture": {
+        "file": "frames/frame-00080.png",
+        "sha256": "971354fe394a09c15f71692cd9e58b49f64d7868960878081b3d4eeec72a551d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 592.9000000059605,
+          "polls": 110,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 81,
+      "second": 15.1,
+      "tick": 302,
+      "submittedTick": 302,
+      "capture": {
+        "file": "frames/frame-00081.png",
+        "sha256": "9ac9659da89f985f917f71be6865b279b84e8969e4a057180d65d05584f691f4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 799.5,
+          "polls": 175,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 82,
+      "second": 15.266666666666666,
+      "tick": 305,
+      "submittedTick": 305,
+      "capture": {
+        "file": "frames/frame-00082.png",
+        "sha256": "eb35c787cd110765ee4c422429ca187f951a3de96c20ee344b2c6f0170d2e669",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 521.3000000119209,
+          "polls": 107,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 83,
+      "second": 15.433333333333334,
+      "tick": 308,
+      "submittedTick": 308,
+      "capture": {
+        "file": "frames/frame-00083.png",
+        "sha256": "160c483200700b06d9a41e83619bac52cae1b63a6598a6fc86a08b08d3bd69f5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 957.8999999910593,
+          "polls": 198,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 84,
+      "second": 15.6,
+      "tick": 312,
+      "submittedTick": 312,
+      "capture": {
+        "file": "frames/frame-00084.png",
+        "sha256": "0c5b670ae01d7f7f50ce6bb67aaa7dd21bd4a12ef1784b10d49ee10171e8e607",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 624,
+          "polls": 129,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 85,
+      "second": 15.766666666666666,
+      "tick": 315,
+      "submittedTick": 315,
+      "capture": {
+        "file": "frames/frame-00085.png",
+        "sha256": "bbe77c3ae38aacbf776264fcc53823ea6adfe2f4e1b427b47717522a09608954",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1098,
+          "polls": 223,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 86,
+      "second": 15.933333333333334,
+      "tick": 318,
+      "submittedTick": 318,
+      "capture": {
+        "file": "frames/frame-00086.png",
+        "sha256": "c448b4979f873cd2c8f9f90650e08b8da5973f22a8fbd9c1e6911095d23a1dcf",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 611.1000000089407,
+          "polls": 117,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 87,
+      "second": 16.1,
+      "tick": 322,
+      "submittedTick": 322,
+      "capture": {
+        "file": "frames/frame-00087.png",
+        "sha256": "3c8e08fd075c76f3252773a4fc4d38284334d9e831b7172dc7b7e18125b365db",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 784,
+          "polls": 148,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 88,
+      "second": 16.266666666666666,
+      "tick": 325,
+      "submittedTick": 325,
+      "capture": {
+        "file": "frames/frame-00088.png",
+        "sha256": "29c7b775a643be3b5ae69dd4a374a380018451427897d95c47df2ca3f22e85e5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 799.7000000029802,
+          "polls": 167,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 89,
+      "second": 16.433333333333334,
+      "tick": 328,
+      "submittedTick": 328,
+      "capture": {
+        "file": "frames/frame-00089.png",
+        "sha256": "9153abea522b39f70f85218acf12c05f8f345e877ee834c35c3ba0f1d095b0c2",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 623.2999999970198,
+          "polls": 131,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 90,
+      "second": 16.6,
+      "tick": 332,
+      "submittedTick": 332,
+      "capture": {
+        "file": "frames/frame-00090.png",
+        "sha256": "fcc52b2e0ae50c70516aadf97a2e227903210e4a9ae39e8ce0296f15b62f6f7d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 755.5999999940395,
+          "polls": 156,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 91,
+      "second": 16.766666666666666,
+      "tick": 335,
+      "submittedTick": 335,
+      "capture": {
+        "file": "frames/frame-00091.png",
+        "sha256": "a269d524e59da5c00ee3d6aed0a7caada36660a6a8d05feb14d018bb78aa3199",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 576.7999999970198,
+          "polls": 114,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 92,
+      "second": 16.933333333333334,
+      "tick": 338,
+      "submittedTick": 338,
+      "capture": {
+        "file": "frames/frame-00092.png",
+        "sha256": "af5916ee0fe25a05296202d32d791acf85f2fa2e5d4f79bc96e8b1a311840f54",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 949.9000000059605,
+          "polls": 188,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 93,
+      "second": 17.1,
+      "tick": 342,
+      "submittedTick": 342,
+      "capture": {
+        "file": "frames/frame-00093.png",
+        "sha256": "13d584b8259a9754ca6d9a25fe668d8f28f667b7ef0d6eabd8f28d60b9d96fcd",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 585.0999999940395,
+          "polls": 126,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 94,
+      "second": 17.266666666666666,
+      "tick": 345,
+      "submittedTick": 345,
+      "capture": {
+        "file": "frames/frame-00094.png",
+        "sha256": "356d9f148db5f7a2e6898342331bbe0bd1c7badf7870c225ad8a005c12d92606",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 840,
+          "polls": 176,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 95,
+      "second": 17.433333333333334,
+      "tick": 348,
+      "submittedTick": 348,
+      "capture": {
+        "file": "frames/frame-00095.png",
+        "sha256": "bf92a5af76cb9e51f45fab2545461d4647327c0dd6ec402ebd12fa87e3dbaaef",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 500.70000000298023,
+          "polls": 110,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 96,
+      "second": 17.6,
+      "tick": 352,
+      "submittedTick": 352,
+      "capture": {
+        "file": "frames/frame-00096.png",
+        "sha256": "84c3f9cf86bee634c0d1b1ae8a6897bbea4f2471cccdaba26c1a1cd541feeccf",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 535,
+          "polls": 122,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 97,
+      "second": 17.76666666666667,
+      "tick": 355,
+      "submittedTick": 355,
+      "capture": {
+        "file": "frames/frame-00097.png",
+        "sha256": "07216f4fa1defd99e2e14c905e5e21f4e79d7b48b9b17e65a5e9cb81929975ac",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1026,
+          "polls": 178,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 98,
+      "second": 17.933333333333334,
+      "tick": 358,
+      "submittedTick": 358,
+      "capture": {
+        "file": "frames/frame-00098.png",
+        "sha256": "b492d97bfa70578e7922d830dc0f0a031c0c98d870522c163c6b788f114ce43f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 688.9000000059605,
+          "polls": 133,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 99,
+      "second": 18.1,
+      "tick": 362,
+      "submittedTick": 362,
+      "capture": {
+        "file": "frames/frame-00099.png",
+        "sha256": "de988ed0eba7f15498272a0692c25727b5c231b09ec87c724dd56e5dd486294f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 716.5,
+          "polls": 157,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 100,
+      "second": 18.26666666666667,
+      "tick": 365,
+      "submittedTick": 365,
+      "capture": {
+        "file": "frames/frame-00100.png",
+        "sha256": "314b911aed8d409f2ecfd2731a550126ba1505699983a03d2ffa2fa2cd500bb8",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 465.70000000298023,
+          "polls": 97,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 101,
+      "second": 18.433333333333334,
+      "tick": 368,
+      "submittedTick": 368,
+      "capture": {
+        "file": "frames/frame-00101.png",
+        "sha256": "be3cb9743e6f2b769551745969fb95e39afd675dfc29e734971941542dba98ca",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 587.7999999970198,
+          "polls": 133,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 102,
+      "second": 18.6,
+      "tick": 372,
+      "submittedTick": 372,
+      "capture": {
+        "file": "frames/frame-00102.png",
+        "sha256": "b76595551c1a63bb00eed43bfb4daa8490277f65b5b9c5a8ae002a05cfe013c4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 455.5,
+          "polls": 101,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 103,
+      "second": 18.76666666666667,
+      "tick": 375,
+      "submittedTick": 375,
+      "capture": {
+        "file": "frames/frame-00103.png",
+        "sha256": "b02891a048a3b0a6c34bc2a9bbff71211050e0a46c3d8f71c5d040dc2a5d1717",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 884.8999999910593,
+          "polls": 185,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 104,
+      "second": 18.933333333333334,
+      "tick": 378,
+      "submittedTick": 378,
+      "capture": {
+        "file": "frames/frame-00104.png",
+        "sha256": "3af05dcec0d73841bd45aa0a6f5dc3522e29f18e41845b073e38dd62b6bd84d5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 549.6000000089407,
+          "polls": 108,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 105,
+      "second": 19.1,
+      "tick": 382,
+      "submittedTick": 382,
+      "capture": {
+        "file": "frames/frame-00105.png",
+        "sha256": "a36f45a86a855f31c42669df608052fee4893173c480991d0fde3bb45fb62094",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 672.1000000089407,
+          "polls": 117,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 106,
+      "second": 19.26666666666667,
+      "tick": 385,
+      "submittedTick": 385,
+      "capture": {
+        "file": "frames/frame-00106.png",
+        "sha256": "b3f8656611eb1cf23ec1d158c3c862df4de6510560835dfe7ad051537c038f23",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 749.3000000119209,
+          "polls": 156,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 107,
+      "second": 19.433333333333334,
+      "tick": 388,
+      "submittedTick": 388,
+      "capture": {
+        "file": "frames/frame-00107.png",
+        "sha256": "a5dfed00be4d27552ea8cf8203a93af41954d23e90a183f90e649932135fed35",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 688.5999999940395,
+          "polls": 135,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 108,
+      "second": 19.6,
+      "tick": 392,
+      "submittedTick": 392,
+      "capture": {
+        "file": "frames/frame-00108.png",
+        "sha256": "18b6c60cee35af9ef617cd6e20c1d961ccdc18f239ff227a3bb78c10e7203a97",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 807,
+          "polls": 165,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 109,
+      "second": 19.76666666666667,
+      "tick": 395,
+      "submittedTick": 395,
+      "capture": {
+        "file": "frames/frame-00109.png",
+        "sha256": "65ecf973171b338eba701e1912b9c664872b49724237032eb603356bfa20ccc2",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 438.29999999701977,
+          "polls": 92,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 110,
+      "second": 19.933333333333334,
+      "tick": 398,
+      "submittedTick": 398,
+      "capture": {
+        "file": "frames/frame-00110.png",
+        "sha256": "4a0320eb26f91d750da23bda28b9aab654a9ce2857b793c97ae84efe9802ddfb",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 790.0999999940395,
+          "polls": 152,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 111,
+      "second": 20.1,
+      "tick": 402,
+      "submittedTick": 402,
+      "capture": {
+        "file": "frames/frame-00111.png",
+        "sha256": "a22f733eeb119a08107a628653eb249ae441470d974ef8455b241aba7e3e3290",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 558.7000000029802,
+          "polls": 122,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 112,
+      "second": 20.26666666666667,
+      "tick": 405,
+      "submittedTick": 405,
+      "capture": {
+        "file": "frames/frame-00112.png",
+        "sha256": "c9ae8d0b327b84def3d30b56de25650fd664bb0f5fd9efef8260087dfef9e10e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1073.2999999970198,
+          "polls": 228,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 113,
+      "second": 20.433333333333334,
+      "tick": 408,
+      "submittedTick": 408,
+      "capture": {
+        "file": "frames/frame-00113.png",
+        "sha256": "d2538ef121ccc2801a323788f5c889e0802c7878131ea76ab212bf899404d173",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 607.8999999910593,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 114,
+      "second": 20.6,
+      "tick": 412,
+      "submittedTick": 412,
+      "capture": {
+        "file": "frames/frame-00114.png",
+        "sha256": "2725cdc945330afc36fef1dc7e36dd3eaae6ea414f751db9440e09cdcfa6f67a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 518,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 115,
+      "second": 20.76666666666667,
+      "tick": 415,
+      "submittedTick": 415,
+      "capture": {
+        "file": "frames/frame-00115.png",
+        "sha256": "17fb932626b39513f09fec7e84abcfc4ae94d016ad34e6c9aaebcf380095c802",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 687.4000000059605,
+          "polls": 154,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 116,
+      "second": 20.933333333333334,
+      "tick": 418,
+      "submittedTick": 418,
+      "capture": {
+        "file": "frames/frame-00116.png",
+        "sha256": "07907e9027c4680b8bebb0e1f6864303c148ea9c4dd3bae0cad9452f2a261a8a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 404,
+          "polls": 91,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 117,
+      "second": 21.1,
+      "tick": 422,
+      "submittedTick": 422,
+      "capture": {
+        "file": "frames/frame-00117.png",
+        "sha256": "54ec61d0367bfc0bc8efbd04fcec6ddf4098d856c561c95c9297b2baf22808e6",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1008.2999999970198,
+          "polls": 204,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 118,
+      "second": 21.26666666666667,
+      "tick": 425,
+      "submittedTick": 425,
+      "capture": {
+        "file": "frames/frame-00118.png",
+        "sha256": "069502bbfe5dbadb0f3e8f020d28ec8a56d90835d1a9b3e54ab90a94252bb1a3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 600.6000000089407,
+          "polls": 118,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 119,
+      "second": 21.433333333333334,
+      "tick": 428,
+      "submittedTick": 428,
+      "capture": {
+        "file": "frames/frame-00119.png",
+        "sha256": "fde7901f9dc3c5ea145e568cb72ea36ddf3a63f9fbad2b672696015d51bab32b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 724.7999999970198,
+          "polls": 152,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 120,
+      "second": 21.6,
+      "tick": 432,
+      "submittedTick": 432,
+      "capture": {
+        "file": "frames/frame-00120.png",
+        "sha256": "81471499813ce10cfe42121d796f03c28701d9f9a5c1693b019a3624afe85d93",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 486.09999999403954,
+          "polls": 106,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 121,
+      "second": 21.76666666666667,
+      "tick": 435,
+      "submittedTick": 435,
+      "capture": {
+        "file": "frames/frame-00121.png",
+        "sha256": "057df8a2814d0b62f97bdae2b6e622eae6e5ad59e0eb19b4beb5602abb006372",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 756,
+          "polls": 163,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 122,
+      "second": 21.933333333333334,
+      "tick": 438,
+      "submittedTick": 438,
+      "capture": {
+        "file": "frames/frame-00122.png",
+        "sha256": "0d882f689b97ace068b8f147acd04ea136e7a76ed758995e1e54ea247c68b6af",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 524.7999999970198,
+          "polls": 112,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 123,
+      "second": 22.1,
+      "tick": 442,
+      "submittedTick": 442,
+      "capture": {
+        "file": "frames/frame-00123.png",
+        "sha256": "2f079b600429807a994e263f5d6e64847e7483946feef988d30a9e0e488b2dd0",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 571.4000000059605,
+          "polls": 121,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 124,
+      "second": 22.26666666666667,
+      "tick": 445,
+      "submittedTick": 445,
+      "capture": {
+        "file": "frames/frame-00124.png",
+        "sha256": "7e7c03b37a642f39e2b88a3533494f7574917e911e107381e0ac9c005476e08d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 991.9000000059605,
+          "polls": 213,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 125,
+      "second": 22.433333333333334,
+      "tick": 448,
+      "submittedTick": 448,
+      "capture": {
+        "file": "frames/frame-00125.png",
+        "sha256": "b07a5af0a3003d6994bb235ab7176518e2428e61d91c12754758781466053cdc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 631.2999999970198,
+          "polls": 118,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 126,
+      "second": 22.6,
+      "tick": 452,
+      "submittedTick": 452,
+      "capture": {
+        "file": "frames/frame-00126.png",
+        "sha256": "c9d521d5848e45d2e9fcfce621890cc6a3006708e0596ea1ccd7e671fe526b03",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 808.2999999970198,
+          "polls": 165,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 127,
+      "second": 22.76666666666667,
+      "tick": 455,
+      "submittedTick": 455,
+      "capture": {
+        "file": "frames/frame-00127.png",
+        "sha256": "9b17dfc1579855d57136dc3936da6c1eea11be21f18a59fdb6092854da01dfa6",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 748,
+          "polls": 149,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 128,
+      "second": 22.933333333333334,
+      "tick": 458,
+      "submittedTick": 458,
+      "capture": {
+        "file": "frames/frame-00128.png",
+        "sha256": "93a01e2873f698d268c26db84dc4d3556053f706dc55385dac8a531dd8014dfe",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 940.6000000089407,
+          "polls": 184,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 129,
+      "second": 23.1,
+      "tick": 462,
+      "submittedTick": 462,
+      "capture": {
+        "file": "frames/frame-00129.png",
+        "sha256": "fb9a43fa622294bfbbbc319d98af9904756c48a520ab19f855ebd5c97e48de1e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 541.2000000029802,
+          "polls": 107,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 130,
+      "second": 23.26666666666667,
+      "tick": 465,
+      "submittedTick": 465,
+      "capture": {
+        "file": "frames/frame-00130.png",
+        "sha256": "0c0d0737179ced2dc1e2416be52652f35cb2e070dc8d24a0653ea1ab8b3b0825",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 902.7000000029802,
+          "polls": 185,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 131,
+      "second": 23.433333333333334,
+      "tick": 468,
+      "submittedTick": 468,
+      "capture": {
+        "file": "frames/frame-00131.png",
+        "sha256": "4b81aa6e8bc211bf370dc078435712633b9addb4d09015e2dd5bab1143559ec3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 638,
+          "polls": 132,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 132,
+      "second": 23.6,
+      "tick": 472,
+      "submittedTick": 472,
+      "capture": {
+        "file": "frames/frame-00132.png",
+        "sha256": "b0f11e33f3b70821a73bfc880e0b18c9feb07f39368e3e2bad279626b9768f48",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 586.7999999970198,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 133,
+      "second": 23.76666666666667,
+      "tick": 475,
+      "submittedTick": 475,
+      "capture": {
+        "file": "frames/frame-00133.png",
+        "sha256": "dc4971afaf404be54296d261915beb473a7ccff5977d475786e16c02a31c387e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1001.4000000059605,
+          "polls": 189,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 134,
+      "second": 23.933333333333334,
+      "tick": 478,
+      "submittedTick": 478,
+      "capture": {
+        "file": "frames/frame-00134.png",
+        "sha256": "045efc331a2f24ba45f273e4c29c5eb872144b5a45ebea2a43c323c0d1da7488",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 526.5999999940395,
+          "polls": 89,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 135,
+      "second": 24.1,
+      "tick": 482,
+      "submittedTick": 482,
+      "capture": {
+        "file": "frames/frame-00135.png",
+        "sha256": "e36c15bd848ba3e0a0f649c49546f3858461567f2de88a85a8a5d27ae4e1be5a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 994.5,
+          "polls": 172,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 136,
+      "second": 24.26666666666667,
+      "tick": 485,
+      "submittedTick": 485,
+      "capture": {
+        "file": "frames/frame-00136.png",
+        "sha256": "7c0dacfa206905b426a46648e360de1ca5ecce601737ef2acbef7fee0f15a51e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 797.0999999940395,
+          "polls": 157,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 137,
+      "second": 24.433333333333334,
+      "tick": 488,
+      "submittedTick": 488,
+      "capture": {
+        "file": "frames/frame-00137.png",
+        "sha256": "4b9d7eef52a336aa01b3a076c4f07b40a3ba79ca5d5b34a4e83c7adcb79ae572",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 952.5,
+          "polls": 197,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 138,
+      "second": 24.6,
+      "tick": 492,
+      "submittedTick": 492,
+      "capture": {
+        "file": "frames/frame-00138.png",
+        "sha256": "017d33c45d16d78fcdf8818431dd5c90ed78d8f913e36622cf264fb66a589ffe",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 704.0999999940395,
+          "polls": 142,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 139,
+      "second": 24.76666666666667,
+      "tick": 495,
+      "submittedTick": 495,
+      "capture": {
+        "file": "frames/frame-00139.png",
+        "sha256": "e0be1a90ed778ed47adfad5fbaba0e997c3458d648ea36213fc1dda7663a82c4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 996.8999999910593,
+          "polls": 196,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 140,
+      "second": 24.933333333333334,
+      "tick": 498,
+      "submittedTick": 498,
+      "capture": {
+        "file": "frames/frame-00140.png",
+        "sha256": "86e728ed64e573337b66a48d1d1339e1ae26512f3078fb54a9dc7936cc34ec33",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 856.7999999970198,
+          "polls": 166,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 141,
+      "second": 25.1,
+      "tick": 502,
+      "submittedTick": 502,
+      "capture": {
+        "file": "frames/frame-00141.png",
+        "sha256": "af3301b0980063a67028d55e396069088d1a655457939e71ac788042d7a1b5ae",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 419.09999999403954,
+          "polls": 98,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 142,
+      "second": 25.26666666666667,
+      "tick": 505,
+      "submittedTick": 505,
+      "capture": {
+        "file": "frames/frame-00142.png",
+        "sha256": "3587b9bcfd11c0f350d47dd0c114fb418c66fb78e7f0bcb8c46940fce82a2d77",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 870.0999999940395,
+          "polls": 177,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 143,
+      "second": 25.433333333333334,
+      "tick": 508,
+      "submittedTick": 508,
+      "capture": {
+        "file": "frames/frame-00143.png",
+        "sha256": "8239c4e1b7e53b453a84e15127559e35d857f1defda018476d6526a6f86fb9cd",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 522,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 144,
+      "second": 25.6,
+      "tick": 512,
+      "submittedTick": 512,
+      "capture": {
+        "file": "frames/frame-00144.png",
+        "sha256": "540ff34562d777d62341467513acc4bc9a88b330664834a261314e08bcbfc4d5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 603.5999999940395,
+          "polls": 126,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 145,
+      "second": 25.76666666666667,
+      "tick": 515,
+      "submittedTick": 515,
+      "capture": {
+        "file": "frames/frame-00145.png",
+        "sha256": "df172aeea6324d80123087f35c5bf2bffe4cb2c5b0ea10e30e63a8a794bdc008",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 436.3999999910593,
+          "polls": 85,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 146,
+      "second": 25.933333333333334,
+      "tick": 518,
+      "submittedTick": 518,
+      "capture": {
+        "file": "frames/frame-00146.png",
+        "sha256": "1f9524049aea425f3a458d944fe6062351313ad0fa0c9eb3586167dd183a5d64",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 964.7000000029802,
+          "polls": 186,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 147,
+      "second": 26.1,
+      "tick": 522,
+      "submittedTick": 522,
+      "capture": {
+        "file": "frames/frame-00147.png",
+        "sha256": "4d0a0c322caef5457bafbf89131d88d4e00e91486828f2dc270df7674387faac",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 765.2999999970198,
+          "polls": 148,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 148,
+      "second": 26.26666666666667,
+      "tick": 525,
+      "submittedTick": 525,
+      "capture": {
+        "file": "frames/frame-00148.png",
+        "sha256": "100618a58e92fb907bc7a69a565ffa4fd465d76805a6ac4bc0996c4b2720b2c7",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 924.5999999940395,
+          "polls": 167,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 149,
+      "second": 26.433333333333334,
+      "tick": 528,
+      "submittedTick": 528,
+      "capture": {
+        "file": "frames/frame-00149.png",
+        "sha256": "4e09842fdf6fa7f7c6be67be5b79456f727d1fc15d612895eb581b8aa046762b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 742.5,
+          "polls": 147,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 150,
+      "second": 26.6,
+      "tick": 532,
+      "submittedTick": 532,
+      "capture": {
+        "file": "frames/frame-00150.png",
+        "sha256": "516e55a778ac911700b17789a0ad94e618fcb455819a1f817c00b4c56191bd18",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1061.3999999910593,
+          "polls": 198,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 151,
+      "second": 26.76666666666667,
+      "tick": 535,
+      "submittedTick": 535,
+      "capture": {
+        "file": "frames/frame-00151.png",
+        "sha256": "4298e6019db8a2700161a47f3c0a5d7af7f31bd9e64e6818b3fc83dc7e582e69",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1052.5,
+          "polls": 213,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 152,
+      "second": 26.933333333333334,
+      "tick": 538,
+      "submittedTick": 538,
+      "capture": {
+        "file": "frames/frame-00152.png",
+        "sha256": "a38898c0ec1f5bb31243c60ff16c85a29457dcb8cc03611eeeb9955db1f6547f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 587.5,
+          "polls": 114,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 153,
+      "second": 27.1,
+      "tick": 542,
+      "submittedTick": 542,
+      "capture": {
+        "file": "frames/frame-00153.png",
+        "sha256": "c9b5eaedb425d6878e6c96dd516ba354c0f9033f17fe8796d76aae9e6c636a65",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 655,
+          "polls": 134,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 154,
+      "second": 27.26666666666667,
+      "tick": 545,
+      "submittedTick": 545,
+      "capture": {
+        "file": "frames/frame-00154.png",
+        "sha256": "3528f181c67e3ba6aba67d3896ab71a1a07c1a3b050c6a4a906c65e294ba8aca",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 578.4000000059605,
+          "polls": 106,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 155,
+      "second": 27.433333333333334,
+      "tick": 548,
+      "submittedTick": 548,
+      "capture": {
+        "file": "frames/frame-00155.png",
+        "sha256": "c0e7fed1f2998368c31ab655b74ed549672901ea9db9a89b4c38936dfb7b3c99",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 706.7999999970198,
+          "polls": 138,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 156,
+      "second": 27.6,
+      "tick": 552,
+      "submittedTick": 552,
+      "capture": {
+        "file": "frames/frame-00156.png",
+        "sha256": "6f183cc7a6f53d5a5f751d415f95a3820fd82aa970cad2da81293778d54f8294",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 486.5,
+          "polls": 99,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 157,
+      "second": 27.76666666666667,
+      "tick": 555,
+      "submittedTick": 555,
+      "capture": {
+        "file": "frames/frame-00157.png",
+        "sha256": "e0f71591e37bf8466e8a7bd4ddf06501bdd98e601519c17ca51be2ff9fa27312",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 716.7999999970198,
+          "polls": 150,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 158,
+      "second": 27.933333333333334,
+      "tick": 558,
+      "submittedTick": 558,
+      "capture": {
+        "file": "frames/frame-00158.png",
+        "sha256": "283e49a1ed2ac9974280537ca7ca99d87012294f078b7e4f36f1641917ca3b67",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 418.1000000089407,
+          "polls": 91,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 159,
+      "second": 28.1,
+      "tick": 562,
+      "submittedTick": 562,
+      "capture": {
+        "file": "frames/frame-00159.png",
+        "sha256": "a9abaee2b7a381f55501210085b2bbe80840b6ec2f211a53701f9927551b9fa1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 536,
+          "polls": 105,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 160,
+      "second": 28.26666666666667,
+      "tick": 565,
+      "submittedTick": 565,
+      "capture": {
+        "file": "frames/frame-00160.png",
+        "sha256": "c5fcb71a5dd125125ac0acb0370cd2875a9403dae3fdd06602d8befdf2d8aed9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 970.3000000119209,
+          "polls": 209,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 161,
+      "second": 28.433333333333334,
+      "tick": 568,
+      "submittedTick": 568,
+      "capture": {
+        "file": "frames/frame-00161.png",
+        "sha256": "5f00cec90b21d424b1bbce528b3a127e018a603f1014f1c38f2e1515ed1d7a19",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 641.1000000089407,
+          "polls": 128,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 162,
+      "second": 28.6,
+      "tick": 572,
+      "submittedTick": 572,
+      "capture": {
+        "file": "frames/frame-00162.png",
+        "sha256": "6f4e2ace4df3dfb1df7d3a12e773e1ef7f2982844874f5e76c00affbb43ac747",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1140.5,
+          "polls": 212,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 163,
+      "second": 28.76666666666667,
+      "tick": 575,
+      "submittedTick": 575,
+      "capture": {
+        "file": "frames/frame-00163.png",
+        "sha256": "0991c1b82a4d85070275335e1e86e4e41c17eba6b5436f5288bb59ec5a07199e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 381.90000000596046,
+          "polls": 86,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 164,
+      "second": 28.933333333333334,
+      "tick": 578,
+      "submittedTick": 578,
+      "capture": {
+        "file": "frames/frame-00164.png",
+        "sha256": "66a67ea9390e7f11b7dac5a13c592db716a7520b6093c7e3d52e26abf3cf222e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 614.7000000029802,
+          "polls": 129,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 165,
+      "second": 29.1,
+      "tick": 582,
+      "submittedTick": 582,
+      "capture": {
+        "file": "frames/frame-00165.png",
+        "sha256": "3e83b2f20d98e2f050b9a33ed130fb7203847e2dff76747468328c208ed97a0e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 523.9000000059605,
+          "polls": 105,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 166,
+      "second": 29.26666666666667,
+      "tick": 585,
+      "submittedTick": 585,
+      "capture": {
+        "file": "frames/frame-00166.png",
+        "sha256": "fe36bbc328ae066089960459251371b7bebc77679824dc61f8f317e7e79b9108",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 945.2999999970198,
+          "polls": 186,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 167,
+      "second": 29.433333333333334,
+      "tick": 588,
+      "submittedTick": 588,
+      "capture": {
+        "file": "frames/frame-00167.png",
+        "sha256": "0ea4d490bfccebb2d98b038b7e6d7305e2a55918ba26f064139ed78ddd3af438",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 393.30000001192093,
+          "polls": 81,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 168,
+      "second": 29.6,
+      "tick": 592,
+      "submittedTick": 592,
+      "capture": {
+        "file": "frames/frame-00168.png",
+        "sha256": "8489e64029ed66cf7df988e7d57cf718eb84041769e84096f130340b4d234e48",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 394.59999999403954,
+          "polls": 70,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 169,
+      "second": 29.76666666666667,
+      "tick": 595,
+      "submittedTick": 595,
+      "capture": {
+        "file": "frames/frame-00169.png",
+        "sha256": "c088984f77567ef05ff350430128bf1e742eb3062091c2895d7403f1f8795828",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 698.7000000029802,
+          "polls": 150,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 170,
+      "second": 29.933333333333334,
+      "tick": 598,
+      "submittedTick": 598,
+      "capture": {
+        "file": "frames/frame-00170.png",
+        "sha256": "128db2ce727b15781b73f37eef0cc306bdaa385c7066f4714a8980da247c5507",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 514.1000000089407,
+          "polls": 111,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 171,
+      "second": 30.1,
+      "tick": 602,
+      "submittedTick": 602,
+      "capture": {
+        "file": "frames/frame-00171.png",
+        "sha256": "40228c6676514eaa20da4a3f5ea72d4f47f16c9cdf250ce038e82d973886fb6d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 705.6000000089407,
+          "polls": 158,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 172,
+      "second": 30.26666666666667,
+      "tick": 605,
+      "submittedTick": 605,
+      "capture": {
+        "file": "frames/frame-00172.png",
+        "sha256": "ebe7eca9da12300fe97640c0925ada140faf403743cf8d7a157cd50cf755f434",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 512.2000000029802,
+          "polls": 111,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 173,
+      "second": 30.433333333333334,
+      "tick": 608,
+      "submittedTick": 608,
+      "capture": {
+        "file": "frames/frame-00173.png",
+        "sha256": "065fcfba28eaae03c57322fe4e6fa49b657502a98d8035ae169f3288590a300f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 682.6999999880791,
+          "polls": 144,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 174,
+      "second": 30.6,
+      "tick": 612,
+      "submittedTick": 612,
+      "capture": {
+        "file": "frames/frame-00174.png",
+        "sha256": "71c007c4e8426fba2f33fce18913f292c3b92b0ac96b14bb1ac0fdb0d966658a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 432.90000000596046,
+          "polls": 95,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 175,
+      "second": 30.76666666666667,
+      "tick": 615,
+      "submittedTick": 615,
+      "capture": {
+        "file": "frames/frame-00175.png",
+        "sha256": "716faff013b665f5f5d6b12e049a65b1d910ac5e2a1d5c276ca1a5017694a443",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 772.2000000029802,
+          "polls": 167,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 176,
+      "second": 30.933333333333334,
+      "tick": 618,
+      "submittedTick": 618,
+      "capture": {
+        "file": "frames/frame-00176.png",
+        "sha256": "d475f8b47b4f920387f1abde3c4895e23fb13104e0e23938e9384cbda81b180e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 602.2000000029802,
+          "polls": 117,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 177,
+      "second": 31.1,
+      "tick": 622,
+      "submittedTick": 622,
+      "capture": {
+        "file": "frames/frame-00177.png",
+        "sha256": "c27e789a26dd9b8d209b2a1ab6892ca4c000e7955d5ec3bc34d17973ea9bc917",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 559.5999999940395,
+          "polls": 119,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 178,
+      "second": 31.26666666666667,
+      "tick": 625,
+      "submittedTick": 625,
+      "capture": {
+        "file": "frames/frame-00178.png",
+        "sha256": "ffaded9ad67c114262fb52c96df9b7d37158f2f897de74ce5d9bbe57143b4dc4",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 866.3999999910593,
+          "polls": 169,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 179,
+      "second": 31.433333333333334,
+      "tick": 628,
+      "submittedTick": 628,
+      "capture": {
+        "file": "frames/frame-00179.png",
+        "sha256": "b6c0633bc628f49e90c4a58d49988070733a3e54372811427f0796962904e7a1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 646.7000000029802,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 180,
+      "second": 31.6,
+      "tick": 632,
+      "submittedTick": 632,
+      "capture": {
+        "file": "frames/frame-00180.png",
+        "sha256": "9a0bb3ca0417a9eb75782385887cdc5e3b67fd3ea0bd0ec046ec30763eb81742",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 798.1000000089407,
+          "polls": 167,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 181,
+      "second": 31.76666666666667,
+      "tick": 635,
+      "submittedTick": 635,
+      "capture": {
+        "file": "frames/frame-00181.png",
+        "sha256": "20e17109df174f33d617e44daf44497ab13e18ba907dde0fd011087a05fc1b18",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 540.7999999970198,
+          "polls": 112,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 182,
+      "second": 31.933333333333334,
+      "tick": 638,
+      "submittedTick": 638,
+      "capture": {
+        "file": "frames/frame-00182.png",
+        "sha256": "b2c3171a0d2122d3f71b9f39c3ce599fe6e7ef9e8921e638648bfe5437ac8c17",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 801.2000000029802,
+          "polls": 164,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 183,
+      "second": 32.1,
+      "tick": 642,
+      "submittedTick": 642,
+      "capture": {
+        "file": "frames/frame-00183.png",
+        "sha256": "9642f498e45b481479c8116787e5f47967c5a0f5e0c2c561ed37c426aacf3e43",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 751.7000000029802,
+          "polls": 141,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 184,
+      "second": 32.266666666666666,
+      "tick": 645,
+      "submittedTick": 645,
+      "capture": {
+        "file": "frames/frame-00184.png",
+        "sha256": "e3c2dfd7437546c2e12753684079a4d25811036f53440e5851a40cd6e68ab41b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 983.2000000029802,
+          "polls": 210,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 185,
+      "second": 32.43333333333333,
+      "tick": 648,
+      "submittedTick": 648,
+      "capture": {
+        "file": "frames/frame-00185.png",
+        "sha256": "e926c3c0229323078041baa42e03f766c557650a37ed8266e7308aca94746d2c",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 519.0999999940395,
+          "polls": 104,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 186,
+      "second": 32.6,
+      "tick": 652,
+      "submittedTick": 652,
+      "capture": {
+        "file": "frames/frame-00186.png",
+        "sha256": "57f53c405c252384283cde6e138b6cec1af719192759f44914fca2ed396f5b74",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 644.9000000059605,
+          "polls": 128,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 187,
+      "second": 32.766666666666666,
+      "tick": 655,
+      "submittedTick": 655,
+      "capture": {
+        "file": "frames/frame-00187.png",
+        "sha256": "e2300b30b8cf612f22106d9b7da9dff3240a5729a6e2dfda4da857a1f9157461",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 699.9000000059605,
+          "polls": 155,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 188,
+      "second": 32.93333333333333,
+      "tick": 658,
+      "submittedTick": 658,
+      "capture": {
+        "file": "frames/frame-00188.png",
+        "sha256": "4def07dc6e44e05a18021849de2361d329092cd32852de3e13709c1fe0931be7",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 447.6000000089407,
+          "polls": 94,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 189,
+      "second": 33.1,
+      "tick": 662,
+      "submittedTick": 662,
+      "capture": {
+        "file": "frames/frame-00189.png",
+        "sha256": "a6a7de38f45dd1275e5055a87893ba55f7733ce720005b3d2ae5f35d8ba4b5ed",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 688.0999999940395,
+          "polls": 139,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 190,
+      "second": 33.266666666666666,
+      "tick": 665,
+      "submittedTick": 665,
+      "capture": {
+        "file": "frames/frame-00190.png",
+        "sha256": "3aff8f0696d08d8be44a51e9b27aaa3354b292a8c99707ad9b3bf77de3672e1f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 636.1000000089407,
+          "polls": 135,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 191,
+      "second": 33.43333333333333,
+      "tick": 668,
+      "submittedTick": 668,
+      "capture": {
+        "file": "frames/frame-00191.png",
+        "sha256": "cc387cbcd5f062ef2e4b2fc2667389c140903a5129e11687058ec6bf1f29fcea",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 737.6000000089407,
+          "polls": 148,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 192,
+      "second": 33.6,
+      "tick": 672,
+      "submittedTick": 672,
+      "capture": {
+        "file": "frames/frame-00192.png",
+        "sha256": "75450318ba2bd4c341fb5689ead26e81b01ec7265f10a81b33a809e5129be664",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 452.70000000298023,
+          "polls": 93,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 193,
+      "second": 33.766666666666666,
+      "tick": 675,
+      "submittedTick": 675,
+      "capture": {
+        "file": "frames/frame-00193.png",
+        "sha256": "1e6088d747d0c25c5590be7dfe60cb7d1e8976b6fde5972622dac6f27470e4e1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 644.3999999910593,
+          "polls": 145,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 194,
+      "second": 33.93333333333334,
+      "tick": 678,
+      "submittedTick": 678,
+      "capture": {
+        "file": "frames/frame-00194.png",
+        "sha256": "e122d144277ab77196c002c74fbe18cee31ff94f9783fbeb77f14e63334f36f5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 641.6999999880791,
+          "polls": 128,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 195,
+      "second": 34.1,
+      "tick": 682,
+      "submittedTick": 682,
+      "capture": {
+        "file": "frames/frame-00195.png",
+        "sha256": "7a735a092109211efe487566dbf5a0e52908148b5c6d51bd5923ed3c7b071646",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 784.7999999970198,
+          "polls": 144,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 196,
+      "second": 34.266666666666666,
+      "tick": 685,
+      "submittedTick": 685,
+      "capture": {
+        "file": "frames/frame-00196.png",
+        "sha256": "9cad271a71c7e5e876b368abacd7471f479e655d7e8a1e6c4f3a1b2664868dfb",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 980.1000000089407,
+          "polls": 193,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 197,
+      "second": 34.43333333333334,
+      "tick": 688,
+      "submittedTick": 688,
+      "capture": {
+        "file": "frames/frame-00197.png",
+        "sha256": "40d5a04e345c3309484772c5b9928bed2c57b41888f3205e43b86f9d8ed35060",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 540.4000000059605,
+          "polls": 115,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 198,
+      "second": 34.6,
+      "tick": 692,
+      "submittedTick": 692,
+      "capture": {
+        "file": "frames/frame-00198.png",
+        "sha256": "a28dbf461e13f874a7ec33bee614e8df5c6a0952ae95129a680705f096ba47db",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 703.0999999940395,
+          "polls": 150,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 199,
+      "second": 34.766666666666666,
+      "tick": 695,
+      "submittedTick": 695,
+      "capture": {
+        "file": "frames/frame-00199.png",
+        "sha256": "2214af381fa8efaceaf333c9827be5f58fb9d032a7df60020c7f9cc67cf351ec",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 299.19999998807907,
+          "polls": 66,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 200,
+      "second": 34.93333333333334,
+      "tick": 698,
+      "submittedTick": 698,
+      "capture": {
+        "file": "frames/frame-00200.png",
+        "sha256": "7801b74231dbe85759e4d6fe122a7ae6c1346060f6514678d1fe46513cc89dc3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 598.5999999940395,
+          "polls": 132,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 201,
+      "second": 35.1,
+      "tick": 702,
+      "submittedTick": 702,
+      "capture": {
+        "file": "frames/frame-00201.png",
+        "sha256": "c599dcb65ef44a2fd37ca8d04f481d0c9d7f55beaea1d1365e926bce15aa1f7a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 414.29999999701977,
+          "polls": 87,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 202,
+      "second": 35.266666666666666,
+      "tick": 705,
+      "submittedTick": 705,
+      "capture": {
+        "file": "frames/frame-00202.png",
+        "sha256": "2497825f5bc6a4223ec80411221b2b3743f4685a05045689c9227018140a16dc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 795.7000000029802,
+          "polls": 164,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 203,
+      "second": 35.43333333333334,
+      "tick": 708,
+      "submittedTick": 708,
+      "capture": {
+        "file": "frames/frame-00203.png",
+        "sha256": "f60ad615574383f14bda448de3c931e04d0f74cbe5c1b54dce7f65590b5b2f6b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 507.20000000298023,
+          "polls": 113,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 204,
+      "second": 35.6,
+      "tick": 712,
+      "submittedTick": 712,
+      "capture": {
+        "file": "frames/frame-00204.png",
+        "sha256": "5d9d3d1832ef428dfd8546c0bb6d21d2969d5787e737776ef165a733d9d84cf9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 600.7999999970198,
+          "polls": 119,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 205,
+      "second": 35.766666666666666,
+      "tick": 715,
+      "submittedTick": 715,
+      "capture": {
+        "file": "frames/frame-00205.png",
+        "sha256": "36019ca736fd6a909ec31add223285cde331c84110641e100e63826a6783ce6e",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 957.6999999880791,
+          "polls": 184,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 206,
+      "second": 35.93333333333334,
+      "tick": 718,
+      "submittedTick": 718,
+      "capture": {
+        "file": "frames/frame-00206.png",
+        "sha256": "8eb95c755edb5507b147ce46bf56c610e065372c9f679284c10ab15576a3f5f5",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 340.40000000596046,
+          "polls": 71,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 207,
+      "second": 36.1,
+      "tick": 722,
+      "submittedTick": 722,
+      "capture": {
+        "file": "frames/frame-00207.png",
+        "sha256": "b20e10f536e3c7cb7ea0d9c7d5a92893e93aa617253ddedbb190f96c2c81059f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 734.3999999910593,
+          "polls": 153,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 208,
+      "second": 36.266666666666666,
+      "tick": 725,
+      "submittedTick": 725,
+      "capture": {
+        "file": "frames/frame-00208.png",
+        "sha256": "394012bb08a068ddd44298444a9a5e33cfeaaa1fe47f240c0dcf9722c647a77a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 374,
+          "polls": 86,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 209,
+      "second": 36.43333333333334,
+      "tick": 728,
+      "submittedTick": 728,
+      "capture": {
+        "file": "frames/frame-00209.png",
+        "sha256": "3463aae9bd43a4097a3aaccca0ef431086c73c0464527750727d361a2f179171",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 715.7999999970198,
+          "polls": 146,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 210,
+      "second": 36.6,
+      "tick": 732,
+      "submittedTick": 732,
+      "capture": {
+        "file": "frames/frame-00210.png",
+        "sha256": "fafbf74b8f0b46087dd9bc0ab6507b717be5404e83134026d58bdf9665da287b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 588.6999999880791,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 211,
+      "second": 36.766666666666666,
+      "tick": 735,
+      "submittedTick": 735,
+      "capture": {
+        "file": "frames/frame-00211.png",
+        "sha256": "51a986ae6fd9dbc6af5a6593dbf5176c48b0e3ee99fbaa69ba3702f6ee8c0195",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 954,
+          "polls": 189,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 212,
+      "second": 36.93333333333334,
+      "tick": 738,
+      "submittedTick": 738,
+      "capture": {
+        "file": "frames/frame-00212.png",
+        "sha256": "2f67b4a4227c1924e2eb01b54e9109850106ed04fc61ff0e0d240089acb33145",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 631.7999999970198,
+          "polls": 124,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 213,
+      "second": 37.1,
+      "tick": 742,
+      "submittedTick": 742,
+      "capture": {
+        "file": "frames/frame-00213.png",
+        "sha256": "843c0080621db024783a06b92d638a4de8aa0880076d13f99cf7dadbe12fc4c9",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 460.70000000298023,
+          "polls": 96,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 214,
+      "second": 37.266666666666666,
+      "tick": 745,
+      "submittedTick": 745,
+      "capture": {
+        "file": "frames/frame-00214.png",
+        "sha256": "25031ea9ff385a90a65a07bf3d421886bda648c88be4c0a24ab677967a135b6d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 766.0999999940395,
+          "polls": 162,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 215,
+      "second": 37.43333333333334,
+      "tick": 748,
+      "submittedTick": 748,
+      "capture": {
+        "file": "frames/frame-00215.png",
+        "sha256": "e45408cdc783fa04f181a4b4a79199842f2b09dc186b0c0f84c625eaa75d1f4d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 488.6000000089407,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 216,
+      "second": 37.6,
+      "tick": 752,
+      "submittedTick": 752,
+      "capture": {
+        "file": "frames/frame-00216.png",
+        "sha256": "17be0c230f1b814a7973907c68be1508f6de2895e4220a1503db808217c61f92",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 836.8000000119209,
+          "polls": 174,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 217,
+      "second": 37.766666666666666,
+      "tick": 755,
+      "submittedTick": 755,
+      "capture": {
+        "file": "frames/frame-00217.png",
+        "sha256": "df0818ea90b805c028a8b3b23d318707b92ad5b0033fafa27b67f974a4ce4bca",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 599.2000000029802,
+          "polls": 115,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 218,
+      "second": 37.93333333333334,
+      "tick": 758,
+      "submittedTick": 758,
+      "capture": {
+        "file": "frames/frame-00218.png",
+        "sha256": "ab27361b2bbb5fae31e4137b7cd7e2feeccda913d504f8250b6e4cf2cc4c7497",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 1136.7999999970198,
+          "polls": 227,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 219,
+      "second": 38.1,
+      "tick": 762,
+      "submittedTick": 762,
+      "capture": {
+        "file": "frames/frame-00219.png",
+        "sha256": "ffabd0c9ca47402ca45ab0e1c42b23c8e6ce1025a8a7bf07a6ea5afcf18a6d43",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 488.40000000596046,
+          "polls": 85,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 220,
+      "second": 38.266666666666666,
+      "tick": 765,
+      "submittedTick": 765,
+      "capture": {
+        "file": "frames/frame-00220.png",
+        "sha256": "c5d173a2faa4365cd7bb2fdc0069716502750855405a2121ed715b8aac5dc963",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 827.2000000029802,
+          "polls": 164,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 221,
+      "second": 38.43333333333334,
+      "tick": 768,
+      "submittedTick": 768,
+      "capture": {
+        "file": "frames/frame-00221.png",
+        "sha256": "9c8d250548f19d7f927704ae0f24194ac27de6d95295dc668149c7dd3408598f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 765.4000000059605,
+          "polls": 135,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 222,
+      "second": 38.6,
+      "tick": 772,
+      "submittedTick": 772,
+      "capture": {
+        "file": "frames/frame-00222.png",
+        "sha256": "15a6ac40fc879eeb709b49859a232e929e6afb9631b5e6c523a0e705c75c627f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 639.2000000029802,
+          "polls": 120,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 223,
+      "second": 38.766666666666666,
+      "tick": 775,
+      "submittedTick": 775,
+      "capture": {
+        "file": "frames/frame-00223.png",
+        "sha256": "e0412387c6115e4978fe4fcf15240022354035323078f30761edaab38b584b57",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 855.0999999940395,
+          "polls": 175,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 224,
+      "second": 38.93333333333334,
+      "tick": 778,
+      "submittedTick": 778,
+      "capture": {
+        "file": "frames/frame-00224.png",
+        "sha256": "5cc41ce301bfb507562060a53aca37351fdf5bfcb484300788bcaac5de6f1854",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 654.4000000059605,
+          "polls": 142,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 225,
+      "second": 39.1,
+      "tick": 782,
+      "submittedTick": 782,
+      "capture": {
+        "file": "frames/frame-00225.png",
+        "sha256": "64a8ffc307313c27dceebf7d780bf191b2f192db02dddbbe3c8aa04c88b5d364",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 705.1999999880791,
+          "polls": 145,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 226,
+      "second": 39.266666666666666,
+      "tick": 785,
+      "submittedTick": 785,
+      "capture": {
+        "file": "frames/frame-00226.png",
+        "sha256": "f8b00710f93fa8864858e36637d823c8556b5227155b9a9ebdfc6bc5270594ff",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 363.70000000298023,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 227,
+      "second": 39.43333333333334,
+      "tick": 788,
+      "submittedTick": 788,
+      "capture": {
+        "file": "frames/frame-00227.png",
+        "sha256": "3f2e9cdfc60087290ce0d0448ab7dfb98c96a51ee0866c8aec007748cd8499a2",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 812.7999999970198,
+          "polls": 187,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 228,
+      "second": 39.6,
+      "tick": 792,
+      "submittedTick": 792,
+      "capture": {
+        "file": "frames/frame-00228.png",
+        "sha256": "f33bf2d8d4161a72d16376a0f166ec84b6670185e458815a9b47e2da8141fa17",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 561.7000000029802,
+          "polls": 113,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 229,
+      "second": 39.766666666666666,
+      "tick": 795,
+      "submittedTick": 795,
+      "capture": {
+        "file": "frames/frame-00229.png",
+        "sha256": "54a6dd834888b966620dd59f39cfe0a89127db8e5dc46515b7274b9b3c1777dc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 838.2000000029802,
+          "polls": 167,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 230,
+      "second": 39.93333333333334,
+      "tick": 798,
+      "submittedTick": 798,
+      "capture": {
+        "file": "frames/frame-00230.png",
+        "sha256": "bc6e319fe71f69565f59bb6bcb7f8ee0fa639d6dac44034c50267cee7ae131b0",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 476,
+          "polls": 90,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 231,
+      "second": 40.1,
+      "tick": 802,
+      "submittedTick": 802,
+      "capture": {
+        "file": "frames/frame-00231.png",
+        "sha256": "1f1fdf7590a3044e1bd39767ce00d181d366d843e6038b8fbc1880fe4bba99a6",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 412.5,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 232,
+      "second": 40.266666666666666,
+      "tick": 805,
+      "submittedTick": 805,
+      "capture": {
+        "file": "frames/frame-00232.png",
+        "sha256": "37ffded4df614dc9b472058d0a26441e4f599fa29aa5736f3a332c3abd0b566a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 692.1000000089407,
+          "polls": 154,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 233,
+      "second": 40.43333333333334,
+      "tick": 808,
+      "submittedTick": 808,
+      "capture": {
+        "file": "frames/frame-00233.png",
+        "sha256": "ebbb90f5e634fbe2cde3ad21643240ba804c9a59027b1a8cd367bf8ec33f773f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 480.5,
+          "polls": 101,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 234,
+      "second": 40.6,
+      "tick": 812,
+      "submittedTick": 812,
+      "capture": {
+        "file": "frames/frame-00234.png",
+        "sha256": "b172f285d66299670b3e32c6fa00055b6c59178745cd590751168f595b60cc0a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 767.0999999940395,
+          "polls": 156,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 235,
+      "second": 40.766666666666666,
+      "tick": 815,
+      "submittedTick": 815,
+      "capture": {
+        "file": "frames/frame-00235.png",
+        "sha256": "2b71a280cc609000a73a3eefe1f66024c33326425f4a901a0aff86389b290982",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 663.3999999910593,
+          "polls": 133,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 236,
+      "second": 40.93333333333334,
+      "tick": 818,
+      "submittedTick": 818,
+      "capture": {
+        "file": "frames/frame-00236.png",
+        "sha256": "a214e4b7bc7dd1d37e3a2f35247f5da70dd0e64b263d68b4ecca892d31c5de80",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 682.5,
+          "polls": 134,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 237,
+      "second": 41.1,
+      "tick": 822,
+      "submittedTick": 822,
+      "capture": {
+        "file": "frames/frame-00237.png",
+        "sha256": "c57a4638fdf476ee1c5c77f2996adb93395f3ff9ccce9fd0b1ecfedff8a2c9d1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 479.79999999701977,
+          "polls": 94,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 238,
+      "second": 41.266666666666666,
+      "tick": 825,
+      "submittedTick": 825,
+      "capture": {
+        "file": "frames/frame-00238.png",
+        "sha256": "33745b7391b74ac8c9e263f1fbb0188a9914dcb50652360aabdf1165f5db3114",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 705.1000000089407,
+          "polls": 149,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 239,
+      "second": 41.43333333333334,
+      "tick": 828,
+      "submittedTick": 828,
+      "capture": {
+        "file": "frames/frame-00239.png",
+        "sha256": "128abac38fc83700dfaf118f4e1454d7bcc87702eeee0e9bc05b2f92bdb2dafc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 409.8999999910593,
+          "polls": 87,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 240,
+      "second": 41.6,
+      "tick": 832,
+      "submittedTick": 832,
+      "capture": {
+        "file": "frames/frame-00240.png",
+        "sha256": "84accbdb6bb7cb9700d36f6842c9352333015979c5252f3fc6f0d14912b24085",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 515.0999999940395,
+          "polls": 96,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 241,
+      "second": 41.766666666666666,
+      "tick": 835,
+      "submittedTick": 835,
+      "capture": {
+        "file": "frames/frame-00241.png",
+        "sha256": "c05c625ab0a1a5e6a90e9f9f460873928eb3bcf5a46d648968e70de5687a230f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 973.2000000029802,
+          "polls": 192,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 242,
+      "second": 41.93333333333334,
+      "tick": 838,
+      "submittedTick": 838,
+      "capture": {
+        "file": "frames/frame-00242.png",
+        "sha256": "5b838b2f8be69921c5812823afe581ae032e90cb68e1132ddb129765b43127df",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 454.09999999403954,
+          "polls": 94,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 243,
+      "second": 42.1,
+      "tick": 842,
+      "submittedTick": 842,
+      "capture": {
+        "file": "frames/frame-00243.png",
+        "sha256": "baf742fa182e28bdc436d29b20c1b2eb9bb97984a25edd0d2504f7de3026d8c3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 782.5,
+          "polls": 158,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 244,
+      "second": 42.266666666666666,
+      "tick": 845,
+      "submittedTick": 845,
+      "capture": {
+        "file": "frames/frame-00244.png",
+        "sha256": "a3f05d79d7736435bc08365b5f020a35fd4c5c17bfea0c09c7612a3a26af717b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 613.9000000059605,
+          "polls": 131,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 245,
+      "second": 42.43333333333334,
+      "tick": 848,
+      "submittedTick": 848,
+      "capture": {
+        "file": "frames/frame-00245.png",
+        "sha256": "53025825be1e090bf0948d3304382960dc88267a5a4e4cb2613c09002ccac849",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 702.5999999940395,
+          "polls": 132,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 246,
+      "second": 42.6,
+      "tick": 852,
+      "submittedTick": 852,
+      "capture": {
+        "file": "frames/frame-00246.png",
+        "sha256": "d5460ba32aec22ef4f5880512a7f9ba8760f7bcb5cd094b81b639a35215337fa",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 559.7999999970198,
+          "polls": 120,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 247,
+      "second": 42.766666666666666,
+      "tick": 855,
+      "submittedTick": 855,
+      "capture": {
+        "file": "frames/frame-00247.png",
+        "sha256": "86f475aebcdd0ae86e11a837f932233ee540150d1f22f383f3384a975aaaf44f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 912.7999999970198,
+          "polls": 180,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 248,
+      "second": 42.93333333333334,
+      "tick": 858,
+      "submittedTick": 858,
+      "capture": {
+        "file": "frames/frame-00248.png",
+        "sha256": "99ae2ba97b093ae4e15f2d66a9d98ba537fd95cdf8ca3694cbd6876be03bfdd1",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 295.90000000596046,
+          "polls": 62,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 249,
+      "second": 43.1,
+      "tick": 862,
+      "submittedTick": 862,
+      "capture": {
+        "file": "frames/frame-00249.png",
+        "sha256": "208f84e78d4871e204313bf8ccb912a0dbd03fcc0837ea5e2413076eba242b3f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 279.59999999403954,
+          "polls": 62,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 250,
+      "second": 43.266666666666666,
+      "tick": 865,
+      "submittedTick": 865,
+      "capture": {
+        "file": "frames/frame-00250.png",
+        "sha256": "dfcf95b031ea0e655af4801c50cb81b3fcfec3f9fe1fe0ca8c1f77392deb29c3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 897.3000000119209,
+          "polls": 186,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 251,
+      "second": 43.43333333333334,
+      "tick": 868,
+      "submittedTick": 868,
+      "capture": {
+        "file": "frames/frame-00251.png",
+        "sha256": "f49a438199aa25c0a033ac60fb83fe433343e076d3e1243c4c6458e5829b473f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 605.9000000059605,
+          "polls": 107,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 252,
+      "second": 43.6,
+      "tick": 872,
+      "submittedTick": 872,
+      "capture": {
+        "file": "frames/frame-00252.png",
+        "sha256": "f0caa32d376cea114b17270dedad825228b5f01a3f1ca2e44b0f42ff71e61f00",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 803.9000000059605,
+          "polls": 160,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 253,
+      "second": 43.766666666666666,
+      "tick": 875,
+      "submittedTick": 875,
+      "capture": {
+        "file": "frames/frame-00253.png",
+        "sha256": "e38c12dd6e5f2cfb881559c0931ae69f5c4df53f43ffea11c1b021b112afc584",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 383,
+          "polls": 82,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 254,
+      "second": 43.93333333333334,
+      "tick": 878,
+      "submittedTick": 878,
+      "capture": {
+        "file": "frames/frame-00254.png",
+        "sha256": "4b19e1e176dc1ce8b208b684e2ac4fd4c8e97df4e31591c7ef6de2c54436b8c7",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 779.2999999970198,
+          "polls": 163,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 255,
+      "second": 44.1,
+      "tick": 882,
+      "submittedTick": 882,
+      "capture": {
+        "file": "frames/frame-00255.png",
+        "sha256": "ad17cd18384ee1d5671272f9d59282316ebb7f71bd165b527418f7b3e38200ac",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 316.5,
+          "polls": 70,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 256,
+      "second": 44.266666666666666,
+      "tick": 885,
+      "submittedTick": 885,
+      "capture": {
+        "file": "frames/frame-00256.png",
+        "sha256": "03e665481bc7f07e7db3e2d86586bd192f0f65855b17b06624630c0f28e36b82",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 599.8000000119209,
+          "polls": 115,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 257,
+      "second": 44.43333333333334,
+      "tick": 888,
+      "submittedTick": 888,
+      "capture": {
+        "file": "frames/frame-00257.png",
+        "sha256": "04be94217207fa87c6798708a1b9840456ded588b400b5907b66cff45827cc8b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 542.9000000059605,
+          "polls": 109,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 258,
+      "second": 44.6,
+      "tick": 892,
+      "submittedTick": 892,
+      "capture": {
+        "file": "frames/frame-00258.png",
+        "sha256": "6c533fa40547263e11f59a743a4a4f39e4ba8ded0ee0d9d12ed29d12299b5861",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 333.70000000298023,
+          "polls": 67,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 259,
+      "second": 44.766666666666666,
+      "tick": 895,
+      "submittedTick": 895,
+      "capture": {
+        "file": "frames/frame-00259.png",
+        "sha256": "fba5723fb5cb0c033de6173a829b88e7fa199b78021d42cbc8647e8036f1913d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 788.6999999880791,
+          "polls": 161,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 260,
+      "second": 44.93333333333334,
+      "tick": 898,
+      "submittedTick": 898,
+      "capture": {
+        "file": "frames/frame-00260.png",
+        "sha256": "7d6f7d7f94c60cfbd4b440f13082c1be6c0655229f456aa394486ad37f0aca86",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 325.29999999701977,
+          "polls": 72,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 261,
+      "second": 45.1,
+      "tick": 902,
+      "submittedTick": 902,
+      "capture": {
+        "file": "frames/frame-00261.png",
+        "sha256": "1d4fa114e08d4599f8e8e9118b54bef5d835996e2e8c847ce6a820e091203653",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 727,
+          "polls": 154,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 262,
+      "second": 45.266666666666666,
+      "tick": 905,
+      "submittedTick": 905,
+      "capture": {
+        "file": "frames/frame-00262.png",
+        "sha256": "9ed66e954faf7256f1d61f9948fa7b4abeef75e03dd390caaec9fbce4b975123",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 424.90000000596046,
+          "polls": 82,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 263,
+      "second": 45.43333333333334,
+      "tick": 908,
+      "submittedTick": 908,
+      "capture": {
+        "file": "frames/frame-00263.png",
+        "sha256": "f94fef859c4d3b8d4b5fc3d73959f67145483c34dc974426aa50c81aba037f73",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 879.7000000029802,
+          "polls": 169,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 264,
+      "second": 45.6,
+      "tick": 912,
+      "submittedTick": 912,
+      "capture": {
+        "file": "frames/frame-00264.png",
+        "sha256": "3ed7f2c4a57f7f6399d04fa9001222b50723ce27829aa24b56a63acea57f75da",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 610.9000000059605,
+          "polls": 129,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 265,
+      "second": 45.766666666666666,
+      "tick": 915,
+      "submittedTick": 915,
+      "capture": {
+        "file": "frames/frame-00265.png",
+        "sha256": "390b9ff83226e741db8c8e418cea739da4aca895b1ddb7dbc1ec60b8c606fd1b",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 608.0999999940395,
+          "polls": 130,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 266,
+      "second": 45.93333333333334,
+      "tick": 918,
+      "submittedTick": 918,
+      "capture": {
+        "file": "frames/frame-00266.png",
+        "sha256": "46605d46fa1be61c6a20613fc8d7bb04a2bc12def6f0295dc10f53f7269201cc",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 408.5,
+          "polls": 80,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 267,
+      "second": 46.1,
+      "tick": 922,
+      "submittedTick": 922,
+      "capture": {
+        "file": "frames/frame-00267.png",
+        "sha256": "b2fac1bf1b189f31e7175937f21fe8427e795ab31c95682162df3c9d0b4b49e6",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 613.7000000029802,
+          "polls": 120,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 268,
+      "second": 46.266666666666666,
+      "tick": 925,
+      "submittedTick": 925,
+      "capture": {
+        "file": "frames/frame-00268.png",
+        "sha256": "1762c516600646f5da40c6304a0269e73896e14eecc3970087a9ea536b6b707a",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 988.2999999970198,
+          "polls": 185,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 269,
+      "second": 46.43333333333334,
+      "tick": 928,
+      "submittedTick": 928,
+      "capture": {
+        "file": "frames/frame-00269.png",
+        "sha256": "d21c151f7cb6a7f12a4a7cb751ba62db6aa53b91a665527c5b9d7b4b779c8d51",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 695.4000000059605,
+          "polls": 135,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 270,
+      "second": 46.6,
+      "tick": 932,
+      "submittedTick": 932,
+      "capture": {
+        "file": "frames/frame-00270.png",
+        "sha256": "c2510f5572b7ed28de3dff08c98a2ba7ce35e167d1c3d20977ceed6ac01d76d3",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 806.4000000059605,
+          "polls": 158,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 271,
+      "second": 46.766666666666666,
+      "tick": 935,
+      "submittedTick": 935,
+      "capture": {
+        "file": "frames/frame-00271.png",
+        "sha256": "85b0f595fec6cbe8ad3a4fce6ac5a1f34d2231bbab23efb8dd365152bf478f39",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 502,
+          "polls": 106,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 272,
+      "second": 46.93333333333334,
+      "tick": 938,
+      "submittedTick": 938,
+      "capture": {
+        "file": "frames/frame-00272.png",
+        "sha256": "77c94ba549c3308337e0cab4ad8a2d80b4bd64e7841401f6f0ff46ab9ab3ccaa",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 535.7999999970198,
+          "polls": 115,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 273,
+      "second": 47.1,
+      "tick": 942,
+      "submittedTick": 942,
+      "capture": {
+        "file": "frames/frame-00273.png",
+        "sha256": "1a525dc9613e7b0aba510ca5b2e5e5eb220cf311f706238f85249c50916ced19",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 203.70000000298023,
+          "polls": 48,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 274,
+      "second": 47.266666666666666,
+      "tick": 945,
+      "submittedTick": 945,
+      "capture": {
+        "file": "frames/frame-00274.png",
+        "sha256": "f85293768c504e9a183d01e057e0ae6051d397089ef30af48d926933d28b484c",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 568.4000000059605,
+          "polls": 119,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 275,
+      "second": 47.43333333333334,
+      "tick": 948,
+      "submittedTick": 948,
+      "capture": {
+        "file": "frames/frame-00275.png",
+        "sha256": "c31edb208f87cf20f2175ad410c7b995a2c7b2b817470493c7f69d299a6090c7",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 328.3999999910593,
+          "polls": 72,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 276,
+      "second": 47.6,
+      "tick": 952,
+      "submittedTick": 952,
+      "capture": {
+        "file": "frames/frame-00276.png",
+        "sha256": "baacd36bdb1a16ae6990a600277ca77d6604a66d6657184967c04d7305576b9d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 428.79999999701977,
+          "polls": 84,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 277,
+      "second": 47.766666666666666,
+      "tick": 955,
+      "submittedTick": 955,
+      "capture": {
+        "file": "frames/frame-00277.png",
+        "sha256": "c843e15cbc31864362dc5a71aa28d2e09309ba3d78309763d55d3b135fff0fe7",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 667.3999999910593,
+          "polls": 131,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 278,
+      "second": 47.93333333333334,
+      "tick": 958,
+      "submittedTick": 958,
+      "capture": {
+        "file": "frames/frame-00278.png",
+        "sha256": "cecf05b203b1dfbb230f9b94bf8308f667912e50139431ed819152f323fd1e1d",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 305.29999999701977,
+          "polls": 59,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 279,
+      "second": 48.1,
+      "tick": 962,
+      "submittedTick": 962,
+      "capture": {
+        "file": "frames/frame-00279.png",
+        "sha256": "9392d249f9150263f00be880b779a75474ea9249eb439d860c2ee411c9fef7fd",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 592.6000000089407,
+          "polls": 105,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 280,
+      "second": 48.266666666666666,
+      "tick": 965,
+      "submittedTick": 965,
+      "capture": {
+        "file": "frames/frame-00280.png",
+        "sha256": "d3ce984ddfdf24bec81678f116c22b070242ea41036e78163ba23ee673ea648f",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 456.09999999403954,
+          "polls": 92,
+          "status": 37148
+        }
+      }
+    },
+    {
+      "frame": 281,
+      "second": 48.43333333333334,
+      "tick": 968,
+      "submittedTick": 968,
+      "capture": {
+        "file": "frames/frame-00281.png",
+        "sha256": "f05e600d3fd7c1f965d356ffa8639bc7215c6b6409bf0a56eabc407c4488d833",
+        "gpuCompletion": {
+          "available": true,
+          "waitMs": 468.6000000089407,
+          "polls": 95,
+          "status": 37148
+        }
+      }
+    }
+  ],
+  "encoding": {
+    "executable": "/usr/bin/ffmpeg",
+    "args": [
+      "-y",
+      "-framerate",
+      "6",
+      "-i",
+      "/workspace/homepage-forest-prewarm-demo/frames/frame-%05d.png",
+      "-c:v",
+      "libx264",
+      "-threads",
+      "2",
+      "-pix_fmt",
+      "yuv420p",
+      "-crf",
+      "21",
+      "-movflags",
+      "+faststart",
+      "/workspace/homepage-forest-prewarm-demo/woods.mp4"
+    ]
+  }
+}

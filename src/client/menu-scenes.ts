@@ -1,6 +1,7 @@
 import { CORE_SCENERY } from "./art/scenery";
 import { snapshotGame } from "../shared/sim";
 import type { MenuSceneRun } from "./menu-scene-world";
+import type { PaintedRemainsPreparation } from './world3d/painted-remains';
 import { createPirateBoarding } from "./menu-pirate-boarding";
 import { createCapitalStreet } from "./menu-capital-street";
 import { createForestHorde } from "./menu-forest-horde";
@@ -94,6 +95,22 @@ export class MenuBackdrop {
   }
 
   prepare(now:number){if(!this.run)this.begin(now);if(!this.snapshot){this.run!.script(this.run!.game,0);this.snapshot=snapshotGame(this.run!.game);}return this.snapshot;}
+  /** Resource loading does not consume the opening beats of the presentation.
+   * Keep this cast and its prepared assets; only display history starts anew. */
+  startPresentation(now:number){
+    if(!this.run)return;
+    this.snapshot=undefined;
+    this.facing=new UnitFacingTracker();
+    this.motion=new UnitMotionSmoother();
+    this.animation=new UnitAnimationTracker();
+    this.combat.reset();this.projectiles.reset();
+    this.started=now;this.clock=now;this.lastPaint=-Infinity;this.motes=[];
+  }
+  get artPreparation():PaintedRemainsPreparation|undefined{
+    const run=this.run;
+    if(!run?.warmCorpses?.length)return;
+    return{corpses:run.warmCorpses,...(run.models?{models:run.models}:{})};
+  }
   get architectureKinds(){return [...new Set([
     ...(this.run?.props.map(prop=>prop.kind).filter(kind=>['statue','well','beacon','citadel'].includes(kind))??[]),
     ...Object.values(this.run?.buildingModels??{}),
@@ -166,15 +183,7 @@ export class MenuBackdrop {
 
   private begin(now: number) {
     this.run = this.scene.create();
-    this.snapshot = undefined;
-    this.facing = new UnitFacingTracker();
-    this.motion = new UnitMotionSmoother();
-    this.animation = new UnitAnimationTracker();
-    this.combat.reset();
-    this.projectiles.reset();
-    this.started = now;
-    this.clock = now;
-    this.motes = [];
+    this.startPresentation(now);
   }
 
   private drawMotes(ctx: CanvasRenderingContext2D, run: Run, width: number, height: number, dt: number, age: number, toScreen: (point: Point) => Point, waterAt: (point: Point) => boolean, zoom: number) {

@@ -3,11 +3,12 @@ import { resources,resourceText,type ResourcePhase } from './resources';
 import { resourcePanel } from './resource-panel';
 import type { GameSnapshot } from '../shared/types';
 import type { World3DLayer } from './world3d/world-layer';
+import type { PaintedRemainsPreparation } from './world3d/painted-remains';
 import './world-presentation.css';
 import { ShipWakeTracker } from './ship-wakes';
 import {PresentationViewIndex} from './presentation-view';
 
-type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[]};
+type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[];artPreparation?:PaintedRemainsPreparation};
 
 /** Coordinates the three presentation layers. Model code loads with the scene,
  * after bootstrap; networking and simulation stay separate. */
@@ -39,10 +40,10 @@ export class WorldPresentation {
     this.stack.className='world-underlay';this.actors.className='world-actors';this.ground.className='world-ground';
     this.stack.hidden=true;this.stack.append(this.ground,this.actors);canvas.before(this.stack);
   }
-  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){
+  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[],artPreparation?:PaintedRemainsPreparation){
     if(this.disposed)return;
     const revision=++this.revision;
-    this.current={snapshot,phase,sites};
+    this.current={snapshot,phase,sites,...(phase==='home'&&artPreparation?{artPreparation}:{})};
     this.enabled=false;this.stack.hidden=true;
     await this.initialize(phase);
     if(revision!==this.revision)return;
@@ -52,7 +53,10 @@ export class WorldPresentation {
       resourcePanel().preparing(resourceText('读取并准备三维模型','Loading and preparing 3D models'));
       await this.layer.prepare(snapshot,phase,sites);
       if(revision!==this.revision || this.contextLost || this.failed)return;
-      this.layer.reset();this.enabled=true;
+      this.layer.reset();
+      if(phase==='home'&&artPreparation)this.layer.prepareRemains(snapshot,artPreparation);
+      if(revision!==this.revision || this.contextLost || this.failed || this.disposed)return;
+      this.enabled=true;
       resourcePanel().renderer=resourceText('实时 3D · 建筑、船只与人物共享深度','Real-time 3D · shared building, ship and troop depth');
     }else{
       await this.prepareFallback(snapshot,phase,sites);
@@ -87,9 +91,9 @@ export class WorldPresentation {
   }
   private async recoverCurrent(){
     if(!this.current||this.disposed)return;
-    const {snapshot,phase,sites}=this.current;
+    const {snapshot,phase,sites,artPreparation}=this.current;
     const revision=this.revision+1;
-    try{await this.prepare(snapshot,phase,sites);}catch(error){
+    try{await this.prepare(snapshot,phase,sites,artPreparation);}catch(error){
       if(revision!==this.revision)return;
       this.failed=true;this.enabled=false;this.stack.hidden=true;
       resourcePanel().renderer=resourceText('2D · GPU 恢复失败后回退','2D · GPU recovery fallback');
@@ -110,7 +114,8 @@ export class WorldPresentation {
     frame={...frame,wakes:this.wakes,viewIndex:this.viewIndex};
     resources.phase=phase;
     const changed=this.current?.phase!==phase;
-    this.current={snapshot:frame.snapshot,phase,sites:Object.values(frame.buildingModels??{})};
+    const artPreparation=changed?undefined:this.current?.artPreparation;
+    this.current={snapshot:frame.snapshot,phase,sites:Object.values(frame.buildingModels??{}),...(artPreparation?{artPreparation}:{})};
     if(changed && !this.enabled){this.revision++;void this.recoverCurrent();}
     const dpr=Math.min(devicePixelRatio,2),width=frame.view.width,height=frame.view.height;
     if(!this.enabled||!this.layer){this.stack.hidden=true;drawWorld(frame);return;}

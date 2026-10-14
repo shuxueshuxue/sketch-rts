@@ -1,0 +1,44 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ❯ src/client/menu-forest-horde.test.ts (6 tests | 2 failed) 576ms
+   × army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent 12ms
+     → expected 'idle' to be 'attack' // Object.is equality
+   × army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame 540ms
+     → expected 34.54083194562233 to be greater than 35
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > stages opening arrows before contact, then releases melee toward the real opponent
+AssertionError: expected 'idle' to be 'attack' // Object.is equality
+
+Expected: "attack"
+Received: "idle"
+
+ ❯ src/client/menu-forest-horde.test.ts:48:25
+     46|       expect(Math.hypot(source.x-target.x,source.y-target.y)).toBeLess…
+     47|       const pose=animation.frame(source,16700);
+     48|       expect(pose.mode).toBe('attack');expect(Math.sign(pose.direction…
+       |                         ^
+     49|       contacts++;
+     50|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/client/menu-forest-horde.test.ts > army against a forest horde menu presentation > has continuous movement, clear body footprints and clear scenery lanes over every authored frame
+AssertionError: expected 34.54083194562233 to be greater than 35
+ ❯ src/client/menu-forest-horde.test.ts:65:96
+     63|         maxStep=Math.max(maxStep,Math.hypot(unit.x-before.x,unit.y-bef…
+     64|         expect(terrain.cells[Math.floor(unit.y/terrain.cell)*terrain.c…
+     65|         for(const prop of blocking)expect(Math.hypot(prop.x-unit.x,pro…
+       |                                                                                                ^
+     66|       }
+     67|       for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  09:54:29
+   Duration  1.85s (transform 834ms, setup 0ms, collect 1.08s, tests 576ms, environment 0ms, prepare 51ms)
+

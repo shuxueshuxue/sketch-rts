@@ -305,6 +305,26 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     layer.draw(frame);expect(remains()).toBeUndefined();
     layer.dispose();expect(layer.remainsStats()).toMatchObject({pages:0,cards:0,pixels:0});
   });
+  it('prepares only exact future deck raster keys at both densities, then reuses their pixels when the real corpse appears',async()=>{
+    const {ship,frame,layer}=setup();
+    const future={id:'future-deck-remains-proof',unitId:'dead-crew',kind:'footman' as const,owner:ship.owner,x:ship.x,y:ship.y,radius:18,diedAtTick:60,deck:{shipId:ship.id,x:12,y:18}};
+    const {deck:_deck,...ground}=future;
+    const original=JSON.stringify(frame.snapshot);
+    await layer.prepare(frame.snapshot,'home');layer.reset();
+    layer.prepareRemains(frame.snapshot,{corpses:[future,future,ground]});
+    const prepared=layer.remainsStats();
+    expect(prepared).toMatchObject({pages:0,cards:0,rasterizations:0,preparedRasters:2});
+    expect(prepared.rasterCache.entries).toBe(2);expect(JSON.stringify(frame.snapshot)).toBe(original);
+    frame.snapshot.corpses=[future];frame.snapshot.tick=60;
+    for(const zoom of [.6,.8]){
+      frame.view={...frame.view,zoom};layer.draw(frame);
+      const drawn=layer.remainsStats();
+      expect(drawn.rasterStages.readbackMs).toBe(prepared.rasterStages.readbackMs);
+      expect(drawn.rasterCache.hits).toBeGreaterThan(prepared.rasterCache.hits);
+      expect(paintedMeshes().some(mesh=>mesh.userData.ids.includes(future.id))).toBe(true);
+    }
+    layer.dispose();
+  });
 
   it('uses actual model geometry, painted alpha picking and deck coordinate inversion without mutating simulation',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');

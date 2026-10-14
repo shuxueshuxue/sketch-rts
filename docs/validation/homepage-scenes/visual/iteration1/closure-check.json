@@ -1,0 +1,13 @@
+{
+  "sourceChecks": {
+    "source": {
+      "head": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
+      "changedFiles": [],
+      "files": 1171
+    }
+  },
+  "acceptedForPhaseEvidence": false,
+  "reason": "Fixed 150ms wait did not acknowledge requested phase draw; raw screenshots retained. UI keyboard event timed out with initial incomplete CDP Enter sequence; outcome awaits properly instrumented rerun.",
+  "rawHarness": "/workspace/homepage-pirate-review-tools/verify-iteration1.mjs",
+  "rawHarnessSha256": "68a6e6d2d90b92b6c14cd95c4fca96e4c2d4c90f460a20f2130b0b80db0224a3"
+}

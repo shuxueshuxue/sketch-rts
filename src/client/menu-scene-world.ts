@@ -1,6 +1,6 @@
 import { createGame, type Game } from "../shared/sim";
 import type { Terrain } from "../shared/terrain";
-import type { PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
+import type { Corpse, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
 import type { PropPainter } from "../story/cast";
 import type { PropView, StageView } from "../story/stage";
 import type { WorldFrame, WorldView } from "./world-renderer";
@@ -17,6 +17,8 @@ export type MenuSceneRun = {
   stillSecond?: number;
   frameAt?: (second: number, width: number, height: number) => { focus: Point; zoom: number; anchorX: number; anchorY: number };
   models?: WorldFrame["models"];
+  /** Finite authored casualties to prepare as assets without spawning them. */
+  warmCorpses?: readonly Corpse[];
   buildingModels?: WorldFrame["buildingModels"];
   painters?: Readonly<Record<string, PropPainter>>;
   actions?: () => StageView["unitActions"];

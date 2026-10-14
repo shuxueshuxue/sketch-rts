@@ -1,0 +1,44 @@
+{
+  "status": "Art visuals accepted; original native render spikes investigated; CPU crop backing candidate rejected by exact RGBA check. No post-fix native performance run yet.",
+  "artVisuals": {
+    "final42": "/workspace/homepage-pirate-visual-final/proof.json",
+    "sourceCheckpoint": "a13878465d7de94311476c7c591b18fc3a39bcc4",
+    "sizes": [
+      "1440x900",
+      "1280x720",
+      "390x844"
+    ],
+    "actualWebGLFence": true,
+    "ui": "settings/profile-save/pointer/Enter scene switch/maps15/back/Rooms/back/reduced-motion-stable/resize passed",
+    "sourceUnchanged": true,
+    "captureCount": 45
+  },
+  "existingPerformance": {
+    "mainVsDifferentArt": "/workspace/homepage-pirate-native-abba/proof.json",
+    "newArtCycles": "/workspace/homepage-pirate-native-cycles/proof.json",
+    "focusedRepetitions": [
+      "/workspace/homepage-pirate-focused-profile1/proof.json",
+      "/workspace/homepage-pirate-focused-profile2/proof.json"
+    ],
+    "limit": "SwiftShader CPU submission and native scheduling observations only. Different authored content in original main-vs-art runs; no pure optimization claim."
+  },
+  "rejectedCandidate": {
+    "sourceDifference": "RasterCache crop reset(canvas)->reset(canvas,true) plus comment",
+    "coreParity": "/workspace/homepage-raster-pixel-parity-core-1/proof.json",
+    "pass": false,
+    "caseCount": 6,
+    "comparisons": 18,
+    "cropAllExact": true,
+    "outerDifferent": 12,
+    "sameSourceControl": "/workspace/homepage-raster-pixel-parity-original-control-1/proof.json",
+    "sameSourcePass": true,
+    "bytes": 9269532,
+    "originalRawPreserved": true
+  },
+  "pending": [
+    "Choose exact candidate preserving original output",
+    "Same-content all3 ABBA15s; fleet/woods full native cycles",
+    "Bind final source with small all3/3size screenshot set",
+    "Export three 6fps time-sampled demonstration MP4s, separately labeled from native FPS"
+  ]
+}

@@ -1,0 +1,16 @@
+diff --git a/src/client/art/raster-cache.ts b/src/client/art/raster-cache.ts
+index 664ff518..edbbd255 100644
+--- a/src/client/art/raster-cache.ts
++++ b/src/client/art/raster-cache.ts
+@@ -57,7 +57,10 @@ export class RasterCache {
+       left = Math.max(0, left - 2); top = Math.max(0, top - 2);
+       right = Math.min(size - 1, right + 2); bottom = Math.min(size - 1, bottom + 2);
+       const canvas = this.take(this.spare,right-left+1,bottom-top+1);
+-      this.reset(canvas).drawImage(source,left,top,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
++      // Crops feed CPU card painters as well as Canvas display. Request the
++      // readback path when their first context is created, avoiding a cold
++      // card's synchronous GPU crop readback in browsers that accelerate it.
++      this.reset(canvas,true).drawImage(source,left,top,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+       const result = { canvas, x: left / density - origin, y: top / density - origin, density };
+       const cost = canvas.width * canvas.height;
+       while (epoch===this.epoch && cost<=this.budget && this.entries.size && (this.entries.size >= this.limit || this.pixels + cost > this.budget)) {

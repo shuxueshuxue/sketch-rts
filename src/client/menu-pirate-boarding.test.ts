@@ -4,9 +4,23 @@ import { deckPointFits } from '../shared/decks';
 import { gangwaySurface } from '../shared/ship-gangway';
 import { localToWorld, shipProfile } from '../shared/ship-geometry';
 import { mountedWeaponPose } from '../shared/ship-equipment';
+import { snapshotGame } from '../shared/sim';
 import { createPirateBoarding } from './menu-pirate-boarding';
 
 describe('the authored pirate boarding menu scene', () => {
+  it('declares only its seven actual future deck casualties without spawning or advancing them',()=>{
+    const run=createPirateBoarding(),before=snapshotGame(run.game);
+    expect(before.corpses).toHaveLength(0);expect(before.tick).toBe(0);
+    expect(run.warmCorpses).toHaveLength(7);
+    for(const corpse of run.warmCorpses!){
+      expect(corpse.deck).toBeDefined();expect(corpse.variant).toBe('menu/marine');
+      expect(run.models!(corpse.variant!)).toBeDefined();
+    }
+    expect(snapshotGame(run.game)).toEqual(before);
+    run.script(run.game,47);
+    expect(run.game.corpses).toEqual(run.warmCorpses);
+    run.script(run.game,0);expect(snapshotGame(run.game)).toEqual(before);
+  });
   it('separates broadside casualties, carpentry, boarding and capture without match simulation', () => {
     const run = createPirateBoarding(), game=run.game;
     expect(run.presentation).toBe(true);

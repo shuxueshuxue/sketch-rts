@@ -1,0 +1,13 @@
+src/client/main.ts
+src/client/menu-pirate-boarding.test.ts
+src/client/menu-pirate-boarding.ts
+src/client/menu-scene-world.ts
+src/client/menu-scenes.test.ts
+src/client/menu-scenes.ts
+src/client/world-presentation.test.ts
+src/client/world-presentation.ts
+src/client/world3d/painted-card-batches.test.ts
+src/client/world3d/painted-card-batches.ts
+src/client/world3d/world-layer.test.ts
+src/client/world3d/world-layer.ts
+src/client/world3d/painted-remains.ts

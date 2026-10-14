@@ -308,7 +308,7 @@ export function createPirateBoarding(): MenuSceneRun {
   };
   script(game,0);
   return {
-    game,props:[],presentation:true,length:LENGTH,stillSecond:38,
+    game,props:[],presentation:true,length:LENGTH,stillSecond:38,warmCorpses:corpses.map(event=>event.corpse),
     focus:{x:CX,y:CY-150},zoom:.7,script,models:variant=>models.get(variant),painters,actions:()=>actionCues,
     frameAt(second,width,height){
       const t=second%LENGTH;

@@ -1,0 +1,1 @@
+{"extends":"/workspace/sketch-rts-homepage-board/tsconfig.json","include":["src/client/menu-forest-horde.ts"]}

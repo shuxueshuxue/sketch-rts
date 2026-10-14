@@ -1,0 +1,46 @@
+{
+  "capturedCommands": [
+    {
+      "cmd": "npx vitest --run src/client/art/raster-cache.test.ts src/client/atlas-art.test.ts src/client/world3d/painted-card-batches.test.ts src/client/world3d/world-layer.test.ts src/client/world-presentation.test.ts src/client/menu-presentation.test.ts src/client/menu-scenes.test.ts src/client/menu-pirate-boarding.test.ts src/client/menu-capital-street.test.ts src/client/menu-forest-horde.test.ts",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 1,
+      "log": "validation/raw-logs/homepage-prewarm-final-targeted-tests.log",
+      "result": "130 pass / 1 optional empty-corpse fixture failure"
+    },
+    {
+      "cmd": "npx vitest --run src/client/menu-scenes.test.ts",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 1,
+      "log": "validation/raw-logs/homepage-prewarm-menu-fixture-rerun.log",
+      "result": "same fixture second empty-list access"
+    },
+    {
+      "cmd": "npx vitest --run src/client/menu-scenes.test.ts",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 0,
+      "log": "validation/raw-logs/homepage-prewarm-menu-fixture-final.log",
+      "result": "6 pass; 131 distinct targeted cases now pass"
+    },
+    {
+      "cmd": "npm run build:production",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 0,
+      "log": "validation/raw-logs/homepage-prewarm-final-production-build.log"
+    },
+    {
+      "cmd": "npx vitest --run src/sdk/boundaries.test.ts",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 1,
+      "log": "validation/raw-logs/homepage-final-sdk-boundaries.log",
+      "result": "No test file matched; no assertion executed"
+    },
+    {
+      "cmd": "npx vitest --run src/sdk/package-boundaries.test.ts",
+      "cwd": "/workspace/sketch-rts-homepage-board",
+      "exitCode": 0,
+      "log": "validation/raw-logs/homepage-final-sdk-package-boundaries.log",
+      "result": "7 pass"
+    }
+  ],
+  "timestampLimits": "Commands are copied from actual execution. Vitest logs carry start and elapsed timestamps; exact process UTC start/end are not reconstructed when not separately recorded. Browser inputs/proof and frame-manifest retain their own actual native times and ffmpeg arguments."
+}

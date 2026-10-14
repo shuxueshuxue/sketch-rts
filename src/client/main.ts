@@ -509,7 +509,9 @@ window.addEventListener('pagehide',event=>{
 
 async function prepareHome(){
   visualsReady=false;const scene=menuBackdrop.prepare(performance.now());
-  await resourcePanel().run('home',resourceText('读取当前首页场景','Loading the current home scene'),async()=>{await soundPacksLoaded;await Promise.all([worldPresentation.prepare(scene,'home',menuBackdrop.architectureKinds),soundboard.prepareHome()]);});
+  const sites=menuBackdrop.architectureKinds,artPreparation=menuBackdrop.artPreparation;
+  await resourcePanel().run('home',resourceText('读取当前首页场景','Loading the current home scene'),async()=>{await soundPacksLoaded;await Promise.all([worldPresentation.prepare(scene,'home',sites,artPreparation),soundboard.prepareHome()]);});
+  menuBackdrop.startPresentation(performance.now());
   visualsReady=true;
 }
 export async function initializeVisuals(){if(applicationClosed)return;await prepareHome();if(!applicationClosed)await openRouteFromUrl();}

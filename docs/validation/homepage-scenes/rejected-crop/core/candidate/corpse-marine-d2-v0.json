@@ -1,0 +1,190 @@
+{
+  "spec": {
+    "id": "corpse-marine-d2-v0",
+    "type": "corpse",
+    "modelKey": "menu/marine",
+    "kind": "footman",
+    "color": "#4f8581",
+    "density": 2,
+    "variant": 0,
+    "tileSize": 128,
+    "presentation": {}
+  },
+  "outputs": [
+    {
+      "temperature": "cold",
+      "width": 256,
+      "height": 256,
+      "anchor": null,
+      "contextAttributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      },
+      "alpha": {
+        "opaque": 3714,
+        "translucent": 581,
+        "transparent": 61241,
+        "sumAlpha": 1021251,
+        "bounds": {
+          "left": 70,
+          "top": 107,
+          "right": 215,
+          "bottom": 165
+        }
+      },
+      "rgba": {
+        "file": "candidate/corpse-marine-d2-v0-outputs-0.rgba.gz",
+        "bytes": 262144,
+        "sha256": "c66423c8634595fd4003321245b2b3cf2b7905051350f9e6ddf0b14c779fd0d9"
+      }
+    },
+    {
+      "temperature": "warm",
+      "width": 256,
+      "height": 256,
+      "anchor": null,
+      "contextAttributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      },
+      "alpha": {
+        "opaque": 3714,
+        "translucent": 581,
+        "transparent": 61241,
+        "sumAlpha": 1021251,
+        "bounds": {
+          "left": 70,
+          "top": 107,
+          "right": 215,
+          "bottom": 165
+        }
+      },
+      "rgba": {
+        "file": "candidate/corpse-marine-d2-v0-outputs-1.rgba.gz",
+        "bytes": 262144,
+        "sha256": "c66423c8634595fd4003321245b2b3cf2b7905051350f9e6ddf0b14c779fd0d9"
+      }
+    }
+  ],
+  "crops": [
+    {
+      "canvasId": 2,
+      "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+      "width": 287,
+      "height": 127,
+      "anchor": {
+        "x": -28.75,
+        "y": -11.25,
+        "density": 4
+      },
+      "contextAttributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      },
+      "alpha": {
+        "opaque": 15436,
+        "translucent": 1130,
+        "transparent": 19883,
+        "sumAlpha": 4084042,
+        "bounds": {
+          "left": 2,
+          "top": 2,
+          "right": 284,
+          "bottom": 124
+        }
+      },
+      "rgba": {
+        "file": "candidate/corpse-marine-d2-v0-crops-0.rgba.gz",
+        "bytes": 145796,
+        "sha256": "f24bd24df9b73e261f87ef47f3d18e4f968157fade07c478b0573f07b13225a4"
+      }
+    }
+  ],
+  "trace": [
+    {
+      "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+      "requestedDensity": 4,
+      "tileSize": 128,
+      "cacheId": 1,
+      "canvasId": 2,
+      "hit": false,
+      "x": -28.75,
+      "y": -11.25,
+      "density": 4,
+      "width": 287,
+      "height": 127,
+      "contextAttributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    },
+    {
+      "key": "corpse:footman:menu/marine:#4f8581:::::::::0",
+      "requestedDensity": 4,
+      "tileSize": 128,
+      "cacheId": 1,
+      "canvasId": 2,
+      "hit": true,
+      "x": -28.75,
+      "y": -11.25,
+      "density": 4,
+      "width": 287,
+      "height": 127,
+      "contextAttributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    }
+  ],
+  "stats": {
+    "entries": 1,
+    "pixels": 36449,
+    "bytes": 145796,
+    "hits": 1,
+    "misses": 1,
+    "evictions": 0,
+    "scratchCanvases": 1,
+    "scratchPixels": 262144,
+    "scratchBytes": 1048576,
+    "spareCanvases": 0,
+    "sparePixels": 0,
+    "spareBytes": 0,
+    "retiredCanvases": 0,
+    "retiredPixels": 0,
+    "retiredBytes": 0,
+    "leasedCanvases": 0,
+    "leasedPixels": 0,
+    "leasedBytes": 0,
+    "ownedCanvasBytes": 1194372
+  }
+}
