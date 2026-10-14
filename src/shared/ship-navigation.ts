@@ -263,7 +263,7 @@ function gridFor(map: SeaMap, ship: Unit) {
     for (let y = 0; y < Math.min(rows,t.rows) && (y+.5)*cell < map.height; y++)
       for (let x = 0; x < Math.min(cols,t.cols) && (x+.5)*cell < map.width; x++)
         water[y*cols+x] = CELL_GROUND[t.cells[y*t.cols+x] ?? '.']?.sea ? 1 : 0;
-    grid = { cells: t.cells, cell, cols, rows, water, masks, fits: new Int8Array(size), turns: new Int8Array(size * 2), moves: new Int8Array(size * 4) };
+    grid = { cells: t.cells, cell, cols, rows, water, masks, fits: new Int8Array(size), turns: new Int8Array(size * 2), moves: new Int8Array(size * 2) };
     if (group.size >= 32)
       group.delete(group.keys().next().value!);
     group.set(key, grid);
@@ -1033,7 +1033,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
         if(Math.abs(ax)>length || Math.abs(ay)>length || Math.hypot(ax,ay)>length)continue;
       }
       if (nx >= 0 && ny >= 0 && nx < lattice.cols && ny < lattice.rows)
-        visit(id, nodeCost, p, (ny * lattice.cols + nx) * DIRECTIONS + h, maneuver===2?edgeWeights[h]!.reverse:edgeWeights[h]!.forward, grid.moves, id * 4 + maneuver, grid.masks[h]![maneuver + 3]!);
+        visit(id, nodeCost, p, (ny * lattice.cols + nx) * DIRECTIONS + h, maneuver===2?edgeWeights[h]!.reverse:edgeWeights[h]!.forward, grid.moves, id * 2 + (maneuver===2?1:0), grid.masks[h]![maneuver + 3]!);
     }
   }
   if(state)state.visited=visited;
