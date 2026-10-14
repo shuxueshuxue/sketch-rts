@@ -1,0 +1,5850 @@
+{
+  "envelopeRevision": {
+    "beforeFile": "comparison.json",
+    "beforeResult": "17 and 12 changed WebGL pixels beyond the first body-only horizontal pad at frames25/49; Canvas all original pads pass.",
+    "reason": "Actor cards cast native shadows. Production sun offset is (-450,650,+250), so a raised sleeve extends its ground shadow toward +screen-x. Widening only the right edge from+75 to+112 includes the authored sprite plus the physically projected native ground shadow; every outside pixel still must match. Original failed result and executed v1 analyzer are retained.",
+    "sunSource": "src/client/world3d/world-layer.ts:216",
+    "cardShadowSource": "src/client/world3d/painted-card-batches.ts:281",
+    "shadowBounds": "For local drawing bounds x[-46,42],y[-60,25], glyphScale15/18, foot17, camera tilt0.72, height<74 world units. Sun dx/height=450/650 projects <51 world units; maximum sprite x35+sun x51 gives <112 screen pixels at zoom1.3 including PCF padding."
+  },
+  "analyzerSha256": "f5e59da4fb15767d725c400c7d10afa1588c4cb3e9d99428dc2dddabd1ef653b",
+  "passed": true,
+  "before": {
+    "file": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/spirit-models/gameplay/before/proof.json",
+    "proofSha256": "8c05976e9325e11c0abeed4ed1470a92e64cd1f7ab8d260a9c36fd2b113532cc",
+    "head": "8345a0dcfeb96b6777ac3940ec64cba13816c851"
+  },
+  "after": {
+    "file": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/spirit-models/gameplay/after/proof.json",
+    "proofSha256": "9bf3e8e1c17cc3404453714b778caaa99c1ae854fa218e5b9eb55f3ab3909caa",
+    "head": "d7c7f4bf93ffd8364a1ee6ef0c6170ca442657a8"
+  },
+  "checks": [
+    {
+      "name": "source.rulesTrees",
+      "identical": true,
+      "sha256Before": "fb40b44894da90168078cfb32ca5b1bbb9cdd7fa7bedd2bcd1aec35e78a209de",
+      "sha256After": "fb40b44894da90168078cfb32ca5b1bbb9cdd7fa7bedd2bcd1aec35e78a209de"
+    },
+    {
+      "name": "source.rulesDiffSha256",
+      "identical": true,
+      "sha256Before": "b4b16dad390bac4c7ce42014c594fa668910b49ec1b7771a17891c187d71e0ab",
+      "sha256After": "b4b16dad390bac4c7ce42014c594fa668910b49ec1b7771a17891c187d71e0ab"
+    },
+    {
+      "name": "captures",
+      "identical": true,
+      "sha256Before": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc",
+      "sha256After": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc"
+    },
+    {
+      "name": "fps",
+      "identical": true,
+      "sha256Before": "f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b",
+      "sha256After": "f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b"
+    },
+    {
+      "name": "initialSnapshotSha256",
+      "identical": true,
+      "sha256Before": "1182aedc9039c453d04fefd224b29f406353f1996675450cef5d7d58c47d2b6f",
+      "sha256After": "1182aedc9039c453d04fefd224b29f406353f1996675450cef5d7d58c47d2b6f"
+    },
+    {
+      "name": "snapshotHashes",
+      "identical": true,
+      "sha256Before": "2f128780b9e23e36039109b545eeb995625569e519a28fae7accdbf7913d621f",
+      "sha256After": "2f128780b9e23e36039109b545eeb995625569e519a28fae7accdbf7913d621f"
+    },
+    {
+      "name": "summons",
+      "identical": true,
+      "sha256Before": "b2b96f2825fdae7ba00b49cfdff0380e3be56af71870cd47afe56aa31f6612f5",
+      "sha256After": "b2b96f2825fdae7ba00b49cfdff0380e3be56af71870cd47afe56aa31f6612f5"
+    },
+    {
+      "name": "commands",
+      "identical": true,
+      "sha256Before": "ce754d7339768e557b93e49eda053b335dfe8f8d5f67f7efcb14ea96a756276a",
+      "sha256After": "ce754d7339768e557b93e49eda053b335dfe8f8d5f67f7efcb14ea96a756276a"
+    },
+    {
+      "name": "scriptedExits",
+      "identical": true,
+      "sha256Before": "dec9f24ded1350cbef6144583c15765efb45171ed1329b680fcf0ce269dda58d",
+      "sha256After": "dec9f24ded1350cbef6144583c15765efb45171ed1329b680fcf0ce269dda58d"
+    },
+    {
+      "name": "releases",
+      "identical": true,
+      "sha256Before": "f97fd88daefb467fc788f6125921a9eb47522ff57a12e9bb79316deb0ab1e0ef",
+      "sha256After": "f97fd88daefb467fc788f6125921a9eb47522ff57a12e9bb79316deb0ab1e0ef"
+    },
+    {
+      "name": "samples",
+      "identical": true,
+      "sha256Before": "5837515725113336ba94254804919922b5fffc5d07298233247f1670b47c90fd",
+      "sha256After": "5837515725113336ba94254804919922b5fffc5d07298233247f1670b47c90fd"
+    },
+    {
+      "name": "actualDeaths",
+      "identical": true,
+      "sha256Before": "49bb141a28183d1d0cbb5b7b71ce0636e87839d19f0bd20a0df9ef4ab8eb5bcd",
+      "sha256After": "49bb141a28183d1d0cbb5b7b71ce0636e87839d19f0bd20a0df9ef4ab8eb5bcd"
+    },
+    {
+      "name": "seen",
+      "identical": true,
+      "sha256Before": "10696a193a372ec4643c137bce5506a7a6b087c4fd6d7e35dd2368a53a3bd064",
+      "sha256After": "10696a193a372ec4643c137bce5506a7a6b087c4fd6d7e35dd2368a53a3bd064"
+    },
+    {
+      "name": "drawMutations",
+      "identical": true,
+      "sha256Before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sha256After": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "glError",
+      "identical": true,
+      "sha256Before": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "sha256After": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "name": "pick identities and clocks",
+      "identical": true,
+      "sha256Before": "a1f1d1c43caaee56dddf4f6c7ab49277eab93d21b87c56f36b75de2dac32909f",
+      "sha256After": "a1f1d1c43caaee56dddf4f6c7ab49277eab93d21b87c56f36b75de2dac32909f"
+    },
+    {
+      "name": "Full original simulation snapshots",
+      "identical": true,
+      "sha256Before": "759b5644ce0e1dbccd7b98b411239878b57917f5cc2620e6ccfe96c53e1f8159",
+      "sha256After": "759b5644ce0e1dbccd7b98b411239878b57917f5cc2620e6ccfe96c53e1f8159"
+    }
+  ],
+  "sourceChanges": [
+    "src/client/art/corpses.ts",
+    "src/client/art/creature-painters.ts",
+    "src/client/art/creature-poses.ts",
+    "src/client/art/painted-spirit.test.ts",
+    "src/client/art/painted-spirit.ts",
+    "src/client/art/unit-appearance.ts",
+    "src/client/atlas-art.test.ts",
+    "src/client/atlas-art.ts"
+  ],
+  "permittedChangedFiles": [
+    "src/client/atlas-art.ts",
+    "src/client/art/unit-appearance.ts",
+    "src/client/art/creature-painters.ts",
+    "src/client/art/creature-poses.ts",
+    "src/client/art/corpses.ts",
+    "src/client/art/painted-spirit.ts",
+    "src/client/art/painted-spirit.test.ts",
+    "src/client/atlas-art.test.ts"
+  ],
+  "portraits": [
+    {
+      "label": "spirit png",
+      "width": 112,
+      "height": 112,
+      "changedPixels": 4759,
+      "changedChannels": 18894,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 255,
+      "allowedEnvelopes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 112,
+          "height": 112
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "spirit bodyPng",
+      "width": 112,
+      "height": 150,
+      "changedPixels": 8562,
+      "changedChannels": 33977,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 255,
+      "allowedEnvelopes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 112,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "summoner png",
+      "width": 112,
+      "height": 112,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 0,
+      "allowedEnvelopes": [],
+      "examples": []
+    },
+    {
+      "label": "summoner bodyPng",
+      "width": 112,
+      "height": 150,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 0,
+      "allowedEnvelopes": [],
+      "examples": []
+    },
+    {
+      "label": "footman png",
+      "width": 112,
+      "height": 112,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 0,
+      "allowedEnvelopes": [],
+      "examples": []
+    },
+    {
+      "label": "footman bodyPng",
+      "width": 112,
+      "height": 150,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 0,
+      "allowedEnvelopes": [],
+      "examples": []
+    }
+  ],
+  "nativeFrames": [
+    {
+      "label": "WebGL 0",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27411,
+      "changedChannels": 81304,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 1",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27404,
+      "changedChannels": 81331,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 2",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27414,
+      "changedChannels": 81364,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 3",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27415,
+      "changedChannels": 81357,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 4",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27417,
+      "changedChannels": 81357,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 5",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27417,
+      "changedChannels": 81347,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 6",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27411,
+      "changedChannels": 81345,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 7",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27405,
+      "changedChannels": 81328,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 8",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27396,
+      "changedChannels": 81266,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 9",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27469,
+      "changedChannels": 81453,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 161,
+      "allowedEnvelopes": [
+        {
+          "x": 154,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 596,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1038,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 163,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 605,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1047,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 10",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27566,
+      "changedChannels": 81779,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 169,
+      "allowedEnvelopes": [
+        {
+          "x": 149,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 591,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1033,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 168,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 610,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1052,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 11",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27497,
+      "changedChannels": 81567,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 159,
+      "allowedEnvelopes": [
+        {
+          "x": 145,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 587,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1029,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 172,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 614,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1056,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 12",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27572,
+      "changedChannels": 81825,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 162,
+      "allowedEnvelopes": [
+        {
+          "x": 140,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 582,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1024,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 177,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 619,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1061,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 13",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27522,
+      "changedChannels": 81604,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 161,
+      "allowedEnvelopes": [
+        {
+          "x": 136,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 578,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1020,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 181,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 623,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1065,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 14",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27455,
+      "changedChannels": 81359,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 573,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1015,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 186,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 628,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1070,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 15",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27526,
+      "changedChannels": 81610,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 163,
+      "allowedEnvelopes": [
+        {
+          "x": 127,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 569,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1011,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 190,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 632,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1074,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 16",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27490,
+      "changedChannels": 81507,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 160,
+      "allowedEnvelopes": [
+        {
+          "x": 122,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 564,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1006,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 637,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1079,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 17",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27537,
+      "changedChannels": 81695,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 118,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 560,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1002,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 199,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 641,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1083,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 18",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27453,
+      "changedChannels": 81412,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 160,
+      "allowedEnvelopes": [
+        {
+          "x": 113,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 555,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 997,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 204,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 646,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1088,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 19",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27558,
+      "changedChannels": 81791,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 108,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 550,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 992,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 209,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 651,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1093,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 20",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27502,
+      "changedChannels": 81645,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 159,
+      "allowedEnvelopes": [
+        {
+          "x": 104,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 546,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 988,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 213,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 655,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1097,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 21",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27559,
+      "changedChannels": 81802,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 22",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27329,
+      "changedChannels": 81156,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 23",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27306,
+      "changedChannels": 81035,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 24",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27211,
+      "changedChannels": 80751,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 25",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28981,
+      "changedChannels": 85596,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 177,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 26",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28597,
+      "changedChannels": 84572,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 161,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 27",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28079,
+      "changedChannels": 83144,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 163,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 28",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27604,
+      "changedChannels": 81878,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 163,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 29",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27383,
+      "changedChannels": 81250,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 30",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 80983,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 31",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27250,
+      "changedChannels": 80964,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 32",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27251,
+      "changedChannels": 80962,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 33",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27251,
+      "changedChannels": 80969,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 34",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27251,
+      "changedChannels": 80969,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 35",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27252,
+      "changedChannels": 80960,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 36",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27252,
+      "changedChannels": 80960,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 37",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27252,
+      "changedChannels": 80964,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 38",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80833,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 39",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80827,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 40",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27230,
+      "changedChannels": 80822,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 41",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80832,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 42",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80830,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 43",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80829,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 44",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27232,
+      "changedChannels": 80837,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 45",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27258,
+      "changedChannels": 80952,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 46",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27260,
+      "changedChannels": 80960,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 47",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27260,
+      "changedChannels": 80953,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 48",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27260,
+      "changedChannels": 80953,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 49",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28885,
+      "changedChannels": 85326,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 177,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 50",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28557,
+      "changedChannels": 84460,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 164,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 51",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 28010,
+      "changedChannels": 82994,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 164,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 52",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27594,
+      "changedChannels": 81879,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 163,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 53",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27381,
+      "changedChannels": 81257,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 54",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27287,
+      "changedChannels": 81011,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 55",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 81029,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 56",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 81029,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 57",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 81029,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 58",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 81029,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 59",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27286,
+      "changedChannels": 81029,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 167,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 60",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27262,
+      "changedChannels": 80955,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 61",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27262,
+      "changedChannels": 80957,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 62",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27262,
+      "changedChannels": 80957,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 63",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27262,
+      "changedChannels": 80957,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 64",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27262,
+      "changedChannels": 80957,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 65",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27446,
+      "changedChannels": 81348,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 157,
+      "allowedEnvelopes": [
+        {
+          "x": 103,
+          "y": 215,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 545,
+          "y": 215,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 987,
+          "y": 215,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 214,
+          "y": 553,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 656,
+          "y": 553,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1098,
+          "y": 553,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 66",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27287,
+      "changedChannels": 80962,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 107,
+          "y": 218,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 549,
+          "y": 218,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 991,
+          "y": 218,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 210,
+          "y": 556,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 652,
+          "y": 556,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1094,
+          "y": 556,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 67",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27329,
+      "changedChannels": 81059,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 157,
+      "allowedEnvelopes": [
+        {
+          "x": 111,
+          "y": 220,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 553,
+          "y": 220,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 995,
+          "y": 220,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 206,
+          "y": 558,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 648,
+          "y": 558,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1090,
+          "y": 558,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 68",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27415,
+      "changedChannels": 81361,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 163,
+      "allowedEnvelopes": [
+        {
+          "x": 115,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 557,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 999,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 202,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 644,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1086,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 69",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27507,
+      "changedChannels": 81615,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 164,
+      "allowedEnvelopes": [
+        {
+          "x": 118,
+          "y": 225,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 560,
+          "y": 225,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1002,
+          "y": 225,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 199,
+          "y": 563,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 641,
+          "y": 563,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1083,
+          "y": 563,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 70",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27517,
+      "changedChannels": 81671,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 159,
+      "allowedEnvelopes": [
+        {
+          "x": 122,
+          "y": 228,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 564,
+          "y": 228,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1006,
+          "y": 228,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 566,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 637,
+          "y": 566,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1079,
+          "y": 566,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 71",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27561,
+      "changedChannels": 81796,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 126,
+          "y": 230,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 568,
+          "y": 230,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 230,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 191,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 633,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 72",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27503,
+      "changedChannels": 81539,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 161,
+      "allowedEnvelopes": [
+        {
+          "x": 130,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 572,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1014,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 187,
+          "y": 571,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 629,
+          "y": 571,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1071,
+          "y": 571,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 73",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 27512,
+      "changedChannels": 81570,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 166,
+      "allowedEnvelopes": [
+        {
+          "x": 134,
+          "y": 235,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 576,
+          "y": 235,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1018,
+          "y": 235,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 183,
+          "y": 573,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 625,
+          "y": 573,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1067,
+          "y": 573,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 74",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17920,
+      "changedChannels": 53154,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 75",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17918,
+      "changedChannels": 53156,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 76",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17918,
+      "changedChannels": 53160,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 77",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17918,
+      "changedChannels": 53160,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 78",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17918,
+      "changedChannels": 53151,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "WebGL 79",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 17918,
+      "changedChannels": 53147,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 156,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 0,
+          "y": 810,
+          "width": 430,
+          "height": 190
+        },
+        {
+          "x": 1230,
+          "y": 850,
+          "width": 190,
+          "height": 150
+        }
+      ],
+      "examples": []
+    }
+  ],
+  "canvasFrames": [
+    {
+      "label": "Canvas 0",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12306,
+      "changedChannels": 35595,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 160,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 8",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12327,
+      "changedChannels": 35782,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 161,
+      "allowedEnvelopes": [
+        {
+          "x": 159,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 159,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 601,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1043,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 23",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12346,
+      "changedChannels": 35979,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 25",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 13784,
+      "changedChannels": 39830,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 176,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 26",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 13536,
+      "changedChannels": 39082,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 173,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 27",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12967,
+      "changedChannels": 37699,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 28",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12527,
+      "changedChannels": 36586,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 29",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12370,
+      "changedChannels": 36069,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 30",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12319,
+      "changedChannels": 35921,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 48",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12349,
+      "changedChannels": 36003,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 49",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 13705,
+      "changedChannels": 39696,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 159,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 50",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 13494,
+      "changedChannels": 39059,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 172,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 51",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12954,
+      "changedChannels": 37736,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 60",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12359,
+      "changedChannels": 36076,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 99,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 541,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 983,
+          "y": 213,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 218,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 660,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1102,
+          "y": 551,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 68",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 12435,
+      "changedChannels": 36428,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 158,
+      "allowedEnvelopes": [
+        {
+          "x": 115,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 557,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 999,
+          "y": 223,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 202,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 644,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1086,
+          "y": 561,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 75",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 2489,
+      "changedChannels": 7343,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 29,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    },
+    {
+      "label": "Canvas 79",
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 2483,
+      "changedChannels": 7321,
+      "changedOutsideEnvelope": 0,
+      "maxDifference": 28,
+      "allowedEnvelopes": [
+        {
+          "x": 131,
+          "y": 232,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 567,
+          "y": 233,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1010,
+          "y": 240,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 195,
+          "y": 559,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 647,
+          "y": 568,
+          "width": 187,
+          "height": 145
+        },
+        {
+          "x": 1075,
+          "y": 578,
+          "width": 187,
+          "height": 145
+        }
+      ],
+      "examples": []
+    }
+  ],
+  "failures": [],
+  "scope": "Exact original simulation facts, clocks, commands, releases, pose/facing samples, death facts and picked identities. Raw point coordinates may differ for legitimate silhouette changes. Four independent nonspirit UI images must be exactly equal. Every pixel/channel, including transparent RGB, is compared in 80 WebGL and 17 Canvas PNGs. Art differences are limited to conservative per-frame spirit body/native-shadow/remains envelopes and the spirit UI panel. These rectangles can include nearby target pixels, so unchanged target painters are additionally established by full source hashes and independent footman UI images. This is not a performance proof or pixel identity proof for spirit art."
+}

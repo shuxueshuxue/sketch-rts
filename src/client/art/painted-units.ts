@@ -3,6 +3,7 @@ import {hasWarfareUnit,paintWarfareUnit} from './warfare-units';
  * One restrained material set; six action keys and eight locomotion keys.
  * Feet stay at y=16 and each figure lives inside the atlas's 128px tile. */
 import { hasPaintedCreature, paintCreature } from './painted-creatures';
+import { hasMercenaryModel, paintMercenary } from './painted-mercenaries';
 import type { UnitKind } from '../../shared/types';
 import type { UnitAnimationFrame } from '../unit-animation';
 import { type Brush, line, ellipse, darker, lighter } from './kit';
@@ -65,6 +66,7 @@ function mount(b:Brush,team:string,phase:number,elite:boolean,facing:number){
 
 export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimationFrame,facing:1|-1,presentation:FigurePresentation={}):boolean{
   if(hasWarfareUnit(kind))return paintWarfareUnit(b,kind,team,pose);
+  if(hasMercenaryModel(kind))return paintMercenary(b,kind,team,pose,facing,presentation);
  const base=figures[kind];if(!base)return paintCreature(b,kind,team,pose);
  const f=presentation.appearance?{...base,...presentation.appearance}:base;
   b.save();b.lineJoin='round';b.lineCap='round';

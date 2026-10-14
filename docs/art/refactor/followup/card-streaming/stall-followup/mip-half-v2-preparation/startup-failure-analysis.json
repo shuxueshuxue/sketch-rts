@@ -1,0 +1,249 @@
+{
+  "failedOriginal": {
+    "path": "docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba/candidate-B2/raw.json",
+    "sha256": "d2174622ca02c60556479da2076a4fc3100864abd6b85bd31aeb0ee38176925d",
+    "bytes": 1118748,
+    "completed": false,
+    "failure": "Error: Multiple canonical Three module identities",
+    "cycles": 0,
+    "errors": [],
+    "failedRequests": [],
+    "threeFullResolvedIds": {
+      "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1": 12,
+      "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=4e647148": 1
+    },
+    "threeResolveRecords": [
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/world-layer.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/combat-ink.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/water.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/projection.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/model-portraits.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/crew-pose.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/selection-markers.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/painted-card-batches.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/batches.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/sail-rig.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/model-library.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/card-mip-uploader.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=cd81ece1",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/sketch-mip-half-viewport-DqoIVi/mip-half-loader.js",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=4e647148",
+        "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=4e647148",
+        "sameThreeIdentity": true,
+        "purpose": "current-context-public-three"
+      }
+    ],
+    "loaderLastRecord": {
+      "request": "three",
+      "importer": "/tmp/sketch-mip-half-viewport-DqoIVi/mip-half-loader.js",
+      "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=4e647148",
+      "currentResolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three.js?v=4e647148",
+      "sameThreeIdentity": true,
+      "purpose": "current-context-public-three"
+    },
+    "GLTFLoaderResolveRecords": [
+      {
+        "request": "three/addons/loaders/GLTFLoader.js",
+        "importer": "/tmp/sketch-stall-baseline-8345/src/client/world3d/model-library.ts",
+        "resolutionImporter": "/tmp/sketch-stall-baseline-8345/src/client/world3d/model-library.ts",
+        "resolvedId": "/tmp/sketch-mip-half-viewport-DqoIVi/.vite/deps/three_addons_loaders_GLTFLoader__js.js?v=a1da16c7",
+        "purpose": "original-module-dependency",
+        "redirectedRelativeDependency": false
+      }
+    ],
+    "log": {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba/candidate-B2.log",
+      "sha256": "8ed49232bcd4f8b189e9786ab0026bdedf598e482748d173b60d98f66e9be161",
+      "bytes": 830,
+      "text": "12:02:38 PM [vite] (client) ✨ new dependencies optimized: three\n12:02:38 PM [vite] (client) ✨ new dependencies optimized: three/addons/loaders/GLTFLoader.js\n12:02:38 PM [vite] (client) ✨ optimized dependencies changed. reloading\nfile:///workspace/sketch-rts-viewport/scripts/art-card-mip-half-provider.mjs:137\n    if (!three.length || new Set(three.map(row => row.resolvedId)).size !== 1) throw new Error('Multiple canonical Three module identities');\n                                                                                     ^\n\nError: Multiple canonical Three module identities\n    at Object.inspectRuntime (file:///workspace/sketch-rts-viewport/scripts/art-card-mip-half-provider.mjs:137:86)\n    at async file:///workspace/sketch-rts-viewport/scripts/art-card-mip-half-viewport-proof.mjs:77:3\n\nNode.js v24.19.0\n"
+    }
+  },
+  "preservedCompleteArms": [
+    {
+      "arm": "production-A",
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba/production-A/raw.json",
+      "sha256": "e8cf36386d2cc54ed61d0e25332cc2edabfd7f35e86fcf1f6099723bca24ed26",
+      "bytes": 1489402,
+      "completed": true,
+      "cycles": 2,
+      "validation": {
+        "passed": true,
+        "violations": []
+      },
+      "scope": "Completed v1 arm preserved; original four-arm ABBA sequence is incomplete."
+    },
+    {
+      "arm": "candidate-B",
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba/candidate-B/raw.json",
+      "sha256": "2e54efa7aeb715747a9af13663c306c49a5719e079999e2a41c7f810c34dcae9",
+      "bytes": 1511254,
+      "completed": true,
+      "cycles": 2,
+      "validation": {
+        "passed": true,
+        "violations": []
+      },
+      "scope": "Completed v1 arm preserved; original four-arm ABBA sequence is incomplete."
+    }
+  ],
+  "diagnosis": {
+    "observed": "Vite optimized three first, then discovered the GLTFLoader deep import and announced an optimized-dependency reload. Twelve production source requests used ?v=cd81ece1; the subsequent balanced loader used ?v=4e647148 on the same optimized file. The exact query is part of the ES module identity and was correctly retained by the guard. No measured third-arm cycles ran.",
+    "boundary": "Resolve records demonstrate two distinct canonical URLs during startup. Failed evidence has no final module graph or bundle snapshots, so this alone does not prove two independently executed Three class registries or a production rendering bug. It invalidates the formal singleton precondition. The two completed arms cannot be presented as a completed ABBA or a candidate timing win.",
+    "fix": "New v2 tool versions include both bare entry points, disable discovery and link the fresh temporary root to the same installed dependencies. In installed Vite 6, noDiscovery chooses createExplicitDepsOptimizer; server.listen waits for its init/optimizeExplicitEnvironmentDeps before Chromium starts. The driver asserts completion, archives optimized bundle/chunk bytes and full IDs, retains the original runtime singleton guard and checks startup/final optimizer metadata plus hashes."
+  },
+  "staticChecks": {
+    "nodeCheckPassed": [
+      "scripts/art-card-mip-half-provider-v2.mjs",
+      "scripts/art-card-mip-half-viewport-proof-v2.mjs",
+      "scripts/art-card-mip-half-camera-proof-v2.mjs"
+    ],
+    "commands": [
+      [
+        "node",
+        "--check",
+        "scripts/art-card-mip-half-provider-v2.mjs"
+      ],
+      [
+        "node",
+        "--check",
+        "scripts/art-card-mip-half-viewport-proof-v2.mjs"
+      ],
+      [
+        "node",
+        "--check",
+        "scripts/art-card-mip-half-camera-proof-v2.mjs"
+      ]
+    ],
+    "browserStarted": false,
+    "optimizerStarted": false,
+    "runtimeFixValidated": false
+  },
+  "newFilesSha256": {
+    "scripts/art-card-mip-half-provider-v2.mjs": "abb399db304ae6704a54961e59a9991074cba10841718e14cb087a0c34ec5219",
+    "scripts/art-card-mip-half-viewport-proof-v2.mjs": "dedab71eb4c80efeed0e5f1637e0823ff7206cf86bba38d484edde17e018b9ba",
+    "scripts/art-card-mip-half-camera-proof-v2.mjs": "d95d45b921f1f8c866c9439d8ef14cbf4a0a44139705e3451525560150a8dcf2"
+  },
+  "originalExecutedToolsSha256": {
+    "scripts/art-card-mip-half-provider.mjs": "376185f1c7711f51a550fed653a78017f51bb05873eb064d991b80de8dfc15de",
+    "scripts/art-card-mip-half-viewport-proof.mjs": "cb62e27daa81e6e25b8aacb5985d7941e9fb79a0e5c2220024febb30f20213db",
+    "scripts/art-card-mip-half-camera-proof.mjs": "5071fab25f4df61f04957126ffa8d3dbfc68ccdc140705f88019a635f0ffb876"
+  },
+  "sourceGate": {
+    "candidate": "/tmp/card-mip-half-margin-candidate.ts",
+    "sha256": "c607b1ac8c87f075b02444cc7e83c84fd728de3b4d7fc6e43da5c0cd5b408022",
+    "unchanged": true
+  },
+  "installedVite": {
+    "version": "6.4.2",
+    "sourcePath": "/workspace/sketch-rts-viewport/node_modules/vite/dist/node/chunks/dep-Dq2t6Dq0.js",
+    "sourceSha256": "62b768c2485cef903e0b4e93f31b4183fc741ee27c12784808ec0551d28a1df3",
+    "references": [
+      {
+        "line": 14604,
+        "symbol": "createOptimizeDepsIncludeResolver"
+      },
+      {
+        "line": 47396,
+        "symbol": "createExplicitDepsOptimizer"
+      },
+      {
+        "line": 47939,
+        "symbol": "noDiscovery selects explicit optimizer"
+      },
+      {
+        "line": 47960,
+        "symbol": "DevEnvironment.listen awaits depsOptimizer.init"
+      }
+    ]
+  },
+  "officialReferences": [
+    "https://v6.vite.dev/guide/dep-pre-bundling",
+    "https://vite.dev/config/dep-optimization-options"
+  ],
+  "reportScope": "Static failure diagnosis and v2 preparation only; no new pixels, timing, dependency-optimizer execution or browser validation."
+}

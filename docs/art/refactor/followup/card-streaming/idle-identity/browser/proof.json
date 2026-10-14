@@ -1,0 +1,5732 @@
+{
+  "sourceRoot": "/workspace/sketch-rts-viewport",
+  "sourceCommit": "454336d814ee131458b0074457f25046d6f91790",
+  "sourcePainterSha256": {
+    "src/client/art/action-direction.ts": "9c4d25a6019612c66ac6cea3967add7e6a066be20f51dc1e7805027f0544c9b5",
+    "src/client/art/appearance.ts": "c466e406eb259ff578925c8dc1616a2fff7bf245cfb6b0d579eecfa13785731d",
+    "src/client/art/body-parts.ts": "2ca3d99e54487e4c387638a9adba9dca6a005cec5b1a5054c0706e962a805870",
+    "src/client/art/building-models.ts": "e8ee2333422cc05cb82db1918266ae774faedbf41ba38dc55e467ea328d28c88",
+    "src/client/art/canvas-effects.ts": "a5fb88989e15fc9333970db4e87b8523cf4135a883b6106bb425637d239cefb1",
+    "src/client/art/canvas-ships.ts": "71c1455403f063f4f8f9abc7de9e1e8c67f1c1df048523f775604987bfa1a2a4",
+    "src/client/art/combat-effects.ts": "6981f79cd2fa7e8be983710f4ec3c60c57f397265b1933c05d39f00b0282ce2a",
+    "src/client/art/corpses.ts": "e483ef3e7dc40e56fac079e26cb50408268c2df0b484c5130ec5041cbd944610",
+    "src/client/art/creature-painters.ts": "646df0dc5b69c73744efcbbb7f601d96253ccaf3efdd72c3d75d08f096a97104",
+    "src/client/art/creature-poses.ts": "f362eacc1fce562d07b235911f734e648a0bdc7a5b6f3adcbfe01fba098b77cd",
+    "src/client/art/effect-presentation.ts": "35a8f7143c07f1d795d8a87912e7152e4219a6aeb6df1ff806ec449d7f4e6979",
+    "src/client/art/environment.ts": "3bcfe38a01315cb8e8d208524d315c1aa80884cc693cc1f98fe0c930830937d1",
+    "src/client/art/equipment.ts": "8458b07a3e07807b83c23670f10b11e22352b9a388f2599af0d765cc51e56193",
+    "src/client/art/items.ts": "4482a151fb9399e70ce84784278f782bda52ccf365e29660cc6cc932056167b4",
+    "src/client/art/kit.ts": "7b3b85f99c292f3da3c756e86443e6f619ae95858bb7a110fdc7e6a63e7c3796",
+    "src/client/art/materials.ts": "7de9410df8d5447a4da7831b1b05d3329e13d7748074389b292c5fe5a59aa246",
+    "src/client/art/model-manifest.ts": "82a494967b62f2b8ff0cca6d07cbb27ec24107f1b49745e03f2947d3bef44004",
+    "src/client/art/motion.ts": "ffcf58b584a854a4f556005af3b57c238b00e9e8a1086902d3d65a37f825bf5c",
+    "src/client/art/paint-identity.ts": "c2c855e1b21ea2fbac101ef1820661d7a88d59eadb88a1f9f0446990f0138ad4",
+    "src/client/art/painted-creatures.ts": "6e7c6c7b0a67eed91408a94f05404868c17484f0fe8d6eb39c40d3b8e3141da6",
+    "src/client/art/painted-units.ts": "727cc9300943fe8a8c565ce4f48c9f21fa70ff0a653f88ddb268bac5c9818431",
+    "src/client/art/portrait-fit.ts": "ac9d0bc244017b0a5b86b15f2366db5c52c955a14e8e99757784f255a71f7679",
+    "src/client/art/raster-cache.ts": "c289d22e6aa91c56699e6e5a5c3dbfc4d0e0c3dcadd1c8bc6b9f23392c577705",
+    "src/client/art/release-socket.ts": "9171ec40756ab3207d946f5178ad62a283286863e6ab89cfd4869cdd991bb19a",
+    "src/client/art/rig.ts": "9d3a11bbf9795c037936bdc87a4a8a2105974a914a55dcbe468e025b1a56cf05",
+    "src/client/art/scenery.ts": "961ab921b4ecbd48aa23d3c9b54616fe235562389c2c9db955b9881c0bde8a67",
+    "src/client/art/scratch-canvas.ts": "90b2dd1e58d0de1ed8122c9ef5e03ca172db6420e07628c35010eceeb6b10cbc",
+    "src/client/art/story-rig.ts": "891737aecfb5084a1591989c85b184cf1a4ceb29adad24a75146c06ccc7d9459",
+    "src/client/art/unit-appearance.ts": "d9a8ae4c9d3cdb87416a73d2748c4fcc83024994ed2ff643f9d038a86e37cdc6",
+    "src/client/art/warfare-units.ts": "ee802af5364968696b4e55922da3de8864cfcd23cb9a352e9d7d76f2cba97c53",
+    "src/client/art/weapon-surface.ts": "3c25d453f01e012b1b5a5b899619f7c15be85b94663fbc09750ea3e312a39c52"
+  },
+  "harnessSha256": "94b5230f9f83ccecf9a1af2020b1d92f7063daddd857c30e6618e6f7980147a6",
+  "fixtureSha256": "a273c7d504f2d959aa2eebd8922365256e75721d9233af4f4bfbceb1df3b14ee",
+  "traceStatesSha256": "14cfb1adc437c317fe2b521efd46189f196719662452083638c57bfaf7d5fb11",
+  "startedAt": "2026-10-13T04:51:49.322Z",
+  "schemaVersion": 1,
+  "completed": true,
+  "passed": true,
+  "method": "Real Chromium HTMLCanvasElement Canvas2D; exact complete original-domain RGBA comparisons, including RGB under zero alpha; no resampling, tolerance, WebGL, WorldLayer or card-cache code.",
+  "settings": {
+    "pairs": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "densities": [
+      2,
+      4
+    ],
+    "facings": [
+      -1,
+      1
+    ],
+    "teams": [
+      "#477b91",
+      "#a85644"
+    ],
+    "carryStates": [
+      {
+        "carry": 0,
+        "carryAim": 0
+      },
+      {
+        "carry": 1,
+        "carryAim": -6
+      },
+      {
+        "carry": 1,
+        "carryAim": 0
+      },
+      {
+        "carry": 1,
+        "carryAim": 6
+      },
+      {
+        "carry": 3,
+        "carryAim": -6
+      },
+      {
+        "carry": 3,
+        "carryAim": 0
+      },
+      {
+        "carry": 3,
+        "carryAim": 6
+      },
+      {
+        "carry": 6,
+        "carryAim": -6
+      },
+      {
+        "carry": 6,
+        "carryAim": 0
+      },
+      {
+        "carry": 6,
+        "carryAim": 6
+      }
+    ],
+    "traceStates": [
+      {
+        "kind": "footman",
+        "carry": 6,
+        "carryAim": -1,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "footman",
+        "carry": 6,
+        "carryAim": 4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "knight",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "lancer",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "ogreLord",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "ogreMage",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "ogreMage",
+        "carry": 6,
+        "carryAim": 4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "ogreWarrior",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "priest",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "priest",
+        "carry": 6,
+        "carryAim": 4,
+        "appearanceLabel": "native"
+      },
+      {
+        "kind": "tidePriest",
+        "carry": 6,
+        "carryAim": -4,
+        "appearanceLabel": "native"
+      }
+    ],
+    "yieldEveryComparisons": 16,
+    "context": {
+      "type": "2d",
+      "willReadFrequently": true
+    },
+    "domain": "actionPaintSize(originalPose, kind)",
+    "opaqueVariants": "excluded",
+    "walking": "negative control only"
+  },
+  "stock": [
+    "thornSlinger",
+    "barkMender",
+    "gladeWitch",
+    "worker",
+    "footman",
+    "lancer",
+    "ashWarden",
+    "archer",
+    "horseArcher",
+    "raider",
+    "knight",
+    "priest",
+    "summoner",
+    "witch",
+    "emberRavager",
+    "cinderRunner",
+    "sparkArcher",
+    "ashHexer",
+    "ashChieftain",
+    "cinderRevenant",
+    "mercenary",
+    "contractArcher",
+    "fieldMedic",
+    "wildling",
+    "mossGnawer",
+    "ancientStag",
+    "spiderling",
+    "venomSpider",
+    "spiderQueen",
+    "dragonWhelp",
+    "redDragon",
+    "golem",
+    "rubbleGolem",
+    "rockGolem",
+    "graniteGolem",
+    "stonebackBrute",
+    "ogreWarrior",
+    "ogreMage",
+    "ogreLord",
+    "murlocPeon",
+    "murlocHunter",
+    "tidePriest",
+    "deepSnapper",
+    "spirit"
+  ],
+  "groups": [
+    {
+      "scope": "stock-native",
+      "kind": "thornSlinger",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "barkMender",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "gladeWitch",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "worker",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashWarden",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "archer",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "horseArcher",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "raider",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "summoner",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "witch",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "emberRavager",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRunner",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "sparkArcher",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashHexer",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashChieftain",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRevenant",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mercenary",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "contractArcher",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "fieldMedic",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "wildling",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mossGnawer",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ancientStag",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderling",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "venomSpider",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderQueen",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "dragonWhelp",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "redDragon",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "golem",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rubbleGolem",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rockGolem",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "graniteGolem",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "stonebackBrute",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocPeon",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocHunter",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        },
+        {
+          "carry": 1,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": 6
+        },
+        {
+          "carry": 3,
+          "carryAim": -6
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 6
+        },
+        {
+          "carry": 6,
+          "carryAim": -6
+        },
+        {
+          "carry": 6,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 6
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "deepSnapper",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spirit",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "footman",
+          "carry": 6,
+          "carryAim": -1,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "footman",
+          "carry": 6,
+          "carryAim": 4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "knight",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "lancer",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "ogreLord",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "ogreMage",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "ogreMage",
+          "carry": 6,
+          "carryAim": 4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "ogreWarrior",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "priest",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "priest",
+          "carry": 6,
+          "carryAim": 4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "appearance": {},
+      "states": [
+        {
+          "kind": "tidePriest",
+          "carry": 6,
+          "carryAim": -4,
+          "appearanceLabel": "native"
+        }
+      ]
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "footman",
+      "appearanceLabel": "greatSword",
+      "appearance": {
+        "weapon": "greatSword"
+      },
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 1,
+          "carryAim": -6
+        }
+      ]
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "lancer",
+      "appearanceLabel": "roundShield",
+      "appearance": {
+        "shield": true,
+        "shieldStyle": "round"
+      },
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 3,
+          "carryAim": 0
+        }
+      ]
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "priest",
+      "appearanceLabel": "ember",
+      "appearance": {
+        "appearance": {
+          "ember": true
+        },
+        "cloth": "#a78265"
+      },
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": -4
+        }
+      ]
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "summoner",
+      "appearanceLabel": "ember",
+      "appearance": {
+        "appearance": {
+          "ember": true
+        },
+        "cloth": "#704b3e"
+      },
+      "states": [
+        {
+          "carry": 0,
+          "carryAim": 0
+        },
+        {
+          "carry": 6,
+          "carryAim": 4
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "scope": "stock-native",
+      "kind": "thornSlinger",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "thornSlinger",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "thornSlinger",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "barkMender",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "barkMender",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "barkMender",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "gladeWitch",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "gladeWitch",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "gladeWitch",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "worker",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "worker",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "worker",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashWarden",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashWarden",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashWarden",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "archer",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "archer",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "archer",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "horseArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "horseArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "horseArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "raider",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "raider",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "raider",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "summoner",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "summoner",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "summoner",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "witch",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "witch",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "witch",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "emberRavager",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "emberRavager",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "emberRavager",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRunner",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRunner",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRunner",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "sparkArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "sparkArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "sparkArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashHexer",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashHexer",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashHexer",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashChieftain",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashChieftain",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ashChieftain",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRevenant",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRevenant",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "cinderRevenant",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mercenary",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mercenary",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mercenary",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "contractArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "contractArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "contractArcher",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "fieldMedic",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "fieldMedic",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "fieldMedic",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "wildling",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "wildling",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "wildling",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mossGnawer",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mossGnawer",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "mossGnawer",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ancientStag",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ancientStag",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ancientStag",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderling",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderling",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderling",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "venomSpider",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "venomSpider",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "venomSpider",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderQueen",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderQueen",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spiderQueen",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "dragonWhelp",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "dragonWhelp",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "dragonWhelp",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "redDragon",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "redDragon",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "redDragon",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "golem",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "golem",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "golem",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rubbleGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rubbleGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rubbleGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rockGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rockGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "rockGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "graniteGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "graniteGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "graniteGolem",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "stonebackBrute",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "stonebackBrute",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "stonebackBrute",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocPeon",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocPeon",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocPeon",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocHunter",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocHunter",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "murlocHunter",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 80,
+      "comparedPixels": 23613440,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "deepSnapper",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "deepSnapper",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "deepSnapper",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spirit",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spirit",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "stock-native",
+      "kind": "spirit",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 1310720,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "footman",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "knight",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "lancer",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreLord",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreMage",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "ogreWarrior",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "priest",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "actual-mixed-extra",
+      "kind": "tidePriest",
+      "appearanceLabel": "native",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 8,
+      "comparedPixels": 2478080,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "footman",
+      "appearanceLabel": "greatSword",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "footman",
+      "appearanceLabel": "greatSword",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "footman",
+      "appearanceLabel": "greatSword",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "lancer",
+      "appearanceLabel": "roundShield",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "lancer",
+      "appearanceLabel": "roundShield",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "equipment-representative",
+      "kind": "lancer",
+      "appearanceLabel": "roundShield",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "priest",
+      "appearanceLabel": "ember",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "priest",
+      "appearanceLabel": "ember",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "priest",
+      "appearanceLabel": "ember",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "summoner",
+      "appearanceLabel": "ember",
+      "frames": [
+        0,
+        4
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "summoner",
+      "appearanceLabel": "ember",
+      "frames": [
+        1,
+        3
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    },
+    {
+      "scope": "ember-representative",
+      "kind": "summoner",
+      "appearanceLabel": "ember",
+      "frames": [
+        5,
+        7
+      ],
+      "comparisons": 16,
+      "comparedPixels": 3788800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0,
+      "failures": []
+    }
+  ],
+  "totals": {
+    "comparisons": 7776,
+    "comparedPixels": 2251100160,
+    "changedPixels": 0,
+    "changedChannels": 0,
+    "maximumChannelDifference": 0,
+    "emptyReferences": 0,
+    "emptyCandidates": 0
+  },
+  "scopeTotals": {
+    "stock-native": {
+      "comparisons": 7320,
+      "comparedPixels": 2123857920,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0
+    },
+    "actual-mixed-extra": {
+      "comparisons": 264,
+      "comparedPixels": 81776640,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0
+    },
+    "equipment-representative": {
+      "comparisons": 96,
+      "comparedPixels": 22732800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0
+    },
+    "ember-representative": {
+      "comparisons": 96,
+      "comparedPixels": 22732800,
+      "changedPixels": 0,
+      "changedChannels": 0,
+      "maximumChannelDifference": 0,
+      "emptyReferences": 0,
+      "emptyCandidates": 0
+    }
+  },
+  "negativeControls": [
+    {
+      "name": "unmerged idle motion",
+      "kind": "footman",
+      "aPose": {
+        "mode": "idle",
+        "frame": 0
+      },
+      "bPose": {
+        "mode": "idle",
+        "frame": 2
+      },
+      "aTeam": "#477b91",
+      "bTeam": "#477b91",
+      "changedPixels": 12065,
+      "changedChannels": 35284,
+      "maximumChannelDifference": 255,
+      "visibleA": 17359,
+      "visibleB": 17233,
+      "samples": [
+        {
+          "pixel": 45910,
+          "a": [
+            39,
+            41,
+            39,
+            123
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 45911,
+          "a": [
+            40,
+            42,
+            40,
+            122
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46421,
+          "a": [
+            40,
+            42,
+            40,
+            108
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46422,
+          "a": [
+            50,
+            51,
+            47,
+            255
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46423,
+          "a": [
+            41,
+            43,
+            41,
+            255
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46424,
+          "a": [
+            38,
+            38,
+            38,
+            20
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46843,
+          "a": [
+            42,
+            42,
+            42,
+            18
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pixel": 46844,
+          "a": [
+            40,
+            43,
+            40,
+            173
+          ],
+          "b": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "authored figure owner colors",
+      "kind": "footman",
+      "aPose": {
+        "mode": "idle",
+        "frame": 0
+      },
+      "bPose": {
+        "mode": "idle",
+        "frame": 0
+      },
+      "aTeam": "#477b91",
+      "bTeam": "#a85644",
+      "changedPixels": 3732,
+      "changedChannels": 11150,
+      "maximumChannelDifference": 87,
+      "visibleA": 17359,
+      "visibleB": 17359,
+      "samples": [
+        {
+          "pixel": 79594,
+          "a": [
+            41,
+            46,
+            44,
+            255
+          ],
+          "b": [
+            45,
+            44,
+            41,
+            255
+          ]
+        },
+        {
+          "pixel": 79595,
+          "a": [
+            44,
+            54,
+            55,
+            255
+          ],
+          "b": [
+            59,
+            48,
+            43,
+            255
+          ]
+        },
+        {
+          "pixel": 79596,
+          "a": [
+            44,
+            56,
+            58,
+            255
+          ],
+          "b": [
+            62,
+            49,
+            44,
+            255
+          ]
+        },
+        {
+          "pixel": 79597,
+          "a": [
+            42,
+            49,
+            48,
+            255
+          ],
+          "b": [
+            50,
+            46,
+            42,
+            255
+          ]
+        },
+        {
+          "pixel": 80103,
+          "a": [
+            40,
+            42,
+            40,
+            255
+          ],
+          "b": [
+            41,
+            42,
+            40,
+            255
+          ]
+        },
+        {
+          "pixel": 80104,
+          "a": [
+            46,
+            62,
+            65,
+            255
+          ],
+          "b": [
+            71,
+            52,
+            45,
+            255
+          ]
+        },
+        {
+          "pixel": 80105,
+          "a": [
+            56,
+            88,
+            102,
+            255
+          ],
+          "b": [
+            117,
+            65,
+            53,
+            255
+          ]
+        },
+        {
+          "pixel": 80106,
+          "a": [
+            61,
+            106,
+            125,
+            255
+          ],
+          "b": [
+            145,
+            74,
+            58,
+            255
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "mounted walking phase",
+      "kind": "knight",
+      "aPose": {
+        "mode": "walk",
+        "frame": 0
+      },
+      "bPose": {
+        "mode": "walk",
+        "frame": 2
+      },
+      "aTeam": "#477b91",
+      "bTeam": "#477b91",
+      "changedPixels": 18518,
+      "changedChannels": 60756,
+      "maximumChannelDifference": 255,
+      "visibleA": 35732,
+      "visibleB": 35713,
+      "samples": [
+        {
+          "pixel": 11481,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            59,
+            118,
+            137,
+            13
+          ]
+        },
+        {
+          "pixel": 11482,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            69,
+            121,
+            146,
+            63
+          ]
+        },
+        {
+          "pixel": 11483,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            70,
+            122,
+            144,
+            113
+          ]
+        },
+        {
+          "pixel": 11484,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            71,
+            122,
+            144,
+            177
+          ]
+        },
+        {
+          "pixel": 11485,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            71,
+            123,
+            145,
+            137
+          ]
+        },
+        {
+          "pixel": 11486,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            68,
+            125,
+            147,
+            45
+          ]
+        },
+        {
+          "pixel": 11988,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            73,
+            121,
+            146,
+            21
+          ]
+        },
+        {
+          "pixel": 11989,
+          "a": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "b": [
+            68,
+            122,
+            144,
+            71
+          ]
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "canvasContexts": [
+    {
+      "size": 256,
+      "attributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    },
+    {
+      "size": 512,
+      "attributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    },
+    {
+      "size": 352,
+      "attributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    },
+    {
+      "size": 704,
+      "attributes": {
+        "alpha": true,
+        "colorSpace": "srgb",
+        "colorType": "unorm8",
+        "desynchronized": false,
+        "toneMapping": {
+          "mode": "standard"
+        },
+        "willReadFrequently": true
+      }
+    }
+  ],
+  "requestedContexts": [
+    "2d"
+  ],
+  "webglAttempts": 0,
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "browserLaunch": {
+    "executable": "/usr/bin/chromium",
+    "args": [
+      "--headless",
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--remote-debugging-port=0",
+      "about:blank"
+    ]
+  },
+  "errors": [],
+  "loadingFailures": [],
+  "loadedModules": [
+    "http://127.0.0.1:5173/",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/scripts/art-idle-browser-identity-fixture.js",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/action-direction.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/appearance.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/body-parts.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/creature-painters.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/creature-poses.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/equipment.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/kit.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/materials.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/motion.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/painted-creatures.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/painted-units.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/raster-cache.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/rig.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/scratch-canvas.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/unit-appearance.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/art/warfare-units.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-common.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-creeps.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-ember.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-grove.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-neutral.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units-warfare.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/content/units.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/client/unit-animation.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/catalog.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/combat-geometry.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/damage-reduction.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/damage-types.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/det-math.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/environment/noise.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/equipment.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/generated/ship-geometry.json?import",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/generated/ship-navigation-masks-64.json?import",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/generated/ship-navigation-masks.json?import",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/hypot.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/item-index.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/navigation-masks.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/navigation-math.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/physical-body.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-equipment.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-fire-control.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-geometry.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-handling.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-navigation-potential.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-navigation.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/ship-wind.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/terrain.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/time.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/transport-role.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/unit-value.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/veteran-skills.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/veteran-stats.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/weapons.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts-viewport/src/shared/wind-field.ts",
+    "http://127.0.0.1:5173/@fs/workspace/sketch-rts/node_modules/vite/dist/client/env.mjs",
+    "http://127.0.0.1:5173/@vite/client",
+    "http://127.0.0.1:5173/favicon.ico"
+  ],
+  "completedAt": "2026-10-13T04:52:25.848Z",
+  "testRunCgroupMemory": {
+    "samplePeriodMs": 100,
+    "samples": 364,
+    "initialCgroupMemoryBytes": 1949716480,
+    "peakSampledCgroupMemoryBytes": 2680840192,
+    "memoryLimitBytes": 17179869184,
+    "eventsBefore": {
+      "low": 0,
+      "high": 0,
+      "max": 353,
+      "oom": 2,
+      "oom_kill": 2,
+      "oom_group_kill": 0
+    },
+    "scope": "Entire test-run cgroup including baseline processes; not isolated process RSS, game memory, a GPU metric or a performance benchmark.",
+    "eventsAfter": {
+      "low": 0,
+      "high": 0,
+      "max": 353,
+      "oom": 2,
+      "oom_kill": 2,
+      "oom_group_kill": 0
+    },
+    "finalCgroupMemoryBytes": 2007040000
+  },
+  "sourcePainterSha256After": {
+    "src/client/art/action-direction.ts": "9c4d25a6019612c66ac6cea3967add7e6a066be20f51dc1e7805027f0544c9b5",
+    "src/client/art/appearance.ts": "c466e406eb259ff578925c8dc1616a2fff7bf245cfb6b0d579eecfa13785731d",
+    "src/client/art/body-parts.ts": "2ca3d99e54487e4c387638a9adba9dca6a005cec5b1a5054c0706e962a805870",
+    "src/client/art/building-models.ts": "e8ee2333422cc05cb82db1918266ae774faedbf41ba38dc55e467ea328d28c88",
+    "src/client/art/canvas-effects.ts": "a5fb88989e15fc9333970db4e87b8523cf4135a883b6106bb425637d239cefb1",
+    "src/client/art/canvas-ships.ts": "71c1455403f063f4f8f9abc7de9e1e8c67f1c1df048523f775604987bfa1a2a4",
+    "src/client/art/combat-effects.ts": "6981f79cd2fa7e8be983710f4ec3c60c57f397265b1933c05d39f00b0282ce2a",
+    "src/client/art/corpses.ts": "e483ef3e7dc40e56fac079e26cb50408268c2df0b484c5130ec5041cbd944610",
+    "src/client/art/creature-painters.ts": "646df0dc5b69c73744efcbbb7f601d96253ccaf3efdd72c3d75d08f096a97104",
+    "src/client/art/creature-poses.ts": "f362eacc1fce562d07b235911f734e648a0bdc7a5b6f3adcbfe01fba098b77cd",
+    "src/client/art/effect-presentation.ts": "35a8f7143c07f1d795d8a87912e7152e4219a6aeb6df1ff806ec449d7f4e6979",
+    "src/client/art/environment.ts": "3bcfe38a01315cb8e8d208524d315c1aa80884cc693cc1f98fe0c930830937d1",
+    "src/client/art/equipment.ts": "8458b07a3e07807b83c23670f10b11e22352b9a388f2599af0d765cc51e56193",
+    "src/client/art/items.ts": "4482a151fb9399e70ce84784278f782bda52ccf365e29660cc6cc932056167b4",
+    "src/client/art/kit.ts": "7b3b85f99c292f3da3c756e86443e6f619ae95858bb7a110fdc7e6a63e7c3796",
+    "src/client/art/materials.ts": "7de9410df8d5447a4da7831b1b05d3329e13d7748074389b292c5fe5a59aa246",
+    "src/client/art/model-manifest.ts": "82a494967b62f2b8ff0cca6d07cbb27ec24107f1b49745e03f2947d3bef44004",
+    "src/client/art/motion.ts": "ffcf58b584a854a4f556005af3b57c238b00e9e8a1086902d3d65a37f825bf5c",
+    "src/client/art/paint-identity.ts": "c2c855e1b21ea2fbac101ef1820661d7a88d59eadb88a1f9f0446990f0138ad4",
+    "src/client/art/painted-creatures.ts": "6e7c6c7b0a67eed91408a94f05404868c17484f0fe8d6eb39c40d3b8e3141da6",
+    "src/client/art/painted-units.ts": "727cc9300943fe8a8c565ce4f48c9f21fa70ff0a653f88ddb268bac5c9818431",
+    "src/client/art/portrait-fit.ts": "ac9d0bc244017b0a5b86b15f2366db5c52c955a14e8e99757784f255a71f7679",
+    "src/client/art/raster-cache.ts": "c289d22e6aa91c56699e6e5a5c3dbfc4d0e0c3dcadd1c8bc6b9f23392c577705",
+    "src/client/art/release-socket.ts": "9171ec40756ab3207d946f5178ad62a283286863e6ab89cfd4869cdd991bb19a",
+    "src/client/art/rig.ts": "9d3a11bbf9795c037936bdc87a4a8a2105974a914a55dcbe468e025b1a56cf05",
+    "src/client/art/scenery.ts": "961ab921b4ecbd48aa23d3c9b54616fe235562389c2c9db955b9881c0bde8a67",
+    "src/client/art/scratch-canvas.ts": "90b2dd1e58d0de1ed8122c9ef5e03ca172db6420e07628c35010eceeb6b10cbc",
+    "src/client/art/story-rig.ts": "891737aecfb5084a1591989c85b184cf1a4ceb29adad24a75146c06ccc7d9459",
+    "src/client/art/unit-appearance.ts": "d9a8ae4c9d3cdb87416a73d2748c4fcc83024994ed2ff643f9d038a86e37cdc6",
+    "src/client/art/warfare-units.ts": "ee802af5364968696b4e55922da3de8864cfcd23cb9a352e9d7d76f2cba97c53",
+    "src/client/art/weapon-surface.ts": "3c25d453f01e012b1b5a5b899619f7c15be85b94663fbc09750ea3e312a39c52"
+  },
+  "sourcePaintersUnchanged": true
+}

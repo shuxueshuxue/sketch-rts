@@ -7,9 +7,18 @@ import type { CorpsePresentation } from './corpses';
 import { figures } from './appearance';
 import { equipmentForKind, sampleFigurePose, type FigurePresentation } from './rig';
 
-const DEFAULT: Readonly<FigurePresentation> = Object.freeze({});
-const EMBER_PRIEST: Readonly<FigurePresentation> = Object.freeze({ appearance:Object.freeze({ember:true}), cloth:'#a78265' });
-const EMBER_SUMMONER: Readonly<FigurePresentation> = Object.freeze({ appearance:Object.freeze({ember:true}), cloth:'#704b3e' });
+// Only these internally constructed, immutable catalog profiles have the
+// stock painter's proven identities. A custom copy is still a custom input.
+const CATALOG_PRESENTATIONS = new WeakSet<Readonly<FigurePresentation>>();
+function catalogPresentation(presentation:FigurePresentation):Readonly<FigurePresentation> {
+  const result=Object.freeze(presentation);CATALOG_PRESENTATIONS.add(result);return result;
+}
+export function isCatalogPresentation(presentation:Readonly<FigurePresentation>):boolean {
+  return CATALOG_PRESENTATIONS.has(presentation);
+}
+const DEFAULT = catalogPresentation({});
+const EMBER_PRIEST = catalogPresentation({ appearance:Object.freeze({ember:true}), cloth:'#a78265' });
+const EMBER_SUMMONER = catalogPresentation({ appearance:Object.freeze({ember:true}), cloth:'#704b3e' });
 const EMBER_REMAINS: Readonly<CorpsePresentation> = Object.freeze({ robe:true, cloth:'#928174' });
 const DEFAULT_REMAINS: Readonly<CorpsePresentation> = Object.freeze({});
 /** Shared roles follow their owner; all other silhouettes retain authored identity. */
@@ -45,7 +54,7 @@ export function appearanceFor(snapshot: Pick<GameSnapshot, 'items'> & Partial<Pi
   if (!weapon && shield === undefined) return base;
   const key = `${unit.kind}:${base===DEFAULT?'base':'ember'}:${weapon ?? ''}:${shield ?? ''}`;
   let result = PRESENTATIONS.get(key);
-  if (!result) { result = Object.freeze({ ...base, ...(weapon ? { weapon } : {}), ...(shield !== undefined ? { shield,...(shield?{shieldStyle:'round' as const}:{}) } : {}) }); PRESENTATIONS.set(key, result); }
+  if (!result) { result = catalogPresentation({ ...base, ...(weapon ? { weapon } : {}), ...(shield !== undefined ? { shield,...(shield?{shieldStyle:'round' as const}:{}) } : {}) }); PRESENTATIONS.set(key, result); }
   return result;
 }
 const DETAIL_IDS = new WeakMap<NonNullable<FigurePresentation['detail']>,number>();

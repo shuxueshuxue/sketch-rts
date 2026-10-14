@@ -1,0 +1,468 @@
+{
+  "scope": "Read-only installed binaries/known debug locations/kernel settings; one disabled own-task software counter and ptrace on newly spawned /usr/bin/true only. No process-memory read, sampling, Chromium attach, install, permission change or GPU/game workload.",
+  "scriptSha256": "d09795f7b141532b56752664c948a86b9b233117f967394fc5c537ed6d243231",
+  "uid": 1000,
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "tools": {
+    "chromium": "/usr/bin/chromium",
+    "readelf": "/usr/bin/readelf",
+    "nm": "/usr/bin/nm",
+    "addr2line": "/usr/bin/addr2line",
+    "objdump": "/usr/bin/objdump",
+    "strace": "/usr/bin/strace",
+    "perf": null,
+    "gdb": null,
+    "lldb": null,
+    "bpftrace": null,
+    "trace-cmd": null
+  },
+  "binaries": [
+    {
+      "path": "/usr/lib/chromium/chromium",
+      "bytes": 321686360,
+      "sha256": "d387400aaf740ccb75e5e996a34aa0940e6e97683a4eabd6ae34c1eed6804723",
+      "uid": 65534,
+      "gid": 65534,
+      "mode": "0o755",
+      "sections": {
+        "argv": [
+          "readelf",
+          "-SW",
+          "/usr/lib/chromium/chromium"
+        ],
+        "returncode": 0,
+        "stdout": "chromium-sections.stdout",
+        "stderr": "chromium-sections.stderr",
+        "stdoutSha256": "f7541aeb89cd1f2b94206fda8464890b92de99aa65c9876bd7473c0f16c57355",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "notes": {
+        "argv": [
+          "readelf",
+          "-n",
+          "/usr/lib/chromium/chromium"
+        ],
+        "returncode": 0,
+        "stdout": "chromium-notes.stdout",
+        "stderr": "chromium-notes.stderr",
+        "stdoutSha256": "42eea5259844be974b63d2c53048779dcafd361d4ccfb0ff19ffea390f2993a8",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "debuglink": {
+        "argv": [
+          "readelf",
+          "--string-dump=.gnu_debuglink",
+          "/usr/lib/chromium/chromium"
+        ],
+        "returncode": 0,
+        "stdout": "chromium-debuglink.stdout",
+        "stderr": "chromium-debuglink.stderr",
+        "stdoutSha256": "b75d0f45682ae3b8978a75d756ab769a4d1213f1d23b87bf01f1f6317a5d8958",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exports": {
+        "argv": [
+          "nm",
+          "-D",
+          "--defined-only",
+          "-C",
+          "/usr/lib/chromium/chromium"
+        ],
+        "returncode": 0,
+        "stdout": "chromium-exports.stdout",
+        "stderr": "chromium-exports.stderr",
+        "stdoutSha256": "715755f728dd482ebfa2a5fcff594e159902d7b7db44fcce085789d9649a01e3",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "hasSymtab": false,
+      "hasEmbeddedDwarfDebug": false,
+      "hasEhFrame": true,
+      "criticalNativeFunctionsExported": {
+        "WaitForToken": false,
+        "RingBuffer": false,
+        "TransferBuffer": false,
+        "GLES2Implementation": false,
+        "HandleSetToken": false
+      }
+    },
+    {
+      "path": "/usr/lib/chromium/libEGL.so",
+      "bytes": 3664,
+      "sha256": "b9ae4b32d6c6ac6d417631aa7b1a72f63bf6caab38587053bbcbdb629e4c7d0c",
+      "uid": 65534,
+      "gid": 65534,
+      "mode": "0o644",
+      "sections": {
+        "argv": [
+          "readelf",
+          "-SW",
+          "/usr/lib/chromium/libEGL.so"
+        ],
+        "returncode": 0,
+        "stdout": "libEGL.so-sections.stdout",
+        "stderr": "libEGL.so-sections.stderr",
+        "stdoutSha256": "9cfe775c6dc21928c9f1368387aaa28ba9a16e060a139f3650fcfbfa53d1d439",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "notes": {
+        "argv": [
+          "readelf",
+          "-n",
+          "/usr/lib/chromium/libEGL.so"
+        ],
+        "returncode": 0,
+        "stdout": "libEGL.so-notes.stdout",
+        "stderr": "libEGL.so-notes.stderr",
+        "stdoutSha256": "3563ce04c20e7d655c8dd26a6c33d431dfbcb0dd2f7be49b8ce1a7470972bf44",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "debuglink": {
+        "argv": [
+          "readelf",
+          "--string-dump=.gnu_debuglink",
+          "/usr/lib/chromium/libEGL.so"
+        ],
+        "returncode": 0,
+        "stdout": "libEGL.so-debuglink.stdout",
+        "stderr": "libEGL.so-debuglink.stderr",
+        "stdoutSha256": "c973615b768f36480038219873f06a4133e3d393b93c232978ab1d38081b7e4d",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exports": {
+        "argv": [
+          "nm",
+          "-D",
+          "--defined-only",
+          "-C",
+          "/usr/lib/chromium/libEGL.so"
+        ],
+        "returncode": 0,
+        "stdout": "libEGL.so-exports.stdout",
+        "stderr": "libEGL.so-exports.stderr",
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "hasSymtab": false,
+      "hasEmbeddedDwarfDebug": false,
+      "hasEhFrame": true,
+      "criticalNativeFunctionsExported": {
+        "WaitForToken": false,
+        "RingBuffer": false,
+        "TransferBuffer": false,
+        "GLES2Implementation": false,
+        "HandleSetToken": false
+      }
+    },
+    {
+      "path": "/usr/lib/chromium/libGLESv2.so",
+      "bytes": 3664,
+      "sha256": "104c61a59f0003ee64fd939d00e99608e754cd64554f98ea9cc248e29136dcd6",
+      "uid": 65534,
+      "gid": 65534,
+      "mode": "0o644",
+      "sections": {
+        "argv": [
+          "readelf",
+          "-SW",
+          "/usr/lib/chromium/libGLESv2.so"
+        ],
+        "returncode": 0,
+        "stdout": "libGLESv2.so-sections.stdout",
+        "stderr": "libGLESv2.so-sections.stderr",
+        "stdoutSha256": "22c1e21100cd94da17809b7af86723307ab561ef5ff29e55df49ec778c773895",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "notes": {
+        "argv": [
+          "readelf",
+          "-n",
+          "/usr/lib/chromium/libGLESv2.so"
+        ],
+        "returncode": 0,
+        "stdout": "libGLESv2.so-notes.stdout",
+        "stderr": "libGLESv2.so-notes.stderr",
+        "stdoutSha256": "830c3628ef1e13b2919bb5aeef758bbff2d1f04340e57b4c958785f30381f93c",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "debuglink": {
+        "argv": [
+          "readelf",
+          "--string-dump=.gnu_debuglink",
+          "/usr/lib/chromium/libGLESv2.so"
+        ],
+        "returncode": 0,
+        "stdout": "libGLESv2.so-debuglink.stdout",
+        "stderr": "libGLESv2.so-debuglink.stderr",
+        "stdoutSha256": "57bcfd9eb731988375fae7ccabe05818a182cb3e6c9d3f60c466c325b6395b88",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exports": {
+        "argv": [
+          "nm",
+          "-D",
+          "--defined-only",
+          "-C",
+          "/usr/lib/chromium/libGLESv2.so"
+        ],
+        "returncode": 0,
+        "stdout": "libGLESv2.so-exports.stdout",
+        "stderr": "libGLESv2.so-exports.stderr",
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "hasSymtab": false,
+      "hasEmbeddedDwarfDebug": false,
+      "hasEhFrame": true,
+      "criticalNativeFunctionsExported": {
+        "WaitForToken": false,
+        "RingBuffer": false,
+        "TransferBuffer": false,
+        "GLES2Implementation": false,
+        "HandleSetToken": false
+      }
+    },
+    {
+      "path": "/usr/lib/chromium/libvk_swiftshader.so",
+      "bytes": 5451472,
+      "sha256": "e0febc98224ef39a4ec7b821a3bb06949734d43180183b62bd98dc43df6464f2",
+      "uid": 65534,
+      "gid": 65534,
+      "mode": "0o644",
+      "sections": {
+        "argv": [
+          "readelf",
+          "-SW",
+          "/usr/lib/chromium/libvk_swiftshader.so"
+        ],
+        "returncode": 0,
+        "stdout": "libvk_swiftshader.so-sections.stdout",
+        "stderr": "libvk_swiftshader.so-sections.stderr",
+        "stdoutSha256": "c3409e695f3bdd1759658ebd030f26d7a5c92d17ea0c1c2d40ddc209468f4644",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "notes": {
+        "argv": [
+          "readelf",
+          "-n",
+          "/usr/lib/chromium/libvk_swiftshader.so"
+        ],
+        "returncode": 0,
+        "stdout": "libvk_swiftshader.so-notes.stdout",
+        "stderr": "libvk_swiftshader.so-notes.stderr",
+        "stdoutSha256": "3ab0437c70c5950344cf2a777d75104813cb88760f516069371f1c9e6a45cf54",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "debuglink": {
+        "argv": [
+          "readelf",
+          "--string-dump=.gnu_debuglink",
+          "/usr/lib/chromium/libvk_swiftshader.so"
+        ],
+        "returncode": 0,
+        "stdout": "libvk_swiftshader.so-debuglink.stdout",
+        "stderr": "libvk_swiftshader.so-debuglink.stderr",
+        "stdoutSha256": "f1ea11a6b9f324cddd1abc14a7cb857e6db62c0a5806d8a62904c4d8549c3f07",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exports": {
+        "argv": [
+          "nm",
+          "-D",
+          "--defined-only",
+          "-C",
+          "/usr/lib/chromium/libvk_swiftshader.so"
+        ],
+        "returncode": 0,
+        "stdout": "libvk_swiftshader.so-exports.stdout",
+        "stderr": "libvk_swiftshader.so-exports.stderr",
+        "stdoutSha256": "cff10c9b0ab4a52bd17e752bfe80cca430abc3b36b659e5d84f07aafef5afd17",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "hasSymtab": false,
+      "hasEmbeddedDwarfDebug": false,
+      "hasEhFrame": true,
+      "criticalNativeFunctionsExported": {
+        "WaitForToken": false,
+        "RingBuffer": false,
+        "TransferBuffer": false,
+        "GLES2Implementation": false,
+        "HandleSetToken": false
+      }
+    },
+    {
+      "path": "/usr/lib/chromium/chrome-sandbox",
+      "bytes": 15472,
+      "sha256": "dfd7a30a4e7cec32fd9c7033955ddc20e18486662aed41b7b8fffc68ce32f276",
+      "uid": 65534,
+      "gid": 65534,
+      "mode": "0o4755"
+    }
+  ],
+  "settings": {
+    "/proc/sys/kernel/perf_event_paranoid": {
+      "readable": true,
+      "value": "2"
+    },
+    "/proc/sys/kernel/kptr_restrict": {
+      "readable": true,
+      "value": "0"
+    },
+    "/proc/sys/kernel/perf_event_mlock_kb": {
+      "readable": true,
+      "value": "516"
+    },
+    "/proc/sys/kernel/unprivileged_bpf_disabled": {
+      "readable": true,
+      "value": "0"
+    },
+    "/proc/sys/kernel/yama/ptrace_scope": {
+      "readable": false,
+      "error": "[Errno 2] No such file or directory: '/proc/sys/kernel/yama/ptrace_scope'"
+    },
+    "/proc/sys/kernel/unprivileged_userns_clone": {
+      "readable": false,
+      "error": "[Errno 2] No such file or directory: '/proc/sys/kernel/unprivileged_userns_clone'"
+    },
+    "/proc/sys/user/max_user_namespaces": {
+      "readable": true,
+      "value": "2147483647"
+    },
+    "/proc/self/status": {
+      "readable": true,
+      "value": "Uid:\t1000\t1000\t1000\t1000\nGid:\t1000\t1000\t1000\t1000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t0000000000000000\nNoNewPrivs:\t1\nSeccomp:\t2\nSeccomp_filters:\t1"
+    }
+  },
+  "packages": {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Status}\n",
+      "chromium",
+      "chromium-common",
+      "chromium-dbgsym",
+      "gdb",
+      "linux-perf",
+      "strace"
+    ],
+    "returncode": 1,
+    "stdout": "installed-packages.stdout",
+    "stderr": "installed-packages.stderr",
+    "stdoutSha256": "b92a17fecbf60bc15f8d05d6aa84294dbe7e9367b82cf80037f8fbef972ab226",
+    "stderrSha256": "234dc6dbbb3b74df112990f75956f6626881726a9f2cec73099f2f47dc7bd780"
+  },
+  "straceVersion": {
+    "argv": [
+      "strace",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "strace-version.stdout",
+    "stderr": "strace-version.stderr",
+    "stdoutSha256": "cd32bce250370753dc898d1a2e703c90aa433ef79267363e01d0a357432f7dba",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "debugSearch": {
+    "root": "/usr/lib/debug",
+    "files": [],
+    "otherDirectories": [
+      {
+        "path": "/usr/lib/chromium",
+        "exists": true,
+        "candidates": []
+      },
+      {
+        "path": "/usr/lib/chromium/.debug",
+        "exists": false,
+        "candidates": []
+      },
+      {
+        "path": "/usr/local/lib/debug",
+        "exists": false,
+        "candidates": []
+      },
+      {
+        "path": "/workspace/.debug",
+        "exists": false,
+        "candidates": []
+      },
+      {
+        "path": "/tmp/.debug",
+        "exists": false,
+        "candidates": []
+      }
+    ]
+  },
+  "matchingDebugFileLocations": [
+    {
+      "buildId": "73255ebb863e89705adfd9f96d605f6470c41f6e",
+      "path": "/usr/lib/debug/.build-id/73/255ebb863e89705adfd9f96d605f6470c41f6e.debug",
+      "exists": false
+    },
+    {
+      "buildId": "6e271506994c1a98093d6ac7875ad34ee7ddbe05",
+      "path": "/usr/lib/debug/.build-id/6e/271506994c1a98093d6ac7875ad34ee7ddbe05.debug",
+      "exists": false
+    },
+    {
+      "buildId": "4375c1d2ccd8794228ea1c3d52017797c80bd315",
+      "path": "/usr/lib/debug/.build-id/43/75c1d2ccd8794228ea1c3d52017797c80bd315.debug",
+      "exists": false
+    }
+  ],
+  "traceRoots": [
+    {
+      "path": "/sys/kernel/tracing",
+      "exists": false,
+      "readable": false
+    },
+    {
+      "path": "/sys/kernel/debug/tracing",
+      "exists": false,
+      "readable": false
+    },
+    {
+      "path": "/sys/kernel/debug",
+      "exists": true,
+      "readable": true
+    },
+    {
+      "path": "/dev/dri",
+      "exists": false,
+      "readable": false
+    }
+  ],
+  "ownTaskPerfProbe": {
+    "syscall": "perf_event_open",
+    "pid": 0,
+    "type": 1,
+    "config": 0,
+    "disabled": true,
+    "excludeKernel": true,
+    "excludeHypervisor": true,
+    "samplePeriod": 0,
+    "resultFd": 3,
+    "errno": 0,
+    "error": null,
+    "meaning": "Descriptor permission only; not native-stack/Chrome attach, symbolization or GPU sampling proof.",
+    "fdClosed": true
+  },
+  "ownChildPtraceProbe": {
+    "argv": [
+      "strace",
+      "-f",
+      "-e",
+      "trace=execve,exit_group",
+      "-o",
+      "work/art-native-causal-feasibility/environment-v1/own-child-strace.log",
+      "/usr/bin/true"
+    ],
+    "returncode": 0,
+    "stdout": "own-child-strace.stdout",
+    "stderr": "own-child-strace.stderr",
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ownChildPtraceMeaning": "Only newly spawned /usr/bin/true; not an assertion that Chromium renderer/GPU attach is authorized or possible.",
+  "noProductionOrSystemConfigurationChanged": true
+}

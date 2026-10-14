@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "target": "trace-current",
+  "kind": "trace",
+  "fileSetSha256": "0f13522813c4d7df9ac644a7cd47804eef3ecdbe9cdc24e31ca8e7fbe9816f8d",
+  "fileSetHashDefinition": "SHA256 compact sorted-key JSON of sorted {name,size,sha256}; original encoded bytes.",
+  "sources": [
+    {
+      "name": "bank-variant.js",
+      "size": 2117,
+      "sha256": "bfb604d6829915717946c24f091ced65fb23db704846f70721e5d19737390b5b"
+    },
+    {
+      "name": "fact-fixture.js",
+      "size": 15860,
+      "sha256": "95ad464326b9d0643d2e6816ec430fc606cae3e72f9ae0b203fb9938823434c3"
+    },
+    {
+      "name": "fixture.js",
+      "size": 363,
+      "sha256": "98681a8fe8f559beb600299388c1aded960e595ff10b884f71603a7b2daa9644"
+    },
+    {
+      "name": "harness.mjs",
+      "size": 19744,
+      "sha256": "02094bda3e043d797344339ae42043dbe859ae9b64204948fd9321d11fcba163"
+    },
+    {
+      "name": "parent-harness.mjs",
+      "size": 13502,
+      "sha256": "e05d9e8eb8ca41d566d616028e2249c85b8a855d3d25ae0a80be7faef9102165"
+    },
+    {
+      "name": "profiler.js",
+      "size": 13672,
+      "sha256": "9fa40c57cc7b3ba922b5a30cab6b0bafb3f6a43b1f4e5eb833ef347f05241ca4"
+    },
+    {
+      "name": "raw.json",
+      "size": 8296010,
+      "sha256": "86b33d05ff056b3dc6db0bb794180db307e07a43e4a61a7edf35038e38713e15"
+    },
+    {
+      "name": "viewport-metadata.js",
+      "size": 2149,
+      "sha256": "45b0ca53e3d16bc89153e4f49f71e307a481e44b9d65a3f2647fb9bc81e15a81"
+    }
+  ],
+  "files": [
+    {
+      "name": "trace.json",
+      "size": 86393736,
+      "sha256": "02ea2d212013f488adf0d4a9009c2e1e2167b77085c54cb84553b8a5bf2a6e22",
+      "keep": false
+    }
+  ],
+  "archive": {
+    "file": "trace-current/trace.json.gz",
+    "size": 6857150,
+    "sha256": "b831416736080db33be5e4a5da0042ce4b04d260b30fb7b54e033acbd82e37fe",
+    "format": "gzip"
+  },
+  "meaning": "Evidence storage only. Original JSON/RGBA/PNG bytes recover exactly; original proofs/helpers/results unchanged, including failures. Expanded payloads may be absent after verified prune."
+}

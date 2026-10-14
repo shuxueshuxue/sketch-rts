@@ -457,3 +457,181 @@ describe('releases appended between draws of one tick',()=>{
     tracker.update({...state,tick:4},50,cues);expect(tracker.frame(actor,50)).toBe(pose);
   });
 });
+
+describe('offscreen release direction history',()=>{
+  const release=(actor:Unit,tick:number,overrides:Partial<WorldEffect>={}):WorldEffect=>({
+    id:`release-${tick}`,type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:tick,
+    x:actor.x-30,y:actor.y,fromX:actor.x,fromY:actor.y,toX:actor.x-30,toY:actor.y,
+    duration:16,remaining:16,...overrides,
+  });
+
+  it('visits only active directions and clears removed histories once among ten thousand idle units',()=>{
+    const units=Array.from({length:10_000},(_,index)=>soldier({id:`unit-${index}`})),actor=units[321]!;
+    const tracker=new UnitAnimationTracker(),observed=new Map<string,unknown>();
+    const observe=(id:string,direction:unknown)=>observed.set(id,direction);
+    tracker.update({tick:0,units,effects:[]},0);
+    expect(tracker.observeDirections(0,observe)).toBe(0);
+    tracker.update({tick:1,units,effects:[release(actor,1)]},50);
+    expect(tracker.observeDirections(50,observe)).toBe(1);
+    expect([...observed.keys()]).toEqual([actor.id]);
+    expect(observed.get(actor.id)).toBe(tracker.frame(actor,50).direction);
+    tracker.update({tick:2,units:units.filter(unit=>unit!==actor),effects:[]},100);
+    expect(tracker.observeDirections(100,observe)).toBe(1);
+    expect(observed.get(actor.id)).toBeUndefined();
+    expect(tracker.observeDirections(125,observe)).toBe(0);
+  });
+
+  it('keeps an unseen attack turn after recovery and carry expire, then lets later movement turn it',()=>{
+    const actor=soldier({order:{type:'hold',x:100,y:100}}),tracker=new UnitAnimationTracker(),facing=new UnitFacingTracker();
+    let last:unknown;
+    const update=(tick:number,effects:WorldEffect[]=[])=>{
+      tracker.update({...snap(tick,actor),effects},tick*50);
+      facing.update([actor],()=>undefined);
+      return tracker.observeDirections(tick*50,(id,direction)=>{last=direction;facing.actionFacing(id,direction);});
+    };
+    expect(update(0)).toBe(0);
+    expect(update(1,[release(actor,1)])).toBe(1);
+    expect(facing.releaseFacing(actor.id)).toBe(-1);
+    for(let tick=2;tick<=75;tick++){
+      expect(update(tick)).toBe(1);
+      expect(last).toEqual({x:-30,y:0});
+      expect(facing.releaseFacing(actor.id)).toBe(-1);
+    }
+    expect(update(76)).toBe(1);expect(last).toBeUndefined();
+    expect(update(77)).toBe(0);expect(facing.facing(actor.id)).toBe(-1);
+    // No frame was needed anywhere in the unseen action/carry lifetime.
+    expect(tracker.frame(actor,3850).carryDirection).toBeUndefined();
+    actor.x+=4;expect(update(78)).toBe(0);expect(facing.facing(actor.id)).toBe(1);
+  });
+
+  it('uses an unseen previous turn for a subsequent vertical release despite a new opposing command',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),facing=new UnitFacingTracker();
+    const observe=(id:string,direction:Parameters<UnitFacingTracker['actionFacing']>[1])=>facing.actionFacing(id,direction);
+    tracker.update({...snap(0,actor),effects:[release(actor,0)]},0);facing.update([actor],()=>undefined);
+    tracker.observeDirections(0,observe);expect(facing.releaseFacing(actor.id)).toBe(-1);
+    for(let tick=1;tick<=75;tick++){
+      tracker.update({...snap(tick,actor),effects:[]},tick*50);facing.update([actor],()=>undefined);tracker.observeDirections(tick*50,observe);
+    }
+    actor.order={type:'attack',targetId:'right'};
+    tracker.update({...snap(76,actor),effects:[release(actor,76,{toX:actor.x,toY:actor.y-100})]},3800);
+    facing.update([actor],()=>({x:200,y:100}));
+    tracker.observeDirections(3800,observe);
+    expect(facing.releaseFacing(actor.id)).toBe(-1);
+    const pose=tracker.frame(actor,3800);
+    expect(pose.direction).toEqual({x:0,y:-100});
+    expect(facing.actionFacing(actor.id,pose.direction)).toBe(-1);
+  });
+
+  it('expires at the interpolated boundary without generating carry poses or waiting for another snapshot',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),directions:unknown[]=[];
+    const observe=(_id:string,direction:unknown)=>directions.push(direction);
+    tracker.update({...snap(0,actor),effects:[release(actor,0)]},0);
+    const direction=releasePoseForEffect(release(actor,0))!.direction;
+    for(let tick=1;tick<=74;tick++){
+      tracker.update({...snap(tick,actor),effects:[]},tick*50);
+      expect(tracker.observeDirections(tick*50,observe)).toBe(1);
+    }
+    expect(directions.at(-1)).toEqual(direction);
+    expect(tracker.observeDirections(3749,observe)).toBe(1);expect(directions.at(-1)).toEqual(direction);
+    expect(tracker.observeDirections(3750,observe)).toBe(1);expect(directions.at(-1)).toBeUndefined();
+    expect(tracker.observeDirections(100000,observe)).toBe(0);
+    expect(tracker.frame(actor,3750).carry).toBeUndefined();
+  });
+
+  it('shares action/carry vector identity and follows same-tick releases, cast precedence and Stage cues',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),effects:WorldEffect[]=[],state={...snap(3,actor),effects};
+    let direction:unknown;
+    const observe=(_id:string,next:unknown)=>{direction=next;};
+    tracker.update(state,0);expect(tracker.observeDirections(0,observe)).toBe(0);
+    effects.push(release(actor,3));tracker.update(state,0);
+    expect(tracker.observeDirections(0,observe)).toBe(1);expect(direction).toBe(tracker.frame(actor,0).direction);
+    // A target/order change must not discard the factual direction already held.
+    actor.order={type:'attack',targetId:'right'};tracker.update(state,0);
+    expect(tracker.observeDirections(0,observe)).toBe(1);expect(direction).toBe(tracker.frame(actor,0).direction);
+    effects.push(release(actor,3,{id:'cast',type:'heal',actionMode:'cast',toX:actor.x,toY:actor.y-60}));
+    tracker.update(state,0);tracker.observeDirections(0,observe);
+    expect(direction).toEqual({x:0,y:-60});expect(direction).toBe(tracker.frame(actor,0).direction);
+    tracker.update(state,0,[{unitId:actor.id,mode:'attack',tick:3,fromX:100,fromY:100,toX:140,toY:170}]);
+    tracker.observeDirections(0,observe);const cueDirection=direction;
+    for(let tick=4;tick<=10;tick++)tracker.update({...snap(tick,actor),effects:[]},tick*50);
+    tracker.observeDirections(500,observe);
+    expect(direction).toBe(cueDirection);expect(direction).toBe(tracker.frame(actor,500).carryDirection);
+  });
+
+  it('clears locks for stun, work and cooldown-only cast, and preserves live history through reduced motion',()=>{
+    for(const interruption of ['stun','work','cast','reducedMotion'] as const){
+      const actor=soldier({kind:'worker'}),tracker=new UnitAnimationTracker();let direction:unknown;
+      const observe=(_id:string,next:unknown)=>{direction=next;};
+      tracker.update({...snap(0,actor),effects:[release(actor,0)]},0);tracker.observeDirections(0,observe);
+      expect(direction).toEqual({x:-30,y:0});
+      if(interruption==='stun')actor.effects=[{type:'stun',remaining:5}];
+      if(interruption==='work')actor.order={type:'repair',buildingId:'hall'};
+      if(interruption==='cast')actor.abilityCooldowns={heal:240};
+      tracker.update({...snap(1,actor),effects:interruption==='work'?[work(actor)]:[]},50);
+      expect(tracker.observeDirections(50,observe,interruption==='reducedMotion')).toBe(1);
+      expect(direction).toBeUndefined();
+      if(interruption==='reducedMotion'){
+        expect(tracker.observeDirections(50,observe)).toBe(1);
+        expect(direction).toBe(tracker.frame(actor,50).direction);
+      }else expect(tracker.observeDirections(50,observe)).toBe(0);
+    }
+  });
+});
+
+describe('reused snapshot observation storage',()=>{
+  it('retains pose cache identity while observation records alternate between snapshots',()=>{
+    const actor=soldier(),tracker=new UnitAnimationTracker(),poses=new Map<string,ReturnType<UnitAnimationTracker['frame']>>();
+    const effect:WorldEffect={id:'cache-contact',type:'melee',sourceId:actor.id,actionMode:'attack',actionTick:0,x:70,y:100,fromX:100,fromY:100,toX:70,toY:100,duration:16,remaining:16};
+    for(let tick=0;tick<75;tick++){
+      tracker.update({...snap(tick,actor),effects:tick===0?[effect]:[]},tick*50);
+      const pose=tracker.frame(actor,tick*50),key=JSON.stringify(pose),old=poses.get(key);
+      if(old)expect(pose).toBe(old);else poses.set(key,pose);
+    }
+    expect(poses.size).toBeGreaterThan(8);
+  });
+
+  it('copies mutable cooldown and deck snapshots and clears optional observations on disembarking',()=>{
+    const actor=soldier({abilityCooldowns:{heal:10},deck:{shipId:'boat',x:0,y:0}}),tracker=new UnitAnimationTracker();
+    tracker.update(snap(0,actor),0);
+    actor.abilityCooldowns!.heal=9;tracker.update(snap(1,actor),50);
+    expect(tracker.frame(actor,50).mode).toBe('idle');
+    actor.abilityCooldowns!.heal=240;tracker.update(snap(2,actor),100);
+    expect(tracker.frame(actor,100)).toMatchObject({mode:'cast',frame:0});
+    delete actor.abilityCooldowns!.heal;actor.abilityCooldowns!.charge=100;
+    tracker.update(snap(3,actor),150);expect(tracker.frame(actor,150)).toMatchObject({mode:'cast',frame:0});
+    actor.abilityCooldowns!.stomp=200;tracker.update(snap(4,actor),200);
+    expect(tracker.frame(actor,200)).toMatchObject({mode:'cast',frame:0});
+    delete actor.abilityCooldowns;tracker.update(snap(5,actor),250);
+    actor.abilityCooldowns={stomp:50};tracker.update(snap(6,actor),300);
+    expect(tracker.frame(actor,300)).toMatchObject({mode:'cast',frame:0});
+    // Expire the cast, then exercise mutable deck records, deck exit and land gait.
+    for(let tick=7;tick<=16;tick++)tracker.update(snap(tick,actor),tick*50);
+    actor.deck!.x=3;tracker.update(snap(17,actor),850);
+    expect(tracker.frame(actor,850).mode).toBe('walk');
+    delete actor.deck;actor.x+=3;tracker.update(snap(18,actor),900);
+    expect(tracker.frame(actor,900).mode).toBe('idle');
+    actor.x+=3;tracker.update(snap(19,actor),950);
+    expect(tracker.frame(actor,950).mode).toBe('walk');
+  });
+
+  it('bounds observation allocations for a stable crew/miner and clears pooled histories on rewind',()=>{
+    const worker=soldier({kind:'worker',deck:{shipId:'boat',x:0,y:0},order:{type:'mine',resourceId:'gold',phase:'gather',timer:100}}),tracker=new UnitAnimationTracker();
+    const records=new Set<unknown>(),abilities=new Set<unknown>(),decks=new Set<unknown>(),mining=new Set<unknown>();
+    const storage=tracker as unknown as {tracks:Map<string,{abilities:object;deck?:object;mining?:object}>};
+    for(let tick=0;tick<30;tick++){
+      if(worker.order.type==='mine')worker.order.timer=100-tick;
+      tracker.update(snap(tick,worker),tick*50);
+      const track=storage.tracks.get(worker.id)!;
+      records.add(track);abilities.add(track.abilities);decks.add(track.deck);mining.add(track.mining);
+      if(tick)expect(tracker.frame(worker,tick*50).mode).toBe('work');
+    }
+    expect([records.size,abilities.size,decks.size,mining.size]).toEqual([2,2,2,2]);
+    worker.order={type:'hold',x:100,y:100};delete worker.deck;
+    tracker.update(snap(0,worker),1500);
+    expect(tracker.frame(worker,1500)).toMatchObject({mode:'idle'});
+    expect(storage.tracks.get(worker.id)?.deck).toBeUndefined();
+    expect(storage.tracks.get(worker.id)?.mining).toBeUndefined();
+    worker.x+=4;tracker.update(snap(1,worker),1550);
+    expect(tracker.frame(worker,1550).mode).toBe('walk');
+  });
+});

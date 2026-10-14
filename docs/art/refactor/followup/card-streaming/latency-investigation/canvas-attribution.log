@@ -1,0 +1,8 @@
+8:27:24 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
+CANVAS capture d48fb3d9 n=116/135/158 max=36
+VIEWPORT streaming cycle 0 0 43.30166666675359 434.2833333341405
+CANVAS balanced round=0 cases=36 direction=forward
+CANVAS balanced round=1 cases=36 direction=reverse
+CANVAS balanced round=2 cases=36 direction=forward
+CANVAS balanced round=3 cases=36 direction=reverse
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/canvas-attribution/proof.json","passed":true,"corpusSamples":36,"measuredModeRows":612,"byN":{"116":8,"135":20,"158":8},"coverageErrors":[],"errors":[],"failed":[]}

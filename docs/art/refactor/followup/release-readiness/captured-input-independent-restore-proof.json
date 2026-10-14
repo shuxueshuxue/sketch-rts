@@ -1,0 +1,130 @@
+{
+  "passed": true,
+  "restoredRoot": "/tmp/art-release-captured-inputs-386e530",
+  "originalGitCommit": "386e530de3a289e2f9e7aab5978f23e70a2953e2",
+  "verifiedFiles": 20,
+  "verifiedBytes": 11170491,
+  "independentDirectGitShowAndGzipAndRestoredFilesByteEquality": true,
+  "files": [
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/battle-comparison.json",
+      "bytes": 42018,
+      "sha256": "02f32190880169f01569fccd1b27f324538aee434a9e3c4bddf0f2851f53111b",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/camera-after/camera-harness.mjs",
+      "bytes": 20412,
+      "sha256": "f97fce0082bac5c8e3522666f42c53efcf5114e95adaae96c6ac8614e1cbc250",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/camera-after/proof.json",
+      "bytes": 2165944,
+      "sha256": "1beb236d3a18295db58f024d20648640612505c2c39c7a701f21003b1616222b",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/camera-before/camera-harness.mjs",
+      "bytes": 20412,
+      "sha256": "f97fce0082bac5c8e3522666f42c53efcf5114e95adaae96c6ac8614e1cbc250",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/camera-before/proof.json",
+      "bytes": 2165438,
+      "sha256": "212760056e87223dc321a2f1487716bfdff4ed65843cbf6a72c975420e6cbdc6",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/canonical-comparison.json",
+      "bytes": 7217,
+      "sha256": "05bbb3b8c31a431c54b148320d64dee6d53c6c671ccdb36e2ecb65ca18ee7e24",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/canonical-four-native-comparison.json",
+      "bytes": 4269,
+      "sha256": "523b2719cde422dc48aa45c3ada2f599580699dfdddf466cbde88cdad072340a",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/canonical-one-native-comparison.json",
+      "bytes": 7219,
+      "sha256": "76e5fad0bdfef3b4496a5797138b450f0298ba919dd8c6c3a0145d430e718392",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/canonical-two-native-comparison.json",
+      "bytes": 4267,
+      "sha256": "f5492b5f9f8a0ed541ba5e334d13bbf47d377e4d8e643d307b7e24dd36ea2f58",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/battle-comparison.json",
+      "bytes": 42031,
+      "sha256": "ec50b60d16552f6b0e52b345ba40ee508afd69fb144e9e0ba5088a0fd59bb0fd",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/camera-candidate/camera-harness.mjs",
+      "bytes": 20412,
+      "sha256": "f97fce0082bac5c8e3522666f42c53efcf5114e95adaae96c6ac8614e1cbc250",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/camera-candidate/proof.json",
+      "bytes": 2166621,
+      "sha256": "4d97dcdc40e3566f0b4515e8acb0300c1c94b8ceb3996d197603c2dd306ab4fb",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/camera-reference/camera-harness.mjs",
+      "bytes": 20412,
+      "sha256": "f97fce0082bac5c8e3522666f42c53efcf5114e95adaae96c6ac8614e1cbc250",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/camera-reference/proof.json",
+      "bytes": 2166548,
+      "sha256": "1cbd731589de0c51e43b6c109633d3a9de972d5571e176253cb62e05063e3502",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/canonical-comparison.json",
+      "bytes": 7241,
+      "sha256": "17263fbdee877722c159dd10ab5eb1104dfed243cad1035033e8554b41f8e955",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/final/mixed-comparison.json",
+      "bytes": 4261,
+      "sha256": "3b9c95a6a66ad8f151b73a5356d0994733bb771c218193b18810d0354d6736ac",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/bank-order/mixed-comparison.json",
+      "bytes": 4237,
+      "sha256": "e60d3a4dc9c467cfcd066e7d4950942c5df8ce776f1a46ef84fd6ca678313950",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/idle-identity/trace-analysis.json",
+      "bytes": 117632,
+      "sha256": "5b6f60aceb68ca0cf121aab9f34fc2630febe9c29ae7eb26ac80a75f2dbf01d7",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/latency-investigation/current-correctness/camera/camera-harness.mjs",
+      "bytes": 20412,
+      "sha256": "f97fce0082bac5c8e3522666f42c53efcf5114e95adaae96c6ac8614e1cbc250",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/latency-investigation/current-correctness/camera/proof.json",
+      "bytes": 2163488,
+      "sha256": "b8fe60c970b067ef7f2c3a7559114f502dde36abdea10939cd5a6c0af0687881",
+      "exactGitOriginalAndDecodedArchiveBytes": true
+    }
+  ]
+}

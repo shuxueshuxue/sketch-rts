@@ -1,0 +1,20 @@
+{
+  "setupCorrection": "Four-character 4e7e prefix was ambiguous before any SDK test ran; selected queue-diagnostics commit 4e7e5e8 by recorded title/date.",
+  "currentHead": "4e7e5e812520e8f12cb959221e39430e3546f7e5",
+  "sourceCommit": "cc854814473bb684e4444eb69719b9978b6dbdc6",
+  "productionDocsCommit": "4e7e5e812520e8f12cb959221e39430e3546f7e5",
+  "workingSourceStatus": "",
+  "diffAgainstProductionDocsCommit": "",
+  "sourceTrees": {
+    "HEAD": "d65fb0ecf269c6bbbb57d278cbff70299d7ba10a",
+    "cc854814473bb684e4444eb69719b9978b6dbdc6": "d65fb0ecf269c6bbbb57d278cbff70299d7ba10a",
+    "4e7e5e812520e8f12cb959221e39430e3546f7e5": "d65fb0ecf269c6bbbb57d278cbff70299d7ba10a"
+  },
+  "publicTrees": {
+    "HEAD": "5a559510a3b029aa053d252bdf0c1ab1847bed7b",
+    "cc854814473bb684e4444eb69719b9978b6dbdc6": "5a559510a3b029aa053d252bdf0c1ab1847bed7b",
+    "4e7e5e812520e8f12cb959221e39430e3546f7e5": "5a559510a3b029aa053d252bdf0c1ab1847bed7b"
+  },
+  "postTestSourceStatus": "",
+  "postTestDiffAgainstProduction": ""
+}

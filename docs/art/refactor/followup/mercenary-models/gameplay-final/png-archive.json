@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "target": "mercenary-models/gameplay-final",
+  "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22",
+  "fileSetHashDefinition": "SHA256 of UTF-8 compact sorted-key JSON array of sorted {name,size,sha256}; exact original PNG encoded bytes.",
+  "archive": {
+    "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+    "bytes": 27698282,
+    "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+  },
+  "sources": [
+    {
+      "name": "comparator.mjs",
+      "sha256": "3c969b08aeba75ecf402502f5228aa01250f41d0144aeaa85033f02e20a4b4bd"
+    },
+    {
+      "name": "comparison.json",
+      "sha256": "bb6d039763a8eb89abd926a3f1a83f9e1e8f290f1efa688cf9012b157d59d3d8"
+    },
+    {
+      "name": "fixture.ts",
+      "sha256": "e3b1fadcf82e4aea7d0a031136c46eed605e9304c31b72d1248e0246107252f4"
+    },
+    {
+      "name": "gameplay.mp4",
+      "sha256": "b2351840fabca71d24070db4272c28ebb6cc7e03cfb01a3bdd0af00ea3461120"
+    },
+    {
+      "name": "harness.mjs",
+      "sha256": "338cb0be6792277934f510a6425a29f09c0b6e0afbf34007d8a10955ce78ecb8"
+    },
+    {
+      "name": "original-fixture.ts",
+      "sha256": "da86cda593c1dd5df2d166cbe19e4d0a17f1e43c5c0100577cfb318c64390ad5"
+    },
+    {
+      "name": "proof.json",
+      "sha256": "c4b64686ba36e290e3914a20698fa50b75dca7aceaa406ffa2af07c6f265339b"
+    }
+  ],
+  "files": [
+    {
+      "name": "contractArcher-bodyPng.png",
+      "size": 17513,
+      "sha256": "51a8612f96e8b4e1fc0ac2437c12b9f50e9d5d9f2620dc5d767f316406fc9fff",
+      "keep": true,
+      "proofEncodedSha256": "51a8612f96e8b4e1fc0ac2437c12b9f50e9d5d9f2620dc5d767f316406fc9fff"
+    },
+    {
+      "name": "contractArcher-ordinaryPng.png",
+      "size": 12461,
+      "sha256": "b0a1f05811f996d5fc338b7d3383485f21f60fde3fc1fc45bde87977d5658e5f",
+      "keep": true,
+      "proofEncodedSha256": "b0a1f05811f996d5fc338b7d3383485f21f60fde3fc1fc45bde87977d5658e5f"
+    },
+    {
+      "name": "contractArcher-png.png",
+      "size": 13312,
+      "sha256": "28f053686fbb17b60b5b8dbf283f4c381559fce8a98c5df0ae6a0dcfba3cbb47",
+      "keep": true,
+      "proofEncodedSha256": "28f053686fbb17b60b5b8dbf283f4c381559fce8a98c5df0ae6a0dcfba3cbb47"
+    },
+    {
+      "name": "fieldMedic-bodyPng.png",
+      "size": 16646,
+      "sha256": "c9f27d71c49d9b5ce2f9ad6d82a2a2df96cec10337cdcfe345ecaf9d5f655a8f",
+      "keep": true,
+      "proofEncodedSha256": "c9f27d71c49d9b5ce2f9ad6d82a2a2df96cec10337cdcfe345ecaf9d5f655a8f"
+    },
+    {
+      "name": "fieldMedic-ordinaryPng.png",
+      "size": 11347,
+      "sha256": "251d4aaf697d17f90dd7a810e4ce36399e1645b8349d0d335d3e7641fee0d79a",
+      "keep": true,
+      "proofEncodedSha256": "251d4aaf697d17f90dd7a810e4ce36399e1645b8349d0d335d3e7641fee0d79a"
+    },
+    {
+      "name": "fieldMedic-png.png",
+      "size": 14332,
+      "sha256": "8cbb644850e8a115d841db0af58a5d277a03463c657f0cea5b9954845f2d4fd6",
+      "keep": true,
+      "proofEncodedSha256": "8cbb644850e8a115d841db0af58a5d277a03463c657f0cea5b9954845f2d4fd6"
+    },
+    {
+      "name": "frame-000.png",
+      "size": 660884,
+      "sha256": "299db92b9bdb20c0d1dec977ca3edc39073c3e4ab2c9a713e87ba3fb952fe790",
+      "keep": true,
+      "proofEncodedSha256": "299db92b9bdb20c0d1dec977ca3edc39073c3e4ab2c9a713e87ba3fb952fe790"
+    },
+    {
+      "name": "frame-001.png",
+      "size": 661233,
+      "sha256": "acc3cb916ad29dff97774c0da1cb8670b4ff96df19037f83fcf5ee85107e33ed",
+      "keep": false,
+      "proofEncodedSha256": "acc3cb916ad29dff97774c0da1cb8670b4ff96df19037f83fcf5ee85107e33ed"
+    },
+    {
+      "name": "frame-002.png",
+      "size": 661936,
+      "sha256": "28d90ea38be4f540e03b667ce9aa72a09f5a662cec341130dac0fcd2aede8c6b",
+      "keep": false,
+      "proofEncodedSha256": "28d90ea38be4f540e03b667ce9aa72a09f5a662cec341130dac0fcd2aede8c6b"
+    },
+    {
+      "name": "frame-003.png",
+      "size": 665721,
+      "sha256": "7b6cbf3060b8b86bae6e93a813594fe726cd02ee482eb961f052680a8b5d9170",
+      "keep": false,
+      "proofEncodedSha256": "7b6cbf3060b8b86bae6e93a813594fe726cd02ee482eb961f052680a8b5d9170"
+    },
+    {
+      "name": "frame-004.png",
+      "size": 667027,
+      "sha256": "8f38110d86bfbdbe352abafe97215877dd8890c8fe62ea63e79d8ef91fa31d65",
+      "keep": false,
+      "proofEncodedSha256": "8f38110d86bfbdbe352abafe97215877dd8890c8fe62ea63e79d8ef91fa31d65"
+    },
+    {
+      "name": "frame-005.png",
+      "size": 670462,
+      "sha256": "e7e4ea2aa8e6d7813db9250af6628ae991dbba050ff7bee57390def59d4514ea",
+      "keep": false,
+      "proofEncodedSha256": "e7e4ea2aa8e6d7813db9250af6628ae991dbba050ff7bee57390def59d4514ea"
+    },
+    {
+      "name": "frame-006.png",
+      "size": 673212,
+      "sha256": "bdb950dd0470104cdbb01a2886480aa073dcaabc6281c69e91d038ee76301b50",
+      "keep": false,
+      "proofEncodedSha256": "bdb950dd0470104cdbb01a2886480aa073dcaabc6281c69e91d038ee76301b50"
+    },
+    {
+      "name": "frame-007.png",
+      "size": 672947,
+      "sha256": "5ebbc35d3e4f60d0c227377db53288fbffcac191af9babb25f118af14448ad3f",
+      "keep": false,
+      "proofEncodedSha256": "5ebbc35d3e4f60d0c227377db53288fbffcac191af9babb25f118af14448ad3f"
+    },
+    {
+      "name": "frame-008.png",
+      "size": 671518,
+      "sha256": "57da23286eaae9b12aec1553ae46885b711d2b95a70be6af415ec9bb532e6329",
+      "keep": false,
+      "proofEncodedSha256": "57da23286eaae9b12aec1553ae46885b711d2b95a70be6af415ec9bb532e6329"
+    },
+    {
+      "name": "frame-009.png",
+      "size": 674128,
+      "sha256": "29d2e2f3b9872dddf3cccc34eb57910bbf4825a774c278528502f9b0505f5ba8",
+      "keep": false,
+      "proofEncodedSha256": "29d2e2f3b9872dddf3cccc34eb57910bbf4825a774c278528502f9b0505f5ba8"
+    },
+    {
+      "name": "frame-010.png",
+      "size": 677177,
+      "sha256": "a04d573249b6d89fb4332f2bdbfd5140618b9bfb5362dd2abb6471dadde3e0cf",
+      "keep": false,
+      "proofEncodedSha256": "a04d573249b6d89fb4332f2bdbfd5140618b9bfb5362dd2abb6471dadde3e0cf"
+    },
+    {
+      "name": "frame-011.png",
+      "size": 679497,
+      "sha256": "96a67012c4eeda784bfe168e467805a780ce3726bf3c0fe5bcc24e6053fe14ce",
+      "keep": false,
+      "proofEncodedSha256": "96a67012c4eeda784bfe168e467805a780ce3726bf3c0fe5bcc24e6053fe14ce"
+    },
+    {
+      "name": "frame-012.png",
+      "size": 663321,
+      "sha256": "19b5c1d745444aaed33aacea7125c1ef7dbe819ad88b84a33f28aade0a18829c",
+      "keep": false,
+      "proofEncodedSha256": "19b5c1d745444aaed33aacea7125c1ef7dbe819ad88b84a33f28aade0a18829c"
+    },
+    {
+      "name": "frame-013.png",
+      "size": 664096,
+      "sha256": "0a2abe179dd4bb94b8f55cceab729fbb30511bf48277c66c5759955a9df11e7a",
+      "keep": false,
+      "proofEncodedSha256": "0a2abe179dd4bb94b8f55cceab729fbb30511bf48277c66c5759955a9df11e7a"
+    },
+    {
+      "name": "frame-014.png",
+      "size": 664371,
+      "sha256": "2c9da9b7ce62cc3d70812b0eea7ef01f1384ca5982d5636453fbe0d76dc1e359",
+      "keep": false,
+      "proofEncodedSha256": "2c9da9b7ce62cc3d70812b0eea7ef01f1384ca5982d5636453fbe0d76dc1e359"
+    },
+    {
+      "name": "frame-015.png",
+      "size": 667875,
+      "sha256": "4b0b7a24e07e72f797ea1c69400368297b530a34bfeae5fd818fb848aeef8cbd",
+      "keep": false,
+      "proofEncodedSha256": "4b0b7a24e07e72f797ea1c69400368297b530a34bfeae5fd818fb848aeef8cbd"
+    },
+    {
+      "name": "frame-016.png",
+      "size": 668415,
+      "sha256": "113b5d999a9989e8df9ecaa36db64046899359bdf5c43c38339c0a30107b0646",
+      "keep": false,
+      "proofEncodedSha256": "113b5d999a9989e8df9ecaa36db64046899359bdf5c43c38339c0a30107b0646"
+    },
+    {
+      "name": "frame-017.png",
+      "size": 668597,
+      "sha256": "a9818aa4c7c55c2b050bc5b0e8cf3a4b69681015e3b6736a93bce43723fa30cf",
+      "keep": false,
+      "proofEncodedSha256": "a9818aa4c7c55c2b050bc5b0e8cf3a4b69681015e3b6736a93bce43723fa30cf"
+    },
+    {
+      "name": "frame-018.png",
+      "size": 701856,
+      "sha256": "5aefeb5af3425e99aeea2cc7b479e2edb32bb9ae92b033fc58f50ffeb3cab15d",
+      "keep": false,
+      "proofEncodedSha256": "5aefeb5af3425e99aeea2cc7b479e2edb32bb9ae92b033fc58f50ffeb3cab15d"
+    },
+    {
+      "name": "frame-019.png",
+      "size": 704534,
+      "sha256": "49a374277667999951b76638fb0d13ea7abea05c165860206c1f010c48659adf",
+      "keep": true,
+      "proofEncodedSha256": "49a374277667999951b76638fb0d13ea7abea05c165860206c1f010c48659adf"
+    },
+    {
+      "name": "frame-020.png",
+      "size": 699530,
+      "sha256": "c04f8da92dfadf17c07c3a9d249a701f5af2cc0ac933ae1cc67934d4c8e9fe11",
+      "keep": true,
+      "proofEncodedSha256": "c04f8da92dfadf17c07c3a9d249a701f5af2cc0ac933ae1cc67934d4c8e9fe11"
+    },
+    {
+      "name": "frame-021.png",
+      "size": 699238,
+      "sha256": "a70d9c9d2962c05874cf8b91d70a9de18b69865a5ceb0a8ca799f20e3904c4f4",
+      "keep": false,
+      "proofEncodedSha256": "a70d9c9d2962c05874cf8b91d70a9de18b69865a5ceb0a8ca799f20e3904c4f4"
+    },
+    {
+      "name": "frame-022.png",
+      "size": 699265,
+      "sha256": "a6cc372ee51af0e134fb0cf1e15475a13463de85950ab907b69eb5fa6fff2801",
+      "keep": false,
+      "proofEncodedSha256": "a6cc372ee51af0e134fb0cf1e15475a13463de85950ab907b69eb5fa6fff2801"
+    },
+    {
+      "name": "frame-023.png",
+      "size": 700179,
+      "sha256": "0adb011f7777d62a8d9abc924ee02e10f27370e4fc11a94fff0fe5f04f64e82d",
+      "keep": false,
+      "proofEncodedSha256": "0adb011f7777d62a8d9abc924ee02e10f27370e4fc11a94fff0fe5f04f64e82d"
+    },
+    {
+      "name": "frame-024.png",
+      "size": 701002,
+      "sha256": "fe740b9946c20c2a31f08aac0913471e183218bd55f8691f5e5b14ed6e3b3f0b",
+      "keep": false,
+      "proofEncodedSha256": "fe740b9946c20c2a31f08aac0913471e183218bd55f8691f5e5b14ed6e3b3f0b"
+    },
+    {
+      "name": "frame-025.png",
+      "size": 700814,
+      "sha256": "62d05d0c6388e739e315391cfdd5ccfd37e6c4ad37582c77fd0abf6207d33220",
+      "keep": false,
+      "proofEncodedSha256": "62d05d0c6388e739e315391cfdd5ccfd37e6c4ad37582c77fd0abf6207d33220"
+    },
+    {
+      "name": "frame-026.png",
+      "size": 701022,
+      "sha256": "3d4b7d8113177d58a4091f14a132c5afb2bfcd30953fbc52130bee9b52fb0d95",
+      "keep": false,
+      "proofEncodedSha256": "3d4b7d8113177d58a4091f14a132c5afb2bfcd30953fbc52130bee9b52fb0d95"
+    },
+    {
+      "name": "frame-027.png",
+      "size": 701374,
+      "sha256": "b56d8f5e057eea63c466e776e17f6f7252aa191d0400710eb703498c5cec668b",
+      "keep": false,
+      "proofEncodedSha256": "b56d8f5e057eea63c466e776e17f6f7252aa191d0400710eb703498c5cec668b"
+    },
+    {
+      "name": "frame-028.png",
+      "size": 701662,
+      "sha256": "00157d13b4187981f4e06a0c120775baa4d258c466889685c39369448dee8e4e",
+      "keep": true,
+      "proofEncodedSha256": "00157d13b4187981f4e06a0c120775baa4d258c466889685c39369448dee8e4e"
+    },
+    {
+      "name": "frame-029.png",
+      "size": 705341,
+      "sha256": "ecf32d43f1be2cb2b79174c6f51e3e1dd2a6c73e08d485772d10b8d13989acdf",
+      "keep": false,
+      "proofEncodedSha256": "ecf32d43f1be2cb2b79174c6f51e3e1dd2a6c73e08d485772d10b8d13989acdf"
+    },
+    {
+      "name": "frame-030.png",
+      "size": 695298,
+      "sha256": "093654f272787922f78377c1b5f0fee1b849af1231b12bc4e2e81fc1896786b5",
+      "keep": true,
+      "proofEncodedSha256": "093654f272787922f78377c1b5f0fee1b849af1231b12bc4e2e81fc1896786b5"
+    },
+    {
+      "name": "frame-031.png",
+      "size": 695086,
+      "sha256": "3f208e9ade1a260e88492ad796de27bc2f203cb297a980fa5006ba34090f98e2",
+      "keep": false,
+      "proofEncodedSha256": "3f208e9ade1a260e88492ad796de27bc2f203cb297a980fa5006ba34090f98e2"
+    },
+    {
+      "name": "frame-032.png",
+      "size": 695078,
+      "sha256": "cbdeb1b44b9b2bfb5f7338cd75990224fb6150baa83f6dbec5cb9acb5809cab1",
+      "keep": false,
+      "proofEncodedSha256": "cbdeb1b44b9b2bfb5f7338cd75990224fb6150baa83f6dbec5cb9acb5809cab1"
+    },
+    {
+      "name": "frame-033.png",
+      "size": 693350,
+      "sha256": "0a0748adca441bbf32505de71c4dac6a152ee7e7d1e632f5e85a637c9248ae1f",
+      "keep": false,
+      "proofEncodedSha256": "0a0748adca441bbf32505de71c4dac6a152ee7e7d1e632f5e85a637c9248ae1f"
+    },
+    {
+      "name": "frame-034.png",
+      "size": 723364,
+      "sha256": "af6ec886acf34ee152a6580dee3598ec6a2ace6b66449f739d7e9e05a85f4bc1",
+      "keep": false,
+      "proofEncodedSha256": "af6ec886acf34ee152a6580dee3598ec6a2ace6b66449f739d7e9e05a85f4bc1"
+    },
+    {
+      "name": "frame-035.png",
+      "size": 725543,
+      "sha256": "b4afd28cda90e9a12621b78cc9a23ea0277089e544962d9ad8a9605e5112e652",
+      "keep": true,
+      "proofEncodedSha256": "b4afd28cda90e9a12621b78cc9a23ea0277089e544962d9ad8a9605e5112e652"
+    },
+    {
+      "name": "frame-036.png",
+      "size": 724128,
+      "sha256": "ca6c3215fedd568042530a6e1a404d281c199f0bf93a34416b5f9d239cdd8f3d",
+      "keep": false,
+      "proofEncodedSha256": "ca6c3215fedd568042530a6e1a404d281c199f0bf93a34416b5f9d239cdd8f3d"
+    },
+    {
+      "name": "frame-037.png",
+      "size": 723599,
+      "sha256": "ae1caf5ef8737ee03dc8aa117a1398a65411d5a1a7555b54dd5d3ad83f920228",
+      "keep": false,
+      "proofEncodedSha256": "ae1caf5ef8737ee03dc8aa117a1398a65411d5a1a7555b54dd5d3ad83f920228"
+    },
+    {
+      "name": "frame-038.png",
+      "size": 722709,
+      "sha256": "71f61d93c8ae070e71b2598bf000a651f59820b0b5b2957fe8f40dd79d122c54",
+      "keep": false,
+      "proofEncodedSha256": "71f61d93c8ae070e71b2598bf000a651f59820b0b5b2957fe8f40dd79d122c54"
+    },
+    {
+      "name": "frame-039.png",
+      "size": 721710,
+      "sha256": "e88a5acba5c18c46461b66484c8099e8c25bfd957b793c6bc92478130ebe17ee",
+      "keep": false,
+      "proofEncodedSha256": "e88a5acba5c18c46461b66484c8099e8c25bfd957b793c6bc92478130ebe17ee"
+    },
+    {
+      "name": "mercenary-bodyPng.png",
+      "size": 19140,
+      "sha256": "74f577a5fda4661a1d4422f2be38570b433ab14fd70dd8a0e34d0a1cce7a2672",
+      "keep": true,
+      "proofEncodedSha256": "74f577a5fda4661a1d4422f2be38570b433ab14fd70dd8a0e34d0a1cce7a2672"
+    },
+    {
+      "name": "mercenary-ordinaryPng.png",
+      "size": 16287,
+      "sha256": "f4cc6ae93ea9f604447eb9a01dca64a8f960bb6296f8329e79ef8bc780762571",
+      "keep": true,
+      "proofEncodedSha256": "f4cc6ae93ea9f604447eb9a01dca64a8f960bb6296f8329e79ef8bc780762571"
+    },
+    {
+      "name": "mercenary-png.png",
+      "size": 16448,
+      "sha256": "fee030c8dca7468f7cbb821d55a6a5d6cc628238d11e1b3cbd788ea4be3feab8",
+      "keep": true,
+      "proofEncodedSha256": "fee030c8dca7468f7cbb821d55a6a5d6cc628238d11e1b3cbd788ea4be3feab8"
+    }
+  ],
+  "meaning": "Original encoded PNG bytes preserved, not a pixel re-encoding. Proofs and negative results unchanged. Missing files restore exactly via --materialize."
+}

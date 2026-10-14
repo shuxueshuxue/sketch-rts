@@ -1,0 +1,3 @@
+mode,banks,mips,peak_methods,mask_provider,cache_provider,cache_budget_bytes,ordering,scope
+reference,1,full,5b exact stats+recordPeaks prototype references,5b frozen mask,5b original 78d5,50331648,current corrected stable snapshot order,combined pipeline comparison
+candidate,1,native,current production,current production,f9c83 original class with one-line default budget change,16777216,current corrected stable snapshot order,combined pipeline comparison

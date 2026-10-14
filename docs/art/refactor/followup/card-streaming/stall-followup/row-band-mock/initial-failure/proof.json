@@ -1,0 +1,328 @@
+{
+  "schema": 1,
+  "completed": false,
+  "passed": false,
+  "command": {
+    "argv": [
+      "--out",
+      "/tmp/card-upload-row-band-mock-result.json"
+    ],
+    "cwd": "/workspace/sketch-rts-viewport",
+    "node": "v24.19.0",
+    "requested": {
+      "candidate": "/tmp/card-upload-row-band-candidate.ts",
+      "original": "/tmp/card-upload-row-band-original.ts",
+      "region": "/tmp/card-upload-row-band-region.ts",
+      "metadata": "/tmp/card-upload-row-band-source.json",
+      "output": "/tmp/card-upload-row-band-mock-result.json"
+    },
+    "actualPaths": {
+      "candidate": "/tmp/card-upload-row-band-candidate.ts",
+      "original": "/tmp/card-upload-row-band-original.ts",
+      "region": "/tmp/card-upload-row-band-region.ts",
+      "metadata": "/tmp/card-upload-row-band-source.json",
+      "mock": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.ts",
+      "driver": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.mjs",
+      "three": "/workspace/sketch-rts/node_modules/three/build/three.module.js"
+    },
+    "output": "/tmp/card-upload-row-band-mock-result.json",
+    "repoRoot": "/workspace/sketch-rts-viewport"
+  },
+  "pinned": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+  },
+  "metadata": {
+    "sourceCommit": "8345a0dcfeb96b6777ac3940ec64cba13816c851",
+    "sourceFile": "src/client/world3d/card-mip-uploader.ts",
+    "original": "/tmp/card-upload-row-band-original.ts",
+    "sourceSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "candidate": "/tmp/card-upload-row-band-candidate.ts",
+    "candidateSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "regionDependency": "/tmp/card-upload-row-band-region.ts",
+    "regionSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "variable": "Warm CPU-source DataTexture aliases a complete dirty row band with full-width stride, source y rebased to zero and original destination x/y; physical rectangle bytes, public-copy count, complete GPU scratch domain and original mip generation/copy remain unchanged.",
+    "candidateExactWarmSetupReplacement": true,
+    "oldWarmSetup": "      this.uploadRegion.min.set(region.left,region.top);this.uploadRegion.max.set(region.right,region.bottom);this.uploadDestination.set(region.left,region.top);",
+    "newWarmSetup": "      // Expose the same shared CPU rows with no new pixel buffer. Keep the\n      // original full-width stride and x skip; only source y is rebased.\n      const rowBytes=sourceWidth*4,bandHeight=region.bottom-region.top;\n      scratch.cpuSource.image.data=scratch.data.subarray(region.top*rowBytes,region.bottom*rowBytes);\n      scratch.cpuSource.image.height=bandHeight;\n      this.uploadRegion.min.set(region.left,0);this.uploadRegion.max.set(region.right,bandHeight);this.uploadDestination.set(region.left,region.top);",
+    "sourceImportsRetained": true,
+    "staticPreparedOnly": true,
+    "scope": "Preparation provenance only; CPU mock is not native GPU sRGB mip proof or a performance result.",
+    "threePublicEntry": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "threeEntrySha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "threeRevision": "186",
+    "mockSource": "scripts/art-card-upload-row-band-mock.ts",
+    "mockDriver": "scripts/art-card-upload-row-band-mock.mjs",
+    "preparedToolSha256": {
+      "scripts/art-card-upload-row-band-mock.ts": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+      "scripts/art-card-upload-row-band-mock.mjs": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+      "scripts/art-card-upload-row-band-formal-proof.mjs": "b63d312517de63e2cc52107a4c4c7b33e7c93c07a884e1f471b06fbe7bbdedd8"
+    },
+    "preparedOnlyCommands": [
+      "node --check scripts/art-card-upload-row-band-mock.ts",
+      "node --check scripts/art-card-upload-row-band-mock.mjs",
+      "node --check scripts/art-card-upload-row-band-formal-proof.mjs"
+    ],
+    "mockCommand": "node scripts/art-card-upload-row-band-mock.mjs --out /tmp/card-upload-row-band-mock-result.json",
+    "formalCommand": "node --import tsx scripts/art-card-upload-row-band-formal-proof.mjs --source <clean-8345-detached-root> --upload-policy <original|candidate> --out <new-run-folder>/raw.json",
+    "modelLimits": "All modeled RGBA mip bytes are checked using deterministic integer-box arithmetic, not native GPU sRGB filtering. Failure injection occurs after modeled public copy completion, not between internal Three UNPACK setup/restoration; context lifecycle is modeled dispose/recreate, not real context loss."
+  },
+  "metadataSourceSha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+  "inputSha256Before": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "metadata": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+    "mock": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+    "driver": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+    "three": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+  },
+  "inputSha256After": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "metadata": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+    "mock": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+    "driver": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+    "three": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+  },
+  "toolSha256": {
+    "driverBefore": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+    "driverAfter": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+    "mockBefore": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+    "mockAfter": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3"
+  },
+  "originalSourceSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+  "candidateSourceSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+  "dependencySourceSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+  "threeBinding": {
+    "publicUrl": "file:///workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "publicEntry": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "entrySha256Before": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "entrySha256After": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "esbuildVersion": "0.28.0",
+    "providerBareImportsRetained": true,
+    "oneSharedConstructorChecked": false,
+    "resolverRecords": [
+      {
+        "request": "three",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "card-upload-mock:candidate",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.ts",
+        "resolved": "/tmp/card-upload-row-band-candidate.ts",
+        "sha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+        "kind": "provider"
+      },
+      {
+        "request": "card-upload-mock:original",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.ts",
+        "resolved": "/tmp/card-upload-row-band-original.ts",
+        "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+        "kind": "provider"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/card-upload-row-band-original.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/card-upload-row-band-candidate.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "./card-upload-region",
+        "importer": "/tmp/card-upload-row-band-original.ts",
+        "resolved": "/tmp/card-upload-row-band-region.ts",
+        "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+        "kind": "region"
+      },
+      {
+        "request": "./card-upload-region",
+        "importer": "/tmp/card-upload-row-band-candidate.ts",
+        "resolved": "/tmp/card-upload-row-band-region.ts",
+        "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+        "kind": "region"
+      }
+    ]
+  },
+  "bundleSha256": "e1d9e9a99bef49c8dfc927f6c552095d7fd20d3e5e64327f1737bdf85724261c",
+  "bundleInputs": {
+    "../sketch-rts/node_modules/three/build/three.core.js": {
+      "bytes": 1458113,
+      "imports": [],
+      "format": "esm"
+    },
+    "../sketch-rts/node_modules/three/build/three.module.js": {
+      "bytes": 662772,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.core.js",
+          "kind": "import-statement",
+          "original": "./three.core.js"
+        },
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.core.js",
+          "kind": "import-statement",
+          "original": "./three.core.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-region.ts": {
+      "bytes": 2358,
+      "imports": [],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-candidate.ts": {
+      "bytes": 11490,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-region.ts",
+          "kind": "import-statement",
+          "original": "./card-upload-region"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-original.ts": {
+      "bytes": 11129,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-region.ts",
+          "kind": "import-statement",
+          "original": "./card-upload-region"
+        }
+      ],
+      "format": "esm"
+    },
+    "scripts/art-card-upload-row-band-mock.ts": {
+      "bytes": 19775,
+      "imports": [
+        {
+          "path": "node:assert/strict",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-candidate.ts",
+          "kind": "import-statement",
+          "original": "card-upload-mock:candidate"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-original.ts",
+          "kind": "import-statement",
+          "original": "card-upload-mock:original"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "bundleDependencies": [
+    {
+      "input": "../sketch-rts/node_modules/three/build/three.core.js",
+      "path": "/workspace/sketch-rts/node_modules/three/build/three.core.js",
+      "bytes": 1458113,
+      "sha256Before": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+      "sha256After": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6"
+    },
+    {
+      "input": "../sketch-rts/node_modules/three/build/three.module.js",
+      "path": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+      "bytes": 662772,
+      "sha256Before": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+      "sha256After": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-region.ts",
+      "path": "/tmp/card-upload-row-band-region.ts",
+      "bytes": 2358,
+      "sha256Before": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "sha256After": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-candidate.ts",
+      "path": "/tmp/card-upload-row-band-candidate.ts",
+      "bytes": 11490,
+      "sha256Before": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+      "sha256After": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-original.ts",
+      "path": "/tmp/card-upload-row-band-original.ts",
+      "bytes": 11129,
+      "sha256Before": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "sha256After": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295"
+    },
+    {
+      "input": "scripts/art-card-upload-row-band-mock.ts",
+      "path": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.ts",
+      "bytes": 19775,
+      "sha256Before": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+      "sha256After": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3"
+    }
+  ],
+  "violations": [],
+  "failure": {
+    "message": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ Uint8ClampedArray(7) [\n- Uint8Array(7) [\n    211,\n    211,\n    211,\n    211,\n    211,\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ Uint8ClampedArray(7) [\n- Uint8Array(7) [\n    211,\n    211,\n    211,\n    211,\n    211,\n\n    at file:///tmp/card-upload-contract-UNF5P8/mock.mjs:11954:12\n    at runCase (file:///tmp/card-upload-contract-UNF5P8/mock.mjs:11780:35)\n    at runMockProof (file:///tmp/card-upload-contract-UNF5P8/mock.mjs:11942:14)\n    at file:///workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock.mjs:94:79"
+  },
+  "scope": "Deterministic CPU contract model. No Canvas/browser/GL or performance benchmark. Full providers and one pinned region helper are bundled with one public Three identity. Native sRGB mip RGBA and frame timing require independent GPU proof/ABBA.",
+  "archivedInputs": {
+    "candidate": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/candidate.ts",
+      "sha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+      "savedSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18"
+    },
+    "original": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/original.ts",
+      "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "savedSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295"
+    },
+    "region": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/card-upload-region.ts",
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "savedSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+    },
+    "metadata": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/metadata.json",
+      "sha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+      "savedSha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca"
+    },
+    "mock": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/art-card-upload-row-band-mock.ts",
+      "sha256": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+      "savedSha256": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3"
+    },
+    "driver": {
+      "file": "/tmp/card-upload-row-band-mock-result.json.inputs/art-card-upload-row-band-mock.mjs",
+      "sha256": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+      "savedSha256": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f"
+    }
+  }
+}

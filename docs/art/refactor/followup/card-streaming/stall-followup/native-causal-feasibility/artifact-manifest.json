@@ -1,0 +1,280 @@
+{
+  "scope": "Read-only environment/capability evidence; no performance or causal result",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 10192,
+      "sha256": "12151b886abd1d4a799315f069291e0df2859458a5a91b4a2419fec94cfa71d8"
+    },
+    {
+      "path": "environment-v1/chromium-debuglink.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/chromium-debuglink.stdout",
+      "bytes": 116,
+      "sha256": "b75d0f45682ae3b8978a75d756ab769a4d1213f1d23b87bf01f1f6317a5d8958"
+    },
+    {
+      "path": "environment-v1/chromium-exports.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/chromium-exports.stdout",
+      "bytes": 2578,
+      "sha256": "715755f728dd482ebfa2a5fcff594e159902d7b7db44fcce085789d9649a01e3"
+    },
+    {
+      "path": "environment-v1/chromium-notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/chromium-notes.stdout",
+      "bytes": 613,
+      "sha256": "42eea5259844be974b63d2c53048779dcafd361d4ccfb0ff19ffea390f2993a8"
+    },
+    {
+      "path": "environment-v1/chromium-sections.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/chromium-sections.stdout",
+      "bytes": 3886,
+      "sha256": "f7541aeb89cd1f2b94206fda8464890b92de99aa65c9876bd7473c0f16c57355"
+    },
+    {
+      "path": "environment-v1/environment.json",
+      "bytes": 15299,
+      "sha256": "dcad0254b19167a3773656c0e5e58d87fcbba5b0369f01de703b166ba2c7989f"
+    },
+    {
+      "path": "environment-v1/executed-environment-audit.py",
+      "bytes": 5993,
+      "sha256": "d09795f7b141532b56752664c948a86b9b233117f967394fc5c537ed6d243231"
+    },
+    {
+      "path": "environment-v1/installed-packages.stderr",
+      "bytes": 105,
+      "sha256": "234dc6dbbb3b74df112990f75956f6626881726a9f2cec73099f2f47dc7bd780"
+    },
+    {
+      "path": "environment-v1/installed-packages.stdout",
+      "bytes": 185,
+      "sha256": "b92a17fecbf60bc15f8d05d6aa84294dbe7e9367b82cf80037f8fbef972ab226"
+    },
+    {
+      "path": "environment-v1/libEGL.so-debuglink.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libEGL.so-debuglink.stdout",
+      "bytes": 116,
+      "sha256": "c973615b768f36480038219873f06a4133e3d393b93c232978ab1d38081b7e4d"
+    },
+    {
+      "path": "environment-v1/libEGL.so-exports.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libEGL.so-exports.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libEGL.so-notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libEGL.so-notes.stdout",
+      "bytes": 226,
+      "sha256": "3563ce04c20e7d655c8dd26a6c33d431dfbcb0dd2f7be49b8ce1a7470972bf44"
+    },
+    {
+      "path": "environment-v1/libEGL.so-sections.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libEGL.so-sections.stdout",
+      "bytes": 2565,
+      "sha256": "9cfe775c6dc21928c9f1368387aaa28ba9a16e060a139f3650fcfbfa53d1d439"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-debuglink.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-debuglink.stdout",
+      "bytes": 118,
+      "sha256": "57bcfd9eb731988375fae7ccabe05818a182cb3e6c9d3f60c466c325b6395b88"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-exports.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-exports.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-notes.stdout",
+      "bytes": 226,
+      "sha256": "830c3628ef1e13b2919bb5aeef758bbff2d1f04340e57b4c958785f30381f93c"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-sections.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libGLESv2.so-sections.stdout",
+      "bytes": 2565,
+      "sha256": "22c1e21100cd94da17809b7af86723307ab561ef5ff29e55df49ec778c773895"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-debuglink.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-debuglink.stdout",
+      "bytes": 118,
+      "sha256": "f1ea11a6b9f324cddd1abc14a7cb857e6db62c0a5806d8a62904c4d8549c3f07"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-exports.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-exports.stdout",
+      "bytes": 197,
+      "sha256": "cff10c9b0ab4a52bd17e752bfe80cca430abc3b36b659e5d84f07aafef5afd17"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-notes.stdout",
+      "bytes": 226,
+      "sha256": "3ab0437c70c5950344cf2a777d75104813cb88760f516069371f1c9e6a45cf54"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-sections.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/libvk_swiftshader.so-sections.stdout",
+      "bytes": 3280,
+      "sha256": "c3409e695f3bdd1759658ebd030f26d7a5c92d17ea0c1c2d40ddc209468f4644"
+    },
+    {
+      "path": "environment-v1/own-child-strace.log",
+      "bytes": 157,
+      "sha256": "0796f8d41fa7ba1abb7756e319760a5c85a0dafcd21b6d6c145d9b65cebfcc84"
+    },
+    {
+      "path": "environment-v1/own-child-strace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/own-child-strace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/strace-version.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment-v1/strace-version.stdout",
+      "bytes": 327,
+      "sha256": "cd32bce250370753dc898d1a2e703c90aa433ef79267363e01d0a357432f7dba"
+    },
+    {
+      "path": "environment-v1.log",
+      "bytes": 209,
+      "sha256": "232ed6d22d9cb824c289378080937335e7227ef4dd52c808ef12195ab082f0d0"
+    },
+    {
+      "path": "feasibility-summary.json",
+      "bytes": 1402,
+      "sha256": "12d6288bb5ac258d2855dbbc184b4cabe4276ab166794a245a9235d0d9ae71a9"
+    },
+    {
+      "path": "namespace-and-cleanup.json",
+      "bytes": 861,
+      "sha256": "1ec290040ceebb0edbfedad2ce0b0b5a420c7a7503e7746c9e973d7caa214977"
+    },
+    {
+      "path": "stock-browser-v1/executed-capability.mjs",
+      "bytes": 5075,
+      "sha256": "01e026684b90b2023d02170c76719fcfececa597b388998a1931134d3c700cfc"
+    },
+    {
+      "path": "stock-browser-v1/failed-wrapper.json",
+      "bytes": 385,
+      "sha256": "3ccce6cb2d83fe9977a6dd9e471bc15b01c194dcac846e5d50697a9157c3c6f5"
+    },
+    {
+      "path": "stock-browser-v1.log",
+      "bytes": 470,
+      "sha256": "c1202dd6d5998ebac1a71e6980d4a91fd37432ec262bc359dbaabd411ba66bde"
+    },
+    {
+      "path": "stock-browser-v2/browser-stderr.log",
+      "bytes": 567,
+      "sha256": "7ff805e8d18afa7c9b9669de21415a1274ca08ed93098d678ba7c9a4ac41d370"
+    },
+    {
+      "path": "stock-browser-v2/browser-stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "stock-browser-v2/executed-capability.mjs",
+      "bytes": 5359,
+      "sha256": "0e57354895358b55dd793e70905f4a1a1bcbce59ab67fea59b806c003bdec82c"
+    },
+    {
+      "path": "stock-browser-v2/proof.json",
+      "bytes": 1490,
+      "sha256": "d58080551364ae5ee57b02bcedbeaa242939b49c5bd9d6f0ad448478f6577e83"
+    },
+    {
+      "path": "stock-browser-v2.log",
+      "bytes": 304,
+      "sha256": "c25b3f38ead2b1b0cee2429069e02b8e6234e5aea8ce6d8de129f6c5432ed805"
+    },
+    {
+      "path": "temporary-empty-profile-cleanup.json",
+      "bytes": 386,
+      "sha256": "04c761db33703a2f85070acf50707958ac11d14ec5c8cacd6a432c6d9a35832e"
+    }
+  ],
+  "executedV2BrowserScriptShaMatches": true,
+  "executedEnvironmentScriptShaMatches": true,
+  "productionSourceAndPublicEqualCc85481": true,
+  "noGameOrTraceWorkload": true,
+  "historicalNativeCallerStillUnproved": true
+}

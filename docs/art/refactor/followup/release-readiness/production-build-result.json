@@ -1,0 +1,20 @@
+{
+  "sourceHead": "85e7c2d9e5629ae8a19ac7fdd78941505cb00753",
+  "sourceHeadAfter": "85e7c2d9e5629ae8a19ac7fdd78941505cb00753",
+  "command": [
+    "npm",
+    "run",
+    "build:production"
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 23.193617917000665,
+  "includes": [
+    "global TypeScript",
+    "Vite client build",
+    "server bundle"
+  ],
+  "log": "production-build.log.gz",
+  "decodedLogBytes": 2855,
+  "decodedLogSha256": "18d2b2b6f9ac76b585dee857afd2841d02f7810231e2f45f141ce78610f94d29",
+  "storedLogSha256": "7f6aaf46a1ac8f28d0bd26fd9fe661240f46b3b7518032788299e002c621061f"
+}

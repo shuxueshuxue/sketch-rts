@@ -1,0 +1,24 @@
+{
+  "anchor": "386e530de3a289e2f9e7aab5978f23e70a2953e2",
+  "purpose": "Original human reports before release wording and archive-link updates; historical observations remain unchanged.",
+  "files": [
+    {
+      "originalPath": "docs/art/refactor/followup/card-streaming/README.md",
+      "originalBytes": 15776,
+      "originalSha256": "3c9c183e1cd0c401f9e12c941491755b8b1023c17e2bae7829b799e1b36d80e4",
+      "archive": "docs/art/refactor/followup/release-readiness/card-streaming-report-before-release.md.gz",
+      "archiveBytes": 6731,
+      "archiveSha256": "d80ed1c2b29fea6e1ed1e6a6d609f0da196a99f4e9caff4e747f5e644472e4d7",
+      "decodedExactGitAnchor": true
+    },
+    {
+      "originalPath": "docs/art/refactor/followup/png-archives/README.md",
+      "originalBytes": 5501,
+      "originalSha256": "e8b4f4da66627916c1f207fc01d195e6d570bfd43a42117c37074ac285cb9bcf",
+      "archive": "docs/art/refactor/followup/release-readiness/png-archive-report-before-release.md.gz",
+      "archiveBytes": 2182,
+      "archiveSha256": "fd68c11edcb2752d08f11ddaddbca409181d00de30ff77c45c0d57fc4f4ea878",
+      "decodedExactGitAnchor": true
+    }
+  ]
+}

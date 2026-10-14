@@ -5,12 +5,14 @@ import type { GameSnapshot } from '../shared/types';
 import type { World3DLayer } from './world3d/world-layer';
 import './world-presentation.css';
 import { ShipWakeTracker } from './ship-wakes';
+import {PresentationViewIndex} from './presentation-view';
 
 type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[]};
 
 /** Coordinates the three presentation layers. Model code loads with the scene,
  * after bootstrap; networking and simulation stay separate. */
 export class WorldPresentation {
+  private viewIndex=new PresentationViewIndex();
   private wakes=new ShipWakeTracker();
   private ground=document.createElement('canvas');
   private actors=document.createElement('canvas');
@@ -105,7 +107,7 @@ export class WorldPresentation {
   }
   draw(frame:WorldFrame,phase:ResourcePhase=this.current?.phase??'home'){
     if(this.disposed)return;
-    frame={...frame,wakes:this.wakes};
+    frame={...frame,wakes:this.wakes,viewIndex:this.viewIndex};
     resources.phase=phase;
     const changed=this.current?.phase!==phase;
     this.current={snapshot:frame.snapshot,phase,sites:Object.values(frame.buildingModels??{})};
@@ -132,11 +134,12 @@ export class WorldPresentation {
   plane(point:{x:number;y:number},height:number){return this.enabled?this.layer?.plane(point,height):undefined;}
   position(id:string){return this.enabled?this.layer?.positions.get(id):undefined;}
   get is3D(){return this.enabled;}
-  reset(){this.revision++;this.current=undefined;this.layer?.reset();this.wakes=new ShipWakeTracker();}
+  reset(){this.revision++;this.current=undefined;this.layer?.reset();this.wakes=new ShipWakeTracker();this.viewIndex.reset();}
   dispose(){
     if(this.disposed)return;this.disposed=true;this.revision++;this.enabled=false;this.current=undefined;
     this.actors.removeEventListener('webglcontextlost',this.onContextLost);this.actors.removeEventListener('webglcontextrestored',this.onContextRestored);
     this.layer?.dispose();this.layer=undefined;this.context=null;this.effectTypes=undefined;this.wakes=new ShipWakeTracker();
+    this.viewIndex.reset();
     this.stack.hidden=true;this.stack.remove();this.ground.width=this.ground.height=this.actors.width=this.actors.height=0;
   }
 }

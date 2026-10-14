@@ -1,0 +1,24 @@
+{
+  "finalVerifyCommand": [
+    "python3",
+    "scripts/art-replay-generation-source-archive.py",
+    "--verify",
+    "--report",
+    "docs/art/refactor/followup/source-archives/replay-generation-v4-source-archive-final-verify-report.json"
+  ],
+  "finalVerifyExitCode": 0,
+  "executionScriptSha256": "6278552bffd68175efa44889c9c37aff7ffcaff3376110f64c5dd604bc566e05",
+  "run": "exact-upload-replay/stage-run-v4",
+  "captureStatus": "Original v4 diagnostic PASS retained unchanged; PASS, native teardown and query evidence are independently preserved outside this source archive.",
+  "sourceArchiveOnlyCapturedSrcNotRunnableCheckout": true,
+  "manifest": "docs/art/refactor/followup/card-streaming/stall-followup/exact-upload-replay/stage-run-v4/replay-generation-source-archive.json",
+  "manifestSha256": "5fd39a9ace8f9c89970c9967f99e1eb5bec55a7f1520ebd75b4c630dbca43236",
+  "remainingSourceFiles": 0,
+  "allPriorSourceArchiveToolsUnchanged": true,
+  "priorSourceArchiveToolSha256": {
+    "scripts/art-queue-source-archive.py": "a027cdeac5ea5db46d5ae02666341e71c8b5ccfd7071ec7e96c629032caf2223",
+    "scripts/art-replay-source-archive.py": "74219796e227cff8ef1245bcdac12b2f42495605afecf3090ffe6415f9ff0312",
+    "scripts/art-replay-stage-source-archive.py": "1b464d09798d9eeb558edb91917f3cf55d062d17db22a41a48a2d05f6cd1d8b5"
+  },
+  "newTmpRestoreVerifiedThenRemoved": true
+}

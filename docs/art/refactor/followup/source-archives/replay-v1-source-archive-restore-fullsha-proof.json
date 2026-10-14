@@ -1,0 +1,28 @@
+{
+  "command": [
+    "python3",
+    "scripts/art-replay-source-archive.py",
+    "--materialize",
+    "--folder",
+    "exact-upload-replay/run-v1",
+    "--out",
+    "/tmp/replay-v1-source-fullsha-restore-135116",
+    "--report",
+    "docs/art/refactor/followup/source-archives/replay-v1-source-archive-restore-report.json"
+  ],
+  "restoreRoot": "/tmp/replay-v1-source-fullsha-restore-135116",
+  "sourceCommit": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "executionScriptSha256": "74219796e227cff8ef1245bcdac12b2f42495605afecf3090ffe6415f9ff0312",
+  "manifestSha256": "305363c509232fbdc9fe5f0a402c4c62fd969020bca2d4e3b4a5d5f9760bede8",
+  "archive": {
+    "file": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0.tar.gz",
+    "bytes": 2221603,
+    "sha256": "4367770df4b0e80693571cd930574bda73701e91a04bb8e9b779863637e26ec2"
+  },
+  "directory": "complete-source-snapshot",
+  "verifiedFiles": 1125,
+  "verifiedBytes": 9687156,
+  "fileSetSha256": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0",
+  "everyFileFullSha256Verified": true,
+  "restoreDirectoryRemovedAfterVerification": true
+}

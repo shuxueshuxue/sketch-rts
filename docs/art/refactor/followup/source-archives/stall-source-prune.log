@@ -1,0 +1,30 @@
+VERIFIED current-trace files=1120
+VERIFIED current-gl-trace files=1120
+VERIFIED mip-half-camera/reference files=1120
+VERIFIED mip-half-camera/candidate files=1120
+VERIFIED mip-half-abba/production-A files=1120
+VERIFIED mip-half-abba/candidate-B files=1120
+VERIFIED mip-half-abba/candidate-B2 files=1120
+VERIFIED mip-half-abba-v2/production-A files=1120
+VERIFIED mip-half-abba-v2/candidate-B files=1120
+VERIFIED mip-half-abba-v2/candidate-B2 files=1120
+VERIFIED mip-half-abba-v2/production-A2 files=1120
+{
+  "operation": "prune",
+  "verifiedRuns": 11,
+  "verifiedFiles": 12320,
+  "originalSourceBytes": 106168898,
+  "uniqueArchives": 1,
+  "archiveBytes": 2212438,
+  "archives": [
+    {
+      "file": "468839ab37bee10734865f09d6364d9e04d2efa0e501ce97da8b2cc21ed53736.tar.gz",
+      "bytes": 2212438,
+      "sha256": "191595b48a5129e68990628f6f6aeb2575977b2ed88de31e47463568d71d32d1"
+    }
+  ],
+  "deletedFiles": 12320,
+  "allOriginalDocumentsAndExtractedFileShaVerified": true,
+  "excludedActiveRuns": "All runs outside the fixed eleven-target list, including row-band-native/formal.",
+  "meaning": "Byte preservation only; no rendering, benchmark or changed capture status."
+}

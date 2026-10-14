@@ -1,0 +1,633 @@
+Exact budget whitelist: pilot, abba, canonical only. v1/tool/proof/raw/helper/comparison unchanged.
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-pilot/original-A"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-pilot/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 3,
+  "deletedExpandedBytes": 2294173,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 2294173,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-pilot/candidate-B"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-pilot/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 3,
+  "deletedExpandedBytes": 2294173,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 2294173,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-abba/original-A"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 6,
+  "deletedExpandedBytes": 4588346,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 4588346,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-abba/candidate-B"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 6,
+  "deletedExpandedBytes": 4588346,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 4588346,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-abba/candidate-B2"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 6,
+  "deletedExpandedBytes": 4588346,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 4588346,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-abba/original-A2"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 6,
+  "deletedExpandedBytes": 4588346,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 4588346,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-canonical-abba/original-A"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 1390483,
+  "deletedExpandedFiles": 12,
+  "deletedExpandedBytes": 5586160,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 4195677,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-canonical-abba/candidate-B"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 12,
+  "deletedExpandedBytes": 5586160,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 5586160,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-canonical-abba/candidate-B2"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 12,
+  "deletedExpandedBytes": 5586160,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 5586160,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--archive", "--prune", "--folder", "rle-budget-canonical-abba/original-A2"]
+{
+  "operation": "archive",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 12,
+  "deletedExpandedBytes": 5586160,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 5586160,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-pilot/original-A"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-pilot/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-pilot/candidate-B"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-pilot/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-abba/original-A"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-abba/candidate-B"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-abba/candidate-B2"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-abba/original-A2"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-canonical-abba/original-A"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-canonical-abba/candidate-B"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-canonical-abba/candidate-B2"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--verify", "--folder", "rle-budget-canonical-abba/original-A2"]
+{
+  "operation": "verify",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 0,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-pilot/original-A", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-pilot/original-A"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-pilot/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 3,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-pilot/candidate-B", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-pilot/candidate-B"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-pilot/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 3,
+  "originalBytes": 2294173,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 3,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-abba/original-A", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-abba/original-A"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 6,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-abba/candidate-B", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-abba/candidate-B"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 6,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-abba/candidate-B2", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-abba/candidate-B2"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 6,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-abba/original-A2", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-abba/original-A2"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 6,
+  "originalBytes": 4588346,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 6,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-canonical-abba/original-A", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-canonical-abba/original-A"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 12,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-canonical-abba/candidate-B", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-canonical-abba/candidate-B"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 12,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-canonical-abba/candidate-B2", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-canonical-abba/candidate-B2"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/candidate-B2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 12,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+COMMAND ["/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3", "/workspace/sketch-rts-viewport/scripts/art-card-latency-budget-evidence-archive.py", "--materialize", "--folder", "rle-budget-canonical-abba/original-A2", "--out", "/tmp/card-current-budget-restore-j83wrp5v/rle-budget-canonical-abba/original-A2"]
+{
+  "operation": "materialize",
+  "verifiedTargets": [
+    "rle-budget-canonical-abba/original-A2"
+  ],
+  "missingTargets": [],
+  "originalFiles": 12,
+  "originalBytes": 5586160,
+  "newContainerBytes": 0,
+  "deletedExpandedFiles": 0,
+  "deletedExpandedBytes": 0,
+  "retiredOwnProvisionalContainers": 0,
+  "retiredOwnProvisionalContainerBytes": 0,
+  "newPayloadNetBytesSaved": 0,
+  "restoredFiles": 12,
+  "meaning": "Repository evidence storage only, not game RAM/VRAM or rendering-performance savings."
+}
+
+EXIT 0
+
+All budget original paths restored with exact encoded bytes/SHA; v1 receipts/tool/source/proof/raw/comparison unchanged; temp restores removed. HEAVY DONE.

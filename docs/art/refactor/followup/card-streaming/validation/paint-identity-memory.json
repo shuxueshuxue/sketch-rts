@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-10-13T03:57:08.475538+00:00",
+  "durationSeconds": 36.116,
+  "command": "npx vitest run src/client/art/paint-identity.test.ts",
+  "exitCode": 0,
+  "samplePeriodMs": 50,
+  "samples": 717,
+  "cgroupMemoryLimitBytes": "17179869184",
+  "initialCgroupMemoryBytes": 1189642240,
+  "peakSampledCgroupMemoryBytes": 1843617792,
+  "finalCgroupMemoryBytes": 1199316992,
+  "memoryEventsBefore": {
+    "low": "0",
+    "high": "0",
+    "max": "353",
+    "oom": "2",
+    "oom_kill": "2",
+    "oom_group_kill": "0"
+  },
+  "memoryEventsAfter": {
+    "low": "0",
+    "high": "0",
+    "max": "353",
+    "oom": "2",
+    "oom_kill": "2",
+    "oom_group_kill": "0"
+  },
+  "testSha256": "f37e5cbfeb70ac8ec46b007937497e45aa28438165ecb7836bbd7831f0600c77",
+  "productionHelperSha256": "c2c855e1b21ea2fbac101ef1820661d7a88d59eadb88a1f9f0446990f0138ad4",
+  "log": "/tmp/paint-identity-full-memory.log",
+  "completedAt": "2026-10-13T03:57:44.591538+00:00",
+  "timestampNote": "Start is reconstructed from completion UTC timestamp and monotonic duration; Vitest also records 03:57:09 UTC in raw log.",
+  "passedTests": 7,
+  "creatureComparisons": 6552,
+  "creatureComparedPixels": 1525248000,
+  "siegeComparisons": 4192,
+  "siegeComparedPixels": 1207459840
+}

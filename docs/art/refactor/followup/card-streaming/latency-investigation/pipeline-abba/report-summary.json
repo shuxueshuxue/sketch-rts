@@ -1,0 +1,6808 @@
+{
+  "sourceCommit": "aec09d620801dd07852042732831e5b2de1c4193",
+  "validation": {
+    "passed": true,
+    "violations": [],
+    "inputHashesUnchanged": true
+  },
+  "images": 24,
+  "facts": 8,
+  "clocks": 480,
+  "rgbaEqual": true,
+  "pngShaEqual": true,
+  "timing": {
+    "original": {
+      "fullCpu": {
+        "n": 240,
+        "mean": 44.01291666678153,
+        "p95": 127.80000000074506,
+        "p99": 470,
+        "max": 470.8999999985099,
+        "over50": 84,
+        "over100": 35
+      },
+      "world3DCpu": {
+        "n": 240,
+        "mean": 43.680416666700815,
+        "p95": 127,
+        "p99": 469.69999999925494,
+        "max": 470.5999999977648,
+        "over50": 84,
+        "over100": 35
+      },
+      "canvasResidual": {
+        "n": 240,
+        "mean": 0.3325000000807146,
+        "p95": 0.5000000037252903,
+        "p99": 1,
+        "max": 2,
+        "over50": 0,
+        "over100": 0
+      },
+      "freshTick": {
+        "n": 80,
+        "mean": 75.16875,
+        "p95": 463.4000000022352,
+        "p99": 470.8999999985099,
+        "max": 470.8999999985099,
+        "over50": 48,
+        "over100": 7
+      },
+      "repeatedTick": {
+        "n": 160,
+        "mean": 28.435000000172295,
+        "p95": 127.80000000074506,
+        "p99": 171,
+        "max": 207,
+        "over50": 36,
+        "over100": 28
+      },
+      "phase1": {
+        "n": 80,
+        "mean": 23.513750000065194,
+        "p95": 118.89999999850988,
+        "p99": 130.79999999701977,
+        "max": 130.79999999701977,
+        "over50": 16,
+        "over100": 14
+      },
+      "phase2": {
+        "n": 80,
+        "mean": 33.356250000279395,
+        "p95": 149.5,
+        "p99": 207,
+        "max": 207,
+        "over50": 20,
+        "over100": 14
+      },
+      "realWall": {
+        "n": 48,
+        "mean": 435.5416666666667,
+        "p95": 1385.5,
+        "p99": 1418.9000000022352,
+        "max": 1418.9000000022352,
+        "over50": 48,
+        "over100": 48
+      },
+      "realSubmit": {
+        "n": 48,
+        "mean": 54.362499999813735,
+        "p95": 283.80000000074506,
+        "p99": 290,
+        "max": 290,
+        "over50": 12,
+        "over100": 12
+      },
+      "realIntervals": {
+        "n": 44,
+        "mean": 465.45227272723884,
+        "p95": 1398.699999999255,
+        "p99": 1430.2000000029802,
+        "max": 1430.2000000029802,
+        "over50": 44,
+        "over100": 44
+      },
+      "firstColdReal": {
+        "n": 4,
+        "mean": 1390.300000000745,
+        "p95": 1418.9000000022352,
+        "p99": 1418.9000000022352,
+        "max": 1418.9000000022352,
+        "over50": 4,
+        "over100": 4
+      },
+      "subsequentReal": {
+        "n": 44,
+        "mean": 348.7454545453868,
+        "p95": 1039.800000000745,
+        "p99": 1083.5,
+        "max": 1083.5,
+        "over50": 44,
+        "over100": 44
+      },
+      "fenceWait": {
+        "n": 48,
+        "mean": 381.1708333333954,
+        "p95": 1095.3999999985099,
+        "p99": 1149.5,
+        "max": 1149.5,
+        "over50": 48,
+        "over100": 48
+      },
+      "pollCall": {
+        "n": 48,
+        "mean": 0.3750000000776102,
+        "p95": 1.1000000089406967,
+        "p99": 1.300000011920929,
+        "max": 1.300000011920929,
+        "over50": 0,
+        "over100": 0
+      },
+      "yieldedWall": {
+        "n": 48,
+        "mean": 380.65833333328675,
+        "p95": 1093.699999988079,
+        "p99": 1148.0000000037253,
+        "max": 1148.0000000037253,
+        "over50": 48,
+        "over100": 48
+      },
+      "fencePolls": {
+        "n": 48,
+        "mean": 93.58333333333333,
+        "p95": 267,
+        "p99": 283,
+        "max": 283,
+        "over50": 18,
+        "over100": 13
+      },
+      "emptyWall": {
+        "n": 4,
+        "mean": 62.59999999962747,
+        "p95": 70.30000000074506,
+        "p99": 70.30000000074506,
+        "max": 70.30000000074506,
+        "over50": 4,
+        "over100": 0
+      },
+      "emptySubmit": {
+        "n": 4,
+        "mean": 5.949999999254942,
+        "p95": 7.399999998509884,
+        "p99": 7.399999998509884,
+        "max": 7.399999998509884,
+        "over50": 0,
+        "over100": 0
+      },
+      "returnedWall": {
+        "n": 4,
+        "mean": 1561.375,
+        "p95": 1624.3999999985099,
+        "p99": 1624.3999999985099,
+        "max": 1624.3999999985099,
+        "over50": 4,
+        "over100": 4
+      },
+      "returnedSubmit": {
+        "n": 4,
+        "mean": 296.54999999981374,
+        "p95": 301,
+        "p99": 301,
+        "max": 301,
+        "over50": 4,
+        "over100": 4
+      }
+    },
+    "candidate": {
+      "fullCpu": {
+        "n": 240,
+        "mean": 42.35583333335817,
+        "p95": 112.29999999701977,
+        "p99": 469.8999999985099,
+        "max": 696.8999999985099,
+        "over50": 75,
+        "over100": 17
+      },
+      "world3DCpu": {
+        "n": 240,
+        "mean": 41.93708333351339,
+        "p95": 112,
+        "p99": 469.6000000014901,
+        "max": 696.5999999977648,
+        "over50": 74,
+        "over100": 17
+      },
+      "canvasResidual": {
+        "n": 240,
+        "mean": 0.41874999984477956,
+        "p95": 0.5,
+        "p99": 3,
+        "max": 21.600000001490116,
+        "over50": 0,
+        "over100": 0
+      },
+      "freshTick": {
+        "n": 80,
+        "mean": 76.10750000011176,
+        "p95": 463.20000000298023,
+        "p99": 696.8999999985099,
+        "max": 696.8999999985099,
+        "over50": 39,
+        "over100": 5
+      },
+      "repeatedTick": {
+        "n": 160,
+        "mean": 25.479999999981374,
+        "p95": 110.60000000149012,
+        "p99": 143.30000000074506,
+        "max": 180.69999999925494,
+        "over50": 36,
+        "over100": 12
+      },
+      "phase1": {
+        "n": 80,
+        "mean": 21.156249999953435,
+        "p95": 109.5,
+        "p99": 122.79999999701977,
+        "max": 122.79999999701977,
+        "over50": 16,
+        "over100": 4
+      },
+      "phase2": {
+        "n": 80,
+        "mean": 29.803750000009313,
+        "p95": 135.39999999850988,
+        "p99": 180.69999999925494,
+        "max": 180.69999999925494,
+        "over50": 20,
+        "over100": 8
+      },
+      "realWall": {
+        "n": 48,
+        "mean": 431.3250000001087,
+        "p95": 1356.2999999970198,
+        "p99": 1377.4000000022352,
+        "max": 1377.4000000022352,
+        "over50": 48,
+        "over100": 48
+      },
+      "realSubmit": {
+        "n": 48,
+        "mean": 53.54166666682189,
+        "p95": 258.4000000022352,
+        "p99": 263,
+        "max": 263,
+        "over50": 12,
+        "over100": 12
+      },
+      "realIntervals": {
+        "n": 44,
+        "mean": 458.886363636279,
+        "p95": 1366.199999999255,
+        "p99": 1383.9000000022352,
+        "max": 1383.9000000022352,
+        "over50": 44,
+        "over100": 44
+      },
+      "firstColdReal": {
+        "n": 4,
+        "mean": 1336.3499999996275,
+        "p95": 1377.4000000022352,
+        "p99": 1377.4000000022352,
+        "max": 1377.4000000022352,
+        "over50": 4,
+        "over100": 4
+      },
+      "subsequentReal": {
+        "n": 44,
+        "mean": 349.0500000001524,
+        "p95": 1068.7999999970198,
+        "p99": 1095.699999999255,
+        "max": 1095.699999999255,
+        "over50": 44,
+        "over100": 44
+      },
+      "fenceWait": {
+        "n": 48,
+        "mean": 377.7687499998913,
+        "p95": 1093.199999999255,
+        "p99": 1119,
+        "max": 1119,
+        "over50": 48,
+        "over100": 48
+      },
+      "pollCall": {
+        "n": 48,
+        "mean": 0.41041666579743225,
+        "p95": 1.2000000029802322,
+        "p99": 1.4000000022351742,
+        "max": 1.4000000022351742,
+        "over50": 0,
+        "over100": 0
+      },
+      "yieldedWall": {
+        "n": 48,
+        "mean": 377.20833333426464,
+        "p95": 1091.800000000745,
+        "p99": 1117.9000000022352,
+        "max": 1117.9000000022352,
+        "over50": 48,
+        "over100": 48
+      },
+      "fencePolls": {
+        "n": 48,
+        "mean": 92.29166666666667,
+        "p95": 268,
+        "p99": 275,
+        "max": 275,
+        "over50": 18,
+        "over100": 12
+      },
+      "emptyWall": {
+        "n": 4,
+        "mean": 60.42500000074506,
+        "p95": 65.20000000298023,
+        "p99": 65.20000000298023,
+        "max": 65.20000000298023,
+        "over50": 4,
+        "over100": 0
+      },
+      "emptySubmit": {
+        "n": 4,
+        "mean": 6.150000000372529,
+        "p95": 8.100000001490116,
+        "p99": 8.100000001490116,
+        "max": 8.100000001490116,
+        "over50": 0,
+        "over100": 0
+      },
+      "returnedWall": {
+        "n": 4,
+        "mean": 1377.2249999986961,
+        "p95": 1405.8999999985099,
+        "p99": 1405.8999999985099,
+        "max": 1405.8999999985099,
+        "over50": 4,
+        "over100": 4
+      },
+      "returnedSubmit": {
+        "n": 4,
+        "mean": 251.72499999962747,
+        "p95": 280.8999999985099,
+        "p99": 280.8999999985099,
+        "max": 280.8999999985099,
+        "over50": 4,
+        "over100": 4
+      }
+    }
+  },
+  "lifetimes": [
+    {
+      "run": "reference-A",
+      "cycle": 0,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 43.589999999726814,
+          "p95": 127.80000000074506,
+          "p99": 470.5,
+          "max": 470.5,
+          "over50": 19,
+          "over100": 9
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 43.274999999875824,
+          "p95": 127,
+          "p99": 470.19999999925494,
+          "max": 470.19999999925494,
+          "over50": 19,
+          "over100": 9
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.31499999985098837,
+          "p95": 0.5000000037252903,
+          "p99": 0.8999999985098839,
+          "max": 0.8999999985098839,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 75.14499999955297,
+          "p95": 470.5,
+          "p99": 470.5,
+          "max": 470.5,
+          "over50": 10,
+          "over100": 2
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 27.812499999813735,
+          "p95": 127.80000000074506,
+          "p99": 149.5,
+          "max": 149.5,
+          "over50": 9,
+          "over100": 7
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 24.884999999776483,
+          "p95": 127.80000000074506,
+          "p99": 127.80000000074506,
+          "max": 127.80000000074506,
+          "over50": 4,
+          "over100": 4
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 30.739999999850987,
+          "p95": 149.5,
+          "p99": 149.5,
+          "max": 149.5,
+          "over50": 5,
+          "over100": 3
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 448.3916666666046,
+          "p95": 1385.5,
+          "p99": 1385.5,
+          "max": 1385.5,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 55.375,
+          "p95": 290,
+          "p99": 290,
+          "max": 290,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 478.6636363633654,
+          "p95": 1398.699999999255,
+          "p99": 1398.699999999255,
+          "max": 1398.699999999255,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1385.5,
+          "p95": 1385.5,
+          "p99": 1385.5,
+          "max": 1385.5,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 363.1999999999323,
+          "p95": 1083.5,
+          "p99": 1083.5,
+          "max": 1083.5,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 392.9999999996896,
+          "p95": 1095.3999999985099,
+          "p99": 1095.3999999985099,
+          "max": 1095.3999999985099,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.4166666694606344,
+          "p95": 1.300000011920929,
+          "p99": 1.300000011920929,
+          "max": 1.300000011920929,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 392.4583333299185,
+          "p95": 1093.699999988079,
+          "p99": 1093.699999988079,
+          "max": 1093.699999988079,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 96.25,
+          "p95": 267,
+          "p99": 267,
+          "max": 267,
+          "over50": 6,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 60.399999998509884,
+          "p95": 60.399999998509884,
+          "p99": 60.399999998509884,
+          "max": 60.399999998509884,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 7.399999998509884,
+          "p95": 7.399999998509884,
+          "p99": 7.399999998509884,
+          "max": 7.399999998509884,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1624.3999999985099,
+          "p95": 1624.3999999985099,
+          "p99": 1624.3999999985099,
+          "max": 1624.3999999985099,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 300.3999999985099,
+          "p95": 300.3999999985099,
+          "p99": 300.3999999985099,
+          "max": 300.3999999985099,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 10,
+          "cards": 107,
+          "pixels": 38789120,
+          "drawChunks": 61,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4851456,
+          "gpuBytes": 206875307,
+          "allocatedMipBytes": 206873324,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4848640,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7882496,
+          "ownedGpuBytes": 210914668,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6967.900000039488,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1258.8999999463558
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 925.900000013411,
+          "avoidedPaintMs": 506.600000012666,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 473.8999999947846,
+          "readbackMs": 4481.900000020862,
+          "cacheMs": 935.5000000037253,
+          "pickMaskMs": 693.099999986589,
+          "rowFlipMs": 148.40000000223517,
+          "slotMs": 97.69999998062849
+        },
+        "actualBaseMips": {
+          "0": 107
+        },
+        "sourceSizes": {
+          "512": 61,
+          "704": 46
+        },
+        "totalCapacity": 107,
+        "liveLayers": 107,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 11,
+            "live": 11,
+            "active": 9,
+            "bases": {
+              "0": 11
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 15,
+            "live": 15,
+            "active": 9,
+            "bases": {
+              "0": 15
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 11,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 124,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 14
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 2,
+          "cards": 22,
+          "pixels": 10903552,
+          "drawChunks": 0,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1365760,
+          "gpuBytes": 58152278,
+          "allocatedMipBytes": 58151368,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1362944,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3348224,
+          "ownedGpuBytes": 60794612,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6967.900000039488,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1258.8999999463558
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 925.900000013411,
+          "avoidedPaintMs": 506.600000012666,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 473.8999999947846,
+          "readbackMs": 4481.900000020862,
+          "cacheMs": 935.5000000037253,
+          "pickMaskMs": 693.099999986589,
+          "rowFlipMs": 148.40000000223517,
+          "slotMs": 97.69999998062849
+        },
+        "actualBaseMips": {
+          "0": 22
+        },
+        "sourceSizes": {
+          "704": 22
+        },
+        "totalCapacity": 22,
+        "liveLayers": 22,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 0,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 0,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 5
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 8,
+          "cards": 97,
+          "pixels": 35934208,
+          "drawChunks": 46,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 477,
+          "drawBufferBytes": 51496,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 191649110,
+          "allocatedMipBytes": 191647180,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 195688524,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1802,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 7217.200000032783,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 20,
+          "mipLayerUpdates": 1802,
+          "mipCopyCalls": 18020,
+          "mipCopyBytes": 3729656168,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 682134332,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 678054716,
+          "scratchPartialUploadPixels": 169513679,
+          "scratchPartialUploads": 1799,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1300.5999999456108
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3702,
+          "workMs": 925.900000013411,
+          "avoidedPaintMs": 506.600000012666,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1649,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 492.69999999180436,
+          "readbackMs": 4672.9000000320375,
+          "cacheMs": 935.5000000037253,
+          "pickMaskMs": 720.299999974668,
+          "rowFlipMs": 152.6000000089407,
+          "slotMs": 100.79999997839332
+        },
+        "actualBaseMips": {
+          "0": 97
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 12,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 94,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 12
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "reference-A",
+      "cycle": 1,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 43.515000000223516,
+          "p95": 132.09999999776483,
+          "p99": 470,
+          "max": 470,
+          "over50": 21,
+          "over100": 7
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 43.17833333350718,
+          "p95": 131.79999999701977,
+          "p99": 469.69999999925494,
+          "max": 469.69999999925494,
+          "over50": 21,
+          "over100": 7
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.3366666667163372,
+          "p95": 0.5,
+          "p99": 2,
+          "max": 2,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 75.17500000037253,
+          "p95": 470,
+          "p99": 470,
+          "max": 470,
+          "over50": 12,
+          "over100": 2
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 27.68500000014901,
+          "p95": 132.09999999776483,
+          "p99": 157.10000000149012,
+          "max": 157.10000000149012,
+          "over50": 9,
+          "over100": 5
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 22.445000000298023,
+          "p95": 116.39999999850988,
+          "p99": 116.39999999850988,
+          "max": 116.39999999850988,
+          "over50": 4,
+          "over100": 2
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 32.925,
+          "p95": 157.10000000149012,
+          "p99": 157.10000000149012,
+          "max": 157.10000000149012,
+          "over50": 5,
+          "over100": 3
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 424.0250000000621,
+          "p95": 1418.9000000022352,
+          "p99": 1418.9000000022352,
+          "max": 1418.9000000022352,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 53.891666666294135,
+          "p95": 283.80000000074506,
+          "p99": 283.80000000074506,
+          "max": 283.80000000074506,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 453.4363636364314,
+          "p95": 1420.9000000022352,
+          "p99": 1420.9000000022352,
+          "max": 1420.9000000022352,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1418.9000000022352,
+          "p95": 1418.9000000022352,
+          "p99": 1418.9000000022352,
+          "max": 1418.9000000022352,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 333.5818181816827,
+          "p95": 1039.800000000745,
+          "p99": 1039.800000000745,
+          "max": 1039.800000000745,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 370.1250000003104,
+          "p95": 1135.1000000014901,
+          "p99": 1135.1000000014901,
+          "max": 1135.1000000014901,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.26666666629413766,
+          "p95": 0.9000000022351742,
+          "p99": 0.9000000022351742,
+          "max": 0.9000000022351742,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 369.7166666664804,
+          "p95": 1133.6999999918044,
+          "p99": 1133.6999999918044,
+          "max": 1133.6999999918044,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 91.41666666666667,
+          "p95": 278,
+          "p99": 278,
+          "max": 278,
+          "over50": 4,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 55.69999999925494,
+          "p95": 55.69999999925494,
+          "p99": 55.69999999925494,
+          "max": 55.69999999925494,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 4.799999997019768,
+          "p95": 4.799999997019768,
+          "p99": 4.799999997019768,
+          "max": 4.799999997019768,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1549.300000000745,
+          "p95": 1549.300000000745,
+          "p99": 1549.300000000745,
+          "max": 1549.300000000745,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 301,
+          "p95": 301,
+          "p99": 301,
+          "max": 301,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 10,
+          "cards": 107,
+          "pixels": 38789120,
+          "drawChunks": 61,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4851456,
+          "gpuBytes": 206875307,
+          "allocatedMipBytes": 206873324,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4848640,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7882496,
+          "ownedGpuBytes": 210914668,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6893.900000065565,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1257.8999998606741
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 899.5999999344349,
+          "avoidedPaintMs": 519.2000000029802,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 417.8999999836087,
+          "readbackMs": 4435.500000014901,
+          "cacheMs": 906.099999949336,
+          "pickMaskMs": 712.7000000327826,
+          "rowFlipMs": 170.10000002011657,
+          "slotMs": 107.20000004023314
+        },
+        "actualBaseMips": {
+          "0": 107
+        },
+        "sourceSizes": {
+          "512": 61,
+          "704": 46
+        },
+        "totalCapacity": 107,
+        "liveLayers": 107,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 11,
+            "live": 11,
+            "active": 9,
+            "bases": {
+              "0": 11
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 15,
+            "live": 15,
+            "active": 9,
+            "bases": {
+              "0": 15
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 11,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 124,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 14
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 2,
+          "cards": 22,
+          "pixels": 10903552,
+          "drawChunks": 0,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1365760,
+          "gpuBytes": 58152278,
+          "allocatedMipBytes": 58151368,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1362944,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3348224,
+          "ownedGpuBytes": 60794612,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6893.900000065565,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1257.8999998606741
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 899.5999999344349,
+          "avoidedPaintMs": 519.2000000029802,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 417.8999999836087,
+          "readbackMs": 4435.500000014901,
+          "cacheMs": 906.099999949336,
+          "pickMaskMs": 712.7000000327826,
+          "rowFlipMs": 170.10000002011657,
+          "slotMs": 107.20000004023314
+        },
+        "actualBaseMips": {
+          "0": 22
+        },
+        "sourceSizes": {
+          "704": 22
+        },
+        "totalCapacity": 22,
+        "liveLayers": 22,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 0,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 0,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 5
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 8,
+          "cards": 97,
+          "pixels": 35934208,
+          "drawChunks": 46,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 477,
+          "drawBufferBytes": 51496,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 191649110,
+          "allocatedMipBytes": 191647180,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 195688524,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1802,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 7153.700000051409,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 20,
+          "mipLayerUpdates": 1802,
+          "mipCopyCalls": 18020,
+          "mipCopyBytes": 3729656168,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 682134332,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 678054716,
+          "scratchPartialUploadPixels": 169513679,
+          "scratchPartialUploads": 1799,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1290.6999998912215
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3702,
+          "workMs": 899.5999999344349,
+          "avoidedPaintMs": 519.2000000029802,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1649,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 437.1999999806285,
+          "readbackMs": 4638.100000016391,
+          "cacheMs": 906.099999949336,
+          "pickMaskMs": 738.7000000476837,
+          "rowFlipMs": 175,
+          "slotMs": 109.70000003650784
+        },
+        "actualBaseMips": {
+          "0": 97
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 12,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 94,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 12
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "candidate-B",
+      "cycle": 0,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 39.445000000235936,
+          "p95": 97.5,
+          "p99": 469.8999999985099,
+          "max": 469.8999999985099,
+          "over50": 22,
+          "over100": 2
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 39.10333333356927,
+          "p95": 97.30000000074506,
+          "p99": 469.6000000014901,
+          "max": 469.6000000014901,
+          "over50": 22,
+          "over100": 2
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.3416666666666667,
+          "p95": 0.5,
+          "p99": 3.400000002235174,
+          "max": 3.400000002235174,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 70.13499999996274,
+          "p95": 469.8999999985099,
+          "p99": 469.8999999985099,
+          "max": 469.8999999985099,
+          "over50": 13,
+          "over100": 1
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 24.10000000037253,
+          "p95": 97.5,
+          "p99": 143.10000000149012,
+          "max": 143.10000000149012,
+          "over50": 9,
+          "over100": 1
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 19.59000000022352,
+          "p95": 94.5,
+          "p99": 94.5,
+          "max": 94.5,
+          "over50": 4,
+          "over100": 0
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 28.61000000052154,
+          "p95": 143.10000000149012,
+          "p99": 143.10000000149012,
+          "max": 143.10000000149012,
+          "over50": 5,
+          "over100": 1
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 430.8916666666046,
+          "p95": 1356.2999999970198,
+          "p99": 1356.2999999970198,
+          "max": 1356.2999999970198,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 51.666666666666664,
+          "p95": 263,
+          "p99": 263,
+          "max": 263,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 459.0272727270018,
+          "p95": 1366.199999999255,
+          "p99": 1366.199999999255,
+          "max": 1366.199999999255,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1356.2999999970198,
+          "p95": 1356.2999999970198,
+          "p99": 1356.2999999970198,
+          "max": 1356.2999999970198,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 346.76363636383957,
+          "p95": 1074,
+          "p99": 1074,
+          "max": 1074,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 379.2083333333333,
+          "p95": 1093.199999999255,
+          "p99": 1093.199999999255,
+          "max": 1093.199999999255,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.5249999994412065,
+          "p95": 1.4000000022351742,
+          "p99": 1.4000000022351742,
+          "max": 1.4000000022351742,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 378.5166666675359,
+          "p95": 1091.800000000745,
+          "p99": 1091.800000000745,
+          "max": 1091.800000000745,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 91.91666666666667,
+          "p95": 268,
+          "p99": 268,
+          "max": 268,
+          "over50": 4,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 56.19999999925494,
+          "p95": 56.19999999925494,
+          "p99": 56.19999999925494,
+          "max": 56.19999999925494,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 6.800000000745058,
+          "p95": 6.800000000745058,
+          "p99": 6.800000000745058,
+          "max": 6.800000000745058,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1405.8999999985099,
+          "p95": 1405.8999999985099,
+          "p99": 1405.8999999985099,
+          "max": 1405.8999999985099,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 280.8999999985099,
+          "p95": 280.8999999985099,
+          "p99": 280.8999999985099,
+          "max": 280.8999999985099,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 14,
+          "cards": 105,
+          "pixels": 35189760,
+          "drawChunks": 70,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4756736,
+          "gpuBytes": 187678720,
+          "allocatedMipBytes": 187676780,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4753920,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7787776,
+          "ownedGpuBytes": 191718124,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6477.199999898672,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1366.1000000834465
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 275.6999999806285,
+          "avoidedPaintMs": 9.300000004470348,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 577.3999999128282,
+          "readbackMs": 4853.400000128895,
+          "cacheMs": 279.0999999754131,
+          "pickMaskMs": 590.8999997973442,
+          "rowFlipMs": 146.10000009089708,
+          "slotMs": 17.200000002980232
+        },
+        "actualBaseMips": {
+          "0": 95,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 60,
+          "704": 45
+        },
+        "totalCapacity": 105,
+        "liveLayers": 105,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 7,
+            "bases": {
+              "0": 14
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 142,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 18
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 6,
+          "cards": 27,
+          "pixels": 12266496,
+          "drawChunks": 0,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1675520,
+          "gpuBytes": 65421312,
+          "allocatedMipBytes": 65420196,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1672704,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3657984,
+          "ownedGpuBytes": 68063440,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6477.199999898672,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1366.1000000834465
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 275.6999999806285,
+          "avoidedPaintMs": 9.300000004470348,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 577.3999999128282,
+          "readbackMs": 4853.400000128895,
+          "cacheMs": 279.0999999754131,
+          "pickMaskMs": 590.8999997973442,
+          "rowFlipMs": 146.10000009089708,
+          "slotMs": 17.200000002980232
+        },
+        "actualBaseMips": {
+          "0": 24,
+          "1": 3
+        },
+        "sourceSizes": {
+          "704": 27
+        },
+        "totalCapacity": 27,
+        "liveLayers": 27,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 0,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 0,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 0,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 0,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 9
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 13,
+          "cards": 97,
+          "pixels": 33092608,
+          "drawChunks": 60,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 366,
+          "drawBufferBytes": 42148,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 176493910,
+          "allocatedMipBytes": 176491980,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 180533324,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1796,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6720.299999888986,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 36,
+          "mipLayerUpdates": 1796,
+          "mipCopyCalls": 17766,
+          "mipCopyBytes": 3423521376,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 677124920,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 673045304,
+          "scratchPartialUploadPixels": 168261326,
+          "scratchPartialUploads": 1793,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1400.7000000961125
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2703,
+          "workMs": 275.6999999806285,
+          "avoidedPaintMs": 9.300000004470348,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1793,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 594.4999999068677,
+          "readbackMs": 5050.000000119209,
+          "cacheMs": 279.0999999754131,
+          "pickMaskMs": 614.5999998040497,
+          "rowFlipMs": 150.40000009536743,
+          "slotMs": 17.799999997019768
+        },
+        "actualBaseMips": {
+          "0": 87,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 122,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 17
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "candidate-B",
+      "cycle": 1,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 36.40333333356927,
+          "p95": 122.40000000223517,
+          "p99": 226.5,
+          "max": 226.5,
+          "over50": 15,
+          "over100": 6
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 36.02833333356927,
+          "p95": 120.80000000074506,
+          "p99": 226.10000000149012,
+          "max": 226.10000000149012,
+          "over50": 15,
+          "over100": 6
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.375,
+          "p95": 0.5,
+          "p99": 3,
+          "max": 3,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 56.790000000223515,
+          "p95": 226.5,
+          "p99": 226.5,
+          "max": 226.5,
+          "over50": 6,
+          "over100": 1
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 26.210000000242143,
+          "p95": 122.40000000223517,
+          "p99": 143.30000000074506,
+          "max": 143.30000000074506,
+          "over50": 9,
+          "over100": 5
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 21.070000000111758,
+          "p95": 110.60000000149012,
+          "p99": 110.60000000149012,
+          "max": 110.60000000149012,
+          "over50": 4,
+          "over100": 1
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 31.35000000037253,
+          "p95": 143.30000000074506,
+          "p99": 143.30000000074506,
+          "max": 143.30000000074506,
+          "over50": 5,
+          "over100": 4
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 417.4083333335196,
+          "p95": 1245.5,
+          "p99": 1245.5,
+          "max": 1245.5,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 58.29166666697711,
+          "p95": 251.89999999850988,
+          "p99": 251.89999999850988,
+          "max": 251.89999999850988,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 447.3999999998645,
+          "p95": 1254.800000000745,
+          "p99": 1254.800000000745,
+          "max": 1254.800000000745,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1245.5,
+          "p95": 1245.5,
+          "p99": 1245.5,
+          "max": 1245.5,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 342.12727272747594,
+          "p95": 1057.199999999255,
+          "p99": 1057.199999999255,
+          "max": 1057.199999999255,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 359.0916666664804,
+          "p95": 993.6000000014901,
+          "p99": 993.6000000014901,
+          "max": 993.6000000014901,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.4583333320915699,
+          "p95": 1.4000000022351742,
+          "p99": 1.4000000022351742,
+          "max": 1.4000000022351742,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 358.5583333351339,
+          "p95": 992.1000000014901,
+          "p99": 992.1000000014901,
+          "max": 992.1000000014901,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 88.25,
+          "p95": 246,
+          "p99": 246,
+          "max": 246,
+          "over50": 4,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 59.69999999925494,
+          "p95": 59.69999999925494,
+          "p99": 59.69999999925494,
+          "max": 59.69999999925494,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 4.799999997019768,
+          "p95": 4.799999997019768,
+          "p99": 4.799999997019768,
+          "max": 4.799999997019768,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1337.199999999255,
+          "p95": 1337.199999999255,
+          "p99": 1337.199999999255,
+          "max": 1337.199999999255,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 236.80000000074506,
+          "p95": 236.80000000074506,
+          "p99": 236.80000000074506,
+          "max": 236.80000000074506,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 14,
+          "cards": 105,
+          "pixels": 35189760,
+          "drawChunks": 70,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4756736,
+          "gpuBytes": 187678720,
+          "allocatedMipBytes": 187676780,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4753920,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7787776,
+          "ownedGpuBytes": 191718124,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6572.700000017881,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1082.1999999396503
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 262.1000000499189,
+          "avoidedPaintMs": 8.99999999627471,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 473.1999999769032,
+          "readbackMs": 5026.400000065565,
+          "cacheMs": 265.700000051409,
+          "pickMaskMs": 610.699999935925,
+          "rowFlipMs": 159.5000000037253,
+          "slotMs": 19.200000002980232
+        },
+        "actualBaseMips": {
+          "0": 95,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 60,
+          "704": 45
+        },
+        "totalCapacity": 105,
+        "liveLayers": 105,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 7,
+            "bases": {
+              "0": 14
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 142,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 18
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 6,
+          "cards": 27,
+          "pixels": 12266496,
+          "drawChunks": 0,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1675520,
+          "gpuBytes": 65421312,
+          "allocatedMipBytes": 65420196,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1672704,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3657984,
+          "ownedGpuBytes": 68063440,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6572.700000017881,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1082.1999999396503
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 262.1000000499189,
+          "avoidedPaintMs": 8.99999999627471,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 473.1999999769032,
+          "readbackMs": 5026.400000065565,
+          "cacheMs": 265.700000051409,
+          "pickMaskMs": 610.699999935925,
+          "rowFlipMs": 159.5000000037253,
+          "slotMs": 19.200000002980232
+        },
+        "actualBaseMips": {
+          "0": 24,
+          "1": 3
+        },
+        "sourceSizes": {
+          "704": 27
+        },
+        "totalCapacity": 27,
+        "liveLayers": 27,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 0,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 0,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 0,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 0,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 9
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 13,
+          "cards": 97,
+          "pixels": 33092608,
+          "drawChunks": 60,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 366,
+          "drawBufferBytes": 42148,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 176493910,
+          "allocatedMipBytes": 176491980,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 180533324,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1796,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6776.100000016391,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 36,
+          "mipLayerUpdates": 1796,
+          "mipCopyCalls": 17766,
+          "mipCopyBytes": 3423521376,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 677124920,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 673045304,
+          "scratchPartialUploadPixels": 168261326,
+          "scratchPartialUploads": 1793,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1111.1999999471009
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2703,
+          "workMs": 262.1000000499189,
+          "avoidedPaintMs": 8.99999999627471,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1793,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 489.899999987334,
+          "readbackMs": 5188.600000053644,
+          "cacheMs": 265.8000000528991,
+          "pickMaskMs": 629.8999999426305,
+          "rowFlipMs": 163.39999999850988,
+          "slotMs": 19.899999998509884
+        },
+        "actualBaseMips": {
+          "0": 87,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 122,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 17
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "candidate-B2",
+      "cycle": 0,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 40.73666666646798,
+          "p95": 112.29999999701977,
+          "p99": 548.1000000014901,
+          "max": 548.1000000014901,
+          "over50": 16,
+          "over100": 4
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 40.09000000016143,
+          "p95": 112,
+          "p99": 547.7000000029802,
+          "max": 547.7000000029802,
+          "over50": 16,
+          "over100": 4
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.6466666663065552,
+          "p95": 0.6000000014901161,
+          "p99": 21.600000001490116,
+          "max": 21.600000001490116,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 71.75000000037252,
+          "p95": 548.1000000014901,
+          "p99": 548.1000000014901,
+          "max": 548.1000000014901,
+          "over50": 7,
+          "over100": 1
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 25.229999999515712,
+          "p95": 112.29999999701977,
+          "p99": 135.39999999850988,
+          "max": 135.39999999850988,
+          "over50": 9,
+          "over100": 3
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 21.60999999959022,
+          "p95": 112.29999999701977,
+          "p99": 112.29999999701977,
+          "max": 112.29999999701977,
+          "over50": 4,
+          "over100": 1
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 28.849999999441206,
+          "p95": 135.39999999850988,
+          "p99": 135.39999999850988,
+          "max": 135.39999999850988,
+          "over50": 5,
+          "over100": 2
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 433.1166666671634,
+          "p95": 1366.199999999255,
+          "p99": 1366.199999999255,
+          "max": 1366.199999999255,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 50.77500000037253,
+          "p95": 259.80000000074506,
+          "p99": 259.80000000074506,
+          "max": 259.80000000074506,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 460.87272727286273,
+          "p95": 1369.800000000745,
+          "p99": 1369.800000000745,
+          "max": 1369.800000000745,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1366.199999999255,
+          "p95": 1366.199999999255,
+          "p99": 1366.199999999255,
+          "max": 1366.199999999255,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 348.2909090915187,
+          "p95": 1068.7999999970198,
+          "p99": 1068.7999999970198,
+          "max": 1068.7999999970198,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 382.32499999987584,
+          "p95": 1106.3999999985099,
+          "p99": 1106.3999999985099,
+          "max": 1106.3999999985099,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.3083333332712452,
+          "p95": 0.8000000044703484,
+          "p99": 0.8000000044703484,
+          "max": 0.8000000044703484,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 381.8166666664183,
+          "p95": 1105.8000000081956,
+          "p99": 1105.8000000081956,
+          "max": 1105.8000000081956,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 94.08333333333333,
+          "p95": 275,
+          "p99": 275,
+          "max": 275,
+          "over50": 5,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 65.20000000298023,
+          "p95": 65.20000000298023,
+          "p99": 65.20000000298023,
+          "max": 65.20000000298023,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 8.100000001490116,
+          "p95": 8.100000001490116,
+          "p99": 8.100000001490116,
+          "max": 8.100000001490116,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1360.3999999985099,
+          "p95": 1360.3999999985099,
+          "p99": 1360.3999999985099,
+          "max": 1360.3999999985099,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 251.89999999850988,
+          "p95": 251.89999999850988,
+          "p99": 251.89999999850988,
+          "max": 251.89999999850988,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 14,
+          "cards": 105,
+          "pixels": 35189760,
+          "drawChunks": 70,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4756736,
+          "gpuBytes": 187678720,
+          "allocatedMipBytes": 187676780,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4753920,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7787776,
+          "ownedGpuBytes": 191718124,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6399.299999892712,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1405.5000001117587
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 278.3999999947846,
+          "avoidedPaintMs": 9,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 500.39999993517995,
+          "readbackMs": 4825.000000003725,
+          "cacheMs": 282.1000000052154,
+          "pickMaskMs": 612.500000089407,
+          "rowFlipMs": 147.79999985545874,
+          "slotMs": 17.100000005215406
+        },
+        "actualBaseMips": {
+          "0": 95,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 60,
+          "704": 45
+        },
+        "totalCapacity": 105,
+        "liveLayers": 105,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 7,
+            "bases": {
+              "0": 14
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 142,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 18
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 6,
+          "cards": 27,
+          "pixels": 12266496,
+          "drawChunks": 0,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1675520,
+          "gpuBytes": 65421312,
+          "allocatedMipBytes": 65420196,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1672704,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3657984,
+          "ownedGpuBytes": 68063440,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6399.299999892712,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1405.5000001117587
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 278.3999999947846,
+          "avoidedPaintMs": 9,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 500.39999993517995,
+          "readbackMs": 4825.000000003725,
+          "cacheMs": 282.1000000052154,
+          "pickMaskMs": 612.500000089407,
+          "rowFlipMs": 147.79999985545874,
+          "slotMs": 17.100000005215406
+        },
+        "actualBaseMips": {
+          "0": 24,
+          "1": 3
+        },
+        "sourceSizes": {
+          "704": 27
+        },
+        "totalCapacity": 27,
+        "liveLayers": 27,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 0,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 0,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 0,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 0,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 9
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 13,
+          "cards": 97,
+          "pixels": 33092608,
+          "drawChunks": 60,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 366,
+          "drawBufferBytes": 42148,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 176493910,
+          "allocatedMipBytes": 176491980,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 180533324,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1796,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6613.899999883026,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 36,
+          "mipLayerUpdates": 1796,
+          "mipCopyCalls": 17766,
+          "mipCopyBytes": 3423521376,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 677124920,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 673045304,
+          "scratchPartialUploadPixels": 168261326,
+          "scratchPartialUploads": 1793,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1436.1000001206994
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2703,
+          "workMs": 278.3999999947846,
+          "avoidedPaintMs": 9,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1793,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 515.9999999217689,
+          "readbackMs": 4995.899999987334,
+          "cacheMs": 282.30000000819564,
+          "pickMaskMs": 633.1000000908971,
+          "rowFlipMs": 154.19999986886978,
+          "slotMs": 17.900000005960464
+        },
+        "actualBaseMips": {
+          "0": 87,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 122,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 17
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "candidate-B2",
+      "cycle": 1,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 52.83833333315949,
+          "p95": 180.69999999925494,
+          "p99": 696.8999999985099,
+          "max": 696.8999999985099,
+          "over50": 22,
+          "over100": 5
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 52.52666666675359,
+          "p95": 180.39999999850988,
+          "p99": 696.5999999977648,
+          "max": 696.5999999977648,
+          "over50": 21,
+          "over100": 5
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.31166666640589635,
+          "p95": 0.5,
+          "p99": 0.6000000014901161,
+          "max": 0.6000000014901161,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 105.75499999988824,
+          "p95": 696.8999999985099,
+          "p99": 696.8999999985099,
+          "max": 696.8999999985099,
+          "over50": 13,
+          "over100": 2
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 26.37999999979511,
+          "p95": 122.79999999701977,
+          "p99": 180.69999999925494,
+          "max": 180.69999999925494,
+          "over50": 9,
+          "over100": 3
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 22.354999999888243,
+          "p95": 122.79999999701977,
+          "p99": 122.79999999701977,
+          "max": 122.79999999701977,
+          "over50": 4,
+          "over100": 2
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 30.404999999701978,
+          "p95": 180.69999999925494,
+          "p99": 180.69999999925494,
+          "max": 180.69999999925494,
+          "over50": 5,
+          "over100": 1
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 443.88333333314705,
+          "p95": 1377.4000000022352,
+          "p99": 1377.4000000022352,
+          "max": 1377.4000000022352,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 53.43333333327124,
+          "p95": 258.4000000022352,
+          "p99": 258.4000000022352,
+          "max": 258.4000000022352,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 468.2454545453868,
+          "p95": 1383.9000000022352,
+          "p99": 1383.9000000022352,
+          "max": 1383.9000000022352,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1377.4000000022352,
+          "p95": 1377.4000000022352,
+          "p99": 1377.4000000022352,
+          "max": 1377.4000000022352,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 359.0181818177754,
+          "p95": 1095.699999999255,
+          "p99": 1095.699999999255,
+          "max": 1095.699999999255,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 390.44999999987584,
+          "p95": 1119,
+          "p99": 1119,
+          "max": 1119,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.34999999838570756,
+          "p95": 1.0999999791383743,
+          "p99": 1.0999999791383743,
+          "max": 1.0999999791383743,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 389.94166666797054,
+          "p95": 1117.9000000022352,
+          "p99": 1117.9000000022352,
+          "max": 1117.9000000022352,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 94.91666666666667,
+          "p95": 274,
+          "p99": 274,
+          "max": 274,
+          "over50": 5,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 60.600000001490116,
+          "p95": 60.600000001490116,
+          "p99": 60.600000001490116,
+          "max": 60.600000001490116,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 4.900000002235174,
+          "p95": 4.900000002235174,
+          "p99": 4.900000002235174,
+          "max": 4.900000002235174,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1405.3999999985099,
+          "p95": 1405.3999999985099,
+          "p99": 1405.3999999985099,
+          "max": 1405.3999999985099,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 237.30000000074506,
+          "p95": 237.30000000074506,
+          "p99": 237.30000000074506,
+          "max": 237.30000000074506,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 14,
+          "cards": 105,
+          "pixels": 35189760,
+          "drawChunks": 70,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4756736,
+          "gpuBytes": 187678720,
+          "allocatedMipBytes": 187676780,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4753920,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7787776,
+          "ownedGpuBytes": 191718124,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6482.900000050664,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1957.0999999567866
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 269.30000000447035,
+          "avoidedPaintMs": 9.700000002980232,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 489.0000000335276,
+          "readbackMs": 4908.199999999255,
+          "cacheMs": 272.19999999925494,
+          "pickMaskMs": 619.199999935925,
+          "rowFlipMs": 153.2000000923872,
+          "slotMs": 21.400000002235174
+        },
+        "actualBaseMips": {
+          "0": 95,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 60,
+          "704": 45
+        },
+        "totalCapacity": 105,
+        "liveLayers": 105,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 7,
+            "bases": {
+              "0": 14
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 142,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 18
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 6,
+          "cards": 27,
+          "pixels": 12266496,
+          "drawChunks": 0,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 358,
+          "drawBufferBytes": 41444,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1675520,
+          "gpuBytes": 65421312,
+          "allocatedMipBytes": 65420196,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1672704,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3657984,
+          "ownedGpuBytes": 68063440,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1726,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6482.900000050664,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 29,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17073,
+          "mipCopyBytes": 3312449592,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1957.0999999567866
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2773,
+          "workMs": 269.30000000447035,
+          "avoidedPaintMs": 9.700000002980232,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1723,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 489.0000000335276,
+          "readbackMs": 4908.199999999255,
+          "cacheMs": 272.19999999925494,
+          "pickMaskMs": 619.199999935925,
+          "rowFlipMs": 153.2000000923872,
+          "slotMs": 21.400000002235174
+        },
+        "actualBaseMips": {
+          "0": 24,
+          "1": 3
+        },
+        "sourceSizes": {
+          "704": 27
+        },
+        "totalCapacity": 27,
+        "liveLayers": 27,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 0,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 0,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 0,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 0,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 0,
+            "bases": {
+              "1": 1
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 9
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 13,
+          "cards": 97,
+          "pixels": 33092608,
+          "drawChunks": 60,
+          "pooledDrawChunks": 71,
+          "drawCapacity": 366,
+          "drawBufferBytes": 42148,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 176493910,
+          "allocatedMipBytes": 176491980,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 180533324,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 26356908,
+          "peakOwnedGpuBytes": 194710892,
+          "peakRetiredGpuBytes": 10572976,
+          "rasterizations": 1796,
+          "copiedLayers": 7,
+          "rasterWorkWallMs": 6687.200000055134,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 36,
+          "mipLayerUpdates": 1796,
+          "mipCopyCalls": 17766,
+          "mipCopyBytes": 3423521376,
+          "gpuCompactionLayers": 7,
+          "gpuCompactionCopyCalls": 67,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 677124920,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 673045304,
+          "scratchPartialUploadPixels": 168261326,
+          "scratchPartialUploads": 1793,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1985.7999999448657
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 2703,
+          "workMs": 269.30000000447035,
+          "avoidedPaintMs": 9.700000002980232,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 3,
+          "misses": 1793,
+          "evictions": 280,
+          "budget": 16777216
+        },
+        "stages": {
+          "paintMs": 506.9000000320375,
+          "readbackMs": 5068.2999999932945,
+          "cacheMs": 272.19999999925494,
+          "pickMaskMs": 638.1999999396503,
+          "rowFlipMs": 159.400000102818,
+          "slotMs": 21.900000002235174
+        },
+        "actualBaseMips": {
+          "0": 87,
+          "1": 10
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "0": 5
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "1": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "capacity": 5,
+            "live": 5,
+            "active": 5,
+            "bases": {
+              "1": 5
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 352,
+            "height": 352,
+            "capacity": 2,
+            "live": 2,
+            "active": 2,
+            "bases": {
+              "1": 2
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 122,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 72,
+          "textures": 17
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            90,
+            10,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "reference-A2",
+      "cycle": 0,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 42.19833333368103,
+          "p95": 116.89999999850988,
+          "p99": 470.8999999985099,
+          "max": 470.8999999985099,
+          "over50": 21,
+          "over100": 8
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 41.893333333730695,
+          "p95": 116.5,
+          "p99": 470.5999999977648,
+          "max": 470.5999999977648,
+          "over50": 21,
+          "over100": 8
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.30499999995032945,
+          "p95": 0.5,
+          "p99": 0.6000000014901161,
+          "max": 0.6000000014901161,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 72.8199999999255,
+          "p95": 470.8999999985099,
+          "p99": 470.8999999985099,
+          "max": 470.8999999985099,
+          "over50": 12,
+          "over100": 1
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 26.887500000558795,
+          "p95": 116.89999999850988,
+          "p99": 145.19999999925494,
+          "max": 145.19999999925494,
+          "over50": 9,
+          "over100": 7
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 22.440000000409782,
+          "p95": 108.60000000149012,
+          "p99": 108.60000000149012,
+          "max": 108.60000000149012,
+          "over50": 4,
+          "over100": 4
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 31.335000000707804,
+          "p95": 145.19999999925494,
+          "p99": 145.19999999925494,
+          "max": 145.19999999925494,
+          "over50": 5,
+          "over100": 3
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 438.0249999997516,
+          "p95": 1417.5,
+          "p99": 1417.5,
+          "max": 1417.5,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 52.99166666654249,
+          "p95": 268,
+          "p99": 268,
+          "max": 268,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 466.3181818181818,
+          "p95": 1430.2000000029802,
+          "p99": 1430.2000000029802,
+          "max": 1430.2000000029802,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1417.5,
+          "p95": 1417.5,
+          "p99": 1417.5,
+          "max": 1417.5,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 348.9818181815472,
+          "p95": 1031.6000000014901,
+          "p99": 1031.6000000014901,
+          "max": 1031.6000000014901,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 385.0249999997516,
+          "p95": 1149.5,
+          "p99": 1149.5,
+          "max": 1149.5,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.42499999919285375,
+          "p95": 1.0999999903142452,
+          "p99": 1.0999999903142452,
+          "max": 1.0999999903142452,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 384.45833333426464,
+          "p95": 1148.0000000037253,
+          "p99": 1148.0000000037253,
+          "max": 1148.0000000037253,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 95.16666666666667,
+          "p95": 283,
+          "p99": 283,
+          "max": 283,
+          "over50": 4,
+          "over100": 4
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 64,
+          "p95": 64,
+          "p99": 64,
+          "max": 64,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 6.800000000745058,
+          "p95": 6.800000000745058,
+          "p99": 6.800000000745058,
+          "max": 6.800000000745058,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1487.5,
+          "p95": 1487.5,
+          "p99": 1487.5,
+          "max": 1487.5,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 285.80000000074506,
+          "p95": 285.80000000074506,
+          "p99": 285.80000000074506,
+          "max": 285.80000000074506,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 10,
+          "cards": 107,
+          "pixels": 38789120,
+          "drawChunks": 61,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4851456,
+          "gpuBytes": 206875307,
+          "allocatedMipBytes": 206873324,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4848640,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7882496,
+          "ownedGpuBytes": 210914668,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6726.899999964982,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1242.7000000327826
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 852.1999998949468,
+          "avoidedPaintMs": 526.2000000067055,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 444.60000002384186,
+          "readbackMs": 4347.099999964237,
+          "cacheMs": 855.6999998912215,
+          "pickMaskMs": 715.4999999590218,
+          "rowFlipMs": 128.10000005736947,
+          "slotMs": 92.20000002160668
+        },
+        "actualBaseMips": {
+          "0": 107
+        },
+        "sourceSizes": {
+          "512": 61,
+          "704": 46
+        },
+        "totalCapacity": 107,
+        "liveLayers": 107,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 11,
+            "live": 11,
+            "active": 9,
+            "bases": {
+              "0": 11
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 15,
+            "live": 15,
+            "active": 9,
+            "bases": {
+              "0": 15
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 11,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 124,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 14
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 2,
+          "cards": 22,
+          "pixels": 10903552,
+          "drawChunks": 0,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1365760,
+          "gpuBytes": 58152278,
+          "allocatedMipBytes": 58151368,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1362944,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3348224,
+          "ownedGpuBytes": 60794612,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6726.899999964982,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1242.7000000327826
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 852.1999998949468,
+          "avoidedPaintMs": 526.2000000067055,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 444.60000002384186,
+          "readbackMs": 4347.099999964237,
+          "cacheMs": 855.6999998912215,
+          "pickMaskMs": 715.4999999590218,
+          "rowFlipMs": 128.10000005736947,
+          "slotMs": 92.20000002160668
+        },
+        "actualBaseMips": {
+          "0": 22
+        },
+        "sourceSizes": {
+          "704": 22
+        },
+        "totalCapacity": 22,
+        "liveLayers": 22,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 0,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 0,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 5
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 8,
+          "cards": 97,
+          "pixels": 35934208,
+          "drawChunks": 46,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 477,
+          "drawBufferBytes": 51496,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 191649110,
+          "allocatedMipBytes": 191647180,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 195688524,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1802,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 6973.899999931455,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 20,
+          "mipLayerUpdates": 1802,
+          "mipCopyCalls": 18020,
+          "mipCopyBytes": 3729656168,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 682134332,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 678054716,
+          "scratchPartialUploadPixels": 169513679,
+          "scratchPartialUploads": 1799,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1275.900000050664
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3702,
+          "workMs": 852.1999998949468,
+          "avoidedPaintMs": 526.2000000067055,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1649,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 462.7000000067055,
+          "readbackMs": 4536.499999959022,
+          "cacheMs": 855.9999998956919,
+          "pickMaskMs": 740.9999999552965,
+          "rowFlipMs": 132.00000004470348,
+          "slotMs": 97.00000002235174
+        },
+        "actualBaseMips": {
+          "0": 97
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 12,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 94,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 12
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "run": "reference-A2",
+      "cycle": 1,
+      "hiddenCount": 0,
+      "timing": {
+        "fullCpu": {
+          "n": 60,
+          "mean": 46.74833333349476,
+          "p95": 171,
+          "p99": 463.4000000022352,
+          "max": 463.4000000022352,
+          "over50": 23,
+          "over100": 11
+        },
+        "world3DCpu": {
+          "n": 60,
+          "mean": 46.37499999968956,
+          "p95": 170.59999999776483,
+          "p99": 463,
+          "max": 463,
+          "over50": 23,
+          "over100": 11
+        },
+        "canvasResidual": {
+          "n": 60,
+          "mean": 0.37333333380520345,
+          "p95": 0.7000000029802322,
+          "p99": 1.3999999985098839,
+          "max": 1.3999999985098839,
+          "over50": 0,
+          "over100": 0
+        },
+        "freshTick": {
+          "n": 20,
+          "mean": 77.53500000014901,
+          "p95": 463.4000000022352,
+          "p99": 463.4000000022352,
+          "max": 463.4000000022352,
+          "over50": 14,
+          "over100": 2
+        },
+        "repeatedTick": {
+          "n": 40,
+          "mean": 31.35500000016764,
+          "p95": 171,
+          "p99": 207,
+          "max": 207,
+          "over50": 9,
+          "over100": 9
+        },
+        "phase1": {
+          "n": 20,
+          "mean": 24.28499999977648,
+          "p95": 130.79999999701977,
+          "p99": 130.79999999701977,
+          "max": 130.79999999701977,
+          "over50": 4,
+          "over100": 4
+        },
+        "phase2": {
+          "n": 20,
+          "mean": 38.425000000558796,
+          "p95": 207,
+          "p99": 207,
+          "max": 207,
+          "over50": 5,
+          "over100": 5
+        },
+        "realWall": {
+          "n": 12,
+          "mean": 431.7250000002484,
+          "p95": 1339.300000000745,
+          "p99": 1339.300000000745,
+          "max": 1339.300000000745,
+          "over50": 12,
+          "over100": 12
+        },
+        "realSubmit": {
+          "n": 12,
+          "mean": 55.191666666418314,
+          "p95": 286.19999999925494,
+          "p99": 286.19999999925494,
+          "max": 286.19999999925494,
+          "over50": 3,
+          "over100": 3
+        },
+        "realIntervals": {
+          "n": 11,
+          "mean": 463.39090909097683,
+          "p95": 1347.5,
+          "p99": 1347.5,
+          "max": 1347.5,
+          "over50": 11,
+          "over100": 11
+        },
+        "firstColdReal": {
+          "n": 1,
+          "mean": 1339.300000000745,
+          "p95": 1339.300000000745,
+          "p99": 1339.300000000745,
+          "max": 1339.300000000745,
+          "over50": 1,
+          "over100": 1
+        },
+        "subsequentReal": {
+          "n": 11,
+          "mean": 349.218181818385,
+          "p95": 1080.4000000022352,
+          "p99": 1080.4000000022352,
+          "max": 1080.4000000022352,
+          "over50": 11,
+          "over100": 11
+        },
+        "fenceWait": {
+          "n": 12,
+          "mean": 376.53333333383006,
+          "p95": 1053.1000000014901,
+          "p99": 1053.1000000014901,
+          "max": 1053.1000000014901,
+          "over50": 12,
+          "over100": 12
+        },
+        "pollCall": {
+          "n": 12,
+          "mean": 0.3916666653628151,
+          "p95": 1.2999999970197678,
+          "p99": 1.2999999970197678,
+          "max": 1.2999999970197678,
+          "over50": 0,
+          "over100": 0
+        },
+        "yieldedWall": {
+          "n": 12,
+          "mean": 376.00000000248355,
+          "p95": 1051.5000000074506,
+          "p99": 1051.5000000074506,
+          "max": 1051.5000000074506,
+          "over50": 12,
+          "over100": 12
+        },
+        "fencePolls": {
+          "n": 12,
+          "mean": 91.5,
+          "p95": 260,
+          "p99": 260,
+          "max": 260,
+          "over50": 4,
+          "over100": 3
+        },
+        "emptyWall": {
+          "n": 1,
+          "mean": 70.30000000074506,
+          "p95": 70.30000000074506,
+          "p99": 70.30000000074506,
+          "max": 70.30000000074506,
+          "over50": 1,
+          "over100": 0
+        },
+        "emptySubmit": {
+          "n": 1,
+          "mean": 4.800000000745058,
+          "p95": 4.800000000745058,
+          "p99": 4.800000000745058,
+          "max": 4.800000000745058,
+          "over50": 0,
+          "over100": 0
+        },
+        "returnedWall": {
+          "n": 1,
+          "mean": 1584.300000000745,
+          "p95": 1584.300000000745,
+          "p99": 1584.300000000745,
+          "max": 1584.300000000745,
+          "over50": 1,
+          "over100": 1
+        },
+        "returnedSubmit": {
+          "n": 1,
+          "mean": 299,
+          "p95": 299,
+          "p99": 299,
+          "max": 299,
+          "over50": 1,
+          "over100": 1
+        }
+      },
+      "before": {
+        "cards": {
+          "pages": 10,
+          "cards": 107,
+          "pixels": 38789120,
+          "drawChunks": 61,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4851456,
+          "gpuBytes": 206875307,
+          "allocatedMipBytes": 206873324,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4848640,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7882496,
+          "ownedGpuBytes": 210914668,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 7052.800000056624,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1316.6999999918044
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 917.3999999538064,
+          "avoidedPaintMs": 505.2000000141561,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 456.3000000976026,
+          "readbackMs": 4509.9000000320375,
+          "cacheMs": 924.7999999336898,
+          "pickMaskMs": 720.2999999076128,
+          "rowFlipMs": 161.6000000499189,
+          "slotMs": 120.20000000670552
+        },
+        "actualBaseMips": {
+          "0": 107
+        },
+        "sourceSizes": {
+          "512": 61,
+          "704": 46
+        },
+        "totalCapacity": 107,
+        "liveLayers": 107,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 1,
+            "live": 1,
+            "active": 1,
+            "bases": {
+              "0": 1
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 11,
+            "live": 11,
+            "active": 9,
+            "bases": {
+              "0": 11
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 15,
+            "live": 15,
+            "active": 9,
+            "bases": {
+              "0": 15
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 2,
+            "live": 2,
+            "active": 1,
+            "bases": {
+              "0": 2
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 8,
+            "live": 8,
+            "active": 8,
+            "bases": {
+              "0": 8
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 11,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 30,
+          "calls": 124,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 14
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "empty": {
+        "cards": {
+          "pages": 2,
+          "cards": 22,
+          "pixels": 10903552,
+          "drawChunks": 0,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 461,
+          "drawBufferBytes": 50088,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 1365760,
+          "gpuBytes": 58152278,
+          "allocatedMipBytes": 58151368,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 1362944,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 3348224,
+          "ownedGpuBytes": 60794612,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1726,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 7052.800000056624,
+          "scratchTextures": 1,
+          "scratchCpuBytes": 1982464,
+          "scratchGpuBytes": 2643244,
+          "mipInitializedPages": 14,
+          "mipLayerUpdates": 1726,
+          "mipCopyCalls": 17260,
+          "mipCopyBytes": 3593517112,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 652717160,
+          "scratchInitialUploadBytes": 3031040,
+          "scratchFullUploadBytes": 3031040,
+          "scratchPartialUploadBytes": 649686120,
+          "scratchPartialUploadPixels": 162421530,
+          "scratchPartialUploads": 1724,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1316.6999999918044
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3778,
+          "workMs": 917.3999999538064,
+          "avoidedPaintMs": 505.2000000141561,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1573,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 456.3000000976026,
+          "readbackMs": 4509.9000000320375,
+          "cacheMs": 924.7999999336898,
+          "pickMaskMs": 720.2999999076128,
+          "rowFlipMs": 161.6000000499189,
+          "slotMs": 120.20000000670552
+        },
+        "actualBaseMips": {
+          "0": 22
+        },
+        "sourceSizes": {
+          "704": 22
+        },
+        "totalCapacity": 22,
+        "liveLayers": 22,
+        "activeLayers": 0,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 0,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 0,
+            "bases": {
+              "0": 10
+            }
+          }
+        ],
+        "positions": 0,
+        "render": {
+          "frame": 31,
+          "calls": 1,
+          "triangles": 2,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 5
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 0,
+          "special": 0,
+          "posed": 0,
+          "directionVisits": 30,
+          "positions": 0,
+          "cardMipBases": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "returned": {
+        "cards": {
+          "pages": 8,
+          "cards": 97,
+          "pixels": 35934208,
+          "drawChunks": 46,
+          "pooledDrawChunks": 68,
+          "drawCapacity": 477,
+          "drawBufferBytes": 51496,
+          "maxTextureBanks": 1,
+          "arrayCpuBytes": 0,
+          "cpuBytes": 4494592,
+          "gpuBytes": 191649110,
+          "allocatedMipBytes": 191647180,
+          "canvasBackingBytes": 3031040,
+          "maskBytes": 4491776,
+          "pendingMaskBytes": 0,
+          "pendingRgbaBytes": 0,
+          "rowScratchBytes": 2816,
+          "retiredGpuBytes": 0,
+          "ownedCpuBytes": 7525632,
+          "ownedGpuBytes": 195688524,
+          "peakPendingRgbaBytes": 1982464,
+          "peakOwnedCpuBytes": 60720132,
+          "peakOwnedGpuBytes": 210914668,
+          "peakRetiredGpuBytes": 15859464,
+          "rasterizations": 1802,
+          "copiedLayers": 4,
+          "rasterWorkWallMs": 7308.000000052154,
+          "scratchTextures": 2,
+          "scratchCpuBytes": 3031040,
+          "scratchGpuBytes": 4041344,
+          "mipInitializedPages": 20,
+          "mipLayerUpdates": 1802,
+          "mipCopyCalls": 18020,
+          "mipCopyBytes": 3729656168,
+          "gpuCompactionLayers": 4,
+          "gpuCompactionCopyCalls": 40,
+          "arrayBaseUploadBytes": 0,
+          "scratchUploadBytes": 682134332,
+          "scratchInitialUploadBytes": 4079616,
+          "scratchFullUploadBytes": 4079616,
+          "scratchPartialUploadBytes": 678054716,
+          "scratchPartialUploadPixels": 169513679,
+          "scratchPartialUploads": 1799,
+          "scratchUnchangedUploads": 0,
+          "scratchFullUploadFallbacks": 0,
+          "gpuTransferSubmissionWallMs": 1352.6000000014901
+        },
+        "cache": {
+          "backoffs": 1,
+          "bypassRequests": 3702,
+          "workMs": 917.3999999538064,
+          "avoidedPaintMs": 505.2000000141561,
+          "bytes": 0,
+          "scratchBytes": 0,
+          "ownedBytes": 0,
+          "entries": 0,
+          "hits": 153,
+          "misses": 1649,
+          "evictions": 832,
+          "budget": 50331648
+        },
+        "stages": {
+          "paintMs": 474.3000001013279,
+          "readbackMs": 4706.800000037998,
+          "cacheMs": 924.7999999336898,
+          "pickMaskMs": 746.099999897182,
+          "rowFlipMs": 166.30000003799796,
+          "slotMs": 125.80000000819564
+        },
+        "actualBaseMips": {
+          "0": 97
+        },
+        "sourceSizes": {
+          "512": 52,
+          "704": 45
+        },
+        "totalCapacity": 97,
+        "liveLayers": 97,
+        "activeLayers": 97,
+        "pages": [
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 12,
+            "live": 12,
+            "active": 12,
+            "bases": {
+              "0": 12
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 10,
+            "live": 10,
+            "active": 10,
+            "bases": {
+              "0": 10
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 6,
+            "live": 6,
+            "active": 6,
+            "bases": {
+              "0": 6
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 16,
+            "live": 16,
+            "active": 16,
+            "bases": {
+              "0": 16
+            }
+          },
+          {
+            "width": 704,
+            "height": 704,
+            "capacity": 7,
+            "live": 7,
+            "active": 7,
+            "bases": {
+              "0": 7
+            }
+          },
+          {
+            "width": 512,
+            "height": 512,
+            "capacity": 14,
+            "live": 14,
+            "active": 14,
+            "bases": {
+              "0": 14
+            }
+          }
+        ],
+        "positions": 100,
+        "render": {
+          "frame": 32,
+          "calls": 94,
+          "triangles": 404,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 67,
+          "textures": 12
+        },
+        "viewIndex": {
+          "builds": 62,
+          "units": 100,
+          "cells": 48,
+          "candidates": 100,
+          "special": 0,
+          "posed": 100,
+          "directionVisits": 30,
+          "positions": 100,
+          "cardMipBases": [
+            100,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  ],
+  "resourceDifferenceFields": [
+    "cards.pages",
+    "cards.cards",
+    "cards.pixels",
+    "cards.drawChunks",
+    "cards.pooledDrawChunks",
+    "cards.drawCapacity",
+    "cards.drawBufferBytes",
+    "cards.cpuBytes",
+    "cards.gpuBytes",
+    "cards.allocatedMipBytes",
+    "cards.maskBytes",
+    "cards.rasterCache.bypassRequests",
+    "cards.rasterCache.hits",
+    "cards.rasterCache.misses",
+    "cards.rasterCache.evictions",
+    "cards.rasterCache.budget",
+    "cards.ownedCpuBytes",
+    "cards.ownedGpuBytes",
+    "cards.peakOwnedCpuBytes",
+    "cards.peakOwnedGpuBytes",
+    "cards.peakRetiredGpuBytes",
+    "cards.copiedLayers",
+    "cards.mipInitializedPages",
+    "cards.mipCopyCalls",
+    "cards.mipCopyBytes",
+    "cards.gpuCompactionLayers",
+    "cards.gpuCompactionCopyCalls",
+    "cards.residencySnapshot.actualCardBaseMips.0",
+    "cards.residencySnapshot.actualCardBaseMips.1",
+    "cards.residencySnapshot.originalSourceSizes.512",
+    "cards.residencySnapshot.originalSourceSizes.704",
+    "cards.residencySnapshot.activeCardBaseMips.0",
+    "cards.residencySnapshot.activeCardBaseMips.1",
+    "cards.residencySnapshot.totalPageCapacity",
+    "cards.residencySnapshot.liveLayers",
+    "cards.residencySnapshot.pages",
+    "cards.residencySnapshot.chunks",
+    "cards.rasterizations",
+    "cards.mipLayerUpdates",
+    "cards.scratchUploadBytes",
+    "cards.scratchPartialUploadBytes",
+    "cards.scratchPartialUploadPixels",
+    "cards.scratchPartialUploads"
+  ],
+  "phaseDifferenceFields": [
+    "phase.cards.pages",
+    "phase.cards.cards",
+    "phase.cards.pixels",
+    "phase.cards.drawChunks",
+    "phase.cards.pooledDrawChunks",
+    "phase.cards.drawCapacity",
+    "phase.cards.drawBufferBytes",
+    "phase.cards.cpuBytes",
+    "phase.cards.gpuBytes",
+    "phase.cards.allocatedMipBytes",
+    "phase.cards.maskBytes",
+    "phase.cards.rasterCache.bypassRequests",
+    "phase.cards.rasterCache.hits",
+    "phase.cards.rasterCache.misses",
+    "phase.cards.rasterCache.evictions",
+    "phase.cards.rasterCache.budget",
+    "phase.cards.ownedCpuBytes",
+    "phase.cards.ownedGpuBytes",
+    "phase.cards.peakOwnedCpuBytes",
+    "phase.cards.peakOwnedGpuBytes",
+    "phase.cards.peakRetiredGpuBytes",
+    "phase.cards.copiedLayers",
+    "phase.cards.mipInitializedPages",
+    "phase.cards.mipCopyCalls",
+    "phase.cards.mipCopyBytes",
+    "phase.cards.gpuCompactionLayers",
+    "phase.cards.gpuCompactionCopyCalls",
+    "phase.cards.residencySnapshot.actualCardBaseMips.0",
+    "phase.cards.residencySnapshot.actualCardBaseMips.1",
+    "phase.cards.residencySnapshot.originalSourceSizes.512",
+    "phase.cards.residencySnapshot.originalSourceSizes.704",
+    "phase.cards.residencySnapshot.activeCardBaseMips.0",
+    "phase.cards.residencySnapshot.activeCardBaseMips.1",
+    "phase.cards.residencySnapshot.totalPageCapacity",
+    "phase.cards.residencySnapshot.liveLayers",
+    "phase.cards.residencySnapshot.pages",
+    "phase.cards.residencySnapshot.chunks",
+    "phase.render.calls",
+    "phase.memory.geometries",
+    "phase.memory.textures",
+    "phase.viewIndex.cardMipBases",
+    "phase.cards.rasterizations",
+    "phase.cards.mipLayerUpdates",
+    "phase.cards.scratchUploadBytes",
+    "phase.cards.scratchPartialUploadBytes",
+    "phase.cards.scratchPartialUploadPixels",
+    "phase.cards.scratchPartialUploads"
+  ],
+  "scriptSha256": "2645e2be6d73f1d0088678188651ef5bfa1db59b6e7a59556e97f27c7f97463e"
+}

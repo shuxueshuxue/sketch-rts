@@ -10,6 +10,8 @@ import { creatures, figures } from './appearance';
 import { IDLE_FRAME } from '../unit-animation';
 import type { EquipmentKind } from './equipment';
 import { creatureAnatomy } from './painted-creatures';
+import { hasMercenaryModel, paintMercenaryRemains } from './painted-mercenaries';
+import { paintSpiritRemains } from './painted-spirit';
 export interface CorpsePresentation {
   anatomy?: 'foot' | 'mounted' | 'beast' | 'construct' | 'wood' | 'spirit' | 'vessel';
   weapon?: EquipmentKind; shield?: boolean; shieldStyle?:'round'|'kite'; headwear?: boolean; robe?: boolean; cloth?: string; size?: number;
@@ -65,6 +67,7 @@ function weapon(b:Brush,equipment:EquipmentKind|undefined){
 }
 function fallenPerson(b:Brush,kind:UnitKind,options:CorpsePresentation,wild=false){
  const equipment=options.weapon??loadout(kind);
+ if(hasMercenaryModel(kind)){paintMercenaryRemains(b,kind,options);weapon(b,equipment);return;}
  const robe=options.robe??isStaff(loadout(kind)),heavy=kind.startsWith('ogre');
  b.save();if(heavy)b.scale(1.2,1.15);
  // Head remains attached to shoulder; the far arm folds underneath the body.
@@ -95,8 +98,7 @@ export function paintCorpse(b:Brush,kind:UnitKind,options:CorpsePresentation={})
   line(b,[[-19,9],[20,-10]],INK,2);sketch(b,[[2,0],[20,-10],[14,0],[7,5]],LIGHT);
   if(kind==='warship')sketch(b,[[-6,2],[-2,-1],[5,1],[4,6],[-5,6]],INK);
  }else if(bearing==='spirit'){
-  for(let i=0;i<5;i++)line(b,[[-17+i*6,2+i%2],[ -10+i*5,-3],[ -6+i*5,0]],'#8b8c7980',.7);
-  ellipse(b,0,1,17,4,'#a1a59024');
+  paintSpiritRemains(b);
  }else if(bearing==='wood'){
   // A fallen trunk with broken roots and a leaf crown, not a rubble golem or
   // quadruped. Its actual anatomy comes from the living creature registry.

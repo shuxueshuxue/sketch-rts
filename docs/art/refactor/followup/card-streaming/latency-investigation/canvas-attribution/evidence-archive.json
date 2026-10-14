@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "target": "canvas-attribution",
+  "kind": "rgba",
+  "fileSetSha256": "8ae3bcd5c7abdf1ea68058a8c8e7b4de10a1cd2024cfe9b2b19ec7253ed2d99d",
+  "fileSetHashDefinition": "SHA256 compact sorted-key JSON of sorted {name,size,sha256}; original encoded bytes.",
+  "sources": [
+    {
+      "name": "analysis.json",
+      "size": 434152,
+      "sha256": "202b3dc097e0098a01f717e5b9d60388143643aa931dad882d66f0ff9047fb38"
+    },
+    {
+      "name": "art-card-bank-variant.js",
+      "size": 2117,
+      "sha256": "bfb604d6829915717946c24f091ced65fb23db704846f70721e5d19737390b5b"
+    },
+    {
+      "name": "art-card-bank-viewport-metadata.js",
+      "size": 2149,
+      "sha256": "45b0ca53e3d16bc89153e4f49f71e307a481e44b9d65a3f2647fb9bc81e15a81"
+    },
+    {
+      "name": "art-card-canvas-attribution-collector.js",
+      "size": 19482,
+      "sha256": "4ada9a6c8c85ab41fe24789c27d458ae86802fc0036e7ad070dcd77d5146ba13"
+    },
+    {
+      "name": "art-card-canvas-attribution-proof.mjs",
+      "size": 20004,
+      "sha256": "ab2f5b9c3b762dd01d1c74e7c6ac4f813f92b42c17d50fc6f4a7f1c1da482bda"
+    },
+    {
+      "name": "art-gpu-completion.mjs",
+      "size": 1400,
+      "sha256": "b0c930791f10c539e29446bcaaa29957dc4c977346e3f15fa8c506f099ca2f9f"
+    },
+    {
+      "name": "art-viewport-bank-mixed-fixture.js",
+      "size": 363,
+      "sha256": "98681a8fe8f559beb600299388c1aded960e595ff10b884f71603a7b2daa9644"
+    },
+    {
+      "name": "art-viewport-streaming-fixture.js",
+      "size": 15860,
+      "sha256": "95ad464326b9d0643d2e6816ec430fc606cae3e72f9ae0b203fb9938823434c3"
+    },
+    {
+      "name": "corpus-manifest.json",
+      "size": 186658,
+      "sha256": "517712befef761868d7e4376d78faf6788d3ea3cbef27cffe03ecc6c4567b710"
+    },
+    {
+      "name": "proof.json",
+      "size": 1768395,
+      "sha256": "bc50b3b0b02924a5058fae73d4a6d5d3b360f29b9cbd96a7b4a6fb581e4e3c32"
+    }
+  ],
+  "files": [
+    {
+      "name": "corpus/card-000-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "ee14156c83544ec130c99ce1365e3e5a1dd7016062395ae2e3ca318c792e9968",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-001-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "16b768ab00beedeeac982e6234be75bc9377dd561c938d5dafcf71862b96900a",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-002-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "e5640f421425652dcee5a32f49ce56c530ccb49f7fa6cae0abc81af6250c2e7c",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-003-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "85f1350c9ad020f86c901e1481c7028df1c96466f4963ec94399b0de502ee53f",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-004-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "f322a024a4fdeef37dba9225cc9c80a9ca9857e0497a2dae59583e6c3222ca83",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-005-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "ac951dfd4d99a807d5db114a8aa088c767449d9284049abce96e1e3c4cf48b20",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-006-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "15cd2fa5523a05a43e07d12ededac3a37e7ebdc38f9bdcca6d9e18c5e4bff808",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-007-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "c3d526dee47ef440f8710954779bafe7e0fe9c07d4c0374ca82fb27fa1bae42f",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-008-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "dee8d0d466bc434b9832a4afb0fcaa03215f1a3e09dbd15fe5a093dc8f871ca5",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-009-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "3a30e5249f1bba7b5c5495ad41631709f5a3d83cc7415beac5b240fa6c79df9d",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-010-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "098615c04e7bbb2acb90cc3173f82e99bf41fb79360f0a2b54a925507585d640",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-011-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "74062c29057703f377fedcb69000321e255a2286c13adae53e4424bff1562c84",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-012-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "6ff75e77a0ac5acd6f1531464fc12f1577a3d6b18c438ace5c84a9eba11e6732",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-013-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "ba2300bcaa8c6ae3980d0ed41cccc5e25edff4626fc0f73557ff36d2cde68de3",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-014-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "b700156d4df0cad91bccc1a8a213a9e6f79d9e927a943e43960bdacd6c794472",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-015-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "ee82a715fe8c4e8bc19a1a65f66c1812eb7e755bd63ffb2030c451314db9c6f3",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-016-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "842d4690c354d2ea82439825a5cdb372d1696d83a30bfa185e2cacff2ca0f65d",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-017-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "dae2862ba45e609ef23343b80537b92f4d4e927d72948c38aa697aba1ad43542",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-018-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "14e73bffffafb46ee63683a8de0de8dfbc7d7d3763c9e37773e10e18235bb94c",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-019-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "c94b6fb820e682aaf07283ba266128ccea493616839d80ad65b4a6a6b608fb9a",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-020-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "639eada7ad5f01b0b018c4eed7cf9ff87196d93c24ebfd4d29b190c2b5513b18",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-021-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "2e9a36df5a184d30a0a4cf91b5c2f76d874644e6f92052cd08ab3292de2ba180",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-022-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "50b5efbd2dcacde0941f8507db83d4dbe33c56bf398127fc75e2a46b9d3f75de",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-023-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "2befa0a0dc8715d5219f7f8949765a602b3cebe96092d2e9fc6b8ba05efcd775",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-024-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "ebb7830a4444f59ed7da09c60d5239a0c1cd999444d134a30ddcd8768a51c0ed",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-025-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "02b3395e74b8437abdca14cebf1b662f3b1d32adc09d542289259ebce7cbb9ee",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-026-704x704.rgba.bin",
+      "size": 1982464,
+      "sha256": "4b758e8b6dc05ae3ec569a5d589a1907be84dd77a07b8bdb12e020e9d7e6ce4a",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-027-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "bad2be6d15ff2e95ffbaee4be756cc3153dacabb305cb79bf69d3b2bd64c5ec0",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-028-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "021c163a2db6296fb110a5c598a9f6131aaaa79e731795c75cad59bd8609d222",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-029-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "fc592c4a2fde4b592ea1a2d9a1f9130f451bd44ca7457a1fd382cbb977708b1d",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-030-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "8347fc5eb8cf8c172ebc4470bf9bf73ec579a5a114600ea0caf593353126cce0",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-031-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "842c64b923cdeec05cba9466797052c22ac1117b111081556b9a66e30a773c62",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-032-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "59d15bf9c64a548df1e631bcc700487d3be9efe690531bbddf22ff7c1dc9d5a7",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-033-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "b6272ab960438c08d81129fde1cab955ec150cafc6ae2e0b7782696d77554dac",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-034-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "3082b1da7806680f6bd1608e2a09e99964822f1f528174028c84996f111cd14b",
+      "keep": false
+    },
+    {
+      "name": "corpus/card-035-512x512.rgba.bin",
+      "size": 1048576,
+      "sha256": "645c34fe24a3884456358c1638bc2c35b8b7cb061c551e5f4b98a22910d1b7f0",
+      "keep": false
+    }
+  ],
+  "archive": {
+    "file": "evidence-archives/rgba-canvas-attribution-8ae3bcd5c7abdf1e.tar.gz",
+    "size": 1627214,
+    "sha256": "7d8f852ef4e42873055d5187374df20b74ac0c1f3ba878d826c24ec4cc6a1a11",
+    "format": "tar.gz"
+  },
+  "meaning": "Evidence storage only. Original JSON/RGBA/PNG bytes recover exactly; original proofs/helpers/results unchanged, including failures. Expanded payloads may be absent after verified prune."
+}

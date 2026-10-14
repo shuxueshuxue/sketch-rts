@@ -1,4 +1,5 @@
 import {bloodSurfaceResolver} from './combat-surfaces';
+import {PresentationViewIndex} from './presentation-view';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from './deck-remains';
 import type {ProjectileOriginTracker} from './projectile-origins';
 import { projectActionFrame, projectPaperDirection } from './art/action-direction';
@@ -13,7 +14,7 @@ import { isInCabin } from '../shared/ship-cabin';
 import { localToWorld,shipProfile,shareShipProfile,shipPassengers,SHIP_CAMERA } from "../shared/ship-geometry";
 import { gangwaySurface, type GangwaySurface } from '../shared/ship-gangway';
 import { gangwayCrewVisualPose } from './ship-gangway-visual';
-import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
+import { healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
@@ -70,6 +71,8 @@ export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels
 }
 
 export type WorldFrame = {
+  /** Shared snapshot index across the GPU, ground and annotation passes. */
+  viewIndex?:PresentationViewIndex;
   /** Terrain and annotations flank the shared GPU depth layer. Recorder/fallback
    * callers omit this and retain the complete Canvas renderer. */
   pass?: 'ground' | 'overlay';
@@ -113,6 +116,7 @@ export type WorldFrame = {
 };
 
 type Painter = {
+  viewIndex:PresentationViewIndex;
   ships: ReadonlyMap<string, Unit>;
   gangways: ReadonlyMap<string, GangwaySurface>;
   actorPositions: WorldFrame['actorPositions'];
@@ -141,11 +145,15 @@ type Painter = {
 };
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
+const canvasViewIndexes=new WeakMap<Brush,PresentationViewIndex>();
 
 export function drawWorld(frame: WorldFrame) {
   const zoom = frame.view.zoom ?? 1;
+  let viewIndex=frame.viewIndex??canvasViewIndexes.get(frame.ctx);
+  if(!viewIndex){viewIndex=new PresentationViewIndex();canvasViewIndexes.set(frame.ctx,viewIndex);}
   const ships = new Map<string, Unit>(), gangways = new Map<string, GangwaySurface>();
   const painter: Painter = {
+    viewIndex,
     ships,
     gangways,
     actorPositions: frame.actorPositions,
@@ -172,6 +180,7 @@ export function drawWorld(frame: WorldFrame) {
   };
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
+  viewIndex.update(snapshot,painter.motion);
   // The GPU pass already supplies crew positions. The Canvas fallback owns
   // its bridge proof once per bridge and shares it with every crossing person.
   if (!frame.actorPositions) {
@@ -187,8 +196,11 @@ export function drawWorld(frame: WorldFrame) {
   }
   painter.animation?.update(snapshot, painter.now, frame.story?.unitActions);
   if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
-  if(!frame.actorPositions)trackUnitFacing(painter.facing,painter.snapshot);
-  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1));
+  if(!frame.actorPositions){
+    trackUnitFacing(painter.facing,painter.snapshot,viewIndex.entities);
+    painter.animation?.observeDirections(painter.now,(id,direction)=>painter.facing.actionFacing(id,direction,projectPaperDirection),painter.reducedMotion);
+  }
+  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1),areas=>viewIndex.queryBoundsUnion(areas));
   frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
   const combat=frame.combat?.frame(painter.now);
   if(combat&&!frame.physicalCombat){
@@ -230,11 +242,11 @@ export function drawWorld(frame: WorldFrame) {
   }
   }
   if(frame.pass==='ground'){ctx.restore();return;}
-  painter.engaged=engagedEntityIds(snapshot);
+  painter.engaged=viewIndex.engagedIds();
   painter.abilityEffects=battlefieldEffectFrame(snapshot);
   if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
-  if (!painter.still && frame.viewer) for (const worker of snapshot.units) {
+  if (!painter.still && frame.viewer) for (const worker of viewIndex.builders) {
     if (isInCabin(worker) || worker.owner !== frame.viewer || worker.order.type !== "build") continue;
     const order = worker.order, point = worldToScreen(painter, order);
     if (!nearScreen(painter, point, 120)) continue;
@@ -247,13 +259,16 @@ export function drawWorld(frame: WorldFrame) {
     }
   }
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
-  const actors=[...snapshot.buildings,...snapshot.units.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
   if (frame.pass !== 'overlay') drawGangways(painter);
-  if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,snapshot.units,true);}
-  else for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+  const candidateUnits=viewIndex.query(frame.view);
+  if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,candidateUnits,true);}
+  else {
+    const actors=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
+    for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+  }
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
-  const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
+  const unitsById = viewIndex.units;
   if(combat&&!frame.physicalCombat)drawCombatGround(ctx,combat,combatProjection,true);
   if(combat&&!frame.physicalCombat)drawCombatAir(ctx,combat,combatProjection,(id,height,position)=>{
     const unit=unitsById.get(id);if(!unit||isInCabin(unit))return null;
@@ -308,10 +323,13 @@ export function drawWorld(frame: WorldFrame) {
 }
 
 /** Feeds the tracker every unit's facing for this snapshot; calling it twice for one snapshot changes nothing. */
-export function trackUnitFacing(facing: UnitFacingTracker, snapshot: GameSnapshot) {
-  const positions = new Map<string, Point>();
-  for (const entity of [...snapshot.units, ...snapshot.buildings]) positions.set(entity.id, entity);
-  facing.update(snapshot.units, (id) => positions.get(id));
+export function trackUnitFacing(facing: UnitFacingTracker, snapshot: GameSnapshot,knownPositions?:ReadonlyMap<string,Point>) {
+  let positions:Map<string,Point>|undefined;
+  facing.updateSnapshot(snapshot,(id)=>{
+    if(knownPositions)return knownPositions.get(id);
+    if(!positions){positions=new Map();for(const entity of snapshot.units)positions.set(entity.id,entity);for(const entity of snapshot.buildings)positions.set(entity.id,entity);}
+    return positions.get(id);
+  });
 }
 
 export function drawPaperMap(ctx: Brush, mapId: MapId, camera: Point, width: number, height: number) {
@@ -378,7 +396,7 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
 // Rocks and gates across their ways (see @@@obstacle-art), their health shown once they are struck.
 function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
   for (const obstacle of obstacles) {
-    const shake = hitFeedbackOffset(painter.snapshot, obstacle);
+    const shake = hitFeedbackOffset(painter.snapshot, obstacle,painter.viewIndex.hits);
     const point = worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
     if (!nearScreen(painter, point, obstacle.radius + 80)) continue;
     drawAtlasObstacle(painter.ctx, obstacle, point);
@@ -399,7 +417,7 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
   const { ctx } = painter;
   const engaged = painter.engaged;
   for (const building of buildings) {
-    const shake = hitFeedbackOffset(painter.snapshot, building);
+    const shake = hitFeedbackOffset(painter.snapshot, building,painter.viewIndex.hits);
     const point = worldToScreen(painter, { x: building.x + shake.x, y: building.y + shake.y });
     const selected = painter.selectedIds.has(building.id);
     const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
@@ -429,7 +447,7 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
 /** Reticles are an owner-only overlay, including during multiplayer and allied shared vision. */
 function drawAimLines(painter: Painter) {
   const { ctx } = painter;
-  for (const unit of painter.snapshot.units) {
+  for (const unit of painter.viewIndex.aiming) {
     const aim = unit.aim;
     if (isInCabin(unit) || unit.owner !== painter.viewer || !aim || !["attack", "attackMove", "hold", "aim", "cast"].includes(unit.order.type)) continue;
     const from = worldToScreen(painter, drawnPosition(painter, unit)), to = worldToScreen(painter, aim);
@@ -508,12 +526,12 @@ function drawGangways(painter: Painter) {
   }
 }
 
-function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
+function drawUnits(painter: Painter, units: readonly Unit[], overlayOnly=false) {
   const { ctx, now } = painter;
   const engaged = painter.engaged;
   for (const unit of units) {
     if (isInCabin(unit)) continue;
-    const shake = hitFeedbackOffset(painter.snapshot, unit);
+    const shake = hitFeedbackOffset(painter.snapshot, unit,painter.viewIndex.hits);
     const anchor=painter.actorPositions?.get(unit.id);
     const at = anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter, unit);
     const ship=unit.deck ? painter.ships.get(unit.deck.shipId) : undefined;
@@ -529,13 +547,15 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
-    const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
-    const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
-    const pose=projectActionFrame(rawPose,facing);
-    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
-    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
     const blood=painter.combatBody?.get(unit.id);
-    if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??facing);
+    if(!overlayOnly||blood){
+      const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
+      const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
+      const pose=projectActionFrame(rawPose,facing);
+      if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
+      else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
+      if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??facing);
+    }
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();
@@ -623,7 +643,7 @@ function ringInk(painter: Painter, owner: Owner) {
 }
 
 function drawGroundSelectionMarkers(painter:Painter) {
-  for(const unit of painter.snapshot.units)if(!unit.deck)drawUnitSelectionMarker(painter,unit);
+  for(const unit of painter.viewIndex.query({x:painter.camera.x,y:painter.camera.y,width:painter.width,height:painter.height}))if(!unit.deck)drawUnitSelectionMarker(painter,unit);
   for(const building of painter.snapshot.buildings) {
     const selected=painter.selectedIds.has(building.id);
     if((selected || painter.hoveredId===building.id) && nearScreen(painter,worldToScreen(painter,building),building.radius+80))
@@ -721,8 +741,8 @@ function drawTrainingProgress(painter: Painter, x: number, y: number, remaining:
 const HIT_SHAKE = 7;
 const MAX_HIT_SHAKE = 2;
 
-function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building | Obstacle): Point {
-  const hit = snapshot.effects.find((effect) => effect.type === "hit" && effect.unitId === entity.id);
+function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building | Obstacle,hits?:ReadonlyMap<string,WorldEffect>): Point {
+  const hit = hits?hits.get(entity.id):snapshot.effects.find((effect) => effect.type === "hit" && effect.unitId === entity.id);
   if (!hit) return { x: 0, y: 0 };
   const amount = Math.min(MAX_HIT_SHAKE, (HIT_SHAKE * (hit.damage ?? 0)) / Math.max(1, entity.maxHp));
   const life = Math.max(0, Math.min(1, hit.remaining / hit.duration));

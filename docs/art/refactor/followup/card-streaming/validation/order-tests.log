@@ -1,0 +1,30 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-viewport
+
+ ✓ src/client/world3d/card-bank-shader.test.ts (10 tests) 11ms
+ ✓ src/client/world3d/painted-card-batches.test.ts (53 tests) 1464ms
+stdout | src/client/world3d/world-layer.test.ts > production scene CPU integration (GPU renderer mocked) > batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit
+2,000 troops: 63.0 ms CPU scene preparation, 1 actor mesh; GPU timing not measured
+
+ ✓ src/client/world3d/world-layer.test.ts (20 tests) 1310ms
+   ✓ production scene CPU integration (GPU renderer mocked) > binds water to the rendered match rather than the smaller home snapshot used for preloading 322ms
+
+ Test Files  3 passed (3)
+      Tests  83 passed (83)
+   Start at  05:00:43
+   Duration  3.73s (transform 1.65s, setup 0ms, collect 2.99s, tests 2.78s, environment 0ms, prepare 150ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+TypeScript verification: npx tsc --noEmit completed with exit code 0.
+Commands: npx vitest --run src/client/world3d/painted-card-batches.test.ts src/client/world3d/card-bank-shader.test.ts src/client/world3d/world-layer.test.ts; npx tsc --noEmit
+SHA256 src/client/world3d/painted-card-batches.ts: b364aadd3144310ec431d799cd3c0978787cf40a78cb3c6e0a148810df7cf5b5
+SHA256 src/client/world3d/painted-card-batches.test.ts: c8857c58f459a7e0940f8fb71931deff52a4d1eec6a086cc6873a185f0945a73
+SHA256 src/client/world3d/card-bank-shader.ts: 53197460498c2d67ed495fb19725c7fdaf6a1cc600f6b19e4491e4e15aa9c144
+SHA256 src/client/world3d/card-bank-shader.test.ts: 2a17a5f5c28a6fcd322a0ee725896b4be9f57726c07fabdc533adab0c76a98a6
+SHA256 src/client/world3d/world-layer.ts: 315d73fc334e489abe0fac742abaf83af4dd5cd6e3e8a5897cc05814e20ef839
+SHA256 src/client/world3d/world-layer.test.ts: ec63bc53f5902a4d5fc725542c7cdfca2845a43771ff387424c5d8e1544994c5

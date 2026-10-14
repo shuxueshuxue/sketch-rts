@@ -1,6 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import * as THREE from 'three';
-import {CardMipUploader,createCardArray,type CardMipPage,type CardTextureRenderer} from './card-mip-uploader';
+import {CardMipUploader,createCardArray,cardTextureBytes,type CardMipPage,type CardTextureRenderer,type CardMipUploadOptions} from './card-mip-uploader';
 function renderer(){const target=new THREE.WebGLRenderTarget(2,2);return{initTexture:vi.fn<CardTextureRenderer['initTexture']>(),copyTextureToTexture:vi.fn<CardTextureRenderer['copyTextureToTexture']>(),getRenderTarget:()=>target,getActiveCubeFace:()=>2,getActiveMipmapLevel:()=>3,setRenderTarget:vi.fn()} satisfies CardTextureRenderer;}
 function page(size=16):CardMipPage{return{texture:createCardArray(size,size,16,8),uploaded:false};}
 function pixels(size=16,layer=0){return new Uint8Array(size*size*4).fill(layer);}
@@ -12,11 +12,99 @@ describe('streamed card mip transfers',()=>{
  it('initializes once, uploads only supplied layers, and restores the framebuffer',()=>{
   const upload=new CardMipUploader(8),p=page(),r=renderer(),copied:number[]=[];
   r.copyTextureToTexture.mockImplementation((source,_dest,box,dest,sourceLevel,destLevel)=>{
+   if(box instanceof THREE.Box2)return;
    expect(sourceLevel).toBe(destLevel);expect(box).toBeInstanceOf(THREE.Box3);expect((dest as THREE.Vector3).z).toBe((source as THREE.DataTexture).image.data![0]);copied.push((dest as THREE.Vector3).z);
   });
   for(const layer of [0,2])upload.uploadLayer(p,layer,pixels(16,layer),r);
-  expect(r.initTexture).toHaveBeenCalledTimes(3);expect(copied).toEqual([...Array(5).fill(0),...Array(5).fill(2)]);expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);
-  const version=p.texture.version;upload.uploadLayer(p,7,pixels(16,7),r);expect(r.initTexture).toHaveBeenCalledTimes(4);expect(p.texture.version).toBe(version);expect(p.texture.image.data).toBeNull();expect(upload.stats()).toMatchObject({mipInitializedPages:1,mipLayerUpdates:3,mipCopyCalls:15,scratchTextures:1,arrayBaseUploadBytes:0});upload.dispose();
+  expect(r.initTexture).toHaveBeenCalledTimes(2);expect(copied).toEqual([...Array(5).fill(0),...Array(5).fill(2)]);expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);
+  const version=p.texture.version;upload.uploadLayer(p,7,pixels(16,7),r);expect(r.initTexture).toHaveBeenCalledTimes(2);expect(p.texture.version).toBe(version);expect(p.texture.image.data).toBeNull();expect(upload.stats()).toMatchObject({mipInitializedPages:1,mipLayerUpdates:3,mipCopyCalls:15,scratchTextures:1,arrayBaseUploadBytes:0});upload.dispose();
+ });
+ it('uploads a single dirty rectangle from an uninitialized CPU source and clears old paint',()=>{
+  const upload=new CardMipUploader(8),p=page(),r=renderer(),initialized=new Set<THREE.Texture>(),gpu=new Map<THREE.Texture,Uint8Array>(),rectangles:THREE.Box2[]=[],layers:Uint8Array[]=[];
+  r.initTexture.mockImplementation(texture=>{initialized.add(texture);if(texture instanceof THREE.DataTexture)gpu.set(texture,new Uint8Array(texture.image.data as Uint8Array));});
+  r.copyTextureToTexture.mockImplementation((source,destination,region,position,srcLevel,dstLevel)=>{
+   if(region instanceof THREE.Box2){
+    expect(source).toBeInstanceOf(THREE.DataTexture);expect(initialized.has(source)).toBe(false);expect(source).not.toBe(destination);expect((source as THREE.DataTexture).image.data).toBe((destination as THREE.DataTexture).image.data);
+    expect(destination.generateMipmaps).toBe(true);expect(destination.colorSpace).toBe(THREE.SRGBColorSpace);expect(destination.flipY).toBe(false);expect(destination.premultiplyAlpha).toBe(false);
+    expect(position).toEqual(region.min);rectangles.push(region.clone());
+    const cpu=(source as THREE.DataTexture).image.data as Uint8Array,stored=gpu.get(destination)!;
+    for(let y=region.min.y;y<region.max.y;y++){const start=(y*16+region.min.x)*4,end=(y*16+region.max.x)*4;stored.set(cpu.subarray(start,end),start);}
+   }else{
+    expect(initialized.has(source)).toBe(true);expect(region).toBeInstanceOf(THREE.Box3);expect(srcLevel).toBe(dstLevel);
+    if(srcLevel===0)layers.push(gpu.get(source)!.slice());
+   }
+  });
+  const before=pixels(),after=pixels();before.set([20,30,40,255],(3*16+2)*4);after.set([90,70,50,0],(6*16+8)*4);
+  upload.uploadLayer(p,0,before,r);upload.uploadLayer(p,1,after,r);upload.uploadLayer(p,2,after.slice(),r);
+  expect(rectangles).toEqual([new THREE.Box2(new THREE.Vector2(2,3),new THREE.Vector2(9,7))]);expect(layers).toEqual([before,after,after]);expect(r.initTexture).toHaveBeenCalledTimes(2);
+  expect(upload.stats()).toMatchObject({scratchUploadBytes:1024+112,scratchInitialUploadBytes:1024,scratchFullUploadBytes:1024,scratchPartialUploadBytes:112,scratchPartialUploadPixels:28,scratchPartialUploads:1,scratchUnchangedUploads:1,scratchFullUploadFallbacks:0,mipCopyCalls:15});
+  expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);upload.dispose();
+ });
+ it('keeps full NPOT mip copies after a partial base upload',()=>{
+  const upload=new CardMipUploader(8),p=page(640),r=renderer();upload.uploadLayer(p,0,pixels(640),r);r.copyTextureToTexture.mockClear();
+  const changed=pixels(640);changed.set([1,2,3,0],(639*640+639)*4);upload.uploadLayer(p,1,changed,r);
+  expect(r.copyTextureToTexture.mock.calls[0]![2]).toEqual(new THREE.Box2(new THREE.Vector2(639,639),new THREE.Vector2(640,640)));
+  expect(r.copyTextureToTexture.mock.calls.slice(1).map(call=>(call[2] as THREE.Box3).max.x)).toEqual([640,320,160,80,40,20,10,5,2,1]);
+  expect(upload.stats()).toMatchObject({scratchInitialUploadBytes:1638400,scratchPartialUploadBytes:4,mipCopyCalls:20});upload.dispose();
+ });
+ it.each([256,640,704].flatMap(size=>[1,2].map(baseMip=>({size,baseMip}))))('retains the exact generated mip tail for $size at base mip $baseMip',({size,baseMip})=>{
+  const upload=new CardMipUploader(8),destinationSize=size/2**baseMip,p=page(destinationSize),r=renderer(),rgba=pixels(size,255),calls:{srcLevel:number;dstLevel:number;width:number;height:number}[]=[];
+  r.copyTextureToTexture.mockImplementation((source,dest,region,position,srcLevel,dstLevel)=>{
+   expect(source).toBeInstanceOf(THREE.DataTexture);expect((source as THREE.DataTexture).image.width).toBe(size);
+   const data=(source as THREE.DataTexture).image.data as Uint8Array;expect(Buffer.from(data.buffer,data.byteOffset,data.byteLength).equals(Buffer.from(rgba.buffer,rgba.byteOffset,rgba.byteLength))).toBe(true);
+   expect(source.generateMipmaps).toBe(true);expect(dest.generateMipmaps).toBe(false);expect((position as THREE.Vector3).z).toBe(5);
+   expect((region as THREE.Box3).min).toEqual(new THREE.Vector3());expect((region as THREE.Box3).max.z).toBe(1);calls.push({srcLevel:srcLevel!,dstLevel:dstLevel!,width:region!.max.x,height:region!.max.y});
+  });
+  upload.uploadLayer(p,5,rgba,r,{sourceWidth:size,sourceHeight:size,baseMip});
+  const nativeLevels=Math.floor(Math.log2(destinationSize))+1;
+  expect(calls).toEqual(Array.from({length:nativeLevels},(_,level)=>({srcLevel:baseMip+level,dstLevel:level,width:Math.max(1,Math.floor(destinationSize/2**level)),height:Math.max(1,Math.floor(destinationSize/2**level))})));
+  expect(upload.stats()).toMatchObject({scratchCpuBytes:size*size*4,scratchGpuBytes:cardTextureBytes(size,size),scratchUploadBytes:size*size*4,mipCopyCalls:nativeLevels,mipCopyBytes:cardTextureBytes(destinationSize,destinationSize)});
+  expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);upload.dispose();
+ });
+ it('reuses a full-source chain between different retained base mips and preserves transparent RGB',()=>{
+  const upload=new CardMipUploader(8),r=renderer(),full=page(640),half=page(320),quarter=page(160),rgba=pixels(640,255);rgba.set([42,84,126,0],4);
+  upload.uploadLayer(full,0,rgba,r);r.copyTextureToTexture.mockClear();
+  upload.uploadLayer(half,0,rgba.slice(),r,{sourceWidth:640,sourceHeight:640,baseMip:1});
+  upload.uploadLayer(quarter,0,rgba.slice(),r,{sourceWidth:640,sourceHeight:640,baseMip:2});
+  expect(r.copyTextureToTexture.mock.calls.every(call=>call[2] instanceof THREE.Box3)).toBe(true);
+  expect(r.copyTextureToTexture.mock.calls[0]![4]).toBe(1);expect(r.copyTextureToTexture.mock.calls[9]![4]).toBe(2);
+  expect(upload.stats()).toMatchObject({scratchTextures:1,scratchFullUploadBytes:640*640*4,scratchUnchangedUploads:2,mipCopyCalls:27});upload.dispose();
+ });
+ it('retries full source pixels after a retained-tail copy fails',()=>{
+  const upload=new CardMipUploader(1),p=page(176),r=renderer(),rgba=pixels(704,255);rgba.set([30,70,90,0],(703*704+703)*4);
+  r.copyTextureToTexture.mockImplementation(()=>{throw new Error('tail copy failed');});
+  const options={sourceWidth:704,sourceHeight:704,baseMip:2};expect(()=>upload.uploadLayer(p,0,rgba,r,options)).toThrow('tail copy failed');expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);
+  r.copyTextureToTexture.mockReset();upload.uploadLayer(p,0,rgba,r,options);
+  expect(r.copyTextureToTexture).toHaveBeenCalledTimes(8);expect(r.copyTextureToTexture.mock.calls[0]![4]).toBe(2);expect(r.initTexture).toHaveBeenCalledTimes(3);
+  expect(upload.stats()).toMatchObject({scratchFullUploadBytes:2*704*704*4,scratchFullUploadFallbacks:1,mipCopyBytes:cardTextureBytes(176,176)});upload.dispose();
+ });
+ it('rejects malformed source dimensions, levels, domains and storage before touching GPU state',()=>{
+  const r=renderer(),upload=new CardMipUploader(1);
+  const invalid:{destination:number;source:number;options:CardMipUploadOptions;layer?:number}[]=[
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:-1}},
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:1.5}},
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:NaN}},
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:10}},
+   {destination:320,source:641,options:{sourceWidth:641,sourceHeight:641,baseMip:1}},
+   {destination:176,source:705,options:{sourceWidth:705,sourceHeight:705,baseMip:2}},
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:0}},
+   {destination:320,source:320,options:{sourceWidth:640,sourceHeight:640,baseMip:1}},
+   {destination:320,source:640,options:{sourceWidth:640.5,sourceHeight:640,baseMip:1}},
+   {destination:320,source:640,options:{sourceWidth:0,sourceHeight:640,baseMip:1}},
+   {destination:320,source:640,options:{sourceWidth:640,sourceHeight:640,baseMip:1},layer:.5},
+  ];
+  for(const test of invalid)expect(()=>upload.uploadLayer(page(test.destination),test.layer??0,pixels(test.source),r,test.options)).toThrow('Invalid card');
+  const missingLevel=page(320);missingLevel.texture.mipmaps.pop();expect(()=>upload.uploadLayer(missingLevel,0,pixels(640),r,{sourceWidth:640,sourceHeight:640,baseMip:1})).toThrow('mip tail');
+  const wrongLevel=page(320);wrongLevel.texture.mipmaps[1]={width:159,height:160,data:new Uint8Array(0)};expect(()=>upload.uploadLayer(wrongLevel,0,pixels(640),r,{sourceWidth:640,sourceHeight:640,baseMip:1})).toThrow('mip tail');
+  expect(r.initTexture).not.toHaveBeenCalled();expect(r.copyTextureToTexture).not.toHaveBeenCalled();expect(r.setRenderTarget).not.toHaveBeenCalled();expect(upload.stats()).toMatchObject({scratchTextures:0,mipLayerUpdates:0,mipCopyBytes:0});upload.dispose();
+ });
+ it('replaces the entire base after a failed partial upload rather than trusting changed CPU pixels',()=>{
+  const upload=new CardMipUploader(1),p=page(),r=renderer();upload.uploadLayer(p,0,pixels(),r);const changed=pixels();changed.set([1,2,3,0],4);
+  r.copyTextureToTexture.mockImplementation((_a,_b,region)=>{if(region instanceof THREE.Box2)throw new Error('partial upload failed');});
+  expect(()=>upload.uploadLayer(p,1,changed,r)).toThrow('partial upload failed');expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);
+  r.copyTextureToTexture.mockReset();upload.uploadLayer(p,1,changed,r);
+  expect(r.initTexture).toHaveBeenCalledTimes(3);expect(r.copyTextureToTexture).toHaveBeenCalledTimes(5);expect(r.copyTextureToTexture.mock.calls.every(call=>call[2] instanceof THREE.Box3)).toBe(true);
+  expect(upload.stats()).toMatchObject({scratchFullUploadBytes:2048,scratchInitialUploadBytes:1024,scratchPartialUploadBytes:0,scratchFullUploadFallbacks:1,mipLayerUpdates:2});upload.dispose();
  });
  it('allows an explicit failed-layer retry and restores the framebuffer on failure',()=>{
   const upload=new CardMipUploader(1),p=page(),r=renderer();r.copyTextureToTexture.mockImplementation(()=>{throw new Error('copy failed');});

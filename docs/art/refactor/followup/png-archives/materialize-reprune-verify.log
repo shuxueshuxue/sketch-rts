@@ -1,0 +1,29 @@
+VERIFIED mercenary-models/gameplay files=49
+{
+  "operation": "verify",
+  "verifiedFolders": 1,
+  "skippedMissingDirectories": [],
+  "originalPngFiles": 49,
+  "originalPngBytes": 27705585,
+  "uniqueArchives": 1,
+  "archiveBytes": 27698282,
+  "largestArchiveBytes": 27698282,
+  "deletedFiles": 0,
+  "deletedBytes": 0,
+  "retainedFiles": 15,
+  "retainedBytes": 4324937,
+  "archives": [
+    {
+      "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+      "bytes": 27698282,
+      "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+    }
+  ],
+  "folders": [
+    {
+      "target": "mercenary-models/gameplay",
+      "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+    }
+  ],
+  "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+}

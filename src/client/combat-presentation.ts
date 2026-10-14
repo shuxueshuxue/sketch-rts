@@ -1,6 +1,6 @@
 /** Deterministic, bounded client-only hit debris. Simulation emits facts, never
  * particles; all positions are world units and height points up from the floor. */
-import {BloodContacts,type BloodPoint} from './blood-contact';
+import {BloodContacts,bloodReceiverBounds,type BloodPoint,type BloodReceiverBounds} from './blood-contact';
 import {BLOOD_HEIGHT_PROJECTION as TILT,type BloodSurfaceResolver} from './combat-surfaces';
 import { circleInPolygon, shipProfile, SHIP_CAMERA } from '../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
@@ -13,6 +13,9 @@ export type GroundBlood = { x:number; y:number; height:number; radius:number; an
 export type BodyBlood = GroundBlood & { unitId:string; height:number; localX:number; localY:number; surface?:'weapon'; width?:number };
 export type CombatSpeedLine = { unitId:string; x:number; y:number; dx:number; dy:number; length:number; width:number; height:number; alpha:number };
 export type CombatPresentationFrame = { droplets:BloodDroplet[]; ground:GroundBlood[]; body:BodyBlood[]; speedLines:CombatSpeedLine[] };
+/** Query the whole world, independently of the camera. Preserve the current
+ * snapshot's unit order so equal-distance contacts keep the same receiver. */
+export type BloodReceiverQuery=(bounds:readonly BloodReceiverBounds[])=>Iterable<Unit>;
 type Snapshot = Pick<GameSnapshot,'tick'|'units'|'effects'>;
 type Drop = { caught?:boolean; ox:number;oy:number; vx:number; vy:number; vz:number; height:number; landTime:number; radius:number; angle:number; air:BloodDroplet; ground:GroundBlood };
 type Burst = { contacts:Set<string>; checkedAge:number; id:string; tick:number; unitId:string; x:number; y:number; deck?:NonNullable<WorldEffect['targetDeck']>; floor:number; drops:Drop[]; mark:BodyBlood };
@@ -24,10 +27,12 @@ const LIFE=9;
 const BODY_LIFE=6;
 export const COMBAT_PRESENTATION_LIMITS=Object.freeze({ bursts:48, residueBursts:96, dropletsPerBurst:10, speedLines:128, seenEvents:2048, transferredMarks:192 });
 
-/** Non-mechanical targets bleed only on a lethal or genuinely close-to-lethal
- * hit. Missing old-save metadata is not guessed from a later live unit. */
+/** Physical non-mechanical targets bleed only on a lethal or genuinely close-
+ * to-lethal hit. Spirits have no blood; their combat class remains unchanged.
+ * Missing old-save metadata is not guessed from a later live unit. */
 export function isBloodHit(effect:WorldEffect):boolean {
   return effect.type==='hit' && effect.targetUnitClass==='nonMechanical' && !!effect.targetKind
+    && effect.targetKind!=='spirit'
     && Number.isFinite(effect.damage) && effect.damage!>0
     && Number.isFinite(effect.targetHpAfter) && effect.targetHpAfter!<=effect.damage!*2
     && Number.isFinite(effect.targetMaxHp) && effect.targetMaxHp!>0;
@@ -58,7 +63,7 @@ export class CombatPresentationTracker {
     this.output.droplets.length=0;this.output.ground.length=0;this.output.body.length=0;this.output.speedLines.length=0;
   }
 
-  update(snapshot:Snapshot,now:number,surfaces?:BloodSurfaceResolver) {
+  update(snapshot:Snapshot,now:number,surfaces?:BloodSurfaceResolver,receivers?:BloodReceiverQuery) {
     if(this.tick!==undefined && snapshot.tick<this.tick)this.reset();
     this.surfaces=surfaces;
     const sameTick=snapshot.tick===this.tick;
@@ -84,7 +89,7 @@ export class CombatPresentationTracker {
       }
       if(this.seen.size>COMBAT_PRESENTATION_LIMITS.seenEvents) { this.seen.delete(this.seen.keys().next().value!);this.overflowThrough=snapshot.tick; }
     }
-    this.transferBlood(snapshot.tick,now);
+    this.transferBlood(snapshot.tick,now,receivers);
     // A hit can arrive between draws of the same tick. Consume it without
     // treating an unchanged position as a new motion observation.
     if(sameTick)return;
@@ -125,7 +130,7 @@ export class CombatPresentationTracker {
     return surface;
   }
 
-  private transferBlood(tick:number,now:number){
+  private transferBlood(tick:number,now:number,receivers?:BloodReceiverQuery){
     this.transferred=this.transferred.filter(stain=>{
       const unit=this.units.get(stain.mark.unitId);
       if(!unit||unit.hp<=0||tick-stain.tick>=BODY_LIFE*SIM_TICKS_PER_SECOND)return false;
@@ -135,7 +140,37 @@ export class CombatPresentationTracker {
     });
     const active=this.bursts.filter(burst=>burst.drops.some(drop=>!drop.caught&&burst.checkedAge<drop.landTime));
     if(!active.length)return;
-    const contacts=new BloodContacts(this.units.values(),this.surfaces?(unit,time)=>this.surfaceFor(unit,time)!:undefined,now);
+    const resolve=this.surfaces?(unit:Unit,time:number)=>this.surfaceFor(unit,time)!:undefined;
+    let candidates:Iterable<Unit>=this.units.values();
+    if(receivers){
+      const bounds:BloodReceiverBounds[]=[];
+      for(const burst of active){
+        const age=Math.max(0,(tick-burst.tick)/SIM_TICKS_PER_SECOND);
+        const hull=burst.deck?this.units.get(burst.deck.shipId):undefined,profile=hull&&hull.hp>0?shipProfile(hull):undefined;
+        if(burst.deck&&!profile)continue;
+        const heading=hull?.sailing?.heading??0,c=Math.cos(heading),s=Math.sin(heading);
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        for(const drop of burst.drops){
+          if(drop.caught||burst.checkedAge>drop.landTime)continue;
+          const end=Math.min(age,drop.landTime),start=Math.min(burst.checkedAge,end);
+          // XY is linear throughout the flight. The two endpoints cover all
+          // simulation-sized contact segments, including skipped ticks. Use
+          // the same current hull transform as the contact points below.
+          for(let endpoint=0;endpoint<2;endpoint++){
+            const t=endpoint===0?start:end;
+            const x=burst.x+drop.ox+drop.vx*t,y=burst.y+drop.oy+drop.vy*t;
+            const worldX=hull?hull.x+x*c-y*s:x,worldY=hull?hull.y+x*s+y*c:y;
+            minX=Math.min(minX,worldX);minY=Math.min(minY,worldY);maxX=Math.max(maxX,worldX);maxY=Math.max(maxY,worldY);
+          }
+        }
+        bounds.push(bloodReceiverBounds(minX,minY,maxX,maxY));
+      }
+      if(!bounds.length)return;
+      candidates=receivers(bounds);
+    }
+    // One union grid shares each receiver's capsules across all droplets and
+    // simultaneous bursts, as the original whole-world contact pass did.
+    const contacts=new BloodContacts(candidates,resolve,now);
     for(const burst of active){
       const age=Math.max(0,(tick-burst.tick)/SIM_TICKS_PER_SECOND);
       const hull=burst.deck?this.units.get(burst.deck.shipId):undefined,profile=hull&&hull.hp>0?shipProfile(hull):undefined;

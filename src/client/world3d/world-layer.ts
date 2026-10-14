@@ -1,16 +1,19 @@
 import {bloodSurfaceResolver} from '../combat-surfaces';
+import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from '../deck-remains';
 import { drawAtlasCorpse } from '../atlas-art';
 import { corpseAppearanceKey } from '../art/corpses';
 import type {UnitAnimationFrame} from '../unit-animation';
-import {animationKey,projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {projectActionFrame,actionPaintSize} from '../art/action-direction';
+import {unitPaintKey} from '../art/paint-identity';
 import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
-import { PaintedCardBatches } from './painted-card-batches';
+import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
+import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
@@ -39,9 +42,22 @@ import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
+class ActorPositions extends Map<string,ActorPosition>{
+  constructor(private locate:(id:string)=>ActorPosition|undefined){super();}
+  override get(id:string){return super.get(id)??this.locate(id);}
+}
 
 export class World3DLayer {
-  readonly positions=new Map<string,ActorPosition>();
+  /** Visible positions are eager; offscreen UI/effect lookups stay exact and
+   * are evaluated on demand instead of projecting the whole army each RAF. */
+  readonly positions=new ActorPositions(id=>this.offscreenPosition(id));
+  private viewIndex=new PresentationViewIndex();
+  private activeIndex=this.viewIndex;
+  private currentFrame:WorldFrame|undefined;
+  private posed=0;
+  private directionVisits=0;
+  private cardMipBases=[0,0,0,0,0];
+  viewStats(){return{...this.activeIndex.stats(),posed:this.posed,directionVisits:this.directionVisits,positions:this.positions.size,cardMipBases:[...this.cardMipBases]};}
   readonly camera=new THREE.OrthographicCamera();
   private scene=new THREE.Scene();
   private water=new WaterSurface(this.scene);
@@ -93,6 +109,11 @@ export class World3DLayer {
   private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
+  private colorMipPass:CardMipPass={camera:this.camera,physicalWidth:0,physicalHeight:0};
+  private shadowMipPass:CardMipPass={camera:this.sun.shadow.camera,physicalWidth:0,physicalHeight:0};
+  private colorMipPasses=[this.colorMipPass];
+  private actorMipPasses=[this.colorMipPass,this.shadowMipPass];
+  private mipInput:CardMipResidencyInput={sourceSize:1,tileSize:1,foot:0,matrix:new THREE.Matrix4(),passes:this.actorMipPasses};
   private shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.24}));
   private ball=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshStandardMaterial({color:'#414945',roughness:1}));
   private bolt=new THREE.Mesh(new THREE.ConeGeometry(1.5,24,4).rotateZ(-Math.PI/2).translate(-9,0,0),new THREE.MeshStandardMaterial({color:'#c0b391',roughness:1}));
@@ -105,8 +126,9 @@ export class World3DLayer {
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined){
-    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1));
-    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1});
+    const maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
+    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks});
+    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks});
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';
@@ -150,12 +172,24 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  private offscreenPosition(id:string):ActorPosition|undefined{
+    const frame=this.currentFrame,unit=this.activeIndex.units.get(id);
+    if(!frame||!unit||unit.deck||isInCabin(unit)||shipProfile(unit))return undefined;
+    const at=frame.motion?.position(unit,frame.now)??unit,model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
+    const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-foot*scale;
+    const result={x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing:frame.facing.releaseFacing(id)};
+    this.positions.set(id,result);return result;
+  }
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
     this.transformCount++;
     return matrix.compose(this.transformPosition.set(x,height,y),rotation??this.transformRotation.setFromAxisAngle(UP,-heading),this.transformScale.setScalar(scale));
+  }
+  private residentMip(tileSize:number,density:number,matrix:THREE.Matrix4,foot:number,castsShadow=true){
+    const input=this.mipInput;input.sourceSize=tileSize*density;input.tileSize=tileSize;input.matrix=matrix;input.foot=foot;input.passes=castsShadow?this.actorMipPasses:this.colorMipPasses;
+    const base=cardBaseMip(input);this.cardMipBases[base]!++;return base;
   }
   private deckPosition(unit:Unit,now:number){
     const track=this.deckMotion.get(unit.id);
@@ -167,22 +201,11 @@ export class World3DLayer {
   }
   draw(frame:WorldFrame){
     const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
-    this.frame++;this.transformCount=0;this.view=frame.view;
+    this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;this.cardMipBases.fill(0);
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
-    // Commands can replace a snapshot without advancing its tick (for example
-    // a crew member leaving shelter). Mutable recorder snapshots also advance
-    // ticks or replace arrays, so tick alone is not a sufficient cache key.
-    const indexCounts=`${snapshot.units.length}:${snapshot.buildings.length}:${snapshot.effects.length}`;
-    if(snapshot!==this.snapshot||snapshot.tick!==this.lastTick||snapshot.units!==this.indexedUnits||snapshot.buildings!==this.indexedBuildings||snapshot.effects!==this.indexedEffects||indexCounts!==this.indexCounts){
-      this.entities.clear();this.ships.clear();this.recoil.clear();
-      for(const unit of snapshot.units){this.entities.set(unit.id,unit);if(shipProfile(unit))this.ships.set(unit.id,unit);}
-      for(const building of snapshot.buildings)this.entities.set(building.id,building);
-      for(const effect of snapshot.effects)if(effect.type==='muzzleFlash'&&effect.itemId&&!this.recoil.has(effect.itemId))this.recoil.set(effect.itemId,effect);
-      this.snapshot=snapshot;
-      this.indexedUnits=snapshot.units;this.indexedBuildings=snapshot.buildings;this.indexedEffects=snapshot.effects;this.indexCounts=indexCounts;
-    }
-    const viewport=`${frame.view.width}:${frame.view.height}:${Math.min(devicePixelRatio,2)}`;
-    if(viewport!==this.viewport){renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
+    const pixelRatio=Math.min(devicePixelRatio,2),viewport=`${frame.view.width}:${frame.view.height}:${pixelRatio}`;
+    if(viewport!==this.viewport){renderer.setPixelRatio(pixelRatio);renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
+    this.colorMipPass.physicalWidth=Math.floor(frame.view.width*pixelRatio);this.colorMipPass.physicalHeight=Math.floor(frame.view.height*pixelRatio);
     configureWorldCamera(this.camera,frame.view);
     // Preloading match models may use the home snapshot. Only the frame being
     // rendered is allowed to bind scene terrain, including after a map change.
@@ -192,12 +215,30 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
+    // Evaluate the same public shadow camera the renderer will sample. A small
+    // color footprint alone is insufficient: the 2048px shadow can need detail.
+    this.sun.updateWorldMatrix(true,false);this.sun.target.updateWorldMatrix(true,false);this.sun.shadow.updateMatrices(this.sun);
+    this.shadowMipPass.physicalWidth=this.sun.shadow.mapSize.x;this.shadowMipPass.physicalHeight=this.sun.shadow.mapSize.y;
     frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
-    frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
-    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion));
+    frame.animation?.update(snapshot,now,frame.story?.unitActions);frame.motion?.update(snapshot,now);
+    this.activeIndex=frame.viewIndex??this.viewIndex;this.activeIndex.update(snapshot,frame.motion);
+    this.entities=this.activeIndex.entities;
+    // Commands can replace a snapshot without advancing its tick; recordings
+    // can advance a mutable snapshot or replace arrays. Reuse the shared entity
+    // index instead of constructing another all-world map for this layer.
+    const indexCounts=`${snapshot.units.length}:${snapshot.buildings.length}:${snapshot.effects.length}`;
+    if(snapshot!==this.snapshot||snapshot.tick!==this.lastTick||snapshot.units!==this.indexedUnits||snapshot.buildings!==this.indexedBuildings||snapshot.effects!==this.indexedEffects||indexCounts!==this.indexCounts){
+      this.ships.clear();this.recoil.clear();
+      for(const unit of this.activeIndex.ships)this.ships.set(unit.id,unit);
+      for(const effect of snapshot.effects)if(effect.type==='muzzleFlash'&&effect.itemId&&!this.recoil.has(effect.itemId))this.recoil.set(effect.itemId,effect);
+      this.snapshot=snapshot;this.indexedUnits=snapshot.units;this.indexedBuildings=snapshot.buildings;this.indexedEffects=snapshot.effects;this.indexCounts=indexCounts;
+    }
+    this.sailMotion.update({tick:snapshot.tick,units:this.activeIndex.sailing},now);
+    trackUnitFacing(frame.facing,snapshot,this.activeIndex.entities);
+    frame.combat?.update(snapshot,now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion),areas=>this.activeIndex.queryBoundsUnion(areas));
     if(snapshot.tick!==this.lastTick){
-      this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
-      for(const unit of snapshot.units)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
+      this.facing.update({units:this.activeIndex.crew});const continuous=snapshot.tick===this.lastTick+1;
+      for(const unit of this.activeIndex.crew)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
         this.deckMotion.set(unit.id,{shipId:unit.deck.shipId,x:unit.deck.x,y:unit.deck.y,fromX:start.x,fromY:start.y,at:now});}
       this.lastTick=snapshot.tick;this.at=now;
     }
@@ -208,6 +249,13 @@ export class World3DLayer {
       this.projectedDirection.set(direction.x,direction.height??0,direction.y).project(this.camera).sub(this.projectedOrigin);
       return{x:this.projectedDirection.x*frame.view.width/2,y:-this.projectedDirection.y*frame.view.height/2};
     };
+    this.directionVisits=frame.animation?.observeDirections(now,(id,direction)=>{
+      const unit=this.activeIndex.units.get(id);
+      // Crew use their deck heading as the fallback for vertical releases.
+      // They retain the exact pre-cull action path below; a ground-side lock
+      // here would steal that first release's correct mirror.
+      if(!unit?.deck&&!ships.has(id))frame.facing.actionFacing(id,direction,projectVector);
+    },frame.reducedMotion)??0;
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
     this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
@@ -231,7 +279,7 @@ export class World3DLayer {
       this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner, snapshot),!building.complete);
     }
     const revealedShips=new Set<string>();
-    for(const unit of snapshot.units)if(frame.selectedIds?.has(unit.id)){if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
+    for(const id of frame.selectedIds??[]){const unit=entities.get(id);if(!unit||!('order' in unit))continue;if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
     for(const ship of ships.values()){
       const at=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0,scale=shipScale(ship),profile=shipProfile(ship)!;
       const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
@@ -285,7 +333,7 @@ export class World3DLayer {
     }
     for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
-    for(const unit of snapshot.units){
+    for(const unit of this.activeIndex.query(frame.view)){
       if(ships.has(unit.id)||isInCabin(unit))continue;
       let at=frame.motion?.position(unit,now)??unit,height=0,facing=frame.facing.facing(unit.id);
       let bridge:ReturnType<typeof gangwayCrewVisualPose>;
@@ -299,12 +347,18 @@ export class World3DLayer {
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
       const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
-      const rawAnimation:UnitAnimationFrame=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
-      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
-      const animation=projectActionFrame(rawAnimation,facing,projectVector);
+      let rawAnimation:UnitAnimationFrame|undefined;
+      if(unit.deck){
+        rawAnimation=frame.reducedMotion?{mode:'idle',frame:0}:frame.animation?.frame(unit,now)??{mode:'idle',frame:0};
+        facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
+      }
       const scale=model?Math.max(.72,unit.radius/18):unitGlyphScale(unit.radius),foot=model?17:creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale,facing});
       if(!visible(at.x,bodyY))continue;
+      rawAnimation??=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
+      facing=frame.facing.actionFacing(unit.id,rawAnimation.direction??rawAnimation.carryDirection,projectVector,facing);
+      const animation=projectActionFrame(rawAnimation,facing,projectVector);this.posed++;
+      this.positions.get(unit.id)!.facing=facing;
       this.combatAnchors.set(unit.id,{x:at.x,y:at.y,floor:height,facing,sourceX:unit.x,sourceY:unit.y});
       const selected=frame.selectedIds?.has(unit.id)??false;
       if(unit.hp>0 && (selected || frame.hoveredId===unit.id)){
@@ -322,13 +376,14 @@ export class World3DLayer {
         this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
       }
       const appearance=appearanceFor(snapshot,unit);
-      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animationKey(animation)}:${facing}:${density}:${appearanceKey(appearance)}:${unit.variant??''}`;
+      const density=zoom<.65?2:4,key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
+      const tileSize=model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind),baseMip=this.residentMip(tileSize,density,transform,foot);
       this.cards.add(key,density,ctx=>{
         ctx.scale(facing,1);
         if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing,appearance);
         else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
-      },transform,unit.id,foot,model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind));
+      },transform,unit.id,foot,tileSize,1,baseMip);
     }
     for(const [shipId,corpses] of deckRemainsByShip(snapshot.corpses)){
       const ship=this.shipPoses.get(shipId);if(!ship||ship.hp<=0)continue;
@@ -340,10 +395,11 @@ export class World3DLayer {
       const appearance=corpseAppearanceFor(snapshot,corpse),color=ownerInk(corpse.owner,snapshot),variant=remainsVariant(corpse.id);
       const key=`corpse:${corpse.kind}:${corpse.variant??''}:${color}:${corpseAppearanceKey(appearance)}:${variant}`;
       const transform=deckRemainsMatrix(this.pose(0,0,0),pose,scale);
-      this.remainsCards.add(key,zoom<.65?2:4,ctx=>{
+      const density=zoom<.65?2:4,baseMip=this.residentMip(128,density,transform,0,false);
+      this.remainsCards.add(key,density,ctx=>{
         // The fixed seven-pixel baseline is already in the world transform.
         drawAtlasCorpse(ctx,corpse.kind,{x:0,y:-7},1,variant,model,corpse.variant,color,appearance);
-      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick));
+      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick),baseMip);
       }
     }
     for(const id of this.deckMotion.keys())if(!liveCrew.has(id))this.deckMotion.delete(id);
@@ -367,7 +423,7 @@ export class World3DLayer {
       }
     }
     this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
-    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion);else this.combatInk.clear();
+    if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion,frame.view);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
     renderer.render(this.scene,this.camera);
   }

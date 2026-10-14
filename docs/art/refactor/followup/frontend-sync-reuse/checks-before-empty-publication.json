@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-10-13T14:54:36.753000+00:00",
+  "gitHeadBefore": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "gitHeadAfter": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "sourceChecksumsBefore": [
+    {
+      "path": "src/client/debug-view.ts",
+      "sha256": "b68adcbee9adf10add74ecc1b11641fdf00559b08da09b54877899cd690a7a9c",
+      "bytes": 1598
+    },
+    {
+      "path": "src/client/frontend-world-view.ts",
+      "sha256": "ada7e3d81165036d55646682720d6f27ae63d6544c9715ba3ce74ee5054bef66",
+      "bytes": 1878
+    },
+    {
+      "path": "src/client/main.ts",
+      "sha256": "0ea585784527c76332f28b3b84f89e3fd98761d9538c21f40b783ea85a3654da",
+      "bytes": 196424
+    }
+  ],
+  "sourceChecksumsAfter": [
+    {
+      "path": "src/client/debug-view.ts",
+      "sha256": "b68adcbee9adf10add74ecc1b11641fdf00559b08da09b54877899cd690a7a9c",
+      "bytes": 1598
+    },
+    {
+      "path": "src/client/frontend-world-view.ts",
+      "sha256": "ada7e3d81165036d55646682720d6f27ae63d6544c9715ba3ce74ee5054bef66",
+      "bytes": 1878
+    },
+    {
+      "path": "src/client/main.ts",
+      "sha256": "0ea585784527c76332f28b3b84f89e3fd98761d9538c21f40b783ea85a3654da",
+      "bytes": 196424
+    }
+  ],
+  "sourceUnchangedDuringChecks": true,
+  "focusedTests": {
+    "command": [
+      "npx",
+      "vitest",
+      "run",
+      "src/client/frontend-world-view.test.ts",
+      "src/client/debug-view.test.ts",
+      "src/client/selection-controls.test.ts",
+      "src/client/control-groups.test.ts",
+      "src/client/hud-model.test.ts",
+      "src/client/build-placement-controls.test.ts",
+      "src/client/item-controls.test.ts",
+      "src/client/ship-boarding-controls.test.ts",
+      "src/client/game-adapter.test.ts",
+      "src/client/net/local-adapter.test.ts",
+      "src/client/net/lockstep-client.test.ts"
+    ],
+    "startedAt": "2026-10-13T14:53:55.954784+00:00",
+    "endedAt": "2026-10-13T14:53:59.723131+00:00",
+    "seconds": 3.768,
+    "exitCode": 0,
+    "passed": true,
+    "testFilesPassed": 11,
+    "testFilesTotal": 11,
+    "testsPassed": 84,
+    "testsTotal": 84,
+    "log": "focused-tests.log"
+  },
+  "typecheck": {
+    "command": [
+      "npx",
+      "tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-10-13T14:54:08.738851+00:00",
+    "endedAt": "2026-10-13T14:54:21.994251+00:00",
+    "seconds": 13.255,
+    "exitCode": 0,
+    "passed": true,
+    "log": "typecheck.log"
+  },
+  "scope": "Only the assigned 11 existing test files and TypeScript noEmit; no browser, production build, full client suite, source edits, frozen baseline changes, or commit."
+}

@@ -1,0 +1,25 @@
+{
+  "operation": "verify",
+  "sourceCommit": "42bd61c74934dc76f30d42b62e1e31eb5c5974ff",
+  "executionScriptSha256": "a027cdeac5ea5db46d5ae02666341e71c8b5ccfd7071ec7e96c629032caf2223",
+  "verifiedRuns": 5,
+  "verifiedSets": 10,
+  "verifiedFiles": 11250,
+  "originalSourceBytes": 96871560,
+  "uniqueArchives": 1,
+  "archiveBytes": 2221603,
+  "archives": [
+    {
+      "file": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0.tar.gz",
+      "bytes": 2221603,
+      "sha256": "4367770df4b0e80693571cd930574bda73701e91a04bb8e9b779863637e26ec2"
+    }
+  ],
+  "fileSetSha256": "99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0",
+  "deletedFiles": 0,
+  "restoredFiles": 0,
+  "restoredRoot": null,
+  "everySourceFileSha256AndGitBlobVerified": true,
+  "rawHelperVendorFilesReadOrChanged": false,
+  "meaning": "Source byte preservation only; failed runs retain original failure status."
+}

@@ -1,0 +1,4492 @@
+{
+  "fps": 10,
+  "simSnapshotHashes": [
+    "cc4760cffe07b048bfed3e0ed70c1188260c12eb578efab5c0c01d688877decc",
+    "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+    "ccfebbf3e83179e3e0bbce40701c50154728ec8c159ae5cb45de7fc3ab666e01",
+    "b97cccd2d955e04e404b0a482950b8a4a968ec6909c7f525d131103e5b3e20de",
+    "12259ed026b2140b7a3bbdba9f4cfd358326c0585927344efb960ddf0210fee8",
+    "e7730a07827b74d8894f5cccd47f0e29e3369de59361a2978552077776399608",
+    "9e89f477ae841da9446152c270dc7af898c653e5f910d8f2bf5bf252af15ff54",
+    "b86470fa85764944eaa6b223279bcf5307d692da921956e7765990a31b4e826e",
+    "2a7ee3971d4d449a7e4d151f13acd2ccdb4afd2325937f9536461dbc11d8ad89",
+    "4ac35afc3e9da03e85ff13ef34578d687452a23b4b009826af540c65fc020a48",
+    "069b86fb8e9b478a9c2315d6287e98f058bbfb4e7de3c4df5b7415ccb373ed5a",
+    "1fe8b2e59be5640d68c6105a85e01e585d1a913c1591342e55f090831d8f5dd4",
+    "7575acc7dafc46030e9e21e70d01ac762959d3ef3eff6edec37b2fc276ad98af",
+    "93b2b4b5b771ccb793c7d4e69d709e0dbe848f9924feecbbc1a76f762030e8d3",
+    "13390206aac2b39a0539be358c3a7b09ebefad606f9d4f722751cdb65ed9dc1b",
+    "6940bd4cfdb0c795e76f54e39c14728cb9ed61609de794cc5ad57b236328ca7f",
+    "f19cd3abde2bef90ab1efe990cd4e1752506cc72f1eee7695f8f5126efe41b1f",
+    "e37ec4cc3261257564bb210f5a028b17ffded36bda7cb0db744e2db390d6a942",
+    "6b594c7839a84c4d53fce1f748420b3c7e6c9096b0f82d4a49364421003533a0",
+    "8ee952bb46ce99b3c3feefd4a90ddb25e1dd9979272045766286d6a616cb653a",
+    "eb2fd33aa55bccf6e9a26ccccd88601acb3c0e89288d22c92bb65f00d995f2cb",
+    "73a5a6e28761d9fbe980d640dd67e930a6f6341cb624eb52b622633290335345",
+    "42c0caab05793a0f87e7dcc2d7a02a8acdb67e6b2cd3c0ccc2859ac3e0faafc2",
+    "a7d706659edde2662db23e78272fc7fba181ab133db23f53bea5fe67ca3f7900",
+    "fd8830b4f33003f629ab9a960a3bc0dd7315f340c7683bca5465ad181ddd3686",
+    "3ca6a20fcbef7256ba619aa50f67e4eaf7893e2c9d67b153f63b48cc80dca291",
+    "f221ca4b0468c6004abde7e78f9adab5acdca02836b9e87eb1c31ec527d2e24b",
+    "a8c94a7153768744d37049ace2d7246893be305f2d0ed71f5bfd7bd4365d1deb",
+    "7c71810983d96a53a4ce18ad9f3409961f4d504cdb5e35b80d9b1cdc6666fccc",
+    "3ff8e71692101deb93ee5047d0ceb811d86898eaddff668b4f61484a43857ccd",
+    "c679fa523c8586fa064683168bb7dd009301315c1ccf7918ca59fc4751b6aed0",
+    "12bb5982eaa32103ce701a3fce96ce2ebbc92a3507f095f9120a3bfbb6b0eaf6",
+    "c148922d4d1aa4a12f4bf9a3a82ebd1b811757178dd5ef00bceda0a014d9b379",
+    "31c13c299597b36ba68edb58ba96e413b02158c496e908b2d7f06271b941823c",
+    "d5ba8e5fa72308377fa20cec175e2a9d8471bfd469d0e22c0d3b6c801a0f6dc2",
+    "b1766613884c67da2bf585044ae86dd954e2d8fb5550a03c957d2b16eda68878",
+    "b296840902c20180259a4e1630a7ba51be487eb06353fb847bf7a835d1ce0b99",
+    "437d028bf8ec4d49ae199ca03eea17ef78a82e3d5b72c04cc057efb45fb2b3ad",
+    "0d105005d1fddb5b08c0d502ca933e4097defe9bcfb237e0ef9d7ff08a5feaaa",
+    "9c7a8cb664223f306e4676f85a619dba8006919942b2648d0c37622a78c733dd",
+    "e1ea2230bc40ec32b290afa2c3eeb1d53662fee584c5fa5f934c550c047df49f",
+    "5a173890c2ffa045bbab00f78237150f596e761952a25352c30fc0a7f8c4de18",
+    "4c730e26024fa3256a11f49c4d5fe8c6e80fcd63c4b539c91b2ccd1125f31af4",
+    "10093ce03a9eacffff8e6f4b36cee303de9c06cb28f13604d47c7ae9cd8a506c",
+    "44e8bb7ef485a1555336bfab5d83c1bda8203d19dd4e6de1d86963b6bb39aac9",
+    "ca486bcfccafcf85e67521d92830718d26d6876868c85245f15f64700c96ff24",
+    "45657756ece1c701efc0b3c1d69ebe6a2ee359278c95e5346400121d05dc2900",
+    "ba495f9a62519570a10389a0247a3ce5f5dde28b7b3683c5f0a077da706a6c81",
+    "5a819ffeb48c21f570966e1b00f1db110389f56276d159479bc4d197917e40b5",
+    "a02e57d4a327bbc76806c9f5db928262533dda8f43523f269c9e3eba99a2437b",
+    "293926fd034043e85bddbdd720ee5b11cb85ca3335ddef762f0350c62d37b95c",
+    "02b07566598defab166c9a6e42b90d8b39f016d44bc6bd6f371e5bd74ef73469",
+    "ab218d024a371d82e182456919c39e20904266feae0bf38957800a06d488735b",
+    "f1416c1eb9bda6d67df65b211fd4265f4a2c3945a34c9107223ecafce7cb2c54",
+    "97a3a7ad86043160f033d895de8a8bfaa0a098a70dcab14637134d8a4d63f8ed",
+    "d4684db90d0d1610e356a74e5842a68edf44801f9f2c822ab87a8d9ec83eb39f",
+    "75bcaa8b1551acf495fef2b43f2885d0689b678d1de668e51da7d8ff5ab98471",
+    "360a6abc06d8021c1c0ce11e09c82d4a66723f98f4217df0f0fc09821793fbb9",
+    "7d35b93c455b91bdde1bea80fced3fb51110c77008cf560780d6820b74d40cc3",
+    "56a7ba117d8d52c6447d41794c60086e9b42d87013d6c9cb29614767cbc3628d",
+    "240ea99a45f55f204cc61c8c8b20f7559e5b9d45e91d2ee7962143ffa15cdfa3",
+    "d67e2f01ad89424ac203bca13a43d250e71f06355c0bc1f7e627780ed833289e",
+    "817acef57d8332f180f1c03c494f498269325b6c16a15ee30494b6aa02a6dc2f",
+    "e309c3f852fe4572c0c69c90b04e5ad4908ae3e94e8b05a5da90c55aef280db9",
+    "524cda1354c8b32b13736f0d722163daa5328bcea9e8929c3e8a74bcb3d77667",
+    "cfece8900972744c3cd9d3c9c167c6614eb16dcccde06a2ab5322ff98549b8ae",
+    "8733ae0c151fbca19c586c39e52240a4a7c4151722745226fbb4517b6aba8bfb",
+    "1266fee4f6805247a004d8ccdbbdb14d4e365e23d588d3d0b0a02607e5af5ec5",
+    "35bd607cb652fd7b9508ccc4dc33bf03cf6f792b9e29b2780d5af7d265b3fc77",
+    "81b4f78cd03464c4cef441ef4c03f185f54bb3fcac088480417888fd9f4b0a53",
+    "2e481438d4b685c24a2b3a2a876f12bd6b022372659c1e3f8831b332dfa6600c",
+    "1435b656555d1da9a3c531eb1c114e17ac04fd1deadb807837315b12c22b39fa",
+    "16021665d4c2e5bd0d29d6bb13867f87b6e905ee18fde42f4248589de45977b0",
+    "c289d5cb273268d058c19d93e788635095d4f2b4be6c8f1c333b21742f3e137c",
+    "16ab23047a45685cabd09c5cdf58d4962b4b05f51211864f3b0b5f996981213c",
+    "d0b9a7b6649fb80d15fd91eb090f0fa8b18527f31ca6ecf8106ebef2d8dd18c8",
+    "fa9d2371cb7f6e2298a77ed362630a0cc8cddda575ec13c38195d38d383f99d3",
+    "4bcc2e30d70165e6d63681038a408fcea2542cb7e41619c33c5916c4b3c05627",
+    "6166c9b7af94005b6c0fb73a98e77fc0685d37c5153cb83efc08e809d92f2e6e",
+    "d130997963debde47d3edaaca1a0cd1a49d065a0d59b6a4ad67fe96e1e436552"
+  ],
+  "viewportProbes": [
+    {
+      "frame": 1,
+      "tick": 2,
+      "now": 100,
+      "trackerDrops": 30,
+      "emptyTrackerDrops": 30,
+      "battlefieldInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "emptyInk": {
+        "count": 0,
+        "capacity": 32,
+        "drawCalls": 0,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 30,
+        "air": 0,
+        "body": 0,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "returnedInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "simHashBefore": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "simHashAfter": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "scope": "Same simulation tick, snapshot and clock. Probe performs two extra presentation draws and zero simulation steps. Starts while the first real lethal-hit drops are airborne.",
+      "images": {
+        "originalPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-originalPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        },
+        "emptyPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-emptyPng.png",
+          "sha256": "14129a8953fe22259847e644ab79d2637ef42d3ebd5ec9a8d681c68d8de78d04"
+        },
+        "returnedPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-returnedPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        }
+      },
+      "returnPngIdentical": true,
+      "simulationUnchanged": true
+    }
+  ],
+  "guards": [
+    {
+      "label": "Right / up / idle",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 30,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 32,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 34,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 4,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 3,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 2,
+          "aim": -4,
+          "side": 1
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 80,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 82,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 84,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 86,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 88,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 90,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 92,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 94,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 96,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 98,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 100,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 102,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 104,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 106,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 108,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 110,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 112,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 114,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 116,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 118,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 120,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 122,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 124,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 126,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 128,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 130,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 132,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 134,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 136,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 138,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 140,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 142,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 144,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 146,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 148,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 150,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 152,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 154,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 156,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 158,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        }
+      ]
+    },
+    {
+      "label": "Right / down / retreat",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 28,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 30,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 32,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 34,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 36,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 38,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 40,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 42,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 44,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 46,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 48,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 50,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 52,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 54,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 56,
+          "mode": "walk",
+          "frame": 0,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 4,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 3,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 2,
+          "aim": 4,
+          "side": 1
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 80,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 82,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 84,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 86,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 88,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 90,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 92,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 94,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 96,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 98,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 100,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 102,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 104,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 106,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 108,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 110,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 112,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 114,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 116,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 118,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 120,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 122,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 124,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 126,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 128,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 130,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 132,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 134,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 136,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 138,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 140,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 142,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 144,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 146,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 148,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 150,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 152,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 154,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 156,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 158,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        }
+      ]
+    },
+    {
+      "label": "Left / up / idle",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 28,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 30,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 32,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 34,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 36,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 38,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 40,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 42,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 44,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 46,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 48,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 50,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 52,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 54,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 56,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 4,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 3,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 2,
+          "aim": -4,
+          "side": -1
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 80,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 82,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 84,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 86,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 88,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 90,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 92,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 94,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 96,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 98,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 100,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 102,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 104,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 106,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 108,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 110,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 112,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 114,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 116,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 118,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 120,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 122,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 124,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 126,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 128,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 130,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 132,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 134,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 136,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 138,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 140,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 142,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 144,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 146,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 148,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 150,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 152,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 154,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 156,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        },
+        {
+          "tick": 158,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": -1
+        }
+      ]
+    },
+    {
+      "label": "Left / down / retreat",
+      "samples": [
+        {
+          "tick": 0,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 2,
+          "mode": "attack",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 4,
+          "mode": "attack",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 6,
+          "mode": "attack",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 8,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 10,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 12,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 14,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 16,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 18,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 20,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 22,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 24,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 26,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 28,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 30,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 32,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 34,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 36,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 38,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 40,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 42,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 44,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 46,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 48,
+          "mode": "walk",
+          "frame": 3,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 50,
+          "mode": "walk",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 52,
+          "mode": "walk",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 54,
+          "mode": "walk",
+          "frame": 5,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 56,
+          "mode": "walk",
+          "frame": 4,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 58,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 60,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 62,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 64,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 66,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 68,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 6,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 70,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 4,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 72,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 3,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 74,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 2,
+          "aim": 4,
+          "side": -1
+        },
+        {
+          "tick": 76,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 78,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 80,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 82,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 84,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 86,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 88,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 90,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 92,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 94,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 96,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 98,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 100,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 102,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 104,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 106,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 108,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 110,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 112,
+          "mode": "idle",
+          "frame": 6,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 114,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 116,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 118,
+          "mode": "idle",
+          "frame": 7,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 120,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 122,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 124,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 126,
+          "mode": "idle",
+          "frame": 0,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 128,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 130,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 132,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 134,
+          "mode": "idle",
+          "frame": 1,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 136,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 138,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 140,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 142,
+          "mode": "idle",
+          "frame": 2,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 144,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 146,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 148,
+          "mode": "idle",
+          "frame": 3,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 150,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 152,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 154,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 156,
+          "mode": "idle",
+          "frame": 4,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        },
+        {
+          "tick": 158,
+          "mode": "idle",
+          "frame": 5,
+          "carry": 0,
+          "aim": 0,
+          "side": 1
+        }
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "tick": 0,
+      "drops": 0,
+      "ground": 0,
+      "body": 0,
+      "neighbor": 0,
+      "weapon": []
+    },
+    {
+      "tick": 2,
+      "drops": 30,
+      "ground": 0,
+      "body": 2,
+      "neighbor": 0,
+      "weapon": []
+    },
+    {
+      "tick": 4,
+      "drops": 30,
+      "ground": 0,
+      "body": 2,
+      "neighbor": 0,
+      "weapon": []
+    },
+    {
+      "tick": 6,
+      "drops": 29,
+      "ground": 0,
+      "body": 3,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 8,
+      "drops": 29,
+      "ground": 0,
+      "body": 3,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 10,
+      "drops": 29,
+      "ground": 0,
+      "body": 3,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 12,
+      "drops": 28,
+      "ground": 0,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 14,
+      "drops": 28,
+      "ground": 0,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 16,
+      "drops": 19,
+      "ground": 9,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 18,
+      "drops": 8,
+      "ground": 20,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 20,
+      "drops": 8,
+      "ground": 28,
+      "body": 5,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 22,
+      "drops": 8,
+      "ground": 28,
+      "body": 5,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 24,
+      "drops": 13,
+      "ground": 28,
+      "body": 3,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 26,
+      "drops": 12,
+      "ground": 28,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 28,
+      "drops": 12,
+      "ground": 28,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 30,
+      "drops": 12,
+      "ground": 28,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 32,
+      "drops": 12,
+      "ground": 28,
+      "body": 4,
+      "neighbor": 0,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 34,
+      "drops": 9,
+      "ground": 30,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 36,
+      "drops": 4,
+      "ground": 35,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.65,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 38,
+      "drops": 2,
+      "ground": 37,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 40,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 42,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 44,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36.45961940777126,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 46,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 48,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 50,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 52,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -36,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 54,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 56,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 58,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 60,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 62,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 64,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 66,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.7733333333333334
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.35,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 68,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.7466666666666666
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 43,
+          "y": -35.54038059222874,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 70,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 42.39420254821619,
+          "y": -47.685007924401106,
+          "width": 1.1199999999999999,
+          "alpha": 0.7200000000000001
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 42.39420254821619,
+          "y": -47.685007924401106,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 72,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 40.68241614330356,
+          "y": -53.376580032208004,
+          "width": 1.1199999999999999,
+          "alpha": 0.6933333333333334
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 40.68241614330356,
+          "y": -53.376580032208004,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 74,
+      "drops": 0,
+      "ground": 39,
+      "body": 5,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 38.10297574167446,
+          "y": -58.6219418856201,
+          "width": 1.1199999999999999,
+          "alpha": 0.6666666666666667
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 38.10297574167446,
+          "y": -58.6219418856201,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 76,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.64
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 78,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.6133333333333333
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 80,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.5866666666666668
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 82,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.56
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 84,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.5333333333333333
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.8
+        }
+      ]
+    },
+    {
+      "tick": 86,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.5066666666666667
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.7762440197398571
+        }
+      ]
+    },
+    {
+      "tick": 88,
+      "drops": 5,
+      "ground": 39,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.48
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.7495773530731904
+        }
+      ]
+    },
+    {
+      "tick": 90,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.4533333333333334
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.7229106864065238
+        }
+      ]
+    },
+    {
+      "tick": 92,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.4266666666666666
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.6962440197398572
+        }
+      ]
+    },
+    {
+      "tick": 94,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.4
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.6695773530731906
+        }
+      ]
+    },
+    {
+      "tick": 96,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.37333333333333346
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.37320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.6429106864065239
+        }
+      ]
+    },
+    {
+      "tick": 98,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.3466666666666667
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.6162440197398572
+        }
+      ]
+    },
+    {
+      "tick": 100,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.32000000000000006
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.5895773530731905
+        }
+      ]
+    },
+    {
+      "tick": 102,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.2933333333333332
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.5629106864065239
+        }
+      ]
+    },
+    {
+      "tick": 104,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.26666666666666666
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.5362440197398572
+        }
+      ]
+    },
+    {
+      "tick": 106,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.2400000000000001
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.5095773530731904
+        }
+      ]
+    },
+    {
+      "tick": 108,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.2133333333333333
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.48291068640652385
+        }
+      ]
+    },
+    {
+      "tick": 110,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.18666666666666673
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.4562440197398573
+        }
+      ]
+    },
+    {
+      "tick": 112,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.15999999999999992
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.42957735307319045
+        }
+      ]
+    },
+    {
+      "tick": 114,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.13333333333333333
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.4029106864065239
+        }
+      ]
+    },
+    {
+      "tick": 116,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.10666666666666676
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.3762440197398571
+        }
+      ]
+    },
+    {
+      "tick": 118,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.07999999999999996
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.3495773530731905
+        }
+      ]
+    },
+    {
+      "tick": 120,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.05333333333333338
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.32291068640652393
+        }
+      ]
+    },
+    {
+      "tick": 122,
+      "drops": 0,
+      "ground": 44,
+      "body": 4,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.026666666666666575
+        },
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.29624401973985715
+        }
+      ]
+    },
+    {
+      "tick": 124,
+      "drops": 0,
+      "ground": 44,
+      "body": 3,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.2695773530731906
+        }
+      ]
+    },
+    {
+      "tick": 126,
+      "drops": 0,
+      "ground": 44,
+      "body": 3,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.07320468678557,
+          "width": 1.1199999999999999,
+          "alpha": 0.24291068640652377
+        }
+      ]
+    },
+    {
+      "tick": 128,
+      "drops": 0,
+      "ground": 44,
+      "body": 3,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.21624401973985719
+        }
+      ]
+    },
+    {
+      "tick": 130,
+      "drops": 0,
+      "ground": 44,
+      "body": 3,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.1895773530731906
+        }
+      ]
+    },
+    {
+      "tick": 132,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.1629106864065238
+        }
+      ]
+    },
+    {
+      "tick": 134,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.26358527901432,
+          "width": 1.1199999999999999,
+          "alpha": 0.13624401973985723
+        }
+      ]
+    },
+    {
+      "tick": 136,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.10957735307319041
+        }
+      ]
+    },
+    {
+      "tick": 138,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.08291068640652384
+        }
+      ]
+    },
+    {
+      "tick": 140,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.056244019739857265
+        }
+      ]
+    },
+    {
+      "tick": 142,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -67.72320468678558,
+          "width": 1.1199999999999999,
+          "alpha": 0.029577353073190454
+        }
+      ]
+    },
+    {
+      "tick": 144,
+      "drops": 0,
+      "ground": 44,
+      "body": 2,
+      "neighbor": 1,
+      "weapon": [
+        {
+          "unit": "unit-player-lancer-1008",
+          "x": 30.68564048909146,
+          "y": -68.18282409455684,
+          "width": 1.1199999999999999,
+          "alpha": 0.0029106864065238844
+        }
+      ]
+    },
+    {
+      "tick": 146,
+      "drops": 0,
+      "ground": 44,
+      "body": 1,
+      "neighbor": 1,
+      "weapon": []
+    },
+    {
+      "tick": 148,
+      "drops": 0,
+      "ground": 44,
+      "body": 1,
+      "neighbor": 1,
+      "weapon": []
+    },
+    {
+      "tick": 150,
+      "drops": 0,
+      "ground": 44,
+      "body": 1,
+      "neighbor": 1,
+      "weapon": []
+    },
+    {
+      "tick": 152,
+      "drops": 0,
+      "ground": 44,
+      "body": 1,
+      "neighbor": 1,
+      "weapon": []
+    },
+    {
+      "tick": 154,
+      "drops": 0,
+      "ground": 44,
+      "body": 0,
+      "neighbor": 0,
+      "weapon": []
+    },
+    {
+      "tick": 156,
+      "drops": 0,
+      "ground": 44,
+      "body": 0,
+      "neighbor": 0,
+      "weapon": []
+    },
+    {
+      "tick": 158,
+      "drops": 0,
+      "ground": 44,
+      "body": 0,
+      "neighbor": 0,
+      "weapon": []
+    }
+  ],
+  "renderSubmitMs": [
+    147.4000000001397,
+    66,
+    32.10000000009313,
+    52,
+    32.4000000001397,
+    3,
+    3.199999999953434,
+    3.5,
+    50.39999999990687,
+    2.300000000046566,
+    6.5,
+    6.5,
+    35.39999999990687,
+    29.100000000093132,
+    20.5,
+    57.10000000009313,
+    15.099999999860302,
+    15.900000000139698,
+    11.200000000186265,
+    31.800000000046566,
+    10.200000000186265,
+    9.600000000093132,
+    6,
+    28.199999999953434,
+    7.400000000139698,
+    6.899999999906868,
+    4.7999999998137355,
+    31.799999999813735,
+    10.800000000046566,
+    14.699999999953434,
+    36.699999999953434,
+    9.100000000093132,
+    7.2999999998137355,
+    7.100000000093132,
+    29.899999999906868,
+    25.199999999953434,
+    43.300000000046566,
+    29.699999999953434,
+    14.100000000093132,
+    8.300000000046566,
+    8.400000000139698,
+    8.5,
+    21.199999999953434,
+    8.800000000046566,
+    13.199999999953434,
+    16.300000000046566,
+    12,
+    10.699999999953434,
+    6.199999999953434,
+    20.300000000046566,
+    10.5,
+    10.399999999906868,
+    5.5,
+    21.399999999906868,
+    5.399999999906868,
+    11.199999999953434,
+    10.300000000046566,
+    12.699999999953434,
+    7.800000000046566,
+    2.9000000001396984,
+    13.5,
+    7.599999999860302,
+    4.599999999860302,
+    7.5,
+    14.900000000139698,
+    2.800000000046566,
+    4.2000000001862645,
+    4.2999999998137355,
+    12.100000000093132,
+    7.399999999906868,
+    1.8999999999068677,
+    7.600000000093132,
+    14.200000000186265,
+    2.5,
+    6.7999999998137355,
+    15.300000000046566,
+    2.5,
+    3.9000000001396984,
+    2.699999999953434,
+    6.900000000139698
+  ],
+  "bodyTransfer": true,
+  "weaponTransfer": true,
+  "walkGuard": true,
+  "holdGuard": true,
+  "expired": true,
+  "wrongFacing": 0,
+  "glError": 0,
+  "passed": true,
+  "method": "160 real ticks. Four lancers kill low-HP targets with normal combat; two then retreat. Natural melee coats nearby weapons. One explicitly scripted strikeUnit(75, melee) exercises a stronger real hit next to a bystander. Combat stats, AI and simulation rules unchanged. 3-second guard starts after recovery; 450ms return. Capture-only preserveDrawingBuffer.",
+  "viewportProbeImages": [
+    {
+      "originalPng": {
+        "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-originalPng.png",
+        "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+      },
+      "emptyPng": {
+        "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-emptyPng.png",
+        "sha256": "14129a8953fe22259847e644ab79d2637ef42d3ebd5ec9a8d681c68d8de78d04"
+      },
+      "returnedPng": {
+        "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/battle-before/proof-probe-0-returnedPng.png",
+        "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+      }
+    }
+  ],
+  "framePngSha256": [
+    "fc15840669e3581edee57791bcc8849c64bbb24a462ec5b79fe9932bc08c1383",
+    "e1f7ec976f3720ad6f2f95c1d046854bf213465924dbfe309e4c6d149cb6e1f7",
+    "3032bab8a22022b37ef30ceb26739cf87616fdf3e9e41d4dd685df73109b3ecf",
+    "ae666e01e6576c7b33c6d51814d36b3ea47e4efb4eca1b1846072c6cb6dfbdaa",
+    "583c3220888aec5125d6bc0009aa73c5dbc647606a78baa2ce4cf351bfeb047b",
+    "afc3dd12e0f7e8c748bfd1e262aa2af8a52d2e3612c8ff40b431ba30b3b6109c",
+    "885f3ca61a1e34eed9236010350e51cc996ca69725e67368273aa2a28ec23d54",
+    "38d5b489e37a2c235e650ba78b5a34b0dca2c65eeb15486c6cd1b14574507973",
+    "81efe94d85ca5b3669aec9f1e803150a32c11c57a0c166d348519da9f26fd727",
+    "a949f7b1c1bdcd76d5a365ae13594bfd2c7306afab0859e4b5f380b7309a5388",
+    "8af7a692921d46c8c87192335c67c6cb45e3d6180b0555c2cefb4c66f25a275d",
+    "aac8faa7262bc710e90c87296e0c1770419ced7a157784dad1d6e2139ff01c36",
+    "088fb0042f628bbcb6dde3d98773b2ba055d927abbf740845435f5601084c924",
+    "fe94286d24d9ac7b0c7f27e9819d1776297639e2b605bf4ab82b02f6158cd1b8",
+    "1c808c1e7bd675c9fb83de72f5b753fbbef9ec05d5a63903f4e65f2121e9772b",
+    "a84adfd6a1ace9143fa2409021386d9f82acdb41262eb158cfb3d7a62732bdd0",
+    "ac132b45821309591119baa3b580ae6c6fbad5bd7afc6b5bc118ccda46511606",
+    "9838824e9c6c4269b4e64fb2a822d468db668db04ff490e367f68b0ddc77e39c",
+    "0adf83911295607aaeba6b3e1d09972bd1116ca8e5eb30cd68b0dfd984dff53e",
+    "7460ad821f20f9d96374057d61ae9659cf8607d427a597f27dd7f73794bb2928",
+    "9ef2e53ea85e3ed2ca6fc83ca9ce4bacd516f1e1a4db9c6e33a6c1eaaf451465",
+    "bcb7b101daba0279e910c4b099bd4303447f442b31af302efa2549adf9378372",
+    "da7258a7a080e23df396bee84f3ab501176bbef653639c832dafa9dcb5d1d4b2",
+    "551c411af5bb73db0edb7f82d7a8574290a5d688d7bf58b701acf855f5056527",
+    "f337493a408fef16bc8514f3dc3f3e995413725ac9f86d8d2e000a61819186df",
+    "afd605849801fe86b625a70375d3cb9de2748348891ccf9aba916bdc84f773d3",
+    "ce7a78e37d4348cbdcf0fed2f8bd8f5710e8394f81b4413af941351026ac2cbb",
+    "177bb3bb967be1d67e2977f8fa67b0b360b8abd8f06801074742af298a385fbd",
+    "ddfc719e9e113aa65dc155aa3bc92e0e38658b8bd3346fe2617b1c63eaf46b69",
+    "be20a1b9921d1129ec094484e1d5ba0534d1402c99452d55b0f1c31a3a106c68",
+    "93d0aa7d70065c7e1e77da9f2676412075f9e53387592caeaba1cfbc17ca4922",
+    "c117fd244afcccb32efbac4d66a0d4d7acc37dbefa7cec7b397fa4ae61482011",
+    "16f95cd9aa69c216fe1953b0b656839566b7280ae5747d97e807a3e04783ed39",
+    "5fcb3bd817b89f6407a4ffc5a4b48076ffec318752d91f1ce9887eaafa81417e",
+    "353c952662050c5882c676906f4b9915738411d62f98ce935a6495a97b6c1119",
+    "86c02f8e136661dde29f7c30590002bea74d29f43ce93c49ab50c1bea9a58f6b",
+    "903775d1a49a8b5fc06df5d055912719be05e21cbc3cab257742675161294e61",
+    "edc5b96a35106efff4ad78d17dd90b6a698c21122398b1eba0e45f7ae11a3ed9",
+    "97b9ad1fb37e60bbee58594c6086d506f766d1ca16f8211ea7045de7fa187e1a",
+    "4b3c1e21233b9718bb82f3e491265cd72216f7e3000eafaf53b50895810f281b",
+    "b91a224621a12522a30e1e366e91736095dd988ca8f0c5bab835882bd0e2d885",
+    "73ff01e792c587d30ee842f6f7ee060db613416c7c2685d518bd5a7be7a509fe",
+    "aa61404c8fea23ee70e9e7d46af5d7ea1861c4246f421d777a57be6d316ff265",
+    "4a625a6268d44ddd0a6bcafdc8d80767e1b5c5f2a91a3d26fd022e060db2043f",
+    "c768300bcd5eb78c6b68996d381e560f4e4df15e8fcc78229d9f09cdfcdc1786",
+    "d9fcc6ea765de99416f37d558842a54cedd2be015bc7a06e6f9560e6e4ea5cb9",
+    "fb48d218bf2c3683f7aa6a4a4f76a56c7726d9f8909344563b5959a4e5a4ba06",
+    "fdec7a6dc5a342b3bc5bb694ad6b35286a4ec9537b14747a3b693dedc4f3d1c2",
+    "dbc3aed1381a0e167fddf40e30a47df787d6df4e6fcddda424eb178b5ee562cf",
+    "bd526c261d65b1c8e10fa9a3c82b68555c9c6d35d7328dddf0a3537c1f38695a",
+    "0f651fbfd8d8cb933ef2f372bd28ff2105475b33df01a25167e24ae332a7d5e9",
+    "1805cc5484547f79d49258993ea6a4799b4d75f92cb03d4aca25ef52edf76c5b",
+    "35eed8c39de752352fad5cbf4a8d0bf8e203a6207de2966c15107c2f45dad0b3",
+    "4d502e8cdc4f157c1efd67c0311b1d84eb1a75a362f6f55036e22cf5f8b68dd4",
+    "62dca304f3319b032cfa5ded9e39fb1a40773839931b9c139b1ad286f06e7cf2",
+    "7a9775d5dc22a08d9e7a4fcc1547cc9ad69ca14f31da60c98b867a218a009495",
+    "0b22bebe90307381750956031a7f169423ef0251f362508262b05bb8b653a30e",
+    "245b9d55c85b322f9628f8e8c35324a584c43756ef1ca097be30cce0574e9daf",
+    "aa7645b23a9e8a6e1d17e26ca737b86027f3c594fa60a37dd3684dc6549ffead",
+    "b1aed34faf526220ced7856a06cc0c5f98caaaff67c87ae01eb4bdb373abbce4",
+    "bbe52aa5e955a0c3c5e75420751ff1e4c2516dd41a86f3fa225e3f76b3971932",
+    "d197da22052f62edd57a6f70207b5b448385927211587348d2135be70b2f2971",
+    "d8e5664c8279a9d819261a2b0bc2a4c5f0f69f0aaa3e000699d3379ea05fbba4",
+    "9f22e816fa380d4229be21103eaa05799665465e9c39677dd6052e0b8ab238b7",
+    "e6b6ef9adc1b78ee905a03e1efd86070a36725efef60f4e65f12758ad3618b2b",
+    "313718fbddfa51d918fd5c62206f891057165e5ae381b81e3d917c028d3c7ec5",
+    "f1f55d0b3bab5b66345aaf33b431c88a9da45e1c1883ced34f869b995c766266",
+    "72b5ca06ef6945b3c9d1e877df8e07ffffb147d43495138a73bd504304935d7a",
+    "e0f2c21176b30ea2a0a5f771211bfbac824dd681d8d3e083a470f9b7b7d96dd1",
+    "ad8dab11f2ac18a64536cb0e385260ce2cf60deaa0695efcece63319593edeeb",
+    "46cba4f3aa0975500f5751c5ce0659dd4930971e96658a64b7e23608e4013578",
+    "f47ef3cebc289a56d9c73b22d83e41ea795045de841c26d3abb4fc0543e7e14b",
+    "e7763416bccd9674fc15bfd75a386df4789bf6446c413a1d34db9cfed918961b",
+    "a0c09eae8f201b36f339e859c011303bd9b9154276549b6b72f298939ea4e3e3",
+    "3ead506ccc393ba10bdd63adf444af72aca429297b89f1cc8ca345451e781596",
+    "715ca27b1614e4b517550f408e83ff954d89426f2a6d701fbbfb7a0961c47ff5",
+    "3ae4cf400b498d806e7759dfed2164662cabdc152403ce92a3f2e64969192b61",
+    "12ebbcdaf012b773bd9dc91755d4144a50080b05958f45633d634990769e9e1c",
+    "ec4febc559e0cac14b4c2b1a9b1e4ae73afdfe516ba7f5443df5e3fb0a31d226",
+    "63d86d4fd8c21f8431a466d0a1c581dc0be2270264d05c49e4e9e880d9731d74"
+  ],
+  "viewportSource": {
+    "sourceRoot": "/tmp/sketch-card-streaming-baseline",
+    "sourceCommit": "f87c3b7609df1ab5cd261971ce20f490c508c5ad",
+    "sourceTrees": {
+      "src/shared": "dcc426b3ce907a2b29e140d88da4e3f969b6ad8a",
+      "src/ai": "e7b0448fbf54098731e2861cfc2881652210b1c4",
+      "src/server": "61a9e038dcaa6d87d5413ab22fa92f98f96f0eb6"
+    },
+    "upstreamFixtureSha256": "daaa234c182d173c3a978f26b24f4cf3db76b4290a21db734dbdea54734b031e",
+    "generatedFixtureSha256": "bfdefa2d3e8d62d145ebe8a7b18ab7f11c494c8760ef4d07e7f7793e31c6b27b",
+    "normalizedFixtureSha256": "ba915ce7f2629a71337f988d0cf2b397c477499cbe3421baff90b53bee82bcce",
+    "scope": "Original production guard/blood simulation proof plus per-frame simulated facts hashes and one same-clock camera probe. No battle rules, commands, tick order, original capture schedule or artwork replaced."
+  },
+  "errors": [],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}
