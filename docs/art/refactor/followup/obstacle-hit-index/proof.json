@@ -1,0 +1,562 @@
+{
+  "passed": true,
+  "method": "Full original and candidate world-renderer modules bundled separately over identical dependency source bytes; real native Napi Canvas drawWorld, exact full RGBA, strict authoritative fact hashes. Local CPU timings exclude observers, image readback and PNG encoding; not browser, GPU, total frame time or FPS.",
+  "head": "d7c7f4bf93ffd8364a1ee6ef0c6170ca442657a8",
+  "environment": {
+    "node": "v24.19.0",
+    "canvas": "@napi-rs/canvas native Skia"
+  },
+  "source": {
+    "beforeSHA256": "58b44cc37daf1b504452ec28b2b8aae185c9b1ae5c038762ed96253e920ed786",
+    "afterSHA256": "6aee3c2f33e4ba7c1bde5e4cb85a8dd572880e62eaa4739270a277c2e5eb2545",
+    "scriptSHA256": "be7aeab6c2e8f65040180449e9f51edcf1e36fa6c977771b2692fc8bc318e677",
+    "changedExpression": {
+      "before": "const shake = hitFeedbackOffset(painter.snapshot, obstacle);",
+      "after": "const shake = hitFeedbackOffset(painter.snapshot, obstacle,painter.viewIndex.hits);"
+    },
+    "dependencyCount": 127
+  },
+  "fixture": {
+    "visibleObstacles": 2,
+    "offscreenObstacles": 1000,
+    "fillerEffects": 1000,
+    "visibleUnits": 2,
+    "visibleBuildings": 1,
+    "selectedUnit": true,
+    "selectedBuilding": true,
+    "hoveredUnit": true,
+    "damagedObstacleAndBuildingHP": true
+  },
+  "rows": [
+    {
+      "duplicateCount": 2,
+      "remaining": 14,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "5381a453195192df885604ff650bed230509799d959ce1b72ed2383b5c8dcd89",
+      "factsSHA256": "08f11010b060eef2533e285681ec50f1e5beaef826e1200022058d1c09d8bdf2",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1006003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates2-remaining14.png",
+          "sha256": "776eb1628ea4ecbebf6b33b1cd42c663c9501df50b818f5f7fe1234475002234"
+        },
+        {
+          "name": "after-duplicates2-remaining14.png",
+          "sha256": "776eb1628ea4ecbebf6b33b1cd42c663c9501df50b818f5f7fe1234475002234"
+        }
+      ]
+    },
+    {
+      "duplicateCount": 2,
+      "remaining": 10,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "f587bc713ad5a1da60a8e7ba1f612637fb7c14655d4e8a52755ed49fee46475b",
+      "factsSHA256": "d524d41a2cf3f3ed41edd36da0b1de03a7771383a1d438f6d5173c38eb97bc96",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1006003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates2-remaining10.png",
+          "sha256": "5b46cccee4becaea779738706c36cd812c2fe4b445adda4b5ac979cbf5cc2186"
+        },
+        {
+          "name": "after-duplicates2-remaining10.png",
+          "sha256": "5b46cccee4becaea779738706c36cd812c2fe4b445adda4b5ac979cbf5cc2186"
+        }
+      ]
+    },
+    {
+      "duplicateCount": 2,
+      "remaining": 6,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "96937684b779cc62a450e73ffcf8dac2df2d4cbd87bd197a8615b15d3bc89013",
+      "factsSHA256": "5f353c6e255043f2d0bf20723dcf33e015ce5ecbc88b71f5ff5f1a63d4bf5e60",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1006003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates2-remaining6.png",
+          "sha256": "d7ba4c648c87fff4763a7e3598fc2961e1e5ec59ee58a1d562b7184403e8a551"
+        },
+        {
+          "name": "after-duplicates2-remaining6.png",
+          "sha256": "d7ba4c648c87fff4763a7e3598fc2961e1e5ec59ee58a1d562b7184403e8a551"
+        }
+      ]
+    },
+    {
+      "duplicateCount": 3,
+      "remaining": 14,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "5381a453195192df885604ff650bed230509799d959ce1b72ed2383b5c8dcd89",
+      "factsSHA256": "9c4648663c52d24439deffece51b2b37e2569395f976496c99b6df193980436f",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1008003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates3-remaining14.png",
+          "sha256": "776eb1628ea4ecbebf6b33b1cd42c663c9501df50b818f5f7fe1234475002234"
+        },
+        {
+          "name": "after-duplicates3-remaining14.png",
+          "sha256": "776eb1628ea4ecbebf6b33b1cd42c663c9501df50b818f5f7fe1234475002234"
+        }
+      ]
+    },
+    {
+      "duplicateCount": 3,
+      "remaining": 10,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "f587bc713ad5a1da60a8e7ba1f612637fb7c14655d4e8a52755ed49fee46475b",
+      "factsSHA256": "8ae0f737332dc8084231071aa94c47b1c505d13fe6c6405b4ad68011f11da4be",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1008003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates3-remaining10.png",
+          "sha256": "5b46cccee4becaea779738706c36cd812c2fe4b445adda4b5ac979cbf5cc2186"
+        },
+        {
+          "name": "after-duplicates3-remaining10.png",
+          "sha256": "5b46cccee4becaea779738706c36cd812c2fe4b445adda4b5ac979cbf5cc2186"
+        }
+      ]
+    },
+    {
+      "duplicateCount": 3,
+      "remaining": 6,
+      "firstIds": [
+        "first-rocks",
+        "first-gate"
+      ],
+      "changedChannels": 0,
+      "maxChannelDifference": 0,
+      "rgbaSHA256": "96937684b779cc62a450e73ffcf8dac2df2d4cbd87bd197a8615b15d3bc89013",
+      "factsSHA256": "a85a51fdb4093659a29496393fa918ba45f5172f9fce75c57bca5edbc62b4089",
+      "before": {
+        "findCalls": 1002,
+        "predicateVisits": 1008003,
+        "mapGets": 3
+      },
+      "after": {
+        "findCalls": 0,
+        "predicateVisits": 0,
+        "mapGets": 1007
+      },
+      "files": [
+        {
+          "name": "before-duplicates3-remaining6.png",
+          "sha256": "d7ba4c648c87fff4763a7e3598fc2961e1e5ec59ee58a1d562b7184403e8a551"
+        },
+        {
+          "name": "after-duplicates3-remaining6.png",
+          "sha256": "d7ba4c648c87fff4763a7e3598fc2961e1e5ec59ee58a1d562b7184403e8a551"
+        }
+      ]
+    }
+  ],
+  "localRendererCPU": {
+    "before": {
+      "samples": 40,
+      "mean": 9.687946324999984,
+      "p50": 9.633272000000034,
+      "p95": 10.252088999999842,
+      "max": 10.31735599999979
+    },
+    "after": {
+      "samples": 40,
+      "mean": 0.5965696999999921,
+      "p50": 0.5833059999999932,
+      "p95": 0.7457139999999072,
+      "max": 0.9229040000000168
+    },
+    "samples": [
+      {
+        "label": "before",
+        "milliseconds": 10.186053000000129
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.9229040000000168
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.7107929999999669
+      },
+      {
+        "label": "before",
+        "milliseconds": 10.31735599999979
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.78490399999987
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6243160000001353
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5595710000000054
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.816941999999926
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.764683999999988
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6195189999998547
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5764459999998053
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.85694999999987
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.633272000000034
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6984949999998662
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6137409999998908
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.720709999999826
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.605000000000018
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5903760000001057
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.500735000000077
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.857831000000033
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.902016000000003
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6811099999999897
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5833059999999932
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.810841999999866
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.844180999999935
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.68759799999998
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6571440000000166
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.580625000000055
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.662113999999974
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.7457139999999072
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6028749999998126
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.888496000000032
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.668002999999999
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6654860000001008
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5827050000000327
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.845593000000008
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.946953000000121
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.7426390000000538
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6274600000001556
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.852653000000146
+      },
+      {
+        "label": "before",
+        "milliseconds": 10.252088999999842
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6378749999998945
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5189920000000257
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.508669000000054
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.476441999999906
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.587252000000035
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5734219999999368
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.50944000000004
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.497724000000062
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5243089999999029
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.4991419999998925
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.43796499999985
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.59282200000007
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5528810000000703
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.4778009999999995
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.489290999999866
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.500737999999956
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5767960000000585
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.47219199999995
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.488689999999906
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.510371000000077
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5457010000000082
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5149049999999988
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.4727069999999
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.554957000000059
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5304479999999785
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5103390000001582
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.476312000000007
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.463703000000123
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.580630999999812
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.4923519999999826
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.507907999999816
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.427018999999973
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5891650000000936
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.6508650000000671
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.54077600000005
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.770723000000089
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.5640869999999722
+      },
+      {
+        "label": "after",
+        "milliseconds": 0.47070000000007894
+      },
+      {
+        "label": "before",
+        "milliseconds": 9.494329000000107
+      }
+    ]
+  }
+}

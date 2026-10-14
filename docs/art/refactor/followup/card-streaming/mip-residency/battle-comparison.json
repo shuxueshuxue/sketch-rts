@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "frames": 80,
+  "freshCapturedPngsRehashed": true,
+  "frameHashesIdentical": false,
+  "snapshotHashesIdentical": true,
+  "sourceTreesIdentical": true,
+  "beforeCommit": "f87c3b7609df1ab5cd261971ce20f490c508c5ad",
+  "afterCommit": "55d6b3b5e0c76aa1fbfac59a39dc5b5d941748d3",
+  "scope": "Before is the independently verified phase-A capture/PNG archive. After contains newly captured and individually rehashed PNGs. Manual production simulation advances160ticks and captures80frames; no AI route or combat rule is rewritten."
+}

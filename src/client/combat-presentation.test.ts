@@ -18,7 +18,7 @@ const snapshot=(tick:number,effects:WorldEffect[],units:Unit[]=[])=>({tick,effec
 const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 
 describe('combat hit facts',()=>{
-  it.each(['footman','golem','ballista','transport'] as const)('records exact actual damage and post-hit facts for %s without extra effects or IDs',kind=>{
+  it.each(['footman','spirit','golem','ballista','transport'] as const)('records exact actual damage and post-hit facts for %s without extra effects or IDs',kind=>{
     const {game,attacker,target}=scene(kind);
     target.hp=20;
     const beforeId=game.nextId,beforeHp=target.hp;
@@ -76,6 +76,37 @@ describe('combat hit facts',()=>{
     const tracker=new CombatPresentationTracker();tracker.update(game,0);
     for(let frame=0;frame<50;frame++)tracker.frame(frame*16);
     expect(snapshotGame(game)).toEqual(before);expect(checksumGame(game)).toBe(checksum);expect(game.nextId).toBe(nextId);
+  });
+
+  it.each(['near-lethal','lethal'] as const)('never creates spirit blood from an actual %s strike through the entire residue lifetime',injury=>{
+    const {game,attacker,target}=scene('spirit');target.hp=injury==='near-lethal'?20:2;
+    strikeUnit(game,attacker,target,injury==='near-lethal'?9:200,'melee');
+    const effect=game.effects.find(effect=>effect.type==='hit')!;
+    expect(effect.targetKind).toBe('spirit');expect(effect.targetUnitClass).toBe('nonMechanical');
+    expect(effect.targetHpAfter).toBeLessThanOrEqual(effect.damage!*2);
+    expect(effect.damage).toBeGreaterThan(0);expect(isBloodHit(effect)).toBe(false);
+    if(injury==='near-lethal')expect(target.hp).toBeGreaterThan(0);else expect(target.hp).toBeLessThanOrEqual(0);
+    const before=snapshotGame(game),checksum=checksumGame(game),nextId=game.nextId;
+    const tracker=new CombatPresentationTracker();
+    for(let tick=0;tick<=190;tick++){
+      tracker.update(snapshot(game.tick+tick,tick===0?game.effects:[],game.units),tick*50);
+      const frame=tracker.frame(tick*50);
+      expect(frame.droplets,`airborne at ${tick}`).toHaveLength(0);
+      expect(frame.ground,`landed at ${tick}`).toHaveLength(0);
+      expect(frame.body,`stained at ${tick}`).toHaveLength(0);
+      // Extra interpolation cannot resurrect a suppressed release.
+      expect(tracker.frame(tick*50+20)).toMatchObject({droplets:[],ground:[],body:[]});
+    }
+    expect(snapshotGame(game)).toEqual(before);expect(checksumGame(game)).toBe(checksum);expect(game.nextId).toBe(nextId);
+  });
+
+  it.each(['footman','wildling'] as const)('preserves blood for actual close-to-lethal physical %s hits',kind=>{
+    const {game,attacker,target}=scene(kind);target.hp=20;strikeUnit(game,attacker,target,9,'melee');
+    const effect=game.effects.find(effect=>effect.type==='hit')!;
+    expect(effect.targetKind).toBe(kind);expect(effect.targetUnitClass).toBe('nonMechanical');
+    expect(isBloodHit(effect)).toBe(true);
+    const tracker=new CombatPresentationTracker();tracker.update(game,0);
+    expect(tracker.frame(0).droplets.length).toBeGreaterThan(0);
   });
 });
 

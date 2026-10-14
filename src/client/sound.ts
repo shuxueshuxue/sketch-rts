@@ -87,6 +87,7 @@ export function readSoundPack(id: string, manifest: unknown, urls: Readonly<Reco
 export class Soundboard {
   settings: SoundSettings = loadSettings();
   private ctx: AudioContext | undefined;
+  private resuming: Promise<void> | undefined;
   private master: GainNode | undefined;
   private groups = new Map<SoundGroup, GainNode>();
   private buffers = new Map<string, AudioBuffer>();
@@ -109,7 +110,7 @@ export class Soundboard {
     this.nodes.clear(); this.groups.clear(); this.master = undefined;
     this.activeEffects.clear(); this.activeVoices.clear(); this.playing.clear(); this.voices = 0;
     this.buffers.clear(); this.loading.clear(); this.failed.clear();
-    const ctx = this.ctx; this.ctx = undefined;
+    const ctx = this.ctx; this.ctx = undefined; this.resuming = undefined;
     if (ctx) void ctx.close().catch(() => {});
   }
 
@@ -140,13 +141,22 @@ export class Soundboard {
   // A browser lets a page make sound only after a person's gesture: the first click or key opens it.
   unlock() {
     if (this.disposed) return;
-    if (this.ctx) {
-      if (this.ctx.state === "suspended") void this.ctx.resume().catch(() => {});
-      return;
-    }
+    const ctx = this.createContext();
+    if (!ctx || ctx.state === "running" || ctx.state === "closed" || this.resuming) return;
+    let resume!: Promise<void>;
+    resume = ctx.resume().catch(() => {}).finally(() => {
+      if (this.resuming === resume) this.resuming = undefined;
+    });
+    this.resuming = resume;
+  }
+
+  // Decoding is allowed before a gesture; resuming and playback are not.
+  private createContext() {
+    if (this.ctx) return this.ctx;
     const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Context) return;
-    const ctx = new Context();
+    let ctx: AudioContext;
+    try { ctx = new Context(); } catch { return; }
     this.ctx = ctx;
     // The last guard before the speakers: nothing past full scale, however many sounds meet.
     const limiter = compressor(ctx, { threshold: -3, knee: 0, ratio: 20, attack: 0.002, release: 0.1 });
@@ -165,6 +175,7 @@ export class Soundboard {
     }
     this.applySettings();
     this.loadPack();
+    return ctx;
   }
 
   update(change: Partial<SoundSettings>) {
@@ -185,17 +196,17 @@ export class Soundboard {
     // Older packs may advertise these voiced acknowledgements. They have no
     // place in this game's generic feedback, even when a pack is still cached.
     if (event === 'select' || event === 'order') return;
-    const fallback = event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
+    const fallback = event === "menu" ? "click" : event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
     const sound = this.pack?.sounds[event] ?? (fallback && this.pack?.sounds[fallback]);
     const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
     if (!sound || !clip || !this.ctx || this.settings.muted) return;
     const url = clip.url;
     const buffer = this.buffers.get(url);
-    if (buffer) return this.playClip(event, sound, clip, buffer, place);
-    const pack = this.pack, requestedAt = this.ctx.currentTime;
-    void this.loadClip(url,EVENT_GROUPS[event]==='ui'?'home':'match').then(buffer => {
-      // Do not play a delayed battle or a previous pack's voice after settings change.
-      if (buffer && this.pack === pack && this.ctx && this.ctx.currentTime - requestedAt < .35) this.playClip(event, sound, clip, buffer, place);
+    if (buffer && this.ctx.state === "running") return this.playClip(event, sound, clip, buffer, place);
+    const pack = this.pack, ctx = this.ctx, requestedAt = performance.now();
+    void Promise.all([buffer ?? this.loadClip(url,EVENT_GROUPS[event]==='ui'?'home':'match'), this.resuming]).then(([buffer]) => {
+      // A suspended audio clock does not advance: expire cues in real time, including while resuming.
+      if (buffer && this.pack === pack && this.ctx === ctx && performance.now() - requestedAt < 350) this.playClip(event, sound, clip, buffer, place);
     });
   }
 
@@ -242,10 +253,25 @@ export class Soundboard {
     for (const [group, node] of this.groups) node.gain.value = this.settings[group];
   }
 
-  // Homepage gestures only warm interface clips; combat waits for a match.
+  // Homepage preparation and pack changes warm only interface clips; combat waits for a match.
   private loadPack() {
-    if (!this.ctx) return;
-    for(const event of ['click','menu'] as const){const clip=this.pack?.sounds[event]?.clip;if(clip)void this.loadClip(clip.url,'home');}
+    void this.loadHomeClips();
+  }
+
+  /** Prepare only the current pack's interface cues, without unlocking or playing audio. */
+  async prepareHome() {
+    if (this.disposed || !this.pack) return;
+    this.createContext();
+    this.failed.clear();
+    await this.loadHomeClips();
+  }
+
+  private async loadHomeClips() {
+    if (!this.ctx || this.disposed) return;
+    await Promise.all((['click','menu'] as const).map(event => {
+      const clip = this.pack?.sounds[event]?.clip;
+      return clip ? this.loadClip(clip.url,'home') : undefined;
+    }));
   }
 
   async prepareMatch(){if(!this.ctx||this.disposed)return;this.failed.clear();const clips=Object.entries(this.pack?.sounds??{}).filter(([event])=>EVENT_GROUPS[event as SoundEvent]==='effects').flatMap(([,sound])=>sound.clip?[sound.clip]:[]);await Promise.all(clips.slice(0,8).map(clip=>this.loadClip(clip.url,'match')));}

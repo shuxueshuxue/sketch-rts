@@ -1,0 +1,73 @@
+{
+  "tool": "scripts/art-replay-input-archive.py",
+  "toolSha256": "afc04b7bfd00de47b44eb8c6cd8d89f5ed892c0d83e36429213ae6ee509e6ead",
+  "manifestSha256": "f946aa7beeb048c3a77951b7c3be8e46ea9b1f4ef1c2b0f302d34944ecad95df",
+  "commands": [
+    {
+      "args": [
+        "--archive"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--verify",
+        "--prune"
+      ],
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "--materialize",
+        "--out",
+        "/tmp/art-replay-v1-input-fullsha-restore"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "verifiedInputs": 279,
+  "prunedOriginals": 279,
+  "restoredInputsFullSizeAndSHA": 279,
+  "verifiedTemporaryMirrorThenRemoved": true,
+  "logs": [
+    {
+      "file": "create.log.gz",
+      "originalBytes": 38878,
+      "originalSha256": "cc0d5d081c71f4a8d79e8e88dedb1fec9c6419b6c06a9bc92772526960203999",
+      "gzipBytes": 12236,
+      "gzipSha256": "a909a80b5c0c3f146ac6adf1015778ddf78bf16aa15bc25718257d9ad6a307f0",
+      "decodedBytesExactlyEqual": true
+    },
+    {
+      "file": "verify.log.gz",
+      "originalBytes": 431,
+      "originalSha256": "7460fe6f271c286932acd9b834195c230e33749668607dcb8f61e707f24ea51f",
+      "gzipBytes": 295,
+      "gzipSha256": "a1ce4a76915ff50068f24c3bcc7d22e61b1c88f074a0c59cd81b6ffaefbb2222",
+      "decodedBytesExactlyEqual": true
+    },
+    {
+      "file": "prune.log.gz",
+      "originalBytes": 432,
+      "originalSha256": "092dbabd8c453c2cc4dce9bd1032467ce16aa8748f7321c5004cda61660ee5ed",
+      "gzipBytes": 296,
+      "gzipSha256": "4be843b60c7e7c0e79d65b10404de183f89598ec4a7c9f69f80708e360206aa1",
+      "decodedBytesExactlyEqual": true
+    },
+    {
+      "file": "restore-proof.log.gz",
+      "originalBytes": 438,
+      "originalSha256": "c8b0dc70564b4855ebf6e39bf67195df52e90c2e84dea11c6bd8968e508e0902",
+      "gzipBytes": 300,
+      "gzipSha256": "3ac3efe7e9df3d058d23d844eff6fd1b9481bcf82fe70615dea5df598f8eed16",
+      "decodedBytesExactlyEqual": true
+    }
+  ],
+  "meaning": "Original run-v1 inputs, independent companion audit and failed metadata preserved exactly; no native rerun, snapshot substitution or changed source/test/PNG."
+}

@@ -1,0 +1,47 @@
+{
+  "baselineHead": "8345a0dcfeb96b6777ac3940ec64cba13816c851",
+  "currentHead": "d7c7f4bf93ffd8364a1ee6ef0c6170ca442657a8",
+  "baselineCommand": "npx vitest run src/shared/ship-maneuver-recovery.test.ts src/shared/ship-voyage-quality.test.ts src/shared/ship-voyage.test.ts src/sdk/package-boundaries.test.ts",
+  "baselineExitCode": 1,
+  "baselineTests": {
+    "passed": 88,
+    "failed": 5,
+    "total": 93
+  },
+  "sameFailureNames": true,
+  "baselineFailureNames": [
+    "src/sdk/package-boundaries.test.ts > SDK package boundaries > does not carry banned cleanup-era naming in source or specs",
+    "src/shared/ship-maneuver-recovery.test.ts > live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+    "src/shared/ship-voyage-quality.test.ts > observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+    "src/shared/ship-voyage.test.ts > forward voyage planning > backs less than one hull length into an aligned berth without two U-turns",
+    "src/shared/ship-voyage.test.ts > forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it"
+  ],
+  "currentFailureNames": [
+    "src/sdk/package-boundaries.test.ts > SDK package boundaries > does not carry banned cleanup-era naming in source or specs",
+    "src/shared/ship-maneuver-recovery.test.ts > live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+    "src/shared/ship-voyage-quality.test.ts > observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+    "src/shared/ship-voyage.test.ts > forward voyage planning > backs less than one hull length into an aligned berth without two U-turns",
+    "src/shared/ship-voyage.test.ts > forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it"
+  ],
+  "trees": {
+    "src/shared": {
+      "baseline": "dcc426b3ce907a2b29e140d88da4e3f969b6ad8a",
+      "current": "dcc426b3ce907a2b29e140d88da4e3f969b6ad8a",
+      "baselineWorkingDiff": "",
+      "currentWorkingDiff": "",
+      "commitDiff": ""
+    },
+    "src/sdk": {
+      "baseline": "507ed9d53dcc1681ae2f6c5eaca49a5432511581",
+      "current": "507ed9d53dcc1681ae2f6c5eaca49a5432511581",
+      "baselineWorkingDiff": "",
+      "currentWorkingDiff": "",
+      "commitDiff": ""
+    }
+  },
+  "baselineOffenderCount": 22,
+  "currentOffenderCount": 34,
+  "note": "Baseline naming gate already fails; current evidence adds offenders, so the entire current naming failure is not claimed unchanged. No navigation or SDK source changes.",
+  "full-tests.logSha256": "ca4d62be367235128abf81f65001cf544d52a2887c76c3a404f62e89f7752df1",
+  "baseline-8345-four-files.logSha256": "bd53fd52c2533533af05edb7a3efdaeeb1b199664066b1fd2c3933bcd46203d2"
+}

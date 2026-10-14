@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "5b356c7795068bb2a532ad1d486b3c22936cf735",
+  "currentMatchesFrozenSource": true,
+  "sourceFile": "src/client/world3d/card-mip-uploader.ts",
+  "sourceSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+  "candidate": "/tmp/card-upload-chunk-candidate.ts",
+  "candidateSha256": "8151202f0add0044a30147645515200e69fde494f439cb801888e62e75f75783",
+  "regionDependency": "/tmp/card-upload-region.ts",
+  "regionSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+  "threePublicEntry": "/workspace/sketch-rts-viewport/node_modules/three/build/three.module.js",
+  "threeEntrySha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+  "threeRevision": "186",
+  "variable": "64KiB partial copy payload; original native chain generated only after final segment; other paths retained",
+  "resolver": "Candidate preserves bare three. Formal resolves original/candidate provider in current uploader context; Node mock esbuild alias maps all bare three imports to this one public ESM entry.",
+  "mockSourceSha256": "f94dd0bfd43ab71c84c03fc7309b0dba46d8448836942c7fa16ce99894f90654",
+  "mockHarnessSha256": "d608c5f894b37e32653b83ffc79c67b5c0cd2e2f507dec92b98d6dffb362a14d",
+  "mockCommand": "node /tmp/card-upload-chunk-mock.mjs --out /tmp/card-upload-chunk-mock-result.json",
+  "staticPreparedOnly": true
+}

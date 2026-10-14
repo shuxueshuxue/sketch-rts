@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Unit, UnitOrder } from "../shared/types";
+import type { GameSnapshot, Unit, UnitOrder } from "../shared/types";
 import { FACING_TURN_DISTANCE, UnitFacingTracker, nextFacing, type FacingState } from "./unit-facing";
 
 const idle: UnitOrder = { type: "idle" };
@@ -35,6 +35,24 @@ describe("unit facing", () => {
   it("keeps its facing when it stops", () => {
     const step = FACING_TURN_DISTANCE;
     expect(walk([100, 100 - step * 2, 100 - step * 2, 100 - step * 2])).toEqual([1, -1, -1, -1]);
+  });
+
+  it('reuses unchanged immutable history while preserving old values across turns and new anchors', () => {
+    const right: FacingState = Object.freeze({ facing: 1, anchorX: 100 });
+    const left: FacingState = Object.freeze({ facing: -1, anchorX: 100 });
+    expect(nextFacing(right, at(100), undefined)).toBe(right);
+    expect(nextFacing(right, at(99), undefined)).toBe(right);
+    expect(nextFacing(right, at(100), { x: 200, y: 0 })).toBe(right);
+    expect(nextFacing(left, at(100), undefined)).toBe(left);
+    expect(nextFacing(left, at(101), undefined)).toBe(left);
+    expect(nextFacing(left, at(100), { x: 0, y: 0 })).toBe(left);
+    const advanced = nextFacing(right, at(110), undefined);
+    expect(advanced).toEqual({ facing: 1, anchorX: 110 });
+    expect(advanced).not.toBe(right);
+    const turned = nextFacing(right, at(100), { x: 0, y: 0 });
+    expect(turned).toEqual({ facing: -1, anchorX: 100 });
+    expect(turned).not.toBe(right);
+    expect(right).toEqual({ facing: 1, anchorX: 100 });
   });
 
   it("measures the turn from the furthest point reached, so a small drift back after a long walk does not turn it", () => {
@@ -112,5 +130,111 @@ describe('release-facing lock',()=>{
     expect(tracker.actionFacing('actor',{x:1,y:200})).toBe(1);
     expect(tracker.actionFacing('actor',{x:100,y:0},p=>({x:-p.x,y:p.y}))).toBe(-1);
     expect(nextFacing({facing:-1,anchorX:100},{x:100,y:100,order:{type:'idle'}},{x:104,y:-200}).facing).toBe(-1);
+  });
+});
+
+describe('snapshot facing history', () => {
+  const actor = (order: UnitOrder = { type: 'attack', targetId: 'target' }, x = 100) => ({ id: 'actor', x, y: 100, order }) as Unit;
+  const snapshot = (tick: number, ...units: Unit[]): Pick<GameSnapshot, 'tick' | 'units' | 'buildings'> => ({ tick, units, buildings: [] });
+
+  it('looks up targets once across repeated frames and retains successive release turns', () => {
+    const tracker = new UnitFacingTracker(), game = snapshot(10, actor());
+    let lookups = 0;
+    const locate = () => { lookups++; return { x: 0, y: 100 }; };
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.facing('actor')).toBe(-1);
+    for (let frame = 0; frame < 10; frame++) tracker.updateSnapshot(game, locate);
+    expect(lookups).toBe(1);
+
+    expect(tracker.actionFacing('actor', { x: 40, y: 0 })).toBe(1);
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.facing('actor')).toBe(1);
+    expect(tracker.actionFacing('actor', { x: -40, y: 0 })).toBe(-1);
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.actionFacing('actor', undefined)).toBe(-1);
+    expect(lookups).toBe(1);
+  });
+
+  it('accepts a command snapshot at the same tick', () => {
+    const tracker = new UnitFacingTracker(), first = snapshot(10, actor());
+    tracker.updateSnapshot(first, () => ({ x: 200, y: 100 }));
+    const command = { ...first, units: [actor({ type: 'attack', targetId: 'behind' })] };
+    tracker.updateSnapshot(command, () => ({ x: 0, y: 100 }));
+    expect(tracker.facing('actor')).toBe(-1);
+  });
+
+  it('accepts mutable recording ticks, rewinds, changed arrays and collection sizes', () => {
+    const tracker = new UnitFacingTracker(), game = snapshot(10, actor());
+    let targetX = 200, lookups = 0;
+    const locate = () => { lookups++; return { x: targetX, y: 100 }; };
+    tracker.updateSnapshot(game, locate);
+    game.tick++;
+    targetX = 0;
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.facing('actor')).toBe(-1);
+    game.tick = 0;
+    targetX = 200;
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.facing('actor')).toBe(1);
+
+    game.units = [actor()];
+    tracker.updateSnapshot(game, locate);
+    game.buildings = [];
+    tracker.updateSnapshot(game, locate);
+    game.buildings.push({ id: 'target' } as GameSnapshot['buildings'][number]);
+    tracker.updateSnapshot(game, locate);
+    expect(lookups).toBe(6);
+
+    tracker.actionFacing('actor', { x: -40, y: 0 });
+    game.units.length = 0;
+    tracker.updateSnapshot(game, locate);
+    expect(tracker.facing('actor')).toBe(1);
+    expect(tracker.releaseFacing('actor')).toBe(1);
+  });
+
+  it('keeps direct update uncached and invalidates a previously accepted snapshot', () => {
+    const tracker = new UnitFacingTracker(), game = snapshot(10, actor());
+    tracker.updateSnapshot(game, () => ({ x: 0, y: 100 }));
+    tracker.update(game.units, () => ({ x: 200, y: 100 }));
+    expect(tracker.facing('actor')).toBe(1);
+    tracker.update(game.units, () => ({ x: 0, y: 100 }));
+    expect(tracker.facing('actor')).toBe(-1);
+    tracker.updateSnapshot(game, () => ({ x: 200, y: 100 }));
+    expect(tracker.facing('actor')).toBe(1);
+  });
+
+  it('retains the pre-snapshot side for a vertical release after the target turns', () => {
+    const tracker = new UnitFacingTracker();
+    tracker.updateSnapshot(snapshot(10, actor()), () => ({ x: 0, y: 100 }));
+    const game = snapshot(11, actor());
+    tracker.updateSnapshot(game, () => ({ x: 200, y: 100 }));
+    tracker.updateSnapshot(game, () => ({ x: 200, y: 100 }));
+    expect(tracker.facing('actor')).toBe(1);
+    expect(tracker.actionFacing('actor', { x: 0, y: -200 })).toBe(-1);
+  });
+
+  it('keeps pre-update history intact when a release turns a reused stationary state', () => {
+    const tracker = new UnitFacingTracker();
+    tracker.update([actor()], () => ({ x: 0, y: 100 }));
+    tracker.update([actor()], () => ({ x: 0, y: 100 }));
+    expect(tracker.actionFacing('actor', { x: 40, y: 0 })).toBe(1);
+    expect(tracker.actionFacing('actor', undefined)).toBe(1);
+    expect(tracker.actionFacing('actor', { x: 0, y: -200 })).toBe(-1);
+  });
+
+  it('keeps an offscreen counterattack side through recovery and subsequent return', () => {
+    const tracker = new UnitFacingTracker(), distant = actor({ type: 'hold', x: 10000, y: 100 }, 10000);
+    tracker.updateSnapshot(snapshot(10, distant), () => undefined);
+    const release = { x: -40, y: 0 };
+    expect(tracker.actionFacing(distant.id, release)).toBe(-1);
+    for (let tick = 11; tick <= 15; tick++) {
+      tracker.updateSnapshot(snapshot(tick, distant), () => undefined);
+      expect(tracker.actionFacing(distant.id, release)).toBe(-1);
+    }
+    expect(tracker.actionFacing(distant.id, undefined)).toBe(-1);
+    tracker.updateSnapshot(snapshot(16, distant), () => undefined);
+    expect(tracker.facing(distant.id)).toBe(-1);
+    tracker.updateSnapshot(snapshot(17, { ...distant, x: 10004 }), () => undefined);
+    expect(tracker.facing(distant.id)).toBe(1);
   });
 });

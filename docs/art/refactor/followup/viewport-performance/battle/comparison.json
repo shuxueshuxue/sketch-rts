@@ -1,0 +1,169 @@
+{
+  "beforeSource": {
+    "sourceRoot": "/tmp/sketch-viewport-baseline",
+    "sourceCommit": "b50cc87982c333ddbdbef9a0977d2251d8b03250",
+    "sourceTrees": {
+      "src/shared": "dcc426b3ce907a2b29e140d88da4e3f969b6ad8a",
+      "src/ai": "d73118cca67a55c1675afd4de7193f85413c0b97",
+      "src/server": "61a9e038dcaa6d87d5413ab22fa92f98f96f0eb6"
+    },
+    "upstreamFixtureSha256": "daaa234c182d173c3a978f26b24f4cf3db76b4290a21db734dbdea54734b031e",
+    "generatedFixtureSha256": "45c39db0d4f782c5c444ff6c8ac67d170991d0e710086c74c4e2e0e9842930e9",
+    "normalizedFixtureSha256": "ba915ce7f2629a71337f988d0cf2b397c477499cbe3421baff90b53bee82bcce",
+    "scope": "Original production guard/blood simulation proof plus per-frame simulated facts hashes and one same-clock camera probe. No battle rules, commands, tick order, original capture schedule or artwork replaced."
+  },
+  "afterSource": {
+    "sourceRoot": "/workspace/sketch-rts-viewport",
+    "sourceCommit": "35dca2b748fb6f620e4ba1f932d32a7b45d6cf85",
+    "sourceTrees": {
+      "src/shared": "dcc426b3ce907a2b29e140d88da4e3f969b6ad8a",
+      "src/ai": "d73118cca67a55c1675afd4de7193f85413c0b97",
+      "src/server": "61a9e038dcaa6d87d5413ab22fa92f98f96f0eb6"
+    },
+    "upstreamFixtureSha256": "daaa234c182d173c3a978f26b24f4cf3db76b4290a21db734dbdea54734b031e",
+    "generatedFixtureSha256": "5bfcfa274eb3ee71305bcfe89ba8b2b66be1599c1d4cbbc8efd94f82c8084a29",
+    "normalizedFixtureSha256": "ba915ce7f2629a71337f988d0cf2b397c477499cbe3421baff90b53bee82bcce",
+    "scope": "Original production guard/blood simulation proof plus per-frame simulated facts hashes and one same-clock camera probe. No battle rules, commands, tick order, original capture schedule or artwork replaced."
+  },
+  "bothPassed": true,
+  "simSnapshotMismatches": [],
+  "pngMismatches": [],
+  "normalizedFixtureIdentical": true,
+  "sourceTreesIdentical": true,
+  "airborneProbe": {
+    "before": {
+      "frame": 1,
+      "tick": 2,
+      "now": 100,
+      "trackerDrops": 30,
+      "emptyTrackerDrops": 30,
+      "battlefieldInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "emptyInk": {
+        "count": 30,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "air": 30,
+        "body": 0,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "returnedInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "simHashBefore": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "simHashAfter": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "scope": "Same simulation tick, snapshot and clock. Probe performs two extra presentation draws and zero simulation steps. Starts while the first real lethal-hit drops are airborne.",
+      "images": {
+        "originalPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/before/proof-probe-0-originalPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        },
+        "emptyPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/before/proof-probe-0-emptyPng.png",
+          "sha256": "14129a8953fe22259847e644ab79d2637ef42d3ebd5ec9a8d681c68d8de78d04"
+        },
+        "returnedPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/before/proof-probe-0-returnedPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        }
+      },
+      "returnPngIdentical": true,
+      "simulationUnchanged": true
+    },
+    "after": {
+      "frame": 1,
+      "tick": 2,
+      "now": 100,
+      "trackerDrops": 30,
+      "emptyTrackerDrops": 30,
+      "battlefieldInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "emptyInk": {
+        "count": 0,
+        "capacity": 32,
+        "drawCalls": 0,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 30,
+        "air": 0,
+        "body": 0,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "returnedInk": {
+        "count": 32,
+        "capacity": 32,
+        "drawCalls": 1,
+        "bufferBytes": 2688,
+        "limit": 2288,
+        "overflow": 0,
+        "culled": 0,
+        "air": 30,
+        "body": 2,
+        "deck": 0,
+        "speed": 0,
+        "disposed": false
+      },
+      "simHashBefore": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "simHashAfter": "25e647164ecd5ae32abd29199add4adb49f66b49865a2741ddfcbf360bd8405a",
+      "scope": "Same simulation tick, snapshot and clock. Probe performs two extra presentation draws and zero simulation steps. Starts while the first real lethal-hit drops are airborne.",
+      "images": {
+        "originalPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/after/proof-probe-0-originalPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        },
+        "emptyPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/after/proof-probe-0-emptyPng.png",
+          "sha256": "14129a8953fe22259847e644ab79d2637ef42d3ebd5ec9a8d681c68d8de78d04"
+        },
+        "returnedPng": {
+          "path": "/workspace/sketch-rts-viewport/docs/art/refactor/followup/viewport-performance/battle/after/proof-probe-0-returnedPng.png",
+          "sha256": "2e06993b0eb77408cafef4f452e5fbbad0c32aa895a7c5b4bb4a2aa21a3359ea"
+        }
+      },
+      "returnPngIdentical": true,
+      "simulationUnchanged": true
+    }
+  },
+  "scope": "80 real simulated frame snapshots (160 ticks), original guard/blood fixture with same clock camera probe. Every original PNG and simulation snapshot hashed, independent of presentation timings."
+}

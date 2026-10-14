@@ -4,6 +4,7 @@ import type { Shape } from './appearance';
 import type { EquipmentKind } from './equipment';
 import { paintRigidEquipment } from './equipment';
 import type { CreatureDrawing } from './creature-poses';
+import { paintSpirit } from './painted-spirit';
 const INK='#343730',BONE='#c1b49a';
 export type CreatureLook={kind:string;shape:Shape;color:string;team:string;crown:boolean;weapon?:EquipmentKind|undefined};
 /** Closed contour with optional cubic sections. A subdued wash sits inside it. */
@@ -325,24 +326,12 @@ function dragonBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  for(const side of [-1,1]){const x=side<0?-13-p.walk*4:19+p.walk*4,lift=Math.max(0,p.stepLift*side)*4;for(const i of [-1,0,1])line(b,[[x+i*1.5,16-lift],[x+i*2+3,18-lift]],BONE,.7);}
  b.translate(0,p.bob);
 }
-function spiritBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
- b.translate(0,p.bob);
- const sway=p.walk*2+p.dx*3;
- b.save();b.globalAlpha*=.72;
- mass(b,[[-7,-33],[-14,-24,-5,-14,-11,1],[-13,10,-8,15,-17,19],[-2,17,7,8,5,-1],[12,-14,10,-29,3,-35]],'#a8b6ad','#7e91867a');
- mass(b,[[-3,-29],[-7,-15,4,-8,sway+2,5],[sway+6,12,sway+3,15,sway-1,18],[sway+13,10,10,-3,6,-16],[9,-29,2,-34,-3,-29]],'#d1d0b8','#aab2a180');
- stroke(b,[[-4,-17],[-17,-7,-13,8,-23,13]],'#a9b7a8',1.3);
- stroke(b,[[4,-22],[15,-19,14,p.release[1]+3,...p.release]],'#d5d5bc',2);
- mass(b,[[-6,-30],[-5,-39,2,-41,7,-34],[9,-29,3,-25,-2,-26]],'#bcc6b7','#8b9c9080');
- line(b,[[-1,-32],[3,-32]],'#e9e2c9',.8);
- b.restore();
-}
 export function paintCreatureBody(b:Brush,look:CreatureLook,p:CreatureDrawing){
  b.lineCap='round';b.lineJoin='round';
  switch(look.shape){
   case 'stone':stoneBody(b,look,p);break;case 'wood':woodBody(b,look,p);break;case 'ogre':ogreBody(b,look,p);break;
   case 'fish':fishBody(b,look,p);break;case 'hound':houndBody(b,look,p);break;case 'stag':stagBody(b,look,p);break;
-  case 'turtle':turtleBody(b,look,p);break;case 'spider':spiderBody(b,look,p);break;case 'dragon':dragonBody(b,look,p);break;case 'spirit':spiritBody(b,look,p);break;
+  case 'turtle':turtleBody(b,look,p);break;case 'spider':spiderBody(b,look,p);break;case 'dragon':dragonBody(b,look,p);break;case 'spirit':paintSpirit(b,look,p);break;
  }
  if(p.casting){
   b.save();b.globalAlpha*=p.casting;ellipse(b,p.release[0],p.release[1],6,7,'#d4d3b42b');

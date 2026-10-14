@@ -1,0 +1,6 @@
+11:59:39 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
+START 8345a0dc hidden=0 cycle=0
+VIEWPORT streaming cycle 0 0 38.896666666616994 422.25
+START 8345a0dc hidden=0 cycle=1
+VIEWPORT streaming cycle 0 1 39.38666666646798 408.1666666666667
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba/production-A/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":38.896666666616994,"p50Ms":7.5,"p95Ms":109.20000000298023,"p99Ms":489.20000000298023,"maxMs":489.20000000298023,"over16_67Ms":28,"over50Ms":15},"real":{"samples":12,"meanMs":422.25,"p50Ms":215.19999999552965,"p95Ms":1358.8999999985099,"p99Ms":1358.8999999985099,"maxMs":1358.8999999985099,"over16_67Ms":12,"over50Ms":12}},{"hiddenCount":0,"cycle":1,"cpu":{"samples":60,"meanMs":39.38666666646798,"p50Ms":8.399999998509884,"p95Ms":122.5,"p99Ms":448.80000000447035,"maxMs":448.80000000447035,"over16_67Ms":28,"over50Ms":18},"real":{"samples":12,"meanMs":408.1666666666667,"p50Ms":192.79999999701977,"p95Ms":1251.5,"p99Ms":1251.5,"maxMs":1251.5,"over16_67Ms":12,"over50Ms":12}}]}

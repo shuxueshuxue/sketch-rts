@@ -1,0 +1,173 @@
+{
+  "schema": "chromium-primary-source-archive-v1",
+  "chromiumTag": "151.0.7922.173",
+  "scope": "Static source support only; not an observed call stack or compiled browser source attestation.",
+  "licenseArchive": "LICENSE.gz",
+  "compression": {
+    "format": "gzip",
+    "level": 9,
+    "mtime": 0,
+    "decodedData": "Exact upstream base64-decoded file bytes; copyright and license text untouched."
+  },
+  "sources": [
+    {
+      "upstreamPath": "gpu/ipc/client/command_buffer_proxy_impl.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/ipc/client/command_buffer_proxy_impl.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/ipc/client/command_buffer_proxy_impl.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/ipc/client/command_buffer_proxy_impl.cc.gz",
+      "decodedBytes": 33782,
+      "decodedSha256": "02ff8e765e1202616970a7e68d1fb5874a4f2aa71048288cd59a28fe16dcebcf",
+      "gzipBytes": 7713,
+      "gzipSha256": "23eb5c8b41272e83911d762cac37264e76ce85d9a7e1a191d5dad7f83f70c483",
+      "lineCount": 952,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/client/transfer_buffer.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/transfer_buffer.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/transfer_buffer.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/client/transfer_buffer.cc.gz",
+      "decodedBytes": 11011,
+      "decodedSha256": "b75bd6677464ce7388d4af321140b3acec1a19c77daf4a232e014d50f645b81d",
+      "gzipBytes": 3159,
+      "gzipSha256": "1630538511d31352b1b7d55cbfd830f66e9add645b216996c350a636ca1a3cf3",
+      "lineCount": 336,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/client/ring_buffer.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/ring_buffer.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/ring_buffer.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/client/ring_buffer.cc.gz",
+      "decodedBytes": 6401,
+      "decodedSha256": "deaf072c337177cedf8123d879ebcd86717ab96f5b64f8f4204c76a88d5cc94a",
+      "gzipBytes": 1907,
+      "gzipSha256": "bc753e6a6e00b4b6ccd721a650769a2e0aa58e93f4946456b0588387367184b2",
+      "lineCount": 212,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/client/cmd_buffer_helper.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/cmd_buffer_helper.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/cmd_buffer_helper.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/client/cmd_buffer_helper.cc.gz",
+      "decodedBytes": 13772,
+      "decodedSha256": "a2dfae2845fbaed16705a5d5b6951f724d467911ab6417854adceb145ebb0a98",
+      "gzipBytes": 4175,
+      "gzipSha256": "6b9fe4dbc6ef3d15c52eacd5870a0c49bf1a4b9a279af8cce10e8dde4e2ac9b7",
+      "lineCount": 421,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/client/gles2_implementation.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/gles2_implementation.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/gles2_implementation.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/client/gles2_implementation.cc.gz",
+      "decodedBytes": 258877,
+      "decodedSha256": "c7a47a5d7f773a7b262237593d6b8b6085a52558cf09987599cb6e5e606aeeaf",
+      "gzipBytes": 40355,
+      "gzipSha256": "fa0f0b4cb5772adbdd42272a15fbc1835fbb9adffa4c645098d5c85fe8643c2f",
+      "lineCount": 6910,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/client/transfer_buffer.h",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/transfer_buffer.h",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/client/transfer_buffer.h?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/client/transfer_buffer.h.gz",
+      "decodedBytes": 9868,
+      "decodedSha256": "cdc05b24ffcdc5e036ca43e628ab7bcabc6c8ba98c1fbfc71cd38e10f1b561f2",
+      "gzipBytes": 2803,
+      "gzipSha256": "205c9950c9feed1dda4a073ed70e13c1058330e61c9af89d8d097b136ff78b2f",
+      "lineCount": 309,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "gpu/command_buffer/service/common_decoder.cc",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/service/common_decoder.cc",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/gpu/command_buffer/service/common_decoder.cc?format=TEXT",
+      "httpStatus": 200,
+      "archive": "gpu/command_buffer/service/common_decoder.cc.gz",
+      "decodedBytes": 14613,
+      "decodedSha256": "dc7c85dd6b0ad9f38e82046ee3f2dc3371ab38491f3232a89e46515a5d0c6067",
+      "gzipBytes": 3600,
+      "gzipSha256": "bff2540bea46be315cce083302c32ba8bcbf00eb33ab28d65bf9c1b870eff56c",
+      "lineCount": 431,
+      "roundTripEqual": true
+    },
+    {
+      "upstreamPath": "LICENSE",
+      "sourceUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/LICENSE",
+      "fetchUrl": "https://chromium.googlesource.com/chromium/src/+/refs/tags/151.0.7922.173/LICENSE?format=TEXT",
+      "httpStatus": 200,
+      "archive": "LICENSE.gz",
+      "decodedBytes": 1536,
+      "decodedSha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "gzipBytes": 802,
+      "gzipSha256": "2a1c518280f80669f1d50d1f9699d67a1441fd86da2dd58812e4c7c5de2e8e68",
+      "lineCount": 27,
+      "roundTripEqual": true
+    }
+  ],
+  "fetchMetadata": [
+    {
+      "originalName": "fetch.json",
+      "archive": "fetch-metadata/fetch.json.gz",
+      "decodedBytes": 551,
+      "decodedSha256": "139b30e8db1c91e8fc285ecb81b702b4aceb412de0528ec71a1dcc3a469622e8",
+      "gzipBytes": 308,
+      "gzipSha256": "406571de4e9de2602547e5f31377fc7d112c1d09f65c5aff1f76f67a637aedd9",
+      "roundTripEqual": true
+    },
+    {
+      "originalName": "proxy-fetch.json",
+      "archive": "fetch-metadata/proxy-fetch.json.gz",
+      "decodedBytes": 337,
+      "decodedSha256": "ac8ce5c723694fd2d558750852c44195b740e43c298babe9d20ec629be716ec1",
+      "gzipBytes": 253,
+      "gzipSha256": "d1efde9ffd9c623969ab4f5d10fd0347582350e79cc7595b213c44619f8af4ef",
+      "roundTripEqual": true
+    },
+    {
+      "originalName": "token-path-fetch.json",
+      "archive": "fetch-metadata/token-path-fetch.json.gz",
+      "decodedBytes": 684,
+      "decodedSha256": "02d599413ad7a9b500dfc74ab118aca49624251ab041076681215265e55c513f",
+      "gzipBytes": 328,
+      "gzipSha256": "099b99a1580f040ae84299ea86de48f40d63874bae049f2cf28001cd2915c970",
+      "roundTripEqual": true
+    },
+    {
+      "originalName": "gles-fetch.json",
+      "archive": "fetch-metadata/gles-fetch.json.gz",
+      "decodedBytes": 339,
+      "decodedSha256": "0ab92ae210b0044ad4d6ed8e264553b24eb16ffea0bd38649328bc44048cba3a",
+      "gzipBytes": 255,
+      "gzipSha256": "9e05466e8432fd3672a9193c3cac0c0bd564a2adbaa88f871a9f04a35ec21b66",
+      "roundTripEqual": true
+    },
+    {
+      "originalName": "static-extra-fetch.json",
+      "archive": "fetch-metadata/static-extra-fetch.json.gz",
+      "decodedBytes": 1145,
+      "decodedSha256": "dca1cf890759ade2834890e0ee993fefe67a926d37d8a27e63201894ab623c03",
+      "gzipBytes": 428,
+      "gzipSha256": "054778dd7f41b1294f3fe50cfd5ed32295d1178388bab46d70fa49f908bb1cc5",
+      "roundTripEqual": true
+    }
+  ],
+  "verification": {
+    "sourceFiles": 8,
+    "metadataFiles": 5,
+    "decodedSourceBytes": 349860,
+    "gzipSourceBytes": 64514,
+    "allRoundTripsExact": true,
+    "failedFetchPreserved": "fetch-metadata/fetch.json.gz includes initial incorrect proxy path HTTP404; corrected exact-tag path HTTP200 is preserved separately."
+  }
+}

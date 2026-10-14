@@ -1,0 +1,4156 @@
+{
+  "sourceRoot": "/workspace/sketch-rts-viewport",
+  "sourceCommit": "0246064c72f414e489e0d300e65d3d8ec142318d",
+  "sourceDirty": " M docs/art/refactor/followup/card-streaming/gpu-correctness.md\n M docs/development.md\n M scripts/card-streaming-gpu-fixture.js\n M scripts/card-streaming-gpu-proof.mjs\n?? docs/art/refactor/followup/card-streaming/codec-diagnostic/\n?? docs/art/refactor/followup/card-streaming/gpu-proof-tail-production.json\n?? docs/art/refactor/followup/card-streaming/idle-identity/\n?? docs/art/refactor/followup/card-streaming/mip-residency/\n?? docs/art/refactor/followup/card-streaming/mip-tail-review.md\n?? docs/art/refactor/followup/card-streaming/mip-tail/\n?? docs/art/refactor/followup/card-streaming/paint-identity.md\n?? docs/art/refactor/followup/card-streaming/validation/\n?? scripts/art-card-mip-camera-fixture.js\n?? scripts/art-card-mip-camera-proof.mjs\n?? scripts/art-card-raster-codec-diagnostic.ts\n?? scripts/art-idle-browser-identity-fixture.js\n?? scripts/art-idle-browser-identity-proof.mjs\n?? scripts/art-idle-paint-identity-proof.ts\n?? scripts/art-viewport-battle-order-proof.mjs\n?? scripts/art-viewport-card-order-diagnostic.js\n?? scripts/art-viewport-order-observe-fixture.js\n?? scripts/art-viewport-order-sort-fixture.js\n?? scripts/card-bank-gpu-fixture.js\n?? scripts/card-bank-gpu-proof.mjs\n?? scripts/card-mip-tail-gpu-fixture.js\n?? scripts/card-mip-tail-gpu-proof.mjs\n",
+  "sourceSha256": {
+    "src/client/world3d/card-bank-shader.ts": "53197460498c2d67ed495fb19725c7fdaf6a1cc600f6b19e4491e4e15aa9c144",
+    "src/client/world3d/painted-card-batches.ts": "0fa9630375e8627da488b18034f372e0a3704ed649b0fe0a003eeb31c41a2962",
+    "src/client/world3d/card-mip-uploader.ts": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295"
+  },
+  "harnessSha256": "084e8b0619af49cb33b05918d2ed24432723466b18b40465f154bdf282347621",
+  "fixtureSha256": "e3b0b962ea7c9ab66c1901272671d163b835455030726cf15f20a7e7058a5093",
+  "three": "186",
+  "anisotropy": 8,
+  "settings": {
+    "bankCounts": [
+      1,
+      2,
+      8,
+      9,
+      16
+    ],
+    "modes": [
+      "opaque"
+    ],
+    "configs": [
+      {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      }
+    ],
+    "maxBanks": 8,
+    "shadowSize": 2048,
+    "method": "Real production PaintedCardBatches cold/warm ordering, upload, full/native-tail pages and geometry. Single-bank chunks use a frozen original implicit texture() shader. Candidate uses actual 1..8-bank helper textureGrad() and production ordered chunks. Every RGBA color and actual directional/point shadow channel is compared at zero tolerance; alpha-zero RGB is not masked.",
+    "allocation": "Test-only real createPage(width,height,1) forces the desired bank count without hundreds of duplicate raster poses. Original literals, float32 cardRect, source painter, material color/alpha pipeline, implicit single-bank UV/LOD and no depth bias are preserved."
+  },
+  "rows": [
+    {
+      "config": {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      },
+      "requestedBankCount": 1,
+      "mode": "opaque",
+      "expected": [
+        "A0",
+        "A5",
+        "A10",
+        "A15"
+      ],
+      "referenceObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 4,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "A5",
+            "A10",
+            "A15"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "candidateObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 4,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "A5",
+            "A10",
+            "A15"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "ordered": true,
+      "banks": [
+        1
+      ],
+      "referenceStats": {
+        "pages": 1,
+        "cards": 1,
+        "pixels": 65536,
+        "drawChunks": 1,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 4,
+        "drawBufferBytes": 492,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 9216,
+        "gpuBytes": 349526,
+        "allocatedMipBytes": 349524,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 8192,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.699999999254942,
+          "avoidedPaintMs": 0,
+          "bytes": 19668,
+          "scratchBytes": 32768,
+          "ownedBytes": 52436,
+          "entries": 1,
+          "hits": 0,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 323796,
+        "ownedGpuBytes": 699048,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 585940,
+        "peakOwnedGpuBytes": 699048,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 3.900000000372529,
+          "readbackMs": 0.2000000011175871,
+          "cacheMs": 1.8999999985098839,
+          "pickMaskMs": 1.5,
+          "rowFlipMs": 0.2000000011175871,
+          "slotMs": 0.40000000037252903
+        },
+        "rasterWorkWallMs": 8.400000000372529,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 1,
+        "mipLayerUpdates": 1,
+        "mipCopyCalls": 9,
+        "mipCopyBytes": 349524,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 262144,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 175.7999999988824
+      },
+      "candidateStats": {
+        "pages": 1,
+        "cards": 1,
+        "pixels": 65536,
+        "drawChunks": 1,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 4,
+        "drawBufferBytes": 492,
+        "maxTextureBanks": 8,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 9216,
+        "gpuBytes": 349526,
+        "allocatedMipBytes": 349524,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 8192,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.300000000745058,
+          "avoidedPaintMs": 0,
+          "bytes": 19668,
+          "scratchBytes": 32768,
+          "ownedBytes": 52436,
+          "entries": 1,
+          "hits": 0,
+          "misses": 1,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 323796,
+        "ownedGpuBytes": 699048,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 585940,
+        "peakOwnedGpuBytes": 699048,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 1,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 2.200000001117587,
+          "readbackMs": 0.09999999962747097,
+          "cacheMs": 1.400000000372529,
+          "pickMaskMs": 0,
+          "rowFlipMs": 0.09999999962747097,
+          "slotMs": 0.09999999962747097
+        },
+        "rasterWorkWallMs": 4,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 1,
+        "mipLayerUpdates": 1,
+        "mipCopyCalls": 9,
+        "mipCopyBytes": 349524,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 262144,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 0,
+        "scratchPartialUploadPixels": 0,
+        "scratchPartialUploads": 0,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0.40000000037252903
+      },
+      "reports": [
+        {
+          "pass": "sun-depth-2048",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 991
+            }
+          ],
+          "referenceColorSha256": "e6997fee014112bd996e03be44a470994c857c64e3c756ad112e9507aa891443",
+          "candidateColorSha256": "e6997fee014112bd996e03be44a470994c857c64e3c756ad112e9507aa891443",
+          "referenceShadowSha256": [
+            "6f59cf094bc2cdda3198177ed0f5ed503837aad79a78afab5c33937a4bb5c41d"
+          ],
+          "candidateShadowSha256": [
+            "6f59cf094bc2cdda3198177ed0f5ed503837aad79a78afab5c33937a4bb5c41d"
+          ]
+        },
+        {
+          "pass": "point-distance-six-faces",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            }
+          ],
+          "referenceColorSha256": "c48c3e87d5294740f5c9e6a131ba2914bcb17b187ec06dbb14bd74fb6028a8ff",
+          "candidateColorSha256": "c48c3e87d5294740f5c9e6a131ba2914bcb17b187ec06dbb14bd74fb6028a8ff",
+          "referenceShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "6af867de0b30875793719f490d21772a6284d30f3931d7980f2d531d244ab90a"
+          ],
+          "candidateShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "6af867de0b30875793719f490d21772a6284d30f3931d7980f2d531d244ab90a"
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "config": {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      },
+      "requestedBankCount": 2,
+      "mode": "opaque",
+      "expected": [
+        "A0",
+        "B5",
+        "A10",
+        "B15",
+        "A20",
+        "B25",
+        "B30",
+        "A35"
+      ],
+      "referenceObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0,
+          "ids": [
+            "A0"
+          ],
+          "orders": [
+            0
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0005,
+          "ids": [
+            "B5"
+          ],
+          "orders": [
+            1
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0006666666666666666,
+          "ids": [
+            "A10"
+          ],
+          "orders": [
+            2
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.00075,
+          "ids": [
+            "B15"
+          ],
+          "orders": [
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008,
+          "ids": [
+            "A20"
+          ],
+          "orders": [
+            4
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 2,
+          "renderOrder": 0.0008333333333333334,
+          "ids": [
+            "B25",
+            "B30"
+          ],
+          "orders": [
+            5,
+            6
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008571428571428572,
+          "ids": [
+            "A35"
+          ],
+          "orders": [
+            7
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "candidateObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 8,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "B5",
+            "A10",
+            "B15",
+            "A20",
+            "B25",
+            "B30",
+            "A35"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "ordered": true,
+      "banks": [
+        2
+      ],
+      "referenceStats": {
+        "pages": 2,
+        "cards": 2,
+        "pixels": 131072,
+        "drawChunks": 7,
+        "pooledDrawChunks": 7,
+        "drawCapacity": 8,
+        "drawBufferBytes": 1684,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 17408,
+        "gpuBytes": 699051,
+        "allocatedMipBytes": 699048,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 16384,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.199999999254942,
+          "avoidedPaintMs": 0,
+          "bytes": 41268,
+          "scratchBytes": 32768,
+          "ownedBytes": 74036,
+          "entries": 2,
+          "hits": 0,
+          "misses": 2,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 353588,
+        "ownedGpuBytes": 1048572,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 615732,
+        "peakOwnedGpuBytes": 1048572,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 2,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 4.099999999627471,
+          "readbackMs": 0.19999999925494194,
+          "cacheMs": 1.199999999254942,
+          "pickMaskMs": 0.09999999962747097,
+          "rowFlipMs": 0.10000000149011612,
+          "slotMs": 0.09999999962747097
+        },
+        "rasterWorkWallMs": 6.099999999627471,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 2,
+        "mipLayerUpdates": 2,
+        "mipCopyCalls": 18,
+        "mipCopyBytes": 699048,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 371584,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 109440,
+        "scratchPartialUploadPixels": 27360,
+        "scratchPartialUploads": 1,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 2.700000001117587
+      },
+      "candidateStats": {
+        "pages": 2,
+        "cards": 2,
+        "pixels": 131072,
+        "drawChunks": 1,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 8,
+        "drawBufferBytes": 844,
+        "maxTextureBanks": 8,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 17408,
+        "gpuBytes": 699051,
+        "allocatedMipBytes": 699048,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 16384,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 0.40000000037252903,
+          "avoidedPaintMs": 0,
+          "bytes": 41268,
+          "scratchBytes": 32768,
+          "ownedBytes": 74036,
+          "entries": 2,
+          "hits": 0,
+          "misses": 2,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 353588,
+        "ownedGpuBytes": 1048572,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 615732,
+        "peakOwnedGpuBytes": 1048572,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 2,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 2.299999998882413,
+          "readbackMs": 0.30000000074505806,
+          "cacheMs": 0.40000000037252903,
+          "pickMaskMs": 0.599999999627471,
+          "rowFlipMs": 0,
+          "slotMs": 0.10000000149011612
+        },
+        "rasterWorkWallMs": 3.800000000745058,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 2,
+        "mipLayerUpdates": 2,
+        "mipCopyCalls": 18,
+        "mipCopyBytes": 699048,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 371584,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 109440,
+        "scratchPartialUploadPixels": 27360,
+        "scratchPartialUploads": 1,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0.49999999813735485
+      },
+      "reports": [
+        {
+          "pass": "sun-depth-2048",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 1286
+            }
+          ],
+          "referenceColorSha256": "aecc191a5beadb1cd6a1beaaaaee5c2ff4ec35d45e0be92b872cd38212853d06",
+          "candidateColorSha256": "aecc191a5beadb1cd6a1beaaaaee5c2ff4ec35d45e0be92b872cd38212853d06",
+          "referenceShadowSha256": [
+            "a6f411c64ded6230e27aa822a78088736c913b171504784074179087e31369b2"
+          ],
+          "candidateShadowSha256": [
+            "a6f411c64ded6230e27aa822a78088736c913b171504784074179087e31369b2"
+          ]
+        },
+        {
+          "pass": "point-distance-six-faces",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            }
+          ],
+          "referenceColorSha256": "73a54087b1102eb1418b96b3c61aa3f92e0f62fd6e7785ec6fbee4eb586d72e0",
+          "candidateColorSha256": "73a54087b1102eb1418b96b3c61aa3f92e0f62fd6e7785ec6fbee4eb586d72e0",
+          "referenceShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "9740035102b9f80d5338fd44d6868fb3635864a01ea0668e67ba121f8c9283a8"
+          ],
+          "candidateShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "9740035102b9f80d5338fd44d6868fb3635864a01ea0668e67ba121f8c9283a8"
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "config": {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      },
+      "requestedBankCount": 8,
+      "mode": "opaque",
+      "expected": [
+        "A0",
+        "B5",
+        "A10",
+        "B15",
+        "bank220",
+        "bank325",
+        "bank430",
+        "bank535",
+        "bank640",
+        "bank745",
+        "A50",
+        "bank755",
+        "B60",
+        "A65"
+      ],
+      "referenceObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0,
+          "ids": [
+            "A0"
+          ],
+          "orders": [
+            0
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0005,
+          "ids": [
+            "B5"
+          ],
+          "orders": [
+            1
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0006666666666666666,
+          "ids": [
+            "A10"
+          ],
+          "orders": [
+            2
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.00075,
+          "ids": [
+            "B15"
+          ],
+          "orders": [
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008,
+          "ids": [
+            "bank220"
+          ],
+          "orders": [
+            4
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008333333333333334,
+          "ids": [
+            "bank325"
+          ],
+          "orders": [
+            5
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008571428571428572,
+          "ids": [
+            "bank430"
+          ],
+          "orders": [
+            6
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.000875,
+          "ids": [
+            "bank535"
+          ],
+          "orders": [
+            7
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008888888888888889,
+          "ids": [
+            "bank640"
+          ],
+          "orders": [
+            8
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009000000000000001,
+          "ids": [
+            "bank745"
+          ],
+          "orders": [
+            9
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009090909090909091,
+          "ids": [
+            "A50"
+          ],
+          "orders": [
+            10
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009166666666666666,
+          "ids": [
+            "bank755"
+          ],
+          "orders": [
+            11
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009230769230769231,
+          "ids": [
+            "B60"
+          ],
+          "orders": [
+            12
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009285714285714287,
+          "ids": [
+            "A65"
+          ],
+          "orders": [
+            13
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "candidateObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 14,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "B5",
+            "A10",
+            "B15",
+            "bank220",
+            "bank325",
+            "bank430",
+            "bank535",
+            "bank640",
+            "bank745",
+            "A50",
+            "bank755",
+            "B60",
+            "A65"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            0,
+            7,
+            1,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "ordered": true,
+      "banks": [
+        8
+      ],
+      "referenceStats": {
+        "pages": 8,
+        "cards": 8,
+        "pixels": 524288,
+        "drawChunks": 14,
+        "pooledDrawChunks": 14,
+        "drawCapacity": 14,
+        "drawBufferBytes": 3192,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 66560,
+        "gpuBytes": 2796203,
+        "allocatedMipBytes": 2796192,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 65536,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.3999999985098839,
+          "avoidedPaintMs": 0,
+          "bytes": 225168,
+          "scratchBytes": 65536,
+          "ownedBytes": 290704,
+          "entries": 8,
+          "hits": 0,
+          "misses": 8,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 619408,
+        "ownedGpuBytes": 3145716,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 881552,
+        "peakOwnedGpuBytes": 3145716,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 8,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 10.899999998509884,
+          "readbackMs": 0.900000000372529,
+          "cacheMs": 1.3999999985098839,
+          "pickMaskMs": 2.100000001490116,
+          "rowFlipMs": 0.2999999988824129,
+          "slotMs": 0.09999999962747097
+        },
+        "rasterWorkWallMs": 15.999999998137355,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 8,
+        "mipLayerUpdates": 8,
+        "mipCopyCalls": 72,
+        "mipCopyBytes": 2796192,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 1076088,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 813944,
+        "scratchPartialUploadPixels": 203486,
+        "scratchPartialUploads": 7,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 2.900000002235174
+      },
+      "candidateStats": {
+        "pages": 8,
+        "cards": 8,
+        "pixels": 524288,
+        "drawChunks": 1,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 16,
+        "drawBufferBytes": 1548,
+        "maxTextureBanks": 8,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 66560,
+        "gpuBytes": 2796203,
+        "allocatedMipBytes": 2796192,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 65536,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.7000000029802322,
+          "avoidedPaintMs": 0,
+          "bytes": 225168,
+          "scratchBytes": 65536,
+          "ownedBytes": 290704,
+          "entries": 8,
+          "hits": 0,
+          "misses": 8,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 619408,
+        "ownedGpuBytes": 3145716,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 881552,
+        "peakOwnedGpuBytes": 3145716,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 8,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 9.500000001862645,
+          "readbackMs": 0.8999999966472387,
+          "cacheMs": 1.7000000029802322,
+          "pickMaskMs": 0.7000000029802322,
+          "rowFlipMs": 0.19999999925494194,
+          "slotMs": 0.2000000011175871
+        },
+        "rasterWorkWallMs": 13.300000004470348,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 8,
+        "mipLayerUpdates": 8,
+        "mipCopyCalls": 72,
+        "mipCopyBytes": 2796192,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 1076088,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 813944,
+        "scratchPartialUploadPixels": 203486,
+        "scratchPartialUploads": 7,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 1.6999999936670065
+      },
+      "reports": [
+        {
+          "pass": "sun-depth-2048",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 2067
+            }
+          ],
+          "referenceColorSha256": "60086797582f4ac47d8e3a54a5e4f001c36a06175e0efd56fdec0c2b694e1db0",
+          "candidateColorSha256": "60086797582f4ac47d8e3a54a5e4f001c36a06175e0efd56fdec0c2b694e1db0",
+          "referenceShadowSha256": [
+            "d5c794fbc4a554ba50327546037707abe4e25ad19fe2f4d7798a36132940b5f7"
+          ],
+          "candidateShadowSha256": [
+            "d5c794fbc4a554ba50327546037707abe4e25ad19fe2f4d7798a36132940b5f7"
+          ]
+        },
+        {
+          "pass": "point-distance-six-faces",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            }
+          ],
+          "referenceColorSha256": "38195caa2e7219aab254af2957ffb995d61ba5cd2fe08ecc060eb35ca1c74b27",
+          "candidateColorSha256": "38195caa2e7219aab254af2957ffb995d61ba5cd2fe08ecc060eb35ca1c74b27",
+          "referenceShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "94b0ba783ba33db8807fcf138c7d8444aa0c028d423a39ec53b8825f68ce03da"
+          ],
+          "candidateShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "94b0ba783ba33db8807fcf138c7d8444aa0c028d423a39ec53b8825f68ce03da"
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "config": {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      },
+      "requestedBankCount": 9,
+      "mode": "opaque",
+      "expected": [
+        "A0",
+        "B5",
+        "A10",
+        "B15",
+        "bank220",
+        "bank325",
+        "bank430",
+        "bank535",
+        "bank640",
+        "bank745",
+        "bank850",
+        "A55",
+        "bank860",
+        "B65",
+        "A70"
+      ],
+      "referenceObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0,
+          "ids": [
+            "A0"
+          ],
+          "orders": [
+            0
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0005,
+          "ids": [
+            "B5"
+          ],
+          "orders": [
+            1
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0006666666666666666,
+          "ids": [
+            "A10"
+          ],
+          "orders": [
+            2
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.00075,
+          "ids": [
+            "B15"
+          ],
+          "orders": [
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008,
+          "ids": [
+            "bank220"
+          ],
+          "orders": [
+            4
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008333333333333334,
+          "ids": [
+            "bank325"
+          ],
+          "orders": [
+            5
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008571428571428572,
+          "ids": [
+            "bank430"
+          ],
+          "orders": [
+            6
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.000875,
+          "ids": [
+            "bank535"
+          ],
+          "orders": [
+            7
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008888888888888889,
+          "ids": [
+            "bank640"
+          ],
+          "orders": [
+            8
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009000000000000001,
+          "ids": [
+            "bank745"
+          ],
+          "orders": [
+            9
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009090909090909091,
+          "ids": [
+            "bank850"
+          ],
+          "orders": [
+            10
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009166666666666666,
+          "ids": [
+            "A55"
+          ],
+          "orders": [
+            11
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009230769230769231,
+          "ids": [
+            "bank860"
+          ],
+          "orders": [
+            12
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009285714285714287,
+          "ids": [
+            "B65"
+          ],
+          "orders": [
+            13
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009333333333333333,
+          "ids": [
+            "A70"
+          ],
+          "orders": [
+            14
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "candidateObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 10,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "B5",
+            "A10",
+            "B15",
+            "bank220",
+            "bank325",
+            "bank430",
+            "bank535",
+            "bank640",
+            "bank745"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 5,
+          "renderOrder": 0.0005,
+          "ids": [
+            "bank850",
+            "A55",
+            "bank860",
+            "B65",
+            "A70"
+          ],
+          "orders": [
+            10,
+            11,
+            12,
+            13,
+            14
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            0,
+            2,
+            1
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "ordered": true,
+      "banks": [
+        8,
+        3
+      ],
+      "referenceStats": {
+        "pages": 9,
+        "cards": 9,
+        "pixels": 589824,
+        "drawChunks": 15,
+        "pooledDrawChunks": 15,
+        "drawCapacity": 15,
+        "drawBufferBytes": 3420,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 74752,
+        "gpuBytes": 3145728,
+        "allocatedMipBytes": 3145716,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 73728,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 1.400000000372529,
+          "avoidedPaintMs": 0,
+          "bytes": 244728,
+          "scratchBytes": 65536,
+          "ownedBytes": 310264,
+          "entries": 9,
+          "hits": 0,
+          "misses": 9,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 647160,
+        "ownedGpuBytes": 3495240,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 909304,
+        "peakOwnedGpuBytes": 3495240,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 9,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 10.400000000372529,
+          "readbackMs": 0.8000000007450581,
+          "cacheMs": 1.400000000372529,
+          "pickMaskMs": 0.2999999988824129,
+          "rowFlipMs": 0.09999999962747097,
+          "slotMs": 0.2000000011175871
+        },
+        "rasterWorkWallMs": 13.800000002607703,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 9,
+        "mipLayerUpdates": 9,
+        "mipCopyCalls": 81,
+        "mipCopyBytes": 3145716,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 1190524,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 928380,
+        "scratchPartialUploadPixels": 232095,
+        "scratchPartialUploads": 8,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 2.499999998137355
+      },
+      "candidateStats": {
+        "pages": 9,
+        "cards": 9,
+        "pixels": 589824,
+        "drawChunks": 2,
+        "pooledDrawChunks": 2,
+        "drawCapacity": 24,
+        "drawBufferBytes": 2392,
+        "maxTextureBanks": 8,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 74752,
+        "gpuBytes": 3145728,
+        "allocatedMipBytes": 3145716,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 73728,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 0.8999999985098839,
+          "avoidedPaintMs": 0,
+          "bytes": 244728,
+          "scratchBytes": 65536,
+          "ownedBytes": 310264,
+          "entries": 9,
+          "hits": 0,
+          "misses": 9,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 647160,
+        "ownedGpuBytes": 3495240,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 909304,
+        "peakOwnedGpuBytes": 3495240,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 9,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 9.800000000745058,
+          "readbackMs": 0.8999999985098839,
+          "cacheMs": 0.8999999985098839,
+          "pickMaskMs": 0.3999999985098839,
+          "rowFlipMs": 0.2999999988824129,
+          "slotMs": 0.6000000033527613
+        },
+        "rasterWorkWallMs": 13.499999998137355,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 9,
+        "mipLayerUpdates": 9,
+        "mipCopyCalls": 81,
+        "mipCopyBytes": 3145716,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 1190524,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 928380,
+        "scratchPartialUploadPixels": 232095,
+        "scratchPartialUploads": 8,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 2.1000000033527613
+      },
+      "reports": [
+        {
+          "pass": "sun-depth-2048",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 2066
+            }
+          ],
+          "referenceColorSha256": "44e925f34e5274a33a0c6ba2adf54997fa8e0a74c80cb42a1f5998a9e17e9449",
+          "candidateColorSha256": "44e925f34e5274a33a0c6ba2adf54997fa8e0a74c80cb42a1f5998a9e17e9449",
+          "referenceShadowSha256": [
+            "21369c2148f9726747bbc3666e0cb406258663f0b54a15e01ce2b96c6d9b5309"
+          ],
+          "candidateShadowSha256": [
+            "21369c2148f9726747bbc3666e0cb406258663f0b54a15e01ce2b96c6d9b5309"
+          ]
+        },
+        {
+          "pass": "point-distance-six-faces",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            }
+          ],
+          "referenceColorSha256": "9ecb5678e0b7d46e3c02cb9b538d83388269611eda7281679ca07dae40a36ec6",
+          "candidateColorSha256": "9ecb5678e0b7d46e3c02cb9b538d83388269611eda7281679ca07dae40a36ec6",
+          "referenceShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "7649524816726ecd416d6a7c3e5188eac7470b59c6f123bf36d942094726b8bb"
+          ],
+          "candidateShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "7649524816726ecd416d6a7c3e5188eac7470b59c6f123bf36d942094726b8bb"
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "config": {
+        "name": "256-overlap",
+        "sizes": [
+          256
+        ],
+        "drops": [
+          0
+        ],
+        "overlap": true
+      },
+      "requestedBankCount": 16,
+      "mode": "opaque",
+      "expected": [
+        "A0",
+        "B5",
+        "A10",
+        "B15",
+        "bank220",
+        "bank325",
+        "bank430",
+        "bank535",
+        "bank640",
+        "bank745",
+        "bank850",
+        "bank955",
+        "bank1060",
+        "bank1165",
+        "bank1270",
+        "bank1375",
+        "bank1480",
+        "bank1585",
+        "A90",
+        "bank1595",
+        "B100",
+        "A105"
+      ],
+      "referenceObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0,
+          "ids": [
+            "A0"
+          ],
+          "orders": [
+            0
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0005,
+          "ids": [
+            "B5"
+          ],
+          "orders": [
+            1
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0006666666666666666,
+          "ids": [
+            "A10"
+          ],
+          "orders": [
+            2
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.00075,
+          "ids": [
+            "B15"
+          ],
+          "orders": [
+            3
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008,
+          "ids": [
+            "bank220"
+          ],
+          "orders": [
+            4
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008333333333333334,
+          "ids": [
+            "bank325"
+          ],
+          "orders": [
+            5
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008571428571428572,
+          "ids": [
+            "bank430"
+          ],
+          "orders": [
+            6
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.000875,
+          "ids": [
+            "bank535"
+          ],
+          "orders": [
+            7
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0008888888888888889,
+          "ids": [
+            "bank640"
+          ],
+          "orders": [
+            8
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009000000000000001,
+          "ids": [
+            "bank745"
+          ],
+          "orders": [
+            9
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009090909090909091,
+          "ids": [
+            "bank850"
+          ],
+          "orders": [
+            10
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009166666666666666,
+          "ids": [
+            "bank955"
+          ],
+          "orders": [
+            11
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009230769230769231,
+          "ids": [
+            "bank1060"
+          ],
+          "orders": [
+            12
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009285714285714287,
+          "ids": [
+            "bank1165"
+          ],
+          "orders": [
+            13
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009333333333333333,
+          "ids": [
+            "bank1270"
+          ],
+          "orders": [
+            14
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009375,
+          "ids": [
+            "bank1375"
+          ],
+          "orders": [
+            15
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009411764705882353,
+          "ids": [
+            "bank1480"
+          ],
+          "orders": [
+            16
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009444444444444445,
+          "ids": [
+            "bank1585"
+          ],
+          "orders": [
+            17
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009473684210526316,
+          "ids": [
+            "A90"
+          ],
+          "orders": [
+            18
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.00095,
+          "ids": [
+            "bank1595"
+          ],
+          "orders": [
+            19
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009523809523809524,
+          "ids": [
+            "B100"
+          ],
+          "orders": [
+            20
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 1,
+          "renderOrder": 0.0009545454545454546,
+          "ids": [
+            "A105"
+          ],
+          "orders": [
+            21
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0
+          ],
+          "cardLayer": [
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "candidateObjects": [
+        {
+          "name": "PaintedCards",
+          "count": 10,
+          "renderOrder": 0,
+          "ids": [
+            "A0",
+            "B5",
+            "A10",
+            "B15",
+            "bank220",
+            "bank325",
+            "bank430",
+            "bank535",
+            "bank640",
+            "bank745"
+          ],
+          "orders": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 8,
+          "renderOrder": 0.0005,
+          "ids": [
+            "bank850",
+            "bank955",
+            "bank1060",
+            "bank1165",
+            "bank1270",
+            "bank1375",
+            "bank1480",
+            "bank1585"
+          ],
+          "orders": [
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        },
+        {
+          "name": "PaintedCards",
+          "count": 4,
+          "renderOrder": 0.0006666666666666666,
+          "ids": [
+            "A90",
+            "bank1595",
+            "B100",
+            "A105"
+          ],
+          "orders": [
+            18,
+            19,
+            20,
+            21
+          ],
+          "banks": [
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            },
+            {
+              "width": 256,
+              "height": 256,
+              "depth": 1
+            }
+          ],
+          "cardBank": [
+            0,
+            1,
+            2,
+            0
+          ],
+          "cardLayer": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cardRect": [
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461,
+            -64,
+            -53.587642669677734,
+            64,
+            92.3531723022461
+          ]
+        }
+      ],
+      "ordered": true,
+      "banks": [
+        8,
+        8,
+        3
+      ],
+      "referenceStats": {
+        "pages": 16,
+        "cards": 16,
+        "pixels": 1048576,
+        "drawChunks": 22,
+        "pooledDrawChunks": 22,
+        "drawCapacity": 22,
+        "drawBufferBytes": 5016,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 132096,
+        "gpuBytes": 5592406,
+        "allocatedMipBytes": 5592384,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 131072,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 2.199999999254942,
+          "avoidedPaintMs": 0,
+          "bytes": 450680,
+          "scratchBytes": 65536,
+          "ownedBytes": 516216,
+          "entries": 16,
+          "hits": 0,
+          "misses": 16,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 910456,
+        "ownedGpuBytes": 5941908,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 1172600,
+        "peakOwnedGpuBytes": 5941908,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 16,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 19.199999997392297,
+          "readbackMs": 1.7000000048428774,
+          "cacheMs": 2.199999999254942,
+          "pickMaskMs": 0.900000000372529,
+          "rowFlipMs": 0.49999999813735485,
+          "slotMs": 0.7999999988824129
+        },
+        "rasterWorkWallMs": 26.40000000037253,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 16,
+        "mipLayerUpdates": 16,
+        "mipCopyCalls": 144,
+        "mipCopyBytes": 5592384,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 2024660,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 1762516,
+        "scratchPartialUploadPixels": 440629,
+        "scratchPartialUploads": 15,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 2.900000000372529
+      },
+      "candidateStats": {
+        "pages": 16,
+        "cards": 16,
+        "pixels": 1048576,
+        "drawChunks": 3,
+        "pooledDrawChunks": 3,
+        "drawCapacity": 28,
+        "drawBufferBytes": 2884,
+        "maxTextureBanks": 8,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 132096,
+        "gpuBytes": 5592406,
+        "allocatedMipBytes": 5592384,
+        "canvasBackingBytes": 262144,
+        "maskBytes": 131072,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 1024,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 2.600000010803342,
+          "avoidedPaintMs": 0,
+          "bytes": 450680,
+          "scratchBytes": 65536,
+          "ownedBytes": 516216,
+          "entries": 16,
+          "hits": 0,
+          "misses": 16,
+          "evictions": 0,
+          "budget": 50331648
+        },
+        "ownedCpuBytes": 910456,
+        "ownedGpuBytes": 5941908,
+        "peakPendingRgbaBytes": 262144,
+        "peakOwnedCpuBytes": 1172600,
+        "peakOwnedGpuBytes": 5941908,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 16,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 25.600000001490116,
+          "readbackMs": 1.4999999981373549,
+          "cacheMs": 2.700000010430813,
+          "pickMaskMs": 1.299999998882413,
+          "rowFlipMs": 0.2999999988824129,
+          "slotMs": 1.3999999985098839
+        },
+        "rasterWorkWallMs": 34.00000000372529,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 16,
+        "mipLayerUpdates": 16,
+        "mipCopyCalls": 144,
+        "mipCopyBytes": 5592384,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 2024660,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 1762516,
+        "scratchPartialUploadPixels": 440629,
+        "scratchPartialUploads": 15,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 3.6999999918043613
+      },
+      "reports": [
+        {
+          "pass": "sun-depth-2048",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 2078
+            }
+          ],
+          "referenceColorSha256": "da84ad84c5d05929614b732365be59d9ee0c125b28920c89c0fcfd6143e1703f",
+          "candidateColorSha256": "da84ad84c5d05929614b732365be59d9ee0c125b28920c89c0fcfd6143e1703f",
+          "referenceShadowSha256": [
+            "0d511868979ae218800507b3a5423dc1fe93b7bef750735d8f7df767292e5e74"
+          ],
+          "candidateShadowSha256": [
+            "0d511868979ae218800507b3a5423dc1fe93b7bef750735d8f7df767292e5e74"
+          ]
+        },
+        {
+          "pass": "point-distance-six-faces",
+          "color": {
+            "maximum": 0,
+            "changedChannels": 0,
+            "changedPixels": 0,
+            "alphaChanged": 0,
+            "alphaZeroRgbChanged": 0,
+            "referenceAlphaZeroRGBPixels": 0
+          },
+          "shadow": [
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            },
+            {
+              "maximum": 0,
+              "changedChannels": 0,
+              "changedPixels": 0,
+              "alphaChanged": 0,
+              "alphaZeroRgbChanged": 0,
+              "referenceAlphaZeroRGBPixels": 0
+            }
+          ],
+          "referenceColorSha256": "d8c069c29d9119ffbba5e47556b4942a5c1485db815759296d7b4e85448e6793",
+          "candidateColorSha256": "d8c069c29d9119ffbba5e47556b4942a5c1485db815759296d7b4e85448e6793",
+          "referenceShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "df7bb1d4eb8a9b7eca9652640d62f6cf5b709aa5428ae0aca0511cdb48970c1b"
+          ],
+          "candidateShadowSha256": [
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b",
+            "df7bb1d4eb8a9b7eca9652640d62f6cf5b709aa5428ae0aca0511cdb48970c1b"
+          ]
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "256-overlap-8-opaque-sun.png"
+    }
+  ],
+  "glError": 0,
+  "programs": [
+    {
+      "runnable": true
+    },
+    {
+      "runnable": true
+    }
+  ],
+  "passed": true,
+  "errors": [],
+  "failures": [],
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "sourceRoot": "/workspace/sketch-rts-viewport",
+  "sourceCommit": "55d6b3b5e0c76aa1fbfac59a39dc5b5d941748d3",
+  "sourceFiles": {
+    "src/client/sound.ts": "0371be3bed7dcc2abfb712449487a53e1937cde488288e1003d3e629566e02eb",
+    "src/client/main.ts": "febbb552795162b5fc4f266df943288c48bb1210ade1b52183a8d382545eee4a",
+    "src/client/sound-loading.test.ts": "41492505d8a6c9d6fe991c60890335ae5b2700981df085167f6d616d74368b0d"
+  },
+  "harnessSha256": "676946f4f2d11b0672a5d8ac210a11b70a1d0957efb632b226ba972fea430291",
+  "method": "Fresh Chromium profile, real homepage and native AudioContext, strict browser autoplay policy, instrumented native decode/resume/source start, and trusted CDP pointer events. The test build selects the repository CC0 pack, whose menu navigation uses its existing click cue. Headless has no physical speakers; this proves loaded nonempty audio buffers and browser playback lifecycle, not human hearing.",
+  "requests": [
+    {
+      "url": "/audio-packs/cc0/arrowHit.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495756
+    },
+    {
+      "url": "/audio-packs/cc0/arrowShot.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495784
+    },
+    {
+      "url": "/audio-packs/cc0/buildingDown.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495807
+    },
+    {
+      "url": "/audio-packs/cc0/built.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495831
+    },
+    {
+      "url": "/audio-packs/cc0/click.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495856
+    },
+    {
+      "url": "/audio-packs/cc0/death.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.49588
+    },
+    {
+      "url": "/audio-packs/cc0/melee.ogg",
+      "query": "?import&url",
+      "type": "Script",
+      "at": 9182.495906
+    },
+    {
+      "url": "/audio-packs/cc0/click.ogg",
+      "query": "",
+      "type": "Fetch",
+      "at": 9184.980935
+    }
+  ],
+  "errors": [],
+  "preGesture": {
+    "contexts": [
+      {
+        "id": 0,
+        "initialState": "suspended",
+        "at": 3015.9000000003725
+      }
+    ],
+    "decodes": [
+      {
+        "id": 0,
+        "duration": 0.14709750566893423,
+        "length": 6487,
+        "peak": 0.498566597700119,
+        "state": "suspended",
+        "at": 3029
+      }
+    ],
+    "resumes": [],
+    "starts": [],
+    "liveContexts": [
+      {
+        "state": "suspended",
+        "currentTime": 0
+      }
+    ],
+    "settings": null
+  },
+  "firstClick": {
+    "contexts": [
+      {
+        "id": 0,
+        "initialState": "suspended",
+        "at": 3015.9000000003725
+      }
+    ],
+    "decodes": [
+      {
+        "id": 0,
+        "duration": 0.14709750566893423,
+        "length": 6487,
+        "peak": 0.498566597700119,
+        "state": "suspended",
+        "at": 3029
+      }
+    ],
+    "resumes": [
+      {
+        "id": 0,
+        "from": "suspended",
+        "at": 8312.200000001118,
+        "to": "running",
+        "finishedAt": 8371.5
+      }
+    ],
+    "starts": [
+      {
+        "id": 0,
+        "state": "running",
+        "duration": 0.14709750566893423,
+        "at": 8371.900000000373,
+        "trustedGesture": true
+      }
+    ],
+    "liveContexts": [
+      {
+        "state": "running",
+        "currentTime": 0.07256235827664399
+      }
+    ],
+    "settings": null
+  },
+  "muted": {
+    "contexts": [
+      {
+        "id": 0,
+        "initialState": "suspended",
+        "at": 3015.9000000003725
+      }
+    ],
+    "decodes": [
+      {
+        "id": 0,
+        "duration": 0.14709750566893423,
+        "length": 6487,
+        "peak": 0.498566597700119,
+        "state": "suspended",
+        "at": 3029
+      }
+    ],
+    "resumes": [
+      {
+        "id": 0,
+        "from": "suspended",
+        "at": 8312.200000001118,
+        "to": "running",
+        "finishedAt": 8371.5
+      }
+    ],
+    "starts": [
+      {
+        "id": 0,
+        "state": "running",
+        "duration": 0.14709750566893423,
+        "at": 8371.900000000373,
+        "trustedGesture": true
+      }
+    ],
+    "liveContexts": [
+      {
+        "state": "running",
+        "currentTime": 0.08126984126984127
+      }
+    ],
+    "settings": {
+      "effects": 0.7,
+      "ui": 0.5,
+      "muted": true
+    }
+  },
+  "mutedClick": {
+    "contexts": [
+      {
+        "id": 0,
+        "initialState": "suspended",
+        "at": 3015.9000000003725
+      }
+    ],
+    "decodes": [
+      {
+        "id": 0,
+        "duration": 0.14709750566893423,
+        "length": 6487,
+        "peak": 0.498566597700119,
+        "state": "suspended",
+        "at": 3029
+      }
+    ],
+    "resumes": [
+      {
+        "id": 0,
+        "from": "suspended",
+        "at": 8312.200000001118,
+        "to": "running",
+        "finishedAt": 8371.5
+      }
+    ],
+    "starts": [
+      {
+        "id": 0,
+        "state": "running",
+        "duration": 0.14709750566893423,
+        "at": 8371.900000000373,
+        "trustedGesture": true
+      }
+    ],
+    "liveContexts": [
+      {
+        "state": "running",
+        "currentTime": 0.24090702947845805
+      }
+    ],
+    "settings": {
+      "effects": 0.7,
+      "ui": 0.5,
+      "muted": true
+    }
+  },
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/151.0.7922.173",
+    "revision": "@a96602f30358e9b5d256a0464e7e4d4bec223004",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "jsVersion": "15.1.206.23"
+  },
+  "passed": true
+}

@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "passed": true,
+  "actualDefaultVerificationRuns": [
+    {
+      "command": [
+        "python3",
+        "scripts/art-png-evidence-archive.py",
+        "--verify"
+      ],
+      "exitCode": 0,
+      "maintainedToolSha256": "37d37f08739bc62f9d6b990afeb865c1dde2a206f250f86b4a868cf74ae8c059",
+      "summary": {
+        "operation": "verify",
+        "verifiedFolders": 14,
+        "skippedMissingDirectories": [],
+        "originalPngFiles": 954,
+        "originalPngBytes": 792843206,
+        "uniqueArchives": 4,
+        "archiveBytes": 211643224,
+        "largestArchiveBytes": 68627707,
+        "deletedFiles": 0,
+        "deletedBytes": 0,
+        "retainedFiles": 166,
+        "retainedBytes": 119238434,
+        "archives": [
+          {
+            "file": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e.tar.gz",
+            "bytes": 68627707,
+            "sha256": "a1939c1716a00df0010abaa18cc17e33f4e80dcd5932745b947698ba3aacff9d"
+          },
+          {
+            "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+            "bytes": 68627584,
+            "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+          },
+          {
+            "file": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256.tar.gz",
+            "bytes": 46689651,
+            "sha256": "effa1df3c37bde98bfa7e09cef6645abbe572b497e34c3b30064c6e37532dfe7"
+          },
+          {
+            "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+            "bytes": 27698282,
+            "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+          }
+        ],
+        "folders": [
+          {
+            "target": "card-streaming/mip-residency/camera-before",
+            "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+          },
+          {
+            "target": "card-streaming/mip-residency/camera-after",
+            "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+          },
+          {
+            "target": "card-streaming/mip-residency/camera-after-coexisting",
+            "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+          },
+          {
+            "target": "card-streaming/mip-residency/camera-after-one-source",
+            "fileSetSha256": "daccf0681b83c27ae49022d1c7aa17ef12ab2d88a7d35782de4f51f2ca12823e"
+          },
+          {
+            "target": "card-streaming/bank-order/camera-before",
+            "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+          },
+          {
+            "target": "card-streaming/bank-order/camera-after",
+            "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+          },
+          {
+            "target": "card-streaming/bank-order/battle-before",
+            "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+          },
+          {
+            "target": "card-streaming/bank-order/battle-after",
+            "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+          },
+          {
+            "target": "card-streaming/bank-order/final/camera-reference",
+            "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+          },
+          {
+            "target": "card-streaming/bank-order/final/camera-candidate",
+            "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+          },
+          {
+            "target": "card-streaming/bank-order/final/battle-reference",
+            "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+          },
+          {
+            "target": "card-streaming/bank-order/final/battle-candidate",
+            "fileSetSha256": "8cec162c21e019bf8b0ea50b3a2c1a196c28e0e86d6e459ccb8371f10389f256"
+          },
+          {
+            "target": "mercenary-models/gameplay",
+            "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+          },
+          {
+            "target": "mercenary-models/gameplay-final",
+            "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+          }
+        ],
+        "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/art-card-current-correctness-archive.py",
+        "--verify"
+      ],
+      "exitCode": 0,
+      "maintainedToolSha256": "da8a1470d9cd4bb4560738a64b9e81cf64a90e209e4ea4cff2e98b7f2e99925f",
+      "summary": {
+        "operation": "verify",
+        "verifiedFolders": 2,
+        "skippedMissingDirectories": [],
+        "originalPngFiles": 111,
+        "originalPngBytes": 96498449,
+        "uniqueArchives": 2,
+        "archiveBytes": 96325866,
+        "largestArchiveBytes": 68627584,
+        "deletedFiles": 0,
+        "deletedBytes": 0,
+        "retainedFiles": 23,
+        "retainedBytes": 13512363,
+        "archives": [
+          {
+            "file": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166.tar.gz",
+            "bytes": 68627584,
+            "sha256": "4a9b24f115e4251ae5acffd36df7e8cfbd234818dea2c55c20641b7fde0b0cd9"
+          },
+          {
+            "file": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22.tar.gz",
+            "bytes": 27698282,
+            "sha256": "7cb5b935f8ad0563fc259457d808c850e59d0eb627b3b6a0eaad87a62a92ec3e"
+          }
+        ],
+        "folders": [
+          {
+            "target": "card-streaming/latency-investigation/current-correctness/camera",
+            "fileSetSha256": "d7dafc2b6bf543fb8154ec4f751dddc71ed94f12fce94359fde748cf9038f166"
+          },
+          {
+            "target": "card-streaming/latency-investigation/current-correctness/merc",
+            "fileSetSha256": "f7633862b765403fc5e4cde19fd1b329ce23a842c3159d4f801a0bd1ac11df22"
+          }
+        ],
+        "meaning": "Exact encoded PNG preservation only; no rendering/performance measurements or original proof changes."
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "path": "docs/art/refactor/followup/release-readiness/tool-verification/source-reader-guard.json.gz",
+      "originalFilename": "art-png-source-read-guard.json",
+      "decodedBytes": 1032,
+      "decodedSha256": "2e2ecadc07be0c8ed93152e2acb5ece475d9ae503b198a2e75f168572309e1d5",
+      "storedBytes": 503,
+      "storedSha256": "d96b0ec352eb2019291f76bb5fae7e8fae8826a0eb902df4c1014277dedb6ee3"
+    },
+    {
+      "path": "docs/art/refactor/followup/release-readiness/tool-verification/default-verify.json.gz",
+      "originalFilename": "art-png-archive-aware-verification.json",
+      "decodedBytes": 4815,
+      "decodedSha256": "dffec4b705f273bddc9506783c064cb969f8799faa1c3090d9235427c919f8e2",
+      "storedBytes": 1501,
+      "storedSha256": "6347b60f4924675c531bb5172d19d1a5db4f24686e501b67b742b453ba4c178a"
+    },
+    {
+      "path": "docs/art/refactor/followup/release-readiness/tool-verification/default-png-verify.log.gz",
+      "originalFilename": "art-png-evidence-archive-after-gzip-verify.log",
+      "decodedBytes": 4494,
+      "decodedSha256": "c8a5fce4e9dac00cebfa63ed886a3322be3bb7fd712ca4962c1c58867bb3ddcd",
+      "storedBytes": 997,
+      "storedSha256": "ea3678a48bbae10d7ba0ad527a297bdf046b0d66796ceaac8c6a3d5ddf26c285"
+    },
+    {
+      "path": "docs/art/refactor/followup/release-readiness/tool-verification/default-current-correctness-verify.log.gz",
+      "originalFilename": "art-card-current-correctness-archive-after-gzip-verify.log",
+      "decodedBytes": 1435,
+      "decodedSha256": "61ac805bb5952b2397b4934ba778734229c8e29d0081932567ae63bd89bde9fb",
+      "storedBytes": 623,
+      "storedSha256": "7b355df2e489894970d3efc7c3db44c1d9aa5e2db59fabe8a87609ad67df639f"
+    }
+  ],
+  "affectedArchivedRawSourceFiles": 10,
+  "historicalPngManifestFiles": 16,
+  "historicalPngManifestHashesUnchanged": true,
+  "wrongRawWithValidGzipRejectedByBothTools": true,
+  "noSourceRestoreOrPngReencoding": true,
+  "meaning": "Existing encoded PNG archives and original source/proof SHA mappings verified unchanged after twenty captured inputs were losslessly archived and pruned. This is evidence-storage verification, not a new visual or performance experiment."
+}

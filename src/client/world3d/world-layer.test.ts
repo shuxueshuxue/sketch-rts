@@ -47,7 +47,75 @@ function setup(){
   const canvas=new EventTarget() as HTMLCanvasElement;
   return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext)};
 }
+function paintedMeshes(){return gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object instanceof InstancedMesh&&object.visible) as InstancedMesh[];}
+function paintedBinding(mesh:InstancedMesh,index:number){
+ const card=mesh.userData.cards[index] as {sourceSize:number;baseMip:number;page:{texture:DataArrayTexture}},bank=mesh.geometry.getAttribute('cardBank').getX(index);
+ const texture:DataArrayTexture=mesh.userData.banks[bank].texture;
+ expect(texture).toBe(card.page.texture);expect(texture.image.width).toBe(card.sourceSize/2**card.baseMip);expect(texture.image.height).toBe(card.sourceSize/2**card.baseMip);
+ return{card,texture};
+}
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('projects only viewport candidates while keeping exact offscreen positions available on demand',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.items=[];game.buildings=[];game.effects=[];
+    const visible=game.spawnUnit('player','footman',600,600);
+    for(let i=0;i<10000;i++)game.spawnUnit('player','footman',6000+i%100*40,6000+Math.floor(i/100)*40);
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
+    const poses=vi.spyOn(frame.animation!,'frame');layer.draw(frame);
+    expect(poses.mock.calls.map(call=>call[0].id)).toEqual([visible.id]);
+    expect(layer.viewStats()).toMatchObject({units:10001,candidates:1,posed:1,builds:1});
+    const hidden=frame.snapshot.units[8000]!;
+    expect(layer.positions.get(hidden.id)).toMatchObject({x:hidden.x,y:hidden.y,bodyY:hidden.y-17*unitGlyphScale(hidden.radius)});
+    poses.mockClear();layer.draw({...frame,now:16});
+    expect(poses.mock.calls).toHaveLength(1);expect(layer.viewStats().builds).toBe(1);
+    poses.mockClear();layer.draw({...frame,now:32,view:{x:30000,y:30000,width:1200,height:900}});
+    expect(poses).not.toHaveBeenCalled();expect(layer.viewStats()).toMatchObject({candidates:0,posed:0,positions:0});
+    layer.reset();expect(layer.positions.get(hidden.id)).toBeUndefined();layer.dispose();
+  });
+  it('retains offscreen release facing and ready direction through reentry and expiry without generating its frames',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.items=[];game.buildings=[];game.effects=[];
+    const unit=game.spawnUnit('player','lancer',6000,600);unit.order={type:'hold',x:unit.x,y:unit.y};
+    game.effects=[{id:'hidden-left-release',type:'melee',sourceId:unit.id,sourceKind:unit.kind,actionMode:'attack',actionTick:0,x:5900,y:500,fromX:6000,fromY:600,toX:5900,toY:500,duration:16,remaining:16}];
+    frame.view={x:0,y:0,width:1200,height:900};frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
+    const poses=vi.spyOn(frame.animation!,'frame'),original=JSON.stringify(frame.snapshot);layer.draw(frame);
+    expect(JSON.stringify(frame.snapshot)).toBe(original);expect(frame.facing.releaseFacing(unit.id)).toBe(-1);expect(poses).not.toHaveBeenCalled();
+    for(let tick=1;tick<=24;tick++){game.tick=tick;game.effects=[];frame.snapshot=snapshotGame(game);frame.now=tick*50;layer.draw(frame);}
+    expect(poses).not.toHaveBeenCalled();
+    const reentry={...frame,view:{x:5500,y:0,width:1200,height:900}};layer.draw(reentry);
+    expect(layer.positions.get(unit.id)!.facing).toBe(-1);expect(frame.animation!.frame(unit,frame.now).carryDirection?.x).toBeLessThan(0);
+    poses.mockClear();
+    for(let tick=25;tick<=80;tick++){game.tick=tick;frame.snapshot=snapshotGame(game);frame.now=tick*50;layer.draw(frame);}
+    expect(poses).not.toHaveBeenCalled();layer.draw({...frame,view:reentry.view});
+    expect(layer.positions.get(unit.id)!.facing).toBe(-1);expect(frame.animation!.frame(unit,frame.now).carryDirection).toBeUndefined();layer.dispose();
+  });
+  it('keeps vertical deck strikes on the crew heading when the release begins offscreen',async()=>{
+    for(const dy of [-100,100]){
+      const {game,ship,frame,layer}=setup();
+      const crew=game.units.find(unit=>unit.deck)!;
+      ship.sailing!.heading=Math.PI;
+      const foot=localToWorld(ship,crew.deck!);crew.x=foot.x;crew.y=foot.y;
+      crew.order={type:'hold',x:crew.x,y:crew.y};
+      game.units=[ship,crew];game.buildings=[];game.effects=[];
+      frame.view={x:6000,y:6000,width:800,height:600};
+      frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+      // The global side starts right; the rotated deck's stationary crew face
+      // left. A vertical release must keep that deck-side fallback.
+      expect(frame.facing.facing(crew.id)).toBe(1);
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      game.effects.push({id:`vertical-deck:${dy}`,type:'melee',x:crew.x,y:crew.y+dy,
+        duration:16,remaining:16,sourceId:crew.id,actionMode:'attack',actionTick:game.tick,
+        fromX:crew.x,fromY:crew.y,toX:crew.x,toY:crew.y+dy});
+      frame.snapshot=snapshotGame(game);layer.draw(frame);
+      expect(frame.animation!.frame(crew,frame.now)).toMatchObject({mode:'attack',direction:{x:0,y:dy}});
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      expect(frame.facing.releaseFacing(crew.id)).toBe(-1);
+      // Panning back during the same tick must expose the same contact pose.
+      frame.view={x:ship.x-200,y:ship.y-200,width:800,height:600};layer.draw(frame);
+      expect(layer.positions.get(crew.id)!.facing).toBe(-1);
+      const cards=paintedMeshes();
+      expect(cards.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count))).toContain(crew.id);
+      layer.dispose();
+    }
+  });
   it('retains context listeners across reset and removes them on final disposal',async()=>{
     const {frame,layer,canvas}=setup(),remove=vi.spyOn(canvas,'removeEventListener');
     await layer.prepare(frame.snapshot,'home');layer.draw(frame);
@@ -219,11 +287,12 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const corpse={id:'deck-remains-proof',unitId:'dead-crew',kind:'footman' as const,owner:ship.owner,x:ship.x,y:ship.y,radius:18,diedAtTick:0,deck:{shipId:ship.id,x:12,y:18}};
     frame.snapshot.corpses=[corpse];
     await layer.prepare(frame.snapshot,'match');layer.draw(frame);
-    const remains=()=>gpu.scene!.children.find(object=>object instanceof InstancedMesh && object.visible && object.userData.ids?.includes(corpse.id)) as InstancedMesh|undefined;
+    const remains=()=>paintedMeshes().find(object=>object.userData.ids?.includes(corpse.id));
     const mesh=remains()!;expect(mesh).toBeDefined();
     const material=mesh.material as MeshBasicMaterial;
+    expect(layer.cardStats().maxTextureBanks).toBe(1);expect(layer.remainsStats().maxTextureBanks).toBe(1);expect(material.customProgramCacheKey()).toBe('painted-card-banks-v1:1:true');
     expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});
-    expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBe(-1);
+    expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBeGreaterThan(-1);expect(mesh.renderOrder).toBeLessThan(0);
     expect(layer.positions.has(corpse.id)).toBe(false);
     const matrix=new Matrix4();mesh.getMatrixAt(mesh.userData.ids.indexOf(corpse.id),matrix);
     expect(matrix.elements[1]).toBeCloseTo(0);expect(matrix.elements[5]).toBeCloseTo(0);
@@ -247,20 +316,21 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const body=projectWorld(frame.view,{x:at.x,y:at.bodyY});let picked=false;
     for(let y=-18;y<=18;y+=3)for(let x=-12;x<=12;x+=3)if(layer.pick({x:body.x+x,y:body.y+y})?.id===crew.id)picked=true;
     expect(picked,'crew can be selected through its visible painted pixels').toBe(true);
-    const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map);
+    const cards=paintedMeshes();
     expect(cards.length).toBeGreaterThan(0);
     const painted=cards as InstancedMesh[],paintedIds=painted.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count));
     expect(paintedIds.sort()).toEqual(game.units.filter(unit=>!isShipKind(unit.kind)&&!unit.cabin).map(unit=>unit.id).sort());
     for(const mesh of painted){
-      const material=mesh.material as MeshBasicMaterial,texture=material.map as DataArrayTexture;
+      const material=mesh.material as MeshBasicMaterial;
       expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);
       for(let i=0;i<mesh.count;i++){
         const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
+        const {card}=paintedBinding(mesh,i);
         // The shader expands cardRect before applying the instance matrix;
-        // one texel still covers a quarter authored unit on both axes.
+        // one original source texel still covers a quarter authored unit on both axes.
         const rect=mesh.geometry.getAttribute('cardRect');
-        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/texture.image.width).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
-        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/texture.image.height).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
       }
     }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
@@ -276,12 +346,12 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     await layer.prepare(frame.snapshot,'home');layer.draw(frame);
     expect(one).toHaveBeenCalledTimes(1);expect(two).toHaveBeenCalledTimes(1);expect(one.mock.calls[0]).toEqual(expect.arrayContaining([{mode:'idle',frame:0}]));
     expect(layer.cardStats().cards).toBe(2);
-    const meshes=gpu.scene!.children.filter(object=>object.name==='PaintedCards'&&object.visible) as InstancedMesh[];
+    const meshes=paintedMeshes();
     expect(meshes.reduce((sum,mesh)=>sum+mesh.count,0)).toBe(2);
     expect(meshes.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count)).sort()).toEqual([first.id,second.id].sort());
     for(const mesh of meshes)for(let i=0;i<mesh.count;i++){
       const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
-      const texture=(mesh.material as MeshBasicMaterial).map as DataArrayTexture,{width,height}=texture.image;
+      const {card}=paintedBinding(mesh,i),width=card.sourceSize,height=card.sourceSize;
       const right=new Vector3().setFromMatrixColumn(matrix,0).normalize();
       const rect=mesh.geometry.getAttribute('cardRect');
       expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/4,5);
@@ -345,7 +415,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     frame.snapshot=snapshotGame(game);frame.view={...frame.view,zoom:.6};await layer.prepare(frame.snapshot,'home');layer.draw(frame);
     expect(layer.positions.size).toBe(game.units.length);
     for(const unit of game.units){const at=layer.positions.get(unit.id)!;expect(Number.isFinite(at.bodyY)).toBe(true);expect(at.topY).toBeLessThan(at.bodyY);}
-    const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map) as InstancedMesh[];
+    const cards=paintedMeshes();
     expect(cards.reduce((sum,card)=>sum+card.count,0)).toBe(game.units.length);layer.dispose();
   });
   it('batches all 2,000 matching troops across shared crop pages instead of allocating one GPU object per unit',async()=>{
@@ -353,11 +423,11 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let i=0;i<2000;i++)game.spawnUnit('player','footman',400+(i%50)*14,400+Math.floor(i/50)*12);
     frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
     const begin=performance.now();layer.draw(frame);const duration=performance.now()-begin;
-    const actors=gpu.scene!.children.filter(object=>object instanceof InstancedMesh) as InstancedMesh[];
+    const actors=gpu.scene!.getObjectsByProperty('isInstancedMesh',true) as InstancedMesh[];
     const painted=actors.filter(actor=>actor.name==='PaintedCards'&&actor.visible);
     expect(painted.reduce((sum,actor)=>sum+actor.count,0)).toBe(2000);
     expect(painted.flatMap(actor=>actor.userData.ids.slice(0,actor.count)).sort()).toEqual(game.units.map(unit=>unit.id).sort());
-    // Pages group bounded pose rectangles; they are never allocated per unit.
+    // Chunks bind shared resident pages; neither is allocated per unit.
     expect(painted.length).toBeGreaterThan(0);expect(painted.length).toBeLessThanOrEqual(layer.cardStats().cards);
     expect(layer.cardStats().cards).toBeLessThanOrEqual(16);expect(layer.positions.size).toBe(2000);
     console.info(`2,000 troops: ${duration.toFixed(1)} ms CPU scene preparation, ${actors.length} actor mesh; GPU timing not measured`);

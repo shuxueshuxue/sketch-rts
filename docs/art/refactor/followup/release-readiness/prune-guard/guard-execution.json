@@ -1,0 +1,103 @@
+{
+  "executedToolSha256": "0535c21a9c4cf2473f6d8b7904ae48bd8b736b986fb4746573f6de5fb4d9dc38",
+  "steps": [
+    {
+      "command": [
+        "python3",
+        "scripts/art-release-evidence-archive.py",
+        "--materialize",
+        "--report",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/prune-guard/in-place-materialize-proof.json"
+      ],
+      "exitCode": 0,
+      "log": {
+        "file": "materialize-in-place.log.gz",
+        "originalBytes": 797,
+        "originalSha256": "86e9326338ac4886cd7a9552a6d542eb0b5062270ba4f44a3cbb154efd1e4bda",
+        "gzipBytes": 491,
+        "gzipSha256": "dd25c1deebb6a91114cd0702b8fd3f12a9835ff00f6fa3b2da1031bc1a929d5c",
+        "decodedBytesExactlyEqual": true
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/art-release-evidence-archive.py",
+        "--verify",
+        "--prune",
+        "--restore-proof",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/prune-guard/missing-directory-restore-proof.json",
+        "--report",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/prune-guard/unexpected-prune-report.json"
+      ],
+      "exitCode": 1,
+      "log": {
+        "file": "missing-directory-rejected.log.gz",
+        "originalBytes": 528,
+        "originalSha256": "28dd638c87c17fd1bf6e5c606b305bff6fd643b5f49b30d59f8d018d7a8f82a3",
+        "gzipBytes": 246,
+        "gzipSha256": "abad5bde3c80547f7995e2b410b3fb9803bdffd0fc9b684325464464e4c703a7",
+        "decodedBytesExactlyEqual": true
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/art-release-evidence-archive.py",
+        "--verify",
+        "--prune",
+        "--restore-proof",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/captured-input-restore-proof.json",
+        "--report",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/prune-guard/legitimate-prune-proof.json"
+      ],
+      "exitCode": 0,
+      "log": {
+        "file": "legitimate-restore-prune.log.gz",
+        "originalBytes": 763,
+        "originalSha256": "6053a6733d0394b566a6050e5fc073740838c4d7aa8b91806d5070dd788e09db",
+        "gzipBytes": 468,
+        "gzipSha256": "0bb49e64dd211096be7b9fef7e0044aaf36f9ce905ceb7a99c05f8c7a7a67a58",
+        "decodedBytesExactlyEqual": true
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/art-release-evidence-archive.py",
+        "--verify",
+        "--report",
+        "/workspace/sketch-rts-viewport/docs/art/refactor/followup/release-readiness/prune-guard/final-verify-proof.json"
+      ],
+      "exitCode": 0,
+      "log": {
+        "file": "final-archive-verify.log.gz",
+        "originalBytes": 763,
+        "originalSha256": "fe7eb80993c2ad3a8a4bbe8f984e67db2dd9d0ca9efd0539deccc18340fc2a14",
+        "gzipBytes": 466,
+        "gzipSha256": "b1d82a51de99920c49bae6cd6a9b27d2a5736ba6aaa56ddd72ef343b4eed541e",
+        "decodedBytesExactlyEqual": true
+      }
+    }
+  ],
+  "executedTool": {
+    "file": "executed-captured-input-archive.py.gz",
+    "originalBytes": 10906,
+    "originalSha256": "0535c21a9c4cf2473f6d8b7904ae48bd8b736b986fb4746573f6de5fb4d9dc38",
+    "gzipBytes": 3550,
+    "gzipSha256": "a6f31c29f813d0471439b3fba0228efee68366b011ad9ca95a3e3a7d2ca63025",
+    "decodedBytesExactlyEqual": true
+  },
+  "passed": true,
+  "fixedContract": "Independent restoration directory must exist; all twenty independent restored files are rechecked before any original working file is removed.",
+  "originalInputs": 20,
+  "originalBytes": 11170491,
+  "originalArchiveGitCommit": "386e530de3a289e2f9e7aab5978f23e70a2953e2",
+  "missingDirectoryRejectedBeforeAnyPrune": true,
+  "legitimateRetainedRestoreRoot": "/tmp/art-release-captured-inputs-386e530",
+  "legitimatePruneDeletedOriginals": 20,
+  "finalRawAbsentAndArchivesExact": true,
+  "earlierManifestToolSnapshotAndProofBytesPreserved": true,
+  "noSourceTestWorkflowRuntimeChangesByThisLane": true,
+  "astParsed": true
+}

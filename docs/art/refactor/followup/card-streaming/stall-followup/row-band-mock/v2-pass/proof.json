@@ -1,0 +1,438 @@
+{
+  "schema": 1,
+  "completed": true,
+  "passed": true,
+  "command": {
+    "argv": [
+      "--out",
+      "/tmp/card-upload-row-band-mock-v2-result.json"
+    ],
+    "cwd": "/workspace/sketch-rts-viewport",
+    "node": "v24.19.0",
+    "requested": {
+      "candidate": "/tmp/card-upload-row-band-candidate.ts",
+      "original": "/tmp/card-upload-row-band-original.ts",
+      "region": "/tmp/card-upload-row-band-region.ts",
+      "metadata": "/tmp/card-upload-row-band-source.json",
+      "output": "/tmp/card-upload-row-band-mock-v2-result.json"
+    },
+    "actualPaths": {
+      "candidate": "/tmp/card-upload-row-band-candidate.ts",
+      "original": "/tmp/card-upload-row-band-original.ts",
+      "region": "/tmp/card-upload-row-band-region.ts",
+      "metadata": "/tmp/card-upload-row-band-source.json",
+      "mock": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.ts",
+      "driver": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.mjs",
+      "three": "/workspace/sketch-rts/node_modules/three/build/three.module.js"
+    },
+    "output": "/tmp/card-upload-row-band-mock-v2-result.json",
+    "repoRoot": "/workspace/sketch-rts-viewport"
+  },
+  "pinned": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+  },
+  "metadata": {
+    "sourceCommit": "8345a0dcfeb96b6777ac3940ec64cba13816c851",
+    "sourceFile": "src/client/world3d/card-mip-uploader.ts",
+    "original": "/tmp/card-upload-row-band-original.ts",
+    "sourceSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "candidate": "/tmp/card-upload-row-band-candidate.ts",
+    "candidateSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "regionDependency": "/tmp/card-upload-row-band-region.ts",
+    "regionSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "variable": "Warm CPU-source DataTexture aliases a complete dirty row band with full-width stride, source y rebased to zero and original destination x/y; physical rectangle bytes, public-copy count, complete GPU scratch domain and original mip generation/copy remain unchanged.",
+    "candidateExactWarmSetupReplacement": true,
+    "oldWarmSetup": "      this.uploadRegion.min.set(region.left,region.top);this.uploadRegion.max.set(region.right,region.bottom);this.uploadDestination.set(region.left,region.top);",
+    "newWarmSetup": "      // Expose the same shared CPU rows with no new pixel buffer. Keep the\n      // original full-width stride and x skip; only source y is rebased.\n      const rowBytes=sourceWidth*4,bandHeight=region.bottom-region.top;\n      scratch.cpuSource.image.data=scratch.data.subarray(region.top*rowBytes,region.bottom*rowBytes);\n      scratch.cpuSource.image.height=bandHeight;\n      this.uploadRegion.min.set(region.left,0);this.uploadRegion.max.set(region.right,bandHeight);this.uploadDestination.set(region.left,region.top);",
+    "sourceImportsRetained": true,
+    "staticPreparedOnly": true,
+    "scope": "Preparation provenance only; CPU mock is not native GPU sRGB mip proof or a performance result.",
+    "threePublicEntry": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "threeEntrySha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "threeRevision": "186",
+    "mockSource": "scripts/art-card-upload-row-band-mock.ts",
+    "mockDriver": "scripts/art-card-upload-row-band-mock.mjs",
+    "preparedToolSha256": {
+      "scripts/art-card-upload-row-band-mock.ts": "1523db0febab9e8f87188fbb06019e5732543ae79a91ce2615279b341e35bfe3",
+      "scripts/art-card-upload-row-band-mock.mjs": "1cb8bb466776e867e6aa8ca0d03ede52171d9630d18a31b2da6bdb8df9dfa61f",
+      "scripts/art-card-upload-row-band-formal-proof.mjs": "b63d312517de63e2cc52107a4c4c7b33e7c93c07a884e1f471b06fbe7bbdedd8"
+    },
+    "preparedOnlyCommands": [
+      "node --check scripts/art-card-upload-row-band-mock.ts",
+      "node --check scripts/art-card-upload-row-band-mock.mjs",
+      "node --check scripts/art-card-upload-row-band-formal-proof.mjs"
+    ],
+    "mockCommand": "node scripts/art-card-upload-row-band-mock.mjs --out /tmp/card-upload-row-band-mock-result.json",
+    "formalCommand": "node --import tsx scripts/art-card-upload-row-band-formal-proof.mjs --source <clean-8345-detached-root> --upload-policy <original|candidate> --out <new-run-folder>/raw.json",
+    "modelLimits": "All modeled RGBA mip bytes are checked using deterministic integer-box arithmetic, not native GPU sRGB filtering. Failure injection occurs after modeled public copy completion, not between internal Three UNPACK setup/restoration; context lifecycle is modeled dispose/recreate, not real context loss."
+  },
+  "metadataSourceSha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+  "inputSha256Before": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "metadata": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+    "mock": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6",
+    "driver": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3",
+    "three": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+  },
+  "inputSha256After": {
+    "candidate": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+    "original": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+    "region": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+    "metadata": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+    "mock": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6",
+    "driver": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3",
+    "three": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+  },
+  "toolSha256": {
+    "driverBefore": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3",
+    "driverAfter": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3",
+    "mockBefore": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6",
+    "mockAfter": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6"
+  },
+  "originalSourceSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+  "candidateSourceSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+  "dependencySourceSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+  "threeBinding": {
+    "publicUrl": "file:///workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "publicEntry": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+    "entrySha256Before": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "entrySha256After": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+    "esbuildVersion": "0.28.0",
+    "providerBareImportsRetained": true,
+    "oneSharedConstructorChecked": true,
+    "resolverRecords": [
+      {
+        "request": "three",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "card-upload-mock:candidate",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.ts",
+        "resolved": "/tmp/card-upload-row-band-candidate.ts",
+        "sha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+        "kind": "provider"
+      },
+      {
+        "request": "card-upload-mock:original",
+        "importer": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.ts",
+        "resolved": "/tmp/card-upload-row-band-original.ts",
+        "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+        "kind": "provider"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/card-upload-row-band-candidate.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "three",
+        "importer": "/tmp/card-upload-row-band-original.ts",
+        "resolved": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+        "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+        "kind": "three"
+      },
+      {
+        "request": "./card-upload-region",
+        "importer": "/tmp/card-upload-row-band-original.ts",
+        "resolved": "/tmp/card-upload-row-band-region.ts",
+        "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+        "kind": "region"
+      },
+      {
+        "request": "./card-upload-region",
+        "importer": "/tmp/card-upload-row-band-candidate.ts",
+        "resolved": "/tmp/card-upload-row-band-region.ts",
+        "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+        "kind": "region"
+      }
+    ]
+  },
+  "bundleSha256": "f25e24697af0c06fcdac7c2083a182b0da50a5b2a2cb190d493603a40e104ec7",
+  "bundleInputs": {
+    "../sketch-rts/node_modules/three/build/three.core.js": {
+      "bytes": 1458113,
+      "imports": [],
+      "format": "esm"
+    },
+    "../sketch-rts/node_modules/three/build/three.module.js": {
+      "bytes": 662772,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.core.js",
+          "kind": "import-statement",
+          "original": "./three.core.js"
+        },
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.core.js",
+          "kind": "import-statement",
+          "original": "./three.core.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-region.ts": {
+      "bytes": 2358,
+      "imports": [],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-candidate.ts": {
+      "bytes": 11490,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-region.ts",
+          "kind": "import-statement",
+          "original": "./card-upload-region"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../tmp/card-upload-row-band-original.ts": {
+      "bytes": 11129,
+      "imports": [
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-region.ts",
+          "kind": "import-statement",
+          "original": "./card-upload-region"
+        }
+      ],
+      "format": "esm"
+    },
+    "scripts/art-card-upload-row-band-mock-v2.ts": {
+      "bytes": 19791,
+      "imports": [
+        {
+          "path": "node:assert/strict",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "../sketch-rts/node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-candidate.ts",
+          "kind": "import-statement",
+          "original": "card-upload-mock:candidate"
+        },
+        {
+          "path": "../../tmp/card-upload-row-band-original.ts",
+          "kind": "import-statement",
+          "original": "card-upload-mock:original"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "bundleDependencies": [
+    {
+      "input": "../sketch-rts/node_modules/three/build/three.core.js",
+      "path": "/workspace/sketch-rts/node_modules/three/build/three.core.js",
+      "bytes": 1458113,
+      "sha256Before": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+      "sha256After": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6"
+    },
+    {
+      "input": "../sketch-rts/node_modules/three/build/three.module.js",
+      "path": "/workspace/sketch-rts/node_modules/three/build/three.module.js",
+      "bytes": 662772,
+      "sha256Before": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+      "sha256After": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-region.ts",
+      "path": "/tmp/card-upload-row-band-region.ts",
+      "bytes": 2358,
+      "sha256Before": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "sha256After": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-candidate.ts",
+      "path": "/tmp/card-upload-row-band-candidate.ts",
+      "bytes": 11490,
+      "sha256Before": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+      "sha256After": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18"
+    },
+    {
+      "input": "../../tmp/card-upload-row-band-original.ts",
+      "path": "/tmp/card-upload-row-band-original.ts",
+      "bytes": 11129,
+      "sha256Before": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "sha256After": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295"
+    },
+    {
+      "input": "scripts/art-card-upload-row-band-mock-v2.ts",
+      "path": "/workspace/sketch-rts-viewport/scripts/art-card-upload-row-band-mock-v2.ts",
+      "bytes": 19791,
+      "sha256Before": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6",
+      "sha256After": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6"
+    }
+  ],
+  "result": {
+    "passed": true,
+    "cases": [
+      {
+        "name": "512 dirty row band: same rectangle, one copy/gen, shared view, every model mip exact",
+        "passed": true,
+        "physicalRectangleBytes": 364320,
+        "copyCalls": 1,
+        "generations": 1,
+        "exposedViewBytes": 540672,
+        "originalExposedViewBytes": 1048576
+      },
+      {
+        "name": "alpha0 nonzero RGB, shifted old marks, complete zero clearing",
+        "passed": true,
+        "everyChannel": true
+      },
+      {
+        "name": "unchanged source copies destination chain with no extra upload or generation",
+        "passed": true,
+        "destinationMipCopies": 10
+      },
+      {
+        "name": "NPOT/tail 640 N0: every model RGBA mip + compaction",
+        "passed": true,
+        "sourceSize": 640,
+        "baseMip": 0,
+        "residentSize": 640,
+        "mipCopies": 10
+      },
+      {
+        "name": "NPOT/tail 704 N1: every model RGBA mip + compaction",
+        "passed": true,
+        "sourceSize": 704,
+        "baseMip": 1,
+        "residentSize": 352,
+        "mipCopies": 9
+      },
+      {
+        "name": "NPOT/tail 704 N2: every model RGBA mip + compaction",
+        "passed": true,
+        "sourceSize": 704,
+        "baseMip": 2,
+        "residentSize": 176,
+        "mipCopies": 8
+      },
+      {
+        "name": "NPOT/tail 256 N2: every model RGBA mip + compaction",
+        "passed": true,
+        "sourceSize": 256,
+        "baseMip": 2,
+        "residentSize": 64,
+        "mipCopies": 7
+      },
+      {
+        "name": "failure after cpu physical write: RT restored, next retry full",
+        "passed": true,
+        "fullRetryBytes": 1982464,
+        "targetFaceMipRestored": true
+      },
+      {
+        "name": "failure after array physical write: RT restored, next retry full",
+        "passed": true,
+        "fullRetryBytes": 1982464,
+        "targetFaceMipRestored": true
+      },
+      {
+        "name": "edge row/column and changing bands keep stride and source y rebasing",
+        "passed": true,
+        "lastByteAndFullHeight": true
+      },
+      {
+        "name": "NPOT 640 bottom-right 1px and full-height column boundary",
+        "passed": true,
+        "sourceSize": 640,
+        "lastPixelBytes": 4,
+        "singleRowViewBytes": 2560,
+        "fullHeightColumnHasFullView": true
+      },
+      {
+        "name": "NPOT 704 bottom-right 1px and full-height column boundary",
+        "passed": true,
+        "sourceSize": 704,
+        "lastPixelBytes": 4,
+        "singleRowViewBytes": 2816,
+        "fullHeightColumnHasFullView": true
+      },
+      {
+        "name": "non-square 640x704 N1: full-width stride and complete model tail",
+        "passed": true,
+        "sourceWidth": 640,
+        "sourceHeight": 704,
+        "baseMip": 1
+      },
+      {
+        "name": "caller Uint8ClampedArray offset view is readonly and detached from scratch storage",
+        "passed": true,
+        "callerOffset": 7
+      },
+      {
+        "name": "dispose/recreate context lifecycle: new uploader full initial chain, no stale CPU view",
+        "passed": true,
+        "newContextModelOnly": true
+      },
+      {
+        "name": "negative dimensions/tails reject before GPU calls and renderer change rejects",
+        "passed": true,
+        "negativeCases": 10,
+        "preGpuValidation": true
+      }
+    ],
+    "scope": "CPU contract model only. Complete base and every modeled RGBA mip, source alias/stride/offset/domain, physical rectangle bytes/calls, original non-time counters, readonly caller inputs and recovery are checked. Integer box modeled mip arithmetic is NOT native GPU sRGB filtering proof; actual context recovery/native mip bytes/performance require serial real WebGL validation."
+  },
+  "violations": [],
+  "failure": null,
+  "scope": "Deterministic CPU contract model. No Canvas/browser/GL or performance benchmark. Full providers and one pinned region helper are bundled with one public Three identity. Native sRGB mip RGBA and frame timing require independent GPU proof/ABBA.",
+  "archivedInputs": {
+    "candidate": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/candidate.ts",
+      "sha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18",
+      "savedSha256": "7523e7c847c159be4d06f08e9b177da75dfa9ea9989c8d6a10d77099c4080e18"
+    },
+    "original": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/original.ts",
+      "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "savedSha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295"
+    },
+    "region": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/card-upload-region.ts",
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "savedSha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439"
+    },
+    "metadata": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/metadata.json",
+      "sha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca",
+      "savedSha256": "aa721570294053720089741dd485f10d441ddee0930dcfb23b58027f1c0a4bca"
+    },
+    "mock": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/art-card-upload-row-band-mock-v2.ts",
+      "sha256": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6",
+      "savedSha256": "395562ab04c9e491c3d581bd2fd62ec91237c6a0e4f0a71e382d0485290e1cd6"
+    },
+    "driver": {
+      "file": "/tmp/card-upload-row-band-mock-v2-result.json.inputs/art-card-upload-row-band-mock-v2.mjs",
+      "sha256": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3",
+      "savedSha256": "45ec7c906248f55552606c19dc904f2426f39cf772cfeb34d7a6cbf96e6742e3"
+    }
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "allStepsExit0": true,
+  "toolIdentity": {
+    "script": "scripts/art-depth1-evidence-archive.py",
+    "bytes": 32089,
+    "sha256": "984b41015b27d94dcef4312c7d2ba1020f2105796fb98e16cf8824f06530bf9d",
+    "gzipBytes": 8583,
+    "gzipSha256": "bbfb6c6dfe91eae7b61c3f075e581abb5d3e0c975ec5bc01291518fc5143fecf",
+    "snapshotBeforeSuccessfulPackaging": true
+  },
+  "records": [
+    {
+      "actualPath": "/tmp/depth1-archive-firstscope-v2verify.json",
+      "archive": "execution-firstscope-v2verify.json.gz",
+      "bytes": 751,
+      "sha256": "59dcbd72b7db913106a3ec822742b124d8f5920e4460f5db5309de85254e4966",
+      "gzipBytes": 468,
+      "gzipSha256": "ec038c1adef873a394150e33fea1d493396a63934d60a53f52e913b99f44db0a",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-firstscope-v2verify.log",
+      "archive": "execution-firstscope-v2verify.log.gz",
+      "bytes": 751,
+      "sha256": "59dcbd72b7db913106a3ec822742b124d8f5920e4460f5db5309de85254e4966",
+      "gzipBytes": 468,
+      "gzipSha256": "ec038c1adef873a394150e33fea1d493396a63934d60a53f52e913b99f44db0a",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2remaining.json",
+      "archive": "execution-v2remaining.json.gz",
+      "bytes": 902,
+      "sha256": "ce521d2ce79ed1c0d028ce44b42c68a8625faa7fe939380fb4f98d5cf4a4eefc",
+      "gzipBytes": 513,
+      "gzipSha256": "afb9c093fca8d8a943cadf8d02b5d291fc4878839ade0a316f4a608919d15476",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2remaining.log",
+      "archive": "execution-v2remaining.log.gz",
+      "bytes": 902,
+      "sha256": "ce521d2ce79ed1c0d028ce44b42c68a8625faa7fe939380fb4f98d5cf4a4eefc",
+      "gzipBytes": 513,
+      "gzipSha256": "afb9c093fca8d8a943cadf8d02b5d291fc4878839ade0a316f4a608919d15476",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2verify.json",
+      "archive": "execution-v2verify.json.gz",
+      "bytes": 927,
+      "sha256": "3e41448a85b0d1520729f7a4f2e5fd11e5cca885bc831bc5ad44a3fcf70b0cd8",
+      "gzipBytes": 515,
+      "gzipSha256": "186933e9366d5e08ddc28f5a17b6f04a604789066ed565d04cb542da3de0a86f",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2verify.log",
+      "archive": "execution-v2verify.log.gz",
+      "bytes": 927,
+      "sha256": "3e41448a85b0d1520729f7a4f2e5fd11e5cca885bc831bc5ad44a3fcf70b0cd8",
+      "gzipBytes": 515,
+      "gzipSha256": "186933e9366d5e08ddc28f5a17b6f04a604789066ed565d04cb542da3de0a86f",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2restore.json",
+      "archive": "execution-v2restore.json.gz",
+      "bytes": 957,
+      "sha256": "27c99e97e8b73c08897d51926c4b2155cf06f9bc1d71fb12ba4720e7f7874bd5",
+      "gzipBytes": 533,
+      "gzipSha256": "851a60323485a4ed231da8a9180cfa5f72de45c8c2753b0f271af7b03d94ad59",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2restore.log",
+      "archive": "execution-v2restore.log.gz",
+      "bytes": 957,
+      "sha256": "27c99e97e8b73c08897d51926c4b2155cf06f9bc1d71fb12ba4720e7f7874bd5",
+      "gzipBytes": 533,
+      "gzipSha256": "851a60323485a4ed231da8a9180cfa5f72de45c8c2753b0f271af7b03d94ad59",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2prune.json",
+      "archive": "execution-v2prune.json.gz",
+      "bytes": 929,
+      "sha256": "8c02e1636023525a7a46d034c2579890109f57324d022788af09066d5c4c5787",
+      "gzipBytes": 518,
+      "gzipSha256": "d586d0a423a0fc10ca344853642cfbcad978aa8c4096e4858377bc0fb788ba23",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2prune.log",
+      "archive": "execution-v2prune.log.gz",
+      "bytes": 929,
+      "sha256": "8c02e1636023525a7a46d034c2579890109f57324d022788af09066d5c4c5787",
+      "gzipBytes": 518,
+      "gzipSha256": "d586d0a423a0fc10ca344853642cfbcad978aa8c4096e4858377bc0fb788ba23",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2finalverify.json",
+      "archive": "execution-v2finalverify.json.gz",
+      "bytes": 927,
+      "sha256": "3e41448a85b0d1520729f7a4f2e5fd11e5cca885bc831bc5ad44a3fcf70b0cd8",
+      "gzipBytes": 515,
+      "gzipSha256": "186933e9366d5e08ddc28f5a17b6f04a604789066ed565d04cb542da3de0a86f",
+      "exitCode": 0
+    },
+    {
+      "actualPath": "/tmp/depth1-archive-v2finalverify.log",
+      "archive": "execution-v2finalverify.log.gz",
+      "bytes": 927,
+      "sha256": "3e41448a85b0d1520729f7a4f2e5fd11e5cca885bc831bc5ad44a3fcf70b0cd8",
+      "gzipBytes": 515,
+      "gzipSha256": "186933e9366d5e08ddc28f5a17b6f04a604789066ed565d04cb542da3de0a86f",
+      "exitCode": 0
+    }
+  ],
+  "firstFailedArchiveAttemptPreserved": "packing-failure-v1/failure-preservation.json",
+  "orderingCorrectionPreserved": "packing-failure-v1/ordering-correction.json",
+  "summary": {
+    "operation": "verify",
+    "folders": [
+      "native-original-v1",
+      "native-original-v2",
+      "native-candidate-v2",
+      "frame-abba/A1",
+      "frame-abba/B1",
+      "frame-abba/B2",
+      "frame-abba/A2",
+      "native-compare-v2",
+      "root"
+    ],
+    "verifiedInputs": 799,
+    "verifiedUncompressedFiles": 50,
+    "sourceMembers": 7875,
+    "originalInputBytes": 99253356,
+    "gzipInputBytes": 22389004,
+    "sourceContainerReused": "docs/art/refactor/followup/source-archives/99aa634b5af359a3b85022df6b22f062955f5602c3d9567d723c0f3e637922a0.tar.gz",
+    "sourceContainerSha256": "4367770df4b0e80693571cd930574bda73701e91a04bb8e9b779863637e26ec2",
+    "deletedOriginalFiles": 0,
+    "toolSha256": "984b41015b27d94dcef4312c7d2ba1020f2105796fb98e16cf8824f06530bf9d",
+    "restoredRoot": null,
+    "sourceShaSizeGitAndEveryInputDecodedShaSizeVerified": true,
+    "originalDiagnosticStatusesUnchanged": true,
+    "productionAndGitIndexNotModified": true
+  },
+  "independentFullShaAndGitBlobProof": "independent-full-restore-proof.json",
+  "temporaryRestoreCleanup": "temporary-restore-cleanup.json",
+  "productionSourceChanged": false
+}

@@ -15,7 +15,7 @@ export class CardRasterCache {
  private windowSavedMs=0;
  private workMs=0;
  private savedMs=0;
- constructor(private budget=48*1024*1024){}
+ constructor(private budget=16*1024*1024){}
  get(key:string){
   if(this.bypass>0){this.bypass--;this.misses++;return undefined;}
   const entry=this.entries.get(key);if(!entry){this.misses++;return undefined;}

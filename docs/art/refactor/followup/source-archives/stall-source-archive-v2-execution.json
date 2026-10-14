@@ -1,0 +1,63 @@
+{
+  "tool": "scripts/art-card-stall-source-archive-v2.py",
+  "toolSha256": "27fdbd6e2065a85c777a4bcd14989a87b174a71d0723c34a7c9aad1935c8551e",
+  "v1ToolSha256": "bd17477d6795f474cfe8a701609f234598e219ea0f08fe1b2aaa2fd58ea6ca23",
+  "execution": "All four ordered commands exit0; original-source preservation only, no rendering or benchmark",
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "scripts/art-card-stall-source-archive-v2.py",
+        "--archive"
+      ],
+      "exitCode": 0,
+      "log": "docs/art/refactor/followup/source-archives/stall-source-archive-v2-create.log",
+      "logSha256": "c39e9806dc730212381228353536d4d0f995d559af932c7615a5c8e26b8d01d1"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/art-card-stall-source-archive-v2.py",
+        "--verify"
+      ],
+      "exitCode": 0,
+      "log": "docs/art/refactor/followup/source-archives/stall-source-archive-v2-verify.log",
+      "logSha256": "29705564399b93a8a96267690def74d77fd8947ddd09bd97b5bf93e71f4e2aa0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/art-card-stall-source-archive-v2.py",
+        "--verify",
+        "--prune"
+      ],
+      "exitCode": 0,
+      "log": "docs/art/refactor/followup/source-archives/stall-source-archive-v2-prune.log",
+      "logSha256": "07386a24db337cc335481d11b00f72e28e545f01dbcbcd649d9d406fe850b5c5"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/art-card-stall-source-archive-v2.py",
+        "--materialize",
+        "--folder",
+        "ring512-pilot-v2/candidate-B",
+        "--out",
+        "/tmp/art-stall-source-v2-ring512-restore"
+      ],
+      "exitCode": 0,
+      "log": "docs/art/refactor/followup/source-archives/stall-source-archive-v2-restore-proof.log",
+      "logSha256": "1ed4075324382c96b2da9196a2d8ea276dc363658b72cfd0260cac1a40f2db85"
+    }
+  ],
+  "reportSha256": "2dfe819238c5c8d4a9628bc58a8c35c6f17fc7d0b14116ae63ea866129095f13",
+  "fixedTargets": [
+    "row-band-pilot-v2/original-A",
+    "row-band-pilot-v2/candidate-B",
+    "ring512-pilot-v2/original-A",
+    "ring512-pilot-v2/candidate-B"
+  ],
+  "verifiedFiles": 4480,
+  "deletedFiles": 4480,
+  "restoredRingFiles": 1120
+}

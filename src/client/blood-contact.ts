@@ -8,7 +8,13 @@ import {shipProfile} from '../shared/ship-geometry';
 import {BLOOD_HEIGHT_PROJECTION as TILT,type BloodSurface,type BloodSurfaceResolver} from './combat-surfaces';
 export type BloodPoint={x:number;y:number;z:number};
 export type BloodContact={unit:Unit;surface:BloodSurface;point:BloodPoint;distance:number;weapon?:{key:string;segment:number;t:number;width:number}};
-const CELL=96;
+const CELL=96,X_REACH=2,Y_REACH=1;
+export type BloodReceiverBounds={left:number;top:number;right:number;bottom:number};
+/** Include every receiver cell contact() may inspect, even for equipment
+ * reaching in from outside the swept path. This is a world-space query. */
+export function bloodReceiverBounds(minX:number,minY:number,maxX:number,maxY:number):BloodReceiverBounds{
+ return{left:(Math.floor(minX/CELL)-X_REACH)*CELL,top:(Math.floor(minY/CELL)-Y_REACH)*CELL,right:(Math.floor(maxX/CELL)+X_REACH+1)*CELL,bottom:(Math.floor(maxY/CELL)+Y_REACH+1)*CELL};
+}
 type Shape={a:BloodPoint;b:BloodPoint;width:number;weapon?:NonNullable<BloodContact['weapon']>};
 type Receiver={unit:Unit;surface?:BloodSurface;shapes?:Shape[]};
 export class BloodContacts {
@@ -44,8 +50,8 @@ export class BloodContacts {
   // Equipment extends beyond body radius. Y is depth, so reject out-of-plane
   // receivers before preparing their authored surfaces. Cache each receiver's
   // capsules once per snapshot, not once for every droplet.
-  const minX=Math.floor(Math.min(a.x,b.x)/CELL)-2,maxX=Math.floor(Math.max(a.x,b.x)/CELL)+2;
-  const minY=Math.floor(Math.min(a.y,b.y)/CELL)-1,maxY=Math.floor(Math.max(a.y,b.y)/CELL)+1;
+  const minX=Math.floor(Math.min(a.x,b.x)/CELL)-X_REACH,maxX=Math.floor(Math.max(a.x,b.x)/CELL)+X_REACH;
+  const minY=Math.floor(Math.min(a.y,b.y)/CELL)-Y_REACH,maxY=Math.floor(Math.max(a.y,b.y)/CELL)+Y_REACH;
   for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)for(const receiver of this.grid.get(`${x}:${y}`)??[]){
    const unit=receiver.unit;if(unit.id===exclude)continue;
    if(Math.abs(unit.y-(a.y+b.y)/2)>Math.abs(b.y-a.y)/2+Math.min(14,unit.radius*.34)+radius)continue;

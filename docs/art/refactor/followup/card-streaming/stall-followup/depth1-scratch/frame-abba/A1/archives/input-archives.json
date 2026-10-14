@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "folder": "frame-abba/A1",
+  "toolSha256": "984b41015b27d94dcef4312c7d2ba1020f2105796fb98e16cf8824f06530bf9d",
+  "files": [
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/bank-variant.js",
+      "bytes": 2117,
+      "sha256": "bfb604d6829915717946c24f091ced65fb23db704846f70721e5d19737390b5b",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/bank-variant.js.gz",
+      "gzipBytes": 977,
+      "gzipSha256": "3573f5a54565d9ada90c273ac61365f926000a93377dc5df07b5fd14267a1772",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/candidate-source-metadata.json",
+      "bytes": 1219,
+      "sha256": "470428afad9b63b95043ec2bed3265cb371eecd0fd29ff002c1b42f314deb969",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/candidate-source-metadata.json.gz",
+      "gzipBytes": 591,
+      "gzipSha256": "764d69b7435bbfc548e570c53d45bba267ec4e950a58ed939701e47be0348f45",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/fact-fixture.js",
+      "bytes": 15860,
+      "sha256": "95ad464326b9d0643d2e6816ec430fc606cae3e72f9ae0b203fb9938823434c3",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/fact-fixture.js.gz",
+      "gzipBytes": 5845,
+      "gzipSha256": "06dd29046b3403795859790f2f511ef130c969b1b55799c5db506155b96bd48f",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/fixture.js",
+      "bytes": 363,
+      "sha256": "98681a8fe8f559beb600299388c1aded960e595ff10b884f71603a7b2daa9644",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/fixture.js.gz",
+      "gzipBytes": 228,
+      "gzipSha256": "0f461e7b8f893a71b0328420e393d285056930db0392777e9f8808af804b978b",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/harness.mjs",
+      "bytes": 41424,
+      "sha256": "81c76376aee2363a7e7d5380e005d662f69ccb88e5e91e4e9256182604f1bd2d",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/harness.mjs.gz",
+      "gzipBytes": 11959,
+      "gzipSha256": "9599f0985cf2a2a27278caefabcfa33f7c81ae905410b70b87b28b35f815c2c2",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js",
+      "bytes": 105178,
+      "sha256": "26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/26529ad0b0c5085e0505d5934eb3e2a1c38689b991de42ffba0b6560e40bdb4d.js.gz",
+      "gzipBytes": 21343,
+      "gzipSha256": "9923140c52263980e3aa9ec34ad9fe612336c10e08f6a1c0d944dd78c82b42ea",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/35bf201b8509c20a99bdb2dd65787743a94920892ddf98398278db7a2ab1fe45.js",
+      "bytes": 16849,
+      "sha256": "35bf201b8509c20a99bdb2dd65787743a94920892ddf98398278db7a2ab1fe45",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/35bf201b8509c20a99bdb2dd65787743a94920892ddf98398278db7a2ab1fe45.js.gz",
+      "gzipBytes": 2521,
+      "gzipSha256": "d8c4c1bb834e35d1b1b1b491feb25aab573e1f83497209cb552c27f581795a92",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/db40cb4b4d1bd2ad31844336722a0f040f8b494e696f811398d77cad5396e2a3.js",
+      "bytes": 1694848,
+      "sha256": "db40cb4b4d1bd2ad31844336722a0f040f8b494e696f811398d77cad5396e2a3",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/optimized-dependency-snapshots/db40cb4b4d1bd2ad31844336722a0f040f8b494e696f811398d77cad5396e2a3.js.gz",
+      "gzipBytes": 307395,
+      "gzipSha256": "0deb8f546e76b291db27bd2ef3bda1f31a3e12fb56879437c8a770f90f2548ee",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/parent-harness.mjs",
+      "bytes": 13502,
+      "sha256": "e05d9e8eb8ca41d566d616028e2249c85b8a855d3d25ae0a80be7faef9102165",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/parent-harness.mjs.gz",
+      "gzipBytes": 5051,
+      "gzipSha256": "268c36f3297445c0fac32698498e34c0b59e02d1980f9208c5b5b51b17f21b0d",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/proof.json",
+      "bytes": 1965692,
+      "sha256": "5f3e2fc21e0637547dcfa0585445ef005a7006c368401ec4446324c5236b7d3c",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/proof.json.gz",
+      "gzipBytes": 315713,
+      "gzipSha256": "14a09682b972a6d3ca24832aef510ca2e842b7eb2151560332f7d471a4e59742",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-card-bank-variant.js",
+      "bytes": 2117,
+      "sha256": "bfb604d6829915717946c24f091ced65fb23db704846f70721e5d19737390b5b",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-card-bank-variant.js.gz",
+      "gzipBytes": 977,
+      "gzipSha256": "3573f5a54565d9ada90c273ac61365f926000a93377dc5df07b5fd14267a1772",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-card-bank-viewport-metadata.js",
+      "bytes": 2149,
+      "sha256": "45b0ca53e3d16bc89153e4f49f71e307a481e44b9d65a3f2647fb9bc81e15a81",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-card-bank-viewport-metadata.js.gz",
+      "gzipBytes": 949,
+      "gzipSha256": "36e4de10e5115b575b6d3f39c1646a637d8b5a60f374468f393f72d11ca39e9f",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-gpu-completion.mjs",
+      "bytes": 1400,
+      "sha256": "b0c930791f10c539e29446bcaaa29957dc4c977346e3f15fa8c506f099ca2f9f",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-gpu-completion.mjs.gz",
+      "gzipBytes": 670,
+      "gzipSha256": "326442caad3acf7decfb2520886a45fcbc7eb440a04c07c08e70fc201fe79c88",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-bank-canonical-fixture.js",
+      "bytes": 353,
+      "sha256": "e16afb3823a50ef0d408ca8e8b071df4fbb462a56e9ee2f3194b574d45fcd06e",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-bank-canonical-fixture.js.gz",
+      "gzipBytes": 221,
+      "gzipSha256": "026aea40cee0b5df16a6595750d7b9c4211f3e7ee55eda2b4fd9aafc86188614",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-bank-mixed-fixture.js",
+      "bytes": 363,
+      "sha256": "98681a8fe8f559beb600299388c1aded960e595ff10b884f71603a7b2daa9644",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-bank-mixed-fixture.js.gz",
+      "gzipBytes": 228,
+      "gzipSha256": "0f461e7b8f893a71b0328420e393d285056930db0392777e9f8808af804b978b",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-fixture.js",
+      "bytes": 12670,
+      "sha256": "ed6c128d8ca0c8fee5c3fafefe3c41933e009e23c120343c0a289a1731f30193",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-fixture.js.gz",
+      "gzipBytes": 4651,
+      "gzipSha256": "8c13647ed779b80d69e6dbaadbf69807f243a80cd79f531cf0c1686f1fce7c2f",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-streaming-fixture.js",
+      "bytes": 15860,
+      "sha256": "95ad464326b9d0643d2e6816ec430fc606cae3e72f9ae0b203fb9938823434c3",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/runtime-helper-snapshots/art-viewport-streaming-fixture.js.gz",
+      "gzipBytes": 5845,
+      "gzipSha256": "06dd29046b3403795859790f2f511ef130c969b1b55799c5db506155b96bd48f",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/baseline-card-mip-uploader.ts",
+      "bytes": 11129,
+      "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/baseline-card-mip-uploader.ts.gz",
+      "gzipBytes": 3440,
+      "gzipSha256": "3b0f39012a4b0181f88be7da5de68e24625f4a9abaf598c91cc5891073eef2b3",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/baseline-card-upload-region.ts",
+      "bytes": 2358,
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/baseline-card-upload-region.ts.gz",
+      "gzipBytes": 1041,
+      "gzipSha256": "76d045f51cd372e714f3a507daad5a48df77328d276d75ecce79193af23e79e0",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/candidate-card-mip-uploader.ts",
+      "bytes": 11143,
+      "sha256": "2bfd78fa7260240fd151fbd3bff1bb0b20557d61ac387b7f3fddcd9643e46813",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/candidate-card-mip-uploader.ts.gz",
+      "gzipBytes": 3442,
+      "gzipSha256": "17a3610a66ca8873321e11ad233d26fde977a7b13b4f34feafbbc15435e1d3ea",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/candidate-card-upload-region.ts",
+      "bytes": 2358,
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/candidate-card-upload-region.ts.gz",
+      "gzipBytes": 1041,
+      "gzipSha256": "76d045f51cd372e714f3a507daad5a48df77328d276d75ecce79193af23e79e0",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-mip-uploader.ts",
+      "bytes": 11129,
+      "sha256": "3526789cda89f194eb9ee69ec266c163f043d75d88c8ef892870d1d5dfa1e295",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-mip-uploader.ts.gz",
+      "gzipBytes": 3440,
+      "gzipSha256": "3b0f39012a4b0181f88be7da5de68e24625f4a9abaf598c91cc5891073eef2b3",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-pick-mask.ts",
+      "bytes": 2674,
+      "sha256": "f968412c60a057452285291aa3001a702b22e3ba76ba6ab6606c353051de30fd",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-pick-mask.ts.gz",
+      "gzipBytes": 1115,
+      "gzipSha256": "73f6070b2a508c74632e0e6471ab5dcd0b1bb17b9409740f5b4172957d9be9ab",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-raster-cache.ts",
+      "bytes": 4829,
+      "sha256": "f9c83fe94bcb5fd4136b5ae820911d6af880a50c1e240c8037853a29f3e3e78b",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-raster-cache.ts.gz",
+      "gzipBytes": 1730,
+      "gzipSha256": "ad785c675dbe5e66d9fa43824d2b86983f4d010acbe8c31d24c0cdbd5d61dc1d",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-upload-region.ts",
+      "bytes": 2358,
+      "sha256": "25d852a8b6424c81648e93b68db98de1076cee90659d3f2b01cc5b07878c8439",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-card-upload-region.ts.gz",
+      "gzipBytes": 1041,
+      "gzipSha256": "76d045f51cd372e714f3a507daad5a48df77328d276d75ecce79193af23e79e0",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-painted-card-batches.ts",
+      "bytes": 31047,
+      "sha256": "f6b2da9c3f4dfd0e51b793e843bbed41bc0d457216f937f744b4a7158471e6c6",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/source-snapshot/current-painted-card-batches.ts.gz",
+      "gzipBytes": 9347,
+      "gzipSha256": "96dc6f6127188fd5fc728c0bb9e4aa0869ae3fe6006b330409f20515bab017d7",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/upload-loader.js",
+      "bytes": 1419,
+      "sha256": "2b0f213324d3ccb1358e44a92acfd2cb6a562d0208dc5bd297883153cc2e159d",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/upload-loader.js.gz",
+      "gzipBytes": 696,
+      "gzipSha256": "7b647b805a87ad2c303626847e98ef7df407358b998dcb1c76863ddd1259071c",
+      "originallyTracked": false
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/viewport-metadata.js",
+      "bytes": 2149,
+      "sha256": "45b0ca53e3d16bc89153e4f49f71e307a481e44b9d65a3f2647fb9bc81e15a81",
+      "gzipPath": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/viewport-metadata.js.gz",
+      "gzipBytes": 949,
+      "gzipSha256": "36e4de10e5115b575b6d3f39c1646a637d8b5a60f374468f393f72d11ca39e9f",
+      "originallyTracked": false
+    }
+  ],
+  "keptFiles": [
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-0-battlefield.png",
+      "bytes": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "reason": "Uncompressed PNG or human Markdown"
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-0-empty.png",
+      "bytes": 271275,
+      "sha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "reason": "Uncompressed PNG or human Markdown"
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-0-returned.png",
+      "bytes": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "reason": "Uncompressed PNG or human Markdown"
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-1-battlefield.png",
+      "bytes": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "reason": "Uncompressed PNG or human Markdown"
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-1-empty.png",
+      "bytes": 271275,
+      "sha256": "ffce2ad41ee195f468419f6f5a0369e4e3e329d65ff865162f78b10b518fd547",
+      "reason": "Uncompressed PNG or human Markdown"
+    },
+    {
+      "path": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/42bd61c7-hidden-0-cycle-1-returned.png",
+      "bytes": 1011449,
+      "sha256": "4bb5a13067418b273371fd0c4d2eb6265520fb29eed04edc0fa333c514852f2a",
+      "reason": "Uncompressed PNG or human Markdown"
+    }
+  ],
+  "sourceManifest": "docs/art/refactor/followup/card-streaming/stall-followup/depth1-scratch/frame-abba/A1/archives/source-archives.json",
+  "comparisonScripts": [],
+  "meaning": "Exact actual output/helper/runtime/optimizer/provider bytes. Original failure and result fields remain unchanged. PNG/Markdown and manifests are not compressed."
+}

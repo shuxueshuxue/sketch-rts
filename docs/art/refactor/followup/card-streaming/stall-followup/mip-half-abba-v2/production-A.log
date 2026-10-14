@@ -1,0 +1,5 @@
+START 8345a0dc hidden=0 cycle=0
+VIEWPORT streaming cycle 0 0 39.41666666691502 420.57499999987584
+START 8345a0dc hidden=0 cycle=1
+VIEWPORT streaming cycle 0 1 41.25833333320916 425.43333333233994
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/mip-half-abba-v2/production-A/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":39.41666666691502,"p50Ms":6.799999997019768,"p95Ms":110.30000000447035,"p99Ms":471.20000000298023,"maxMs":471.20000000298023,"over16_67Ms":28,"over50Ms":16},"real":{"samples":12,"meanMs":420.57499999987584,"p50Ms":200.19999999552965,"p95Ms":1350.7999999970198,"p99Ms":1350.7999999970198,"maxMs":1350.7999999970198,"over16_67Ms":12,"over50Ms":12}},{"hiddenCount":0,"cycle":1,"cpu":{"samples":60,"meanMs":41.25833333320916,"p50Ms":9.100000001490116,"p95Ms":134.20000000298023,"p99Ms":459.3999999985099,"maxMs":459.3999999985099,"over16_67Ms":28,"over50Ms":22},"real":{"samples":12,"meanMs":425.43333333233994,"p50Ms":209.20000000298023,"p95Ms":1272,"p99Ms":1272,"maxMs":1272,"over16_67Ms":12,"over50Ms":12}}]}

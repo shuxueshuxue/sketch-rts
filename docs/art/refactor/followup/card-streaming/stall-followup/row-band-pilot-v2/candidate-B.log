@@ -1,0 +1,3 @@
+START 8345a0dc hidden=0 cycle=0
+VIEWPORT streaming cycle 0 0 40.41000000014901 431.92500000136596
+{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/row-band-pilot-v2/candidate-B/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":40.41000000014901,"p50Ms":9.199999995529652,"p95Ms":106.80000000447035,"p99Ms":452.3999999985099,"maxMs":452.3999999985099,"over16_67Ms":28,"over50Ms":20},"real":{"samples":12,"meanMs":431.92500000136596,"p50Ms":204,"p95Ms":1268.1000000014901,"p99Ms":1268.1000000014901,"maxMs":1268.1000000014901,"over16_67Ms":12,"over50Ms":12}}]}

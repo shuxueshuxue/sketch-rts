@@ -1,0 +1,13 @@
+{
+  "operation": "archive",
+  "verifiedInputs": 220,
+  "originalBytes": 14099124,
+  "gzipBytes": 3058958,
+  "largestGzipBytes": 344517,
+  "originalOver100MB": 0,
+  "decodedOriginalSizeAndShaVerified": true,
+  "deletedOriginals": 0,
+  "restoredInputs": 0,
+  "toolSha256": "48a5425af01a5911cb1a23a0f81090bd4e593dfa12cde4a2a1b2c38fac91509d",
+  "meaning": "Evidence storage only, no changed source/capture/diagnostic conclusions."
+}
