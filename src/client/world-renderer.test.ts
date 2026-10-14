@@ -7,14 +7,15 @@ import { CombatPresentationTracker } from "./combat-presentation";
 import { UnitAnimationTracker } from "./unit-animation";
 import { UnitMotionSmoother } from "./unit-motion";
 import { RELATION_INK } from "./relations";
-import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
+import { drawWorld, ownerInk, trackUnitFacing, worldLabelsFor, type WorldFrame } from "./world-renderer";
+import { createI18n } from "./i18n";
 import { sketchScene } from "../sdk/scene";
 import { ABILITY_DEFS } from "../shared/catalog";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
 import { boardUnit } from '../shared/decks';
 import { beginShipBoarding, gangwaySurface, updateShipGangways } from '../shared/ship-gangway';
 import { shipProfile } from '../shared/ship-geometry';
-import { createUnit } from '../shared/map';
+import { createBuilding, createUnit } from '../shared/map';
 import type { GameSnapshot } from "../shared/types";
 
 type Call = { name: string; args: unknown[]; at?: Transform; ink?: unknown };
@@ -47,7 +48,7 @@ function recordingContext() {
       if (key in target) return target[key];
       const method = methods[key];
       return (...args: unknown[]) => {
-        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : key === "stroke" || key === "fill" ? { name: key, args, ink: key === 'fill' ? target.fillStyle : target.strokeStyle } : { name: key, args });
+        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : key === "stroke" || key === "fill" || key === "fillRect" || key === "fillText" ? { name: key, args, ink: key === 'stroke' ? target.strokeStyle : target.fillStyle } : { name: key, args });
         return method?.(...(args as never[]));
       };
     },
@@ -316,6 +317,61 @@ describe("world renderer", () => {
     const view = frame(duelSnapshot({ campStock: 3 }));
     drawWorld(view);
     expect(view.calls.some((call) => call.name === "fillText" && call.args[0] === "stock:3")).toBe(true);
+  });
+
+  it('paints an amber waiting-launch bar and localized state on an unselected visible shipyard in both render paths',()=>{
+    const snapshot=duelSnapshot();snapshot.units=[];
+    const dock=createBuilding('dock','north','shipyard',300,300,true);
+    dock.queue=[{unitKind:'transport',remaining:0},{unitKind:'carrier',remaining:80}];snapshot.buildings=[dock];
+    const original=JSON.stringify(snapshot),labels=worldLabelsFor(createI18n('en'));
+    for(const pass of [undefined,'overlay'] as const){
+      const rendered=frame(snapshot,{labels,...(pass?{pass}:{})});
+      const measure=vi.fn(()=>({width:63.25}) as TextMetrics);rendered.ctx.measureText=measure;drawWorld(rendered);
+      expect(rendered.selectedIds?.size??0).toBe(0);
+      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#9a6a28'&&call.args[2]===56&&call.args[3]===5)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.unitKind('transport')} x2`)).toBe(true);
+      expect(rendered.calls.filter(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toHaveLength(1);
+      expect(measure).toHaveBeenCalledWith('Awaiting launch');
+      expect(rendered.calls.filter(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')).toMatchObject([{args:[expect.any(Number),expect.any(Number),72,15]}]);
+      expect(rendered.calls.find(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')?.ink).toBe('#704a20');
+    }
+    expect(JSON.stringify(snapshot)).toBe(original);
+  });
+
+  it('keeps ordinary production blue and does not mistake a zero-time queued hull for the completed head',()=>{
+    const snapshot=duelSnapshot();snapshot.units=[];
+    const labels=worldLabelsFor(createI18n('en'));
+    for(const kind of ['shipyard','barracks'] as const){
+      const building=createBuilding('producer','north',kind,300,300,true);
+      building.queue=kind==='shipyard'?[{unitKind:'transport',remaining:10},{unitKind:'carrier',remaining:0}]:[{unitKind:'footman',remaining:0},{unitKind:'lancer',remaining:80}];
+      snapshot.buildings=[building];const rendered=frame(snapshot,{labels,pass:'overlay'});drawWorld(rendered);
+      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#315f87'&&call.args[3]===5)).toBe(true);
+      expect(rendered.calls.some(call=>call.ink==='#9a6a28')).toBe(false);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toBe(false);
+      expect(rendered.calls.some(call=>call.ink==='rgba(255, 250, 226, 0.94)')).toBe(false);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.unitKind(building.queue[0]!.unitKind)} x2`)).toBe(true);
+    }
+  });
+
+  it('reads waiting-launch words from the live localization callback and never evaluates it for a culled yard',()=>{
+    const snapshot=duelSnapshot();snapshot.units=[];
+    const dock=createBuilding('dock','north','shipyard',300,300,true);dock.queue=[{unitKind:'transport',remaining:0}];snapshot.buildings=[dock];
+    const i18n=createI18n('en'),labels=worldLabelsFor(i18n),waiting=vi.fn(labels.awaitingShipLaunch!);
+    labels.awaitingShipLaunch=waiting;
+    const en=frame(snapshot,{labels,pass:'overlay'}),measureEnglish=vi.fn(()=>({width:87.4}) as TextMetrics);en.ctx.measureText=measureEnglish;drawWorld(en);
+    expect(en.calls.some(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toBe(true);
+    expect(measureEnglish).toHaveBeenCalledWith('Awaiting launch');
+    expect(en.calls.find(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')?.args[2]).toBe(96);
+    Object.assign(i18n,createI18n('zh'));
+    const zh=frame(snapshot,{labels,pass:'overlay'}),measureChinese=vi.fn(()=>({width:28.2}) as TextMetrics);zh.ctx.measureText=measureChinese;drawWorld(zh);
+    expect(zh.calls.some(call=>call.name==='fillText'&&call.args[0]==='待下水')).toBe(true);
+    expect(zh.calls.some(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toBe(false);
+    expect(measureChinese).toHaveBeenCalledWith('待下水');
+    expect(zh.calls.find(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')?.args[2]).toBe(37);
+    expect(waiting).toHaveBeenCalledTimes(2);waiting.mockClear();dock.x=10000;
+    const culled=frame(snapshot,{labels,pass:'overlay'});drawWorld(culled);
+    expect(waiting).not.toHaveBeenCalled();expect(culled.calls.some(call=>call.ink==='#9a6a28')).toBe(false);
+    expect(culled.calls.some(call=>call.ink==='rgba(255, 250, 226, 0.94)')).toBe(false);
   });
 
   it("tracks facing idempotently, so extra updates between drawn frames change nothing", () => {

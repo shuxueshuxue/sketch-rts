@@ -239,8 +239,23 @@ function stagBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
 }
 function turtleBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  const c=l.color;
- for(const side of [-1,1])flesh(b,[side*16,0],[side*24,4],[side*30+p.walk*side*2,13-Math.max(0,p.stepLift*side)*2],6,darker(c,.18));
+ // Four splayed limbs occupy separate lanes in the quarter view. Far feet
+ // project outside the shell; near feet carry its weight at the ground line.
+ const leg=(front:boolean,near:boolean)=>{
+  const phase=(front?1:-1)*(near?1:-1),step=p.walk*phase*2;
+  const lift=Math.max(0,p.stepLift*phase)*2;
+  const root:XY=[front?17:-17,(near?2:-5)+p.bob];
+  const knee:XY=[(front?1:-1)*(near?24:30),near?9:1];
+  const foot:XY=[(front?1:-1)*(near?23:36)+step,(near?18:9)-lift];
+  const skin=near?c:darker(c,.22);
+  flesh(b,root,knee,foot,near?9:7,skin);
+  mass(b,[[foot[0]-4,foot[1]-4],[foot[0]+3,foot[1]-4],[foot[0]+6,foot[1]-1],[foot[0]+3,foot[1]],[foot[0]-5,foot[1]]],skin);
+  for(const i of [-1,0,1])line(b,[[foot[0]+i*2,foot[1]-2],[foot[0]+i*2+2,foot[1]]],BONE,.8);
+  line(b,[[knee[0]-2,knee[1]],[knee[0]+2,knee[1]+1]],darker(skin,.25),.7);
+ };
+ leg(false,false);leg(true,false);
  b.translate(0,p.bob);
+ mass(b,[[-21,1],[-30,0,-34,1,-42,4],[-35,7,-29,7,-21,5]],darker(c,.12));
  mass(b,[[-24,0],[-30,-11,-20,-26,-4,-27],[12,-29,27,-18,27,-4],[24,5,4,9,-16,5],[-24,4,-26,2,-24,0]],'#626d59');
  mass(b,[[-26,-2],[-22,-13,-12,-21,-1,-23],[11,-24,23,-14,24,-4],[16,-4,4,2,-9,3],[-17,3,-24,2,-26,-2]],'#7c8167');
  for(const [x,y,w,h] of [[-15,-7,15,14],[-3,-14,17,15],[11,-11,15,16],[-1,0,16,10]]){
@@ -248,15 +263,21 @@ function turtleBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
   line(b,[[x!-4,y!],[x!,y!-4],[x!+4,y!]],'#a3a487',.65);
  }
  const x=p.headX,y=p.headY;
- flesh(b,[18,-2],[x-6,y+4],[x+4,y+4],10,c);
- mass(b,[[x-6,y+3],[x-3,y-5],[x+4,y-7],[x+11,y-1],[x+15,y+4],[x+7,y+9],[x-2,y+8]],c);
- mass(b,[[x+3,y+5],[x+15,y+4],[x+10,y+8],[x+1,y+9]],darker(c,.16));
- line(b,[[x+4,y+5],[x+14,y+4]],INK,.85);
- ellipse(b,x+5,y-1,1,.85,'#c2b284');
- line(b,[[x+1,y-3],[x+6,y-3]],darker(c,.3),.65);
- stroke(b,[[-24,2],[-33,5,-37,10,-42,12]],c,3);
+ flesh(b,[18,-2],[x-7,y+4],[x+1,y+4],12,darker(c,.06));
+ // Broad jaw muscles and a hooked upper beak; the beak seam ends at the
+ // existing mouth/release socket, including upward and downward contact.
+ mass(b,[[x-9,y+1],[x-7,y-7],[x+1,y-9],[x+8,y-5],[x+12,y],[x+14,y+4],[x+9,y+5],[x+6,y+9],[x-4,y+10],[x-10,y+5]],c);
+ mass(b,[[x-8,y+2],[x-2,y-2],[x+4,y+3],[x+6,y+8],[x-4,y+10],[x-9,y+6]],darker(c,.16));
+ mass(b,[[x+3,y+1],[x+10,y+1],[x+14,y+4],[x+10,y+7],[x+8,y+4]],'#9b9c7d');
+ line(b,[[x-2,y+5],[x+6,y+6],[x+10,y+4],[x+14,y+4]],INK,1);
+ line(b,[[x-6,y-5],[x,y-7],[x+7,y-4]],lighter(c,.2),1);
+ ellipse(b,x+3,y-3,1.5,1,'#b7aa78');
+ ellipse(b,x+3.5,y-3,.55,.75,INK);
+ line(b,[[x,y-5],[x+5,y-5],[x+7,y-3]],darker(c,.4),1);
+ line(b,[[x+9,y],[x+10,y+.3]],INK,.8);
+ line(b,[[20,0],[x-8,y+5]],lighter(c,.12),.75);
  b.translate(0,-p.bob);
- for(const side of [-1,1]){const x=side*17,foot:XY=[side*31-p.walk*side*3,18-Math.max(0,-p.stepLift*side)*2];flesh(b,[x,0],[side*26,7],foot,7,c);for(const i of [-1,0,1])line(b,[[foot[0]+i*2,foot[1]-3],[foot[0]+i*3+3,foot[1]]],BONE,.85);}
+ leg(false,true);leg(true,true);
  b.translate(0,p.bob);
 }
 function spiderBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
@@ -304,23 +325,43 @@ function dragonBody(b:Brush,l:CreatureLook,p:CreatureDrawing){
  mass(b,[[-25,-12],[-23,-24,-4,-27,10,-21],[23,-20,27,-10,20,-1],[11,7,-3,4,-17,3],[-24,1,-28,-4,-25,-12]],c);
  mass(b,[[-18,-4],[-8,-10,5,-9,19,-4],[16,4,4,6,-11,2]],'#a28a6b');
  for(const y of [-3,0,3])stroke(b,[[-12,y],[1,y-3,9,y-2,16,y]],'#695a47',.65);
- const x=p.headX,y=p.headY;
- // Recover the original dragon's wedge brow and long amber eye. The
- // jaw shares the authored mouth socket while the neck keeps its new curve.
- mass(b,[[13,-2],[22,-12,17,y-6,x-6,y-7],[x+2,y-10],[x+10,y-3],[x+15,y+4],[x+4,y+9],[x-5,y+5,22,6,15,4]],c);
- mass(b,[[21,1],[25,-10,x-5,y+1,x+3,y+3],[x+9,y+8,x+7,y+10,x,y+9],[x-6,y+9,24,8,21,1]],'#b29b79');
- mass(b,[[x+1,y+5],[x+14,y+4],[x+10,y+8+Math.max(0,p.strike)*3],[x+1,y+10]],darker(c,.18));
- line(b,[[x+2,y+5],[x+14,y+4]],'#352d28',1);
- line(b,[[x-1,y-2],[x+5,y-2]],'#45362d',1.8);
- line(b,[[x,y-2],[x+5,y-2]],'#d5b06b',.9);
- line(b,[[x+11,y+1],[x+13,y+2]],'#45362d',.7);
- for(const side of [-1,1])mass(b,[[x-4+side*3,y-6],[x-11+side*4,y-15],[x-5+side*3,y-12],[x+side*3,y-6]],BONE);
- if(l.crown)stroke(b,[[x-7,y-3],[x-4,y+1],[x-3,y+6]],'#c3a983',.85);
+ const x=p.headX,y=p.headY,adult=l.kind==='redDragon',gape=p.action*(adult?4:3);
+ // Shoulder, nape and throat form one taper into the skull, rather than a
+ // narrow upright stalk. The head follows the authored gesture unrotated.
+ mass(b,[[9,-8],[14,-24,x-20,y-14,x-8,y-10],[x-3,y-4],[x-4,y+7],[26,-2,24,5,16,5],[17,-4,15,-6,9,-8]],c);
+ mass(b,[[18,2],[24,-4,x-12,y+1,x-5,y+5],[x,y+7],[25,2,23,8,18,2]],'#af9475');
+ stroke(b,[[17,-8],[21,-19,x-17,y-10,x-9,y-8]],lighter(c,.2),.8);
+ for(let i=0;i<3;i++){
+  const t=(i+1)/4,tx=20+(x-25)*t,ty=1+(y+4)*t;
+  stroke(b,[[tx-2,ty-1],[tx+1,ty+1],[tx+3,ty]],'#78674f',.55);
+ }
+ // Two swept horns frame a broad reptilian braincase. Juveniles have short
+ // growing horns; no crown of parallel spikes or human-like eyebrow bars.
+ mass(b,[[x-5,y-7],[x-5,y-12,x-8,y-17,x-(adult?12:7),y-(adult?21:13)],[x-5,y-17,x-1,y-12,x-2,y-7]],'#a3947a');
+ // Jaw and dark mouth sit behind the upper muzzle. Its front corner remains
+ // exactly the same p.release used by the launched flame/projectile.
+ mass(b,[[x-8,y+1],[x+4,y+3],[p.release[0],p.release[1]],[x+10,y+6+gape],[x-3,y+7+gape],[x-8,y+4]],darker(c,.12));
+ if(gape>.05)mass(b,[[x-4,y+3],[x+6,y+3],[p.release[0],p.release[1]],[x+10,y+4+gape],[x-3,y+4+gape]],'#342b28');
+ mass(b,[[x-11,y-4],[x-7,y-9],[x-1,y-9],[x+5,y-5],[x+10,y-2],[x+15,y-1],[x+17,y+1],[p.release[0],p.release[1]],[x+5,y+3],[x-3,y+4],[x-8,y+2]],c);
+ mass(b,[[x-7,y-7],[x-1,y-7],[x+5,y-4],[x+11,y-1],[x+3,y-2],[x-3,y-3]],lighter(c,adult?.16:.12));
+ mass(b,[[x-8,y-6],[x-12,y-7,x-17,y-10,x-(adult?22:13),y-(adult?15:10)],[x-15,y-11,x-11,y-10,x-5,y-9],[x-4,y-6]],'#bba987');
+ stroke(b,[[x-9,y-8],[x-(adult?18:11),y-(adult?12:9)]],'#d6c29d',.55);
+ // A single shaded eye socket, amber iris and tapered brow survive the 48px
+ // portrait reduction. Large cheek/muzzle planes do the work, not stippling.
+ mass(b,[[x-4,y-3],[x,y-3.8],[x+2,y-2.5],[x-2,y-1.4]],'#40352c');
+ ellipse(b,x-.9,y-2.55,1.25,.5,'#cba35a');
+ line(b,[[x-.5,y-3],[x-.5,y-2.1]],'#2f3027',.5);
+ stroke(b,[[x-6,y-4.5],[x-1,y-5],[x+4,y-3]],darker(c,.3),.65);
+ stroke(b,[[x+6,y-.5],[x+11,y+.4],[x+14,y+.7]],lighter(c,.2),.6);
+ ellipse(b,x+12.2,y+1.1,.9,.55,'#42362c');
+ stroke(b,[[x-7,y-1],[x-3,y+1],[x-5,y+3]],darker(c,.27),.6);
+ stroke(b,[[x-4,y+4],[x+6,y+3.5],[p.release[0],p.release[1]]],'#43352c',.55);
+ stroke(b,[[x-3,y+6+gape],[x+5,y+5.5+gape],[x+10,y+5+gape]],'#ac9473',.6);
  for(const i of [0,1,2,3,4]){
   const sx=-20+i*7,sy=-18+(i<2?0:2);
   mass(b,[[sx-2,sy],[sx-4,sy-7],[sx+2,sy-3],[sx+4,sy+1]],'#88785e');
  }
- for(const [sx,sy] of [[-15,-16],[-5,-18],[7,-17],[18,-10],[p.headX-4,p.headY-3]])for(let i=0;i<3;i++)stroke(b,[[sx!+i*2,sy!],[sx!+i*2+1,sy!+2],[sx!+i*2+3,sy!+1]],darker(c,.24),.55);
+ for(const [sx,sy] of [[-15,-16],[-5,-18],[7,-17],[18,-10]])for(let i=0;i<3;i++)stroke(b,[[sx!+i*2,sy!],[sx!+i*2+1,sy!+2],[sx!+i*2+3,sy!+1]],darker(c,.24),.55);
  dragonWing(b,-1,-16,Math.max(0,p.strike)*6-p.walk*2,true);
  b.translate(0,-p.bob);beastLeg(b,-11,false,true,c,p);beastLeg(b,17,true,true,c,p);
  for(const side of [-1,1]){const x=side<0?-13-p.walk*4:19+p.walk*4,lift=Math.max(0,p.stepLift*side)*4;for(const i of [-1,0,1])line(b,[[x+i*1.5,16-lift],[x+i*2+3,18-lift]],BONE,.7);}

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "folder": "after",
+  "passed": true,
+  "maintainedTool": "scripts/art-creature-gameplay-png-archive.py",
+  "maintainedToolSha256": "e39633af1b6f1ea8cb9641318b2b701423021c8ec4d87f8c5bbcf788333f4800",
+  "manifestSha256": "ff80fe27842364191474e4f01ed8ab74670eafb4b424d0b19dd9257219736125",
+  "originalProofSha256": "f2db1fcf888a2c3a12911c19574793226a27f3d9cef6baad889e15e8173fca24",
+  "originalEncodedFrameFileSetSha256": "5dc4d4e375fa9608c0675b00b23dcbe7515c4f2cfa0aac41983776bbcb0c5d81",
+  "archive": {
+    "format": "xz",
+    "file": "5dc4d4e375fa9608c0675b00b23dcbe7515c4f2cfa0aac41983776bbcb0c5d81.tar.xz",
+    "bytes": 17532584,
+    "sha256": "e267db94e848c9588db830e1d4ef708a5189793ed29fc2100057a4072bbfcfe0"
+  },
+  "completeOriginalFrames": 40,
+  "independentRestoredFrameSizesAndShaMatchUnchangedProof": true,
+  "directFrameNumbers": [
+    0,
+    9,
+    20,
+    29,
+    39
+  ],
+  "nonselectedFramesPruned": 35,
+  "allSixDirectPortraitBodyPngAndMp4AndOriginalSourceTarPreserved": true,
+  "operations": [
+    {
+      "phase": "archive",
+      "path": "docs/art/refactor/followup/creature-launch-review/gameplay/after/archives/archive.log.gz",
+      "decodedBytes": 2537,
+      "decodedSha256": "a2328a5cdcd9c63816355da0f082b8eac8941e3c0e38aea2c192a7b36c9a106d",
+      "gzipBytes": 808,
+      "gzipSha256": "bfb90ebe29ab555b3781030a83033cf77759eb4dc82bd9d00a3fcb0834670238",
+      "exitCode": 0,
+      "elapsedSeconds": 23.02904179399775
+    },
+    {
+      "phase": "prune",
+      "path": "docs/art/refactor/followup/creature-launch-review/gameplay/after/archives/prune.log.gz",
+      "decodedBytes": 2544,
+      "decodedSha256": "3454e4fd4d5d90dcbffe0dd785a44e4916a81b9fd09fdb2eb52ad7857680322d",
+      "gzipBytes": 812,
+      "gzipSha256": "95050b422468c13fa342c84dd566ff90a2184a8c3c274e8c1490a0b74e44ba4b",
+      "exitCode": 0,
+      "elapsedSeconds": 2.4711592569947243
+    },
+    {
+      "phase": "finalverify",
+      "path": "docs/art/refactor/followup/creature-launch-review/gameplay/after/archives/finalverify.log.gz",
+      "decodedBytes": 2536,
+      "decodedSha256": "f6764a4eda59b6163301dc4c32edcfc86ab2539661867238e8f0d5e5170d2dad",
+      "gzipBytes": 810,
+      "gzipSha256": "3f163cb3c1fe631577b6c5a4c2ad94bb7844524328a0e4c30608efd2611fff2a",
+      "exitCode": 0,
+      "elapsedSeconds": 2.179319137998391
+    }
+  ],
+  "fullGroupFacts": {
+    "originalFrames": 80,
+    "encodedOriginalFrameBytes": 44399898,
+    "containerBytes": 35207424,
+    "deletedNonselectedFrames": 70,
+    "deletedOriginalFrameBytes": 38927687,
+    "retainedDirectFrames": 10,
+    "retainedPortraitBodyPng": 12,
+    "retainedMp4": 2
+  },
+  "sizeTargetNotMet": true,
+  "meaning": "Lossless evidence storage only. Original PNG encoded bytes, source/proof/video, all visible captured content and existing source tar files were not changed. Standard gzip and xz were compared; only the smaller xz containers remain. No game-rendering or FPS improvement is claimed."
+}

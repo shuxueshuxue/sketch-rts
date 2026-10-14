@@ -1,0 +1,226 @@
+[
+  {
+    "frame": {
+      "mode": "idle",
+      "frame": 0
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 0
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 1
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 2
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 3
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 4
+    },
+    "bounds": [
+      -42,
+      -28,
+      41,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 5
+    },
+    "bounds": [
+      -43,
+      -28,
+      43,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 6
+    },
+    "bounds": [
+      -44,
+      -28,
+      43,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "walk",
+      "frame": 7
+    },
+    "bounds": [
+      -43,
+      -28,
+      43,
+      19
+    ],
+    "release": {
+      "x": 41,
+      "y": -4,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "attack",
+      "frame": 0,
+      "aim": -4
+    },
+    "bounds": [
+      -42,
+      -28,
+      49,
+      19
+    ],
+    "release": {
+      "x": 49,
+      "y": -11.526279441628823,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "attack",
+      "frame": 0,
+      "aim": 0
+    },
+    "bounds": [
+      -42,
+      -28,
+      55,
+      19
+    ],
+    "release": {
+      "x": 55,
+      "y": -2,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "attack",
+      "frame": 0,
+      "aim": 4
+    },
+    "bounds": [
+      -42,
+      -28,
+      49,
+      19
+    ],
+    "release": {
+      "x": 49,
+      "y": 7.526279441628825,
+      "ground": 18
+    }
+  },
+  {
+    "frame": {
+      "mode": "cast",
+      "frame": 0
+    },
+    "bounds": [
+      -42,
+      -28,
+      58,
+      19
+    ],
+    "release": {
+      "x": 53,
+      "y": -4,
+      "ground": 18
+    }
+  }
+]

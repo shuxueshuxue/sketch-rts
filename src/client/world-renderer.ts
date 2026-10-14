@@ -31,7 +31,7 @@ import { shouldRenderBuildingRally } from "./rally-visual";
 import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
-import { trainingQueueCountText } from "./training-queue";
+import { isAwaitingShipLaunch, trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
@@ -61,12 +61,14 @@ export type WorldView = {
 export type WorldLabels = {
   mercenaryStock: (stock: number) => string;
   unitKind: (kind: TrainableUnitKind) => string;
+  awaitingShipLaunch?: () => string;
 };
 
 export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels {
   return {
     mercenaryStock: (stock) => i18n.t("canvas.mercenaryStock", { stock }),
     unitKind: (kind) => i18n.label(kind),
+    awaitingShipLaunch: () => i18n.t("canvas.shipAwaitingLaunch"),
   };
 }
 
@@ -439,7 +441,7 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
     if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
     if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
-      drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
+      drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building);
     }
   }
 }
@@ -719,21 +721,37 @@ function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number, wid
   ctx.fillRect(x - width / 2, y, width * ratio, 3);
 }
 
-function drawProgress(ctx: Brush, x: number, y: number, ratio: number) {
+function drawProgress(ctx: Brush, x: number, y: number, ratio: number, ink = "#315f87") {
   ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
   ctx.fillRect(x - 28, y, 56, 5);
-  ctx.fillStyle = "#315f87";
+  ctx.fillStyle = ink;
   ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
 }
 
-function drawTrainingProgress(painter: Painter, x: number, y: number, remaining: number, unitKind: TrainableUnitKind, queueLength: number) {
+function drawTrainingProgress(painter: Painter, x: number, y: number, building: Building) {
   const { ctx } = painter;
+  const { remaining, unitKind } = building.queue[0]!;
   const total = UNIT_DEFS[unitKind].trainTime;
-  drawProgress(ctx, x, y, 1 - remaining / total);
-  ctx.fillStyle = "#315f87";
+  const awaitingLaunch = isAwaitingShipLaunch(building);
+  const ink = awaitingLaunch ? "#9a6a28" : "#315f87";
+  drawProgress(ctx, x, y, 1 - remaining / total, ink);
+  ctx.fillStyle = ink;
   ctx.font = "9px ui-monospace, monospace";
-  const countText = trainingQueueCountText(queueLength);
+  const countText = trainingQueueCountText(building.queue.length);
   ctx.fillText(`${painter.labels.unitKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
+  if (awaitingLaunch && painter.labels.awaitingShipLaunch) {
+    const label = painter.labels.awaitingShipLaunch();
+    ctx.save();
+    ctx.font = "600 10px ui-monospace, monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    const width = Math.ceil(ctx.measureText(label).width) + 8;
+    ctx.fillStyle = "rgba(255, 250, 226, 0.94)";
+    ctx.fillRect(x - 31, y + 20, width, 15);
+    ctx.fillStyle = "#704a20";
+    ctx.fillText(label, x - 27, y + 31);
+    ctx.restore();
+  }
 }
 
 // @@@hit-shake - A subtle, decaying contact response; strong hits cannot move
