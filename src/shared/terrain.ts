@@ -648,6 +648,7 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
+  const localOffsets = [1, columns, -1, -columns, columns + 1, columns - 1, -columns - 1, -columns + 1];
   const origin = box.top * width + box.left;
   const { dist, next } = arrays;
   dist.fill(UNREACHED);
@@ -675,13 +676,17 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
       const col = index % columns;
       const row = (index - col) / columns;
       const at = origin + row * width + col;
+      // Box boundaries remove the same directions for every neighbour of this cell.
+      let directions = 0xff;
+      if (col === 0) directions &= ~0x64; // W, SW, NW
+      if (col === columns - 1) directions &= ~0x91; // E, SE, NE
+      if (row === 0) directions &= ~0xc8; // N, NW, NE
+      if (row === rows - 1) directions &= ~0x32; // S, SE, SW
       for (let direction = 0; direction < 8; direction += 1) {
-        const stepCol = col + STEP_COLS[direction]!;
-        const stepRow = row + STEP_ROWS[direction]!;
-        if (stepCol < 0 || stepRow < 0 || stepCol >= columns || stepRow >= rows) continue;
+        if ((directions & (1 << direction)) === 0) continue;
         const step = at + offsets[direction]!;
         if (walk[step] !== 1) continue;
-        const there = stepRow * columns + stepCol;
+        const there = index + localOffsets[direction]!;
         const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[step]!;
         if (reached >= dist[there]! || !stepAllowed(state, at, direction)) continue;
         dist[there] = reached;
