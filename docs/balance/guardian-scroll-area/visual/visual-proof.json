@@ -1,0 +1,183 @@
+{
+  "fixture": [
+    {
+      "id": "north-inner",
+      "x": 1500,
+      "y": 1340,
+      "distance": 160
+    },
+    {
+      "id": "north-outer",
+      "x": 1500,
+      "y": 1280,
+      "distance": 220
+    },
+    {
+      "id": "south-inner",
+      "x": 1500,
+      "y": 1660,
+      "distance": 160
+    },
+    {
+      "id": "south-outer",
+      "x": 1500,
+      "y": 1720,
+      "distance": 220
+    },
+    {
+      "id": "east-inner",
+      "x": 1660,
+      "y": 1500,
+      "distance": 160
+    },
+    {
+      "id": "east-outer",
+      "x": 1720,
+      "y": 1500,
+      "distance": 220
+    },
+    {
+      "id": "west-inner",
+      "x": 1340,
+      "y": 1500,
+      "distance": 160
+    },
+    {
+      "id": "west-outer",
+      "x": 1280,
+      "y": 1500,
+      "distance": 220
+    }
+  ],
+  "view": {
+    "x": 1100,
+    "y": 1100,
+    "width": 800,
+    "height": 800,
+    "zoom": 1
+  },
+  "method": "Actual shared simulation and drawWorld Canvas fallback; not a WebGL screenshot.",
+  "samples": [
+    {
+      "name": "before",
+      "source": "/workspace/sketch-rts-six-player-baseline-a052",
+      "headCommit": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
+      "trackedSourceDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rulesVersion": 2,
+      "radius": 280,
+      "field": {
+        "id": "effect-1000",
+        "type": "guardianField",
+        "x": 1500,
+        "y": 1500,
+        "remaining": 140,
+        "duration": 140,
+        "radius": 280,
+        "sourceId": "carrier",
+        "actionMode": "cast",
+        "fromX": 1500,
+        "fromY": 1500,
+        "toX": 1500,
+        "toY": 1500,
+        "actionTick": 0
+      },
+      "sourceSha256": {
+        "src/shared/sim.ts": "e1183a6e3df2c0591d63fdb2a436c803cf616ddef92d1f1f693f431a77c1ed11",
+        "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+        "src/shared/rules-version.ts": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57",
+        "src/client/world-renderer.ts": "19999d01f8ef7be44372a30a8cfde436f4b9aeb375b3a9193a04a3b84173a1ee",
+        "src/client/effect-renderer.ts": "ba8ac9eb8d0d93c29979dfb8f4040444507c7ea8763b2dd9a771ffc79e9ebf8b",
+        "src/client/art/canvas-effects.ts": "a5fb88989e15fc9333970db4e87b8523cf4135a883b6106bb425637d239cefb1",
+        "src/client/world3d/projection.ts": "17dd588f2c07ecc6d9ab4b1bbb255068a2d8eb89e383cf11b32641df908d3ec2",
+        "src/ai/policy/item-tactics.ts": "7d0c94c5a14ef7ba0095568060365c20e52f85e74c0bd04d1064dd59680b4ea9",
+        "src/ai/policy-v2prod/item-tactics.ts": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238"
+      },
+      "snapshotSha256": "31fc9856d65e889a3de04a30e5f1f4eb3a35a51bfd1a5775926c453b2992f30d",
+      "pngSha256": "fba23f87e03d72288d3c7182edc21e010cf02d2974d46cc2597893d155a84ba1",
+      "recipients": [
+        "carrier",
+        "east-inner",
+        "east-outer",
+        "north-inner",
+        "north-outer",
+        "south-inner",
+        "south-outer",
+        "west-inner",
+        "west-outer"
+      ],
+      "unchangedAiDiagnostic": {
+        "commands": [
+          {
+            "type": "useItem",
+            "unitId": "ai-carrier",
+            "itemId": "ai-scroll"
+          }
+        ],
+        "estimatedNearbyAlliesAt260": 4,
+        "actualRecipients": [
+          "ai-245",
+          "ai-250",
+          "ai-255",
+          "ai-carrier"
+        ]
+      }
+    },
+    {
+      "name": "after",
+      "source": "/workspace/sketch-rts-guardian-scroll",
+      "headCommit": "a0524c2c9b32d4b92084d4f9478729eb562f7d29",
+      "trackedSourceDiffSha256": "93880376bb8f95f237c1f7ae7ebc7dcfee8ebf1cfe634150e3bb37310921d19d",
+      "rulesVersion": 3,
+      "radius": 180,
+      "field": {
+        "id": "effect-1000",
+        "type": "guardianField",
+        "x": 1500,
+        "y": 1500,
+        "remaining": 140,
+        "duration": 140,
+        "radius": 180,
+        "sourceId": "carrier",
+        "actionMode": "cast",
+        "fromX": 1500,
+        "fromY": 1500,
+        "toX": 1500,
+        "toY": 1500,
+        "actionTick": 0
+      },
+      "sourceSha256": {
+        "src/shared/sim.ts": "e1183a6e3df2c0591d63fdb2a436c803cf616ddef92d1f1f693f431a77c1ed11",
+        "src/shared/item-rules.ts": "79676caca9bbda62bd1f53b9b53dc44c92249220bec8458035b0132fa446c55c",
+        "src/shared/rules-version.ts": "e2babd61d66f2efdcfb0d992d4fc6382dcbf863430d52632d894180e27b9ed2f",
+        "src/client/world-renderer.ts": "19999d01f8ef7be44372a30a8cfde436f4b9aeb375b3a9193a04a3b84173a1ee",
+        "src/client/effect-renderer.ts": "f864da3180b0c19c83d59e4dcb4c777dcb0aff92bce5076c250f087c8d12b25a",
+        "src/client/art/canvas-effects.ts": "9e470dd664866705a497fe9e01fc527babdfbe742df37b425a1f45b9519d33a0",
+        "src/client/world3d/projection.ts": "17dd588f2c07ecc6d9ab4b1bbb255068a2d8eb89e383cf11b32641df908d3ec2",
+        "src/ai/policy/item-tactics.ts": "7d0c94c5a14ef7ba0095568060365c20e52f85e74c0bd04d1064dd59680b4ea9",
+        "src/ai/policy-v2prod/item-tactics.ts": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238"
+      },
+      "snapshotSha256": "69b0603630aa6922476cd8b60166d24e543c4465702c14658a04c223e9ad4f3d",
+      "pngSha256": "bcb13c9a02dec7497c0a7b06777365fb8684bb4843606c198237f94a90e79364",
+      "recipients": [
+        "carrier",
+        "east-inner",
+        "north-inner",
+        "south-inner",
+        "west-inner"
+      ],
+      "unchangedAiDiagnostic": {
+        "commands": [
+          {
+            "type": "useItem",
+            "unitId": "ai-carrier",
+            "itemId": "ai-scroll"
+          }
+        ],
+        "estimatedNearbyAlliesAt260": 4,
+        "actualRecipients": [
+          "ai-carrier"
+        ]
+      }
+    }
+  ]
+}

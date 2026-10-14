@@ -145,7 +145,7 @@ describe("director", () => {
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, older)).toThrow(`checksum version 1; this build checks version ${CHECKSUM_VERSION}`);
   });
 
-  it.each([undefined, 1, 3])("rejects rules version %s before invoking story replay even with a valid checksum", rulesVersion => {
+  it.each([undefined, 1, 2, 99])("rejects rules version %s before invoking story replay even with a valid checksum", rulesVersion => {
     const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale });
     director.begin();
     const save = director.save();
@@ -156,7 +156,7 @@ describe("director", () => {
     expect(story).not.toHaveBeenCalled();
   });
 
-  it("validates a rules-2 version-17 save in full while retaining new replay-generated death facts", () => {
+  it("validates a current-rules version-17 save in full while retaining new replay-generated death facts", () => {
     const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale, pilot, seed: 7 });
     director.begin();
     advanceUntil(director, () => (director.game.corpses?.length ?? 0) >= 5);

@@ -1,13 +1,14 @@
 /** Simulation rules identity, separate from JSON format and checksum algorithms.
  * 1: separate Grove/Ember support casters (also all records without a version).
  * 2: canonical shared priest/summoner and race-specific production relations.
+ * 3: guardian scroll cast radius reduced from 280 to 180 world units.
  */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 export const PREVIOUS_RULES_VERSION = 1;
 
 export function savedRulesVersion(version: unknown): number {
   if (version === undefined) return PREVIOUS_RULES_VERSION;
-  if (version !== PREVIOUS_RULES_VERSION && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
+  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
   return version;
 }
 
