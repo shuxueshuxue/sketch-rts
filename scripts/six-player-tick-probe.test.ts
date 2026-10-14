@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../src/shared/rules-version";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -150,7 +151,7 @@ describe("six-player production-path probe", () => {
       const timedDir = join(directory, "timed"), plainDir = join(directory, "plain");
       const timed = await runProbe({ source: process.cwd(), ticks: 31, out: timedDir });
       const plain = await runProbe({ source: process.cwd(), ticks: 31, out: plainDir, plain: true });
-      expect(timed.rulesVersion).toBe(2);
+      expect(timed.rulesVersion).toBe(RULES_VERSION);
       expect(timed.planningTicks).toMatchObject({ count: 3, allOnMod15Zero: true, allFiveOwners: true });
       expect(timed.finalChecksum).toBe(plain.finalChecksum);
       expect(timed.commandLogSha256).toBe(plain.commandLogSha256);
