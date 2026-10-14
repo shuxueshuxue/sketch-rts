@@ -33,6 +33,8 @@ Restoring original captured inputs in place temporarily exposes the old captured
 
 Output directories and operation reports must be new. Keep the independent temporary restoration and its proof until pruning finishes: pruning rechecks all restored bytes and all in-place originals before removing any original. The script records each operation separately and does not turn a historical failed test into a pass.
 
+A final review caught and fixed a missing-directory case in that contract. The maintained tool now requires the independent restore directory to exist and checks all 20 restored files unconditionally. [The real CLI guard run](prune-guard/guard-execution.json) restores all originals, supplies a proof pointing to a missing directory and confirms rejection with all originals and archives unchanged. Legitimate pruning and final archive verification then pass. Earlier executed tool snapshots and operation records retain their original meaning and bytes.
+
 Actual archive, verification, independent full restoration, pruning and final verification all passed: [execution record](captured-input-execution.json). The 20 original inputs total 11,170,491 bytes and the gzip files total 919,874 bytes; this is repository evidence storage, not game memory or rendering performance. All decoded bytes match the original Git anchor. [Default PNG-tool verification](tool-verification/verification.json) passes for 16 directories and 1,065 original PNGs with unchanged source/PNG manifests. An isolated wrong raw file plus valid archive is rejected by both readers.
 
 ## Verified local integration

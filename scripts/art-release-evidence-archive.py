@@ -198,10 +198,11 @@ def main():
         destination = Path(proof['restoredRoot'])
         require(destination.is_absolute() and destination != REPO
                 and str(destination).startswith('/tmp/'), 'Independent restore must be beneath /tmp')
+        require(destination.is_dir(), 'Required independent restore directory is missing')
+        no_links(destination)
         for name, data in decoded.items():
-            if destination.exists():
-                require(read(destination / name) == data,
-                        'Independent restored bytes differ: ' + name)
+            require(read(destination / name) == data,
+                    'Independent restored bytes differ: ' + name)
             require(read(REPO / name) == data, 'Original full preflight differs: ' + name)
         for name in TARGETS:
             require(read(REPO / name) == decoded[name], 'Original changed immediately before prune')
