@@ -792,18 +792,27 @@ function reachableTarget(state: TerrainRuntime, ground: TerrainRuntime, tiles: T
   const row = Math.floor(target / width) - 1;
   let best = near;
   let bestDistance = Infinity;
+  const consider = (c: number, r: number) => {
+    if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) return;
+    const at = pad(state, c, r);
+    if (tiles.island[at] !== island) return;
+    const gap = (c - col) ** 2 + (r - row) ** 2;
+    if (gap < bestDistance || (gap === bestDistance && at < best)) {
+      bestDistance = gap;
+      best = at;
+    }
+  };
   for (let ring = 1; ring <= Math.max(terrain.cols, terrain.rows) && ring * ring <= bestDistance; ring += 1) {
-    for (let r = row - ring; r <= row + ring; r += 1) {
-      for (let c = col - ring; c <= col + ring; c += 1) {
-        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring || c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
-        const at = pad(state, c, r);
-        if (tiles.island[at] !== island) continue;
-        const gap = (c - col) ** 2 + (r - row) ** 2;
-        if (gap < bestDistance || (gap === bestDistance && at < best)) {
-          bestDistance = gap;
-          best = at;
-        }
-      }
+    // Only the 8r border cells belong to this ring; the interior was visited in earlier rings.
+    // The minimum (squared distance, padded index) is independent of traversal order.
+    const top = row - ring, bottom = row + ring;
+    for (let c = col - ring; c <= col + ring; c += 1) {
+      consider(c, top);
+      consider(c, bottom);
+    }
+    for (let r = top + 1; r < bottom; r += 1) {
+      consider(col - ring, r);
+      consider(col + ring, r);
     }
   }
   if (tiles.nearest.size > 4_096) tiles.nearest.clear();
