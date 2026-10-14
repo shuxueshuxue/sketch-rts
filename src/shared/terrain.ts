@@ -1430,11 +1430,29 @@ function grow(state: TerrainRuntime, sources: number[]): Field {
       const at = bucket[--tops[slot]!]!;
       pending -= 1;
       if (dist[at] !== cost) continue;
-      for (let direction = 0; direction < 8; direction += 1) {
+      // The first four offsets are right, down, left, up. Keep their original
+      // walk reads for the later corner tests, including rejected relaxations.
+      let sides = 0;
+      for (let direction = 0; direction < 4; direction += 1) {
         const next = at + offsets[direction]!;
         if (walk[next] !== 1) continue;
-        const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL);
-        if (reached >= dist[next]! || !stepAllowed(state, at, direction)) continue;
+        sides |= 1 << direction;
+        const reached = cost + STRAIGHT;
+        if (reached >= dist[next]!) continue;
+        dist[next] = reached;
+        const into = reached & 7;
+        buckets[into]![tops[into]!++] = next;
+        pending += 1;
+      }
+      // Continue in the same 4..7 order. A diagonal needs the two adjoining
+      // cardinal bits: right/down, down/left, left/up, up/right.
+      for (let direction = 4; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1) continue;
+        const reached = cost + DIAGONAL;
+        if (reached >= dist[next]!) continue;
+        const corner = direction === 4 ? 3 : direction === 5 ? 6 : direction === 6 ? 12 : 9;
+        if ((sides & corner) !== corner) continue;
         dist[next] = reached;
         const into = reached & 7;
         buckets[into]![tops[into]!++] = next;
