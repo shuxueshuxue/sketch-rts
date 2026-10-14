@@ -1,0 +1,11 @@
+{
+  "source": "/workspace/sketch-rts-six-player-structural-before-0f31",
+  "root": "/workspace/six-player-structural-shore-tool/captures-xT1i8w",
+  "completed": true,
+  "frames": 31,
+  "commandBytes": 4085,
+  "commandSha256": "728be47578cdbea79678a68cb2bbfd90402f1795ae9e55e6ad8c9ddbf632a417",
+  "checksum": "b8473a1c",
+  "inputCaptureBytes": 2992785,
+  "note": "The first 31 ticks need not call shoreSpot. The synthetic actual-body contract separately proves selected capture/return/exception transparency. This is a probe smoke, not performance evidence."
+}

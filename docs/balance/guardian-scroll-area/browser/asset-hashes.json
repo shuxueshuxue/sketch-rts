@@ -1,0 +1,21 @@
+{
+  "sameNativeModel": true,
+  "files": [
+    {
+      "name": "before",
+      "source": "/workspace/sketch-rts-homepage-before-a052",
+      "file": "public/art/world3d/buildings/townHall.glb",
+      "bytes": 25264,
+      "sha256": "93ee5f135484a3ec8976a987f7406c3693f328b70d4e0a5885e4a0b2beb5d2c0",
+      "loadedUrl": "/art/world3d/buildings/townHall.glb?v=93ee5f135484"
+    },
+    {
+      "name": "after",
+      "source": "/workspace/sketch-rts-guardian-scroll",
+      "file": "public/art/world3d/buildings/townHall.glb",
+      "bytes": 25264,
+      "sha256": "93ee5f135484a3ec8976a987f7406c3693f328b70d4e0a5885e4a0b2beb5d2c0",
+      "loadedUrl": "/art/world3d/buildings/townHall.glb?v=93ee5f135484"
+    }
+  ]
+}

@@ -1,9 +1,8 @@
 import {bloodSurfaceResolver} from '../combat-surfaces';
 import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
-import { deckRemainsByShip, deckRemainsPose, remainsOpacity, remainsVariant } from '../deck-remains';
-import { drawAtlasCorpse } from '../atlas-art';
-import { corpseAppearanceKey } from '../art/corpses';
+import { deckRemainsByShip, deckRemainsPose, remainsOpacity } from '../deck-remains';
+import { paintedRemainsRecipe, type PaintedRemainsPreparation } from './painted-remains';
 import type {UnitAnimationFrame} from '../unit-animation';
 import {projectActionFrame,actionPaintSize} from '../art/action-direction';
 import {unitPaintKey} from '../art/paint-identity';
@@ -24,7 +23,7 @@ import { WaterSurface } from './water';
 import { creatureShadow } from '../art/painted-creatures';
 import { spellOrbPalette } from '../art/effect-presentation';
 import { paintFigure } from '../art/painted-units';
-import { appearanceFor,appearanceKey,corpseAppearanceFor } from '../art/unit-appearance';
+import { appearanceFor,appearanceKey } from '../art/unit-appearance';
 import { unitGlyphScale } from '../glyphs';
 import { footprintSquare } from '../footprint-view';
 import { relationTo,RELATION_INK } from '../relations';
@@ -171,6 +170,20 @@ export class World3DLayer {
     return layer;
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
+  prepareRemains(snapshot:GameSnapshot,preparation:PaintedRemainsPreparation){
+    if(this.disposed||this.contextLost)return;
+    const prepared=new Set<string>();
+    for(const corpse of preparation.corpses){
+      // Ground remains use the Canvas world pass, not the CPU deck-card path.
+      if(!corpse.deck)continue;
+      const recipe=paintedRemainsRecipe(snapshot,corpse,preparation.models);
+      for(const density of [2,4]){
+        const id=`${recipe.key}:${density}:128`;
+        if(prepared.has(id))continue;
+        prepared.add(id);this.remainsCards.prepareRaster(recipe.key,density,recipe.paint,128);
+      }
+    }
+  }
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
   reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
   private offscreenPosition(id:string):ActorPosition|undefined{
@@ -390,16 +403,11 @@ export class World3DLayer {
       for(const corpse of corpses){
       const pose=deckRemainsPose(corpse,ship);
       if(!pose||!visible(pose.x,pose.y-pose.height*TILT,128))continue;
-      const model=corpse.variant?frame.models?.(corpse.variant):undefined;
+      const recipe=paintedRemainsRecipe(snapshot,corpse,frame.models),model=recipe.model;
       const scale=model?Math.max(.72,corpse.radius/18):unitGlyphScale(corpse.radius);
-      const appearance=corpseAppearanceFor(snapshot,corpse),color=ownerInk(corpse.owner,snapshot),variant=remainsVariant(corpse.id);
-      const key=`corpse:${corpse.kind}:${corpse.variant??''}:${color}:${corpseAppearanceKey(appearance)}:${variant}`;
       const transform=deckRemainsMatrix(this.pose(0,0,0),pose,scale);
       const density=zoom<.65?2:4,baseMip=this.residentMip(128,density,transform,0,false);
-      this.remainsCards.add(key,density,ctx=>{
-        // The fixed seven-pixel baseline is already in the world transform.
-        drawAtlasCorpse(ctx,corpse.kind,{x:0,y:-7},1,variant,model,corpse.variant,color,appearance);
-      },transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick),baseMip);
+      this.remainsCards.add(recipe.key,density,recipe.paint,transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick),baseMip);
       }
     }
     for(const id of this.deckMotion.keys())if(!liveCrew.has(id))this.deckMotion.delete(id);

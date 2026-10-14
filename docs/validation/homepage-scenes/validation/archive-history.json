@@ -1,0 +1,9 @@
+[
+  {
+    "path": "validation/raw-logs/homepage-pirate-prewarm-final-visual.log",
+    "historyPath": "validation/archive-history/homepage-pirate-prewarm-final-visual.log",
+    "historySha256": "b9721e65a41354930d924dc435a73efa8f42966bd431b633583f10558721aa62",
+    "finalSha256": "dbfd90062cfbec59e408687b5f6e4de4c65483733f24f32a320d0600d4f55cea",
+    "reason": "Initial archival copied a still-running visual or demo log; both versions preserved."
+  }
+]

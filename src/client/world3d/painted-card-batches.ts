@@ -35,6 +35,7 @@ export class PaintedCardBatches {
   private maxTextureBanks:number;
   private pending:Request[]=[];
   private rasterizations=0;
+  private preparedRasters=0;
   private copiedLayers=0;
   private matrix=new THREE.Matrix4();
   private offset=new THREE.Matrix4();
@@ -125,22 +126,48 @@ export class PaintedCardBatches {
     let target=this.bindings.get(current);if(!target){target=[];this.bindings.set(current,target);}
     for(const row of rows){row.card=current;target.push(row);}this.bindings.delete(previous);
   }
+  private readRaster(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,tileSize:number){
+    const size=tileSize*density,cacheStart=performance.now();let rgba=this.rasterCache.get(key);
+    this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
+    if(!rgba){
+      const paintStart=performance.now();
+      let canvas=this.canvases.get(size);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(size,canvas);}
+      const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
+      try{paint(ctx);}finally{ctx.restore();}
+      const paintedAt=performance.now();this.rasterStages.paintMs+=paintedAt-paintStart;
+      rgba=ctx.getImageData(0,0,size,size).data;const readAt=performance.now();this.rasterStages.readbackMs+=readAt-paintedAt;paintMs=readAt-paintStart;
+    }
+    return{rgba,fromCache,paintMs};
+  }
+  private flipRows(rgba:Uint8ClampedArray,size:number){
+    const row=size*4;if(this.rowScratch.length<row)this.rowScratch=new Uint8Array(row);
+    for(let y=0;y<Math.floor(size/2);y++){
+      const top=y*row,bottom=(size-1-y)*row;this.rowScratch.set(rgba.subarray(top,top+row));
+      rgba.copyWithin(top,bottom,bottom+row);rgba.set(this.rowScratch.subarray(0,row),bottom);
+    }
+  }
+  /** Prepare a finite authored raster during resource loading. The original
+   * painter, filtering and lossless recovery cache are shared with live draws;
+   * preparation allocates no GPU page, draw chunk or visible instance. */
+  prepareRaster(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,tileSize:number=ART_TILE_SIZE){
+    key=`${key}:${density}:${tileSize}`;
+    const start=performance.now(),size=tileSize*density;
+    const {rgba,fromCache,paintMs}=this.readRaster(key,density,paint,tileSize);
+    if(fromCache)return;
+    this.pendingRgbaBytes=rgba.byteLength;this.recordPeaks();
+    try{
+      const flipStart=performance.now();if(hasPaint(rgba))this.flipRows(rgba,size);
+      const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
+      this.rasterCache.put(key,rgba,size,size,paintMs);this.rasterStages.cacheMs+=performance.now()-flippedAt;
+      this.preparedRasters++;this.rasterWorkWallMs+=performance.now()-start;this.recordPeaks();
+    }finally{this.pendingRgbaBytes=0;}
+  }
   private raster({key,density,paint,matrix,id,foot,tileSize,opacity,order}:Request,renderer:CardTextureRenderer,baseMip:number,pendingLayers:Map<number,number>){
     let card=this.cards.get(key);
     if(!card||card.baseMip>baseMip){
       const previous=card;
       const start=performance.now(),size=tileSize*density;
-      const cacheStart=performance.now();let rgba=this.rasterCache.get(key);
-      this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
-      if(!rgba){
-        const paintStart=performance.now();
-        let canvas=this.canvases.get(size);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(size,canvas);}
-        const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
-        try{paint(ctx);}finally{ctx.restore();}
-        const paintedAt=performance.now();this.rasterStages.paintMs+=paintedAt-paintStart;
-        rgba=ctx.getImageData(0,0,size,size).data;const readAt=performance.now();this.rasterStages.readbackMs+=readAt-paintedAt;paintMs=readAt-paintStart;
-
-      }
+      const {rgba,fromCache,paintMs}=this.readRaster(key,density,paint,tileSize);
       this.pendingRgbaBytes=rgba.byteLength;this.recordPeaks();
       try{
         const maskStart=performance.now(),painted=hasPaint(rgba),sourceSize=painted?size:16,residentMip=painted?baseMip:0,retainedSize=sourceSize/2**residentMip;
@@ -149,13 +176,7 @@ export class PaintedCardBatches {
         const flipStart=performance.now();this.rasterStages.pickMaskMs+=flipStart-maskStart;
         // Reverse rows in place. A single reusable row replaces a second full
         // RGBA allocation; the source readback is released after this upload.
-        if(painted&&!fromCache){
-          const row=size*4;if(this.rowScratch.length<row)this.rowScratch=new Uint8Array(row);
-          for(let y=0;y<Math.floor(size/2);y++){
-            const top=y*row,bottom=(size-1-y)*row;this.rowScratch.set(rgba.subarray(top,top+row));
-            rgba.copyWithin(top,bottom,bottom+row);rgba.set(this.rowScratch.subarray(0,row),bottom);
-          }
-        }
+        if(painted&&!fromCache)this.flipRows(rgba,size);
         const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
         // Cached bytes already have GPU row orientation. Rehydration never
         // rewrites transparent rows just to flip them a second time.
@@ -379,7 +400,7 @@ export class PaintedCardBatches {
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const drawBufferBytes=this.chunks.reduce((sum,chunk)=>sum+chunk.mesh.instanceMatrix.array.byteLength+Object.values(chunk.geometry.attributes).reduce((total,attribute)=>total+attribute.array.byteLength,0)+(chunk.geometry.index?.array.byteLength??0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
-    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
+    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
   private recordPeaks(){
     // Sampling occurs several times per raster. Preserve the same ownership and

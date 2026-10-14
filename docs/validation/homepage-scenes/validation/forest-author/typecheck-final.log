@@ -1,0 +1,2 @@
+src/client/menu-forest-horde.test.ts(31,12): error TS2532: Object is possibly 'undefined'.
+src/client/menu-forest-horde.test.ts(37,22): error TS2532: Object is possibly 'undefined'.

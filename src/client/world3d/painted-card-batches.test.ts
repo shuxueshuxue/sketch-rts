@@ -21,6 +21,30 @@ const matrix=new THREE.Matrix4();
 const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
 const fullPaint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-62,-62,124,124);};
 describe('painted card array batches',()=>{
+  it.each([2,4])('prepares exact density-%i source bytes without allocating GPU pages or showing actors',density=>{
+    const {cards,scene}=setup(),painter=vi.fn((ctx:CanvasRenderingContext2D)=>{
+      ctx.fillStyle='#634b87';ctx.fillRect(-7,-43,11,58);
+      ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,19,4,6);
+    }),size=ART_TILE_SIZE*density;
+    const source=createCanvas(size,size),ctx=source.getContext('2d');ctx.scale(density,density);ctx.translate(ART_TILE_SIZE/2,ART_TILE_SIZE/2);
+    painter(ctx as unknown as CanvasRenderingContext2D);painter.mockClear();
+    const rgba=ctx.getImageData(0,0,size,size).data,expected=new Uint8Array(rgba.length);
+    for(let y=0;y<size;y++)expected.set(rgba.subarray(y*size*4,(y+1)*size*4),(size-1-y)*size*4);
+    cards.prepareRaster('future',density,painter);cards.prepareRaster('future',density,painter);
+    expect(painter).toHaveBeenCalledTimes(1);expect(renderer.initTexture).not.toHaveBeenCalled();expect(renderer.copyTextureToTexture).not.toHaveBeenCalled();
+    expect(scene.children).toHaveLength(0);expect(cards.objects()).toHaveLength(0);
+    expect(cards.stats()).toMatchObject({pages:0,cards:0,rasterizations:0,preparedRasters:1,pendingRgbaBytes:0,ownedGpuBytes:0,rasterCache:{entries:1}});
+    let uploaded:Uint8Array|undefined;
+    renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture,_destination:THREE.Texture,_region:unknown,_position:unknown,level:number)=>{
+      if(level===0&&source instanceof THREE.DataTexture)uploaded=new Uint8Array(source.image.data!);
+    });
+    cards.begin();cards.add('future',density,painter,matrix,'now-visible',17);cards.finish(renderer);
+    expect(painter).toHaveBeenCalledTimes(1);expect(Buffer.from(uploaded!).equals(Buffer.from(expected))).toBe(true);
+    expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['now-visible']);
+    const visible=binding(cards,'now-visible');expect(visible.mesh.userData.paintedHit(visible.index,{x:.5,y:.5})).toBe(true);
+    expect(visible.mesh.userData.paintedHit(visible.index,{x:.1,y:.1})).toBe(false);
+    expect(cards.stats()).toMatchObject({preparedRasters:1,rasterizations:1,rasterCache:{entries:1,hits:2}});cards.dispose();
+  });
   it('defaults to ordered single-bank draws and the original implicit sampling in every pass',()=>{
     const {cards}=setup({});cards.begin();
     for(const [order,bank] of [0,1,0].entries())cards.add(`default:${bank}`,2,paint,matrix,`unit:${order}`,17,bank?160:128);cards.finish(renderer);

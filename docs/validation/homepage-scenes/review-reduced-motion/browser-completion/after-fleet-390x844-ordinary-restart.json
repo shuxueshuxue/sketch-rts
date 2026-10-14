@@ -1,0 +1,1112 @@
+{
+  "rebuilt": {
+    "created": 2,
+    "now": 3192.7999999970198,
+    "age": 0,
+    "tick": 0,
+    "normalFrames": [
+      {
+        "now": 2846.199999988079,
+        "age": 300.352599999994,
+        "tick": 7,
+        "created": 1,
+        "runAlive": false
+      },
+      {
+        "now": 3192.7999999970198,
+        "age": 0,
+        "tick": 0,
+        "created": 2,
+        "runAlive": true
+      }
+    ]
+  },
+  "ordinary": {
+    "scene": "fleet",
+    "width": 390,
+    "height": 844,
+    "kind": "ordinary-after-reduced",
+    "state": {
+      "scene": "fleet",
+      "age": 3.0302999999970197,
+      "submittedAge": 2.6,
+      "submittedTick": 52,
+      "tick": 52,
+      "view": {
+        "x": 1670,
+        "y": 259.79487179487205,
+        "width": 390,
+        "height": 844,
+        "zoom": 0.319672131147541
+      },
+      "reducedMotion": false,
+      "presentation": true,
+      "unitCount": 25,
+      "buildingCount": 0,
+      "effectTypes": [
+        "muzzleFlash",
+        "siegeBolt",
+        "muzzleFlash",
+        "siegeBolt"
+      ],
+      "ships": [
+        {
+          "id": "menu-shipOfTheLine-1",
+          "kind": "shipOfTheLine",
+          "owner": "corsairs",
+          "hp": 740,
+          "x": 2616.1415993695846,
+          "y": 1481.0766597699733,
+          "deckScale": 2.5,
+          "heading": -1.42
+        },
+        {
+          "id": "menu-shipOfTheLine-2",
+          "kind": "shipOfTheLine",
+          "owner": "admiralty",
+          "hp": 740,
+          "x": 1943.8584006304154,
+          "y": 1378.9233402300267,
+          "deckScale": 2.5,
+          "heading": -1.42
+        }
+      ],
+      "crew": [
+        {
+          "id": "unit-corsairs-footman-1000",
+          "kind": "footman",
+          "variant": "menu/pirate-captain",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 90,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1001",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 26,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1002",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -38,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1003",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -102,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1004",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -166,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1005",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -230,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1006",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -294,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1007",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -358,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1008",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 170,
+            "y": -85
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1009",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 300,
+            "y": -60
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1010",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -222,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1011",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -96,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1012",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 30,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1013",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 150,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1014",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -250,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1015",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 0,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1016",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 160,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1017",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 280,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1018",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -100,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1019",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 110,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1020",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -155,
+            "y": 130
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1021",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 85,
+            "y": 120
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1022",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 330,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "props": [],
+      "preparedRemainsKeys": [
+        "corpse:footman:menu/marine:#4f8581:::::::::0:2:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:3:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:4:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:5:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:0:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:0:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:1:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:1:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:2:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:3:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:4:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:5:2:128"
+      ],
+      "remainsCacheStats": {
+        "pages": 1,
+        "cards": 4,
+        "pixels": 65536,
+        "drawChunks": 0,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 4,
+        "drawBufferBytes": 508,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 2048,
+        "gpuBytes": 349526,
+        "allocatedMipBytes": 349520,
+        "canvasBackingBytes": 1310720,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 2048,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 9.000000014901161,
+          "avoidedPaintMs": 341.5,
+          "bytes": 304640,
+          "scratchBytes": 131072,
+          "ownedBytes": 435712,
+          "entries": 12,
+          "hits": 4,
+          "misses": 12,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 699904,
+        "ownedGpuBytes": 699044,
+        "peakPendingRgbaBytes": 1048576,
+        "peakOwnedCpuBytes": 1486336,
+        "peakOwnedGpuBytes": 699044,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 4,
+        "preparedRasters": 12,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 10.100000008940697,
+          "readbackMs": 362.70000000298023,
+          "cacheMs": 9.200000002980232,
+          "pickMaskMs": 0.19999998807907104,
+          "rowFlipMs": 1.5999999940395355,
+          "slotMs": 0.09999999403953552
+        },
+        "rasterWorkWallMs": 384.5999999642372,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 1,
+        "mipLayerUpdates": 4,
+        "mipCopyCalls": 32,
+        "mipCopyBytes": 349520,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 399512,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 137368,
+        "scratchPartialUploadPixels": 34342,
+        "scratchPartialUploads": 3,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0.5000000149011612
+      },
+      "units": [],
+      "corpses": [],
+      "menu": {
+        "x": 25,
+        "y": 561.6875,
+        "width": 340,
+        "height": 214.3125
+      },
+      "buttons": [
+        {
+          "text": "Play",
+          "x": 25,
+          "y": 612,
+          "width": 340,
+          "height": 48
+        },
+        {
+          "text": "Rooms",
+          "x": 25,
+          "y": 670,
+          "width": 340,
+          "height": 48
+        },
+        {
+          "text": "Settings",
+          "x": 25,
+          "y": 728,
+          "width": 340,
+          "height": 48
+        }
+      ],
+      "renderer": "WebGL2 stack",
+      "scrollWidth": 390,
+      "windowWidth": 390
+    },
+    "overlay": {
+      "canvas": {
+        "width": 390,
+        "height": 844
+      },
+      "pixels": 329160,
+      "alpha255": 281,
+      "fadeRGB": 0,
+      "fadeCoverRatio": 0,
+      "nearBlackRatio": 0,
+      "meanAlpha": 61.151853202090166,
+      "note": "Main overlay canvas, excludes separate ground/WebGL actors and DOM menu."
+    },
+    "capture": {
+      "file": "after-fleet-390x844-ordinary-age2.6.png",
+      "sha256": "9314b0f2f6b9c7f6cbea527a3794c9acfb20c2e8b054e51fde26fd01c432b008",
+      "gpuCompletion": {
+        "available": true,
+        "waitMs": 25.5,
+        "polls": 13,
+        "status": 37148
+      }
+    }
+  },
+  "afterRestart": {
+    "scene": "fleet",
+    "width": 390,
+    "height": 844,
+    "kind": "ordinary-after-explicit-restart",
+    "restart": {
+      "tick": 0,
+      "age": 0.007799999997019768,
+      "created": 2,
+      "sameRun": true,
+      "sameGame": true,
+      "sameModels": true,
+      "sameCorpses": true
+    },
+    "state": {
+      "scene": "fleet",
+      "age": 1.6177999999970198,
+      "submittedAge": 1.6,
+      "submittedTick": 32,
+      "tick": 32,
+      "view": {
+        "x": 1670,
+        "y": 259.79487179487205,
+        "width": 390,
+        "height": 844,
+        "zoom": 0.319672131147541
+      },
+      "reducedMotion": false,
+      "presentation": true,
+      "unitCount": 25,
+      "buildingCount": 0,
+      "effectTypes": [],
+      "ships": [
+        {
+          "id": "menu-shipOfTheLine-1",
+          "kind": "shipOfTheLine",
+          "owner": "corsairs",
+          "hp": 740,
+          "x": 2616.1415993695846,
+          "y": 1481.0766597699733,
+          "deckScale": 2.5,
+          "heading": -1.42
+        },
+        {
+          "id": "menu-shipOfTheLine-2",
+          "kind": "shipOfTheLine",
+          "owner": "admiralty",
+          "hp": 740,
+          "x": 1943.8584006304154,
+          "y": 1378.9233402300267,
+          "deckScale": 2.5,
+          "heading": -1.42
+        }
+      ],
+      "crew": [
+        {
+          "id": "unit-corsairs-footman-1000",
+          "kind": "footman",
+          "variant": "menu/pirate-captain",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 90,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1001",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 26,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1002",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -38,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1003",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -102,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1004",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -166,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1005",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -230,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1006",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -294,
+            "y": 70
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1007",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": -358,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1008",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 170,
+            "y": -85
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-corsairs-footman-1009",
+          "kind": "footman",
+          "variant": "menu/pirate",
+          "owner": "corsairs",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-1",
+            "x": 300,
+            "y": -60
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1010",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -222,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1011",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -96,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1012",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 30,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1013",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 150,
+            "y": 90
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1014",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -250,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1015",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 0,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1016",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 160,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1017",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 280,
+            "y": 0
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1018",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -100,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-footman-1019",
+          "kind": "footman",
+          "variant": "menu/marine",
+          "owner": "admiralty",
+          "hp": 145,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 110,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1020",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": -155,
+            "y": 130
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1021",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 85,
+            "y": 120
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-admiralty-worker-1022",
+          "kind": "worker",
+          "variant": "menu/carpenter",
+          "owner": "admiralty",
+          "hp": 70,
+          "deck": {
+            "shipId": "menu-shipOfTheLine-2",
+            "x": 330,
+            "y": -20
+          },
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "props": [],
+      "preparedRemainsKeys": [
+        "corpse:footman:menu/marine:#4f8581:::::::::0:2:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:3:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:4:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:5:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:0:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:0:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:1:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:1:4:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:2:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:3:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:4:2:128",
+        "corpse:footman:menu/marine:#4f8581:::::::::0:5:2:128"
+      ],
+      "remainsCacheStats": {
+        "pages": 1,
+        "cards": 4,
+        "pixels": 65536,
+        "drawChunks": 0,
+        "pooledDrawChunks": 1,
+        "drawCapacity": 4,
+        "drawBufferBytes": 508,
+        "maxTextureBanks": 1,
+        "arrayCpuBytes": 0,
+        "cpuBytes": 2048,
+        "gpuBytes": 349526,
+        "allocatedMipBytes": 349520,
+        "canvasBackingBytes": 1310720,
+        "maskBytes": 0,
+        "pendingMaskBytes": 0,
+        "pendingRgbaBytes": 0,
+        "rowScratchBytes": 2048,
+        "retiredGpuBytes": 0,
+        "rasterCache": {
+          "backoffs": 0,
+          "bypassRequests": 0,
+          "workMs": 9.000000014901161,
+          "avoidedPaintMs": 341.5,
+          "bytes": 304640,
+          "scratchBytes": 131072,
+          "ownedBytes": 435712,
+          "entries": 12,
+          "hits": 4,
+          "misses": 12,
+          "evictions": 0,
+          "budget": 16777216
+        },
+        "ownedCpuBytes": 699904,
+        "ownedGpuBytes": 699044,
+        "peakPendingRgbaBytes": 1048576,
+        "peakOwnedCpuBytes": 1486336,
+        "peakOwnedGpuBytes": 699044,
+        "peakRetiredGpuBytes": 0,
+        "rasterizations": 4,
+        "preparedRasters": 12,
+        "copiedLayers": 0,
+        "rasterStages": {
+          "paintMs": 10.100000008940697,
+          "readbackMs": 362.70000000298023,
+          "cacheMs": 9.200000002980232,
+          "pickMaskMs": 0.19999998807907104,
+          "rowFlipMs": 1.5999999940395355,
+          "slotMs": 0.09999999403953552
+        },
+        "rasterWorkWallMs": 384.5999999642372,
+        "scratchTextures": 1,
+        "scratchCpuBytes": 262144,
+        "scratchGpuBytes": 349524,
+        "mipInitializedPages": 1,
+        "mipLayerUpdates": 4,
+        "mipCopyCalls": 32,
+        "mipCopyBytes": 349520,
+        "gpuCompactionLayers": 0,
+        "gpuCompactionCopyCalls": 0,
+        "arrayBaseUploadBytes": 0,
+        "scratchUploadBytes": 399512,
+        "scratchInitialUploadBytes": 262144,
+        "scratchFullUploadBytes": 262144,
+        "scratchPartialUploadBytes": 137368,
+        "scratchPartialUploadPixels": 34342,
+        "scratchPartialUploads": 3,
+        "scratchUnchangedUploads": 0,
+        "scratchFullUploadFallbacks": 0,
+        "gpuTransferSubmissionWallMs": 0.5000000149011612
+      },
+      "units": [],
+      "corpses": [],
+      "menu": {
+        "x": 25,
+        "y": 561.6875,
+        "width": 340,
+        "height": 214.3125
+      },
+      "buttons": [
+        {
+          "text": "Play",
+          "x": 25,
+          "y": 612,
+          "width": 340,
+          "height": 48
+        },
+        {
+          "text": "Rooms",
+          "x": 25,
+          "y": 670,
+          "width": 340,
+          "height": 48
+        },
+        {
+          "text": "Settings",
+          "x": 25,
+          "y": 728,
+          "width": 340,
+          "height": 48
+        }
+      ],
+      "renderer": "WebGL2 stack",
+      "scrollWidth": 390,
+      "windowWidth": 390
+    },
+    "overlay": {
+      "canvas": {
+        "width": 390,
+        "height": 844
+      },
+      "pixels": 329160,
+      "alpha255": 172,
+      "fadeRGB": 0,
+      "fadeCoverRatio": 0,
+      "nearBlackRatio": 0,
+      "meanAlpha": 60.463504070968526,
+      "note": "Main overlay canvas, excludes separate ground/WebGL actors and DOM menu."
+    },
+    "capture": {
+      "file": "after-fleet-390x844-restart-age1.6.png",
+      "sha256": "6c67d02bdc09d83f1c01686536373c6684e21d11a4bb7a368b317e4110629ea7",
+      "gpuCompletion": {
+        "available": true,
+        "waitMs": 61.19999998807907,
+        "polls": 21,
+        "status": 37148
+      }
+    }
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "schema": 1,
+  "capturedDirectories": [
+    {
+      "source": "/workspace/six-player-spike-runs",
+      "destination": "capture"
+    },
+    {
+      "source": "/workspace/six-player-spike-tool-freeze-current",
+      "destination": "tools/current"
+    },
+    {
+      "source": "/workspace/six-player-spike-tool-profile-original-capture",
+      "destination": "tools/profile-original"
+    },
+    {
+      "source": "/workspace/six-player-focused-smoke-20261014",
+      "destination": "probe-smoke/intermediate"
+    }
+  ],
+  "capturedFiles": [
+    {
+      "source": "/workspace/six-player-spike-focused-analysis-run1.json",
+      "destination": "analyses/six-player-spike-focused-analysis-run1.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-focused-analysis-run2.json",
+      "destination": "analyses/six-player-spike-focused-analysis-run2.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-focused-analysis-stage3.json",
+      "destination": "analyses/six-player-spike-focused-analysis-stage3.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-focused-two-run-comparison.json",
+      "destination": "analyses/six-player-spike-focused-two-run-comparison.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-analysis.json",
+      "destination": "analyses/six-player-spike-abba-analysis.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-readonly-audit.json",
+      "destination": "analyses/six-player-spike-abba-readonly-audit.json"
+    },
+    {
+      "source": "/workspace/six-player-spike-test-attribution.json",
+      "destination": "analyses/six-player-spike-test-attribution.json"
+    },
+    {
+      "source": "/workspace/analyze-six-player-focused-spikes.py",
+      "destination": "analyses/analyze-six-player-focused-spikes.py"
+    },
+    {
+      "source": "/workspace/compare-six-player-focused-spikes.py",
+      "destination": "analyses/compare-six-player-focused-spikes.py"
+    },
+    {
+      "source": "/workspace/analyze-six-player-spike-abba.py",
+      "destination": "analyses/analyze-six-player-spike-abba.py"
+    },
+    {
+      "source": "/workspace/six-player-focused-contract-final.log",
+      "destination": "logs/six-player-focused-contract-final.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-full-run1.log",
+      "destination": "logs/six-player-focused-full-run1.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-full-run2.log",
+      "destination": "logs/six-player-focused-full-run2.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-full.log",
+      "destination": "logs/six-player-focused-full.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-smoke-20261014.log",
+      "destination": "logs/six-player-focused-smoke-20261014.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-smoke-tests.log",
+      "destination": "logs/six-player-focused-smoke-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-smoke-typecheck-final.log",
+      "destination": "logs/six-player-focused-smoke-typecheck-final.log"
+    },
+    {
+      "source": "/workspace/six-player-focused-smoke-typecheck.log",
+      "destination": "logs/six-player-focused-smoke-typecheck.log"
+    },
+    {
+      "source": "/workspace/six-player-terrain-counter-freeze-tests.log",
+      "destination": "logs/six-player-terrain-counter-freeze-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-terrain-counter-tests-final.log",
+      "destination": "logs/six-player-terrain-counter-tests-final.log"
+    },
+    {
+      "source": "/workspace/six-player-terrain-counter-tests.log",
+      "destination": "logs/six-player-terrain-counter-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-terrain-counter-typecheck.log",
+      "destination": "logs/six-player-terrain-counter-typecheck.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-A1.log",
+      "destination": "logs/six-player-spike-abba-A1.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-A2.log",
+      "destination": "logs/six-player-spike-abba-A2.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-B1.log",
+      "destination": "logs/six-player-spike-abba-B1.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-abba-B2.log",
+      "destination": "logs/six-player-spike-abba-B2.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-build-production.log",
+      "destination": "logs/six-player-spike-build-production.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-cache-before.log",
+      "destination": "logs/six-player-spike-cache-before.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-cache-candidate.log",
+      "destination": "logs/six-player-spike-cache-candidate.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-focused-stage3-retry.log",
+      "destination": "logs/six-player-spike-focused-stage3-retry.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-focused-stage3.log",
+      "destination": "logs/six-player-spike-focused-stage3.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-full-tests.log",
+      "destination": "logs/six-player-spike-full-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-island-coast-first-tests.log",
+      "destination": "logs/six-player-spike-island-coast-first-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-island-coast-typecheck.log",
+      "destination": "logs/six-player-spike-island-coast-typecheck.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-lazy-sat-tests.log",
+      "destination": "logs/six-player-spike-lazy-sat-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-naval-mine-retest.log",
+      "destination": "logs/six-player-spike-naval-mine-retest.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-naval-mine-tests.log",
+      "destination": "logs/six-player-spike-naval-mine-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-naval-mine-typecheck.log",
+      "destination": "logs/six-player-spike-naval-mine-typecheck.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-terrain-tests.log",
+      "destination": "logs/six-player-spike-terrain-tests.log"
+    },
+    {
+      "source": "/workspace/six-player-spike-typecheck-pre-coast.log",
+      "destination": "logs/six-player-spike-typecheck-pre-coast.log"
+    }
+  ],
+  "notes": [
+    "All nine long runs retain complete native frames and original final checksum. Diagnostic timings do not establish performance gain.",
+    "Original 123 assets and README/manifest protected.",
+    "Post-archive SDK boundary log will be appended independently after testing the final archived tree."
+  ]
+}

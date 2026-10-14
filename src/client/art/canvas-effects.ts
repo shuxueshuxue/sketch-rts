@@ -1,4 +1,5 @@
 import { seconds } from "../../shared/time";
+import { GUARDIAN_SCROLL } from "../../shared/item-rules";
 import type { WorldEffect } from "../../shared/types";
 import { arrowFrame, hasEffectVector, type ArrowFrame, type SpellOrbPalette, type ChargeTrailFrame, type ChargeImpactFrame } from './effect-presentation';
 type Point = { x: number; y: number };
@@ -182,7 +183,7 @@ export function drawStormEffect(ctx: CanvasRenderingContext2D, effect: WorldEffe
 }
 
 export function drawGuardianFieldEffect(ctx: CanvasRenderingContext2D, effect: WorldEffect, point: Point, life: number) {
-  const radius = effect.radius ?? 280;
+  const radius = effect.radius ?? GUARDIAN_SCROLL.radius;
   const pulse = 1 - life;
   ctx.save();
   ctx.lineCap = "round";
@@ -192,18 +193,20 @@ export function drawGuardianFieldEffect(ctx: CanvasRenderingContext2D, effect: W
   ctx.strokeStyle = `rgba(166, 137, 53, ${0.28 + life * 0.22})`;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 12, radius, radius * 0.42, 0, 0, Math.PI * 2);
+  // The world ground uses equal x/y scale. This boundary marks the actual
+  // cast selection circle; a flattened body shadow would understate its reach.
+  ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.strokeStyle = `rgba(245, 231, 157, ${0.42 + life * 0.28})`;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 12, radius * (0.72 + pulse * 0.12), radius * (0.3 + pulse * 0.05), 0, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, radius * (0.72 + pulse * 0.12), 0, Math.PI * 2);
   ctx.stroke();
   for (let i = 0; i < 6; i += 1) {
     const angle = i * (Math.PI / 3) + pulse * 0.8;
     const x = point.x + Math.cos(angle) * radius * 0.5;
-    const y = point.y + Math.sin(angle) * radius * 0.2 + 12;
+    const y = point.y + Math.sin(angle) * radius * 0.5;
     ctx.beginPath();
     ctx.moveTo(x, y - 9);
     ctx.lineTo(x + 8, y - 2);

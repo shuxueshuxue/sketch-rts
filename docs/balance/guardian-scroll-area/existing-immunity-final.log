@@ -1,0 +1,15 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-guardian-scroll
+
+ ✓ src/shared/sim.test.ts (114 tests | 113 skipped) 21ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 113 skipped (114)
+   Start at  09:52:34
+   Duration  2.43s (transform 1.68s, setup 0ms, collect 2.17s, tests 21ms, environment 0ms, prepare 58ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

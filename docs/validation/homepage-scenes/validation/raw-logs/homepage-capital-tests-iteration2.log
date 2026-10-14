@@ -1,0 +1,40 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-homepage-board
+
+ ❯ src/client/menu-capital-street.test.ts (4 tests | 1 failed) 4678ms
+   × capital street presentation > uses a fixed local cast without a match AI, catalogue variants or simulation advancement 15ms
+     → expected [ 'enemy', 'enemy2', 'lion', …(2) ] to deeply equal [ 'lion', 'townsfolk' ]
+   ✓ capital street presentation > can seek to a scene time without accumulated movement, and never teleports at route joins 4262ms
+   ✓ capital street presentation > looks across the street slowly, keeps its authored focus inside the map and retains a fixed reduced-motion view 379ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/client/menu-capital-street.test.ts > capital street presentation > uses a fixed local cast without a match AI, catalogue variants or simulation advancement
+AssertionError: expected [ 'enemy', 'enemy2', 'lion', …(2) ] to deeply equal [ 'lion', 'townsfolk' ]
+
+- Expected
++ Received
+
+  Array [
++   "enemy",
++   "enemy2",
+    "lion",
++   "player",
+    "townsfolk",
+  ]
+
+ ❯ src/client/menu-capital-street.test.ts:12:50
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  09:49:14
+   Duration  6.81s (transform 1.24s, setup 0ms, collect 1.89s, tests 4.68s, environment 0ms, prepare 48ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

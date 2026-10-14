@@ -3,6 +3,7 @@ import { drawChainLightningEffect, drawHealEffect, drawSummonEffect, drawCurseEf
 import { estimatedRider, riderRadius, hasEffectVector, chargeTrailFrame, chargeImpactFrame, projectileLook, launchPoint, arrowFrame, isUnitKind, TOWER_ARROW_SCALE, spellOrbPalette } from "./art/effect-presentation";
 import { drawWarfareEffect } from "./warfare-effects";
 import { SHIP_CAMERA } from "../shared/ship-geometry";
+import { GUARDIAN_SCROLL } from "../shared/item-rules";
 import { drawVeteranCastEffect } from './ability-effects';
 import { shouldRenderCommandFeedback } from './command-feedback';
 import type { GameSnapshot, PlayerId, Unit, WorldEffect } from "../shared/types";
@@ -86,7 +87,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     const point = worldToScreen(effect);
-    const pad = effect.type === "guardianField" || effect.type === "storm" ? (effect.radius ?? (effect.type === "guardianField" ? 280 : 145)) + 80 : 90;
+    const pad = effect.type === "guardianField" || effect.type === "storm" ? (effect.radius ?? (effect.type === "guardianField" ? GUARDIAN_SCROLL.radius : 145)) + 80 : 90;
     if (!nearScreen(point, pad)) continue;
     const life = effect.remaining / effect.duration;
     const radius = 9 + (1 - life) * 22;

@@ -853,8 +853,33 @@ input[type="range"] {
   }
 
   .main-menu[data-menu-view="home"] {
-    place-items: center;
-    padding-left: 12px;
+    place-items: end center;
+    padding: 12px 12px 68px;
+    background: linear-gradient(0deg, rgba(10, 5, 2, .92), rgba(10, 5, 2, .65) 25%, rgba(10, 5, 2, 0) 58%);
+  }
+
+  .main-menu[data-menu-view="home"]::before {
+    -webkit-mask-image: linear-gradient(0deg, #000, #000 24%, transparent 53%);
+    mask-image: linear-gradient(0deg, #000, #000 24%, transparent 53%);
+  }
+
+  .main-menu[data-menu-view="home"] .menu-window {
+    gap: 16px;
+    justify-items: center;
+  }
+
+  .main-menu[data-menu-view="home"] .menu-title {
+    font-size: clamp(32px, 8.8vw, 42px);
+    white-space: nowrap;
+  }
+
+  .main-menu[data-menu-view="home"] .map-list {
+    width: min(340px, calc(100vw - 24px));
+    gap: 10px;
+  }
+
+  .main-menu[data-menu-view="home"] .map-button {
+    min-height: 48px;
   }
 
   .menu-window {

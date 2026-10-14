@@ -1,0 +1,57 @@
+{
+  "sourceUnchanged": true,
+  "cropBytesAllEqual": true,
+  "outerCases": [
+    {
+      "case": "corpse-marine-d2-v0",
+      "bytes": 262144,
+      "changedBytes": 3347,
+      "changedPixels": 1357,
+      "alphaDifferences": 502,
+      "maximumDelta": 128
+    },
+    {
+      "case": "corpse-marine-d2-v1",
+      "bytes": 262144,
+      "changedBytes": 2521,
+      "changedPixels": 1418,
+      "alphaDifferences": 167,
+      "maximumDelta": 128
+    },
+    {
+      "case": "corpse-marine-d2-v2",
+      "bytes": 262144,
+      "changedBytes": 3253,
+      "changedPixels": 1317,
+      "alphaDifferences": 483,
+      "maximumDelta": 128
+    },
+    {
+      "case": "corpse-marine-d4-v0",
+      "bytes": 1048576,
+      "changedBytes": 4110,
+      "changedPixels": 1884,
+      "alphaDifferences": 819,
+      "maximumDelta": 128
+    },
+    {
+      "case": "corpse-marine-d4-v1",
+      "bytes": 1048576,
+      "changedBytes": 10227,
+      "changedPixels": 4412,
+      "alphaDifferences": 1214,
+      "maximumDelta": 128
+    },
+    {
+      "case": "corpse-marine-d4-v2",
+      "bytes": 1048576,
+      "changedBytes": 6916,
+      "changedPixels": 2991,
+      "alphaDifferences": 1133,
+      "maximumDelta": 128
+    }
+  ],
+  "parityAccepted": false,
+  "interpretation": "Actual crop pixels match; CPU destination resampling differs when the source backing hint changes. Same-source control pending; no performance run started. MaximumDelta includes low-alpha unpremultiplied RGB and does not quantify perceived image error.",
+  "diagnosticPngs": "1:1 output RGBA/gray and absolute per-channel RGBA delta/red changed-pixels mask, generated losslessly from archived gzip raw RGBA; original raw retained."
+}

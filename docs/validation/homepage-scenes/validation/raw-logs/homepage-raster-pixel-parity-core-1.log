@@ -1,0 +1,13 @@
+{"label":"baseline","case":"corpse-marine-d2-v0","outputs":2,"crops":1,"status":"captured"}
+{"label":"baseline","case":"corpse-marine-d2-v1","outputs":2,"crops":1,"status":"captured"}
+{"label":"baseline","case":"corpse-marine-d2-v2","outputs":2,"crops":1,"status":"captured"}
+{"label":"baseline","case":"corpse-marine-d4-v0","outputs":2,"crops":1,"status":"captured"}
+{"label":"baseline","case":"corpse-marine-d4-v1","outputs":2,"crops":1,"status":"captured"}
+{"label":"baseline","case":"corpse-marine-d4-v2","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d2-v0","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d2-v1","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d2-v2","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d4-v0","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d4-v1","outputs":2,"crops":1,"status":"captured"}
+{"label":"candidate","case":"corpse-marine-d4-v2","outputs":2,"crops":1,"status":"captured"}
+{"pass":false,"cases":6,"rasterComparisons":18,"totalBytesCompared":9269532,"failures":18,"output":"/workspace/homepage-raster-pixel-parity-core-1"}

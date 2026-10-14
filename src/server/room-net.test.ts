@@ -21,7 +21,7 @@ function invalidTrainingAiScript(): AiScript {
 }
 
 describe("room net hub", () => {
-  it.each([undefined, 1, 99])("rejects incompatible join rules %s and withholds game traffic", version => {
+  it.each([undefined, 1, 2, 99])("rejects incompatible join rules %s and withholds game traffic", version => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "rules-boundary", host: hostUser, mapId: "bareDuel" });
     roomHost.startRoom(room.id);

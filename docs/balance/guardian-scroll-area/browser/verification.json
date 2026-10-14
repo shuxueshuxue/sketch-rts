@@ -1,0 +1,36 @@
+{
+  "verified": true,
+  "priorManifestSha256": "b65ad68aef5d09793b71a12e78091bf6f390f36576aa62ea65f09db41ec16a9e",
+  "priorEntriesUnchanged": 40,
+  "captures": 2,
+  "viewport": "1280x720",
+  "actualWebGL2": true,
+  "nativeTownHallModelLoaded": true,
+  "snapshotEqualApartFromGuardianRecipientsAndFieldRadius": true,
+  "simulationTicksRun": 0,
+  "drawsPerSource": 3,
+  "launcherExitCode": 1,
+  "launcherFailure": "Owned Chromium temporary-directory cleanup ENOTEMPTY after completed captures; original log retained.",
+  "artifactVerificationExitCode": 0,
+  "sourceChanged": false,
+  "glErrors": 0,
+  "browserExceptions": 0,
+  "consoleErrors": 0,
+  "networkFailures": 0,
+  "cleanup": {
+    "directory": "/workspace/guardian-webgl-sFHqCo",
+    "completed": true
+  },
+  "screenshots": [
+    {
+      "name": "before",
+      "png": "before-1280x720.png",
+      "pngSha256": "fad0327555fea7ea9e80b689f412b20aea53fa17272fed94dbc94ae1a5618981"
+    },
+    {
+      "name": "after",
+      "png": "after-1280x720.png",
+      "pngSha256": "e4be02403312f39fade53660ffe7303471c35e7a9e6f24d91cbc72ba0abfe254"
+    }
+  ]
+}

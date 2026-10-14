@@ -1,0 +1,1488 @@
+{
+  "complete": true,
+  "countsOnly": false,
+  "source": "/workspace/sketch-rts-six-player-structural-before-0f31",
+  "sourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+  "inputsPath": "/workspace/six-player-structural-runs/shore-actual-0f31/shore-inputs.jsonl.gz",
+  "storedInputSha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a",
+  "inputPayloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682",
+  "capturedEnvironmentSha256": "16f351e4de2469dfd2387cb3db3f9ae70afe9a17b7f5689f12a8c71ef587f70e",
+  "toolSha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c",
+  "sourceManifestSha256": "37f81a0840c728102938f5b72ca3ae6fd719e7e14ed9ac6224fff7aaa990f8b4",
+  "artifacts": [
+    {
+      "id": "A-timed",
+      "codeSha256": "4a016802b423b04196293d36ca52fa4d26ad11a374fb48588c4c4231c4db98fa",
+      "navalSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd",
+      "terrainSha256": "2381d4d570c95774c566876ad168140e873afb6258554c9eaa18819374a8f269"
+    },
+    {
+      "id": "B-timed",
+      "codeSha256": "22662463fa668d492be0a941c0351b054a8224de288564f7d18a54ab153f131b",
+      "navalSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871",
+      "terrainSha256": "5497926d7fb800dc4cebfabeeb2b0eb4c44cf163945b1561582f47fb4a544d3d"
+    },
+    {
+      "id": "A-counts",
+      "codeSha256": "1c669e2082c2214e3e661faeb368a2c62e4744c43f71f5b45bb859e8cb718e14",
+      "navalSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd",
+      "terrainSha256": "86dd93cd907ec3607f29120a07393a17846807c697107424392bf3a41b72cfe0"
+    },
+    {
+      "id": "B-counts",
+      "codeSha256": "4e48857c83217e0d4af905bb150d2e82556c61a280eadbeb002a2bc1e0c6229f",
+      "navalSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871",
+      "terrainSha256": "ae4679c3b81ae425bd1a41fb557256292c1722a59c7df74b037386ca406d59d4"
+    }
+  ],
+  "node": "v24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "esbuild": "0.28.0",
+  "typescript": "5.9.3",
+  "cpus": [
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5412950,
+        "nice": 0,
+        "sys": 439210,
+        "idle": 104959040,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5596760,
+        "nice": 0,
+        "sys": 442260,
+        "idle": 104765950,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5547610,
+        "nice": 0,
+        "sys": 462830,
+        "idle": 104780420,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5545320,
+        "nice": 0,
+        "sys": 448330,
+        "idle": 104813450,
+        "irq": 0
+      }
+    },
+    {
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "speed": 0,
+      "times": {
+        "user": 5645570,
+        "nice": 0,
+        "sys": 458240,
+        "idle": 104695100,
+        "irq": 0
+      }
+    }
+  ],
+  "rows": [
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "A": {
+        "count": 10,
+        "median": 11.28753000000006,
+        "p95": 17.174101000000064,
+        "p99": 17.174101000000064,
+        "max": 17.174101000000064,
+        "mean": 12.224828000000002
+      },
+      "B": {
+        "count": 10,
+        "median": 13.385555999999951,
+        "p95": 32.39265399999999,
+        "p99": 32.39265399999999,
+        "max": 32.39265399999999,
+        "mean": 17.097067599999992
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 2,
+            "median": 12.92100500000015,
+            "p95": 17.174101000000064,
+            "p99": 17.174101000000064,
+            "max": 17.174101000000064,
+            "mean": 15.047553000000107
+          },
+          "B": {
+            "count": 2,
+            "median": 18.048983000000135,
+            "p95": 32.39265399999999,
+            "p99": 32.39265399999999,
+            "max": 32.39265399999999,
+            "mean": 25.220818500000064
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 2,
+            "median": 9.480880999999954,
+            "p95": 13.029193000000078,
+            "p99": 13.029193000000078,
+            "max": 13.029193000000078,
+            "mean": 11.255037000000016
+          },
+          "B": {
+            "count": 2,
+            "median": 10.051277000000027,
+            "p95": 13.77775100000008,
+            "p99": 13.77775100000008,
+            "max": 13.77775100000008,
+            "mean": 11.914514000000054
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 2,
+            "median": 9.676236999999901,
+            "p95": 13.60997499999985,
+            "p99": 13.60997499999985,
+            "max": 13.60997499999985,
+            "mean": 11.643105999999875
+          },
+          "B": {
+            "count": 2,
+            "median": 10.536988999999949,
+            "p95": 26.49862200000007,
+            "p99": 26.49862200000007,
+            "max": 26.49862200000007,
+            "mean": 18.51780550000001
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 2,
+            "median": 9.47575299999994,
+            "p95": 16.131411999999955,
+            "p99": 16.131411999999955,
+            "max": 16.131411999999955,
+            "mean": 12.803582499999948
+          },
+          "B": {
+            "count": 2,
+            "median": 10.349163999999973,
+            "p95": 26.250908999999865,
+            "p99": 26.250908999999865,
+            "max": 26.250908999999865,
+            "mean": 18.30003649999992
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 2,
+            "median": 9.46219300000007,
+            "p95": 11.28753000000006,
+            "p99": 11.28753000000006,
+            "max": 11.28753000000006,
+            "mean": 10.374861500000065
+          },
+          "B": {
+            "count": 2,
+            "median": 9.67877099999987,
+            "p95": 13.385555999999951,
+            "p99": 13.385555999999951,
+            "max": 13.385555999999951,
+            "mean": 11.53216349999991
+          }
+        }
+      ]
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "A": {
+        "count": 10,
+        "median": 1.5451450000000477,
+        "p95": 3.3575230000001284,
+        "p99": 3.3575230000001284,
+        "max": 3.3575230000001284,
+        "mean": 1.9310351000000536
+      },
+      "B": {
+        "count": 10,
+        "median": 2.873693000000003,
+        "p95": 7.281786999999895,
+        "p99": 7.281786999999895,
+        "max": 7.281786999999895,
+        "mean": 3.5611172000000577
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 2,
+            "median": 1.4302470000000085,
+            "p95": 2.1536779999999,
+            "p99": 2.1536779999999,
+            "max": 2.1536779999999,
+            "mean": 1.7919624999999542
+          },
+          "B": {
+            "count": 2,
+            "median": 2.3349930000001677,
+            "p95": 7.281786999999895,
+            "p99": 7.281786999999895,
+            "max": 7.281786999999895,
+            "mean": 4.808390000000031
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 2,
+            "median": 1.4837659999998323,
+            "p95": 1.5451450000000477,
+            "p99": 1.5451450000000477,
+            "max": 1.5451450000000477,
+            "mean": 1.51445549999994
+          },
+          "B": {
+            "count": 2,
+            "median": 2.501777999999831,
+            "p95": 2.873693000000003,
+            "p99": 2.873693000000003,
+            "max": 2.873693000000003,
+            "mean": 2.687735499999917
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 2,
+            "median": 1.3571200000001227,
+            "p95": 1.5308640000002924,
+            "p99": 1.5308640000002924,
+            "max": 1.5308640000002924,
+            "mean": 1.4439920000002076
+          },
+          "B": {
+            "count": 2,
+            "median": 2.4793549999999414,
+            "p95": 3.1209460000000036,
+            "p99": 3.1209460000000036,
+            "max": 3.1209460000000036,
+            "mean": 2.8001504999999725
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 2,
+            "median": 1.9403339999998934,
+            "p95": 3.3575230000001284,
+            "p99": 3.3575230000001284,
+            "max": 3.3575230000001284,
+            "mean": 2.648928500000011
+          },
+          "B": {
+            "count": 2,
+            "median": 2.3099160000001575,
+            "p95": 3.0830210000003717,
+            "p99": 3.0830210000003717,
+            "max": 3.0830210000003717,
+            "mean": 2.6964685000002646
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 2,
+            "median": 1.8883880000003046,
+            "p95": 2.6232860000000073,
+            "p99": 2.6232860000000073,
+            "max": 2.6232860000000073,
+            "mean": 2.255837000000156
+          },
+          "B": {
+            "count": 2,
+            "median": 3.836264999999912,
+            "p95": 5.789418000000296,
+            "p99": 5.789418000000296,
+            "max": 5.789418000000296,
+            "mean": 4.812841500000104
+          }
+        }
+      ]
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "A": {
+        "count": 400,
+        "median": 1.2698020000002543,
+        "p95": 1.948406999999861,
+        "p99": 2.3677010000001246,
+        "max": 3.158621000000039,
+        "mean": 1.3450565550000102
+      },
+      "B": {
+        "count": 400,
+        "median": 1.2607980000002499,
+        "p95": 1.8797159999999167,
+        "p99": 2.2141660000006596,
+        "max": 3.7931409999996504,
+        "mean": 1.335306069999988
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 80,
+            "median": 1.3168700000001081,
+            "p95": 2.0486730000002353,
+            "p99": 2.677795999999944,
+            "max": 2.677795999999944,
+            "mean": 1.4055173500000193
+          },
+          "B": {
+            "count": 80,
+            "median": 1.2852539999998953,
+            "p95": 1.814089999999851,
+            "p99": 2.142051000000265,
+            "max": 2.142051000000265,
+            "mean": 1.3404953125000134
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 80,
+            "median": 1.2547100000001592,
+            "p95": 1.762724000000162,
+            "p99": 2.1013100000000122,
+            "max": 2.1013100000000122,
+            "mean": 1.3100970124999889
+          },
+          "B": {
+            "count": 80,
+            "median": 1.254109000000426,
+            "p95": 2.2086890000000494,
+            "p99": 3.7931409999996504,
+            "max": 3.7931409999996504,
+            "mean": 1.4119698125000013
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 80,
+            "median": 1.259555999999975,
+            "p95": 1.8880079999998998,
+            "p99": 3.158621000000039,
+            "max": 3.158621000000039,
+            "mean": 1.3540687375000118
+          },
+          "B": {
+            "count": 80,
+            "median": 1.2627110000003086,
+            "p95": 1.533668999999918,
+            "p99": 2.027813000000151,
+            "max": 2.027813000000151,
+            "mean": 1.3096643124999787
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 80,
+            "median": 1.2678290000003472,
+            "p95": 1.3991120000000592,
+            "p99": 2.120719000000463,
+            "max": 2.120719000000463,
+            "mean": 1.314736900000014
+          },
+          "B": {
+            "count": 80,
+            "median": 1.2277800000001662,
+            "p95": 1.9008569999996325,
+            "p99": 2.2141660000006596,
+            "max": 2.2141660000006596,
+            "mean": 1.3079968249999865
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 80,
+            "median": 1.2663470000006782,
+            "p95": 1.7782569999999396,
+            "p99": 2.1924249999992753,
+            "max": 2.1924249999992753,
+            "mean": 1.3408627750000164
+          },
+          "B": {
+            "count": 80,
+            "median": 1.259106000000429,
+            "p95": 1.442004000000452,
+            "p99": 2.1044649999994363,
+            "max": 2.1044649999994363,
+            "mean": 1.3064040874999592
+          }
+        }
+      ]
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "A": {
+        "count": 10,
+        "median": 9.703366999999844,
+        "p95": 12.978409000000056,
+        "p99": 12.978409000000056,
+        "max": 12.978409000000056,
+        "mean": 10.376404900000011
+      },
+      "B": {
+        "count": 10,
+        "median": 10.50113599999986,
+        "p95": 13.174656000000141,
+        "p99": 13.174656000000141,
+        "max": 13.174656000000141,
+        "mean": 10.668041299999981
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 2,
+            "median": 9.956597999999985,
+            "p95": 10.129292000000078,
+            "p99": 10.129292000000078,
+            "max": 10.129292000000078,
+            "mean": 10.042945000000032
+          },
+          "B": {
+            "count": 2,
+            "median": 10.50113599999986,
+            "p95": 11.457288999999946,
+            "p99": 11.457288999999946,
+            "max": 11.457288999999946,
+            "mean": 10.979212499999903
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 2,
+            "median": 9.703366999999844,
+            "p95": 12.488150000000132,
+            "p99": 12.488150000000132,
+            "max": 12.488150000000132,
+            "mean": 11.095758499999988
+          },
+          "B": {
+            "count": 2,
+            "median": 10.252531999999974,
+            "p95": 10.362112000000025,
+            "p99": 10.362112000000025,
+            "max": 10.362112000000025,
+            "mean": 10.307322
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 2,
+            "median": 9.487390000000005,
+            "p95": 10.952477999999928,
+            "p99": 10.952477999999928,
+            "max": 10.952477999999928,
+            "mean": 10.219933999999967
+          },
+          "B": {
+            "count": 2,
+            "median": 10.907412999999906,
+            "p95": 13.174656000000141,
+            "p99": 13.174656000000141,
+            "max": 13.174656000000141,
+            "mean": 12.041034500000023
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 2,
+            "median": 9.353403999999955,
+            "p95": 9.457647000000179,
+            "p99": 9.457647000000179,
+            "max": 9.457647000000179,
+            "mean": 9.405525500000067
+          },
+          "B": {
+            "count": 2,
+            "median": 10.513554999999997,
+            "p95": 11.369670999999926,
+            "p99": 11.369670999999926,
+            "max": 11.369670999999926,
+            "mean": 10.941612999999961
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 2,
+            "median": 9.257313999999951,
+            "p95": 12.978409000000056,
+            "p99": 12.978409000000056,
+            "max": 12.978409000000056,
+            "mean": 11.117861500000004
+          },
+          "B": {
+            "count": 2,
+            "median": 9.01258400000006,
+            "p95": 9.129464999999982,
+            "p99": 9.129464999999982,
+            "max": 9.129464999999982,
+            "mean": 9.071024500000021
+          }
+        }
+      ]
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "A": {
+        "count": 10,
+        "median": 1.4872799999998279,
+        "p95": 6.350760999999693,
+        "p99": 6.350760999999693,
+        "max": 6.350760999999693,
+        "mean": 2.3666298000000325
+      },
+      "B": {
+        "count": 10,
+        "median": 2.1511540000001332,
+        "p95": 5.916794999999638,
+        "p99": 5.916794999999638,
+        "max": 5.916794999999638,
+        "mean": 2.6557378000000424
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 2,
+            "median": 1.286435999999867,
+            "p95": 2.688241000000062,
+            "p99": 2.688241000000062,
+            "max": 2.688241000000062,
+            "mean": 1.9873384999999644
+          },
+          "B": {
+            "count": 2,
+            "median": 1.7847170000000006,
+            "p95": 2.179094999999961,
+            "p99": 2.179094999999961,
+            "max": 2.179094999999961,
+            "mean": 1.9819059999999808
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 2,
+            "median": 1.404649000000063,
+            "p95": 3.1525220000003173,
+            "p99": 3.1525220000003173,
+            "max": 3.1525220000003173,
+            "mean": 2.2785855000001902
+          },
+          "B": {
+            "count": 2,
+            "median": 1.8970009999998183,
+            "p95": 2.9960430000000997,
+            "p99": 2.9960430000000997,
+            "max": 2.9960430000000997,
+            "mean": 2.446521999999959
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 2,
+            "median": 1.3471650000001318,
+            "p95": 2.5276160000003074,
+            "p99": 2.5276160000003074,
+            "max": 2.5276160000003074,
+            "mean": 1.9373905000002196
+          },
+          "B": {
+            "count": 2,
+            "median": 2.1511540000001332,
+            "p95": 5.916794999999638,
+            "p99": 5.916794999999638,
+            "max": 5.916794999999638,
+            "mean": 4.033974499999886
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 2,
+            "median": 1.362177999999858,
+            "p95": 6.350760999999693,
+            "p99": 6.350760999999693,
+            "max": 6.350760999999693,
+            "mean": 3.8564694999997755
+          },
+          "B": {
+            "count": 2,
+            "median": 2.645560000000387,
+            "p95": 3.225359000000026,
+            "p99": 3.225359000000026,
+            "max": 3.225359000000026,
+            "mean": 2.9354595000002064
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 2,
+            "median": 1.4872799999998279,
+            "p95": 2.059450000000197,
+            "p99": 2.059450000000197,
+            "max": 2.059450000000197,
+            "mean": 1.7733650000000125
+          },
+          "B": {
+            "count": 2,
+            "median": 1.8741070000000946,
+            "p95": 1.8875470000002679,
+            "p99": 1.8875470000002679,
+            "max": 1.8875470000002679,
+            "mean": 1.8808270000001812
+          }
+        }
+      ]
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "A": {
+        "count": 400,
+        "median": 1.2838520000000244,
+        "p95": 2.028534999999465,
+        "p99": 2.364166999999725,
+        "max": 5.9883899999995265,
+        "mean": 1.3796204950000288
+      },
+      "B": {
+        "count": 400,
+        "median": 1.2878380000001926,
+        "p95": 2.235537999999906,
+        "p99": 2.9101769999997487,
+        "max": 5.127787999999782,
+        "mean": 1.4202707499999736
+      },
+      "groups": [
+        {
+          "group": 0,
+          "A": {
+            "count": 80,
+            "median": 1.2746790000001056,
+            "p95": 1.745198000000073,
+            "p99": 2.3298859999999877,
+            "max": 2.3298859999999877,
+            "mean": 1.3442192625000415
+          },
+          "B": {
+            "count": 80,
+            "median": 1.261670000000322,
+            "p95": 1.4115990000000238,
+            "p99": 2.0877809999997226,
+            "max": 2.0877809999997226,
+            "mean": 1.3086031875000004
+          }
+        },
+        {
+          "group": 1,
+          "A": {
+            "count": 80,
+            "median": 1.2770230000000993,
+            "p95": 1.888238999999885,
+            "p99": 2.299742000000151,
+            "max": 2.299742000000151,
+            "mean": 1.356163650000002
+          },
+          "B": {
+            "count": 80,
+            "median": 1.2717940000002272,
+            "p95": 1.5162230000000818,
+            "p99": 1.9609350000000632,
+            "max": 1.9609350000000632,
+            "mean": 1.3145810875000108
+          }
+        },
+        {
+          "group": 2,
+          "A": {
+            "count": 80,
+            "median": 1.2861059999995632,
+            "p95": 2.0708559999993668,
+            "p99": 2.6300559999999678,
+            "max": 2.6300559999999678,
+            "mean": 1.3870578374999867
+          },
+          "B": {
+            "count": 80,
+            "median": 1.2854949999991732,
+            "p95": 1.7086149999995541,
+            "p99": 5.127787999999782,
+            "max": 5.127787999999782,
+            "mean": 1.3834340374999783
+          }
+        },
+        {
+          "group": 3,
+          "A": {
+            "count": 80,
+            "median": 1.2923949999994875,
+            "p95": 1.778678000000582,
+            "p99": 5.9883899999995265,
+            "max": 5.9883899999995265,
+            "mean": 1.4061173125000437
+          },
+          "B": {
+            "count": 80,
+            "median": 1.3127150000000256,
+            "p95": 2.3460299999997005,
+            "p99": 3.6066680000003544,
+            "max": 3.6066680000003544,
+            "mean": 1.515807749999908
+          }
+        },
+        {
+          "group": 4,
+          "A": {
+            "count": 80,
+            "median": 1.3013479999999618,
+            "p95": 2.157933999999841,
+            "p99": 2.3728790000004665,
+            "max": 2.3728790000004665,
+            "mean": 1.40454441250007
+          },
+          "B": {
+            "count": 80,
+            "median": 1.3326139999999214,
+            "p95": 2.308513999999377,
+            "p99": 3.6814580000000205,
+            "max": 3.6814580000000205,
+            "mean": 1.57892768749997
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 6,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 2,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 1,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "variant": "A",
+      "counts": {
+        "walking": 10555,
+        "walkingBlocked": 2484,
+        "exactField": 8071,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "state": "all-warm",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 0,
+        "factory": 1,
+        "multiQuery": 25,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":6160,\"y\":1392}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 6,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 2,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "old-fields-warm-multi-cold",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 1,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 1
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "variant": "A",
+      "counts": {
+        "walking": 10540,
+        "walkingBlocked": 2484,
+        "exactField": 8056,
+        "grow": 0,
+        "factory": 0,
+        "multiQuery": 0,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "state": "all-warm",
+      "variant": "B",
+      "counts": {
+        "walking": 10430,
+        "walkingBlocked": 2484,
+        "exactField": 7946,
+        "grow": 0,
+        "factory": 1,
+        "multiQuery": 22,
+        "multiBuild": 0
+      },
+      "facts": {
+        "shores": 10430,
+        "landWalkableCenters": 7946,
+        "invalidLandCenters": 2484,
+        "ours": [
+          {
+            "id": "building-enemy-townhall",
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "theirs": [
+          {
+            "id": "building-player-townhall",
+            "x": 8496,
+            "y": 3632
+          },
+          {
+            "id": "building-enemy2-townhall",
+            "x": 4720,
+            "y": 8784
+          },
+          {
+            "id": "building-player-4-townhall",
+            "x": 1744,
+            "y": 6608
+          },
+          {
+            "id": "building-player-5-townhall",
+            "x": 2160,
+            "y": 2928
+          },
+          {
+            "id": "building-player-6-townhall",
+            "x": 5520,
+            "y": 1456
+          }
+        ]
+      },
+      "resultBytes": "{\"x\":7408,\"y\":7312}"
+    }
+  ],
+  "expectedResultBytes": [
+    "{\"x\":6160,\"y\":1392}",
+    "{\"x\":7408,\"y\":7312}"
+  ],
+  "trials": 120,
+  "totalMeasuredCalls": 1680,
+  "method": {
+    "groups": 5,
+    "order": "ABBA",
+    "completeFunction": "Actual entire original shoreSpot vs same function with only theirs using lazy 5/7 source-set field. Ours retains original gapOf/map/spread and walkingDistance queries.",
+    "cold": "Independent fresh module/runtime in every slot; first complete function call, including native terrain/shore/single fields and any candidate multi build.",
+    "oldWarmNewCold": "Original full shoreSpot prewarms the same module runtime once outside timer. Candidate multi source-set field is still absent on timed call.",
+    "warm": "Original and candidate complete functions prewarm outside timer; then forty full calls timed individually.",
+    "counts": "Separate counting bundles and invocations. No per-query counters/timers occur in the measured bundles.",
+    "candidateScope": "Scratch only. Private actual grow is reused, sorted valid source cells, scalar min only, owned field not in state.fields/spare pool. Fields persist only in this scratch module for these fixed measured source sets; no production API/cache is proposed.",
+    "limits": "Two captured real inputs; isolated native Node function timing, not a full tick/browser comparison or proof of the main-thread budget. No forced GC; GC/scheduling can enter measured outliers. Build/load/input serialization/assertions/output excluded from each call timer."
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "fileNames": [
+    "A-counts-naval.ts.gz",
+    "A-counts-terrain.ts.gz",
+    "A-counts.cjs.gz",
+    "A-timed-naval.ts.gz",
+    "A-timed-terrain.ts.gz",
+    "A-timed.cjs.gz",
+    "B-counts-naval.ts.gz",
+    "B-counts-terrain.ts.gz",
+    "B-counts.cjs.gz",
+    "B-timed-naval.ts.gz",
+    "B-timed-terrain.ts.gz",
+    "B-timed.cjs.gz",
+    "captured-inputs.jsonl.gz",
+    "experiment-source.ts",
+    "report.json",
+    "source-inputs.json.gz",
+    "source-manifest.json",
+    "summary.json",
+    "trials.json.gz"
+  ],
+  "assets": [
+    {
+      "name": "A-counts-naval.ts.gz",
+      "bytes": 22950,
+      "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+    },
+    {
+      "name": "A-counts-terrain.ts.gz",
+      "bytes": 20990,
+      "sha256": "68f06b3874e2848dbbab5a882630a5e8cd0cad79ba5a5956872b9af5c9f3264e"
+    },
+    {
+      "name": "A-counts.cjs.gz",
+      "bytes": 68772,
+      "sha256": "69cae2db89f0c5e2aee957969e82572b9cd8862e4148ee83065fc70de10d590f"
+    },
+    {
+      "name": "A-timed-naval.ts.gz",
+      "bytes": 22950,
+      "sha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874"
+    },
+    {
+      "name": "A-timed-terrain.ts.gz",
+      "bytes": 20950,
+      "sha256": "4dd1a8c8463e99d4c41e80daf4d1230c3deda3a0ba3ac3178c7fe252cb4855f9"
+    },
+    {
+      "name": "A-timed.cjs.gz",
+      "bytes": 68729,
+      "sha256": "4a90bdabbd4e12b10c435be18e56e84930e2c012c7dd9ad5b192e7dd19f158d5"
+    },
+    {
+      "name": "B-counts-naval.ts.gz",
+      "bytes": 22991,
+      "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+    },
+    {
+      "name": "B-counts-terrain.ts.gz",
+      "bytes": 21349,
+      "sha256": "4041c7035b13320cef4e90ab70d6b41ff39d4aecb8f858897401e413ea1f4f44"
+    },
+    {
+      "name": "B-counts.cjs.gz",
+      "bytes": 69074,
+      "sha256": "af782346e121aa3d7db9ae66503085dbbc8395d25d3588848a0177f489002397"
+    },
+    {
+      "name": "B-timed-naval.ts.gz",
+      "bytes": 22991,
+      "sha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f"
+    },
+    {
+      "name": "B-timed-terrain.ts.gz",
+      "bytes": 21288,
+      "sha256": "6f821748f8160f9f08f94b658ff047b0b999c2f688c2feef6883c3ac87683d54"
+    },
+    {
+      "name": "B-timed.cjs.gz",
+      "bytes": 69011,
+      "sha256": "a98a79d8303bfa8c18e980b589a1f1e303b52c7419437b473a02195360119f7e"
+    },
+    {
+      "name": "captured-inputs.jsonl.gz",
+      "bytes": 40325,
+      "sha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a"
+    },
+    {
+      "name": "experiment-source.ts",
+      "bytes": 16947,
+      "sha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    },
+    {
+      "name": "report.json",
+      "bytes": 18307,
+      "sha256": "8042df72381c44c3b3fc25615b9266cb44e52973be3da4fc1707a844c055b4a4"
+    },
+    {
+      "name": "source-inputs.json.gz",
+      "bytes": 419572,
+      "sha256": "c9906e955ad839eb7e4eb1e04663d7107512a792ab9b13b39abfc6498e2714e6"
+    },
+    {
+      "name": "source-manifest.json",
+      "bytes": 19521,
+      "sha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+    },
+    {
+      "name": "summary.json",
+      "bytes": 39298,
+      "sha256": "af15246ace541de73d4ef97c0971c2bf098525083c6f86502df382f7332b39c3"
+    },
+    {
+      "name": "trials.json.gz",
+      "bytes": 11955,
+      "sha256": "e0d88215892d3f178942ad83ac9125eb35dd0cecce840f15540b6123626592e4"
+    }
+  ],
+  "excludedDependencyLink": "node_modules"
+}

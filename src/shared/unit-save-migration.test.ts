@@ -75,8 +75,9 @@ describe('canonical save import', () => {
     }
   });
 
-  it('rejects retired kinds stamped current and unknown rules versions', () => {
+  it.each([2, RULES_VERSION])('rejects retired kinds stamped rules %s and unknown rules versions', rulesVersion => {
     const { save, unit } = fixture();
+    save.rulesVersion = rulesVersion;
     Object.assign(save.snapshot.units.find(candidate => candidate.id === unit.id)!, { kind: 'pyreCaller' });
     expect(() => assertCanonicalSavedKinds(save.snapshot)).toThrow('Unknown saved');
     expect(() => restoreGameFromSave(save)).toThrow('Unknown saved');
@@ -86,7 +87,7 @@ describe('canonical save import', () => {
 });
 
 describe('replay rules boundary', () => {
-  it.each([undefined, 1, 99])('rejects trace rules %s before choosing an otherwise valid checkpoint', version => {
+  it.each([undefined, 1, 2, 99])('rejects trace rules %s before choosing an otherwise valid checkpoint', version => {
     const { save, game } = fixture();
     const trace = createDebugReplayTrace({ id: 'replay', initialSave: save });
     recordReplayCheckpoint(trace, game);

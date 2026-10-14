@@ -8,6 +8,7 @@ import { navalBudgetReserve } from "./naval";
 import { shopErrandCost } from "./v9/shop";
 import { SHIP_WEAPONS } from "../../shared/ship-equipment";
 import { withAiGoldBudget } from './snapshot';
+import { planCombatReadiness, readinessUnitIds, withCombatReadinessReuse } from "./combat-readiness";
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
@@ -17,6 +18,12 @@ export type ScriptRunnerOptions = {
 export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: PresetAiPolicyOptions = {}, runnerOptions: ScriptRunnerOptions = {}): AiCommandEntry[] {
   if (!snapshot.players[owner] || snapshot.match.winner) return [];
   const policyOptions: AiPolicyContext = { ...options, memory: options.memory ?? createAiPolicyMemory() };
+  const run = () => runScriptsWithContext(snapshot, owner, scripts, policyOptions, runnerOptions);
+  return scripts.some(script => script.run === planCombatReadiness || script.claimsUnits === readinessUnitIds)
+    ? withCombatReadinessReuse(policyOptions, run) : run();
+}
+
+function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], policyOptions: AiPolicyContext, runnerOptions: ScriptRunnerOptions): AiCommandEntry[] {
   const preserveHireCampClaims = isV5HybridPolicy(policyOptions) || policyOptions.version === "v5";
   const preserveSkirmishRetreatClaims = (policyOptions.requestedVersion ?? policyOptions.version) === "v2";
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);

@@ -1,11 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { issuePlayerCommand, snapshotGame } from "../../shared/sim";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import { sketchScene } from "../../sdk/scene";
 import { runAiCommandEntriesFromScripts } from "./script-runner";
-import type { AiScript } from "./types";
+import type { AiPolicyContext, AiScript } from "./types";
 import { aiSnapshotQuery } from "./snapshot";
 import { createAiPolicyMemory } from "../memory";
+import * as naval from "../../shared/naval";
+import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("AI script runner", () => {
   function tacticalScene() {
@@ -262,4 +266,94 @@ describe("AI script runner", () => {
     expect(game.buildings.some(building => building.x === 1500)).toBe(false);
   });
 
+});
+
+describe("script runner readiness scope", () => {
+  const readiness: AiScript = { id: "readiness", phase: "tactics", run: planCombatReadiness, claimsUnits: readinessUnitIds };
+  function frame() {
+    const game = sketchScene("readiness-runner-scope").map("bareDuel").replaceDefaults()
+      .player("us", { race: "grove" }).player("enemy", { race: "ember" }).playerState("us", { gold: 1000 })
+      .townHall("us", 300, 300).townHall("enemy", 3400, 3400)
+      .unit("us", "archer", 1000, 1000, { id: "shooter" })
+      .unit("enemy", "footman", 1430, 1000, { id: "foe" })
+      .worker("us", 500, 500, { id: "builder" }).build().createGame();
+    const memory = createAiPolicyMemory();
+    memory.v6 = { general: { mode: "guard", target: { x: 1000, y: 1000 } } };
+    return { snapshot: snapshotGame(game), memory };
+  }
+
+  it("reuses claims for the real readiness script without changing bookkeeping", () => {
+    const { snapshot, memory } = frame(), before = structuredClone(snapshot);
+    const reach = vi.spyOn(naval, "canReach");
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", [readiness], { version: "v7", memory })).toEqual([
+      { scriptId: "readiness", command: { type: "aim", unitIds: ["shooter"], x: 1271.32, y: 1000 } },
+    ]);
+    expect(reach).toHaveBeenCalledTimes(1);
+    expect(snapshot).toEqual(before);
+  });
+
+  it("uses memory changed by an earlier tactics script while preserving earlier claims", () => {
+    const { snapshot, memory } = frame();
+    const scripts: AiScript[] = [
+      { id: "changeGeneral", phase: "tactics", run: (_frame, _owner, context) => {
+        context.memory.v6!.general!.mode = "attack";
+        return undefined;
+      } },
+      readiness,
+      { id: "later", phase: "tactics", run: () => ({ type: "move", unitIds: ["shooter"], x: 1500, y: 1500 }) },
+    ];
+    // Claims are still computed before the general change, exactly as before.
+    // Readiness now emits no aim, and its earlier claim still excludes `later`.
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", scripts, { version: "v7", memory })).toEqual([]);
+    expect(memory.v6!.general!.mode).toBe("attack");
+  });
+
+  it("uses memory changed by a later claims callback before readiness executes", () => {
+    const { snapshot, memory } = frame();
+    const scripts: AiScript[] = [readiness, {
+      id: "laterClaims", phase: "tactics", run: () => undefined,
+      claimsUnits: (_frame, _owner, context) => {
+        context.memory.v6!.general!.target!.x = 1300;
+        return new Set();
+      },
+    }];
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", scripts, { version: "v7", memory })).toEqual([]);
+    expect(memory.v6!.general!.target!.x).toBe(1300);
+  });
+
+  it("keeps an economy budget distinct from the original claims snapshot", () => {
+    const { snapshot, memory } = frame();
+    snapshot.units.find(unit => unit.id === "builder")!.order = { type: "build", buildingKind: "farm", x: 1300, y: 1500 };
+    const reach = vi.spyOn(naval, "canReach");
+    const observed: typeof snapshot[] = [];
+    const scripts: AiScript[] = [
+      { id: "inspectBudget", phase: "economy", run: frame => { observed.push(frame); return undefined; } },
+      { ...readiness, phase: "economy" },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", scripts, { version: "v7", memory })).toEqual([
+      { scriptId: "readiness", command: { type: "aim", unitIds: ["shooter"], x: 1271.32, y: 1000 } },
+    ]);
+    expect(observed[0]).not.toBe(snapshot);
+    expect(observed[0]!.units).toBe(snapshot.units);
+    expect(observed[0]!.players.us!.gold).toBe(1000 - BUILDING_DEFS.farm.cost);
+    expect(snapshot.players.us!.gold).toBe(1000);
+    expect(reach).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts fresh on every invocation and expires a retained context", () => {
+    const { snapshot, memory } = frame();
+    let retained: AiPolicyContext | undefined;
+    const scripts: AiScript[] = [
+      { id: "retain", phase: "tactics", run: (_frame, _owner, context) => { retained = context; return undefined; } },
+      readiness,
+    ];
+    const options = { version: "v7" as const, memory };
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", scripts, options)).toHaveLength(1);
+    const firstContext = retained!;
+    snapshot.units.find(unit => unit.id === "foe")!.x = 2000;
+    expect(planCombatReadiness(snapshot, "us", firstContext)).toEqual([]);
+    expect(runAiCommandEntriesFromScripts(snapshot, "us", scripts, options)).toEqual([]);
+    expect(retained).not.toBe(firstContext);
+    expect(retained!.memory).toBe(memory);
+  });
 });

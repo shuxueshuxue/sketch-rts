@@ -1,0 +1,15 @@
+{
+  "toolFailure": "Standalone middleware module was not transformed by Vite, so added bare three import could not resolve. No painter/candidate code ran; retry uses explicit Vite source URL.",
+  "sourceChecks": {
+    "baseline": {
+      "unchanged": true,
+      "diffs": [],
+      "filesChecked": 1175
+    },
+    "candidate": {
+      "unchanged": true,
+      "diffs": [],
+      "filesChecked": 1176
+    }
+  }
+}

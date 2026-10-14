@@ -1,0 +1,544 @@
+{
+  "complete": true,
+  "candidateDecision": "rejected",
+  "strictTypecheckExitCode": 0,
+  "runVerification": [
+    {
+      "directory": "run1",
+      "assets": 19,
+      "measuredCalls": 1680,
+      "sourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    },
+    {
+      "directory": "run2",
+      "assets": 19,
+      "measuredCalls": 1680,
+      "sourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    },
+    {
+      "directory": "counts-boundaries",
+      "assets": 19,
+      "measuredCalls": 0,
+      "sourceHead": "0f31f16c32e9a8050180c4da9d993eb7bf86cad0",
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    }
+  ],
+  "exactFileNames": [
+    "README.md",
+    "closure-verification.json",
+    "counts-boundaries-first.log",
+    "counts-boundaries/A-counts-naval.ts.gz",
+    "counts-boundaries/A-counts-terrain.ts.gz",
+    "counts-boundaries/A-counts.cjs.gz",
+    "counts-boundaries/A-timed-naval.ts.gz",
+    "counts-boundaries/A-timed-terrain.ts.gz",
+    "counts-boundaries/A-timed.cjs.gz",
+    "counts-boundaries/B-counts-naval.ts.gz",
+    "counts-boundaries/B-counts-terrain.ts.gz",
+    "counts-boundaries/B-counts.cjs.gz",
+    "counts-boundaries/B-timed-naval.ts.gz",
+    "counts-boundaries/B-timed-terrain.ts.gz",
+    "counts-boundaries/B-timed.cjs.gz",
+    "counts-boundaries/captured-inputs.jsonl.gz",
+    "counts-boundaries/closed-manifest.json",
+    "counts-boundaries/experiment-source.ts",
+    "counts-boundaries/report.json",
+    "counts-boundaries/source-inputs.json.gz",
+    "counts-boundaries/source-manifest.json",
+    "counts-boundaries/summary.json",
+    "counts-boundaries/trials.json.gz",
+    "first-run.log",
+    "package.json",
+    "run1/A-counts-naval.ts.gz",
+    "run1/A-counts-terrain.ts.gz",
+    "run1/A-counts.cjs.gz",
+    "run1/A-timed-naval.ts.gz",
+    "run1/A-timed-terrain.ts.gz",
+    "run1/A-timed.cjs.gz",
+    "run1/B-counts-naval.ts.gz",
+    "run1/B-counts-terrain.ts.gz",
+    "run1/B-counts.cjs.gz",
+    "run1/B-timed-naval.ts.gz",
+    "run1/B-timed-terrain.ts.gz",
+    "run1/B-timed.cjs.gz",
+    "run1/captured-inputs.jsonl.gz",
+    "run1/closed-manifest.json",
+    "run1/experiment-source.ts",
+    "run1/report.json",
+    "run1/source-inputs.json.gz",
+    "run1/source-manifest.json",
+    "run1/summary.json",
+    "run1/trials.json.gz",
+    "run2/A-counts-naval.ts.gz",
+    "run2/A-counts-terrain.ts.gz",
+    "run2/A-counts.cjs.gz",
+    "run2/A-timed-naval.ts.gz",
+    "run2/A-timed-terrain.ts.gz",
+    "run2/A-timed.cjs.gz",
+    "run2/B-counts-naval.ts.gz",
+    "run2/B-counts-terrain.ts.gz",
+    "run2/B-counts.cjs.gz",
+    "run2/B-timed-naval.ts.gz",
+    "run2/B-timed-terrain.ts.gz",
+    "run2/B-timed.cjs.gz",
+    "run2/captured-inputs.jsonl.gz",
+    "run2/closed-manifest.json",
+    "run2/experiment-source.ts",
+    "run2/report.json",
+    "run2/source-inputs.json.gz",
+    "run2/source-manifest.json",
+    "run2/summary.json",
+    "run2/trials.json.gz",
+    "second-run.log",
+    "shore-experiment.ts",
+    "tsconfig.json",
+    "typecheck-final.log",
+    "typecheck-first.log"
+  ],
+  "excludedDependencyLink": "node_modules",
+  "assets": [
+    {
+      "path": "README.md",
+      "storedBytes": 6735,
+      "storedSha256": "cc4e3b2a62e0fcf2627f8937be2558c76ab7b34c92df440806e22993e898152c"
+    },
+    {
+      "path": "closure-verification.json",
+      "storedBytes": 2597,
+      "storedSha256": "a4045fd59f1b958609712bbad1fc46fffb5698adcec1b760e7dceace2155ce01"
+    },
+    {
+      "path": "counts-boundaries-first.log",
+      "storedBytes": 79,
+      "storedSha256": "1cea6a968f702c8c05287011916c311bd98cca9398ff702b660718ababc4812b"
+    },
+    {
+      "path": "counts-boundaries/A-counts-naval.ts.gz",
+      "storedBytes": 22950,
+      "storedSha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874",
+      "payloadBytes": 97360,
+      "payloadSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd"
+    },
+    {
+      "path": "counts-boundaries/A-counts-terrain.ts.gz",
+      "storedBytes": 20990,
+      "storedSha256": "68f06b3874e2848dbbab5a882630a5e8cd0cad79ba5a5956872b9af5c9f3264e",
+      "payloadBytes": 74610,
+      "payloadSha256": "86dd93cd907ec3607f29120a07393a17846807c697107424392bf3a41b72cfe0"
+    },
+    {
+      "path": "counts-boundaries/A-counts.cjs.gz",
+      "storedBytes": 68772,
+      "storedSha256": "69cae2db89f0c5e2aee957969e82572b9cd8862e4148ee83065fc70de10d590f",
+      "payloadBytes": 295994,
+      "payloadSha256": "1c669e2082c2214e3e661faeb368a2c62e4744c43f71f5b45bb859e8cb718e14"
+    },
+    {
+      "path": "counts-boundaries/A-timed-naval.ts.gz",
+      "storedBytes": 22950,
+      "storedSha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874",
+      "payloadBytes": 97360,
+      "payloadSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd"
+    },
+    {
+      "path": "counts-boundaries/A-timed-terrain.ts.gz",
+      "storedBytes": 20950,
+      "storedSha256": "4dd1a8c8463e99d4c41e80daf4d1230c3deda3a0ba3ac3178c7fe252cb4855f9",
+      "payloadBytes": 74459,
+      "payloadSha256": "2381d4d570c95774c566876ad168140e873afb6258554c9eaa18819374a8f269"
+    },
+    {
+      "path": "counts-boundaries/A-timed.cjs.gz",
+      "storedBytes": 68729,
+      "storedSha256": "4a90bdabbd4e12b10c435be18e56e84930e2c012c7dd9ad5b192e7dd19f158d5",
+      "payloadBytes": 295827,
+      "payloadSha256": "4a016802b423b04196293d36ca52fa4d26ad11a374fb48588c4c4231c4db98fa"
+    },
+    {
+      "path": "counts-boundaries/B-counts-naval.ts.gz",
+      "storedBytes": 22991,
+      "storedSha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f",
+      "payloadBytes": 97521,
+      "payloadSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871"
+    },
+    {
+      "path": "counts-boundaries/B-counts-terrain.ts.gz",
+      "storedBytes": 21349,
+      "storedSha256": "4041c7035b13320cef4e90ab70d6b41ff39d4aecb8f858897401e413ea1f4f44",
+      "payloadBytes": 75780,
+      "payloadSha256": "ae4679c3b81ae425bd1a41fb557256292c1722a59c7df74b037386ca406d59d4"
+    },
+    {
+      "path": "counts-boundaries/B-counts.cjs.gz",
+      "storedBytes": 69074,
+      "storedSha256": "af782346e121aa3d7db9ae66503085dbbc8395d25d3588848a0177f489002397",
+      "payloadBytes": 297321,
+      "payloadSha256": "4e48857c83217e0d4af905bb150d2e82556c61a280eadbeb002a2bc1e0c6229f"
+    },
+    {
+      "path": "counts-boundaries/B-timed-naval.ts.gz",
+      "storedBytes": 22991,
+      "storedSha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f",
+      "payloadBytes": 97521,
+      "payloadSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871"
+    },
+    {
+      "path": "counts-boundaries/B-timed-terrain.ts.gz",
+      "storedBytes": 21288,
+      "storedSha256": "6f821748f8160f9f08f94b658ff047b0b999c2f688c2feef6883c3ac87683d54",
+      "payloadBytes": 75521,
+      "payloadSha256": "5497926d7fb800dc4cebfabeeb2b0eb4c44cf163945b1561582f47fb4a544d3d"
+    },
+    {
+      "path": "counts-boundaries/B-timed.cjs.gz",
+      "storedBytes": 69011,
+      "storedSha256": "a98a79d8303bfa8c18e980b589a1f1e303b52c7419437b473a02195360119f7e",
+      "payloadBytes": 297029,
+      "payloadSha256": "22662463fa668d492be0a941c0351b054a8224de288564f7d18a54ab153f131b"
+    },
+    {
+      "path": "counts-boundaries/captured-inputs.jsonl.gz",
+      "storedBytes": 40325,
+      "storedSha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a",
+      "payloadBytes": 413716,
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    },
+    {
+      "path": "counts-boundaries/closed-manifest.json",
+      "storedBytes": 3507,
+      "storedSha256": "3d5bfe63f7673976e650022903091eec279e0d30a1ae991f783223027da58cca"
+    },
+    {
+      "path": "counts-boundaries/experiment-source.ts",
+      "storedBytes": 16947,
+      "storedSha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    },
+    {
+      "path": "counts-boundaries/report.json",
+      "storedBytes": 15121,
+      "storedSha256": "5925b91012f8d72f88d079405d40fb516190b0f0b918df2669346a0c07e77984"
+    },
+    {
+      "path": "counts-boundaries/source-inputs.json.gz",
+      "storedBytes": 419789,
+      "storedSha256": "23c2a1b3ee4132b4d88fcae510f2a64cda236ba46c6ad2785b999ae4a9991478",
+      "payloadBytes": 1570475,
+      "payloadSha256": "08d594e6934b02956d418f1b2ad16df694f0ec90c7edddf22a1616d1634a113a"
+    },
+    {
+      "path": "counts-boundaries/source-manifest.json",
+      "storedBytes": 19521,
+      "storedSha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+    },
+    {
+      "path": "counts-boundaries/summary.json",
+      "storedBytes": 19692,
+      "storedSha256": "6b4b0210db0dd4dff889246030176059c1993bc3f56c2b303c06f03b9038918b"
+    },
+    {
+      "path": "counts-boundaries/trials.json.gz",
+      "storedBytes": 22,
+      "storedSha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+      "payloadBytes": 2,
+      "payloadSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "first-run.log",
+      "storedBytes": 3252,
+      "storedSha256": "2f6370936e3dad83cf624a22e047ec9cb81b66693f08309979fd99a572ff4721"
+    },
+    {
+      "path": "package.json",
+      "storedBytes": 18,
+      "storedSha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
+    },
+    {
+      "path": "run1/A-counts-naval.ts.gz",
+      "storedBytes": 22895,
+      "storedSha256": "83f48c7dee1da0aa782cf2888dc0a74aae3f60af9d995e5fd56d2568303dfcb3",
+      "payloadBytes": 97160,
+      "payloadSha256": "8fbbc9b3c8935af80b355fb09da91397bc8b7d4e9c9732fd64751ca24bd05539"
+    },
+    {
+      "path": "run1/A-counts-terrain.ts.gz",
+      "storedBytes": 20957,
+      "storedSha256": "e98b5255d1745a4cad49a6178fbc43b0f3e024f74bde39dc4ef221ef002e1535",
+      "payloadBytes": 74498,
+      "payloadSha256": "36eff43158537e0c03316e47e7c1a91f84a54b7ab2b8d06258937a3c0ac42c09"
+    },
+    {
+      "path": "run1/A-counts.cjs.gz",
+      "storedBytes": 68687,
+      "storedSha256": "af3a194c4cfbc6dd3906f71ba8f5305e0278b818d80ff76d5a0cb55419db8dfd",
+      "payloadBytes": 295631,
+      "payloadSha256": "c8921a8e862663f617a7880d1bf9102956f5c34a6b77f9451b03cabf850502b8"
+    },
+    {
+      "path": "run1/A-timed-naval.ts.gz",
+      "storedBytes": 22895,
+      "storedSha256": "83f48c7dee1da0aa782cf2888dc0a74aae3f60af9d995e5fd56d2568303dfcb3",
+      "payloadBytes": 97160,
+      "payloadSha256": "8fbbc9b3c8935af80b355fb09da91397bc8b7d4e9c9732fd64751ca24bd05539"
+    },
+    {
+      "path": "run1/A-timed-terrain.ts.gz",
+      "storedBytes": 20938,
+      "storedSha256": "430b78e9ef45cbae862c24cc8bce1e89a943b2bc4f6d17e19565df8a01e1ad35",
+      "payloadBytes": 74429,
+      "payloadSha256": "376490508bef776c658529e44b419bdb8589de38c3090b92a736f570d7ac5a6c"
+    },
+    {
+      "path": "run1/A-timed.cjs.gz",
+      "storedBytes": 68662,
+      "storedSha256": "1bcb63a695564fe9b8251ccc959f75fc99dc692b42ebc13233217b7dbb39d027",
+      "payloadBytes": 295560,
+      "payloadSha256": "db56ba3ea0dc55196c3d85041f29d4ad42969ffd00c47d60c74cf1c218922372"
+    },
+    {
+      "path": "run1/B-counts-naval.ts.gz",
+      "storedBytes": 22936,
+      "storedSha256": "1968b5ad1ffb05721c3d914104fa5a5268cdbdc50b89c21ba24fa96326fbb950",
+      "payloadBytes": 97321,
+      "payloadSha256": "e1ddabcdfb51a2b6af1990bb16ea4cd557f8587f5590a1698f10890ccc4b9663"
+    },
+    {
+      "path": "run1/B-counts-terrain.ts.gz",
+      "storedBytes": 21315,
+      "storedSha256": "d2607c83c689ad4ded9706612a60f2d4785fecd0017cc3876b4029d59255f3f8",
+      "payloadBytes": 75668,
+      "payloadSha256": "71f1379ca31997fba388086b22f7f8442a3ef5c161b841f6ef0ab292f60bc042"
+    },
+    {
+      "path": "run1/B-counts.cjs.gz",
+      "storedBytes": 68994,
+      "storedSha256": "38ea7cbf9932a8cfd27bc734cdf67ba232dd73d4c16252291612b2f20b72dd19",
+      "payloadBytes": 296958,
+      "payloadSha256": "cd08fdfb829d803d7bd6e26b81cc4aaa938b957c5d2a54f2c4f1570af48294c1"
+    },
+    {
+      "path": "run1/B-timed-naval.ts.gz",
+      "storedBytes": 22936,
+      "storedSha256": "1968b5ad1ffb05721c3d914104fa5a5268cdbdc50b89c21ba24fa96326fbb950",
+      "payloadBytes": 97321,
+      "payloadSha256": "e1ddabcdfb51a2b6af1990bb16ea4cd557f8587f5590a1698f10890ccc4b9663"
+    },
+    {
+      "path": "run1/B-timed-terrain.ts.gz",
+      "storedBytes": 21278,
+      "storedSha256": "0566662cae88b48dfc0a7a9ebe8a76e3d88aaf724a5de8f6ef7d36853a155ae6",
+      "payloadBytes": 75491,
+      "payloadSha256": "49f3516310b234a8db3dc60db9271f6e504ed195f3cc957ce3727f5024ee481c"
+    },
+    {
+      "path": "run1/B-timed.cjs.gz",
+      "storedBytes": 68945,
+      "storedSha256": "4f74e3aef9710754345c0bcd55904058190d6a1795310dcf0a2b1e4cf950dc15",
+      "payloadBytes": 296762,
+      "payloadSha256": "70465bd860d7f491fd1570b434a803d8eaf4021676875d99e2b64768199abeba"
+    },
+    {
+      "path": "run1/captured-inputs.jsonl.gz",
+      "storedBytes": 40325,
+      "storedSha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a",
+      "payloadBytes": 413716,
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    },
+    {
+      "path": "run1/closed-manifest.json",
+      "storedBytes": 3510,
+      "storedSha256": "35b9eabad5e7b98174e35ccde91d0593681bb442ec713839d97fb238acc92e53"
+    },
+    {
+      "path": "run1/experiment-source.ts",
+      "storedBytes": 16069,
+      "storedSha256": "6b83dd816d951eb7aea692ab2c8ca882406a8a8e7fdaaddf15bdd006e4bff811"
+    },
+    {
+      "path": "run1/report.json",
+      "storedBytes": 16698,
+      "storedSha256": "cefdb66259a83331c725c1d148e18572997a7e6c9f0a991dabfcc21318d27e8a"
+    },
+    {
+      "path": "run1/source-inputs.json.gz",
+      "storedBytes": 418897,
+      "storedSha256": "a80d790626ba89884c37da8602a868857cde4b22f9c6d97d480a70a3026268aa",
+      "payloadBytes": 1570475,
+      "payloadSha256": "37b608cfee7671d741fdd254ff8242655e804dae9125a62a5077689add5f3b05"
+    },
+    {
+      "path": "run1/source-manifest.json",
+      "storedBytes": 19521,
+      "storedSha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+    },
+    {
+      "path": "run1/summary.json",
+      "storedBytes": 37660,
+      "storedSha256": "7af7c05f59619cc47adcd09d682ae5040a1572e931e8204a6bf45b832905e03c"
+    },
+    {
+      "path": "run1/trials.json.gz",
+      "storedBytes": 12025,
+      "storedSha256": "914f9db3ef2ad170e5602a48ab1e827eb6fe52660ed69672ec7393ddf1b6346e",
+      "payloadBytes": 49307,
+      "payloadSha256": "5f4394d941331221da5184245259d6a6bd8c6d23e8458194f34890182e0018a6"
+    },
+    {
+      "path": "run2/A-counts-naval.ts.gz",
+      "storedBytes": 22950,
+      "storedSha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874",
+      "payloadBytes": 97360,
+      "payloadSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd"
+    },
+    {
+      "path": "run2/A-counts-terrain.ts.gz",
+      "storedBytes": 20990,
+      "storedSha256": "68f06b3874e2848dbbab5a882630a5e8cd0cad79ba5a5956872b9af5c9f3264e",
+      "payloadBytes": 74610,
+      "payloadSha256": "86dd93cd907ec3607f29120a07393a17846807c697107424392bf3a41b72cfe0"
+    },
+    {
+      "path": "run2/A-counts.cjs.gz",
+      "storedBytes": 68772,
+      "storedSha256": "69cae2db89f0c5e2aee957969e82572b9cd8862e4148ee83065fc70de10d590f",
+      "payloadBytes": 295994,
+      "payloadSha256": "1c669e2082c2214e3e661faeb368a2c62e4744c43f71f5b45bb859e8cb718e14"
+    },
+    {
+      "path": "run2/A-timed-naval.ts.gz",
+      "storedBytes": 22950,
+      "storedSha256": "5473b56bfd19aabaf1999b3057d6dfcd8e3333ecc9d8ac6260dcef4bb3a6b874",
+      "payloadBytes": 97360,
+      "payloadSha256": "00c22ef820d90eac5d64790c04d2262b69d4ae8d97c4bd1178c72d788a8377bd"
+    },
+    {
+      "path": "run2/A-timed-terrain.ts.gz",
+      "storedBytes": 20950,
+      "storedSha256": "4dd1a8c8463e99d4c41e80daf4d1230c3deda3a0ba3ac3178c7fe252cb4855f9",
+      "payloadBytes": 74459,
+      "payloadSha256": "2381d4d570c95774c566876ad168140e873afb6258554c9eaa18819374a8f269"
+    },
+    {
+      "path": "run2/A-timed.cjs.gz",
+      "storedBytes": 68729,
+      "storedSha256": "4a90bdabbd4e12b10c435be18e56e84930e2c012c7dd9ad5b192e7dd19f158d5",
+      "payloadBytes": 295827,
+      "payloadSha256": "4a016802b423b04196293d36ca52fa4d26ad11a374fb48588c4c4231c4db98fa"
+    },
+    {
+      "path": "run2/B-counts-naval.ts.gz",
+      "storedBytes": 22991,
+      "storedSha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f",
+      "payloadBytes": 97521,
+      "payloadSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871"
+    },
+    {
+      "path": "run2/B-counts-terrain.ts.gz",
+      "storedBytes": 21349,
+      "storedSha256": "4041c7035b13320cef4e90ab70d6b41ff39d4aecb8f858897401e413ea1f4f44",
+      "payloadBytes": 75780,
+      "payloadSha256": "ae4679c3b81ae425bd1a41fb557256292c1722a59c7df74b037386ca406d59d4"
+    },
+    {
+      "path": "run2/B-counts.cjs.gz",
+      "storedBytes": 69074,
+      "storedSha256": "af782346e121aa3d7db9ae66503085dbbc8395d25d3588848a0177f489002397",
+      "payloadBytes": 297321,
+      "payloadSha256": "4e48857c83217e0d4af905bb150d2e82556c61a280eadbeb002a2bc1e0c6229f"
+    },
+    {
+      "path": "run2/B-timed-naval.ts.gz",
+      "storedBytes": 22991,
+      "storedSha256": "6c1cb989289e57dcc5327b7ee0e704bcb09b4efa5d8c4ad87db864c2528af54f",
+      "payloadBytes": 97521,
+      "payloadSha256": "fcf1d2d569e18535a182533e2bb51e75fee965018566ba78443b9ce4677c0871"
+    },
+    {
+      "path": "run2/B-timed-terrain.ts.gz",
+      "storedBytes": 21288,
+      "storedSha256": "6f821748f8160f9f08f94b658ff047b0b999c2f688c2feef6883c3ac87683d54",
+      "payloadBytes": 75521,
+      "payloadSha256": "5497926d7fb800dc4cebfabeeb2b0eb4c44cf163945b1561582f47fb4a544d3d"
+    },
+    {
+      "path": "run2/B-timed.cjs.gz",
+      "storedBytes": 69011,
+      "storedSha256": "a98a79d8303bfa8c18e980b589a1f1e303b52c7419437b473a02195360119f7e",
+      "payloadBytes": 297029,
+      "payloadSha256": "22662463fa668d492be0a941c0351b054a8224de288564f7d18a54ab153f131b"
+    },
+    {
+      "path": "run2/captured-inputs.jsonl.gz",
+      "storedBytes": 40325,
+      "storedSha256": "53f53d7b594f6835e1a8c268c0a74879be7417ec44a0f4880d1d788200052e2a",
+      "payloadBytes": 413716,
+      "payloadSha256": "7328e4441d9e5f09ebc620f3a92ee629106a7c8c89b5d950beda6f434a8a7682"
+    },
+    {
+      "path": "run2/closed-manifest.json",
+      "storedBytes": 3510,
+      "storedSha256": "9e2d025e06ed21d61fda91208243a0be18902b3d82a702caacb04e08dbb17282"
+    },
+    {
+      "path": "run2/experiment-source.ts",
+      "storedBytes": 16947,
+      "storedSha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    },
+    {
+      "path": "run2/report.json",
+      "storedBytes": 18307,
+      "storedSha256": "8042df72381c44c3b3fc25615b9266cb44e52973be3da4fc1707a844c055b4a4"
+    },
+    {
+      "path": "run2/source-inputs.json.gz",
+      "storedBytes": 419572,
+      "storedSha256": "c9906e955ad839eb7e4eb1e04663d7107512a792ab9b13b39abfc6498e2714e6",
+      "payloadBytes": 1570475,
+      "payloadSha256": "c863a937c15583d5d6c21b1cf4d9c9bd95f2b263547593fe82436ba26adeace9"
+    },
+    {
+      "path": "run2/source-manifest.json",
+      "storedBytes": 19521,
+      "storedSha256": "9fb1552ee2a5997a9bdf713c2b53f27a6fdab9b2492af8bcf9a2481e86e2a849"
+    },
+    {
+      "path": "run2/summary.json",
+      "storedBytes": 39298,
+      "storedSha256": "af15246ace541de73d4ef97c0971c2bf098525083c6f86502df382f7332b39c3"
+    },
+    {
+      "path": "run2/trials.json.gz",
+      "storedBytes": 11955,
+      "storedSha256": "e0d88215892d3f178942ad83ac9125eb35dd0cecce840f15540b6123626592e4",
+      "payloadBytes": 49347,
+      "payloadSha256": "3acd80c8d78800798c3fae823c91a10015e7cc681f7cdc855a204a2cce79dfb4"
+    },
+    {
+      "path": "second-run.log",
+      "storedBytes": 3265,
+      "storedSha256": "d130cdaf666ae0104cb6f0795daf444faf21f7b558f607348b5938a92bb5c80d"
+    },
+    {
+      "path": "shore-experiment.ts",
+      "storedBytes": 16947,
+      "storedSha256": "2d05c7c6d2f8eb98bb314e52cf94b76031f81e534eee9144de7f5359cfed156c"
+    },
+    {
+      "path": "tsconfig.json",
+      "storedBytes": 461,
+      "storedSha256": "9dbed7bb19673760a0fdb87031fb2339375683a8d1c0f87673621b2c986b2f31"
+    },
+    {
+      "path": "typecheck-final.log",
+      "storedBytes": 208,
+      "storedSha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    {
+      "path": "typecheck-first.log",
+      "storedBytes": 208,
+      "storedSha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    }
+  ],
+  "closureVerification": "closure-verification.json"
+}

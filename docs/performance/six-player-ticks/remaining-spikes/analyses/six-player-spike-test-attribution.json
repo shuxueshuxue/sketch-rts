@@ -1,0 +1,40 @@
+{
+  "sourceHead": "09e4d3c22577e590647556785d469ebff8c581b1",
+  "fullSuite": {
+    "exitCode": 1,
+    "filesPassed": 623,
+    "filesFailed": 3,
+    "testsPassed": 6795,
+    "testsFailed": 4,
+    "testsTotal": 6799,
+    "durationSeconds": 408.22,
+    "rawLogSha256": "87e27c9ba63f6371d9ba9b8f0de920685cbd0c770175d712892bbdc04d15bb19"
+  },
+  "oldAttributionSha256": "01e4e168b12e622b36fb9e7dde4a38a571783a29718403ac69b2d3b8f039f1e1",
+  "sameFailureNamesAndAssertionMessages": true,
+  "unmodifiedFailingSpecSha256": {
+    "src/shared/ship-maneuver-recovery.test.ts": "bf96ce7fbbf11e6cf14a7afed2a4fa927e35f6ffedf4ce001121895ff1df0baa",
+    "src/shared/ship-voyage-quality.test.ts": "e596f5b1dc05ece83e0a4d9deb8c87f4a5827931e24fa0a072b967ca23641588",
+    "src/shared/ship-voyage.test.ts": "65138d9d9f296585d0dfe8ba2b4ff82cbc24b5a7811132c6d1b0f984aa2af582"
+  },
+  "failures": [
+    {
+      "case": " src/shared/ship-maneuver-recovery.test.ts > live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+      "assertion": "AssertionError: expected [ { x: 6279.04768839752, \u2026(3) }, \u2026(1) ] to have a length of 1 but got 2"
+    },
+    {
+      "case": " src/shared/ship-voyage-quality.test.ts > observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+      "assertion": "AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []"
+    },
+    {
+      "case": " src/shared/ship-voyage.test.ts > forward voyage planning > backs less than one hull length into an aligned berth without two U-turns",
+      "assertion": "AssertionError: expected 0 to be greater than 0"
+    },
+    {
+      "case": " src/shared/ship-voyage.test.ts > forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it",
+      "assertion": "AssertionError: expected false to be true // Object.is equality"
+    }
+  ],
+  "comparisonMethod": "Compare actual FAIL testcase names after stripping display whitespace, assertion messages verbatim, and complete failing spec bytes against the published original baseline attribution. No test output altered.",
+  "interpretation": "Same four assertion failures and unchanged spec bytes as the published original full run and its a052 baseline reproduction. No new failures in the full suite. This does not prove the tests are incorrect; navigation acceptance behavior remains unresolved. No assertions were reduced."
+}

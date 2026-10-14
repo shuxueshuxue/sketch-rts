@@ -1,0 +1,1163 @@
+{
+  "schema": 1,
+  "roomId": "six-player-perf-512",
+  "mapId": "sapphireArchipelago",
+  "ticks": 2110,
+  "finalTick": 2110,
+  "winner": null,
+  "rulesVersion": 2,
+  "checksumVersion": 18,
+  "finalChecksum": "7a73a658",
+  "commandLogSha256": "acd47bbc31b5480319a69bf4b1c6a10ac4c6c624e003b49e54bc0682fdea60be",
+  "commandLogBytes": 68005,
+  "frames": 2110,
+  "nonEmptyFrames": 33,
+  "initial": {
+    "units": 48,
+    "buildings": 6,
+    "races": {
+      "player": "grove",
+      "enemy": "grove",
+      "enemy2": "ember",
+      "player-4": "grove",
+      "player-5": "ember",
+      "player-6": "grove"
+    }
+  },
+  "final": {
+    "units": 68,
+    "buildings": 21
+  },
+  "timing": {
+    "wholeMs": {
+      "count": 2110,
+      "median": 0.06761999999980617,
+      "p95": 4.644403999999668,
+      "p99": 14.5041369999999,
+      "max": 91.531297,
+      "mean": 0.8477127156398143,
+      "over16": 17,
+      "over50": 1
+    },
+    "frameMs": {
+      "count": 2110,
+      "median": 0.06684899999982008,
+      "p95": 4.642790999999761,
+      "p99": 14.500451999999768,
+      "max": 91.43694899999991,
+      "mean": 0.8463064545023665,
+      "over16": 17,
+      "over50": 1
+    },
+    "simMs": {
+      "count": 2110,
+      "median": 0.06437500000038199,
+      "p95": 0.972747000000254,
+      "p99": 11.748214999999618,
+      "max": 43.89236000000028,
+      "mean": 0.43206025355449684,
+      "over16": 11,
+      "over50": 0
+    },
+    "aiMs": {
+      "count": 2110,
+      "median": 0.0004909999997835257,
+      "p95": 3.3700940000003357,
+      "p99": 6.405767000000196,
+      "max": 78.41279299999997,
+      "mean": 0.40486870284360693,
+      "over16": 5,
+      "over50": 1
+    },
+    "aiSnapshotMs": {
+      "count": 2110,
+      "median": 0,
+      "p95": 0.019478000000162865,
+      "p99": 0.044315000000096916,
+      "max": 0.11202499999990323,
+      "mean": 0.0019106592417061422,
+      "over16": 0,
+      "over50": 0
+    },
+    "otherSnapshotMs": {
+      "count": 2110,
+      "median": 0.02248299999973824,
+      "p95": 0.08058899999969071,
+      "p99": 0.11875400000008085,
+      "max": 0.19942300000002433,
+      "mean": 0.034192827014213126,
+      "over16": 0,
+      "over50": 0
+    },
+    "renderSnapshotMs": {
+      "count": 2110,
+      "median": 0.02284300000019357,
+      "p95": 0.082061000000067,
+      "p99": 0.11998599999969883,
+      "max": 0.2007939999998598,
+      "mean": 0.03492659336492616,
+      "over16": 0,
+      "over50": 0
+    },
+    "observerMs": {
+      "count": 2110,
+      "median": 0.0017319999997198465,
+      "p95": 0.00902300000007017,
+      "p99": 0.02306399999997666,
+      "max": 0.17953299999999217,
+      "mean": 0.0034547360189502306,
+      "over16": 0,
+      "over50": 0
+    }
+  },
+  "ownerStats": [
+    {
+      "owner": "enemy",
+      "version": "v9_archer",
+      "count": 141,
+      "median": 0.9358429999997497,
+      "p95": 3.511081000000104,
+      "p99": 10.928162000000157,
+      "max": 51.49682599999983,
+      "mean": 1.6382429858155987,
+      "over16": 1,
+      "over50": 1
+    },
+    {
+      "owner": "enemy2",
+      "version": "v9_archer",
+      "count": 141,
+      "median": 0.795046000000184,
+      "p95": 2.5265459999998257,
+      "p99": 5.065910999999915,
+      "max": 7.315262000000075,
+      "mean": 1.0550696028368836,
+      "over16": 0,
+      "over50": 0
+    },
+    {
+      "owner": "player-4",
+      "version": "v9_knight",
+      "count": 141,
+      "median": 0.7699090000000979,
+      "p95": 3.0318680000000313,
+      "p99": 6.508737999999994,
+      "max": 8.933185000000094,
+      "mean": 1.0854139219858074,
+      "over16": 0,
+      "over50": 0
+    },
+    {
+      "owner": "player-5",
+      "version": "v9_summoner",
+      "count": 141,
+      "median": 0.8307979999999588,
+      "p95": 2.6048509999995986,
+      "p99": 5.494480999999951,
+      "max": 7.7338850000001,
+      "mean": 1.1044807446808604,
+      "over16": 0,
+      "over50": 0
+    },
+    {
+      "owner": "player-6",
+      "version": "v9_knight",
+      "count": 141,
+      "median": 0.7601949999998396,
+      "p95": 3.59958000000006,
+      "p99": 5.0229089999998,
+      "max": 8.734482999999955,
+      "mean": 1.1143376382978822,
+      "over16": 0,
+      "over50": 0
+    }
+  ],
+  "planningTicks": {
+    "count": 141,
+    "whole": {
+      "count": 141,
+      "median": 4.728196000000025,
+      "p95": 15.817825000000084,
+      "p99": 41.52490200000011,
+      "max": 91.531297,
+      "mean": 6.863405787234042,
+      "over16": 7,
+      "over50": 1
+    },
+    "allOnMod15Zero": true,
+    "allFiveOwners": true
+  },
+  "top25": [
+    {
+      "tick": 0,
+      "tickAfter": 1,
+      "mod15": 0,
+      "wholeMs": 91.531297,
+      "frameMs": 91.43694899999991,
+      "simMs": 8.976879000000054,
+      "aiMs": 78.41279299999997,
+      "aiSnapshotMs": 0.11202499999990323,
+      "otherSnapshotMs": 0.1467849999999089,
+      "renderSnapshotMs": 0.17239300000005642,
+      "observerMs": 0.1157900000000609,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 51.49682599999983
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 7.315262000000075
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 8.933185000000094
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 5.494480999999951
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 4.670311999999967
+        }
+      ],
+      "units": 48,
+      "buildings": 6,
+      "memory": {
+        "rss": 344543232,
+        "heapTotal": 200196096,
+        "heapUsed": 79293032,
+        "external": 113706906,
+        "arrayBuffers": 97542631
+      }
+    },
+    {
+      "tick": 1859,
+      "tickAfter": 1860,
+      "mod15": 14,
+      "wholeMs": 43.91093799999999,
+      "frameMs": 43.89522500000021,
+      "simMs": 43.89236000000028,
+      "aiMs": 0.0002600000002530578,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.17816099999981816,
+      "renderSnapshotMs": 0.18045399999982692,
+      "observerMs": 0.014811999999892578,
+      "ownerPlans": [],
+      "units": 65,
+      "buildings": 21
+    },
+    {
+      "tick": 1875,
+      "tickAfter": 1876,
+      "mod15": 0,
+      "wholeMs": 41.52490200000011,
+      "frameMs": 41.52114699999993,
+      "simMs": 33.662788999999975,
+      "aiMs": 7.597044000000096,
+      "aiSnapshotMs": 0.048901999999998225,
+      "otherSnapshotMs": 0.13903399999981048,
+      "renderSnapshotMs": 0.14213900000004287,
+      "observerMs": 0.023083999999926164,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 1.5927469999996902
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 1.4317399999999907
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 1.0740160000000287
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 1.936631000000034
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 1.4713879999999335
+        }
+      ],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 15,
+      "tickAfter": 16,
+      "mod15": 0,
+      "wholeMs": 40.632658999999876,
+      "frameMs": 40.59175800000003,
+      "simMs": 0.965195999999878,
+      "aiMs": 38.44132300000001,
+      "aiSnapshotMs": 0.01555200000007062,
+      "otherSnapshotMs": 0.08249099999989085,
+      "renderSnapshotMs": 0.11262499999997999,
+      "observerMs": 0.048011000000087733,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 10.928162000000157
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 4.37533899999994
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 6.508737999999994
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 7.7338850000001
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 8.734482999999955
+        }
+      ],
+      "units": 48,
+      "buildings": 6
+    },
+    {
+      "tick": 1860,
+      "tickAfter": 1861,
+      "mod15": 0,
+      "wholeMs": 35.001888000000235,
+      "frameMs": 34.993015000000014,
+      "simMs": 12.771706999999878,
+      "aiMs": 14.997561000000132,
+      "aiSnapshotMs": 0.05605199999990873,
+      "otherSnapshotMs": 0.14410099999986414,
+      "renderSnapshotMs": 0.14680500000031316,
+      "observerMs": 0.02175200000010591,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 3.3507549999999355
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 1.3788620000000265
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 4.289522999999917
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 1.2648250000002008
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 4.585867000000235
+        }
+      ],
+      "units": 65,
+      "buildings": 21
+    },
+    {
+      "tick": 30,
+      "tickAfter": 31,
+      "mod15": 0,
+      "wholeMs": 31.830034999999953,
+      "frameMs": 31.826770000000124,
+      "simMs": 8.211677000000009,
+      "aiMs": 23.47661999999991,
+      "aiSnapshotMs": 0.03961799999979121,
+      "otherSnapshotMs": 0.06441400000016984,
+      "renderSnapshotMs": 0.0677290000000994,
+      "observerMs": 0.0352020000000266,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 5.345141000000012
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 5.065910999999915
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 5.1692129999999
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 4.821973999999955
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 2.9547950000001038
+        }
+      ],
+      "units": 48,
+      "buildings": 9
+    },
+    {
+      "tick": 194,
+      "tickAfter": 195,
+      "mod15": 14,
+      "wholeMs": 26.863328999999794,
+      "frameMs": 26.860384000000067,
+      "simMs": 26.856248999999934,
+      "aiMs": 0.0004100000001017179,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.06118000000014945,
+      "renderSnapshotMs": 0.06283299999995506,
+      "observerMs": 0.018097000000125263,
+      "ownerPlans": [],
+      "units": 53,
+      "buildings": 13
+    },
+    {
+      "tick": 31,
+      "tickAfter": 32,
+      "mod15": 1,
+      "wholeMs": 24.739933000000065,
+      "frameMs": 24.73339400000009,
+      "simMs": 24.717740999999933,
+      "aiMs": 0.0016829999999572465,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.11977600000000166,
+      "renderSnapshotMs": 0.12537399999996524,
+      "observerMs": 0.023764999999912106,
+      "ownerPlans": [],
+      "units": 48,
+      "buildings": 9
+    },
+    {
+      "tick": 985,
+      "tickAfter": 986,
+      "mod15": 10,
+      "wholeMs": 23.779385000000275,
+      "frameMs": 23.77575999999999,
+      "simMs": 23.770821999999953,
+      "aiMs": 0.0008110000003398454,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.15505799999982628,
+      "renderSnapshotMs": 0.15813200000002325,
+      "observerMs": 0.017505999999684718,
+      "ownerPlans": [],
+      "units": 63,
+      "buildings": 21
+    },
+    {
+      "tick": 45,
+      "tickAfter": 46,
+      "mod15": 0,
+      "wholeMs": 19.36608000000001,
+      "frameMs": 19.36302599999999,
+      "simMs": 0.2750539999999546,
+      "aiMs": 19.079048000000057,
+      "aiSnapshotMs": 0.017164999999977226,
+      "otherSnapshotMs": 0.03673299999991286,
+      "renderSnapshotMs": 0.03831599999989521,
+      "observerMs": 0.019948999999996886,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 4.976910999999973
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 4.415648000000147
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 3.0318680000000313
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 2.532756000000063
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 4.036011000000144
+        }
+      ],
+      "units": 48,
+      "buildings": 9
+    },
+    {
+      "tick": 902,
+      "tickAfter": 903,
+      "mod15": 2,
+      "wholeMs": 18.898915000000216,
+      "frameMs": 18.896060999999918,
+      "simMs": 18.892065000000002,
+      "aiMs": 0.0007010000003901951,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.06399400000009337,
+      "renderSnapshotMs": 0.06643699999995079,
+      "observerMs": 0.010174999999890133,
+      "ownerPlans": [],
+      "units": 63,
+      "buildings": 19
+    },
+    {
+      "tick": 2108,
+      "tickAfter": 2109,
+      "mod15": 8,
+      "wholeMs": 18.854119999999966,
+      "frameMs": 18.8504539999999,
+      "simMs": 18.845686000000114,
+      "aiMs": 0.0011210000002392917,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.1268259999997099,
+      "renderSnapshotMs": 0.12932000000000698,
+      "observerMs": 0.019538999999895168,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 180,
+      "tickAfter": 181,
+      "mod15": 0,
+      "wholeMs": 18.81922799999984,
+      "frameMs": 18.816863999999896,
+      "simMs": 0.20421000000033018,
+      "aiMs": 18.604663000000073,
+      "aiSnapshotMs": 0.044165000000248256,
+      "otherSnapshotMs": 0.05357800000001589,
+      "renderSnapshotMs": 0.05456000000003769,
+      "observerMs": 0.015221999999994296,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 3.7714019999998527
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 3.8058740000001308
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 3.676644000000124
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 3.6861579999999776
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 3.59958000000006
+        }
+      ],
+      "units": 53,
+      "buildings": 11
+    },
+    {
+      "tick": 1968,
+      "tickAfter": 1969,
+      "mod15": 3,
+      "wholeMs": 18.458358999999746,
+      "frameMs": 18.455884000000424,
+      "simMs": 18.45159799999965,
+      "aiMs": 0.0010010000000875152,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.09981599999991886,
+      "renderSnapshotMs": 0.10140899999987596,
+      "observerMs": 0.008993000000373286,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 966,
+      "tickAfter": 967,
+      "mod15": 6,
+      "wholeMs": 17.406906000000163,
+      "frameMs": 17.404381999999714,
+      "simMs": 17.400848000000224,
+      "aiMs": 0.0006109999999353022,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.04560700000001816,
+      "renderSnapshotMs": 0.04685899999958565,
+      "observerMs": 0.00964399999975285,
+      "ownerPlans": [],
+      "units": 63,
+      "buildings": 20
+    },
+    {
+      "tick": 2008,
+      "tickAfter": 2009,
+      "mod15": 13,
+      "wholeMs": 17.313019000000168,
+      "frameMs": 17.31034499999987,
+      "simMs": 17.30573800000002,
+      "aiMs": 0.0010019999999713036,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.11887500000011642,
+      "renderSnapshotMs": 0.12105699999983699,
+      "observerMs": 0.014301000000159547,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 2088,
+      "tickAfter": 2089,
+      "mod15": 3,
+      "wholeMs": 16.014994000000115,
+      "frameMs": 16.01209999999992,
+      "simMs": 16.005039000000124,
+      "aiMs": 0.001491999999871041,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.12360099999978047,
+      "renderSnapshotMs": 0.1269760000000133,
+      "observerMs": 0.011977000000115368,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 120,
+      "tickAfter": 121,
+      "mod15": 0,
+      "wholeMs": 15.817825000000084,
+      "frameMs": 15.814950999999837,
+      "simMs": 0.14026600000033795,
+      "aiMs": 15.666312999999718,
+      "aiSnapshotMs": 0.040359000000080414,
+      "otherSnapshotMs": 0.04274200000008932,
+      "renderSnapshotMs": 0.044174000000111846,
+      "observerMs": 0.018998000000010506,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 2.641845999999987
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 2.1450369999997747
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 2.223942999999963
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 3.5538339999998243
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 5.0229089999998
+        }
+      ],
+      "units": 48,
+      "buildings": 11
+    },
+    {
+      "tick": 887,
+      "tickAfter": 888,
+      "mod15": 2,
+      "wholeMs": 15.601968000000397,
+      "frameMs": 15.599675999999818,
+      "simMs": 15.597512000000279,
+      "aiMs": 0.00034099999993486563,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.08620699999983117,
+      "renderSnapshotMs": 0.08851000000004206,
+      "observerMs": 0.00826199999983146,
+      "ownerPlans": [],
+      "units": 63,
+      "buildings": 17
+    },
+    {
+      "tick": 2068,
+      "tickAfter": 2069,
+      "mod15": 13,
+      "wholeMs": 15.436815999999908,
+      "frameMs": 15.433170999999675,
+      "simMs": 15.42714100000012,
+      "aiMs": 0.0009719999998196727,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.1192550000000665,
+      "renderSnapshotMs": 0.12261000000034983,
+      "observerMs": 0.019378999999844382,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    },
+    {
+      "tick": 165,
+      "tickAfter": 166,
+      "mod15": 0,
+      "wholeMs": 14.931574000000182,
+      "frameMs": 14.92888099999982,
+      "simMs": 0.3475499999999556,
+      "aiMs": 14.511418000000049,
+      "aiSnapshotMs": 0.018245999999635387,
+      "otherSnapshotMs": 0.05114499999990585,
+      "renderSnapshotMs": 0.05258800000001429,
+      "observerMs": 0.026880000000346627,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 2.478845999999976
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 2.1219530000003033
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 3.611898999999994
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 2.6048509999995986
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 3.65142700000024
+        }
+      ],
+      "units": 53,
+      "buildings": 11
+    },
+    {
+      "tick": 75,
+      "tickAfter": 76,
+      "mod15": 0,
+      "wholeMs": 14.5041369999999,
+      "frameMs": 14.500451999999768,
+      "simMs": 1.0318539999998393,
+      "aiMs": 13.460005999999794,
+      "aiSnapshotMs": 0.016765000000077634,
+      "otherSnapshotMs": 0.033989999999903375,
+      "renderSnapshotMs": 0.03535199999987526,
+      "observerMs": 0.01792699999987235,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 2.7859470000000783
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 3.161968999999999
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 2.4542599999999766
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 2.5075890000000527
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 2.4991660000000593
+        }
+      ],
+      "units": 48,
+      "buildings": 10
+    },
+    {
+      "tick": 90,
+      "tickAfter": 91,
+      "mod15": 0,
+      "wholeMs": 14.298506000000089,
+      "frameMs": 14.296261999999842,
+      "simMs": 0.13082200000008015,
+      "aiMs": 14.158159999999953,
+      "aiSnapshotMs": 0.0150220000000445,
+      "otherSnapshotMs": 0.03761499999973239,
+      "renderSnapshotMs": 0.03909699999985605,
+      "observerMs": 0.01717499999995198,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 2.489803000000393
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 3.85928100000001
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 3.3600189999997383
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 2.234837999999854
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 2.1452470000003814
+        }
+      ],
+      "units": 48,
+      "buildings": 11
+    },
+    {
+      "tick": 60,
+      "tickAfter": 61,
+      "mod15": 0,
+      "wholeMs": 14.074447999999848,
+      "frameMs": 14.071153000000095,
+      "simMs": 0.35014400000000023,
+      "aiMs": 13.711014000000205,
+      "aiSnapshotMs": 0.01625400000011723,
+      "otherSnapshotMs": 0.03755500000011125,
+      "renderSnapshotMs": 0.03970800000001873,
+      "observerMs": 0.021040999999968335,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 3.511081000000104
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 2.5265459999998257
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 2.5002580000000307
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 2.5821780000001127
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 2.5377730000000156
+        }
+      ],
+      "units": 48,
+      "buildings": 9
+    },
+    {
+      "tick": 1961,
+      "tickAfter": 1962,
+      "mod15": 11,
+      "wholeMs": 13.231179999999767,
+      "frameMs": 13.228485999999975,
+      "simMs": 13.19417599999997,
+      "aiMs": 0.001081999999769323,
+      "aiSnapshotMs": 0,
+      "otherSnapshotMs": 0.10769799999980023,
+      "renderSnapshotMs": 0.10990099999980885,
+      "observerMs": 0.010935999999674095,
+      "ownerPlans": [],
+      "units": 68,
+      "buildings": 21
+    }
+  ],
+  "perMinute": [
+    {
+      "minute": 0,
+      "ticks": 1200,
+      "unitsAtEnd": 63,
+      "buildingsAtEnd": 21,
+      "whole": {
+        "count": 1200,
+        "median": 0.07850499999995009,
+        "p95": 4.555753999999979,
+        "p99": 14.931574000000182,
+        "max": 91.531297,
+        "mean": 0.7780550375000043,
+        "over16": 10,
+        "over50": 1
+      },
+      "sim": {
+        "count": 1200,
+        "median": 0.07428900000013527,
+        "p95": 0.32785100000000966,
+        "p99": 3.2516600000003564,
+        "max": 26.856248999999934,
+        "mean": 0.2704270316666661,
+        "over16": 5,
+        "over50": 0
+      },
+      "ai": {
+        "count": 1200,
+        "median": 0.0005510000000867876,
+        "p95": 3.9837039999997614,
+        "p99": 11.204036999999971,
+        "max": 78.41279299999997,
+        "mean": 0.497508793333336,
+        "over16": 5,
+        "over50": 1
+      },
+      "planningTick": {
+        "count": 80,
+        "median": 4.8801290000001245,
+        "p95": 18.81922799999984,
+        "p99": 91.531297,
+        "max": 91.531297,
+        "mean": 7.9480255624999785,
+        "over16": 5,
+        "over50": 1
+      }
+    },
+    {
+      "minute": 1,
+      "ticks": 910,
+      "unitsAtEnd": 68,
+      "buildingsAtEnd": 21,
+      "whole": {
+        "count": 910,
+        "median": 0.04560700000001816,
+        "p95": 4.644403999999668,
+        "p99": 12.925692999999683,
+        "max": 43.91093799999999,
+        "mean": 0.9395689945054978,
+        "over16": 7,
+        "over50": 0
+      },
+      "sim": {
+        "count": 910,
+        "median": 0.04388500000004569,
+        "p95": 1.4572979999998097,
+        "p99": 12.881878000000142,
+        "max": 43.89236000000028,
+        "mean": 0.6452029637362517,
+        "over16": 6,
+        "over50": 0
+      },
+      "ai": {
+        "count": 910,
+        "median": 0.0003400000000510772,
+        "p95": 3.06016899999986,
+        "p99": 5.565313999999944,
+        "max": 14.997561000000132,
+        "mean": 0.2827059461538543,
+        "over16": 0,
+        "over50": 0
+      },
+      "planningTick": {
+        "count": 61,
+        "median": 3.4137980000000425,
+        "p95": 8.399140999999872,
+        "p99": 41.52490200000011,
+        "max": 41.52490200000011,
+        "mean": 5.440953622950847,
+        "over16": 2,
+        "over50": 0
+      }
+    }
+  ],
+  "memory": {
+    "before": {
+      "rss": 265400320,
+      "heapTotal": 133169152,
+      "heapUsed": 73836424,
+      "external": 99914027,
+      "arrayBuffers": 83749792
+    },
+    "after": {
+      "rss": 467529728,
+      "heapTotal": 254357504,
+      "heapUsed": 76125192,
+      "external": 140152375,
+      "arrayBuffers": 126214038
+    },
+    "observations": [
+      {
+        "tick": 0,
+        "rss": 344543232,
+        "heapTotal": 200196096,
+        "heapUsed": 79293032,
+        "external": 113706906,
+        "arrayBuffers": 97542631
+      },
+      {
+        "tick": 1200,
+        "rss": 400904192,
+        "heapTotal": 230866944,
+        "heapUsed": 127177248,
+        "external": 138462410,
+        "arrayBuffers": 121883399
+      },
+      {
+        "tick": 2109,
+        "rss": 472076288,
+        "heapTotal": 281018368,
+        "heapUsed": 150392072,
+        "external": 135674574,
+        "arrayBuffers": 121736237
+      }
+    ]
+  },
+  "processWallMs": 2289.349379,
+  "method": {
+    "execution": "StaticSoloDeploymentRuntime.startRoom → LocalGameAdapter.updateToRenderTime → CommandFrameRuntime.tick",
+    "clockAdvanceMsPerCall": 50,
+    "renderSnapshotCallsPerTick": 1,
+    "plainSource": false,
+    "cpuProfileFrom": null,
+    "wholeTickExcludes": [
+      "currentSnapshot (separately timed)",
+      "command serialization/hash observer",
+      "disk output"
+    ],
+    "aiIncludes": "planPresetAiRuntimeCommands including shared snapshot and all due owners; no-owner calls also timed",
+    "simIncludes": "stepGame; frameMs additionally includes admission/planning/apply",
+    "otherSnapshotIncludes": "All snapshotGame calls outside AI, including the separately timed render currentSnapshot; these are overlapping diagnostics, not additive costs.",
+    "hooks": [
+      {
+        "path": "src/ai/runtime.ts",
+        "functions": [
+          "planPresetAiRuntimeCommands"
+        ]
+      },
+      {
+        "path": "src/shared/sim.ts",
+        "functions": [
+          "stepGame",
+          "snapshotGame"
+        ]
+      },
+      {
+        "path": "src/ai/planner-context.ts",
+        "functions": [
+          "planAiOwnerCommandEntries"
+        ]
+      }
+    ],
+    "incompleteAttachmentReproduction": "Attachment omitted room id/races; this fixed real room resolves the reported owner/preset order, with its complete initial state archived. It is a controlled scenario, not proof of the attachment's exact original match.",
+    "diagnosticOutput": "focused-diagnostics.json.gz",
+    "focusedHooks": [
+      {
+        "path": "src/shared/sim.ts",
+        "functions": [
+          "syncBuildingBodies",
+          "updateTraining",
+          "updateUnits",
+          "keepUnitsOutOfBuildings",
+          "separateUnits"
+        ]
+      },
+      {
+        "path": "src/ai/planner-context.ts",
+        "functions": [
+          "planAiOwnerCommandEntries"
+        ]
+      },
+      {
+        "path": "src/ai/bootstrap_1/policy.ts",
+        "functions": [
+          "bootstrapPolicyContext"
+        ]
+      },
+      {
+        "path": "src/shared/terrain.ts",
+        "functions": [
+          "tilesOf"
+        ]
+      },
+      {
+        "path": "src/shared/sailing.ts",
+        "functions": [
+          "sailToward"
+        ]
+      },
+      {
+        "path": "src/shared/ship-planning-job.ts",
+        "functions": [
+          "prepareShipPlanningJob",
+          "prepareShipPlanningJobs"
+        ]
+      },
+      {
+        "path": "src/shared/ship-navigation.ts",
+        "functions": [
+          "gridFor",
+          "planShipRouteImpl"
+        ]
+      },
+      {
+        "path": "src/ai/bootstrap_1/mounted-recruitment.ts",
+        "functions": [
+          "mountedRecruitment"
+        ]
+      },
+      {
+        "path": "src/ai/policy/naval.ts",
+        "functions": [
+          "navalBudgetReserve"
+        ]
+      },
+      {
+        "path": "src/ai/policy/v9/shop.ts",
+        "functions": [
+          "shopErrandCost"
+        ]
+      },
+      {
+        "path": "src/ai/policy/script-runner.ts",
+        "functions": [
+          "unitClaims",
+          "script.run",
+          "script.run",
+          "script.claimsUnits"
+        ]
+      }
+    ]
+  }
+}

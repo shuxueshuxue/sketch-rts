@@ -11,6 +11,10 @@ it('wires presentation into real menu worlds and clears its history when switchi
  backdrop.draw(ctx,320,180,0,true,capture);
  const first=frames[0]!;
  expect(first.combat).toBeDefined();expect(first.projectiles).toBeDefined();
+ // The authored still frame now contains a volley. Isolate the explicit
+ // history fixture while retaining the exact reset assertions below.
+ first.snapshot.effects.length=0;
+ first.projectiles!.reset();first.combat!.reset();
  const source=first.snapshot.units[0]!;
  first.snapshot.effects.push({id:'menu-shot',type:'projectile',sourceId:source.id,sourceKind:source.kind,actionTick:0,actionMode:'attack',fromX:source.x,fromY:source.y,toX:source.x+100,toY:source.y,x:source.x+100,y:source.y,duration:20,remaining:20});
  first.projectiles!.update(first.snapshot);expect(first.projectiles!.size).toBe(1);
