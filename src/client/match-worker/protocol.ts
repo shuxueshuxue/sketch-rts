@@ -4,7 +4,8 @@ import type { GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, Playe
 
 // @@@match-thread - A browser match runs on a Web Worker; the page only draws its snapshots and sends its commands.
 // The page drives the match clock (it says what time it is each frame), so a hidden tab still pauses the match and a
-// long tick on the match thread never holds a frame. The worker builds the same game from the same setup.
+// long tick on the match thread never holds a frame. The ticks a frame makes due run at the match thread's own pace,
+// not one frame budget at a time. The worker builds the same game from the same setup.
 
 export type MatchThreadInit =
   | {

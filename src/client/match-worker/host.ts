@@ -20,6 +20,25 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
     if (local) post({ type: "snapshot", snapshot: withoutGround(local.currentSnapshot()) });
     else if (lockstep) post({ type: "snapshot", snapshot: withoutGround(lockstep.currentSnapshot()), pendingCasts: [...lockstep.pendingCasts()] });
   };
+  const step = () => !!(local?.updateToRenderTime() || lockstep?.updateToRenderTime());
+  // An update stops on a page's frame budget with ticks possibly still due. Here a tick holds no frame, so the match
+  // goes on after the messages already waiting (commands, server frames) instead of at the page's next frame: a slow
+  // frame no longer slows the game. The page still gets one snapshot per frame, and one when such a run ends.
+  let stepped = false, continuing = false, closed = false;
+  const carryOn = () => {
+    if (continuing) return;
+    continuing = true;
+    setTimeout(() => {
+      continuing = false;
+      if (closed) return;
+      try {
+        if (step()) { stepped = true; carryOn(); }
+        else if (stepped) { stepped = false; publish(); }
+      } catch (error) {
+        report(error);
+      }
+    }, 0);
+  };
   return {
     handle(message: MatchThreadMessage) {
       try {
@@ -51,7 +70,9 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
         }
         if (message.type === "advance") {
           now = message.now;
-          if (local?.updateToRenderTime() || lockstep?.updateToRenderTime()) publish();
+          const advanced = step();
+          if (advanced || stepped) { stepped = false; publish(); }
+          if (advanced) carryOn();
           return;
         }
         if (message.type === "command") {
@@ -71,6 +92,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
           lockstep?.join();
           return;
         }
+        closed = true;
         local?.close();
         lockstep?.close();
       } catch (error) {

@@ -47,6 +47,32 @@ describe("match thread", () => {
     expect(threaded.currentSnapshot().units.find((unit) => unit.id === worker.id)!.x).toBeGreaterThan(worker.x + 60);
   });
 
+  it("runs the ticks a slow frame made due before the next frame, one budget slice after another", async () => {
+    // Each update's time budget runs out after a single tick.
+    let elapsed = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => (elapsed += 10));
+    try {
+      const events: MatchThreadEvent[] = [];
+      const host = createMatchThreadHost((event) => events.push(event));
+      const ticks = () => events.flatMap((event) => (event.type === "snapshot" ? [event.snapshot.tick] : []));
+      host.handle({ type: "local", playerId: "player", mapId: "bareDuel", options, aiPlayers: ["enemy"], tickMs: 50, now: 0 });
+      // A frame 150 ms after the last: three ticks are due, and its own update has budget for one.
+      host.handle({ type: "advance", now: 150 });
+      expect(ticks()).toEqual([1]);
+      for (let turn = 0; turn < 5; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+      // The other two ran without another frame; the page heard once more, when the run ended.
+      expect(ticks()).toEqual([1, 3]);
+      // Nothing more is due until the page's clock moves on: a page that sends no frames still pauses the match.
+      for (let turn = 0; turn < 5; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(ticks()).toEqual([1, 3]);
+      host.handle({ type: "advance", now: 200 });
+      expect(ticks()).toEqual([1, 3, 4]);
+      host.handle({ type: "close" });
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
   it("refuses a command the latest snapshot refuses, as it is given", () => {
     const threaded = startThreaded(() => 0);
     const townHall = threaded.currentSnapshot().buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
