@@ -1,3 +1,4 @@
+import { pendingDeckBoarding } from './transfer-lanes';
 import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
 import { isShipKind, shipPassengers, shipProfile } from "../../shared/ship-geometry";
@@ -62,12 +63,10 @@ export function navalServices(
       transportId: target.id,
     });
   };
-  for (const crew of own)
-    if (
-      crew.order.type === "board" &&
-      !options.memory.naval?.ferries?.[crew.order.transportId]
-    ) {
-      const target = ships.find(ship => crew.order.type === 'board' && ship.id === crew.order.transportId);
+  for (const crew of own) {
+    const boarding=pendingDeckBoarding(crew);
+    if (boarding && !options.memory.naval?.ferries?.[boarding.transportId]) {
+      const target = ships.find(ship => ship.id === boarding.transportId);
       // A dock can finish the repair before an engineer reaches the hull.
       // That obsolete cross-deck trip must not reserve both ships forever.
       // Keep shore recruits, hostile captures, live ferry crews and a worker
@@ -78,9 +77,10 @@ export function navalServices(
       }
       result.reserved.add(crew.id);
       if (crew.deck) result.reserved.add(crew.deck.shipId);
-      result.reserved.add(crew.order.transportId);
+      result.reserved.add(boarding.transportId);
       if (target) awaitBoarding(target);
     }
+  }
   // Boarding reservations also cover missing or hostile destinations. Keep
   // them above the empty-fleet return; repair and prize tasks need an own hull.
   if (ships.length === 0) return result;

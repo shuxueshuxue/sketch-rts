@@ -15,6 +15,21 @@ describe("AI script runner", () => {
       .unit("v2", "footman", 620, 520, { id: "guard" })
       .unit("v2", "footman", 650, 550, { id: "free" }).build().createGame();
   }
+  it.each([false,true])('only the owning assignment may adjust an existing boarding approach (owned=%s)',owned=>{
+    const game=tacticalScene(),unit=game.units.find(unit=>unit.id==='guard')!;
+    unit.order={type:'board',transportId:'ferry'};
+    const scripts:AiScript[]=[
+      {id:'crossing',phase:'tactics',...(owned?{claimsUnits:()=>new Set(['guard'])}:{}),
+        run:()=>[{type:'move',unitIds:['guard'],x:700,y:700,avoidCombat:true},
+          {type:'holdPosition',unitIds:['guard'],queued:true},
+          {type:'board',unitIds:['guard'],transportId:'ferry',queued:true}]},
+      {id:'army',phase:'tactics',run:()=>({type:'attackMove',unitIds:['guard'],x:3000,y:3000})},
+    ];
+    const entries=runAiCommandEntriesFromScripts(snapshotGame(game),'v2',scripts);
+    expect(entries.filter(entry=>entry.scriptId==='crossing').map(entry=>entry.command.type))
+      .toEqual(owned?['move','holdPosition','board']:['board']);
+    expect(entries.some(entry=>entry.scriptId==='army')).toBe(false);
+  });
   const retreatClaim = { kind: "retreat" as const, targetId: "retreat", x: 500, y: 500, sinceTick: 0, expiresTick: 900 };
 
   it.each(["undefined", "array"] as const)("keeps an empty %s script's memory updates before later real commands", result => {

@@ -185,10 +185,10 @@ function connectedShips(start: Unit, passenger: Unit, units: readonly Unit[]) {
   return found;
 }
 /** Hull contact, usable floor and body clearance govern decks and shore alike. */
-export function walkConnectedSurfaces(passenger: Unit, world: Point, units: readonly Unit[], map: GameMap, pace = 1) {
+function planConnectedSurfaceWalk(passenger: Unit, world: Point, units: readonly Unit[], map: GameMap, pace=1) {
   const hulls = shipsIn(units);
   if (!hulls.length)
-    return false;
+    return undefined;
   const source = passenger.deck && hulls.find(ship => ship.id === passenger.deck!.shipId);
   let target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, world), 0, shipProfile(ship)!.hull));
   // A ground journey does not silently turn into boarding merely because a
@@ -199,26 +199,26 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, next), 0, shipProfile(ship)!.hull));
   }
   if (!source && !target)
-    return false;
+    return undefined;
   if (!source && target && Math.hypot(passenger.x - target.x, passenger.y - target.y) > shipProfile(target)!.length / 2 + passenger.radius * 3)
-    return false;
+    return undefined;
   const ships = connectedShips(source || target!, passenger, units);
-  if(source && target?.id===source.id && ships.length===1 && deckPointFits(source,passenger,worldToLocal(source,passenger),units,false))return false;
+  if(source && target?.id===source.id && ships.length===1 && deckPointFits(source,passenger,worldToLocal(source,passenger),units,false))return undefined;
   if (target && !ships.includes(target))
-    return false;
+    return undefined;
   const land = !source || !target;
   if (land && (!map.terrain || ships.every(ship => shipProfile(ship)!.deckHeight > passenger.radius * 2.5)))
-    return false;
+    return undefined;
   const geometry = crossingGeometry(ships, passenger, map, land), { surface, floor, obstacles } = geometry;
   // Ground routing owns an approach until the whole body fits the crossing floor.
   if (!source && !floor.diskFits(passenger, passenger.radius + 1))
-    return false;
+    return undefined;
   let destination: Point | undefined;
   if (target) {
     if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckPlacement(target, passenger, units))
-      return false;
+      return undefined;
     if (!source && !ships.some(ship => Math.hypot(passenger.x - ship.x, passenger.y - ship.y) < shipProfile(ship)!.length / 2 + passenger.radius * 3))
-      return false;
+      return undefined;
     const goal = deckPlacement(target, passenger, units, worldToLocal(target, source ? world : passenger), true);
     if (goal)
       destination = localToWorld(target, goal);
@@ -239,7 +239,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       }
   }
   if (!destination)
-    return false;
+    return undefined;
   // Only bodies beside this crossing can obstruct it. Distant shore armies
   // used to create hundreds of nodes and quadratic, map-wide edge searches.
   const margin = passenger.radius * 4 + 32;
@@ -250,9 +250,9 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     && other.x + other.radius >= left && other.x - other.radius <= right && other.y + other.radius >= top && other.y - other.radius <= bottom);
   const fits = (point: Point, occupied = false) => {
     if (obstacles.some(o => Math.hypot(point.x - o.x, point.y - o.y) < o.radius + passenger.radius + 1 - 1e-6))
-      return false;
+      return undefined;
     if (!floor.diskFits(point, passenger.radius + 1))
-      return false;
+      return undefined;
     return !occupied || capsuleClearsBodies(passenger, point, passenger.radius + 1, bodies);
   };
   const staticClear = (a: Point, b: Point) => floor.capsuleFits(a, b, passenger.radius + 1) && capsuleClearsCircles(a, b, passenger.radius + 1, obstacles);
@@ -323,7 +323,6 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
         const distance=estimate(i);
         if(distance<best-1e-6){best=distance;destinationNode=i;}
       }
-      if(destinationNode===0)return true;
       break;
     }
     if (current === 1)
@@ -339,12 +338,22 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       }
     }
   }
-  let next = destinationNode;
-  while (parents[next]! > 0)
-    next = parents[next]!;
-  const waypoint = nodes[next]!, gap = Math.hypot(waypoint.x - passenger.x, waypoint.y - passenger.y);
-  if (!gap)
-    return true;
+  const points:Point[]=[];
+  for(let index=destinationNode;index>=0;index=parents[index]!)points.push({x:nodes[index]!.x,y:nodes[index]!.y});
+  points.reverse();
+  return {points,complete:destinationNode===1,source,ships,surface,floor,fits};
+}
+/** The same physical crossing path used by walking, without moving any body. */
+export function connectedSurfacePath(passenger:Unit,world:Point,units:readonly Unit[],map:GameMap) {
+  const plan=planConnectedSurfaceWalk(passenger,world,units,map);
+  return plan && {points:plan.points,complete:plan.complete};
+}
+export function walkConnectedSurfaces(passenger: Unit, world: Point, units: readonly Unit[], map: GameMap, pace = 1) {
+  const plan=planConnectedSurfaceWalk(passenger,world,units,map,pace);
+  if(!plan)return false;
+  const {points,source,ships,surface,floor,fits}=plan;
+  const waypoint=points[1]??passenger,gap=Math.hypot(waypoint.x-passenger.x,waypoint.y-passenger.y);
+  if(!gap)return true;
   const step = Math.min(gap, perTick(passenger.speed) * pace), at = { x: passenger.x + (waypoint.x - passenger.x) * step / gap, y: passenger.y + (waypoint.y - passenger.y) * step / gap };
   if (!fits(at, true))
     return true;

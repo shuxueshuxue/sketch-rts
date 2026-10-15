@@ -100,7 +100,12 @@ function incomingLanding(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
         && sameGround(snapshot.map, hall, ship.order)
         && shipPassengers(snapshot.units, ship).some(unit => combatCapability(snapshot, unit).armed));
 }
-/** Keep a colony's hall and, near mine depletion, a replacement ferry funded. */
+function economicFerry(unit: Unit, options: AiPolicyContext): boolean {
+    if (!ferryCapacity(unit)) return false;
+    const mission=options.memory.naval?.ferries?.[unit.id];
+    return !mission || mission.phase==='return' || mission.purpose==='settle' || mission.purpose==='rebase' || mission.purpose==='evacuate';
+}
+/** Keep a colony's hall and, near mine depletion, usable economic lift funded. */
 export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): number {
     if (!snapshot.map.terrain || groundWholes(snapshot.map) <= 1)
         return 0;
@@ -108,10 +113,11 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
     const home = halls[0];
     if (!home || !units(snapshot, owner).some(unit => unit.kind === "worker"))
         return 0;
-    // Defense and restoring the supply line take precedence over saving for a future overseas colony.
+    // A threatened home can use its whole economy. A distant colony spends
+    // the reserve through its own defense purchases, not unrelated home recruits.
     if (snapshot.units.some(unit => unit.kind !== "worker" && combatCapability(snapshot,unit).armed && isOpponentOwner(snapshot, owner, unit.owner, options)
-        && halls.some(hall => sameGround(snapshot.map, hall, unit) && distance(hall, unit) < 700))
-        || halls.some(hall => coastalBaseThreat(snapshot, owner, options, hall) || incomingLanding(snapshot, owner, options, hall))) return 0;
+        && sameGround(snapshot.map, home, unit) && distance(home, unit) < 700)
+        || coastalBaseThreat(snapshot, owner, options, home) || incomingLanding(snapshot, owner, options, home)) return 0;
     const remote = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
         && !halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
         && !mineClaimedByAlly(snapshot, owner, mine, options));
@@ -123,11 +129,11 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
     const pendingHall = units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "townHall");
     const approachingDepletion = remaining < 2500 && !localExpansionAvailable(snapshot, owner, options);
     return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
-        + (approachingDepletion && !units(snapshot, owner).some(unit => ferryCapacity(unit) > 0) ? UNIT_DEFS.transport.cost : 0);
+        + (approachingDepletion && !units(snapshot, owner).some(unit => economicFerry(unit,options)) ? UNIT_DEFS.transport.cost : 0);
 }
 // The transport, population prerequisite and hall can use their own reserved
 // funds; unrelated purchases preserve the colony budget.
-export const navalReservePurchase = (id: string) => ["naval:islandHall", "naval:transport", "naval:shipyard", "naval:population"].includes(id);
+export const navalReservePurchase = (id: string) => ["naval:islandHall", "naval:transport", "naval:shipyard", "naval:population", "naval:footholdProducer", "naval:footholdArmy", "naval:footholdTower"].includes(id);
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
     return planNavalWant(snapshot, owner, options, "all", () => true);
 }
@@ -290,13 +296,18 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
         const mission = navalMemory(options).ferries?.[unit.id];
         return !mission || mission.purpose === 'assault';
     });
+    const remaining = snapshot.resources.filter(mine=>halls.some(hall=>distance(hall,mine)<GOLD_MINE_RULES.baseRange))
+        .reduce((sum,mine)=>sum+mine.amount,0);
+    // Hulls already carrying the invasion cannot also carry the next colony.
+    // Fund one economic ferry before the last working mine runs out.
+    const economicLift = plan && remaining<2500 && !convoy.some(unit=>economicFerry(unit,options));
     const moreLift = expedition?.ready && transported && !convoyCanCarry(snapshot, availableConvoy, expedition.crew);
     const guardedIsland = plan && snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 600).reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0) > 3;
     const activeBases=halls.filter(hall=>snapshot.resources.some(mine=>mine.amount>0&&distance(mine,hall)<GOLD_MINE_RULES.baseRange)).length;
     const fleetTarget=Math.min(8,Math.max(WARSHIPS,activeBases>2?activeBases+1:WARSHIPS,enemyFleet.length+1));
     const ship: TrainableUnitKind | undefined = held
         ? (warships < Math.max(6,fleetTarget) ? "warship" : undefined)
-        : !transported && (plan || assault) ? "transport"
+        : economicLift || !transported && (plan || assault) ? "transport"
             : moreLift ? (advanced ? "carrier" : "transport")
             : advanced && guardedIsland && !fleet.some(unit => unit.kind === "carrier" && sameGround(snapshot.map, unit, water, "sea")) ? "carrier"
             : warships < fleetTarget ? "warship"
@@ -659,11 +670,20 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             const power = [...nearbyAssaultCrew(snapshot,owner,options,boat,450),...landed]
                 .filter(unit=>unit.kind!=='worker' && !unit.expiresTick)
                 .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
-            if (power < assaultExpedition(snapshot,owner,options,target).required) {
+            const required=assaultExpedition(snapshot,owner,options,target).required;
+            if (power < required) {
                 // Faster ferries wait outside the coast's fire for the actual
                 // convoy, rather than counting a slow hull across the ocean.
-                const companions = Object.values(ferries).filter(other=>other.purpose==='assault'
-                    && other.phase==='sailing' && other.targetId===mission.targetId);
+                const convoy = own.filter(ship=>ferries[ship.id]?.purpose==='assault'
+                    && ferries[ship.id]?.phase==='sailing' && ferries[ship.id]?.targetId===mission.targetId
+                    && sameGround(map,boat,ship,'sea'));
+                const incomingPower=[...convoy.flatMap(ship=>shipPassengers(snapshot.units,ship)),...landed]
+                    .filter(unit=>unit.kind!=='worker' && !unit.expiresTick)
+                    .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
+                // Assembly cannot repair a force deficit: the real underway
+                // convoy must still be able to take this island together.
+                if(incomingPower<required)return cancelFerry(snapshot,boat,mission,options);
+                const companions=convoy.map(ship=>ferries[ship.id]!);
                 const danger = outmatchingCoast(snapshot,owner,boat,boat,options);
                 const refuge = danger.length ? coastalRefuge(snapshot,boat,danger) : undefined;
                 const rally = refuge ?? mission.rally ?? companions.find(other=>other.rally)?.rally ?? {x:boat.x,y:boat.y};

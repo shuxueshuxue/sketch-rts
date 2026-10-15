@@ -22,7 +22,8 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const claims = unitClaims(snapshot, owner, scripts, policyOptions);
   const commands: AiCommandEntry[] = [];
-  const movedUnitIds = new Set(snapshot.units.filter(unit => unit.owner === owner && unit.order.type === "board").map(unit => unit.id));
+  const boardingUnitIds = snapshot.units.filter(unit => unit.owner === owner && unit.order.type === "board").map(unit => unit.id);
+  const movedUnitIds = new Set<string>();
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
@@ -57,9 +58,12 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
     if (rawScriptCommands.length === 0) continue;
+    // Boarding excludes unrelated tactics. Its owning assignment can still
+    // steer a physical approach or make room before resuming the crossing.
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
-      : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+      : removeOrderedUnitConflicts(rawScriptCommands, new Set([...movedUnitIds,
+        ...boardingUnitIds.filter(id=>claims.get(id)!==script.id)]), (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);

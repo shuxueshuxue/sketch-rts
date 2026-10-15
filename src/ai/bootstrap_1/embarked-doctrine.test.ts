@@ -1,7 +1,7 @@
 import {expect,it} from 'vitest';
 import {sketchScene} from '../../sdk/scene';
 import type {TrainableUnitKind} from '../../shared/types';
-import {colonyNavalWant,navalBudgetReserve} from '../policy/naval';
+import {colonyNavalWant,navalBudgetReserve,planNavalEconomy} from '../policy/naval';
 import {boardUnit} from '../../shared/decks';
 import {snapshotGame} from '../../shared/sim';
 import {createAiPolicyMemory} from '../memory';
@@ -50,7 +50,8 @@ it('funds coast defense before land garrisons when enemy guns reach a colony',()
  const options=()=>bootstrapPolicyContext(snapshotGame(game),'us','v9_archer',{memory:createAiPolicyMemory(),teams:game.teams});
  expect(navalBudgetReserve(snapshotGame(game),'us',options())).toBeGreaterThan(0);
  game.spawnUnit('foe','warship',2100,500);
- expect(navalBudgetReserve(snapshotGame(game),'us',options())).toBe(0);
+ expect(navalBudgetReserve(snapshotGame(game),'us',options())).toBeGreaterThan(0);
+ expect(planNavalEconomy(snapshotGame(game),'us',options())).toMatchObject({type:'build',buildingKind:'defenseTower'});
  expect(colonyNavalWant(snapshotGame(game),'us',options())?.id).toBe('naval:footholdTower');
 });
 
@@ -67,7 +68,10 @@ it('prepares a targeted colony while an armed enemy convoy is still at sea',()=>
  const check=()=>{const s=snapshotGame(game),o=bootstrapPolicyContext(s,'us','v9_archer',{memory:createAiPolicyMemory(),teams:game.teams});return {reserve:navalBudgetReserve(s,'us',o),want:colonyNavalWant(s,'us',o)?.id};};
  expect(check().want?.startsWith('naval:foothold')).not.toBe(true);
  ship.order={type:'unload',x:2400,y:500};
- expect(check()).toEqual({reserve:0,want:'naval:footholdProducer'});
+ expect(check().reserve).toBeGreaterThan(0);
+ expect(check().want).toBe('naval:footholdProducer');
+ const s=snapshotGame(game),o=bootstrapPolicyContext(s,'us','v9_archer',{memory:createAiPolicyMemory(),teams:game.teams});
+ expect(planNavalEconomy(s,'us',o)).toMatchObject({type:'build',buildingKind:'barracks'});
  ship.order={type:'unload',x:3500,y:500};
  expect(check().want?.startsWith('naval:foothold')).not.toBe(true);
 });
