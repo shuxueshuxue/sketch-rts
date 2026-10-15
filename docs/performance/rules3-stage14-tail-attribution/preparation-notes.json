@@ -1,0 +1,19 @@
+{
+  "scope": "rules3-stage14-tail-attribution",
+  "cutoffUTC": "2026-10-15T05:36:04.463394+00:00",
+  "inventorySha256": "317b455664e5fdc2321c3754f593135f9478509e3c443d8993fb23e31f49bad4",
+  "frozenOriginalPaths": 583,
+  "rawOriginalBytes": 31309703,
+  "rawUniqueContents": 280,
+  "rawCompleteAliasWitnesses": 303,
+  "measuredOriginalGzipPayloadBytes": 12664580,
+  "allNewTemporaryCapBytes": 33554432,
+  "oldSdkRerun": false,
+  "oldSdkHistoricalStage13Passed": 13,
+  "oldSdkHistoricalStage13Total": 14,
+  "oldSdkHistoricalSingleStage5FailureUnchanged": true,
+  "oldPayloadWorkingFilesSparse": 3876,
+  "future10950CounterExcluded": true,
+  "newPerformanceAcceptance": false,
+  "source55AndOriginalFailureHistoryPreserved": true
+}

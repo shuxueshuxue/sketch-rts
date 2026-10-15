@@ -1,0 +1,101 @@
+{
+  "complete": true,
+  "originalPaths": 583,
+  "fullOriginalAliasByteWitnessPreserved": true,
+  "portableHeads": [
+    "0ea5beaee063c8443d66f7654333032b070d51ad",
+    "1cfcc0e418930d5c38925f94b4793554a526f2b6"
+  ],
+  "sourceGraphs": 6,
+  "sourceRecords": 1446,
+  "fullCommandsInitialFinalAndPhasePass": true,
+  "commandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "initialBytes": 147891,
+  "finalChecksum": "7d94a5e8",
+  "restoredOriginalProfileSourceFiles": 55,
+  "restoredProfileSourceBytes": 512808,
+  "validCpuWindows": 6,
+  "allOriginalProfileClippedIntervalsLeafInclusiveAndSourceQualificationsRecomputed": true,
+  "counter": {
+    "status": "ARCHIVE_ONLY_COUNTER_SOURCE_AND_RAW_READBACK_PASS",
+    "sourceHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+    "sourceCount": 241,
+    "sourceBytes": 2811947,
+    "sourceManifestSha256": "1e7fd434649c758e9ff720d42f2e789858d0197972e0ca6e2150e57e209731c1",
+    "frozenToolPayloads": 22,
+    "readerSourceFiles": 5,
+    "originalInputPinsVerified": 332,
+    "portableGitSourceBlobsAuthenticated": 241,
+    "historicalLivePinsAuthenticatedFromCapturedSources": 241,
+    "fullCommandLogBytes": 618189,
+    "fullCommandLogSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "initialBytes": 147891,
+    "initialSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+    "ticks": 14400,
+    "planningTicks": 960,
+    "nonPlanningTicks": 13440,
+    "finalChecksum": "7d94a5e8",
+    "final": {
+      "units": 109,
+      "buildings": 51
+    },
+    "rawEvents": [
+      [
+        1,
+        0,
+        2,
+        103684
+      ],
+      [
+        2,
+        6990,
+        2,
+        103684
+      ]
+    ],
+    "rawCounters": [
+      2,
+      0,
+      14400,
+      14400,
+      0
+    ],
+    "actualColdGroups": 2,
+    "successfulOriginalTypedArrays": 16,
+    "cumulativeOriginalTypedPayloadBytes": 6635776,
+    "lengthHistogram": {
+      "103684": 2
+    },
+    "phaseHistogram": {
+      "2": 2
+    },
+    "mover": null,
+    "moverNotCaptured": true,
+    "nativeExitCode": 0,
+    "originalAnalyzerExitCode": 0,
+    "originalIndependentReaderExitCode": 0,
+    "engineExecutedByAdapter": false,
+    "currentLiveCheckoutReadByAdapter": false,
+    "limitations": [
+      "Only original successful bucket cold RHS entries; not grow/runtime counts.",
+      "Two groups have no recorded mover identity; no one-land/one-sea conclusion.",
+      "Cumulative typed payload excludes overhead and other sites; not live/peak/rate/GC or CPU benefit.",
+      "Sixteen arrays do not establish sixteen system malloc operations.",
+      "Standalone third 0ea diagnostic; excluded from two-head CPU/performance pools.",
+      "Historical live claims are authenticated from captured bytes and portable Git, not re-executed."
+    ]
+  },
+  "oldSdkRerun": false,
+  "oldPayloadsSparse": true,
+  "wholeTargetPassed": false,
+  "candidateDecision": "HELD_PENDING_FOCUSED_TAIL_ATTRIBUTION_NOT_ADOPTED",
+  "performanceAcceptance": false,
+  "applicationEngineExecuted": false,
+  "limitations": [
+    "Sampled intervals and inclusive walls do not establish exact CPU or causal attribution.",
+    "5280 was not reproduced;1859 launch and10950 sea goal22916 are diagnostic context.",
+    "Allocation mover identities unavailable; cumulative payload is not peak, rate, malloc calls, or CPU saving.",
+    "Historical SDK13/14 belongs to Stage13 before old payload dehydration; Stage14 does not claim an SDK rerun."
+  ]
+}

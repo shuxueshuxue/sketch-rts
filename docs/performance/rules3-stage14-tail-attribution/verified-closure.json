@@ -1,0 +1,22 @@
+{
+  "complete": true,
+  "utc": "2026-10-15T05:59:18.935802+00:00",
+  "scopeCodecFullOriginalByteReadback": true,
+  "independentOfflineReadback": true,
+  "oldModeBlobExact": 18549,
+  "originalPaths": 583,
+  "sourceFiles": 676,
+  "uniquePayloads": 361,
+  "aliases": 315,
+  "originalBytes": 32150499,
+  "storedBytes": 12927224,
+  "sourceRecords": 1446,
+  "validCpuWindows": 6,
+  "actualBucketGroups": 2,
+  "cumulativeTypedPayloadBytes": 6635776,
+  "wholeTargetPassed": false,
+  "candidateAdopted": false,
+  "sdkRerun": false,
+  "logicalOldGitStatePreserved": true,
+  "oldMissingPayloadsNotTreatedAsVerified": true
+}
