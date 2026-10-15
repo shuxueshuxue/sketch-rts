@@ -96,7 +96,7 @@ export function interceptTime(dx: number, dy: number, vx: number, vy: number, sp
 
 /** The tactical layer owns range bands and target identity. It never supplies
  * a docking heading, changes sail state, or resets a committed sailing leg. */
-export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0, stationCanFire?: (station: Unit) => boolean, stationSearchAdmitted?: () => boolean): PursuitGoal | undefined {
+export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly Unit[], range: number, minimum = 0, following = false, stationaryFire?: () => boolean, map?: GameMap, fireHeading?: number, stationBowReach = 0, stationCanFire?: (station: Unit) => boolean, stationSearchAdmitted?: () => boolean, shoreStation?: () => { x: number; y: number } | undefined): PursuitGoal | undefined {
   const target = shipNavigationTarget(requested, units), motion = ship.sailing!;
   const targetMotion = 'order' in target ? target.sailing : undefined;
   const vx = targetMotion?.velocityX ?? 0, vy = targetMotion?.velocityY ?? 0, speed = Math.hypot(vx, vy);
@@ -308,7 +308,18 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
         if(standoff-high>8)consider(station((high+standoff)/2));
       }
     }
-    if (best) { goal.x = best.x; goal.y = best.y; }
+    // The ordinary inner firing ring can lie entirely over land while an
+    // actual mounted shot remains possible near the weapon's outer reach.
+    // Ask the world for that pose lazily, retaining the same full rotation,
+    // traffic and real mounted-fire admission as every other station.
+    if (!best && shoreStation) {
+      const shore = shoreStation();
+      if (shore && accessible(shore)) consider(shore);
+    }
+    // An unvalidated default point inside the coast may project to nearby
+    // water and report arrival forever, even though the gun cannot fire.
+    if (!best) return undefined;
+    goal.x = best.x; goal.y = best.y;
   }
   if (moving && phase === 'engage') {
     // Closing error changes speed continuously. A target moving away remains

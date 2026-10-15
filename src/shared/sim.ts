@@ -23,7 +23,7 @@ import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, itemEquippe
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
-import { automaticShoreTargetReachable } from './shore-fire';
+import { automaticShoreTargetReachable, shoreFiringStation } from './shore-fire';
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
@@ -1756,7 +1756,8 @@ function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Ob
   const bow=weapons.find(item=>item.mountId==='bow' && veteranWeaponRange(ship,SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].range)>=ship.attackRange);
   const bowPose=bow && mountedWeaponPose(ship,bow);
   const stationBowReach=bowPose ? (bowPose.pivot.x-ship.x)*detCos(ship.sailing!.heading)+(bowPose.pivot.y-ship.y)*detSin(ship.sailing!.heading) : 0;
-  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false),()=>tryAdmitShipPlan(ship));
+  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false),()=>tryAdmitShipPlan(ship),
+    () => isObstacle(target) ? undefined : shoreFiringStation(game,ship,target));
   const pace = statusPace(ship);
   if (goal && pace > 0) sailToward(ship, goal, game.map, game.units, pace);
   else if (!goal && ship.sailing!.planningRequestedAtTick !== undefined && !ship.sailing!.route) {
