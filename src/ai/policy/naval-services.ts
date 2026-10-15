@@ -87,6 +87,14 @@ export function navalServices(
   const foes = snapshot.units.filter(
     (unit) => unit.hp > 0 && isEnemyOwner(snapshot, owner, unit.owner, options),
   );
+  // A depleted harbor can still maintain its fleet. Its idle shore workers
+  // take real boarding tasks even below the normal crew-recruitment threshold.
+  const shoreEngineer = (crew: Unit, ship: Unit) => !crew.deck && crew.order.type === 'idle'
+    && !options.memory.unitClaims[crew.id]
+    && !snapshot.resources.some(mine => mine.amount > 0 && sameGround(snapshot.map, crew, mine))
+    && snapshot.buildings.some(dock => dock.owner === owner && dock.kind === 'shipyard' && dock.complete
+      && distance(ship, dock) < 600 && distance(crew, dock) < 650
+      && sameGround(snapshot.map, crew, walkableGoal(snapshot.map, dock.x, dock.y, 'land')));
   if ((snapshot.players[owner]?.gold ?? 0) > 30)
     for (const ship of [...ships].sort(
       (a, b) => a.hp / a.maxHp - b.hp / b.maxHp,
@@ -103,20 +111,21 @@ export function navalServices(
         .filter(
           (crew) =>
             crew.kind === "worker" &&
-            crew.deck &&
             !isInCabin(crew) &&
             !result.reserved.has(crew.id) &&
             crew.order.type !== "board" &&
             canBoard(ship, crew, snapshot.units),
         )
         .filter((crew) => {
+          if (!crew.deck) return shoreEngineer(crew, ship);
           const source = ships.find(
             (source) => source.id === crew.deck!.shipId,
           );
           return (
             source &&
             !blocked(source) &&
-            source.hp / source.maxHp >= 0.75 &&
+            // Finish this hull's maintenance before sending its engineer away.
+            !shipNeedsRepair(snapshot, source) &&
             sameGround(snapshot.map, source, ship, "sea") &&
             distance(source, ship) < 1400
           );
