@@ -2,7 +2,7 @@ import { missingMiningWorkers } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
-import { colonyNavalWantWithMineEligibility, prepareColonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
@@ -114,11 +114,8 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 };
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  return rankBootstrapGoalsImpl(snapshot, owner, options, colonyNavalWantWithMineEligibility);
-}
-function rankBootstrapGoalsImpl(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, naval: typeof colonyNavalWantWithMineEligibility) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
-    (view, player, context) => naval(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
+    (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
     economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)]);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
@@ -180,7 +177,7 @@ function rankBootstrapGoalsImpl(snapshot: GameSnapshot, owner: PlayerId, options
 // The frozen goal generator still supplies placement, prerequisites, naval plans and aging.
 // Only the candidate's purchase order changes; all commands spend ordinary gold and supply.
 export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const goals = rankBootstrapGoalsImpl(snapshot, owner, options, prepareColonyNavalWant);
+  const goals = rankBootstrapGoals(snapshot, owner, options);
   const player = snapshot.players[owner]!;
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);

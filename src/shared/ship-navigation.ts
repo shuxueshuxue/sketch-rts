@@ -918,9 +918,6 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   const t = map.terrain;
   if (!t)
     return {points:[{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }],partial:false};
-  // Empty-traffic connectors can finish without ever constructing the lattice.
-  // Callback queries retain their original pre-callback input capture.
-  const prepareGraph=()=>{
   const grid = gridFor(map, ship), size = grid.fits.length;
   const limits=shipMotionLimits(ship),cruise=Math.max(1e-6,coursePerformance(ship,map,0,{assumeTrimmed:true}).maxForwardSpeed),turnSpeed=Math.max(1e-6,limits.turnRate);
   const courseSpeeds=Array.from({length:DIRECTIONS},(_,h)=>{
@@ -933,9 +930,6 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   });
   const lattice = grid;
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
-    return {grid,size,limits,cruise,turnSpeed,courseSpeeds,edgeWeights,lattice,pose};
-  };
-  const eagerGraph=noTraffic?undefined:prepareGraph();
   const savedTraffic=runtime?.graph?.traffic ?? new Map(state?.trafficFits?.map(entry=>[entry.id,entry.clear]));
   const fits = (id: number) => {
     if (!grid.fits[id])
@@ -977,7 +971,6 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     }
     if(state){state.target=target;state.deferred=deferred;state.trafficBlocked=trafficBlocked;state.phase='entrance';return;}
   }
-  const {grid,size,limits,cruise,turnSpeed,courseSpeeds,edgeWeights,lattice,pose}=eagerGraph??prepareGraph();
   const target=preparedTarget!;
   const destination=requested?target:{x:target.x,y:target.y};
   const arrive=arrivalConnectorFor(map,ship,target,trafficClear,runtime);
