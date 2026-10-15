@@ -379,7 +379,13 @@ export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
     const x=other.id===plan.sourceId?plan.sourceX:plan.targetX,y=other.id===plan.sourceId?plan.sourceY:plan.targetY;
     return{...other,x,y,sailing:{...other.sailing,heading:plan.heading}};
   });
-  return shipTraffic(ship,reserved,range);
+  const planned=shipTraffic(ship,reserved,range),live=shipTraffic(ship,units,range);
+  const originX=ship.x,originY=ship.y;
+  // The partner has not left its actual hull yet. Departure turns, including
+  // in-place search orientations, must clear it before using the future berth.
+  return Object.assign((from:ShipPose,to:ShipPose,padding?:number)=>planned(from,to,padding)
+    && (Math.hypot(from.x-originX,from.y-originY)>1e-7 || live(from,to,padding)),
+    {hasTraffic:planned.hasTraffic||live.hasTraffic});
 }
 
 /** Planning and maneuver refinement share the executor's shore-body constraints. */
