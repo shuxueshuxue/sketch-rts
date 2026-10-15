@@ -2,12 +2,17 @@ import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { stepGame, type Game } from "../sim";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
+import { partitionDeliveredPlannerCommands } from "./planner-schedule";
 import type { GameCommand } from "../types";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
   restore: (state: State) => void;
-  plan: () => CommandEnvelope[];
+  // Whether the commands due on the current tick are planned: a think may still run beside the simulation (see
+  // @@@planner-schedule). A runtime is ticked only when it is ready.
+  ready?: () => boolean;
+  // Plans the owners due on this tick, checking each fresh plan with `check`, and returns the commands due on it.
+  plan: (check: (commands: CommandEnvelope[]) => void) => CommandEnvelope[];
 };
 
 export type CommandFrameRuntimeOptions<State = unknown> = {
@@ -60,8 +65,14 @@ export function advanceCommandFrameTick(game: Game, frames?: CommandFrame | Comm
 
 export class CommandFrameRuntime<State = unknown> {
   private nextSequence = 0;
+  // Planned AI commands the world outgrew during their delay (see partitionDeliveredPlannerCommands).
+  staleAiCommands = 0;
 
   constructor(private readonly options: CommandFrameRuntimeOptions<State>) {}
+
+  ready(): boolean {
+    return this.options.aiPlanner?.ready?.() ?? true;
+  }
 
   completeAndApply(commands: CommandEnvelope[], options: RuntimeFrameOptions = {}): CommandFrame | undefined {
     const frame = this.completeFrame(commands, options);
@@ -80,6 +91,11 @@ export class CommandFrameRuntime<State = unknown> {
 
   admit(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
     this.validate(normalizeCommandFrameEntries(commands), { purpose: "admission", rejectionLabel: options.rejectionLabel });
+  }
+
+  // A planner's fresh commands, checked as a frame would apply them now (transient rejections pass).
+  check(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
+    this.validate(normalizeCommandFrameEntries(commands), { purpose: "apply", rejectionLabel: options.rejectionLabel });
   }
 
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
@@ -103,9 +119,10 @@ export class CommandFrameRuntime<State = unknown> {
     if (!this.options.aiPlanner) return [];
     const checkpoint = this.options.aiPlanner.checkpoint();
     try {
-      const commands = this.options.aiPlanner.plan();
-      this.validate(commands, { purpose: "apply" });
-      return commands;
+      const delivered = this.options.aiPlanner.plan((commands) => this.validate(commands, { purpose: "apply" }));
+      const { deliverable, stale } = partitionDeliveredPlannerCommands(this.options.game, delivered);
+      this.staleAiCommands += stale.length;
+      return deliverable;
     } catch (error) {
       this.options.aiPlanner.restore(checkpoint);
       throw error;

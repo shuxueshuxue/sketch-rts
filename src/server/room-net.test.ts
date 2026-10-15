@@ -2,6 +2,7 @@ import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import type { AiScript } from "../ai/policy";
 import { decodeServerNetMessage, encodeNetMessage } from "../shared/net/codec";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub, type RoomNetSocket } from "./room-net";
 import type { ServerNetMessage } from "../shared/net/types";
@@ -54,22 +55,18 @@ describe("room net hub", () => {
     hub.connect(room.id, socket);
     socket.emit(encodeNetMessage({ type: "join", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player" }));
     socket.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", clientSeq: 0, epoch: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }));
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
+    const ticks = Math.max(3, PLANNER_COMMAND_DELAY_TICKS + 1);
+    for (let tick = 0; tick < ticks; tick += 1) hub.tickRoom(room.id);
 
     const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
     expect(messages[0]).toEqual({ type: "hello", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player", tick: 0, epoch: 0 });
     const frames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
-    expect(frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence }))).toEqual([
-      { tick: 0, sequence: 0 },
-      { tick: 1, sequence: 1 },
-      { tick: 2, sequence: 2 },
-    ]);
-    expect(frames[0]?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence }))).toEqual(Array.from({ length: ticks }, (_, tick) => ({ tick, sequence: tick })));
+    // The AI's tick-0 think lands PLANNER_COMMAND_DELAY_TICKS later; the client command lands commandDelayTicks later.
+    expect(frames[PLANNER_COMMAND_DELAY_TICKS]?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
     expect(frames[2]?.commands).toContainEqual({ playerId: "player", clientSeq: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
     const after = roomHost.snapshot(room.id);
-    expect(after.tick).toBe(3);
+    expect(after.tick).toBe(ticks);
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
@@ -81,10 +78,11 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
 
     connectCurrent(hub, room.id, socket);
-    hub.tickRoom(room.id);
+    for (let tick = 0; tick <= PLANNER_COMMAND_DELAY_TICKS; tick += 1) hub.tickRoom(room.id);
 
-    const frame = socket.sent.map((raw) => decodeServerNetMessage(raw)).find((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame")?.frame;
+    const frame = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").at(-1)?.frame;
     const after = roomHost.snapshot(room.id);
+    expect(frame?.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
     const enemyWorker = after.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
     expect(frame?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
     expect(enemyWorker?.order.type).not.toBe("idle");
@@ -101,12 +99,12 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
 
     connectCurrent(hub, room.id, socket);
-    roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1);
+    roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1 + PLANNER_COMMAND_DELAY_TICKS);
 
     const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
-    expect(frames).toHaveLength(1);
+    expect(frames.map((message) => message.frame.tick)).toEqual([0, PLANNER_COMMAND_DELAY_TICKS]);
     expect(frames[0]?.frame.commands).toContainEqual({ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
-    expect(frames[0]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames[1]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
   });
 
   it("publishes single room commands as one connected room frame tick", () => {

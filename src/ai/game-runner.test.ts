@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AI_SCRIPT_LIBRARY, type AiPolicyMemory, type AiScript } from "./policy";
 import { issuePlayerCommand } from "../shared/sim";
 import { runAiGame, runAiGameLoop } from "./game-runner";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import { sketchScene } from "../sdk/scene";
 
 describe("SDK game runner", () => {
@@ -74,7 +75,7 @@ describe("SDK game runner", () => {
     });
 
     expect(report.commands.length).toBeGreaterThan(0);
-    expect(report.commands[0]?.tick).toBe(0);
+    expect(report.commands[0]?.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
     expect(report.commands[0]?.owner).toMatch(/alpha|beta/);
     expect(report.commands[0]?.scriptId).toBeTruthy();
     expect(report.commands.some((entry) => entry.source === "external-agent")).toBe(true);

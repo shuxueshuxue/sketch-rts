@@ -3,6 +3,8 @@ import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryPro
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import { normalizeCommandFrameEntries, type CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
+import { PLANNER_COMMAND_DELAY_TICKS, plannerPhase, plannerThinksAt } from "../shared/sim/planner-schedule";
+import type { CommandEnvelope } from "../shared/net/types";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
@@ -69,29 +71,80 @@ export function createAiRuntime(
   };
 }
 
-export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
-  if (game.match.winner) return { commands: [] };
+// Each controlled player thinks on its own phase of the shared interval (see @@@planner-schedule), so five AIs spread
+// their thinking over the interval instead of all landing on one tick.
+function dueAiOwners(game: Game, runtime: AiRuntimeState): PlayerId[] {
+  if (game.match.winner) return [];
+  const count = runtime.controlledPlayers.length;
+  return runtime.controlledPlayers.filter((owner, index) =>
+    !!game.players[owner] && plannerThinksAt(game.tick, plannerPhase(index, count, runtime.thinkInterval), runtime.thinkInterval));
+}
 
-  const dueOwners = runtime.controlledPlayers.filter((owner) => {
-    if (!game.players[owner]) return false;
-    return game.tick - (runtime.lastThink[owner] ?? -runtime.thinkInterval) >= runtime.thinkInterval;
-  });
-  if (dueOwners.length === 0) return { commands: [] };
-
-  const requests = dueOwners.map((owner) => {
+function claimThink(game: Game, runtime: AiRuntimeState, owners: PlayerId[]): AiCommandFrameRequest[] {
+  return owners.map((owner) => {
     runtime.lastThink[owner] = game.tick;
     return runtimeRequestForOwner(runtime, owner);
   });
-  return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
 
-export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntimeState): CommandFrameRuntimeAiPlanner<AiRuntimeFramePlannerState> {
+/** Plans the owners due on this tick and returns their commands now, with no delivery delay (tools and tests). */
+export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
+  const owners = dueAiOwners(game, runtime);
+  if (owners.length === 0) return { commands: [] };
+  return planAiCommandFrame(game, claimThink(game, runtime, owners), { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
+}
+
+// One think: the owners due on `tick`, planned from the world as it stood then. Their commands land on `deliveryTick`.
+export type AiThinkJob = { tick: number; deliveryTick: number; requests: AiCommandFrameRequest[] };
+
+// Where thinks run: right here (createInlineAiThinkExecutor) or beside the simulation on another thread. A think's commands
+// land on its delivery tick either way, so the match is the same (see @@@planner-schedule).
+export type AiThinkExecutor = {
+  // `check` rejects a command that is illegal in the world it was planned from.
+  submit(game: Game, job: AiThinkJob, check: (commands: CommandEnvelope[]) => void): void;
+  // Whether every think due by this tick has been planned.
+  ready(tick: number): boolean;
+  take(tick: number): CommandEnvelope[];
+};
+
+export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExecutor {
+  const planned = new Map<number, CommandEnvelope[]>();
+  return {
+    submit(game, job, check) {
+      const result = planAiCommandFrame(game, job.requests, runtime.policyMode ? { policyMode: runtime.policyMode } : {});
+      const commands = result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
+      check(commands);
+      if (commands.length > 0) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
+    },
+    ready: () => true,
+    take(tick) {
+      const commands = planned.get(tick) ?? [];
+      planned.delete(tick);
+      return commands;
+    },
+  };
+}
+
+export type AiFramePlannerOptions = {
+  executor?: AiThinkExecutor;
+  // Ticks between a think and its commands; 0 lands them on the think's own tick.
+  commandDelayTicks?: number;
+};
+
+export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntimeState, options: AiFramePlannerOptions = {}): CommandFrameRuntimeAiPlanner<AiRuntimeFramePlannerState> {
+  const delay = options.commandDelayTicks ?? PLANNER_COMMAND_DELAY_TICKS;
+  const executor = options.executor ?? createInlineAiThinkExecutor(runtime);
   return {
     checkpoint: () => ({ ...runtime.lastThink }),
     restore: (lastThink) => {
       runtime.lastThink = lastThink;
     },
-    plan: () => planPresetAiRuntimeCommands(game, runtime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })),
+    ready: () => executor.ready(game.tick),
+    plan: (check) => {
+      const owners = dueAiOwners(game, runtime);
+      if (owners.length > 0) executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests: claimThink(game, runtime, owners) }, check);
+      return executor.take(game.tick);
+    },
   };
 }
 
@@ -113,7 +166,7 @@ export function planAiCommandFrameFromSnapshot<Source extends string = string>(s
 
 function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
-  // @@@shared-ai-frame - All controlled slots reason over one world frame; replay/SDK equivalence depends on this.
+  // @@@shared-ai-frame - All requests of one think reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
     planned.push(...planAiOwnerCommandEntries(snapshot, request, { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) }));
   }

@@ -69,6 +69,17 @@ export class SdkCommandFrameRuntime {
     return { commands: issued, ...(appliedFrame ? { frame: appliedFrame } : {}), ...(options.checksum === false ? {} : { checksum: checksumGame(this.game) }) };
   }
 
+  // Rejects a freshly planned command the game would refuse now, as issuing it would, without applying anything.
+  check<Source extends string = string>(planned: CommandFrameEntry<Source>[]): void {
+    const checked = normalizeCommandFrameEntries(planned);
+    this.runtime.check(checked.map((entry) => ({ playerId: entry.playerId, command: entry.command })), {
+      rejectionLabel(entry, index) {
+        const checkedEntry = checked[index];
+        return `SDK command frame rejected ${checkedEntry?.playerId ?? entry.playerId} ${checkedEntry?.scriptId ?? "unknown"} command`;
+      },
+    });
+  }
+
   tick(): void {
     this.runtime.tick([]);
   }
