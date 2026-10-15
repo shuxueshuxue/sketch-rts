@@ -1,12 +1,12 @@
 {
   "complete": true,
   "scope": "rules3-stage12-focused-inputs",
-  "sourceFiles": 350,
-  "uniquePayloads": 259,
-  "aliases": 91,
-  "originalBytes": 21265736,
-  "storedBytes": 6633256,
-  "manifestSha256": "064bf5cc931e53d8b8605d902481f0053fa6f1e112d744cfd5c7304e02f6d7eb",
+  "sourceFiles": 383,
+  "uniquePayloads": 279,
+  "aliases": 104,
+  "originalBytes": 21322673,
+  "storedBytes": 6642058,
+  "manifestSha256": "d8c8d3cf1e4ee4f887159566349b9bff379122ffad68e4d66e26367c7c94c9b0",
   "allStoredDecodedOriginalBytesExact": true,
   "strictInventoryAndAliasesVerified": true,
   "supportingFilePinsExact": true,
@@ -36,8 +36,8 @@
       "/tmp/whole-stage12-archive-tools/finish-v3.py"
     ],
     "cwd": "/tmp/whole-stage12-archive-tools",
-    "startedUTC": "2026-10-15T04:46:29.776407+00:00",
-    "endedUTC": "2026-10-15T04:46:29.946676+00:00",
-    "wallSeconds": 0.17026925800018944
+    "startedUTC": "2026-10-15T04:47:21.810229+00:00",
+    "endedUTC": "2026-10-15T04:47:21.981068+00:00",
+    "wallSeconds": 0.17084059698390774
   }
 }

@@ -55,7 +55,7 @@ plan内外按实际调用栈归属分列，不代表所有AI规划／非规划�
 
 库存截点 **2026-10-15T04:35:29.909714+00:00**，只包含8个已完成诊断目录、明确列出的原工具/历史语义引用，以及三份未执行prepared-plan provenance。组合proof/cold-prep、23b正确性及后续candidate native均不并入。便携源码对象仅原0ea一个raw commit及认证241输入所需raw trees，没有候选代码对象。
 
-**350个完整原路径、259个gzip、91个显式alias**；原件21,265,736 B，unique gzip 6,633,256 B。全部stored/decoded SHA、原件全文、库存/alias及支持文件pins通过；两图×241本轮source、3份before图和独立历史oracle图分别核对，不冒称额外native实验。
+**383个完整原路径、279个gzip、104个显式alias**；原件21,322,673 B，unique gzip 6,642,058 B。全部stored/decoded SHA、原件全文、库存/alias及支持文件pins通过；两图×241本轮source、3份before图和独立历史oracle图分别核对，不冒称额外native实验。
 
 两个原完整commands均618,189B、SHA256 `771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997`，初始147,891B全文一致、final `7d94a5e8`、rules3/checksum18。离线复核两个14,400tick phase与全部数值buffers、原报告算术，保留所有不利/否定证据。v2原27、nav9375原23及v1来源17个payload均逐项完整认证，原文件不改写。
 

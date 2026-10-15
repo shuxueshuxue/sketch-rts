@@ -2304,6 +2304,818 @@
       "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdmVyaWZ5LnB5",
       "files": 1,
       "originalBytes": 13672
+    },
+    {
+      "id": "receipts-02-0",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvQU5BTFlaRVItVjItU09VUkNFLmpzb24=",
+      "files": 1,
+      "originalBytes": 949
+    },
+    {
+      "id": "receipts-02-1",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvRklOQUwtV09SRElORy1TT1VSQ0UuanNvbg==",
+      "files": 1,
+      "originalBytes": 462
+    },
+    {
+      "id": "receipts-02-2",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvSEVBVlktQUNUSVZBVElPTi5qc29u",
+      "files": 1,
+      "originalBytes": 713
+    },
+    {
+      "id": "receipts-02-3",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvUkVBRE1FLnpoLmRyYWZ0Lm1k",
+      "files": 1,
+      "originalBytes": 5058
+    },
+    {
+      "id": "receipts-02-4",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvU09VUkNFLVBSRVBBUkVELmpzb24=",
+      "files": 1,
+      "originalBytes": 3104
+    },
+    {
+      "id": "receipts-02-5",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYWN0aXZhdGUtaGVhdnkucHk=",
+      "files": 1,
+      "originalBytes": 3222
+    },
+    {
+      "id": "receipts-02-6",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYWRhcHQtYW5hbHl6ZXItMDItZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 775
+    },
+    {
+      "id": "receipts-02-7",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYWRhcHQtYW5hbHl6ZXItMDIuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-8",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYWRhcHQtYW5hbHl6ZXItMDIuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 847
+    },
+    {
+      "id": "receipts-02-9",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYWRhcHQtYW5hbHl6ZXItdjIucHk=",
+      "files": 1,
+      "originalBytes": 1528
+    },
+    {
+      "id": "receipts-02-10",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 894
+    },
+    {
+      "id": "receipts-02-11",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 1146
+    },
+    {
+      "id": "receipts-02-12",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-13",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMi1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 903
+    },
+    {
+      "id": "receipts-02-14",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMi5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-15",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS0wMi5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 306
+    },
+    {
+      "id": "receipts-02-16",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS1uYXRpdmUtdjIucHk=",
+      "files": 1,
+      "originalBytes": 11881
+    },
+    {
+      "id": "receipts-02-17",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYW5hbHl6ZS1uYXRpdmUucHk=",
+      "files": 1,
+      "originalBytes": 11661
+    },
+    {
+      "id": "receipts-02-18",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 993
+    },
+    {
+      "id": "receipts-02-19",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-20",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 174
+    },
+    {
+      "id": "receipts-02-21",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvY2hlY2stZml4ZWQtZG93bmxvYWRzLnB5",
+      "files": 1,
+      "originalBytes": 2192
+    },
+    {
+      "id": "receipts-02-22",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvY2hlY2stc2RrLnB5",
+      "files": 1,
+      "originalBytes": 2757
+    },
+    {
+      "id": "receipts-02-23",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvY29tcHJlc3MtMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 947
+    },
+    {
+      "id": "receipts-02-24",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvY29tcHJlc3MtMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-25",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvY29tcHJlc3MtMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 174
+    },
+    {
+      "id": "receipts-02-26",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 822
+    },
+    {
+      "id": "receipts-02-27",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-28",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 306
+    },
+    {
+      "id": "receipts-02-29",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluYWwtc3RhdGUucHk=",
+      "files": 1,
+      "originalBytes": 2335
+    },
+    {
+      "id": "receipts-02-30",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluYWwtd29yZGluZy1zb3VyY2UtMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 792
+    },
+    {
+      "id": "receipts-02-31",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluYWwtd29yZGluZy1zb3VyY2UtMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-32",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluYWwtd29yZGluZy1zb3VyY2UtMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 392
+    },
+    {
+      "id": "receipts-02-33",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 763
+    },
+    {
+      "id": "receipts-02-34",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-35",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 1171
+    },
+    {
+      "id": "receipts-02-36",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 740
+    },
+    {
+      "id": "receipts-02-37",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-38",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 1172
+    },
+    {
+      "id": "receipts-02-39",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLXYyLnB5",
+      "files": 1,
+      "originalBytes": 8311
+    },
+    {
+      "id": "receipts-02-40",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLXYzLnB5",
+      "files": 1,
+      "originalBytes": 8635
+    },
+    {
+      "id": "receipts-02-41",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLnB5",
+      "files": 1,
+      "originalBytes": 7437
+    },
+    {
+      "id": "receipts-02-42",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZml4ZWQtZG93bmxvYWRzLWZpcnN0Lmpzb24=",
+      "files": 1,
+      "originalBytes": 2175
+    },
+    {
+      "id": "receipts-02-43",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnJlZXplLWludmVudG9yeS0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 767
+    },
+    {
+      "id": "receipts-02-44",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnJlZXplLWludmVudG9yeS0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-45",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnJlZXplLWludmVudG9yeS0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 1769
+    },
+    {
+      "id": "receipts-02-46",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnVsbC1vcmlnaW5hbC1yZWFkYmFjay0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 922
+    },
+    {
+      "id": "receipts-02-47",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnVsbC1vcmlnaW5hbC1yZWFkYmFjay0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-48",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZnVsbC1vcmlnaW5hbC1yZWFkYmFjay0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 171
+    },
+    {
+      "id": "receipts-02-49",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 835
+    },
+    {
+      "id": "receipts-02-50",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-51",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-52",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 781
+    },
+    {
+      "id": "receipts-02-53",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-54",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-55",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 818
+    },
+    {
+      "id": "receipts-02-56",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-57",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 24178
+    },
+    {
+      "id": "receipts-02-58",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 816
+    },
+    {
+      "id": "receipts-02-59",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 126
+    },
+    {
+      "id": "receipts-02-60",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-61",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaGVhdnktYWN0aXZhdGlvbi0wMS1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 764
+    },
+    {
+      "id": "receipts-02-62",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaGVhdnktYWN0aXZhdGlvbi0wMS5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-63",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaGVhdnktYWN0aXZhdGlvbi0wMS5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 631
+    },
+    {
+      "id": "receipts-02-64",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaW5wdXRzLXJlY2VpcHRzLTAxLmpzb24=",
+      "files": 1,
+      "originalBytes": 19575
+    },
+    {
+      "id": "receipts-02-65",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaW5wdXRzLXN0YWdlMTIuZHJhZnQuanNvbg==",
+      "files": 1,
+      "originalBytes": 64317
+    },
+    {
+      "id": "receipts-02-66",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaW5wdXRzLXN0YWdlMTIuanNvbg==",
+      "files": 1,
+      "originalBytes": 64558
+    },
+    {
+      "id": "receipts-02-67",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaW52ZW50b3J5LXBsYW4uanNvbg==",
+      "files": 1,
+      "originalBytes": 56415
+    },
+    {
+      "id": "receipts-02-68",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvbWF0ZXJpYWxpemUtc2NvcGUtMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 770
+    },
+    {
+      "id": "receipts-02-69",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvbWF0ZXJpYWxpemUtc2NvcGUtMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-70",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvbWF0ZXJpYWxpemUtc2NvcGUtMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 164
+    },
+    {
+      "id": "receipts-02-71",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvbWF0ZXJpYWxpemUtc2NvcGUucHk=",
+      "files": 1,
+      "originalBytes": 971
+    },
+    {
+      "id": "receipts-02-72",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvb2xkLXNkay1hdHRyaWJ1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 354
+    },
+    {
+      "id": "receipts-02-73",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1yZWNlaXB0cy5weQ==",
+      "files": 1,
+      "originalBytes": 549
+    },
+    {
+      "id": "receipts-02-74",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 767
+    },
+    {
+      "id": "receipts-02-75",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-76",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 1112
+    },
+    {
+      "id": "receipts-02-77",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAyLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 766
+    },
+    {
+      "id": "receipts-02-78",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAyLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-79",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLTAyLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 1112
+    },
+    {
+      "id": "receipts-02-80",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLXYyLnB5",
+      "files": 1,
+      "originalBytes": 5269
+    },
+    {
+      "id": "receipts-02-81",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcGxhbi1zdG9yYWdlLnB5",
+      "files": 1,
+      "originalBytes": 5300
+    },
+    {
+      "id": "receipts-02-82",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcG9ydGFibGUtMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 761
+    },
+    {
+      "id": "receipts-02-83",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcG9ydGFibGUtMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-84",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcG9ydGFibGUtMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 212
+    },
+    {
+      "id": "receipts-02-85",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcG9ydGFibGUtcHJlcGFyYXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 228
+    },
+    {
+      "id": "receipts-02-86",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 745
+    },
+    {
+      "id": "receipts-02-87",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-88",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 429
+    },
+    {
+      "id": "receipts-02-89",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0Lmpzb24=",
+      "files": 1,
+      "originalBytes": 445
+    },
+    {
+      "id": "receipts-02-90",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LnB5",
+      "files": 1,
+      "originalBytes": 1176
+    },
+    {
+      "id": "receipts-02-91",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlcGFyZS1maW5hbC13b3JkaW5nLnB5",
+      "files": 1,
+      "originalBytes": 1137
+    },
+    {
+      "id": "receipts-02-92",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlcGFyZS1pbnZlbnRvcnkucHk=",
+      "files": 1,
+      "originalBytes": 4352
+    },
+    {
+      "id": "receipts-02-93",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlcGFyZS1wb3J0YWJsZS5weQ==",
+      "files": 1,
+      "originalBytes": 2318
+    },
+    {
+      "id": "receipts-02-94",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 777
+    },
+    {
+      "id": "receipts-02-95",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-96",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 83
+    },
+    {
+      "id": "receipts-02-97",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAyLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-98",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAyLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 84
+    },
+    {
+      "id": "receipts-02-99",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcnVuLXN0ZXAucHk=",
+      "files": 1,
+      "originalBytes": 1598
+    },
+    {
+      "id": "receipts-02-100",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLWFjdHVhbC1leGVjdXRpb24uanNvbg==",
+      "files": 1,
+      "originalBytes": 507214
+    },
+    {
+      "id": "receipts-02-101",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLWFjdHVhbC5zdGRlcnIubG9n",
+      "files": 1,
+      "originalBytes": 696
+    },
+    {
+      "id": "receipts-02-102",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLWFjdHVhbC5zdGRvdXQubG9n",
+      "files": 1,
+      "originalBytes": 669
+    },
+    {
+      "id": "receipts-02-103",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLXdyYXBwZXItMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 757
+    },
+    {
+      "id": "receipts-02-104",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLXdyYXBwZXItMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-105",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2RrLXdyYXBwZXItMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 3090
+    },
+    {
+      "id": "receipts-02-106",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2VhbC1wcmVwYXJlZC1zb3VyY2UucHk=",
+      "files": 1,
+      "originalBytes": 1387
+    },
+    {
+      "id": "receipts-02-107",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2VhbC1zb3VyY2UtcmVhZHktMDEtZXhlY3V0aW9uLmpzb24=",
+      "files": 1,
+      "originalBytes": 785
+    },
+    {
+      "id": "receipts-02-108",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2VhbC1zb3VyY2UtcmVhZHktMDEuc3RkZXJyLmxvZw==",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-109",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc2VhbC1zb3VyY2UtcmVhZHktMDEuc3Rkb3V0LmxvZw==",
+      "files": 1,
+      "originalBytes": 632
+    },
+    {
+      "id": "receipts-02-110",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc3RvcmFnZS1hbmQtYXJndi1wbGFuLXYyLmpzb24=",
+      "files": 1,
+      "originalBytes": 6784
+    },
+    {
+      "id": "receipts-02-111",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvc3RvcmFnZS1hbmQtYXJndi1wbGFuLmpzb24=",
+      "files": 1,
+      "originalBytes": 6818
+    },
+    {
+      "id": "receipts-02-112",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLWV4ZWN1dGlvbi5qc29u",
+      "files": 1,
+      "originalBytes": 780
+    },
+    {
+      "id": "receipts-02-113",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLnN0ZGVyci5sb2c=",
+      "files": 1,
+      "originalBytes": 0
+    },
+    {
+      "id": "receipts-02-114",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLnN0ZG91dC5sb2c=",
+      "files": 1,
+      "originalBytes": 166
+    },
+    {
+      "id": "receipts-02-115",
+      "description": "Completed exact source, command, stdout/stderr, UTC, exit or archive-only readback receipt.",
+      "sourcePathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdmVyaWZ5LnB5",
+      "files": 1,
+      "originalBytes": 13672
     }
   ],
   "exclusions": [],
@@ -6248,6 +7060,382 @@
       "encoding": "gzip",
       "storedBytes": 3971,
       "storedSha256": "e6bd5156501fa22de2befe843635b90fc2f4d50fd2d7423c33c1a18a41366483"
+    },
+    {
+      "group": "receipts-02-18",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 993,
+      "originalSha256": "b23398015855c39273a17631457fc55a9942c69541f77a222335f3d20e3f86d4",
+      "payloadId": "p0260",
+      "storedPath": "payloads/id0260.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 467,
+      "storedSha256": "8cd617647f54f95e9c5ac405b4cf8da995da3968265fcd08b1945e400862c91b"
+    },
+    {
+      "group": "receipts-02-19",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-20",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvYXBwZW5kLXJlY2VpcHRzLTAxLnN0ZG91dC5sb2c=",
+      "originalBytes": 174,
+      "originalSha256": "72a56bf27ac8dcfc32fbd1c4f1d3523a8518ecf1a15ddb523d6821cc813b435e",
+      "payloadId": "p0261",
+      "storedPath": "payloads/id0261.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 148,
+      "storedSha256": "7a866021a7a84cd19ccae59c5358ac66d515733876d56454e9d3ecd3bb38aaf9"
+    },
+    {
+      "group": "receipts-02-26",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS1leGVjdXRpb24uanNvbg==",
+      "originalBytes": 822,
+      "originalSha256": "c770ad742a01848b6094a01ba6a74f51dc2e6a70b97093b374bd47e9b77be91b",
+      "payloadId": "p0262",
+      "storedPath": "payloads/id0262.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 439,
+      "storedSha256": "3d8a7755c537731808dbc4ab41143c12bf7ee5c1fe5fe77eafa1eaf37a721f06"
+    },
+    {
+      "group": "receipts-02-27",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS5zdGRlcnIubG9n",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-28",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZGV0ZXJtaW5pc3RpYy1yZWFkYmFjay0wMS5zdGRvdXQubG9n",
+      "originalBytes": 306,
+      "originalSha256": "ced99e34d4e20195615b93f28a2598fa52b78b3c18cf11d17c18eb8e75f96573",
+      "storedPath": "payloads/id0206.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 219,
+      "storedSha256": "4612957f618e5e01b5be05f597cf20eefd91efcdb28c90af0a127640b01c1947",
+      "aliasOf": "p0206",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-36",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 740,
+      "originalSha256": "617d34189d3abc3baa97611fd1f1070db6f1c2e0a565a4921145445212382d19",
+      "payloadId": "p0263",
+      "storedPath": "payloads/id0263.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 382,
+      "storedSha256": "162ef50d2451d2885c20cc908c73e10231302c207f4b7095475b779862e5f983"
+    },
+    {
+      "group": "receipts-02-37",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-38",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZmluaXNoLTAyLnN0ZG91dC5sb2c=",
+      "originalBytes": 1172,
+      "originalSha256": "a5aade06b30e8ad6596aad0a3cbcc604e75e0d5582d6c1289b0662b63b341b3d",
+      "payloadId": "p0264",
+      "storedPath": "payloads/id0264.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 661,
+      "storedSha256": "697e1e215a944a0dd071fda04235aef9486dd675244d68eae02ff4d9a78fbedb"
+    },
+    {
+      "group": "receipts-02-42",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZml4ZWQtZG93bmxvYWRzLWZpcnN0Lmpzb24=",
+      "originalBytes": 2175,
+      "originalSha256": "5a405c06f1f3d0edc3e26b3821a886f85e345acef27c4da56b76b2430459077a",
+      "payloadId": "p0265",
+      "storedPath": "payloads/id0265.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 824,
+      "storedSha256": "1fd81c05587f4b3d73c4d2fd645258fcef967acc7e86b382f84740ac35fff3ea"
+    },
+    {
+      "group": "receipts-02-49",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS1leGVjdXRpb24uanNvbg==",
+      "originalBytes": 835,
+      "originalSha256": "07d82d1b44a44553a1d3f3d65b76ab4a37657fd65fa25aefe80ff034b9127105",
+      "payloadId": "p0266",
+      "storedPath": "payloads/id0266.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 385,
+      "storedSha256": "19d651c6bb40475b2a5bcf6c32facce8aef1d7e516425c27d89cb656f7a422ec"
+    },
+    {
+      "group": "receipts-02-50",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS5zdGRlcnIubG9n",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-51",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWFkZC0wMS5zdGRvdXQubG9n",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-52",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 781,
+      "originalSha256": "23e35641f710792469c803c73f2f6bc037d95ad21646039a0ba23d233836ffdb",
+      "payloadId": "p0267",
+      "storedPath": "payloads/id0267.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 354,
+      "storedSha256": "17027927831fd8956eb205cbcf90ef3c7ca4687f5c812149a1322c084e171f25"
+    },
+    {
+      "group": "receipts-02-53",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-54",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNoZWNrLTAxLnN0ZG91dC5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-55",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS1leGVjdXRpb24uanNvbg==",
+      "originalBytes": 818,
+      "originalSha256": "8ea0cb543548583baafc87cb3845f72b08f40291de231a0e5b02bf7ecfab0b8c",
+      "payloadId": "p0268",
+      "storedPath": "payloads/id0268.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 424,
+      "storedSha256": "49d3e8efc129ed35fd5e542d145587fbbf462bd8ffab490b28d074917dc3cab2"
+    },
+    {
+      "group": "receipts-02-56",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS5zdGRlcnIubG9n",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-57",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LWNvbW1pdC0wMS5zdGRvdXQubG9n",
+      "originalBytes": 24178,
+      "originalSha256": "d7ba9b822d954aeb9010ed2020a12d4c226d66a238af426b9121e03f0fd9e0b8",
+      "payloadId": "p0269",
+      "storedPath": "payloads/id0269.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 1014,
+      "storedSha256": "cea80faaef3d33a658b5ba2a6b560f7d4a58551feacdc872d3131d2a68a7dc7f"
+    },
+    {
+      "group": "receipts-02-58",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEtZXhlY3V0aW9uLmpzb24=",
+      "originalBytes": 816,
+      "originalSha256": "6cbfc6cedef2dcc5a78e721b555c5569e58cb52bd14ddb1961a8d8203e6d0553",
+      "payloadId": "p0270",
+      "storedPath": "payloads/id0270.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 422,
+      "storedSha256": "34456d2fa1e01b94aee228812f41422dabdf218276f607a31c902755176730c7"
+    },
+    {
+      "group": "receipts-02-59",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEuc3RkZXJyLmxvZw==",
+      "originalBytes": 126,
+      "originalSha256": "2d5be0ad0f6eca2e7e888a3e68930901319af4ab019c579ea90bf1cd253337bb",
+      "payloadId": "p0271",
+      "storedPath": "payloads/id0271.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 117,
+      "storedSha256": "847e0fa5281092b2d0830c82c22b8fa89ca89a3a0809f00ad61a3fdf1b328350"
+    },
+    {
+      "group": "receipts-02-60",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvZ2l0LXB1c2gtMDEuc3Rkb3V0LmxvZw==",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-64",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvaW5wdXRzLXJlY2VpcHRzLTAxLmpzb24=",
+      "originalBytes": 19575,
+      "originalSha256": "95f8f932093843575eea8246116135b38b322fb8ac79dbffbdaeafd183f6e469",
+      "payloadId": "p0272",
+      "storedPath": "payloads/id0272.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 1109,
+      "storedSha256": "58ac124f263c10f4545b3d7ff5520bd31cbab57eddd714ba15f50d373db0103e"
+    },
+    {
+      "group": "receipts-02-86",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 745,
+      "originalSha256": "c9c023b2660d11b43a2e248ca736bf89d091474b47db673cc0b98bbbcbf2a087",
+      "payloadId": "p0273",
+      "storedPath": "payloads/id0273.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 380,
+      "storedSha256": "2d9eb900303f803d8b6aa973141707fc37ec84d0ef9c2f66603fb3e8a0282426"
+    },
+    {
+      "group": "receipts-02-87",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-88",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0LTAxLnN0ZG91dC5sb2c=",
+      "originalBytes": 429,
+      "originalSha256": "5d97cc2af0d2ab8948db4f450fa943c5374ea86d10fb4f8289d7d8601a80ff5d",
+      "payloadId": "p0274",
+      "storedPath": "payloads/id0274.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 312,
+      "storedSha256": "60164175c47ff5896edb081a188abc8b43f209caea1ffc9e9bb731e84aa35e5d"
+    },
+    {
+      "group": "receipts-02-89",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcHJlY29tbWl0Lmpzb24=",
+      "originalBytes": 445,
+      "originalSha256": "65a52b0fb039513bc28769bf37f9d42bca6c68b048484fa4f7824fc3d3cd68fb",
+      "payloadId": "p0275",
+      "storedPath": "payloads/id0275.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 316,
+      "storedSha256": "f86c0d7529cd1c867ff8637215cfd1c1f3bf2ef22fd15f766ad837160bec7dd7"
+    },
+    {
+      "group": "receipts-02-94",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAxLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 777,
+      "originalSha256": "c222be6c34e2f1fcf23c31127df697a97bfc2da82cc1c768b658a73d12ad9182",
+      "payloadId": "p0276",
+      "storedPath": "payloads/id0276.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 391,
+      "storedSha256": "c3655a15574adc13602e44079a0681c6d8aedc19f9827553d2bbbf39fa3fde0b"
+    },
+    {
+      "group": "receipts-02-97",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAyLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-98",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvcmVjZWlwdC1wbGFuLTAyLnN0ZG91dC5sb2c=",
+      "originalBytes": 84,
+      "originalSha256": "a02f7512fc9e59ff60c54c404a66439c48da5545f6a631dee5f5d57590787bbe",
+      "payloadId": "p0277",
+      "storedPath": "payloads/id0277.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 99,
+      "storedSha256": "52700539b4279a082428217582c8522695126a2d628958171bad36c57191bf8f"
+    },
+    {
+      "group": "receipts-02-112",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLWV4ZWN1dGlvbi5qc29u",
+      "originalBytes": 780,
+      "originalSha256": "6fa99a7c856194ab1bb8bbbd37ba28a0ae4ef602399a60cf9c89b8e4f788db81",
+      "payloadId": "p0278",
+      "storedPath": "payloads/id0278.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 404,
+      "storedSha256": "4140e9509fdb65e036f2dc9b058ca054d56e5077bd8416a8df43bfd1f3adf89c"
+    },
+    {
+      "group": "receipts-02-113",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLnN0ZGVyci5sb2c=",
+      "originalBytes": 0,
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "storedPath": "payloads/id0029.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 20,
+      "storedSha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "aliasOf": "p0029",
+      "duplicateVerifiedByFullByteComparison": true
+    },
+    {
+      "group": "receipts-02-114",
+      "originalPathBase64": "L3RtcC93aG9sZS1zdGFnZTEyLWFyY2hpdmUtdG9vbHMvdGxzLWZpcnN0LTAxLnN0ZG91dC5sb2c=",
+      "originalBytes": 166,
+      "originalSha256": "734b467c68332526561deee47aa2080a54a70c9af772e06dfba494f6f514e99e",
+      "payloadId": "p0279",
+      "storedPath": "payloads/id0279.bin.gz",
+      "encoding": "gzip",
+      "storedBytes": 154,
+      "storedSha256": "d2fa37c19bde83ff13224c82bf4cede536140c6794a9900cd831c2f6d405e0bf"
     }
   ],
   "supportingFiles": [
@@ -6263,8 +7451,8 @@
   "supportingFilePins": [
     {
       "path": "README.zh.md",
-      "bytes": 7209,
-      "sha256": "66d250ca1b943b2d5c2d33e22391f965477715e9a63f3d7e805cb5f1855881dc"
+      "bytes": 7210,
+      "sha256": "b6a8185794b72e8825035eec457eb895b197557771e5c8a420f6b8132de5eb11"
     },
     {
       "path": "verify.py",
@@ -6302,6 +7490,96 @@
       "identity": "stage12-archive-receipts-01",
       "newSourceFiles": 83,
       "alreadyRetainedPaths": [],
+      "olderPayloadsUntouched": true
+    },
+    {
+      "identity": "stage12-archive-receipts-02",
+      "newSourceFiles": 33,
+      "alreadyRetainedPaths": [
+        "/tmp/whole-stage12-archive-tools/ANALYZER-V2-SOURCE.json",
+        "/tmp/whole-stage12-archive-tools/FINAL-WORDING-SOURCE.json",
+        "/tmp/whole-stage12-archive-tools/HEAVY-ACTIVATION.json",
+        "/tmp/whole-stage12-archive-tools/README.zh.draft.md",
+        "/tmp/whole-stage12-archive-tools/SOURCE-PREPARED.json",
+        "/tmp/whole-stage12-archive-tools/activate-heavy.py",
+        "/tmp/whole-stage12-archive-tools/adapt-analyzer-02-execution.json",
+        "/tmp/whole-stage12-archive-tools/adapt-analyzer-02.stderr.log",
+        "/tmp/whole-stage12-archive-tools/adapt-analyzer-02.stdout.log",
+        "/tmp/whole-stage12-archive-tools/adapt-analyzer-v2.py",
+        "/tmp/whole-stage12-archive-tools/analyze-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/analyze-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/analyze-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/analyze-02-execution.json",
+        "/tmp/whole-stage12-archive-tools/analyze-02.stderr.log",
+        "/tmp/whole-stage12-archive-tools/analyze-02.stdout.log",
+        "/tmp/whole-stage12-archive-tools/analyze-native-v2.py",
+        "/tmp/whole-stage12-archive-tools/analyze-native.py",
+        "/tmp/whole-stage12-archive-tools/check-fixed-downloads.py",
+        "/tmp/whole-stage12-archive-tools/check-sdk.py",
+        "/tmp/whole-stage12-archive-tools/compress-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/compress-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/compress-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/final-state.py",
+        "/tmp/whole-stage12-archive-tools/final-wording-source-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/final-wording-source-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/final-wording-source-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/finish-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/finish-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/finish-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/finish-v2.py",
+        "/tmp/whole-stage12-archive-tools/finish-v3.py",
+        "/tmp/whole-stage12-archive-tools/finish.py",
+        "/tmp/whole-stage12-archive-tools/freeze-inventory-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/freeze-inventory-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/freeze-inventory-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/full-original-readback-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/full-original-readback-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/full-original-readback-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/heavy-activation-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/heavy-activation-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/heavy-activation-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/inputs-stage12.draft.json",
+        "/tmp/whole-stage12-archive-tools/inputs-stage12.json",
+        "/tmp/whole-stage12-archive-tools/inventory-plan.json",
+        "/tmp/whole-stage12-archive-tools/materialize-scope-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/materialize-scope-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/materialize-scope-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/materialize-scope.py",
+        "/tmp/whole-stage12-archive-tools/old-sdk-attribution.json",
+        "/tmp/whole-stage12-archive-tools/plan-receipts.py",
+        "/tmp/whole-stage12-archive-tools/plan-storage-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/plan-storage-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/plan-storage-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/plan-storage-02-execution.json",
+        "/tmp/whole-stage12-archive-tools/plan-storage-02.stderr.log",
+        "/tmp/whole-stage12-archive-tools/plan-storage-02.stdout.log",
+        "/tmp/whole-stage12-archive-tools/plan-storage-v2.py",
+        "/tmp/whole-stage12-archive-tools/plan-storage.py",
+        "/tmp/whole-stage12-archive-tools/portable-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/portable-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/portable-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/portable-preparation.json",
+        "/tmp/whole-stage12-archive-tools/precommit.py",
+        "/tmp/whole-stage12-archive-tools/prepare-final-wording.py",
+        "/tmp/whole-stage12-archive-tools/prepare-inventory.py",
+        "/tmp/whole-stage12-archive-tools/prepare-portable.py",
+        "/tmp/whole-stage12-archive-tools/receipt-plan-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/receipt-plan-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/run-step.py",
+        "/tmp/whole-stage12-archive-tools/sdk-actual-execution.json",
+        "/tmp/whole-stage12-archive-tools/sdk-actual.stderr.log",
+        "/tmp/whole-stage12-archive-tools/sdk-actual.stdout.log",
+        "/tmp/whole-stage12-archive-tools/sdk-wrapper-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/sdk-wrapper-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/sdk-wrapper-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/seal-prepared-source.py",
+        "/tmp/whole-stage12-archive-tools/seal-source-ready-01-execution.json",
+        "/tmp/whole-stage12-archive-tools/seal-source-ready-01.stderr.log",
+        "/tmp/whole-stage12-archive-tools/seal-source-ready-01.stdout.log",
+        "/tmp/whole-stage12-archive-tools/storage-and-argv-plan-v2.json",
+        "/tmp/whole-stage12-archive-tools/storage-and-argv-plan.json",
+        "/tmp/whole-stage12-archive-tools/verify.py"
+      ],
       "olderPayloadsUntouched": true
     }
   ]
