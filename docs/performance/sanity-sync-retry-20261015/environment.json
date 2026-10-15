@@ -1,0 +1,9 @@
+{
+  "node": "v24.19.0",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "sourceBaseline": "884e5214faa76544fd4c9d38802ea2b5ebf0147a",
+  "reviewBaseline": "3b4d778e469d3ec5d3b6ebc1970881c4f524b6ef",
+  "runtimeCandidate": "1389caa336ec0a10c0cd909536961e767e7a97d9"
+}
