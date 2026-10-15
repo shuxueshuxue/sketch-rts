@@ -1260,7 +1260,11 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const px = (x+.5)*lattice.cell, py = (y+.5)*lattice.cell;
     const p = noTraffic ? undefined : {x:px,y:py,heading:h*ANGLE};
     work+=expansionWork;
-    if(++visited>budget){best=id;partial=true;break;}
+    // An exhausted budget ends the journey at the reached state nearest the
+    // target, not at whatever state the frontier offers next: that one may lie
+    // astern of the start behind several turns on the spot. A journey that
+    // would gain nothing on the start keeps the frontier's state instead.
+    if(++visited>budget){if(best<0 || bestGap>=Math.hypot(start.x-target.x,start.y-target.y)-1e-7)best=id;partial=true;break;}
     const gap = Math.hypot(px - target.x, py - target.y);
     if (gap < bestGap || (gap === bestGap && cost(id) < (best < 0 ? Infinity : cost(best)))) {
       best = id;
