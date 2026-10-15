@@ -551,14 +551,23 @@ function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:Sh
 /** A berth can be reached with a turning arc even when a straight final leg
  * would point its bow through the coast. Stage in open water, then swing the
  * bow/stern around a fixed point on the keel. No sideways docking shortcut. */
-function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean) {
+type PlanningSearchRuntime={arrival?:{profile:ReturnType<typeof shipProfile>;cells:string|undefined;key:string;checks:{fits?:boolean;passage?:boolean}[]}};
+function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,runtime?:PlanningSearchRuntime) {
+  const profile=shipProfile(ship),t=map.terrain;
+  const key=runtime?`${map.width}:${map.height}:${t?.cell}:${t?.cols}:${t?.rows}:${goal.x}:${goal.y}:${goal.heading}`:'';
+  if(runtime && (!runtime.arrival || runtime.arrival.profile!==profile || runtime.arrival.cells!==t?.cells || runtime.arrival.key!==key))
+    runtime.arrival={profile,cells:t?.cells,key,checks:[]};
+  let index=0;
   const length=shipProfile(ship)!.length;
   const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
   for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
     const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
     const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
-    if(!hullFits(map,ship,stage) || !traffic(stage,stage))continue;
-    if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))continue;
+    // Retain only pure terrain answers. Fresh poses and the current traffic
+    // wrapper preserve callback identity/order and this slice's blocked flag.
+    const check=runtime ? runtime.arrival!.checks[index++]??(runtime.arrival!.checks[index-1]={}) : undefined;
+    if(!(check ? check.fits??(check.fits=hullFits(map,ship,stage)) : hullFits(map,ship,stage)) || !traffic(stage,stage))continue;
+    if(!(check ? check.passage??(check.passage=hullPassageClear(map,ship,stage,end)) : hullPassageClear(map,ship,stage,end)) || !traffic(stage,end))continue;
     arcs.push({stage,end,angle});
   }
   // These swept arrival arcs depend only on the berth. Validate them once
@@ -832,6 +841,12 @@ export type ShipRouteSearchState={
   entrances?:{cell:number;points:ShipPose[][]}[]; entranceCursor?:number;
   best?:number; bestGap?:number; visited?:number; path?:ShipPose[]; fallback?:ShipRouteSearchState; result?:RouteResult;
 };
+/** Job-owned derived state: inputs and traffic geometry are frozen by the job.
+ * The public continuation APIs keep their observable arrays and identities. */
+export function createShipPlanningSearch(ship:Unit,goal:Point & {heading?:number},traffic:(from:ShipPose,to:ShipPose)=>boolean,budget:number,voyage:boolean) {
+  const state:ShipRouteSearchState={phase:'prepare'},runtime:PlanningSearchRuntime={};
+  return (map:SeaMap):RouteResult|undefined=>advanceShipRouteSearchImpl(map,ship,goal,traffic,budget,voyage,state,true,runtime);
+}
 const livePlanningSearches=new WeakSet<ShipRouteSearchState>();
 /** Internal planner-only fresh state; decoded jobs never acquire this identity. */
 export function beginLiveShipRouteSearch():ShipRouteSearchState {
@@ -848,7 +863,7 @@ export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {headin
   return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false);
 }
 function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
-  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean):RouteResult|undefined {
+  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean,runtime?:PlanningSearchRuntime):RouteResult|undefined {
   if(state.phase==='done')return state.result;
   // Fallback owns no active workspace. Resume it at this caller's depth,
   // retaining nested isolation only for a real reentrant traffic callback.
@@ -861,11 +876,11 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
   }
   routeSearchDepth++;
   try {
-    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
+    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned,runtime);
     if(result){state.result=result;state.phase='done';}return result;
   }finally{routeSearchDepth--;}
 }
-function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
+function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false,runtime?:PlanningSearchRuntime): RouteResult|undefined {
   // The real traffic provider declares an empty frozen obstacle set. Custom
   // callbacks without that declaration still receive every original check.
   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
@@ -913,7 +928,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const direct=keelConnector(map,ship,start,destination,trafficClear);
     if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
       || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
-    const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
+    const arrival=arrivalConnectorFor(map,ship,target,trafficClear,runtime)(start);
     if(arrival)return {points:arrival,partial:deferred};
     const direction=Math.atan2(target.y-start.y,target.x-start.x);
     if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
@@ -924,7 +939,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   }
   const target=preparedTarget!;
   const destination=requested?target:{x:target.x,y:target.y};
-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
+  const arrive=arrivalConnectorFor(map,ship,target,trafficClear,runtime);
   const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
     basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
   // A local traffic budget and a short berth search should stay local. The
