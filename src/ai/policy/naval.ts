@@ -416,6 +416,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
     const own = units(snapshot, owner);
     const plan = islandPlan(snapshot, owner, options, eligible);
     const assault = assaultPlan(snapshot, owner, options);
+    retargetAssaultFerries(snapshot, owner, options, assault);
     const outfit = outfitting(snapshot, owner, options);
     const services=navalServices(snapshot,owner,options);
     const commands: GameCommand[] = [...clearTransferLanes(snapshot,owner),...services.commands];
@@ -701,6 +702,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         if (!shore || !landing)
             return [];
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : settlement ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
+        if(mission.purpose==='assault' && sameGround(map,target,target))mission.targetGround={x:target.x,y:target.y};
     }
     // A loaded colony expedition can take newly available income before it sails.
     if (mission.purpose === 'settle' && mission.phase === 'loading' && island && mission.targetId !== island.mine.id) {
@@ -1296,6 +1298,32 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const live = plan && snapshot.resources.find((mine) => mine.id === plan.mineId && mine.amount > 0);
     return plan && live ? { mine: live, landing: plan.landing } : undefined;
 }
+/** Destroying one building does not clear its island. Update the convoy
+ * together, before individual ferry checks can cancel their old objective. */
+function retargetAssaultFerries(snapshot:GameSnapshot,owner:PlayerId,options:AiPolicyContext,assault:AssaultPlan|undefined) {
+    if(!assault || !isOpponentOwner(snapshot,owner,assault.target.owner,options))return;
+    const ferries=Object.entries(navalMemory(options).ferries ?? {}),own=units(snapshot,owner);
+    const observedIsland=(mission:typeof ferries[number][1])=>mission.purpose==='assault' && mission.phase!=='return'
+        && !!mission.targetGround && sameGround(snapshot.map,mission.targetGround,assault.target);
+    const standing=(mission:typeof ferries[number][1])=>snapshot.buildings.some(building=>building.id===mission.targetId
+        && isOpponentOwner(snapshot,owner,building.owner,options));
+    // One fallen objective changes the convoy's shared task. Leaving a live
+    // companion on another building ID splits the assembly strength in half.
+    if(!ferries.some(([id,mission])=>observedIsland(mission) && !standing(mission)
+        && own.some(unit=>unit.id===id && ferryCapacity(unit)>0)))return;
+    for(const [id,mission] of ferries) {
+        // Only an observed real objective identifies the landmass. A deep
+        // water shore goal can be shared by two different islands.
+        if(!observedIsland(mission))continue;
+        const boat=own.find(unit=>unit.id===id && ferryCapacity(unit)>0);
+        // A selected safe beach belongs to the island, not its fallen building.
+        const landing=boat && (mission.approach || standing(mission) ? mission.to : coastOnWater(snapshot,assault.target,boat));
+        if(!landing)continue;
+        mission.targetId=assault.target.id;
+        mission.targetGround={x:assault.target.x,y:assault.target.y};
+        mission.to=landing;
+    }
+}
 // The assault (see @@@ai-closeout): of the opponents whose every building stands off the owner's home's ground, the
 // building nearest its home that water by it joins to a shore of the owner's (or its shipyard), with that water. Looked for again
 // every PLAN_RETRY, and at once when its target falls.
@@ -1307,8 +1335,18 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     if (!home)
         return undefined;
     const memory = navalMemory(options);
+    const own=units(snapshot,owner);
+    // Remember the actual live objective before it can fall between thoughts.
+    // A saved mission whose target is already gone has no new observation.
+    for(const mission of Object.values(memory.ferries ?? {})) {
+        if(mission.purpose!=='assault' || mission.phase==='return')continue;
+        const target=snapshot.buildings.find(building=>building.id===mission.targetId
+            && isOpponentOwner(snapshot,owner,building.owner,options));
+        if(target && sameGround(map,target,target))mission.targetGround={x:target.x,y:target.y};
+    }
     let known = memory.assault;
-    const standing = known?.plan && snapshot.buildings.some((building) => building.id === known!.plan!.targetId);
+    const standing = known?.plan && snapshot.buildings.some((building) => building.id === known!.plan!.targetId
+        && isOpponentOwner(snapshot,owner,building.owner,options));
     if (!known || snapshot.tick - known.tick >= PLAN_RETRY || (known.plan && !standing)) {
         // The opponents walled off by water, every building of theirs off the home's ground (another opponent may still stand
         // on it, for the army: four players' games ended with the island's last hall untouched while two fought on), and the
@@ -1316,9 +1354,20 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
         const foes = snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options));
         const ashore = new Set(foes.filter((building) => sameGround(map, home, building)).map((building) => building.owner));
         const targets = foes.filter((building) => !ashore.has(building.owner) || (building.kind === "townHall" && !sameGround(map, home, building)));
+        // Keep the real committed enemy island while buildings remain there;
+        // a fallen beach target must not send its loaded convoy back to port.
+        const permanentCombat=(unit:Unit)=>unit.kind!=='worker' && unitMover(unit.kind)==='land' && unit.expiresTick===undefined;
+        const committed=Object.entries(memory.ferries ?? {}).flatMap(([id,mission])=>{
+            const boat=own.find(unit=>unit.id===id && ferryCapacity(unit)>0);
+            if(!boat || mission.purpose!=='assault' || mission.phase==='return' || !mission.targetGround)return [];
+            const crew=shipPassengers(snapshot.units,boat);
+            const loading=own.some(unit=>permanentCombat(unit) && unit.order.type==='board' && unit.order.transportId===id);
+            return crew.some(permanentCombat) || loading ? [mission.targetGround] : [];
+        });
+        const committedIsland=(target:Building)=>committed.some(ground=>sameGround(map,ground,target));
         let assault: AssaultPlan | undefined;
         if (targets.length > 0) {
-            for (const target of targets.sort((a, b) => distance(a, home) - distance(b, home))) {
+            for (const target of targets.sort((a, b) => Number(committedIsland(b))-Number(committedIsland(a)) || distance(a, home) - distance(b, home))) {
                 const landing = walkableGoal(map, target.x, target.y, "sea");
                 if (!isWalkable(map, landing.x, landing.y, "sea"))
                     continue;
@@ -1332,7 +1381,7 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
         memory.assault = known;
     }
     const live = known.plan && snapshot.buildings.find((building) => building.id === known!.plan!.targetId);
-    if (!known.plan || !live)
+    if (!known.plan || !live || !isOpponentOwner(snapshot,owner,live.owner,options))
         return undefined;
     const free = lastFight(snapshot, owner, options, home) || soleOpponent(snapshot, owner, options);
     return free || readyToCross(snapshot, owner, options, home, live) ? { target: live, landing: known.plan.landing } : undefined;

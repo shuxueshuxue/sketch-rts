@@ -537,3 +537,33 @@ root增量加入部署v6及v7一行射程修正。既有naval owner保留原requ
 通过合法装备转移/真实付费维修复现：bombardShip汇总attackRange312，但修复的mortar实际射程576，旧部署查询默认canReach漏判；原生15tick内发射，后爆伤登陆弓手14、既有厅72。v7显式用combatCapability.range查询，不改native规则；固定v7又完整88110→91820，全部公开指令、终世界/nextId/双方mem及每tick原队分区与v6全等。完整反例/v7证据包SHA07bfec7992d5e8ff4a343cf2fbfdb8205fbe18f9993a0eeec23d35fc528cfd49，旧858源及归档未回写。
 
 root组合验证分列：部署广泛批次213/214，通过项包括3条历史正常殖民；唯一旧nearby convoy期望在clean25cce同样失败，两个原始船/mission诊断逐值相同，原断言未改，不称全绿。佣兵相关78/78，最终部署/佣兵13/13，长炮新回归1/1，最终tsc/vite构建通过，日志与旧失败对照归root-landing-courier-integration-validation.tar.gz。这些个别完整比赛分数归各自固定源；包含全部新改动的root组合另须完整续局/普通0验证。后续同岛目标重定、避险预测、护理与殖民塔候选仍独立；没有将负例或更快但多损失的候选悄然混入。三路线/全部单敌与六配对/官方图与未见留出的完整验收仍未完成，原坏容器未提交修改恢复缺口保留。
+
+
+### 6f80 干净整合版的完整跨海续局
+
+`6f80a9365e591cbfba9148260806cd4f9033788e` 的独立 sparse/clean 树从原始未经摆兵的88110完整world/nextId/双方memory继续至91820原生p0获胜。29原兵90031同tick真实登陆，终24敌岛/5死/0甲板/0别处；本段我损5/敌损25，整局25/50。敌0建筑但仍4名远端idle sparkArcher（1035/1179/2866/4000），不是全敌实体清零。865份运行源/支持文件前后不变、规则2、冻结184份和完整恢复均核验。与先前183b-v7在该特定存档的完整末态、nextId、双方memory、全部公开命令与逐tick29人分区严格同值，独立归属本次整合源，不冒充新种子或普通0。包 `root6f80-original88110-evidence.tar.gz` 8,789,527B /126 payload /109完整frames，SHA256 `9c57352fcec83c8f1459e85e155e9e7f43d5db198e717cf582b8c14cb0d32dc0`。
+
+### 目标建筑倒下后的同岛运输承诺
+
+归档V2在b0实际40860完整world/nextId/双方memory换码、43200同源续局至49964自然获胜，最终敌0单位0建筑，7名永久陆军48826真正登陆并最终拆厅。不是carrier2290的11人登陆：那11人仍活在甲板。此段5名原永久单位死亡，不能说零损失；既有晚期舰船死亡/colony损失也未因胜利消失。完整48600→终局与40920→43200的JSON闭合、V1/V2全部world/nextId/命令同值已验证，memory因新增实际targetGround字段合法不同。V2源1406份固定；18新测试、117原契约通过，3个先前已验证冻结长测明确跳过，本轮不是120全过。
+
+`targetGround`只记录活敌方目标真实在陆地上的坐标。目标倒下后只承接同一已观测陆地的目标；不以邻近海岸或“最近陆地”猜岛。空船/工人/临时灵体不能赠送全局进攻优先级；实际永久作战船载或真实board命令才构成承诺。return与身份未知旧任务保持原取消逻辑，不加旧名/规则兼容层。安全approach及其to不会因建筑变化被覆盖。V2原包 `b0-assault-retarget-v2-win-evidence.tar.gz` 29,640,569B /57 payload（含独立重验V1嵌套包），SHA256 `105757389f825073b6fbd79667529275593e39b7c60195f0618bf861fba177d8`。
+
+合入当前root前进一步发现明确组合边界：在真实89625完整输入上显式构造“旧目标倒下、同岛伴船仍瞄另一活目标”，V2允许保留活目标，现有assembly/convoy按building ID拆组，普通兵力准入让两船都return。这是明确标注的反事实planner/native回归，不是观察到的新实战失败。当前实现只在有真实own ferry的已观测目标倒下时，先统一整组同岛非return任务的下一目标，再执行原准入；同岛活伴船原to即使没有approach仍保留。无倒下触发不合并、另一实证岛/未知身份/非真实渡船不串组。新6项回归在归档V2反证4失败2通过、当前源6通过；三条路线均保留sailing，先船stop等伴船，公开命令+1原生tick后29人均仍原船。原18项中“同岛活目标保持不同”的断言因此有意改为同岛触发时共享目标，归档V2源/日志未改。该新整组版本尚不能归用V2的49964成绩，需独立组合完整局。
+
+### 护理退避终点的原生身体碰撞
+
+只合入457e1ec3的两处几何检查：现有rendezvous短路终点和avoidCombat escape终点需避开建筑身体+原生到达范围，不改变训练/储备/guard与治疗归属。真实7905旧目标在己方新塔身体内；7912尚距目标约33.89，却由restsAgainstGoalBody提前判为到达，7913重新attack、7921被反击死亡。便携真实完整fixture测试在183旧码精确1通过1失败（7913），新码2/2通过；不改引擎。
+
+单独固定457普通0：v9_summoner Ember side1对正常双v8的已开发greystonePass生成ladder案例，从183原30151败变为57109自然胜，敌两方各0单位0建筑；600..7800世界/nextId/全3mem与旧普通局逐值同，8400/9000/9600与换码原生因果链逐值同，末段57000/57015恢复至57109也全同。另一方面，同457的实际v9_knight普通0在同开发场景40398仍败，183原25657败；不能把存活较久写作骑士通过。两树各856源固定、冻结184、规则2均验证。包 `bootstrap-care-building-arrival-v9-evidence.tar.gz` 23,537,891B /2065 payload，SHA256 `034ae1c9e20315706c6a1a57bf1d3f59d760d111c1c5ab4af29dc211ca684f64`，含已归档负例、两路线完整对局、原生视觉与全部旧红日志。
+
+### 保留的未合候选与负面边界
+
+- 殖民塔位候选完整37200换码/38400同源至55876胜，实际860源不变，却总31永久死亡（63临时spirit）对比原b0完整17永久死亡；1010/3232暂时存活后仍于40673/40578死亡。生产未合。`bootstrap-quiet-colony-tower-candidate-evidence.tar.gz` 5,921,559B /102 payload，SHA256 `94903665bf88530fecd832fa50c365cf25742a6e389aaf5e2dc75588c935b4f5`。包含键顺序误判的原失败与逐JSON字段值恢复纠正、原生38400/55876图，不丢原始反证。
+- 医疗早生产v5/v6、v7维持原开局、v8错调用点等负例：`bootstrap-land-army-native-medical-supplement.tar.gz` 26,726,781B /6150 payload，SHA256 `2b262a005374bdca45dc57a102afb2e8cb8a5e54f4bcfed50b82afd607e30587`。尤其v6提前得到第一医师却真实普通0在12495败，比原30151败更早。不能因局部出现治疗就合入。
+- 佣兵修复5f胜局唯一中立死亡horse2503的实际10200..10800重放：10681遭ready rod84伤击杀，10665实际gap288.224位于原near297.8内；先前308/漏near推测已撤回，全foes与near产生同坏点，不据此加参数。`bootstrap-archer-mounted-care-10681-evidence.tar.gz` 8,482,374B /87 payload，SHA256 `1a9d6da9e7532080511a5e6e8d2183c631b1c6f23ed5698660cc260de23563f7`。后续follow策略独立实验未混入几何修复成绩。
+- 运输query v13..v20保留完整正负源与双方AI证据，均未合当前root。v20修复v17真实manual92400多8船伤/多死1人的回归，并消除v19把89295原地浮点余量的战略warning当真实危险而误hold；原88110..96000仍0敌岛登陆、16返岸13死、无胜利，返岸仍偏慢。有限观测不会证明未来重规划/其他单位运动，CPU长尾也保留。不是新的跨海胜利或bootstrap完成。补包：`bootstrap-transit-v13-v15-evidence.tar.gz` 40,065,241B SHA256 `231cd13f41cfcde554b2dbd75970889fa3356cc18a11bf92bcbd99a5fd87a04b`；`bootstrap-transit-v16-v17-evidence.tar.gz` 17,123,992B SHA256 `7e86771b34b59cc67041c8ec0643b4c218a9ba001973e3631d3f9eec2e67ae50`；`bootstrap-transit-v17-v20-evidence.tar.gz` 66,022,151B /2076 payload SHA256 `e4d247f404333bf18385769d70fd111b5c85df3ddffcf909f305a9f2486f526b`。
+
+主分支/规则3或4性能工作未改；用户已合的船只平衡属于另一规则版本，不回灌规则2验收。原故障容器未提交修改仍未恢复。三路线、所有旧单路线与六种配对、官方地图及未见种子最终完整比赛要求尚未满足。当前6f80骑士官方普通0仍在运行，已观察首航母与11船载部队阵亡、敌方反登陆殖民岛，具体完整实战反证需继续推进，不以本次测试/提交数替代任务完成。
+
+本次root整合最终26项目标/整队/身体到达回归及独立38项护理微操通过；原beach10项与courier4项在整合中通过，最后`npm run build`（tsc+vite）exit0。既有附近集结测试在干净25cce也失败的事实保留，未以本轮局测声称全套通过。新6项强负对照小包 `bootstrap-retarget-deployment-integration-regression-evidence.tar.gz` 106,552B /20payload，SHA256 `29d78b706c49b33e8b54aa2c30aef76d138942876167eca0c6a51ae4bee8fde7`；最终root源码快照/日志包 `root-retarget-care-integration-validation.tar.gz` 115020B，SHA256 `c7f694069e6a83608e2b51bd99d1053c796cc6fe3b7964cfe30cab315ac68c29`。提交后继续独立完整对局验证新整组版本，不将局测或归档算最终验收。

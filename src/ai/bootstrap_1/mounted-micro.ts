@@ -18,6 +18,12 @@ import { hostileDamageDisks } from './damage-footprints';
 type Threat = Unit | Building;
 export const THINK_TICKS = 15;
 
+/** A goal in this envelope makes native walking finish early against the building. */
+export function clearOfBuildingArrival(snapshot: GameSnapshot, unit: Pick<Unit, 'radius'>, goal: Point) {
+  return snapshot.buildings.every(building => distance(goal, building)
+    >= building.radius + unit.radius + MOVE_ORDER_ARRIVAL_RANGE);
+}
+
 /** Break healing support before shooting the troops it can keep alive. */
 export function mountedTargetOrder(a: Unit, b: Unit) {
   const heals = (unit: Unit) => unitAbilities(unit).some(ability => ABILITY_DEFS[ability].behavior === 'heal');
@@ -154,6 +160,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
       distance: destination ? distance(point, destination) : 0 };
   }).filter(({ goal }) => goal.x >= 0 && goal.y >= 0 && goal.x < snapshot.map.width && goal.y < snapshot.map.height
     && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal)
+    && (!avoidCombat || goal === rider || clearOfBuildingArrival(snapshot, rider, goal))
     && (goal === rider || constrainGroundShipStep(snapshot.map, rider, rider, goal, snapshot.units) === goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
     || (a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)

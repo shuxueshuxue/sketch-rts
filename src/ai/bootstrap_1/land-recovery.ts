@@ -14,7 +14,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { postRecoveryAssignments } from './front-recovery';
-import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { clearOfBuildingArrival, mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
 function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
   return foes.filter(foe => sameGround(snapshot.map, patient, foe)
@@ -76,7 +76,8 @@ export function patientRendezvousCommands(snapshot: GameSnapshot,
       const point = prefix[prefix.length - 1]!;
       const blockers = foes.filter((foe): foe is Unit => 'order' in foe && !foe.deck && unitMover(foe.kind) === 'land')
         .map(foe => ({ x: foe.x, y: foe.y, radius: foe.radius + (foe.attackRange <= 100 ? foe.attackRange : 0) }));
-      if (!capsuleClearsBodies(patient, point, patient.radius, blockers)) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+      if (!capsuleClearsBodies(patient, point, patient.radius, blockers) || !clearOfBuildingArrival(snapshot, patient, point))
+        return mountedEscape(snapshot, patient, threats, 0, healer, true);
       return { type: 'move', unitIds: [patient.id], x: point.x, y: point.y, avoidCombat: true };
     }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };
