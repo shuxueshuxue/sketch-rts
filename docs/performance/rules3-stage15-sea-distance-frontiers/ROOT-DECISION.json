@@ -1,0 +1,325 @@
+{
+  "createdUtc": "2026-10-15T07:08:58.787045+00:00",
+  "status": "HELD_PENDING_FOCUSED_TAIL_ATTRIBUTION_NOT_ADOPTED",
+  "wholeGoal": "FAILED",
+  "baselineHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "candidateHead": "bccc987c8aac31889c2cf1b70bfbbe50f941a24a",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "unchangedCommandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "finalChecksum": "7d94a5e8",
+  "target": {
+    "wholeP99Ms": 16,
+    "wholeMaxMs": 50
+  },
+  "nativeProtocol": {
+    "rounds": 2,
+    "originalOrderEach": [
+      "A1",
+      "B1",
+      "B2",
+      "A2",
+      "Bplain"
+    ],
+    "performanceGamesPerArm": 4,
+    "ticksPerGame": 14400,
+    "pooledTicksPerArm": 57600,
+    "BplainPooled": false,
+    "removedOutliers": 0,
+    "replacementRuns": 0,
+    "forcedGc": false
+  },
+  "meanDeltaPercent": -0.7129364074227595,
+  "blockMeanDeltaPercent": [
+    0.2071800531568968,
+    -1.6165427156703993
+  ],
+  "paired": [
+    {
+      "A": "r1-A1",
+      "B": "r1-B1",
+      "meanDeltaPercent": -1.181987264988782
+    },
+    {
+      "A": "r1-A2",
+      "B": "r1-B2",
+      "meanDeltaPercent": 1.6768933708163125
+    },
+    {
+      "A": "r2-A1",
+      "B": "r2-B1",
+      "meanDeltaPercent": -2.2711123926753563
+    },
+    {
+      "A": "r2-A2",
+      "B": "r2-B2",
+      "meanDeltaPercent": -0.9659022993668609
+    }
+  ],
+  "pooled": {
+    "A": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.591285010381948,
+        "median": 1.8976029999976163,
+        "p95": 15.79459499999939,
+        "p99": 26.47809899999993,
+        "max": 94.29555000000005,
+        "over16": 2818,
+        "over50": 19
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.7493854792187453,
+        "median": 1.8171949999959907,
+        "p95": 9.373882999999296,
+        "p99": 18.815847000001668,
+        "max": 63.7508179999968,
+        "over16": 893,
+        "over50": 7
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8226463143402784,
+        "median": 0.0014320000045699999,
+        "p95": 7.632427000000462,
+        "p99": 18.205250000006345,
+        "max": 80.34017599999993,
+        "over16": 995,
+        "over50": 8
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.22191754196180977,
+        "median": 0.2334420000006503,
+        "p95": 0.4039030000058119,
+        "p99": 0.5572370000008959,
+        "max": 16.575519999998505,
+        "over16": 1,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.007717456475710493,
+        "median": 0.005899000003410038,
+        "p95": 0.018377000000327826,
+        "p99": 0.03180599999905098,
+        "max": 2.0675630000005185,
+        "over16": 0,
+        "over50": 0
+      }
+    },
+    "B": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.5656814320486188,
+        "median": 1.897744000001694,
+        "p95": 15.590381000001798,
+        "p99": 26.253178999999363,
+        "max": 261.8549559999956,
+        "over16": 2724,
+        "over50": 29
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.7372273651041623,
+        "median": 1.821263000001636,
+        "p95": 9.232179999999062,
+        "p99": 18.744015000003856,
+        "max": 78.08552900000177,
+        "over16": 873,
+        "over50": 10
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8095963478472191,
+        "median": 0.0014020000016898848,
+        "p95": 7.826833999999508,
+        "p99": 17.59461200000078,
+        "max": 258.84706300000107,
+        "over16": 903,
+        "over50": 7
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21766308388890265,
+        "median": 0.2337329999973008,
+        "p95": 0.39209500000288244,
+        "p99": 0.5282059999990452,
+        "max": 13.939016000003903,
+        "over16": 0,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.00758952236111219,
+        "median": 0.005939000002399553,
+        "p95": 0.01762600000074599,
+        "p99": 0.03171600000496255,
+        "max": 3.3747000000003027,
+        "over16": 0,
+        "over50": 0
+      }
+    }
+  },
+  "slowTickCounts": {
+    "A": {
+      "wholeOver50": 19,
+      "planningOver50": 12,
+      "nonPlanningOver50": 7
+    },
+    "B": {
+      "wholeOver50": 29,
+      "planningOver50": 19,
+      "nonPlanningOver50": 10
+    }
+  },
+  "cold": {
+    "A": {
+      "contiguousImportThroughFirstNativeTickMs": {
+        "count": 12,
+        "median": 374.885974,
+        "p95": 427.528349,
+        "p99": 427.528349,
+        "max": 427.528349,
+        "mean": 385.46891024999996,
+        "over16": 12,
+        "over50": 12
+      },
+      "firstNativeAdapterTickMs": {
+        "count": 12,
+        "median": 83.37293399999999,
+        "p95": 127.658319,
+        "p99": 127.658319,
+        "max": 127.658319,
+        "mean": 90.98987374999997,
+        "over16": 12,
+        "over50": 12
+      }
+    },
+    "B": {
+      "contiguousImportThroughFirstNativeTickMs": {
+        "count": 12,
+        "median": 386.934059,
+        "p95": 419.119077,
+        "p99": 419.119077,
+        "max": 419.119077,
+        "mean": 386.76846316666666,
+        "over16": 12,
+        "over50": 12
+      },
+      "firstNativeAdapterTickMs": {
+        "count": 12,
+        "median": 86.83973399999996,
+        "p95": 101.90253899999999,
+        "p99": 101.90253899999999,
+        "max": 101.90253899999999,
+        "mean": 88.26293774999999,
+        "over16": 12,
+        "over50": 12
+      }
+    },
+    "protocol": {
+      "blocks": 6,
+      "freshProcesses": 24,
+      "perArm": 12,
+      "firstTickBlocksBetter": 3,
+      "inclusiveBlocksBetter": 2,
+      "osPageCacheControlled": false,
+      "p99IsOnlyLargestOfTwelve": true
+    }
+  },
+  "sparseMemoryFinalRss": {
+    "A": {
+      "valuesBytes": [
+        973258752,
+        982818816,
+        978993152,
+        960589824
+      ],
+      "meanBytes": 973915136.0,
+      "meaning": "Final samples of four runs; 13 samples per run are not allocation, peak or leak proof"
+    },
+    "B": {
+      "valuesBytes": [
+        961077248,
+        947380224,
+        963420160,
+        977784832
+      ],
+      "meanBytes": 962415616.0,
+      "meaning": "Final samples of four runs; 13 samples per run are not allocation, peak or leak proof"
+    }
+  },
+  "correctness": {
+    "uniqueTests": 704,
+    "passed": 700,
+    "fourExactBaselineAssertionFailures": 4,
+    "allTestsGreen": false,
+    "actualModuleProofGroups": 10,
+    "actualModuleProofQueries": 849,
+    "sdkTestsPassed": 7,
+    "tscPassed": true,
+    "vitePassed": true,
+    "publicPayloadsFullBytesVerified": 68,
+    "resourceManifestAssets": 82,
+    "sourceInputsPerRun": 241,
+    "sourceBytesCandidate": 2813858,
+    "runtimeChangedPaths": [
+      "src/shared/terrain.ts"
+    ],
+    "originalV8RepresentationAssertionFailureAndStricterInputGraphCorrectionRetained": true,
+    "missingRealTestInputsMaterializedAndAffected54TestsPassed": true
+  },
+  "joint381": {
+    "draftHead": "f13b2f73100675aab75a9e8ba7a8fbd186159728",
+    "productionCandidateContains381": false,
+    "focusedJointCorrectnessPassed": true,
+    "comparisons": 1392,
+    "assertions": 13892,
+    "pausedSeaBuildingMutations": 12,
+    "crossSnapshotSeaResumes": 6,
+    "automaticMerge": false
+  },
+  "laneBoundary": {
+    "shipPlanningJobLifecycleOwned": false,
+    "arrivalGeometryLifecycleOwned": false,
+    "sailingWaitForTrafficReplanOwned": false,
+    "held1cfOnlySharedFunction": "ship-navigation.ts::hullPassageClear same-call local endpoint carry, not adopted"
+  },
+  "unresolved": [
+    "Candidate tick11970 whole261.854956ms, AI258.847063ms, enemy2 planner244.251591ms; no GC/JIT/OS cause established",
+    "Candidate tick6893 whole78.113881ms, sim78.085529ms; no new cause established",
+    "Actual6990 whole improvements inconsistent across matched samples; successful isolated prefix proof is not full-game work or performance proof",
+    "Cold first-tick median regressed and only3/6 blocks improved; inclusive only2/6 blocks improved"
+  ],
+  "prohibitedChangesPreserved": [
+    "AI phase",
+    "ship rules",
+    "checksum cadence",
+    "original test assertions",
+    "economy and combat rules",
+    "visible content and quality"
+  ],
+  "references": {
+    "native": {
+      "path": "/tmp/terrain-sea-distance-frontiers-native-analysis-v1/aggregate/review.json",
+      "sha256": "675300f7873bae655cdf52dcc3d835e8ae97b1f71ef803b9fdb86de6f96e814b"
+    },
+    "cold": {
+      "path": "/tmp/terrain-sea-distance-frontiers-cold-proof-v1/summary.json",
+      "sha256": "757e0d66135982c3754351e15a02c201ce802d387fed27e1a28ac8de9803c42e"
+    },
+    "coldIndependent": {
+      "path": "/tmp/terrain-sea-distance-frontiers-cold-independent-review-v1/report.json",
+      "sha256": "6ec198e464c9663cbb070e855660307bbfcde45b5fa266265b532e1b47c6343c"
+    },
+    "correctness": "/tmp/terrain-sea-distance-frontiers-validation-v1/FINAL-VALIDATION.json",
+    "joint": "/tmp/snapshot-frontier-joint-correctness-v1/result.json"
+  },
+  "productPrCreated": false,
+  "merged": false,
+  "deployed": false,
+  "next": "Preserve full evidence, then separately focus-profile cold tick0 manual scopes, actual6990/10950 sea work and11970 before choosing further exact-equivalent optimization."
+}
