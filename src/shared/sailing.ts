@@ -366,7 +366,10 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       }
     }
     let completedExactLeg=false;
-    while(route.points.length && Math.hypot(ship.x-route.points[0]!.x,ship.y-route.points[0]!.y)<1e-7
+    // Keel motion admits a 1e-5 lateral numerical residual below. Requiring
+    // tighter point arrival can oscillate forever across an already reached
+    // lattice point; discard that waypoint without moving or snapping the hull.
+    while(route.points.length && Math.hypot(ship.x-route.points[0]!.x,ship.y-route.points[0]!.y)<=1e-5
       && Math.abs(headingDifference(motion.heading,route.points[0]!.heading))<1e-7
       && !(route.intent==='pursuit' && motion.pursuit?.moving && !route.partial && route.points.length===1
         && !route.points[0]!.tack && !route.points[0]!.exact && !route.points[0]!.pivot)){
