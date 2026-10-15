@@ -835,6 +835,28 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
   finally { routeSearchDepth--; }
 }
 type RouteResult={points:ShipPose[];partial:boolean};
+// Only sailing's admitted, empty-traffic wait retry uses this derived state.
+// Full value guards deliberately include more than the search currently reads.
+const trafficRetries=new WeakMap<Unit,{motion:Unit['sailing'];map:SeaMap;input:unknown;result:RouteResult}>();
+function sameRetryInput(a:unknown,b:unknown):boolean {
+  if(Object.is(a,b))return true;
+  if(!a || !b || typeof a!=='object' || typeof b!=='object' || Array.isArray(a)!==Array.isArray(b))return false;
+  const left=a as Record<string,unknown>,right=b as Record<string,unknown>,keys=Object.keys(left);
+  return keys.length===Object.keys(right).length && keys.every(key=>Object.hasOwn(right,key) && sameRetryInput(left[key],right[key]));
+}
+export function clearShipTrafficRetry(ship:Unit):void {trafficRetries.delete(ship);}
+/** Internal wait retry, after the original admission and budget checks. */
+export function planShipTrafficRetry(map:SeaMap,ship:Unit,goal:Point & {heading?:number},traffic:((from:ShipPose,to:ShipPose)=>boolean)&{hasTraffic?:boolean},budget:number):RouteResult {
+  if(traffic.hasTraffic!==false || routeSearchDepth!==0){clearShipTrafficRetry(ship);return planShipRoute(map,ship,goal,traffic,budget);}
+  const input={ship,goal,map:{width:map.width,height:map.height,terrain:map.terrain,wind:map.wind},
+    profile:shipProfile(ship),limits:shipMotionLimits(ship),wind:windAt(map,ship),budget,voyage:false};
+  const cached=trafficRetries.get(ship);
+  if(cached && cached.motion===ship.sailing && cached.map===map && sameRetryInput(cached.input,input))return structuredClone(cached.result);
+  const saved=structuredClone(input),result=planShipRoute(map,ship,goal,traffic,budget);
+  trafficRetries.set(ship,{motion:ship.sailing,map,input:saved,result:structuredClone(result)});
+  return result;
+}
+
 /** Sparse, lossless continuation. Geometry caches remain recomputable; only
  * reached costs, exact heap order and deterministic loop cursors are saved. */
 export type ShipRouteSearchState={

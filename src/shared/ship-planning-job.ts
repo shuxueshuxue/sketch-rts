@@ -1,6 +1,6 @@
 import { shipTraffic } from './ship-avoidance';
 import { isShipKind, shipProfile } from './ship-geometry';
-import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, createShipPlanningSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
+import { clearShipTrafficRetry, advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, createShipPlanningSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
 import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
 import type { ShipCourseGoal } from './sailing';
 import type { GameMap, Unit } from './types';
@@ -134,7 +134,7 @@ function save(ship:Unit,job:VoyageJob):void {
   const {search:_,...saved}=job;
   const source=JSON.stringify(saved);ship.sailing!.planningJob=source;decoded.set(ship,{source,job});
 }
-export function cancelShipPlanningJob(ship:Unit):void {if(ship.sailing){delete ship.sailing.planningJob;delete ship.sailing.planningJobLastRequestedAtTick;}decoded.delete(ship);}
+export function cancelShipPlanningJob(ship:Unit):void {clearShipTrafficRetry(ship);if(ship.sailing){delete ship.sailing.planningJob;delete ship.sailing.planningJobLastRequestedAtTick;}decoded.delete(ship);}
 export function shipPlanningSliceCost(ship:Unit):number {
   const job=read(ship);return job?.phase==='finished'?0:job?.phase==='refine'?4:2;
 }
