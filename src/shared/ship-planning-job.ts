@@ -26,13 +26,13 @@ function voyageReference(job:VoyageJob):boolean {
 }
 function advanceReferenceSearch(job:VoyageJob,map:GameMap) {
   const search=searches.get(job);
-  return search ? search(map) : advanceLiveShipRouteSearch(map,job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job),job.search!);
+  return search ? search(map,trafficView(job)) : advanceLiveShipRouteSearch(map,job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job),job.search!);
 }
 function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{ready:boolean;used:number;invalid:boolean} {
   if(job.phase!=='reference')return {ready:true,used:0,invalid:false};
   let state=reconstruction.get(job);
   if(!job.search && !searches.has(job)){
-    searches.set(job,createShipPlanningSearch(job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job)));
+    searches.set(job,createShipPlanningSearch(job.ship,job.goal,job.limited?1024:Infinity,voyageReference(job)));
     state={remaining:job.searchSteps??0,invalid:false};
     reconstruction.set(job,state);
   }

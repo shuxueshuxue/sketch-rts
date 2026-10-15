@@ -561,14 +561,14 @@ function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipP
   if(runtime && (!runtime.arrival || runtime.arrival.profile!==profile || runtime.arrival.cells!==t?.cells || runtime.arrival.key!==key))
     runtime.arrival={profile,cells:t?.cells,key,checks:[]};
   let index=0;
-  const length=shipProfile(ship)!.length;
+  const length=profile!.length;
   const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
   for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
     const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
     const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
     // Retain only pure terrain answers. Fresh poses and the current traffic
     // wrapper preserve callback identity/order and this slice's blocked flag.
-    const check=runtime ? runtime.arrival!.checks[index++]??(runtime.arrival!.checks[index-1]={}) : undefined;
+    const checks=runtime?.arrival?.checks,check=checks ? checks[index]??(checks[index]={}) : undefined;index++;
     if(!(check ? check.fits??(check.fits=hullFits(map,ship,stage)) : hullFits(map,ship,stage)) || !traffic(stage,stage))continue;
     if(!(check ? check.passage??(check.passage=hullPassageClear(map,ship,stage,end)) : hullPassageClear(map,ship,stage,end)) || !traffic(stage,end))continue;
     arcs.push({stage,end,angle});
@@ -846,9 +846,9 @@ export type ShipRouteSearchState={
 };
 /** Job-owned derived state: inputs and traffic geometry are frozen by the job.
  * The public continuation APIs keep their observable arrays and identities. */
-export function createShipPlanningSearch(ship:Unit,goal:Point & {heading?:number},traffic:(from:ShipPose,to:ShipPose)=>boolean,budget:number,voyage:boolean) {
+export function createShipPlanningSearch(ship:Unit,goal:Point & {heading?:number},budget:number,voyage:boolean) {
   const state:ShipRouteSearchState={phase:'prepare'},runtime:PlanningSearchRuntime={};
-  return (map:SeaMap):RouteResult|undefined=>{
+  return (map:SeaMap,traffic:(from:ShipPose,to:ShipPose)=>boolean):RouteResult|undefined=>{
     const result=advanceShipRouteSearchImpl(map,ship,goal,traffic,budget,voyage,state,true,runtime);
     if(result || state.phase==='fallback')delete runtime.graph;
     return result;

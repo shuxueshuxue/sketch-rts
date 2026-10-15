@@ -26,18 +26,18 @@ describe('job-owned planning search',()=>{
     for(const budget of [12,1024,Infinity])for(const blocked of [false,true]){
       const a=scene(),b=scene(),left=recorder(blocked),right=recorder(blocked);
       const state:ShipRouteSearchState={phase:'prepare'};
-      const advance=createShipPlanningSearch(b.ship,b.goal,right.traffic,budget,true);
-      const other=createShipPlanningSearch(b.ship,{x:600,y:300},()=>true,12,false);
+      const advance=createShipPlanningSearch(b.ship,b.goal,budget,true);
+      const other=createShipPlanningSearch(b.ship,{x:600,y:300},12,false);
       let result:ReturnType<typeof planShipRoute>|undefined,slices=0;
       while(!result && slices++<500){
         left.events.length=0;right.events.length=0;
         const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left.traffic,budget,true,state);
-        result=advance(b.map);
+        result=advance(b.map,right.traffic);
         expect(result).toEqual(expected);expect(right.events).toEqual(left.events);
-        other(b.map);planShipRoute(b.map,b.ship,{x:600,y:300},undefined,8,true);
+        other(b.map,()=>true);planShipRoute(b.map,b.ship,{x:600,y:300},undefined,8,true);
       }
       expect(result).toBeDefined();expect(slices).toBeGreaterThan(2);
-      expect(advance(b.map)).toBe(result);
+      expect(advance(b.map,right.traffic)).toBe(result);
     }
   });
 
@@ -48,11 +48,11 @@ describe('job-owned planning search',()=>{
         planShipRoute(s.map,s.ship,{x:600,y:300},undefined,8,false);
         return Math.max(from.y,to.y)<=44*32;
       },empty?{hasTraffic:false}:{});
-      const left=traffic(a),right=traffic(b),advance=createShipPlanningSearch(b.ship,b.goal,right,Infinity,true);
+      const left=traffic(a),right=traffic(b),advance=createShipPlanningSearch(b.ship,b.goal,Infinity,true);
       let result:ReturnType<typeof planShipRoute>|undefined,slices=0;
       while(!result && slices++<500){
         const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left,Infinity,true,state);
-        result=advance(b.map);expect(result).toEqual(expected);
+        result=advance(b.map,right);expect(result).toEqual(expected);
       }
       expect(result).toBeDefined();expect(slices).toBeGreaterThan(2);
     }
@@ -60,7 +60,7 @@ describe('job-owned planning search',()=>{
 
   it('rechecks berth geometry after terrain contents or map dimensions change between slices',()=>{
     const a=scene(),b=scene(),left=recorder(false),right=recorder(false),state:ShipRouteSearchState={phase:'prepare'};
-    const advance=createShipPlanningSearch(b.ship,b.goal,right.traffic,1024,true);
+    const advance=createShipPlanningSearch(b.ship,b.goal,1024,true);
     let result:ReturnType<typeof planShipRoute>|undefined;
     for(let slice=0;slice<80 && !result;slice++){
       if(slice===2)for(const s of [a,b]){
@@ -70,7 +70,7 @@ describe('job-owned planning search',()=>{
       if(slice===3)for(const s of [a,b])s.map.width-=1;
       left.events.length=0;right.events.length=0;
       const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left.traffic,1024,true,state);
-      result=advance(b.map);
+      result=advance(b.map,right.traffic);
       expect(result).toEqual(expected);expect(right.events).toEqual(left.events);
     }
     expect(result).toBeDefined();
