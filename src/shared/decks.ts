@@ -83,8 +83,11 @@ export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
 export function syncDecks(units: readonly Unit[]) {
   const vessels=shipsIn(units);if(!vessels.length)return;
   const ships=new Map(vessels.map(ship=>[ship.id,ship]));
+  // Each hull's crew in unit order, as shipPassengers lists it, gathered in one pass instead of one pass per hull.
+  const crews=new Map<string,Unit[]>();
+  for(const unit of units)if(unit.deck){const crew=crews.get(unit.deck.shipId);if(crew)crew.push(unit);else crews.set(unit.deck.shipId,[unit]);}
   for(const ship of ships.values()) {
-    const profile=shipProfile(ship)!, crew=shipPassengers(units,ship);
+    const profile=shipProfile(ship)!, crew=crews.get(ship.id)??[];
     const cabin=profile.obstacles.find(obstacle=>obstacle.type==='cabin');
     const load=(ship.holdMass ?? 0)+crew.reduce((sum,unit)=>sum+bodyMass(unit),0);
     const offset=load ? Math.hypot(crew.reduce((s,u)=>s+(isInCabin(u)?cabin?.x??u.deck!.x:u.deck!.x)*bodyMass(u),0),crew.reduce((s,u)=>s+(isInCabin(u)?cabin?.y??u.deck!.y:u.deck!.y)*bodyMass(u),0))/load : 0;

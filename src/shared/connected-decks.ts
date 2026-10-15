@@ -184,19 +184,37 @@ function connectedShips(start: Unit, passenger: Unit, units: readonly Unit[]) {
       }
   return found;
 }
+// How far each hull's farthest corner lies from its centre: a point beyond that cannot be on the deck. Every walker asks
+// this of every hull each tick, and most hulls are far away; rotating the point into each of them is the cost.
+const hullReach = new WeakMap<readonly Point[], number>();
+function onHull(ship: Unit, point: Point) {
+  if (ship.hp <= 0) return false;
+  const profile = shipProfile(ship);
+  if (!profile) return false;
+  let reach = hullReach.get(profile.hull);
+  if (reach === undefined) {
+    reach = profile.hull.reduce((farthest, corner) => Math.max(farthest, Math.hypot(corner.x, corner.y)), 0);
+    hullReach.set(profile.hull, reach);
+  }
+  const dx = point.x - ship.x, dy = point.y - ship.y;
+  // One unit of slack covers circleInPolygon's tolerance on an edge.
+  if (dx * dx + dy * dy > (reach + 1) * (reach + 1)) return false;
+  return circleInPolygon(worldToLocal(ship, point), 0, profile.hull);
+}
+
 /** Hull contact, usable floor and body clearance govern decks and shore alike. */
 export function walkConnectedSurfaces(passenger: Unit, world: Point, units: readonly Unit[], map: GameMap, pace = 1) {
   const hulls = shipsIn(units);
   if (!hulls.length)
     return false;
   const source = passenger.deck && hulls.find(ship => ship.id === passenger.deck!.shipId);
-  let target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, world), 0, shipProfile(ship)!.hull));
+  let target = hulls.find(ship => onHull(ship, world));
   // A ground journey does not silently turn into boarding merely because a
   // passing hull overlaps the shallows. Enter a deck when it is the destination.
   if (!source && !target && !isOpenGround(map,world.x,world.y,'land')) {
     const dx = world.x - passenger.x, dy = world.y - passenger.y, len = Math.hypot(dx, dy) || 1;
     const next = { x: passenger.x + dx / len * perTick(passenger.speed) * pace, y: passenger.y + dy / len * perTick(passenger.speed) * pace };
-    target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, next), 0, shipProfile(ship)!.hull));
+    target = hulls.find(ship => onHull(ship, next));
   }
   if (!source && !target)
     return false;
