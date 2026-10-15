@@ -206,7 +206,12 @@ function planConnectedSurfaceWalk(passenger: Unit, world: Point, units: readonly
   if(source && target?.id===source.id && ships.length===1 && deckPointFits(source,passenger,worldToLocal(source,passenger),units,false))return undefined;
   if (target && !ships.includes(target))
     return undefined;
-  const land = !source || !target;
+  // A crew member can still straddle the quay while walking toward another
+  // connected ship. Its current floor includes that shore, even though both
+  // endpoint parents are hulls; omitting it makes the first step impossible.
+  const shoreStart=source && target && !circleInPolygon(worldToLocal(source,passenger),passenger.radius+1,shipProfile(source)!.hull)
+    && !crossingGeometry(ships,passenger,map,false).floor.diskFits(passenger,passenger.radius+1);
+  const land = !source || !target || !!shoreStart;
   if (land && (!map.terrain || ships.every(ship => shipProfile(ship)!.deckHeight > passenger.radius * 2.5)))
     return undefined;
   const geometry = crossingGeometry(ships, passenger, map, land), { surface, floor, obstacles } = geometry;
