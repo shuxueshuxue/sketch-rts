@@ -1,6 +1,6 @@
 import { shipPartMax } from "./ship-equipment";
 import { shipSolidTraffic } from './ship-collisions';
-import { reservationTraffic, shipContactGoal, shipTraffic, shipTrafficKey } from "./ship-avoidance";
+import { reservationTraffic, shipContactGoal, shipRouteTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
 import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, planBeatDeparture, shipPoseAt, shipTackRoute } from "./ship-navigation";
@@ -402,7 +402,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
             +(route.points[0]!.y-ship.y)*detSin(route.points[0]!.heading)<-1e-7)
       && (completedExactLeg || (route.age??0)>=SIM_TICKS_PER_SECOND
         && ((route.age??0)%SIM_TICKS_PER_SECOND===0 || motion.planningRequestedAtTick!==undefined))){
-      const traffic=shipTraffic(ship,units);
+      const traffic=shipRouteTraffic(map,ship,units);
       if(hasShipPlanningFrame(ship)){
         if(replan(true,undefined,true))route=motion.route!;
         else if(motion.planningJob && holdsShipPlanningOrigin(ship)){
@@ -437,7 +437,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         const next=route.points[index];
         if(next && !route.points.slice(0,index+1).some(point=>point.pivot)){
           const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
-          const traffic=shipTraffic(ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity);
+          const traffic=shipRouteTraffic(map,ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity);
           const departure=movingPursuit ? planBeatDeparture(map,ship,next,traffic,route.tackHeading) : undefined;
           const tack=!departure ? shipTackRoute(map,ship,next,traffic,route.tackHeading) : undefined;
           if(departure){
@@ -455,7 +455,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
               // A bounded tack replaces the old departure, too. Reusing its
               // original turn arc would send us back to where we set sail.
               const onward={...ship,x:finish.x,y:finish.y,sailing:{...motion,heading:finish.heading}};
-              const suffix=planVoyageRoute(map,onward,{x:next.x,y:next.y},shipTraffic(onward,units.filter(unit=>unit!==ship),Infinity),1024);
+              const suffix=planVoyageRoute(map,onward,{x:next.x,y:next.y},shipRouteTraffic(map,onward,units.filter(unit=>unit!==ship),Infinity),1024);
               route.points.splice(0,index+1,...tack,...suffix.points);
               route.partial ||= suffix.partial;
               route.end=route.points.at(-1)??finish;
@@ -468,7 +468,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       if(cruise===true){route.blockedTicks=0;return;}
       if(cruise==='maneuver'){
         const first=route.points[0],turned=first && {...start,heading:first.heading};
-        const traffic=shipTraffic(ship,units);
+        const traffic=shipRouteTraffic(map,ship,units);
         if(first?.exact && !first.pivot && turned && hullPassageClear(map,ship,start,turned)
           && hullPassageClear(map,ship,turned,first) && traffic(start,turned) && traffic(turned,first))route.cruise=false;
         else if(!replan(false)){motion.speed=0;return;}

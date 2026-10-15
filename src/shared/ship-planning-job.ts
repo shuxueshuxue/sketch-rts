@@ -1,4 +1,5 @@
-import { shipTraffic } from './ship-avoidance';
+import { isWalkable } from './terrain';
+import { shipRouteTraffic } from './ship-avoidance';
 import { isShipKind, shipProfile } from './ship-geometry';
 import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, advanceShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
 import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
@@ -9,15 +10,15 @@ import { hasShipPlanningWork } from './ship-planning-budget';
 type VoyageJob = { version:1; phase:'direct'|'reference'|'refine'|'finished'; ship:Unit; traffic:Unit[]; goal:ShipCourseGoal;
   windKey:string; guard:string; anchor?:ShipPose; recovery?:boolean; limited?:boolean; partial?:boolean; points?:ShipPose[]; searchSteps?:number; search?:ShipRouteSearchState; refinement?:VoyageRefinementState };
 const decoded=new WeakMap<Unit,{source:string;job:VoyageJob}>();
-const trafficViews=new WeakMap<VoyageJob,ReturnType<typeof shipTraffic>>();
+const trafficViews=new WeakMap<VoyageJob,ReturnType<typeof shipRouteTraffic>>();
 // Restored checkpoints keep a compact logical cursor. Reconstruct its graph
 // separately so a browser can yield between the same deterministic slices.
 // This state never participates in the saved job or the world's checksum.
 const reconstruction=new WeakMap<VoyageJob,{remaining:number;invalid:boolean}>();
 
-function trafficView(job:VoyageJob):ReturnType<typeof shipTraffic> {
+function trafficView(job:VoyageJob,map:GameMap):ReturnType<typeof shipRouteTraffic> {
   let traffic=trafficViews.get(job);
-  if(!traffic){traffic=shipTraffic(job.ship,job.traffic);trafficViews.set(job,traffic);}
+  if(!traffic){traffic=shipRouteTraffic(map,job.ship,job.traffic);trafficViews.set(job,traffic);}
   return traffic;
 }
 function voyageReference(job:VoyageJob):boolean {
@@ -36,7 +37,7 @@ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{rea
   if(!state)return {ready:true,used:0,invalid:false};
   if(state.invalid || state.remaining===0 || maxSlices===0)
     return {ready:state.invalid || state.remaining===0,used:0,invalid:state.invalid};
-  const traffic=trafficView(job);
+  const traffic=trafficView(job,map);
   let used=0;
   while(!state.invalid && state.remaining>0 && used<maxSlices){
     used++;
@@ -139,11 +140,11 @@ export function holdsShipPlanningOrigin(ship:Unit):boolean {const job=read(ship)
 export function beginShipPlanningJob(ship:Unit,goal:ShipCourseGoal,map:GameMap,units:readonly Unit[],anchor?:ShipPose,recovery=false):void {
   const frozen=plannerUnit(ship);
   if(anchor){frozen.x=anchor.x;frozen.y=anchor.y;frozen.sailing!.heading=anchor.heading;}
-  const traffic=units.filter(unit=>unit!==ship && unit.hp>0 && isShipKind(unit.kind) && Math.hypot(unit.x-frozen.x,unit.y-frozen.y)<600).map(source=>JSON.parse(JSON.stringify({
+  const traffic=units.filter(unit=>unit!==ship && unit.hp>0 && !unit.deck && (isShipKind(unit.kind) || isWalkable(map,unit.x,unit.y,'land')) && Math.hypot(unit.x-frozen.x,unit.y-frozen.y)<600).map(source=>JSON.parse(JSON.stringify({
     id:source.id,owner:source.owner,kind:source.kind,hp:source.hp,maxHp:source.maxHp,x:source.x,y:source.y,
-    radius:source.radius,cargoCapacity:source.cargoCapacity,deckScale:source.deckScale,
+    radius:source.radius,cargoCapacity:source.cargoCapacity,deckScale:source.deckScale,order:source.order,
     sailing:{heading:source.sailing?.heading??0}})) as Unit);
-  const limited=shipTraffic(frozen,traffic).hasTraffic;
+  const limited=traffic.length>0;
   save(ship,{version:1,phase:'direct',ship:frozen,traffic,goal:{...goal},windKey:windAt(map,ship).key,guard:guard(ship),
     ...(anchor?{anchor:{...anchor}}:{}),...(recovery?{recovery:true}:{}),...(limited?{limited:true}:{})});
 }
@@ -172,7 +173,7 @@ export function advanceShipPlanningJob(ship:Unit,map:GameMap):{points:ShipPose[]
   // artificial sailing circle or refinement when continued across ticks.
   const voyage=voyageReference(job);
   if(job.phase==='direct' && !voyage)job.phase='reference';
-  const traffic=trafficView(job);
+  const traffic=trafficView(job,map);
   let points:ShipPose[]|undefined;
   if(job.phase==='finished')points=job.points;
   else if(job.phase==='direct'){

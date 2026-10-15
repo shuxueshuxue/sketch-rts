@@ -6,7 +6,7 @@ import { detCos, detSin } from "./det-math";
 import { headingDifference, shipPoseAt, type ShipPose } from "./ship-navigation";
 import { SIM_TICKS_PER_SECOND } from './time';
 import { shipMotionLimits } from './ship-handling';
-import { sweepShipCollision } from './ship-collisions';
+import { sweepShipCollision, shipSolidTraffic } from './ship-collisions';
 
 const trafficShapes=new Map<string,Point[]>();
 const trafficBases=new Map<string,Point[]>();
@@ -382,8 +382,15 @@ export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
   return shipTraffic(ship,reserved,range);
 }
 
+/** Planning and maneuver refinement share the executor's shore-body constraints. */
+export function shipRouteTraffic(map:GameMap,ship:Unit,units:readonly Unit[],range=600):ReturnType<typeof shipTraffic> {
+  const hulls=shipTraffic(ship,units,range),solids=shipSolidTraffic(map,ship,units);
+  return Object.assign((from:ShipPose,to:ShipPose,padding?:number)=>hulls(from,to,padding)&&solids(from,to),
+    {hasTraffic:hulls.hasTraffic||solids.hasTraffic});
+}
+
 export function shipTrafficKey(ship:Unit,units:readonly Unit[]) {
-  return shipsIn(units).filter(other=>other!==ship && other.hp>0 && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
+  return units.filter(other=>other!==ship && other.hp>0 && !other.deck && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
     .map(other=>`${other.id}:${Math.round(other.x/16)}:${Math.round(other.y/16)}:${Math.round((other.sailing?.heading ?? 0)*16/Math.PI)}`).join('|');
 }
 /** A destination on another deck means hull contact. Compute the berth in

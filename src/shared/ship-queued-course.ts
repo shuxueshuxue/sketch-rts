@@ -1,4 +1,4 @@
-import { shipContactGoal, shipTraffic, shipTrafficKey } from './ship-avoidance';
+import { shipContactGoal, shipRouteTraffic, shipTrafficKey } from './ship-avoidance';
 import { shipProfile } from './ship-geometry';
 import { followShipRoute } from './ship-guidance';
 import { shipMotionLimits } from './ship-handling';
@@ -58,7 +58,7 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
       const performance = coursePerformance(ship, map, heading, { assumeTrimmed: true });
       return !performance.calm && (performance.noGo || performance.targetSpeed < performance.auxiliarySpeed);
     })) return false;
-    const traffic = shipTraffic(ship, units, Infinity);
+    const traffic = shipRouteTraffic(map,ship, units, Infinity);
     const straightCourse=Math.abs(headingDifference(from.heading,headings[0]!))<.01
       && Math.abs(headingDifference(headings[0]!,headings[1]!))<.01;
     // Without a committed route a failed corner preview must still allow the

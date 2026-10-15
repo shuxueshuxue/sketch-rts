@@ -1,0 +1,176 @@
+{
+  "control": {
+    "result": {
+      "tick": 126000,
+      "winner": null,
+      "completed": true
+    },
+    "gold": 401.42,
+    "supply": 162,
+    "cap": 164,
+    "bases": 7,
+    "army": 61,
+    "transport": {
+      "id": "unit-p0-transport-1046",
+      "kind": "transport",
+      "x": 3238.8485100764137,
+      "y": 4353.063742658286,
+      "hp": 391.6789270277991,
+      "maxHp": 392,
+      "order": {
+        "type": "move",
+        "x": 7792,
+        "y": 3632,
+        "avoidCombat": true
+      },
+      "cooldown": 0
+    },
+    "stats": {
+      "unitsKilled": {
+        "p0": 7,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "unitsLost": {
+        "p0": 0,
+        "p1": 3,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 4
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 19912,
+        "p1": 5707,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 4,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "candidate": {
+    "result": {
+      "tick": 144000,
+      "winner": null,
+      "completed": true
+    },
+    "gold": 62.91,
+    "supply": 175,
+    "cap": 184,
+    "bases": 8,
+    "army": 67,
+    "transport": {
+      "id": "unit-p0-transport-1046",
+      "kind": "transport",
+      "x": 4730.411736923447,
+      "y": 2446.923200318753,
+      "hp": 392,
+      "maxHp": 392,
+      "order": {
+        "type": "unload",
+        "x": 6608,
+        "y": 3728,
+        "avoidCombat": true
+      },
+      "cooldown": 0
+    },
+    "stats": {
+      "unitsKilled": {
+        "p0": 9,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "unitsLost": {
+        "p0": 0,
+        "p1": 3,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 6
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 21238,
+        "p1": 5707,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 6,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  }
+}
