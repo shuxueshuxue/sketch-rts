@@ -20,12 +20,18 @@ type PlaneState = {
 };
 const planes = new WeakMap<readonly Point[], PlaneState>();
 const supportCandidates = new WeakSet<readonly Point[]>();
+// Below SUPPORT_WALK_MIN vertices supportScale never walks, member or not; generated rings are never changed after they
+// are made, so a short one is left out of the set instead of paying for a weak entry per hull.
+const SUPPORT_WALK_MIN = 12;
+function markSupportCandidate(polygon: readonly Point[]) {
+  if (polygon.length >= SUPPORT_WALK_MIN) supportCandidates.add(polygon);
+}
 
 /** Only generated, numerically strict convex rings use support walking. The
  * robust turns and one angular wrap exclude flat, concave and winding rings.
  * Difficult scales keep the original complete projection scan. */
 function supportScale(polygon: readonly Point[]) {
-  if (!supportCandidates.has(polygon) || polygon.length < 12) return;
+  if (!supportCandidates.has(polygon) || polygon.length < SUPPORT_WALK_MIN) return;
   let scale = 0;
   for (const p of polygon) {
     if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
@@ -239,22 +245,25 @@ function sortByXThenY(points: readonly Point[]): Point[] {
   return sorted;
 }
 // One monotone chain of Andrew's hull over sorted[first..limit) in the given direction.
+// The chain is a stack kept in `out` up to `size`: entries past it are overwritten, and the array is cut to size once.
 function hullChain(sorted: readonly Point[], first: number, limit: number, step: number): Point[] {
   const out: Point[] = [];
+  let size = 0;
   for (let i = first; i !== limit; i += step) {
     const p = sorted[i]!;
-    const last = out[out.length - 1];
-    if (last && (p.x - last.x) ** 2 + (p.y - last.y) ** 2 < 1e-16) continue;
-    while (out.length > 1) {
-      const a = out[out.length - 2]!, b = out[out.length - 1]!;
+    if (size) { const last = out[size - 1]!; if ((p.x - last.x) ** 2 + (p.y - last.y) ** 2 < 1e-16) continue; }
+    while (size > 1) {
+      const a = out[size - 2]!, b = out[size - 1]!;
       // Nearly identical rotated endpoints can leave a zero-length edge or
       // parallel offset planes. Remove numerical corners before offsetting.
       const turn = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x), abX = b.x - a.x, abY = b.y - a.y, bpX = p.x - b.x, bpY = p.y - b.y;
       if (turn > 0 && turn * turn > 1e-20 * (abX * abX + abY * abY) * (bpX * bpX + bpY * bpY)) break;
-      out.pop();
+      size--;
     }
-    out.push(p);
+    if (size === out.length) out.push(p); else out[size] = p;
+    size++;
   }
+  out.length = size;
   return out;
 }
 export function convexHull(points: readonly Point[]) {
@@ -265,7 +274,7 @@ export function convexHull(points: readonly Point[]) {
   const result = lower;
   for (const point of upper) result.push(point);
   if (result.length > 1 && (result[0]!.x - result[result.length - 1]!.x) ** 2 + (result[0]!.y - result[result.length - 1]!.y) ** 2 < 1e-16) result.pop();
-  supportCandidates.add(result);
+  markSupportCandidate(result);
   return result;
 }
 /** Merge CCW edge directions, then remove numerical corners. This avoids
@@ -333,6 +342,6 @@ export function expandConvex(polygon: readonly Point[], amount: number) {
     result.push({ x: (am * b.y - a.y * bm) / det, y: (a.x * bm - am * b.x) / det });
     a = b; am = bm;
   }
-  if (amount >= 0 && Number.isFinite(amount)) supportCandidates.add(result);
+  if (amount >= 0 && Number.isFinite(amount)) markSupportCandidate(result);
   return result;
 }
