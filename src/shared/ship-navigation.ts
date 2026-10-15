@@ -90,7 +90,7 @@ const hullIds = new WeakMap<readonly Point[], string>(), hullShapes = new Map<st
 const PASSAGE_MEMO_LIMIT = 32768, FIT_MEMO_LIMIT = 16384;
 /** Number keys must keep every distinct value apart; template text merges -0 with 0. */
 export const exactKey = (value: number) => value === 0 && 1 / value < 0 ? '-0' : `${value}`;
-function hullId(hull: readonly Point[]) {
+export function hullId(hull: readonly Point[]) {
   let id = hullIds.get(hull);
   if (id === undefined) {
     // Profiles are recomputed per unit; equal vertex lists share one short id.

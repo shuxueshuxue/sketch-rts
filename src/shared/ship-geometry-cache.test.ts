@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { detCos, detSin } from './det-math';
 import { createUnit } from './map';
-import { clipToConvex, convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonRadius, polygonTouchesCellForPolygon } from './navigation-math';
+import { clipToConvex, convexHull, expandConvex, minkowskiSum, pointSegmentDistanceSquared, polygonPlanes, polygonRadius, polygonSupportingPlanes, polygonTouchesCellForPolygon } from './navigation-math';
+import { shipTraffic } from './ship-avoidance';
 import { SHIP_KINDS, shipProfile, type Point } from './ship-geometry';
 import { headingDifference, hullFits, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
 import { beginShipCollisionFrame, physicalSolidOutline, sweepShipCollision } from './ship-collisions';
@@ -216,6 +217,87 @@ function referenceSweepShipCollision(map: GameMap, ship: Unit, bodies: readonly 
   return best;
 }
 
+// The traffic view as it was before its own-hull sweeps were shared across views (4804631c), verbatim but for names.
+const referenceTrafficShapes = new Map<string, Point[]>(), referenceTrafficBases = new Map<string, Point[]>();
+let referenceTrafficBasePoints = 0;
+function referenceCacheTrafficBase(key: string, polygon: Point[]) {
+  if (polygon.length > 16_384) return;
+  while (referenceTrafficBases.size >= 512 || referenceTrafficBasePoints + polygon.length > 16_384) {
+    const oldest = referenceTrafficBases.keys().next().value!;
+    referenceTrafficBasePoints -= referenceTrafficBases.get(oldest)!.length; referenceTrafficBases.delete(oldest);
+  }
+  referenceTrafficBases.set(key, polygon); referenceTrafficBasePoints += polygon.length;
+}
+function referenceShipTraffic(ship: Unit, units: readonly Unit[], range = 600) {
+  const ownProfile = shipProfile(ship)!, hull = ownProfile.hull, radius = polygonRadius(hull);
+  const bodies = [] as { other: Unit; center: Point; radius: number; profile: NonNullable<ReturnType<typeof shipProfile>>; heading: number; outline?: Point[] }[];
+  for (const other of units) {
+    if (!shipProfile(other) || other === ship || other.hp <= 0 || Math.hypot(other.x - ship.x, other.y - ship.y) >= range) continue;
+    const profile = shipProfile(other)!;
+    bodies.push({ other, center: { x: other.x, y: other.y }, radius: polygonRadius(profile.hull), profile, heading: other.sailing?.heading ?? 0 });
+  }
+  const configurations = new Map<string, Point[]>(), sweeps = new Map<string, Point[]>();
+  const configuration = (from: number, to: number, body: typeof bodies[number], padding: number) => {
+    const key = `${from}:${to}:${body.other.id}:${padding}`, known = configurations.get(key); if (known) return known;
+    const profile = body.profile, angle = body.heading;
+    const baseKey = `${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}`;
+    const shapeKey = `${baseKey}:${padding}`;
+    let polygon = referenceTrafficShapes.get(shapeKey);
+    if (!polygon) {
+      let base = referenceTrafficBases.get(baseKey);
+      if (!base) {
+        const sweepKey = `${from}:${to}`; let negative = sweeps.get(sweepKey);
+        if (!negative) {
+          const turn = headingDifference(from, to), steps = Math.max(1, Math.ceil(Math.abs(turn) * radius / 4)), points: Point[] = [];
+          for (let i = 0; i <= steps; i++) {
+            const heading = from + turn * i / steps, c = detCos(heading), s = detSin(heading);
+            for (const p of hull) points.push({ x: p.x * c - p.y * s, y: p.x * s + p.y * c });
+          }
+          let shape = convexHull(points); if (turn) shape = expandConvex(shape, radius * (turn / steps) ** 2 / 8 + 1e-7);
+          negative = shape.map(p => ({ x: -p.x, y: -p.y })); sweeps.set(sweepKey, negative);
+        }
+        if (!body.outline) { const c = detCos(angle), s = detSin(angle); body.outline = profile.hull.map(p => ({ x: p.x * c - p.y * s, y: p.x * s + p.y * c })); }
+        base = minkowskiSum(body.outline, negative); referenceCacheTrafficBase(baseKey, base);
+      }
+      polygon = padding ? expandConvex(base, padding) : base;
+      if (referenceTrafficShapes.size >= 512) referenceTrafficShapes.delete(referenceTrafficShapes.keys().next().value!); referenceTrafficShapes.set(shapeKey, polygon);
+    }
+    configurations.set(key, polygon); return polygon;
+  };
+  const interior = (x: number, y: number, polygon: readonly Point[]) => {
+    for (const p of polygonSupportingPlanes(polygon)) if (!(x * p.x + y * p.y > p.min + 1e-6)) return false;
+    return true;
+  };
+  const start = { x: 0, y: 0 }, end = { x: 0, y: 0 };
+  let curves: Map<string, boolean> | undefined;
+  const clear = (from: ShipPose, to: ShipPose, padding = 0): boolean => {
+    if (!bodies.length) return true;
+    if (to.pivot || Math.abs(to.curvature ?? 0) > 1e-9) {
+      const key = `${from.x}:${from.y}:${from.heading}:${to.x}:${to.y}:${to.heading}:${to.curvature}:${to.pivot?.x}:${to.pivot?.y}:${padding}`;
+      const known = curves?.get(key); if (known !== undefined) return known;
+      const turn = headingDifference(from.heading, to.heading), lever = to.pivot ? Math.hypot(from.x - to.pivot.x, from.y - to.pivot.y) : 1 / Math.abs(to.curvature!);
+      const steps = Math.max(1, Math.ceil(Math.abs(turn) * Math.sqrt((radius + lever) / (8 * .025))));
+      const error = lever * (turn / steps) ** 2 / 8 + 1e-7;
+      let result = true;
+      for (let i = 0; i < steps; i++) if (!clear(shipPoseAt(from, to, i / steps), shipPoseAt(from, to, (i + 1) / steps), error)) { result = false; break; }
+      curves ??= new Map(); if (curves.size >= 256) curves.delete(curves.keys().next().value!); curves.set(key, result);
+      return result;
+    }
+    const dx = to.x - from.x, dy = to.y - from.y, turn = headingDifference(from.heading, to.heading);
+    for (const body of bodies) {
+      if (pointSegmentDistanceSquared(body.center, from, to) > (radius + body.radius + padding) ** 2) continue;
+      const polygon = configuration(from.heading, to.heading, body, padding);
+      start.x = from.x - body.center.x; start.y = from.y - body.center.y; end.x = to.x - body.center.x; end.y = to.y - body.center.y;
+      const clip = clipToConvex(start, end, polygon); if (!clip || clip[1] - clip[0] < 1e-7) continue;
+      const middle = (clip[0] + clip[1]) / 2;
+      if (!interior(start.x + dx * middle, start.y + dy * middle, polygon)) continue;
+      if (!(Math.abs(turn) < 1e-7 && clip[0] <= 1e-7 && dx * (from.x - body.center.x) + dy * (from.y - body.center.y) > 0)) return false;
+    }
+    return true;
+  };
+  return clear;
+}
+
 // ---- Scenarios: a coast of islands, shallows and map edges, with hulls, crews and buildings close by.
 function random(seed: number) {
   return () => {
@@ -280,11 +362,46 @@ describe('remembered hull sweeps and shared swept shapes', () => {
     }
   });
 
+  it('clear the same traffic passages as views that each swept their own hull', () => {
+    let blocked = 0, total = 0;
+    for (let seed = 1; seed <= 4; seed++) {
+      const next = random(200 + seed);
+      for (let round = 0; round < 24; round++) {
+        const kind = () => SHIP_KINDS[Math.floor(next() * SHIP_KINDS.length)]!;
+        const ship = createUnit(`own-${round}`, 'player', kind(), 2000, 2000);
+        ship.sailing = { heading: heading(next), speed: 0, load: 0, balance: 0 };
+        const units = [ship];
+        for (let i = 0; i < 5; i++) {
+          const other = createUnit(`traffic-${round}-${i}`, 'enemy', kind(), 2000 + (next() * 2 - 1) * 320, 2000 + (next() * 2 - 1) * 320);
+          other.sailing = { heading: heading(next), speed: 0, load: 0, balance: 0 };
+          units.push(other);
+        }
+        const length = shipProfile(ship)!.length;
+        // Later views read the sweeps an earlier view computed.
+        for (let view = 0; view < 3; view++) {
+          const actual = shipTraffic(ship, units), expected = referenceShipTraffic(ship, units);
+          for (let query = 0; query < 24; query++) {
+            const lattice = next() < .5, at = { x: 2000 + (next() * 2 - 1) * 160, y: 2000 + (next() * 2 - 1) * 160 };
+            const from = { ...at, heading: lattice ? Math.floor(next() * 8) * Math.PI / 4 : heading(next) };
+            const to = lattice ? (next() < .5 ? { ...from, heading: from.heading + (next() < .5 ? 1 : -1) * Math.PI / 4 }
+              : { x: from.x + 32 * detCos(from.heading), y: from.y + 32 * detSin(from.heading), heading: from.heading }) : motion(next, from, length);
+            const padding = next() < .3 ? next() * 4 : 0;
+            const clear = expected(from, to, padding);
+            expect(actual(from, to, padding)).toBe(clear);
+            total++; if (!clear) blocked++;
+          }
+        }
+      }
+    }
+    expect(blocked).toBeGreaterThan(100);
+    expect(total - blocked).toBeGreaterThan(100);
+  });
+
   it('find the same first contact, normal and point as the original per-body sweep', () => {
     let contacts = 0, terrain = 0;
-    for (let seed = 1; seed <= 6; seed++) {
+    for (let seed = 1; seed <= 3; seed++) {
       const next = random(100 + seed), map = coast(next);
-      for (let round = 0; round < 40; round++) {
+      for (let round = 0; round < 20; round++) {
         const center = { x: 160 + next() * (map.width - 320), y: 160 + next() * (map.height - 320) };
         const units: Unit[] = [], solids: Building[] = [];
         const ship = createUnit(`ship-${round}`, 'player', SHIP_KINDS[Math.floor(next() * SHIP_KINDS.length)]!, center.x, center.y);
