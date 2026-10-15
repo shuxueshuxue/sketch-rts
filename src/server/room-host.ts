@@ -6,6 +6,7 @@ import type { AiScript, AiScriptVersion } from "../ai/policy";
 import { createGame, snapshotGame, warmGameCaches, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { checksumGame } from "../shared/sim/checksum";
+import { LOCKSTEP_CHECKSUM_EVERY_TICKS } from "../shared/net/cadence";
 import { prepareShipPlanningJobs } from "../shared/ship-planning-job";
 import { extractReplayFrameSave, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
@@ -33,8 +34,11 @@ export type HostedRoomFrameEvent = {
   frame: CommandFrame;
   source: ReplayCommandSource;
   room: RoomState;
-  snapshot: GameSnapshot;
-  checksum: string;
+  // The world's tick after the frame.
+  tick: number;
+  // The world's checksum after the frame, on the ticks lockstep clients report theirs and on the last one (see
+  // @@@lockstep-cadence).
+  checksum?: string;
 };
 
 export type HostedRoomFrameListener = (event: HostedRoomFrameEvent) => void;
@@ -375,6 +379,15 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedFrame(hosted, game, frame, source);
     },
 
+    // The live ticker's step: the completed frame only, without the public snapshot and usage figures of tickRoomFrame.
+    advanceRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): CommandFrame {
+      const { hosted, game } = getLiveGame(roomId);
+      if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
+      const completed = advanceHostedRoomTick(hosted, game, { frame, source });
+      if (!completed) throw new Error(`Hosted room ${roomId} advanced without a command frame`);
+      return completed;
+    },
+
     checkpointRoom(roomId: string): CheckpointFrame {
       const { hosted, game } = getLiveGame(roomId);
       const checkpoint = createHostedCheckpoint(hosted, game);
@@ -537,17 +550,19 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
   const frameOptions = input.frame ? { frame: input.frame } : {};
-  hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
+  // A whole copy of the world is kept only where the history wants one (see ROOM_CHECKPOINT_INTERVAL_TICKS), and the
+  // whole world is hashed only on the ticks lockstep clients compare (see @@@lockstep-cadence), not on every tick.
+  if (hosted.history.wantsCheckpoint(game.tick)) hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
   const matchEnded = Boolean(game.match.winner);
-  // History and public tick results keep their independent snapshots. The
-  // internal event copy is only consumed by a listener or match cleanup.
-  const snapshot = matchEnded || completedFrame && hosted.frameListeners.size > 0 ? snapshotGame(game) : undefined;
   if (matchEnded) {
     hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
-    finishHostedRoom(hosted, snapshot!);
+    finishHostedRoom(hosted, snapshotGame(game));
   }
-  if (completedFrame && snapshot) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
+  if (completedFrame && hosted.frameListeners.size > 0) {
+    const checksum = matchEnded || game.tick % LOCKSTEP_CHECKSUM_EVERY_TICKS === 0 ? checksumGame(game) : undefined;
+    notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, tick: game.tick, ...(checksum === undefined ? {} : { checksum }) });
+  }
   if (matchEnded) notifyHostedRoomLifecycle(hosted, { room: hosted.room });
   return completedFrame;
 }
