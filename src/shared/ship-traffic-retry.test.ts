@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { createMap, createUnit } from './map';
 import { planShipRoute, planShipTrafficRetry, type ShipPose } from './ship-navigation';
+import { shipProfile } from './ship-geometry';
 import { cancelShipPlanningJob } from './ship-planning-job';
 
 function scene(){
@@ -49,13 +50,20 @@ it('revalidates in-place input changes, replacement objects, cancellation and co
     ()=>{map.wind.speed=40;},()=>{map.wind.direction+=.25;},()=>{ship.deckScale=1;},
     ()=>{ship.sailing!.load=20;ship.sailing!.balance=.5;},()=>{ship.speed+=1;},
     ()=>{ship.shipParts={rigging:1,rudder:1,cabin:0};},()=>{map.width-=1;},
+    ()=>{ship.fittings=[{id:'fit',x:0,y:0,radius:1,bearing:0,halfArc:1,accepts:[]}];},
+    ()=>{ship.fittings![0]!.x+=1;},()=>{shipProfile(ship)!.hull[0]!.x+=1;},
+    ()=>{map.terrain.cell+=1;},()=>{map.terrain.cols-=1;map.terrain.rows-=1;},
     ()=>{map.terrain.cells='.'.repeat(48*40);},()=>{goal.x+=3;},
     ()=>{ship.sailing=structuredClone(ship.sailing);},()=>{cancelShipPlanningJob(ship);},
     ()=>{ship=structuredClone(ship);},()=>{map=structuredClone(map);}];
-  for(const change of mutations){
+  const clone=vi.spyOn(globalThis,'structuredClone');
+  const misses=()=>clone.mock.calls.filter(([value])=>value && typeof value==='object' && 'ship' in value && 'goal' in value).length;
+  try{for(const change of mutations){
     planShipTrafficRetry(map,ship,goal,traffic,Infinity);change();
+    const before=misses();
     expect(graph(planShipTrafficRetry(map,ship,goal,traffic,Infinity))).toEqual(graph(planShipRoute(map,ship,goal,traffic,Infinity)));
-  }
+    expect(misses()).toBe(before+1);
+  }}finally{clone.mockRestore();}
   expect(traffic).not.toHaveBeenCalled();
 });
 it('keeps callback searches and nested searches on the original path',()=>{
@@ -74,6 +82,9 @@ it('keeps callback searches and nested searches on the original path',()=>{
     return {result,events};
   };
   expect(run(true)).toEqual(run(false));expect(run(true)).toEqual(run(false));
+  const fail=()=>{throw Error('traffic failure');};
+  expect(()=>planShipTrafficRetry(map,ship,goal,fail,8)).toThrow('traffic failure');
+  expect(()=>planShipRoute(map,ship,goal,fail,8)).toThrow('traffic failure');
 });
 it('distinguishes undefined, signed zero and non-finite raw inputs, and caches negative results',()=>{
   const {map,ship,goal,traffic}=scene();map.terrain.cells='.'.repeat(48*40);
