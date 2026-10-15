@@ -1,4 +1,5 @@
 import { combatCapability } from '../../shared/combat-capabilities';
+import { nearestByRoute } from '../../shared/route-selection';
 import { isTransportKind } from '../../shared/transport-role';
 import { walkingDistance } from '../../shared/terrain';
 import type { GameSnapshot, PlayerId, ResourceNode } from '../../shared/types';
@@ -19,14 +20,8 @@ export function chooseNavalMine(snapshot: GameSnapshot, owner: PlayerId, candida
       && isEnemyOwner(snapshot, owner, building.owner, options)).map(building => ({ body: building, rating: structureRating(building) })),
   ];
   return candidates.map(candidate => {
-    // Every landing asks about the same small fleet/departure set. Build
-    // fields at those origins; the unweighted 5/7 sea distance is symmetric.
-    let origin: { x: number; y: number } | undefined, shortest = Infinity;
-    for (const point of [...fleet, candidate.departure]) {
-      const distance = walkingDistance(snapshot.map, candidate.landing, point, 'sea');
-      if (distance !== undefined && distance < shortest) { origin = point; shortest = distance; }
-    }
-    const road = origin ? shortest : walkingDistance(snapshot.map, origin!, candidate.landing, 'sea')!;
+    const origin = nearestByRoute(snapshot.map, [...fleet, candidate.departure], candidate.landing, 'sea')!;
+    const road = walkingDistance(snapshot.map, origin, candidate.landing, 'sea')!;
     const threat = threats.filter(({ body }) => distance(body, candidate.mine) < 400)
       .reduce((score, { rating }) => score + rating, 0);
     return { candidate, threat, road };
