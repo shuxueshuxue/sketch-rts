@@ -1,0 +1,13 @@
+{
+  "run": 38213985927,
+  "head": "99a4bc3b3006c8c7f2bdaa7c6f826407fd28b8c5",
+  "attempt": 1,
+  "productionTag": "99a4bc3b3006c8c7f2bdaa7c6f826407fd28b8c5",
+  "steps": {
+    "Run npm run build:production": "success",
+    "Pack production artifact": "success",
+    "Upload artifact and deploy script": "success",
+    "Verify public game endpoint": "success",
+    "Publish GitHub production release package": "success"
+  }
+}

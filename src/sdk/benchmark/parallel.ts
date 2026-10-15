@@ -8,6 +8,7 @@ import type { SdkGameAgent } from "../game-runner";
 export type BenchmarkParallelOptions = {
   workers?: number;
   workerModule: string;
+  onMatch?: (match: BenchmarkMatchReport) => void;
 };
 
 type BenchmarkTask<TAgent extends SdkGameAgent> = {
@@ -37,6 +38,7 @@ export async function runBenchmarkParallel<TAgent extends SdkGameAgent = SdkGame
           const task = tasks[cursor]!;
           cursor += 1;
           results[task.id] = await worker.run(task);
+          options.onMatch?.(results[task.id]!);
         }
       } finally {
         await worker.close();

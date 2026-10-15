@@ -15,6 +15,7 @@ import { CommandFrameRuntime } from '../../shared/sim/command-frame-runtime';
 import { seconds } from '../../shared/time';
 import { runAiCommandEntriesFromScripts } from './script-runner';
 import { planNavalEconomy } from './naval';
+import { frozenPolicyModules } from '../../../scripts/bootstrap_1-planner';
 import { hullFits } from '../../shared/ship-navigation';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { LANDING_REACH, passengerLandingSpot } from '../../shared/naval';
@@ -122,7 +123,7 @@ describe('shared dock outfitting', () => {
     }
   });
 
-  it('keeps an embarked colony sailing when casualties have lowered population below the opening gate', () => {
+  it('keeps an embarked colony sailing when casualties have lowered population below the opening gate', async () => {
     const game = islandGame();
     game.buildings = game.buildings.filter(building => building.id !== 'hall-b');
     game.resources = game.resources.filter(mine => mine.id !== 'natural');
@@ -141,6 +142,10 @@ describe('shared dock outfitting', () => {
     };
     const snapshot = snapshotGame(game);
     expect(snapshot.players.player!.supplyUsed).toBeLessThan(20);
+    const historical = await frozenPolicyModules(), oldMemory = structuredClone(memory);
+    historical.planAiOwnerCommandEntries(snapshot, { playerId: 'player', version: 'v8', scriptIds: ['naval'] },
+      { memory: oldMemory, teams: game.teams });
+    expect(oldMemory.naval!.ferries![boat.id]!.phase).toBe('return');
     const commands = planNavalTactics(snapshot, 'player', { version: 'v8', memory });
     expect(memory.naval.ferries![boat.id]!.phase).toBe('sailing');
     expect(commands).toContainEqual({ type: 'unload', unitIds: [boat.id], ...at(19, 9) });

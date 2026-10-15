@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
-import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from '../../shared/sim';
+import { issuePlayerCommand, snapshotGame, stepGame, type Game } from '../../shared/sim';
 import { CAMP_TEMPLATES } from '../../shared/camps';
 import { UPGRADE_DEFS } from '../../shared/catalog';
 import { isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
@@ -10,6 +10,7 @@ import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { distance } from '../policy/spatial';
 import { neutralCamps, stagingPoint } from '../policy/v7/creep';
+import { bootstrapGame, bootstrapMatches } from './benchmark';
 import { mountedMicro, mountedTargetOrder } from './mounted-micro';
 import { bootstrapPolicyContext } from './policy';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
@@ -134,7 +135,7 @@ describe('mounted micro through ordinary SDK commands', () => {
     expect(game.match.stats.goldSpent.us).toBe(0);
   });
   it.each(['ogreMage', 'graniteGolem'] as const)('clears the original Grand Estuary %s mining camp with one unupgraded rider and no damage', kind => {
-    const game = createGame('grandEstuary', { players: Array.from({ length: 8 }, (_, index) => `p${index}`), aiPlayers: [] });
+    const game = bootstrapGame(bootstrapMatches('bootstrap_1-development', ['grandEstuary'])[0]!);
     const home = game.buildings.find(building => building.owner === 'p0')!;
     const camp = neutralCamps(snapshotGame(game)).filter(camp => camp.creeps.some(unit => unit.kind === kind)
       && sameGround(game.map, home, camp.center)).sort((a, b) => distance(home, a.center) - distance(home, b.center))[0]!;

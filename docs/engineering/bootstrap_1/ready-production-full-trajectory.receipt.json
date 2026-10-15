@@ -1,0 +1,26 @@
+{
+  "base": "e503095274b2e947a96ccb9629b1a93de46d8d40",
+  "candidate": "0a24e0f8fb425426e5c3d4a1a893d976beba5381",
+  "match": "greystonePass/v9_summoner/v5+v7/ember/1",
+  "initial": "Same ordinary6000 world and all controller memories; separate trajectories are continued to native winners or48000.",
+  "parent": {
+    "tick": 26558,
+    "winner": "p1",
+    "permanentDeaths": 59,
+    "workers": 0,
+    "army": 0,
+    "halls": 0,
+    "gold": 41.97
+  },
+  "candidateResult": {
+    "tick": 48000,
+    "winner": null,
+    "permanentDeaths": 35,
+    "workers": 4,
+    "army": 26,
+    "halls": 1,
+    "gold": 104.18
+  },
+  "result": "Parentloss; candidatetimeout is a failure, not a win.",
+  "acceptance": "All1620 cells and untouched seeds pending."
+}

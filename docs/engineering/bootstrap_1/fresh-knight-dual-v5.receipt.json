@@ -1,0 +1,92 @@
+{
+  "controllerRevision": "4df34db4007e435dc7268085ecc7868de85cefd8",
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "match": "loneMarket/v9_knight/v5+v5/grove/0",
+  "engine": "current public #320",
+  "mode": "single fresh full-match observation; terminal replay is not a second win",
+  "seed": "bootstrap_1-development",
+  "thinkInterval": 15,
+  "maxTicks": 48000,
+  "result": {
+    "tick": 40613,
+    "winner": "p0"
+  },
+  "freshFromTick": 0,
+  "terminalReplayFromTick": 39000,
+  "terminalStats": {
+    "unitsKilled": {
+      "p0": 133,
+      "p1": 22,
+      "p2": 20,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 6
+    },
+    "unitsLost": {
+      "p0": 33,
+      "p1": 61,
+      "p2": 73,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 14
+    },
+    "buildingsDestroyed": {
+      "p0": 38,
+      "p1": 1,
+      "p2": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "nonBaseBuildingsDestroyed": {
+      "p0": 34,
+      "p1": 1,
+      "p2": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "goldSpent": {
+      "p0": 16080,
+      "p1": 11163,
+      "p2": 12619,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "mercenaryKills": {
+      "p0": 5,
+      "p1": 2,
+      "p2": 1,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "neutralUnitsKilled": {
+      "p0": 5,
+      "p1": 4,
+      "p2": 5,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "unitsKilledByNeutral": {
+      "p0": 0,
+      "p1": 1,
+      "p2": 5,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    }
+  },
+  "enemyBuildingsRemaining": 0,
+  "artifacts": {
+    "/tmp/bootstrap_1-320-knight-loneMarket-fresh.json": "7d79d4fbccd1285b44c57c0e695899348ddbab4a93a080edf4386fface61da91",
+    "/tmp/bootstrap_1-320-knight-loneMarket-terminal.json": "cd1e5066aaf6ddde421ed7591570c50fdd6068e7ae6bb7d4dab71b65dde8bcdf",
+    "/tmp/bootstrap_1-320-knight-loneMarket-terminal.json.frames/40613.json": "1f55bedcb2df12c4d59db31c2386a6f3cec513ecd0788ef3444bf8198dfbabe0"
+  },
+  "completeMatrixAccepted": false,
+  "completeMatrixCases": 1620
+}

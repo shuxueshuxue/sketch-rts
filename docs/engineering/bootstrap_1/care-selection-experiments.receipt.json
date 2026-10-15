@@ -1,0 +1,36 @@
+{
+  "published": false,
+  "publicBase": "4b8312922dc9057299aef16f3b40948c073cb49a",
+  "from": 12000,
+  "to": 12450,
+  "originalPermanentDeaths": 3,
+  "variants": {
+    "movingClinicPatientPriority": {
+      "deaths": 5,
+      "oldChecksPassed": 66
+    },
+    "physicalFireInsteadOfLiteralTarget": {
+      "deaths": 5,
+      "oldChecksPassed": 82
+    },
+    "coldHealersExcludedGlobally": {
+      "deaths": 4,
+      "oldChecksPassed": 76,
+      "oldChecksFailed": 6,
+      "failedScope": "Ember island front recovery"
+    },
+    "readyCastOwnershipWithPhysicalFire": {
+      "deaths": 4,
+      "oldChecksPassed": 82
+    },
+    "readyCastOwnershipAlone": {
+      "deaths": 4
+    }
+  },
+  "observedActualCause": "At12060 all nearby enemies target knight3920; mobile care releases the90hp raider and the general issues an attackMove. Normal attacks at12061/12062/12065 reduce it to20hp; it dies at12076 to28 ordinary damage. No charge kill occurred.",
+  "decision": "Every runtime variant withdrawn. Resting versus travelling, skill cooldown and literal targeting alone do not solve whole-front coordination. Earlier identical care-threat-continuity patch11-to14losses remains withdrawn; do not repeat it as a new idea.",
+  "originalReportSha256": "f00723c4b33c180e264b571465df2b21ef9daad60c59770a7b8e46ec0f1a4501",
+  "transitReportSha256": "582c1fa158f7949cc97eeb54a7f04875151a890fa7b62df882f174da9a454cfe",
+  "fireReportSha256": "7aafff32de9ad4c9e9eb30237670685c2777137b850e72a46940291b821605e1",
+  "readyOnlyReportSha256": "a59f3cc1d05adaa1d31062e51a8ef0eb145190fa718a72a601c974f3c43ae347"
+}

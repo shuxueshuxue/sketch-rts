@@ -1,0 +1,80 @@
+{
+  "mode": "One fresh native full causal game for the previously failed formal map/race/side/controllers; normal resources and rules; not a full-matrix or held-out acceptance",
+  "source": "d6d66e2ee629f0022cf3affe8e728eda7a306e7d",
+  "rulesVersion": 1,
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "match": {
+    "name": "reedwater/v9_archer/v7/grove/0",
+    "mapId": "reedwater",
+    "subject": "v9_archer",
+    "side": 0,
+    "seed": "bootstrap_1-development",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_archer",
+        "versionLabel": "v9_archer",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v7",
+        "versionLabel": "v7",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "result": {
+    "tick": 25393,
+    "winner": "p0"
+  },
+  "finalSummary": {
+    "tick": 25393,
+    "winner": "p0",
+    "players": {
+      "p0": {
+        "gold": 97.62,
+        "supply": 73,
+        "halls": 5,
+        "workers": 21,
+        "permanentArmy": 24,
+        "losses": 25,
+        "creepLosses": 2,
+        "creepKills": 10
+      },
+      "p1": {
+        "gold": 10.32,
+        "supply": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0,
+        "losses": 224,
+        "creepLosses": 6,
+        "creepKills": 13
+      }
+    }
+  },
+  "formalParent": {
+    "name": "reedwater/v9_archer/v7/grove/0",
+    "map": "reedwater",
+    "subject": "v9_archer",
+    "opponents": "v7",
+    "race": "grove",
+    "side": "0",
+    "winner": "p1",
+    "tick": "31820",
+    "timeout": "False",
+    "status": "loss",
+    "artifact": "bootstrap_1-candidate-reedwater-v9_archer",
+    "artifactId": "11723020235",
+    "evidenceFile": "report.json.matches/reedwater%2Fv9_archer%2Fv7%2Fgrove%2F0.json"
+  },
+  "observerPermanentDeaths": 25,
+  "upstreamRules2Accepted": false,
+  "fullMatrixAccepted": false
+}

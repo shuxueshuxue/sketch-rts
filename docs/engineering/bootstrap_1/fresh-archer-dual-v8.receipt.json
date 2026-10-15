@@ -1,0 +1,569 @@
+{
+  "task": "bootstrap_1",
+  "head": "2203fbdc412e3ce0af189541fa0a7bdbaa4b060f",
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "mode": "one observed native match, normal resources/rules and 15-tick think; one fresh observed matchup, no controller swaps; does not represent full-matrix acceptance",
+  "match": {
+    "name": "pineshade/v9_archer/v8+v8/grove/0",
+    "mapId": "pineshade",
+    "subject": "v9_archer",
+    "side": 0,
+    "seed": "bootstrap_1-development",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_archer",
+        "versionLabel": "v9_archer",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "result": {
+    "tick": 40368,
+    "winner": "p0"
+  },
+  "normalRules": {
+    "freshStartTick": 0,
+    "thinkInterval": 15,
+    "noControllerSwaps": true,
+    "nativeVictory": true,
+    "observer": "read-only hit and onStep observations; CPU timings are not benchmark evidence"
+  },
+  "samples": [
+    {
+      "tick": 600,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 44,
+          "supply": 6,
+          "cap": 8,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 0,
+          "creepKills": 0
+        },
+        "p1": {
+          "gold": 89,
+          "supply": 6,
+          "cap": 14,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 0,
+          "creepKills": 0
+        },
+        "p2": {
+          "gold": 85,
+          "supply": 6,
+          "cap": 14,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 0,
+          "creepKills": 0
+        }
+      }
+    },
+    {
+      "tick": 6000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 83,
+          "supply": 25,
+          "cap": 40,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 7,
+          "mounted": [],
+          "losses": 0,
+          "creepKills": 3
+        },
+        "p1": {
+          "gold": 168,
+          "supply": 21,
+          "cap": 46,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 5,
+          "mounted": [],
+          "losses": 1,
+          "creepKills": 1
+        },
+        "p2": {
+          "gold": 835,
+          "supply": 18,
+          "cap": 26,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 6,
+          "mounted": [],
+          "losses": 2,
+          "creepKills": 2
+        }
+      }
+    },
+    {
+      "tick": 11400,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 144.02,
+          "supply": 46,
+          "cap": 58,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 17,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 109,
+              "order": {
+                "type": "attack",
+                "targetId": "creep-gen-3-3"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-4277",
+              "hp": 109,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 3,
+          "creepKills": 8
+        },
+        "p1": {
+          "gold": 51,
+          "supply": 30,
+          "cap": 64,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 8,
+          "mounted": [],
+          "losses": 12,
+          "creepKills": 4
+        },
+        "p2": {
+          "gold": 138,
+          "supply": 27,
+          "cap": 44,
+          "halls": 1,
+          "workers": 9,
+          "permanentArmy": 9,
+          "mounted": [],
+          "losses": 7,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 12000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 87.91,
+          "supply": 30,
+          "cap": 58,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 109,
+              "order": {
+                "type": "attack",
+                "targetId": "creep-gen-3-1"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-4277",
+              "hp": 109,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 12,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 71,
+          "supply": 35,
+          "cap": 64,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 10,
+          "mounted": [],
+          "losses": 12,
+          "creepKills": 4
+        },
+        "p2": {
+          "gold": 88,
+          "supply": 27,
+          "cap": 44,
+          "halls": 1,
+          "workers": 9,
+          "permanentArmy": 9,
+          "mounted": [],
+          "losses": 7,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 18000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 11.65,
+          "supply": 66,
+          "cap": 72,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 23,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 108,
+              "order": {
+                "type": "attackMove",
+                "x": 2315.2599634054427,
+                "y": 2561.405116034612
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-5620",
+              "hp": 131,
+              "order": {
+                "type": "attackMove",
+                "x": 2315.2599634054427,
+                "y": 2561.405116034612
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-7374",
+              "hp": 93,
+              "order": {
+                "type": "attackMove",
+                "x": 2316.130906566923,
+                "y": 2562.660020135274
+              }
+            }
+          ],
+          "losses": 13,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 82.22,
+          "supply": 48,
+          "cap": 72,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 13,
+          "mounted": [],
+          "losses": 31,
+          "creepKills": 5
+        },
+        "p2": {
+          "gold": 143,
+          "supply": 34,
+          "cap": 56,
+          "halls": 1,
+          "workers": 9,
+          "permanentArmy": 11,
+          "mounted": [],
+          "losses": 14,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 24000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 25.63,
+          "supply": 69,
+          "cap": 86,
+          "halls": 4,
+          "workers": 16,
+          "permanentArmy": 24,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 71,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-13115",
+              "hp": 59,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-14454",
+              "hp": 125,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 21,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 112.04,
+          "supply": 49,
+          "cap": 72,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 14,
+          "mounted": [],
+          "losses": 43,
+          "creepKills": 5
+        },
+        "p2": {
+          "gold": 7,
+          "supply": 24,
+          "cap": 62,
+          "halls": 1,
+          "workers": 9,
+          "permanentArmy": 6,
+          "mounted": [],
+          "losses": 20,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 30000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 27.55,
+          "supply": 66,
+          "cap": 86,
+          "halls": 4,
+          "workers": 16,
+          "permanentArmy": 24,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 247,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-14454",
+              "hp": 137,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-20652",
+              "hp": 133,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 36,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 63.64,
+          "supply": 33,
+          "cap": 72,
+          "halls": 3,
+          "workers": 0,
+          "permanentArmy": 14,
+          "mounted": [],
+          "losses": 64,
+          "creepKills": 5
+        },
+        "p2": {
+          "gold": 30,
+          "supply": 18,
+          "cap": 56,
+          "halls": 1,
+          "workers": 0,
+          "permanentArmy": 8,
+          "mounted": [],
+          "losses": 29,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 36000,
+      "winner": null,
+      "players": {
+        "p0": {
+          "gold": 189.69,
+          "supply": 72,
+          "cap": 94,
+          "halls": 5,
+          "workers": 16,
+          "permanentArmy": 26,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 132,
+              "order": {
+                "type": "hold",
+                "x": 3295.991749114894,
+                "y": 1203.3443945878957
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-14454",
+              "hp": 137,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-20652",
+              "hp": 156,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 43,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 63.64,
+          "supply": 0,
+          "cap": 30,
+          "halls": 0,
+          "workers": 0,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 78,
+          "creepKills": 5
+        },
+        "p2": {
+          "gold": 30,
+          "supply": 0,
+          "cap": 32,
+          "halls": 1,
+          "workers": 0,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 37,
+          "creepKills": 4
+        }
+      }
+    },
+    {
+      "tick": 40368,
+      "winner": "p0",
+      "players": {
+        "p0": {
+          "gold": 181.13,
+          "supply": 94,
+          "cap": 94,
+          "halls": 5,
+          "workers": 16,
+          "permanentArmy": 36,
+          "mounted": [
+            {
+              "id": "unit-p0-horseArcher-2808",
+              "hp": 263,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-14454",
+              "hp": 158,
+              "order": {
+                "type": "idle"
+              }
+            },
+            {
+              "id": "unit-p0-horseArcher-20652",
+              "hp": 156,
+              "order": {
+                "type": "idle"
+              }
+            }
+          ],
+          "losses": 44,
+          "creepKills": 10
+        },
+        "p1": {
+          "gold": 63.64,
+          "supply": 0,
+          "cap": 0,
+          "halls": 0,
+          "workers": 0,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 78,
+          "creepKills": 5
+        },
+        "p2": {
+          "gold": 30,
+          "supply": 0,
+          "cap": 0,
+          "halls": 0,
+          "workers": 0,
+          "permanentArmy": 0,
+          "mounted": [],
+          "losses": 37,
+          "creepKills": 4
+        }
+      }
+    }
+  ],
+  "frozenArchiveVerification": {
+    "files": 54,
+    "mismatches": 0,
+    "revision": "dba796cfc152379adad9988a1314f94ffc736137"
+  },
+  "artifacts": {
+    "/tmp/bootstrap_1-archer-dual-v8-fresh-observation.json": "73619dbee913ab1d51805e7fb82a9fae828c502c3e9a86272e3f33a7008c13d7",
+    "/tmp/bootstrap_1-archer-dual-v8-fresh-observe.mjs": "41642c816114f21d77b55fc79ebfa24562a39140e9f2a24d64a70f327675d626",
+    "/tmp/bootstrap_1-build-archer-dual-v8-fresh.mjs": "19f299bb9a783aa378e2c0292d2ee012c963e588953ae5103a1d8a824d9db57e",
+    "/tmp/bootstrap_1-archer-dual-v8-fresh-runtime.mjs": "0f40058f9e9138fee2ab25919155fe15c349f2d663c4500998896a8cb22e56d1"
+  },
+  "limits": [
+    "One matchup on one map, one race and one side.",
+    "No claim of complete 1620-case or held-out acceptance.",
+    "44 total unit losses; lossless army preservation remains unfinished."
+  ]
+}

@@ -1,0 +1,226 @@
+{
+  "mode": "Three isolated actual SDK production windows using archived unchanged planners, existing producers and ordinary starting gold; not a game-strength benchmark",
+  "rows": [
+    {
+      "version": "v5",
+      "tick": 120,
+      "error": null,
+      "plans": [
+        {
+          "tick": 0,
+          "entries": []
+        },
+        {
+          "tick": 15,
+          "entries": []
+        },
+        {
+          "tick": 30,
+          "entries": []
+        },
+        {
+          "tick": 45,
+          "entries": []
+        },
+        {
+          "tick": 60,
+          "entries": []
+        },
+        {
+          "tick": 75,
+          "entries": []
+        },
+        {
+          "tick": 90,
+          "entries": []
+        },
+        {
+          "tick": 105,
+          "entries": []
+        }
+      ]
+    },
+    {
+      "version": "v7",
+      "tick": 0,
+      "error": {
+        "tick": 0,
+        "message": "Error: SDK command frame rejected old v6Economy command: cinderSpire cannot train pyreCaller for ember",
+        "entries": [
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "train",
+              "buildingId": "scene-frozen-production-current-shared-roster-old-townHall-1",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "train",
+              "buildingId": "scene-frozen-production-current-shared-roster-old-cinderSpire-1",
+              "unitKind": "pyreCaller"
+            }
+          },
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "build",
+              "unitId": "scene-frozen-production-current-shared-roster-old-worker-1",
+              "buildingKind": "workshop",
+              "x": 822,
+              "y": 700
+            }
+          }
+        ]
+      },
+      "plans": [
+        {
+          "tick": 0,
+          "entries": [
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "train",
+                "buildingId": "scene-frozen-production-current-shared-roster-old-townHall-1",
+                "unitKind": "worker"
+              }
+            },
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "train",
+                "buildingId": "scene-frozen-production-current-shared-roster-old-cinderSpire-1",
+                "unitKind": "pyreCaller"
+              }
+            },
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "build",
+                "unitId": "scene-frozen-production-current-shared-roster-old-worker-1",
+                "buildingKind": "workshop",
+                "x": 822,
+                "y": 700
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "v8",
+      "tick": 0,
+      "error": {
+        "tick": 0,
+        "message": "Error: SDK command frame rejected old v6Economy command: cinderSpire cannot train emberAcolyte for ember",
+        "entries": [
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "train",
+              "buildingId": "scene-frozen-production-current-shared-roster-old-townHall-1",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "train",
+              "buildingId": "scene-frozen-production-current-shared-roster-old-cinderSpire-1",
+              "unitKind": "emberAcolyte"
+            }
+          },
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "build",
+              "unitId": "scene-frozen-production-current-shared-roster-old-worker-1",
+              "buildingKind": "defenseTower",
+              "x": 706.0660171779821,
+              "y": 706.0660171779821
+            }
+          },
+          {
+            "playerId": "old",
+            "source": "external-agent",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "train",
+              "buildingId": "scene-frozen-production-current-shared-roster-old-emberForge-1",
+              "unitKind": "emberRavager"
+            }
+          }
+        ]
+      },
+      "plans": [
+        {
+          "tick": 0,
+          "entries": [
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "train",
+                "buildingId": "scene-frozen-production-current-shared-roster-old-townHall-1",
+                "unitKind": "worker"
+              }
+            },
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "train",
+                "buildingId": "scene-frozen-production-current-shared-roster-old-cinderSpire-1",
+                "unitKind": "emberAcolyte"
+              }
+            },
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "build",
+                "unitId": "scene-frozen-production-current-shared-roster-old-worker-1",
+                "buildingKind": "defenseTower",
+                "x": 706.0660171779821,
+                "y": 706.0660171779821
+              }
+            },
+            {
+              "playerId": "old",
+              "source": "external-agent",
+              "scriptId": "v6Economy",
+              "command": {
+                "type": "train",
+                "buildingId": "scene-frozen-production-current-shared-roster-old-emberForge-1",
+                "unitKind": "emberRavager"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

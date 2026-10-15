@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { GOLD_MINE_RULES } from "../shared/mining";
 import { issuePlayerCommand } from "../shared/sim";
 import { runBenchmark, runBenchmarkParallel } from "./benchmark";
 import type { SdkGameCommandPlannerContext } from "./game-runner";
@@ -19,8 +20,8 @@ describe("SDK benchmark", () => {
       .unit("v2", "footman", 700, 700, { id: "v2-star-footman" })
       .worker("v2", 520, 520, { id: "v2-main-worker" })
       .worker("v2", 1420, 720, { id: "v2-natural-worker" })
-      .goldMine("v2-main-mine", 580, 520, 4000)
-      .goldMine("v2-natural-mine", 1480, 720, 4000)
+      .goldMine("v2-main-mine", 500 + GOLD_MINE_RULES.mainDistance, 500, 4000)
+      .goldMine("v2-natural-mine", 1400 + GOLD_MINE_RULES.mainDistance, 700, 4000)
       .townHall("v1", 3400, 3400, { id: "v1-main" })
       .worker("v1", 3380, 3380)
       .goldMine("v1-main-mine", 3320, 3380, 4000)

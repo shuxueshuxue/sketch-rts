@@ -1,0 +1,9 @@
+{
+  "status": "withdrawn; no runtime changes retained",
+  "window": "Original12000 to16000 knight snapshot, real frozen opponents and normal spending.",
+  "parentPermanentLosses": 9,
+  "candidatePermanentLosses": 12,
+  "candidateReportSha256": "a6b3197c3a42664871a5af6ffb054b615dcf397ef581b5ffd6436e6ebcd89399",
+  "reason": "Leasing one production queue and gold for the admitted first scout increases losses9 to12. The purchased scout dies to a golem at15015 while mobileCare owns its movement. Earlier purchase alone is not a strength improvement.",
+  "sdk": "Initial32 checks:26 pass,6 fail because allied controls finish before first factory purchase; no assertion was weakened and no experimental code is published."
+}

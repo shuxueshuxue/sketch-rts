@@ -60,5 +60,12 @@
     "attempt": 1,
     "failure": "Two original archer-task-scope checks receive mountedTasks instead of mountedField because a newly reachable raid takes a pursued free rider; a camp member is also incorrectly claimed. Health/loss assertions pass.",
     "correction": "Exclude actual assigned camp members from available riders; do not start a new sortie for a rider pursued by a nearby enemy. Original test assertions unchanged. No rerun of failed head."
-  }
+  },
+  "finalCareSdk": {
+    "passed": 130,
+    "failed": 0,
+    "suites": 10,
+    "sha256": "1b135bfeea3412d5f1f5641cf4b770467271782604ec2eedf6ebb17bb27f2605"
+  },
+  "finalDistinctTests": 203
 }

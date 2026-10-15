@@ -1,0 +1,37 @@
+{
+  "candidate": "0c11b492c9768f5261f11ddbb5a31a01bd698f3e",
+  "controllerReference": "443d1d8657cd1a39e60e33988284a68a0302da13",
+  "sdkPassed": 104,
+  "newCases": 12,
+  "newCasesParentPassed": 0,
+  "ordinaryStatesIdentical": 63,
+  "commandsIdentical": 167,
+  "fullMemoryIdentical": true,
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "frozenFiles": 54,
+  "artifacts": {
+    "/tmp/bootstrap_1-colony-care-final-sdk.json": "8dc84265069c05d2fd62778b89a0826139e57f857d1671d8cdcb955310ffefb3",
+    "/tmp/bootstrap_1-colony-care-clean-sdk.json": "a28faaa4d587cff6ae50e79cf1de9cbef1a35e93bae576986907ea621907ccbf",
+    "/tmp/bootstrap_1-colony-care-parent-sdk.json": "02e3b46c0f3f93891506c61a31af59d8793642e09e9c02fd61ac1ef7419a9f68",
+    "/tmp/bootstrap_1-colony-care-stable-proof.json": "bce9856af1c814546e2d5f94a8997e8693256223f08f352e2c45c5bd3a923d42",
+    "/tmp/bootstrap_1-colony-care-next-observation.json": "8ced5a4367fa1ebf79fbdb1c311cc1dd8d93b5be648e3ca0022dff3da499e94f",
+    "/tmp/bootstrap_1-colony-recovery-budget-parent-observation.json": "e631a476d2405d8b164d60a12f02a4543099ef3039ebc79250657747bf708b56",
+    "/tmp/bootstrap_1-query-bounds-proof.json": "2d2e6e6c7427adac9ee4a5dad6eb08445f9face8bde7b30c89cbe602b9452815"
+  },
+  "freshFormalWinsAdded": 0,
+  "publicReleaseUnchanged": "4df34db4007e435dc7268085ecc7868de85cefd8",
+  "pr321CpuRun": 38140412788,
+  "pr321CpuConclusion": "failure",
+  "cpuBudgetsUnchanged": true,
+  "cpuBaseline": {
+    "run": 38143400226,
+    "head": "4df34db4007e435dc7268085ecc7868de85cefd8",
+    "attempt": 1,
+    "conclusion": "failure",
+    "bareCpuMs": 14936.722,
+    "bareBudgetMs": 12000,
+    "ladderCpuMs": 17641.456,
+    "ladderBudgetMs": 16000,
+    "retries": 0
+  }
+}

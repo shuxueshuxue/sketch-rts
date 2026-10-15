@@ -1,0 +1,711 @@
+{
+  "publicMain": "26a2dc38ff1e2a3669414f0258b977e01f1977c6",
+  "command": "node --import tsx scripts/bootstrap_1.ts --maps greystonePass --subjects v9_summoner --opponents v8+v8 --race grove --side 0 --ticks 48000 --workers 1",
+  "metadata": {
+    "name": "bootstrap_1",
+    "commit": "07955b960771a933425659bde51d30a4bff06e0d",
+    "frozenPolicyRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+    "sourceHashes": {
+      "scripts/bootstrap_1-planner.ts": "a1cd53fa39508af3d0fe2ff737b3d15d00efa4f8287face8bc872b67c8a3c95a",
+      "scripts/bootstrap_1.ts": "d3278aee1d4311317aa98944adfc1ca8d985931d12a2f8543a86c23c48c1ad1e",
+      "src/ai/ab-test.ts": "1c38e8d67877eec6b7a0bbddbb9617f9d1a1029629ee318bd8f1f82678ed063c",
+      "src/ai/benchmark/army-balance-stats.ts": "92b843010d7893640a770a0b616b51044e789a97492c7c4611686d421e353aec",
+      "src/ai/benchmark/command-stats.ts": "b87f809883a7686d5d8b68a3a10d10cc8519c0ec782eefce7a40b66fe0fe2d42",
+      "src/ai/benchmark/control.ts": "3963286454827fd20a89583b8c90354eec32c613d5c2437fa7807fa17085e0f6",
+      "src/ai/benchmark/dashboard-store.ts": "1445c3ea3430f5b944c1c224b97317c0f2e2659def5bc024b309fdf1ecb825bb",
+      "src/ai/benchmark/expansion-claim-timeline.ts": "9d6cbab20d8d2198d889c7be988a6e528ded81bb900f18592cfb21f4378cf6de",
+      "src/ai/benchmark/gauntlet-cli.ts": "3d4b6f863490c907a8c9f5ecceb23f94e1fcd6139a53c667291055c8e51f8957",
+      "src/ai/benchmark/gauntlet.ts": "5f4bf64d403235e42635eae8546f79ad9b1008500da6eae5d063280d3526263e",
+      "src/ai/benchmark/matrix.ts": "56df993abf199692dc6679ea4676cc38743c8d18e03660124a2eca9340689393",
+      "src/ai/benchmark/nudge.ts": "c19d5a5469b49c212aa34e24fd8a586aa97861d8d5e3916e703ac7509a265418",
+      "src/ai/benchmark/parallel-worker.ts": "7af5c80803111f253d9028519b0aaa6909a829458311c33d62e3bd292d58c7b4",
+      "src/ai/benchmark/parity.ts": "9ce55dc806612c8d2e14ea4a52be900826dbc1aba4e398c087d526128f839625",
+      "src/ai/benchmark/presets.ts": "67a0fb51829b1010a7a13a57e46328dc525e1fe168281401290f0ec7adf45661",
+      "src/ai/benchmark/subject-gauntlet.ts": "b6cf7879f057f937056b0ba630b39baedbbfe46a78fcc2dbfb324ea9737def87",
+      "src/ai/benchmark/unit-roster-stats.ts": "2fd993892dc8a02875c2aa9f120b3b6f8167aa1e0e22dbe084b5f45e42ee3200",
+      "src/ai/benchmark/v5-arena.ts": "67446377cb95938d5453ee631fd4bc846d74dcfd884d76ae84190d293e8b6884",
+      "src/ai/benchmark/v6-doctrine-stats.ts": "66afb13278e5910d39a99bd2ebe8dccb5ab89270e4213ea7be978086b110f872",
+      "src/ai/benchmark/v6-gauntlet.ts": "5b9f609210e759397821eb8c6d59fa720d3ab6b3022de48710160b2698b577bf",
+      "src/ai/benchmark/v7-gauntlet.ts": "49e7ede47e0e9a1b7b36a1328d708748b99234bd2c184962b50ee33772e79840",
+      "src/ai/benchmark/v8-gauntlet.ts": "193279c46f9ddfefa11c7f942b8f63cfe3f35ee1ac5bb7c96423f3bc3bed641a",
+      "src/ai/benchmark/v9-gauntlet.ts": "f2dd2b87039847cf9ee34907764391355c35bc9b1e533c9d19334691dfd9103c",
+      "src/ai/benchmark/wounded-moonwell-stats.ts": "e926476fe88fce2c9ce0c35b1d63ee8b14370c4739ee3126c4440b00090207c1",
+      "src/ai/bootstrap_1/archer-doctrine.ts": "31a10c060c86a362f7ece39a40c8b08a22189ffb0c5f7b5568eb44cc2fc9707a",
+      "src/ai/bootstrap_1/archer-micro.ts": "b5e342d075720d910df2167d4f7367f9908c9977068166d084f824e2c6fb7874",
+      "src/ai/bootstrap_1/benchmark.ts": "6440c8ee9a0fcd723d8bc602b9321d4a80543881d074b72030b20ee5b2d34359",
+      "src/ai/bootstrap_1/economy.ts": "e713343c0bf3e7b5cb8ff7af1e1bd9c626e9c5c0bf246c082b68a362ec501b76",
+      "src/ai/bootstrap_1/medical-recovery.ts": "dcbd1e3f69238f1e6c013d9b9e3b9939bcabeebee1568bfb3a5cb38eccb91440",
+      "src/ai/bootstrap_1/mine-defense.ts": "4fe25e3ca61a75153e8a872b46c780979365294d2402db33dcc953428a1b2c06",
+      "src/ai/bootstrap_1/mining-assignments.ts": "61e4a6fdffd5004a41e0a95fd534dbb25ce3998d6096c3e4a8e027aa57ef7001",
+      "src/ai/bootstrap_1/mounted-micro.ts": "6223e2b0c220f291635abc00feb01d077822a98d92306975c05b80264b0fc08c",
+      "src/ai/bootstrap_1/mounted-tasks.ts": "a0cfcccdbdec5f7bd5e7f1c81e65a750f606c8b7a98a891bf6e6947c53bf41d8",
+      "src/ai/bootstrap_1/policy.ts": "e1336c07d3c1a71ac810965004b00cbf97f0666b53ba6da1c3714f9a0a69be54",
+      "src/ai/bootstrap_1/repair.ts": "3d48ba8fba4de24c754f690606513b4e6252875a7794b288d4878cea57d5067b",
+      "src/ai/bootstrap_1/shell-evasion.ts": "6d2029da1beb50f7700f463f416da5e8a18df56a7fd43fb4cc88cd54587139f3",
+      "src/ai/bootstrap_1/summon-host.ts": "547281151a45b03df6b03a0cbd7eb19a026da75d470f47d3117f19a7fe860e7a",
+      "src/ai/bootstrap_1/summoner-screen.ts": "37d81e8779950cec9942f19eb8992fcbc9393eb8f307195a047fec5c99fb1169",
+      "src/ai/bootstrap_1/tower-rush.ts": "75edfbd6e43961e56f241060e500cada7cee59ddb30c785074773355c5bd21a2",
+      "src/ai/bootstrap_1/worker.ts": "e17b9a9b886ca471277669e068fa812a7dd7524adfbe5552bd6e6f53e5328e71",
+      "src/ai/bootstrap_1/workforce.ts": "f4002a6c7700aafb70dbac69af25f0d263e17ea43cf0b6fc31a4d1c1f64ee0a7",
+      "src/ai/game-runner.ts": "d15acb3cc44c3e17aa3a82b6a503672bda7df190310c2d53524cb7c45e518bba",
+      "src/ai/memory.ts": "e6695c66b16945b2dcb34deedfaf87bb7a2bfc6617fc11aec2db9b29c4e04721",
+      "src/ai/planner-context.ts": "6512062bc03d517676f5cb95a468eed0a429cca20a413a70b4a594149d560938",
+      "src/ai/playtest-command-manifest.ts": "79c8e756bc2f922477c0b0f91aa63ccbcfacd0adad65fac129365ed8a663b3da",
+      "src/ai/playtest-diagnosis.ts": "97b3fa09fb8b9b5adc2194a1352af373e10974dacbe2f082e0316278f934cbfe",
+      "src/ai/playtest-session-file.ts": "6d858e015802c24f24fb79eb09f4f1f3e204fc3c142db00fd9f688e4968f5440",
+      "src/ai/playtest-session-setup.ts": "635aceaa161805ffecff61b264d62ea27b6c160d111f73fc552272bf685231ad",
+      "src/ai/playtest.ts": "b0f79db69f17567ee18344da3731e7009985df808f0fb836371cb63bb9c73cfa",
+      "src/ai/policy-v2prod/base-defense-model.ts": "2cbaf01df1ac9cac6f25663ae5ef709ce157c5b532ff08472b01fb3cf7eff656",
+      "src/ai/policy-v2prod/build-layout.ts": "f3b0bd33549cbbf86cf40cd8f12c610251c8661f1f171243b432fa04b6416c7f",
+      "src/ai/policy-v2prod/claims.ts": "c64e3f7894c521b5ee7d923b1429793b67a6781a5c2dc5ad04c251967a8869a5",
+      "src/ai/policy-v2prod/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+      "src/ai/policy-v2prod/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+      "src/ai/policy-v2prod/core.ts": "e4d177f085287bab23511605cd23ec10ea8d71fa9c7a41be7afed3e7628c46c1",
+      "src/ai/policy-v2prod/expansion-model.ts": "b98496273c459575bd753567eaade776d75b8a835391d580975b45c9a45695e6",
+      "src/ai/policy-v2prod/item-tactics.ts": "14e720ecbfc1fb5008c93e66b2fa14654be58cb47f5923f5d79ab31c517dc238",
+      "src/ai/policy-v2prod/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+      "src/ai/policy-v2prod/playbook.ts": "32c5d51db4c2a136b277e8e34eb14749f3f643d1cc526cd4752c44c71aa2ab62",
+      "src/ai/policy-v2prod/production-model.ts": "912ee409b9a1a792a5fba105cc0d3338330824e117eab1369c1e70e0a27db7b9",
+      "src/ai/policy-v2prod/script-runner.ts": "ec51c8571f479260fb035f4f4802311dd3d2de4b12ff5f5352646a8d25fd0d83",
+      "src/ai/policy-v2prod/skirmish-tactics.ts": "72855d9b3afecfd5e27b3610443d096ae3daa7dc387a29db1b3b843bf825dc7e",
+      "src/ai/policy-v2prod/snapshot.ts": "34d2b5245b5a66f58a5982fe3d381875553133151b39032840f04e4cf8ce4b2a",
+      "src/ai/policy-v2prod/spatial.ts": "1a958780f43c4e32213118f4fe5bf0da20945f17fee5a289e2e1e877234351ac",
+      "src/ai/policy-v2prod/spell-tactics.ts": "588a1b34f9f7f2a253ebdf33647891ca81b2bff43ed5b162aa0cd26900252ed9",
+      "src/ai/policy-v2prod/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+      "src/ai/policy-v2prod/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+      "src/ai/policy-v2prod/training-choice.ts": "7b0b7ab8b9b26c2eb6a711f0f6c7431efa37552e2c46c2111dfbfce1c94ed7e9",
+      "src/ai/policy-v2prod/types.ts": "f15b3b03cd776e5fae52b50cee8cf34f9b49cea0ade9490f3b622a9ed45ea75e",
+      "src/ai/policy-v2prod/world-model.ts": "b1361f2b4b1001dbc15eca2d6998bcaa5d6169ee3e8b36bc38c9907a3f09e685",
+      "src/ai/policy.ts": "2d43f6a5dd021f546769c2e1f89bd572e6ed082df44ce62a693432a9f01a373e",
+      "src/ai/policy/adaptive-army.ts": "620e36491a435f798c7e2c57bdb20051dff26089af6cd6181bfd78df310769a7",
+      "src/ai/policy/ally-support.ts": "d1e7b6539cbbef4d65ae1687e3e558ae7f62a2d013deae2603b8ec340147a9a2",
+      "src/ai/policy/base-defense-model.ts": "8fe2b400e5c8f9acea361745f347f1e5d6178d0a57686e9b8ad9b4b225d9128d",
+      "src/ai/policy/base-pressure.ts": "51de9a20b894c6351362223b12b30e3eccc7b71718d5394cee181edcea9f54b3",
+      "src/ai/policy/battlefield.ts": "4772eadda29f9929ecf847bc39bf541b42e4840a8c0a9337dc80eaf9d3d5cbb2",
+      "src/ai/policy/build-layout.ts": "e29054d10b3f641b72c2f8e949a22c92c19e43ba6b29c43b3879f05804a9e76f",
+      "src/ai/policy/claims.ts": "62137c2dd856c3bad89063654a3914fb2ca303ccc6d7292c44c9f1ed899f0fd6",
+      "src/ai/policy/combat-math.ts": "110be104f01763739107a3737e9b74abed872dd7fa6a5df5da76254cae70fdb0",
+      "src/ai/policy/combat-readiness.ts": "b461e9c7d64650729326f36ab8ba18c6679a157f4a346e1a6687ec8fff3d6def",
+      "src/ai/policy/commands.ts": "f2ce45edcd3636ef0172510c82967c26cb0c364a03689210d0d141f8294b03bd",
+      "src/ai/policy/convoy-load.ts": "c3c536677d030f62441c8b0ddf2e4046995a815ca18d9ee5a27d3a7d3ddb0ae0",
+      "src/ai/policy/core.ts": "7b50765feece9960d01abaac53d30148fd1c62afdd9f8bab5edf313ad815ba13",
+      "src/ai/policy/engagements.ts": "9cbcd86748bd1a97a54126ebf63cf480f89099f5dbb94b90931fe13e5e119b94",
+      "src/ai/policy/engineering.ts": "bc6dbf29f4a5d1b5cb0f7b5040b38f5408d9c60ecf165e0a294e8553a976bd30",
+      "src/ai/policy/expansion-model.ts": "33e5402cec184fe5818e7c26fa910707f3136e078c1601666e58d1659c06acbf",
+      "src/ai/policy/fleet-engagement.ts": "2cccb5e9a36df0827ee758d096cf1ff0d94490faa824df645c009720d1a2ff0e",
+      "src/ai/policy/fleet-formation.ts": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+      "src/ai/policy/ground.ts": "ff05f47aba18c497a9f6a768174524f3cb1d1b0a67100bf5870d50c1f87bad15",
+      "src/ai/policy/item-tactics.ts": "663771a4a731d21a37af4615b8241edeae0cdc06d8b6292243d6dcd721e25d4c",
+      "src/ai/policy/mechanical-repair.ts": "e3ddf0d2e899a6fe71b0406791e53f0f00a3b2ded56a4432aff705c1cbc37ff7",
+      "src/ai/policy/naval-services.ts": "2a8f2cc659ca3350de1703471027c9c33d6af9790d59d9c7c079bcd0c4e9f5d6",
+      "src/ai/policy/naval.ts": "60a8f885decfbfb815e025f8273705c7b6ad8b1932cce60f950889d7951852c8",
+      "src/ai/policy/ownership.ts": "31565f278dea30c0438a5c8c44abae16be854524081c7f58ea8ee46697edc8d9",
+      "src/ai/policy/playbook.ts": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
+      "src/ai/policy/production-model.ts": "f9cb8f9ea9f8ee36a239f8540903eb7de20aa14fab71955971bafa3e0ceef9b3",
+      "src/ai/policy/script-runner.ts": "2af5fd349b8f258a420aa1b9bf81cf9a44d2bcae0763d4895012de73ce29d5a2",
+      "src/ai/policy/skirmish-tactics.ts": "4136b1aa7901dc6a18a7424e00169269f3c82bb11524acf4f983c4f54b6c0bce",
+      "src/ai/policy/snapshot.ts": "6c6812342517475f972432d8d76f1186d35378fbc1687844d780abfffcb483d1",
+      "src/ai/policy/spatial.ts": "c965c841c33dbb5a9497ac981acefb188c189707035c32a02070a8feca1d597e",
+      "src/ai/policy/spell-tactics.ts": "c8885e3d28f033ccac3f19d9c75e4da17b7b5af2879533c7739043a6e4c816ee",
+      "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
+      "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
+      "src/ai/policy/training-choice.ts": "4f952fb0fd4016127244e277caea5638c9a967f1641bebc463806a6687af01df",
+      "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
+      "src/ai/policy/types.ts": "97cab1aff747cc4f4d5bf32816727929a9a6234b4eeaf326a3cbc28a08fc0d65",
+      "src/ai/policy/v6/backline.ts": "24ea1e219de49bf637ca974ce74436c8a31ce637e05d9440135ad3f80ed1a5a5",
+      "src/ai/policy/v6/closeout.ts": "a23defb92af85a8059a20c7a8fc798f53fe9a1b60ab3712e6765216122f0c922",
+      "src/ai/policy/v6/doctrine.ts": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
+      "src/ai/policy/v6/economy.ts": "a04a1aabd53dffa45fc3255d6a69f94dd0cb800af36ebc89521a98c241eb8179",
+      "src/ai/policy/v6/general.ts": "a93996e678a0da8da6965bb4fa00c37dcb07552f28c133f0cfb19204c47642ad",
+      "src/ai/policy/v6/intel.ts": "2f95f695bffe98a02de07a817c06cf1fe49d79be6499c5c161b727d213f61dac",
+      "src/ai/policy/v6/memory.ts": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
+      "src/ai/policy/v6/raid.ts": "4924a2b64cfa5a5e71b971a29c5bd18282b69ce7799338c9f8ded76a34bb38ec",
+      "src/ai/policy/v6/rng.ts": "b2fbac706071c48c9476b5968330affaffb7cdaa1c0d0415ff4db4f579b7bd62",
+      "src/ai/policy/v6/select.ts": "56c6ab5be29e38051da66b1ca35f7b9d28d73e69dca90492280e26afb8aab8ab",
+      "src/ai/policy/v6/strength.ts": "bd474f113ea57894a442ae846f727432e70e3d63da9f9e86eeb837f281999823",
+      "src/ai/policy/v7/creep.ts": "543a851617955b7375ff02e282708e91476332f6d9ca63c6fd960291dc5fb261",
+      "src/ai/policy/v7/discipline.ts": "9132b684e9fb71ce3aebdf58521c3aacd8690eb7c7a320bc2dd6e47544f1a910",
+      "src/ai/policy/v8/charge.ts": "d113ffd1cca8d615d68e80a1c74e5af32723a99718b6fa71d24a4e35b4eb89df",
+      "src/ai/policy/v8/doctrine.ts": "94fc1aff9dd33707cf5c111c19bcd6cff4e06d623a1ea43a7e0d71587b7c6f02",
+      "src/ai/policy/v8/well.ts": "955bbe13995d1a7df5d503ad364ab95f2c6e0b688d83024492a507c71c5052f0",
+      "src/ai/policy/v9/doctrine.ts": "c0ae229e6b37adc7bbb04961e64b5e1c6dc1f52cc4675ebaecee48401596a0c1",
+      "src/ai/policy/v9/front.ts": "b44b085784ee77ff840b3b45cf511a4400079485397c3553518fc439367e7cfa",
+      "src/ai/policy/v9/march.ts": "14b175e155aa1f3f0235f23b1375e2c327aeb7e2b1f13fa9be30a18993fcab1e",
+      "src/ai/policy/v9/shop.ts": "151295123598130f159273b5aa57f213f3a59e0a745b7318c3cb141bcd5df07c",
+      "src/ai/policy/versions.ts": "8fce11b6a43eecf4bfd995d5c035d067f67dbf04e73ad2015e07fb5677418ea0",
+      "src/ai/policy/veterancy.ts": "ab0fc9cd9a401a7092d3111487b8c01467b70f2f19ae5cf6003018d3c4105854",
+      "src/ai/policy/world-model.ts": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+      "src/ai/runtime-test-helpers.ts": "37131d4672da797710241063260d424ffe49e4f4f6e55e416aeda56d2d3e85a5",
+      "src/ai/runtime.ts": "89e4ffc549528072f9e803aa83108d88a6e5cdba9f637c573f636661cf8d59e5",
+      "src/ai/squad/squad.ts": "11d89ec2dff88495c789cfffc9f6e677add18ee9d7b21cb2777a56b5e0ded5ec",
+      "src/ai/veteran-skills.ts": "c4cc2bb9caf714ec2e081061c24cd7e65405e9192c54dd6be5f3a7cadee14910",
+      "src/sdk/benchmark.ts": "938f5f74f0cbe33fdb398f8bd97fc5d4a4cb3ddab9f033ccba0d5ba42bf6bdf7",
+      "src/sdk/benchmark/core-worker.ts": "858e408eb20a65872eafda10ce86b48c87b3e2e3b9830aae37628a945787ed59",
+      "src/sdk/benchmark/core.ts": "b76ec254064a6b8ec28e3cbbc555c30ed3ac06156d04d28d5dcbbf0edf816303",
+      "src/sdk/benchmark/manifest.ts": "308016b640d282ab6a2f0231efbb09ad12e9231f329b4f439c626a2f97bada7b",
+      "src/sdk/benchmark/parallel-child.ts": "d2026c975e912855101616b971750f9e471067849ae057cf24963ba40dbf8ea6",
+      "src/sdk/benchmark/parallel.ts": "707ec25102b5e07d91b4f1fa6881fb9bade9fa57d6b51be7262544778a687e51",
+      "src/sdk/benchmark/persistent-worker-fixture.ts": "46cf74299b31117989294e2ab3f185e94aa9ba9116b04d0c882398b65999b8cd",
+      "src/sdk/browser.ts": "22043852374bfedfcbbec3a80491bf1c805ae0858c690e5d8233f69ef1bbdda1",
+      "src/sdk/client.ts": "d40b10b002ed554cd40687a9fa0ac5040e95e800dc62136ae48d96a65d963133",
+      "src/sdk/commands/frame.ts": "e611072ad0fd5f879c76aa7ea7ad1eb6d062573aec1594ae7bb42e125d474cf2",
+      "src/sdk/commands/intent.ts": "bb6f41a6cc92fb108c79f8e06d76e9530a66874af9e36e9b0924bc1384c63cc6",
+      "src/sdk/external-agent-room-runner.ts": "143fa1a9008547786d5bb7bc45cd38441dc99ddf0ee3d752819e4aa248f5ec6b",
+      "src/sdk/game-runner.ts": "dbf83422d4bc203de7114d96d4fdbc8b49188616f9eb255c77fcfef9c6df0ef1",
+      "src/sdk/map-analysis.ts": "54d2bb016e7f5fff8c729cfd1a1613ddf99828f0225243ad7e6f817a4180ea42",
+      "src/sdk/match-report.ts": "7baa60b35dae1e4dd069763b1468b7abf75e71ed1f32a9cc869d9f50670e6e6c",
+      "src/sdk/playtest.ts": "47d10ec43c2e8a6d8697f2320f389426c0d25194e1c1f72a16420e424ee0153c",
+      "src/sdk/scenarios/combat.ts": "f3d6f9180fb6382b231fda6cf56a2acd78cf9e6f27081c2eec31366e02db0053",
+      "src/sdk/scene.ts": "0fcdc3aca5b56c146a461c28e729530db90d4028142991dc73982ad5fa8f1112",
+      "src/sdk/snapshot-query.ts": "1c7f75e65d8324dec5048e5ae4df4c07e30dc9fd6e6c89145db41671beb9e025",
+      "src/sdk/snapshot/query.ts": "9387bd510a90d8283037ce2da0ed93a51a29aab751124be864611d94439fad14",
+      "src/sdk/snapshot/range-index.ts": "453b34c6856bd7a160e18885ab9a242f33210840aa16d02f38b0618aba48c669",
+      "src/sdk/winner-mode.ts": "26251648e35ca43e6d7b36642a7531df1adadb68c4c34b29456febba2f7ade38",
+      "src/shared/ability-cooldowns.ts": "bc9f3a7359d624d14e31555ebb6fa435bd98a4a6b638527e491f7f5784413d63",
+      "src/shared/aiming.ts": "3285e7a05850cee040dddc3e0b1b733927f1b19ed6fae01bab2758cc22863fa4",
+      "src/shared/archipelago-map.ts": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+      "src/shared/attack-presentation.ts": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+      "src/shared/autocast.ts": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+      "src/shared/build-placement.ts": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+      "src/shared/camps.ts": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+      "src/shared/catalog.ts": "2dd742e037286a9a92b55ceff975bacbb0ffd613d64da75c459ee48d64bd8829",
+      "src/shared/chat.ts": "fa0124ca978c67c0d0200dd9cc3c0bc2192b99d0edc500bb48540a07a2f21a63",
+      "src/shared/combat-capabilities.ts": "94d30fb982d360254162fecda338a741bf0ae08c10b797e4f63f4fd40b266fd4",
+      "src/shared/combat-geometry.ts": "25daa95a39cb4218063237c2e9e16985a72a4fe189b10a5e3b45155d105a5838",
+      "src/shared/combat-save-upgrade.ts": "eba692c658d150200033ac11582f4bd6cae0beef6d70dcfadfde2df45891dd6c",
+      "src/shared/combat-target.ts": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+      "src/shared/command-schema.ts": "40c2e421da152a615157e39e7c3c55188557d3256cd398b256aa9517b279aabf",
+      "src/shared/connected-decks.ts": "d4b44531960d043f453a0063bdfb1e456f5359989b378f108151f06ee2f450fb",
+      "src/shared/construction.ts": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+      "src/shared/crew-rendezvous.ts": "38296157473b7e27034fd6e5ff5129cfcff7b8b10475f1bc4024133562a8587e",
+      "src/shared/damage-reduction.ts": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+      "src/shared/damage-types.ts": "bfa6343a0eea33c669a718c1c522e34cc7ffbacb416a9b3c3536dad79c3608bc",
+      "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+      "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+      "src/shared/decks.ts": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+      "src/shared/deployment-base.ts": "7adf1a4ea5ec581f861ab962e163af574456fa1640158120085f2ce280345587",
+      "src/shared/det-math.ts": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+      "src/shared/environment/ecology.ts": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+      "src/shared/environment/fields.ts": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644",
+      "src/shared/environment/noise.ts": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+      "src/shared/equipment.ts": "3aae45fe1724de7e6cb003cbc1df11ca254a918bf002c71fd7474599f83d8f75",
+      "src/shared/estuary-map.ts": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+      "src/shared/generated-map.ts": "9773d8a00fab9644b2cc98d723cc937604f0724032ea9ef60ea27881edc43a1a",
+      "src/shared/healing.ts": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+      "src/shared/item-index.ts": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+      "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+      "src/shared/item-surfaces.ts": "007374f68912e6a18ef90677ac508b78a2bacfafefb5d29669a9dd1fc61c0db2",
+      "src/shared/map-dressing.ts": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+      "src/shared/map-ids.ts": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+      "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+      "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+      "src/shared/mining-site.ts": "84a5edcf46ff06f18afd5601ca8870e0d4cc014e3723a6183b3a200f6f4fa0f8",
+      "src/shared/mining.ts": "a6cbd4fb9e0b27a66e31d02a7927e122aca625a8f48d2ab5964a0a6e74cc8361",
+      "src/shared/naval.ts": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+      "src/shared/navigation-masks.ts": "73605ee46030c60bf9835fc46af63cfcfe8bec17f6f420bc9d265b9e8a31b07f",
+      "src/shared/navigation-math.ts": "36de9ac16cff20842cb2715b64737a6e0b4fa01d8398f9d67aa671ac90df0c41",
+      "src/shared/net/checkpoint-semantics.ts": "38b3ff4a08318cf583a36da71cf3a4e5f0858c97c00e90d4699182da36448180",
+      "src/shared/net/codec.ts": "7b888d40c62010a02c4356065da38a258f1cc34a46b8359d4b00bf90335cb768",
+      "src/shared/net/frame-buffer.ts": "5823a3e015fc20612c32f50012c9a3b93cccca86a2275eb1ae0adcb814bb57e6",
+      "src/shared/net/types.ts": "016b19bab2080ce51bbb4d01363645f52be77af726e94739342552259c082618",
+      "src/shared/obstacle.ts": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+      "src/shared/physical-body.ts": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+      "src/shared/player-colors.ts": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+      "src/shared/presentation.ts": "94b0030646ad646d9c5b787e0fcae9b87e4cc55ddb84a4f0b19dd47bdcbe23a6",
+      "src/shared/purchase.ts": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+      "src/shared/push.ts": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+      "src/shared/replay.ts": "73ce64320597ab60bbd192698c7420dc9634795868fa92aa567944348567688b",
+      "src/shared/room-lifecycle.ts": "ba995af814b8b4ecf088ba438dee903200201441dd2d5c0157fa661f9031569d",
+      "src/shared/room-schema.ts": "d63d847cd0c00db19b7f8eafdcf39d6a650001e52dd0e1abc5db3b8c80b6f1d4",
+      "src/shared/room-slot-counts.ts": "4f0790dcfe6cf67f77eb9e5aeba064a8ce18142bcc52906afe2e5c03fdb38b7e",
+      "src/shared/rooms.ts": "d7199dcc142ea40c20c8cfc8b601e1171721dd2c7f5a37e1945a5f7be9e56690",
+      "src/shared/sailing.ts": "9a37443937b32a72f94359bd18ff48423a0e31baf0105b775b5499f0ec3196cc",
+      "src/shared/savegame.ts": "73575c3203c5a47a0082cc822d3dff1957a1364970f60b6c042bfdd596d48caf",
+      "src/shared/ship-avoidance.ts": "807c1b3f105f0ba7c39c9501b1156d2777ecd8a50e83278d8327cbee6bf81d54",
+      "src/shared/ship-cabin-quota.ts": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+      "src/shared/ship-cabin.ts": "46aa77894309812c4678f46498a39cf2d70c51b96994728f89eb3e835aa4ff88",
+      "src/shared/ship-collisions.ts": "f70744a906f2854e4a2252279195e0acd601111741018a7e765a8204c8804fad",
+      "src/shared/ship-defense.ts": "6d2ea73df4b5ed2f40e8add889ca2d1d875a6a92a6ba31ad4c5441f7b6ef1e7b",
+      "src/shared/ship-equipment.ts": "2fb322946adb7253b5997c2768b0f25a8977d77501bdfb9a80c43bf7f1e30a5b",
+      "src/shared/ship-fire-control.ts": "c7ecd45a7e171fea6d5bf3ccc88c57a8121b81bfd9483ed42082408cfdeb8538",
+      "src/shared/ship-gangway.ts": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+      "src/shared/ship-geometry.ts": "839d3ba7f2b3d6405c61f87804155f539c5bb8af85695136ccf91098e80452f3",
+      "src/shared/ship-guidance.ts": "7d18df1aaf10e04bc9c50da02ec675fde3fddb533443d92ca4257cd35567fd94",
+      "src/shared/ship-handling.ts": "085b18b64a6cee0795bea64ad645c79f96139d32ebe5fde0dd7bcb5bc69cadda",
+      "src/shared/ship-launch.ts": "7a857bda311f387a0571446d758ad9045cb149ebb4f84e69b479359e6c5cd07e",
+      "src/shared/ship-motion.ts": "6b7b0eb872455ea437f1cc690534ab62ed344e160a4e4dc2e59ad8a9bce563a2",
+      "src/shared/ship-navigation.ts": "0e3172f571d48605b55b9eacee276328c21dba78633dc28b97ee71b168e790e7",
+      "src/shared/ship-pursuit.ts": "b104bda7fd540901f9758b1bd0c2a62d149694757f957f90d6682908b81fa6eb",
+      "src/shared/ship-queued-course.ts": "cf9b81630a5f58f8be1f8521392efefccf123dbcf2f1f279b0ae064ce93da207",
+      "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+      "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+      "src/shared/sim.ts": "d0d03d23c73b81765fef3de09bf133474705b9c14418942b5d3f321996d69932",
+      "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+      "src/shared/sim/checksum.ts": "10cf66705dc1bfe160169eb46b70c84dda1990ab9d6759981385a4285afd0555",
+      "src/shared/sim/command-frame-runtime.ts": "6496d692982acc41f1b5e42fc22dd052e8430815163067712bdbf93163de7ad4",
+      "src/shared/sim/command-validation.ts": "dc020acef9badb8b5afdc00976620c6713041df0418c27bb67a7dcba932dc27a",
+      "src/shared/sim/engine.ts": "0a13689009409b817196e4b4f7a8c385f409c3e56508ffb0b93fb43d172820f3",
+      "src/shared/sim/frame.ts": "e0fa92deef57423c7c9a2d501aea3ca4913eed67790ee09481c64713f9c77472",
+      "src/shared/spark-fire.ts": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+      "src/shared/support-surface.ts": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+      "src/shared/terrain.ts": "51065da52239d377920c8fa5e8ded5aceb886e66c5e03304b9571e7eaad3c4b7",
+      "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+      "src/shared/transport-role.ts": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+      "src/shared/types.ts": "7d90894b4f39a788409e457d61f24517192a4c7b2000d2ba1ce473c360154bcf",
+      "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+      "src/shared/unit-lookup.ts": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+      "src/shared/unit-repair.ts": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+      "src/shared/unit-targeting.ts": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+      "src/shared/unit-value.ts": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+      "src/shared/veteran-runtime.ts": "0c229511c77e346e9178b74e7eb2933bf282818de227b582c18617731706ed44",
+      "src/shared/veteran-skills.ts": "46e032713592a3d87358d09214cb15b64e210b2581a2b0b3a1f8eece9ecb4e2f",
+      "src/shared/veteran-stats.ts": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+      "src/shared/weapons.ts": "2c15ad1dbbb641cebec3ae78a4acaeb06cabbc4bbbc4857a4b8970b094fd564c",
+      "src/shared/wind-field.ts": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c"
+    },
+    "dirty": false,
+    "seed": "bootstrap_1-development",
+    "baseline": false,
+    "unseen": false,
+    "matches": [
+      "greystonePass/v9_summoner/v8+v8/grove/0"
+    ],
+    "agents": {
+      "greystonePass/v9_summoner/v8+v8/grove/0": {
+        "p0": {
+          "version": "v9_summoner",
+          "versionLabel": "v9_summoner",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      }
+    }
+  },
+  "match": {
+    "name": "greystonePass/v9_summoner/v8+v8/grove/0",
+    "elapsedMs": 139624.65,
+    "cpuMs": 133118.336,
+    "setup": {
+      "map": {
+        "id": "greystonePass",
+        "name": "Greystone Pass",
+        "width": 4608,
+        "height": 4608,
+        "goldMineCount": 7,
+        "goldMines": [
+          {
+            "id": "gold-seat0-main",
+            "x": 830,
+            "y": 1208,
+            "amount": 6000
+          },
+          {
+            "id": "gold-seat1-main",
+            "x": 3778,
+            "y": 3400,
+            "amount": 6000
+          },
+          {
+            "id": "gold-gen-1",
+            "x": 1004,
+            "y": 1753,
+            "amount": 6000
+          },
+          {
+            "id": "gold-gen-2",
+            "x": 3604,
+            "y": 2855,
+            "amount": 6000
+          },
+          {
+            "id": "gold-gen-3",
+            "x": 3474,
+            "y": 2097,
+            "amount": 6000
+          },
+          {
+            "id": "gold-gen-4",
+            "x": 1134,
+            "y": 2511,
+            "amount": 6000
+          },
+          {
+            "id": "gold-p2-main",
+            "x": 3586,
+            "y": 3304,
+            "amount": 6000
+          }
+        ],
+        "neutralCamps": {
+          "mapId": "greystonePass",
+          "players": 3,
+          "carriedItems": 2,
+          "camps": [
+            {
+              "index": 1,
+              "x": 1021.3333333333334,
+              "y": 1951.6666666666667,
+              "role": "mine",
+              "power": 11,
+              "band": "orange",
+              "bounty": 300,
+              "unitIds": [
+                "creep-gen-1-1",
+                "creep-gen-1-2",
+                "creep-gen-1-3"
+              ],
+              "itemKinds": [],
+              "guardedObjectiveIds": [
+                "gold-gen-1"
+              ]
+            },
+            {
+              "index": 2,
+              "x": 3587.3333333333335,
+              "y": 2655.6666666666665,
+              "role": "mine",
+              "power": 11,
+              "band": "orange",
+              "bounty": 300,
+              "unitIds": [
+                "creep-gen-2-1",
+                "creep-gen-2-2",
+                "creep-gen-2-3"
+              ],
+              "itemKinds": [],
+              "guardedObjectiveIds": [
+                "gold-gen-2"
+              ]
+            },
+            {
+              "index": 3,
+              "x": 3329,
+              "y": 1959,
+              "role": "mine",
+              "power": 7,
+              "band": "green",
+              "bounty": 185,
+              "unitIds": [
+                "creep-gen-3-1",
+                "creep-gen-3-2"
+              ],
+              "itemKinds": [
+                "experienceBook"
+              ],
+              "guardedObjectiveIds": [
+                "gold-gen-3"
+              ]
+            },
+            {
+              "index": 4,
+              "x": 1314,
+              "y": 2425,
+              "role": "mine",
+              "power": 7,
+              "band": "green",
+              "bounty": 185,
+              "unitIds": [
+                "creep-gen-4-1",
+                "creep-gen-4-2"
+              ],
+              "itemKinds": [
+                "experienceBook"
+              ],
+              "guardedObjectiveIds": [
+                "gold-gen-4"
+              ]
+            },
+            {
+              "index": 5,
+              "x": 1956,
+              "y": 1503,
+              "role": "free",
+              "power": 6,
+              "band": "green",
+              "bounty": 140,
+              "unitIds": [
+                "creep-gen-5-1",
+                "creep-gen-5-2"
+              ],
+              "itemKinds": [],
+              "guardedObjectiveIds": []
+            },
+            {
+              "index": 6,
+              "x": 2652,
+              "y": 3105,
+              "role": "free",
+              "power": 6,
+              "band": "green",
+              "bounty": 140,
+              "unitIds": [
+                "creep-gen-6-1",
+                "creep-gen-6-2"
+              ],
+              "itemKinds": [],
+              "guardedObjectiveIds": []
+            }
+          ],
+          "freeCamps": 2,
+          "guardedCamps": 4,
+          "bands": {
+            "green": 4,
+            "orange": 2,
+            "red": 0
+          },
+          "totalPower": 48,
+          "totalBounty": 1250
+        },
+        "mercenaryCamps": [
+          {
+            "id": "merc-gen-1",
+            "x": 2415,
+            "y": 1673,
+            "hireKind": "mercenary",
+            "stock": 3
+          },
+          {
+            "id": "merc-gen-2",
+            "x": 2193,
+            "y": 2935,
+            "hireKind": "mercenary",
+            "stock": 3
+          }
+        ],
+        "items": {
+          "total": 2,
+          "byKind": {
+            "experienceBook": 2
+          }
+        }
+      },
+      "players": {
+        "p0": {
+          "team": "a",
+          "race": "grove",
+          "aiVersion": "v9_summoner",
+          "controller": "external-agent",
+          "plannerOrigin": "local-command-planner",
+          "traceSource": "external-agent"
+        },
+        "p1": {
+          "team": "b",
+          "race": "ember",
+          "aiVersion": "v8",
+          "controller": "external-agent",
+          "plannerOrigin": "local-command-planner",
+          "traceSource": "external-agent"
+        },
+        "p2": {
+          "team": "b",
+          "race": "grove",
+          "aiVersion": "v8",
+          "controller": "external-agent",
+          "plannerOrigin": "local-command-planner",
+          "traceSource": "external-agent"
+        }
+      }
+    },
+    "result": {
+      "tick": 39541,
+      "gameSecond": 1977.05,
+      "winner": "p0",
+      "winnerTeam": "a",
+      "timeout": false,
+      "players": {
+        "p0": {
+          "team": "a",
+          "race": "grove",
+          "aiVersion": "v9_summoner",
+          "firstExpansionMiningSecond": 175.55,
+          "upgradeSeconds": {},
+          "starUnitCounts": {
+            "1": 1,
+            "2": 1
+          },
+          "firstEnemyEngagementSecond": 486.2,
+          "firstEnemyExpansionAttackSecond": 1362.15,
+          "firstOwnExpansionAttackedSecond": null,
+          "baseBuildCount": 3,
+          "neutralUnitKills": 5,
+          "enemyUnitKills": 115,
+          "unitsLost": 276,
+          "unitsKilledByNeutral": 0,
+          "defenseTowerBuildCount": 16,
+          "moonWellBuildCount": 0,
+          "moonWellHealingEvents": 0,
+          "moonWellHealingHp": 0,
+          "itemPickupCount": 2,
+          "itemUseCount": 4,
+          "peakSupply": 68,
+          "finalSupply": 49,
+          "finalBuildingCount": 27,
+          "goldMineIncome": 14579,
+          "creepBountyIncome": 440,
+          "totalGoldIncome": 15019,
+          "unitTrainingGoldSpent": 9755,
+          "buildingGoldSpent": 4900,
+          "totalGoldSpent": 15428
+        },
+        "p1": {
+          "team": "b",
+          "race": "ember",
+          "aiVersion": "v8",
+          "firstExpansionMiningSecond": 201.8,
+          "upgradeSeconds": {
+            "reinforcedPlating": {
+              "1": 428.25
+            }
+          },
+          "starUnitCounts": {},
+          "firstEnemyEngagementSecond": 502.35,
+          "firstEnemyExpansionAttackSecond": null,
+          "firstOwnExpansionAttackedSecond": 1596.85,
+          "baseBuildCount": 2,
+          "neutralUnitKills": 6,
+          "enemyUnitKills": 128,
+          "unitsLost": 62,
+          "unitsKilledByNeutral": 3,
+          "defenseTowerBuildCount": 4,
+          "moonWellBuildCount": 0,
+          "moonWellHealingEvents": 0,
+          "moonWellHealingHp": 0,
+          "itemPickupCount": 1,
+          "itemUseCount": 1,
+          "peakSupply": 62,
+          "finalSupply": 0,
+          "finalBuildingCount": 0,
+          "goldMineIncome": 10890,
+          "creepBountyIncome": 510,
+          "totalGoldIncome": 11400,
+          "unitTrainingGoldSpent": 8250,
+          "buildingGoldSpent": 18140,
+          "totalGoldSpent": 11865
+        },
+        "p2": {
+          "team": "b",
+          "race": "grove",
+          "aiVersion": "v8",
+          "firstExpansionMiningSecond": 244.55,
+          "upgradeSeconds": {
+            "weaponTraining": {
+              "1": 595.5,
+              "2": 1178.25
+            }
+          },
+          "starUnitCounts": {},
+          "firstEnemyEngagementSecond": 486.2,
+          "firstEnemyExpansionAttackSecond": null,
+          "firstOwnExpansionAttackedSecond": 1362.15,
+          "baseBuildCount": 2,
+          "neutralUnitKills": 3,
+          "enemyUnitKills": 148,
+          "unitsLost": 57,
+          "unitsKilledByNeutral": 1,
+          "defenseTowerBuildCount": 5,
+          "moonWellBuildCount": 0,
+          "moonWellHealingEvents": 0,
+          "moonWellHealingHp": 0,
+          "itemPickupCount": 1,
+          "itemUseCount": 2,
+          "peakSupply": 59,
+          "finalSupply": 0,
+          "finalBuildingCount": 0,
+          "goldMineIncome": 11088,
+          "creepBountyIncome": 300,
+          "totalGoldIncome": 11388,
+          "unitTrainingGoldSpent": 8195,
+          "buildingGoldSpent": 3245,
+          "totalGoldSpent": 11888
+        }
+      },
+      "trackers": {
+        "unitRosterStats": {
+          "owners": {
+            "p0": {
+              "orderedByKind": {
+                "worker": 17,
+                "footman": 6,
+                "summoner": 16,
+                "priest": 3,
+                "lancer": 16,
+                "ballista": 6,
+                "raider": 9
+              },
+              "peakByKind": {
+                "worker": 17,
+                "footman": 6,
+                "summoner": 15,
+                "spirit": 28,
+                "priest": 2,
+                "lancer": 4,
+                "ballista": 3,
+                "raider": 2
+              }
+            },
+            "p1": {
+              "orderedByKind": {
+                "worker": 8,
+                "emberRavager": 22,
+                "emberAcolyte": 3,
+                "ashWarden": 3,
+                "cinderRunner": 7,
+                "ashHexer": 3,
+                "ashChieftain": 10,
+                "catapult": 3
+              },
+              "peakByKind": {
+                "worker": 11,
+                "emberRavager": 10,
+                "emberAcolyte": 3,
+                "ashWarden": 2,
+                "cinderRunner": 2,
+                "ashHexer": 3,
+                "ashChieftain": 5,
+                "catapult": 3
+              }
+            },
+            "p2": {
+              "orderedByKind": {
+                "worker": 8,
+                "lancer": 7,
+                "priest": 4,
+                "raider": 9,
+                "witch": 4,
+                "golem": 4,
+                "knight": 15,
+                "ballista": 3
+              },
+              "peakByKind": {
+                "worker": 11,
+                "lancer": 6,
+                "priest": 4,
+                "raider": 5,
+                "witch": 4,
+                "golem": 2,
+                "knight": 6,
+                "ballista": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "rawReportSha256": "dc7a02db5c15a27502f95bc6f5259b5b8e1953042b1f69c77acdb88a106e0485"
+}

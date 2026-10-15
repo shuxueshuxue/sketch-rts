@@ -1,0 +1,83 @@
+{
+  "candidateHead": "d510af013f1db00fa19d15c9b2db93c508d61a07",
+  "publicMerge": "ed6ee2b94ab03f01558424df148471823ab68327",
+  "engine": "94bb72ee95f4ad37b5698d80240c91853c8b19f7",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "match": {
+    "name": "pineshade/v9_knight/v8+v8/grove/0",
+    "mapId": "pineshade",
+    "subject": "v9_knight",
+    "side": 0,
+    "seed": "bootstrap_1-current-rules-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_knight",
+        "versionLabel": "v9_knight",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "summary": {
+    "tick": 28590,
+    "winner": "p1",
+    "owners": {
+      "p0": {
+        "gold": 21.67,
+        "pop": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0
+      },
+      "p1": {
+        "gold": 316.26,
+        "pop": 43,
+        "halls": 4,
+        "workers": 11,
+        "permanentArmy": 16
+      },
+      "p2": {
+        "gold": 60.22,
+        "pop": 30,
+        "halls": 2,
+        "workers": 11,
+        "permanentArmy": 8
+      }
+    },
+    "subjectPermanentDeaths": 53
+  },
+  "checksum": "b6c4167e",
+  "commandStreamSha256": "097ad28e0289f87c2bc074af6afe35bd19ebce263218c80847b849d4f8ce8bfb",
+  "reportSha256": "96b874affa69c14842f7116c83e57e500cfe9bea8e1262a176f6bd7a77ec68fb",
+  "commandScriptSha256": "17f9e5bcbdde5ab9af5a3d53bfdd3fbb13846704d9d4c2a83197187b772f6ffa",
+  "runtimeInputsVerified": 221,
+  "deathKinds": {
+    "raider": 7,
+    "worker": 23,
+    "lancer": 6,
+    "knight": 6,
+    "witch": 4,
+    "priest": 3,
+    "mercenary": 3,
+    "ballista": 1
+  },
+  "scope": "One fixed candidate from ordinary tick-zero resources, full native controllers and approved co-spawn. Failure, not a win or full acceptance. No identical public #351 fixed-opening knight control was run; do not compare this result as a regression to older-engine timeouts."
+}
