@@ -2,18 +2,18 @@
   "schema": 1,
   "complete": true,
   "scope": "rules3-stage8-hot-entry",
-  "sourceFiles": 394,
-  "uniquePayloads": 279,
-  "aliases": 115,
-  "originalBytes": 101757101,
-  "storedBytes": 20216300,
+  "sourceFiles": 468,
+  "uniquePayloads": 326,
+  "aliases": 142,
+  "originalBytes": 101922966,
+  "storedBytes": 20241652,
   "allStoredAndDecodedSha256Exact": true,
   "everyOriginalFullBytesEqualDecodedCanonical": true,
   "allPinnedSupportFilesExact": true,
   "strictInventoryAndExplicitAliasesVerified": true,
   "rawOriginalEvidenceNotRewritten": true,
   "oldScopesUnchanged": true,
-  "manifestSha256": "984ae0a2f61150b4470c154940573d1f8331ffdd20258c69a839b48bd204d451",
+  "manifestSha256": "5aad3639d0df29bc7664bb4212f13b549498ce6d466b33947009810f2a090b6b",
   "sdkActual": {
     "files": 4,
     "total": 14,
@@ -24,12 +24,12 @@
   },
   "execution": {
     "argv": [
-      "/tmp/whole-stage8-archive-tools/finish.py"
+      "/tmp/whole-stage8-archive-tools/finish-v2.py"
     ],
     "cwd": "/tmp/whole-stage8-archive-tools",
-    "startedAt": "2026-10-15T01:37:02.297618+00:00",
-    "endedAt": "2026-10-15T01:37:02.702865+00:00",
-    "wallSeconds": 0.4052493240160402
+    "startedAt": "2026-10-15T01:39:52.190805+00:00",
+    "endedAt": "2026-10-15T01:39:52.589778+00:00",
+    "wallSeconds": 0.3989755930087995
   },
   "candidateDecision": "REJECTED",
   "wholeTargetPassed": false,

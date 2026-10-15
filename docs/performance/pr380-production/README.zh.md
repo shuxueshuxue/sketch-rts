@@ -32,6 +32,6 @@ schema3采用lossless gzip与明确alias，去重前全文比较。`analyze-nati
 
 ## 最终归档闭合
 
-**320个完整原路径、266个gzip、54个显式alias**；原件21,215,683 B，unique gzip 8,928,884 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
+**394个完整原路径、313个gzip、81个显式alias**；原件21,381,548 B，unique gzip 8,954,236 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
 
 原四文件SDK实际 **13/14 pass、1个既有Stage5文档命名失败，exit1，32.132257秒**。唯一offender与旧9f3101闭合blob全文相同；新scope未被列为offender。旧文档及原断言未改，原stdout/stderr/UTC/argv/cwd/exit和精确归因全部保留。SDK执行期间四个追加scope全部SHA不变；随后仅追加归档receipts和明确闭合状态。
