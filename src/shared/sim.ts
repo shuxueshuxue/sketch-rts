@@ -3558,7 +3558,10 @@ function nonStarUnitStats(game: Game, unit: Unit) {
       if (!levelDef) throw new Error(`${upgradeKind} missing level ${level + 1}`);
       if (levelDef.attackMultiplier) attackDamage = stats.attackDamage * levelDef.attackMultiplier;
       if (levelDef.maxHpMultiplier) maxHp = stats.hp * levelDef.maxHpMultiplier;
-      if (levelDef.speedMultiplier) speed = roundUnitScalar(stats.speed * levelDef.speedMultiplier);
+      if (levelDef.speedMultiplier) {
+        // Each technology stores cumulative levels; combine independent technologies once.
+        if (level === (upgrades[upgradeKind] ?? 0) - 1) speed = roundUnitScalar(speed * levelDef.speedMultiplier);
+      }
       if (levelDef.attackRangeMultiplier) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
     }
   }

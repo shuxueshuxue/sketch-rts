@@ -597,16 +597,18 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
 
 const UPGRADE_DESCRIPTIONS: Record<Locale, Record<UpgradeKind, string>> = {
   en: {
-    weaponTraining: "Improves attack damage for ordinary combat units.",
-    reinforcedPlating: "Improves maximum health for ordinary combat units.",
+    shipbuilding: "Each level adds 1/3 of base maximum ship health and 1/5 of base movement speed.",
+    weaponTraining: "Improves attack damage for ordinary combat units, excluding ships.",
+    reinforcedPlating: "Improves maximum health for ordinary combat units, excluding ships.",
     buildingDurability: "Improves maximum health for owned buildings.",
     speedTraining: "Improves movement speed for ordinary combat units.",
     rangeTraining: "Improves attack range for ordinary combat units, excluding towers.",
     leadership: "Lets non-mechanical veteran owned units regenerate health based on their star level. Mechanical units require repairs.",
   },
   zh: {
-    weaponTraining: "提升普通作战单位的攻击伤害。",
-    reinforcedPlating: "提升普通作战单位的最大生命。",
+    shipbuilding: "每级增加船只基础生命上限的 1/3 和基础移速的 1/5。",
+    weaponTraining: "提升普通作战单位的攻击伤害，不影响船只。",
+    reinforcedPlating: "提升普通作战单位的最大生命，不影响船只。",
     buildingDurability: "提升己方建筑的最大生命。",
     speedTraining: "提升普通作战单位的移动速度。",
     rangeTraining: "提升普通作战单位的攻击射程，不影响防御塔。",

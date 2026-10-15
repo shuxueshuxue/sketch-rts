@@ -101,11 +101,11 @@ describe('guardian scroll area balance', () => {
 });
 
 describe('guardian balance rules boundary', () => {
-  it('identifies rules 3 and refuses replay/network simulation of rules 2', () => {
-    expect(RULES_VERSION).toBe(3);
+  it('identifies current rules and refuses replay/network simulation of rules 2', () => {
+    expect(RULES_VERSION).toBe(4);
     expect(GUARDIAN_SCROLL.radius).toBe(180);
     expect(() => assertCurrentRulesVersion(2, 'Old replay')).toThrow('Cross-version simulation is not supported');
-    expect(() => assertCurrentRulesVersion(3, 'Current replay')).not.toThrow();
+    expect(() => assertCurrentRulesVersion(RULES_VERSION, 'Current replay')).not.toThrow();
     expect([undefined, 1, 2, 3].map(savedRulesVersion)).toEqual([1, 1, 2, 3]);
   });
 
@@ -123,7 +123,7 @@ describe('guardian balance rules boundary', () => {
     expect(imported.effects.find(effect => effect.id === 'old-field')).toMatchObject({ radius: 280, remaining: 73 });
     expect(JSON.stringify(save)).toBe(bytes);
     const savedAgain = createSaveGameRecord(imported, room, { id: 'new-snapshot' });
-    expect(savedAgain.rulesVersion).toBe(3);
+    expect(savedAgain.rulesVersion).toBe(RULES_VERSION);
     // Only future casts use the new range. Snapshot import is not old-command replay.
     cast(imported);
     expect(imported.units.find(unit => unit.id === target.id)!.effects).toEqual(target.effects);
