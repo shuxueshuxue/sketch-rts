@@ -10,6 +10,7 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { navalServices } from '../policy/naval-services';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
+import { workerBoardingSafe } from './worker-boarding';
 
 /** A real boarding order owns the worker while the ferry still sails to the loading coast. */
 export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, primary: readonly GameCommand[]): GameCommand[] {
@@ -42,6 +43,7 @@ export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, opt
     let room = carries(boat) - [...cargo, ...pending].reduce((mass, passenger) => mass + bodyMass(passenger), 0);
     const crew = routeArrivals(snapshot.map, workers, shore, 'land')
       .sort((a, b) => Number(b.unit.order.type === 'idle') - Number(a.unit.order.type === 'idle')).slice(0, wanted).flatMap(({ unit }) => {
+      if (!workerBoardingSafe(snapshot, owner, options, unit, boat)) return [];
       if (bodyMass(unit) > room) return [];
       const copy = { ...unit };
       if (!boardUnit(boat, copy, planning)) return [];

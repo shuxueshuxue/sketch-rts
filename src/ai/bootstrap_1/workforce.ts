@@ -1,15 +1,19 @@
 import { UNIT_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { sameGround } from '../../shared/terrain';
-import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
+import { currentBerthLandings, passengerLandingSpot } from '../../shared/naval';
+import { isInCabin } from '../../shared/ship-cabin';
+import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { projectedSupplyUsed } from '../policy/world-model';
-import type { AiScript } from '../policy/types';
+import type { AiPolicyContext, AiScript } from '../policy/types';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import type { TeamPolicyOptions } from '../policy/ownership';
 import type { Point } from '../policy/spatial';
 import { towerRushConstructionCrew } from './tower-rush';
 import { longHaulInvestment } from './long-haul-investment';
 import { miningJobOrder } from './mining-jobs';
+
+type MiningWorkforceOptions = TeamPolicyOptions & { memory?: AiPolicyContext['memory'] };
 
 /** Fill a mining base while it rises, before competing army and technology purchases. */
 export const miningWorkforce: AiScript = {
@@ -21,7 +25,7 @@ export const miningWorkforce: AiScript = {
   },
 };
 
-export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: TeamPolicyOptions): GameCommand[] {
+export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: MiningWorkforceOptions): GameCommand[] {
   const demand = miningWorkerDemand(snapshot, owner, constructionCrew, options);
   const halls = demand.halls.filter(hall => hall.complete && hall.queue.length === 0);
   let missing = totalMissing(demand);
@@ -45,12 +49,12 @@ export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, con
 }
 
 /** A living worker in transit or a paid recruit still belongs to the mining workforce. */
-export function missingMiningWorkers(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: TeamPolicyOptions) {
+export function missingMiningWorkers(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: MiningWorkforceOptions) {
   return totalMissing(miningWorkerDemand(snapshot, owner, constructionCrew, options));
 }
 
 /** Mining labor belongs to its walk-connected land; embarked labor is credited only once. */
-function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: TeamPolicyOptions) {
+function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: MiningWorkforceOptions) {
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
   const mining = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
     && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
@@ -66,18 +70,43 @@ function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructio
     const region = regions.find(region => sameGround(snapshot.map, origin, region.origins[0]!));
     if (region) region.origins.push(origin); else regions.push({ origins: [origin], missing: 0 });
   }
-  let embarked = workers.filter(worker => worker.deck).length;
+  const embarked = new Set(workers.filter(worker => worker.deck));
   for (const region of regions) {
     const land = region.origins[0]!;
     const local = workers.filter(worker => !worker.deck && sameGround(snapshot.map, worker, land)).length
       + halls.filter(hall => sameGround(snapshot.map, hall, land)).reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
     const deficit = Math.max(0, region.origins.length * GOLD_MINE_RULES.workstations - local);
-    const inTransit = Math.min(embarked, deficit);
+    let inTransit = 0;
+    if (deficit > 0) for (const worker of embarked) {
+      if (!miningArrival(snapshot, worker, land, options)) continue;
+      embarked.delete(worker);
+      if (++inTransit === deficit) break;
+    }
     region.missing = deficit - inTransit;
-    embarked -= inTransit;
   }
   return { halls, regions, globalMissing: Math.min(36, origins.length * GOLD_MINE_RULES.workstations + constructionCrew) - workers.length - queued,
     capacity: Math.max(0, 36 - workers.length - queued) };
+}
+
+/** Credit a real economic destination, or labor that can actually step back
+ * onto this land while its ship has no assigned journey. Sea goals do not
+ * identify an island by their nearest shore. */
+function miningArrival(snapshot: GameSnapshot, worker: Unit, land: Point, options: MiningWorkforceOptions) {
+  const boat = snapshot.units.find(unit => unit.id === worker.deck?.shipId && unit.owner === worker.owner);
+  if (!boat || isInCabin(worker)) return false;
+  const mission = options.memory?.naval?.ferries?.[boat.id];
+  if (mission) {
+    if (mission.phase === 'return') return sameGround(snapshot.map, mission.from, land)
+      || currentBerthLandings(snapshot.map, boat, land, snapshot.units).some(landing => landing.passengerId === worker.id);
+    const target = snapshot.resources.find(mine => mine.id === mission.targetId)
+      ?? snapshot.buildings.find(building => building.id === mission.targetId);
+    return ['settle', 'rebase', 'evacuate'].includes(mission.purpose) && !!target && sameGround(snapshot.map, target, land);
+  }
+  if (boat.order.type === 'unload')
+    return currentBerthLandings(snapshot.map, boat, land, snapshot.units).some(landing => landing.passengerId === worker.id);
+  if (boat.order.type !== 'idle' && boat.order.type !== 'hold') return false;
+  const landing = passengerLandingSpot(snapshot.map, boat, worker.id, snapshot.units);
+  return !!landing && sameGround(snapshot.map, landing, land);
 }
 
 function totalMissing(demand: ReturnType<typeof miningWorkerDemand>) {

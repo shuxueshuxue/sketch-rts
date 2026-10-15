@@ -15,6 +15,7 @@ import { postRecoveryCommands } from './front-recovery';
 import { expeditionDeparture } from './expedition-departure';
 import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
 import { planLandedCombat } from './landed-combat';
+import { workerBoardingSafe } from './worker-boarding';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -34,6 +35,17 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   reviseAssaultBeaches(snapshot, owner, options);
   const crossing = planRiderCrossing(snapshot, owner, options);
   const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
+  const released = new Set<string>();
+  for (const worker of units(snapshot, owner)) {
+    if (worker.kind !== 'worker' || worker.deck || worker.order.type !== 'board') continue;
+    const transportId = worker.order.transportId;
+    const boat = snapshot.units.find(unit => unit.id === transportId && unit.owner === owner);
+    const mission = boat && ferries?.[boat.id];
+    if (!boat || !mission || workerBoardingSafe(snapshot, owner, options, worker, boat)) continue;
+    released.add(worker.id);
+    mission.crewIds = mission.crewIds.filter(id => id !== worker.id);
+    cancelled.push({ type: 'stop', unitIds: [worker.id] });
+  }
   if (ferries) for (const boat of units(snapshot, owner)) {
     const mission = ferries[boat.id];
     if (mission?.purpose === 'rebase' && mission.phase !== 'return'
@@ -63,6 +75,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id) && !mainlandCare.has(unit.id),
+    workerAvailable: (unit, boat) => !released.has(unit.id) && workerBoardingSafe(snapshot, owner, options, unit, boat),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
 

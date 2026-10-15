@@ -408,6 +408,7 @@ type NavalAssignments = {
     targetAvailable: (target: Unit | Building) => boolean;
     transportReady: (boat: Unit) => boolean;
     troopAvailable: (unit: Unit) => boolean;
+    workerAvailable?: (unit: Unit, boat: Unit) => boolean;
 };
 
 export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assignments: NavalAssignments): GameCommand[] {
@@ -615,7 +616,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable, orderAssaultLanding));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable, orderAssaultLanding, assignments.workerAvailable));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -657,7 +658,7 @@ function ferryUnloadCommands(snapshot: GameSnapshot, boat: Unit, goal: Point, av
         ({ type: 'unloadPassenger', transportId: boat.id, passengerId }));
 }
 
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean, orderAssaultLanding: AssaultLandingOrder): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean, orderAssaultLanding: AssaultLandingOrder, workerAvailable?: (unit: Unit, boat: Unit) => boolean): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -833,6 +834,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         crew.push(...workers.slice(0, Math.min(2 - workerCount, workers.length - reserveMiners, Math.floor(room / 75))));
     else if (mission.purpose === "assault" && !workerCount && workers.length >= 6 && room > 0)
         crew.push(workers[0]!);
+    // Recruitment keeps its local workforce thresholds; a rejected engineer
+    // remains a miner while the empty hull approaches under its ordinary plan.
+    if (workerAvailable) crew.splice(0, crew.length, ...crew.filter(unit => workerAvailable(unit, boat)));
     room -= crew.reduce((mass, unit) => mass + bodyMass(unit), 0);
     // Reserve payload for the expedition's engineers; geometric reservations below also leave actual floor space.
     if (mission.purpose === "settle")
