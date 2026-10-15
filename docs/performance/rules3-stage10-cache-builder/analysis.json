@@ -1,0 +1,454 @@
+{
+  "complete": true,
+  "candidate": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+  "base": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "decision": "REJECTED_NOT_ADOPTED",
+  "wholeTargetPassed": false,
+  "originalSourceGraphs": {
+    "r1-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B1": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B2": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-Bplain": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B1": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B2": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-Bplain": {
+      "head": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    }
+  },
+  "originalSourceRecords": 2410,
+  "commandFiles": 10,
+  "allCompleteCommandBytesEqual": true,
+  "commandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "finalChecksum": "7d94a5e8",
+  "pooled": {
+    "A": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.5601419801909633,
+        "median": 1.8884209999996528,
+        "p95": 15.688097999998718,
+        "p99": 26.212288000002445,
+        "max": 93.41073699999993,
+        "over16": 2789,
+        "over50": 23
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.7275937761111035,
+        "median": 1.8156240000025718,
+        "p95": 9.170103999997082,
+        "p99": 18.625816000003397,
+        "max": 81.9270970000016,
+        "over16": 894,
+        "over50": 11
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.813415182222218,
+        "median": 0.0014020000016898848,
+        "p95": 7.785141999999723,
+        "p99": 17.90055399999983,
+        "max": 77.02842099999998,
+        "over16": 930,
+        "over50": 5
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21864720420140255,
+        "median": 0.23199100000056205,
+        "p95": 0.3892710000000079,
+        "p99": 0.5488550000009127,
+        "max": 16.753289000000223,
+        "over16": 2,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.00747234545138569,
+        "median": 0.005837999997311272,
+        "p95": 0.017646000000240747,
+        "p99": 0.031036000000312924,
+        "max": 0.6284820000000764,
+        "over16": 0,
+        "over50": 0
+      }
+    },
+    "B": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.598828934531254,
+        "median": 1.8893800000005285,
+        "p95": 15.879579000000376,
+        "p99": 26.740300000001298,
+        "max": 82.46154200000001,
+        "over16": 2842,
+        "over50": 27
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.762367896597223,
+        "median": 1.8128890000007232,
+        "p95": 9.44605600000068,
+        "p99": 18.97103900000002,
+        "max": 80.44476399999985,
+        "over16": 923,
+        "over50": 13
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8175103260243024,
+        "median": 0.0013819999949191697,
+        "p95": 7.5893620000006194,
+        "p99": 17.97009600000456,
+        "max": 70.30035300000009,
+        "over16": 1005,
+        "over50": 7
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21698763378472785,
+        "median": 0.2289359999995213,
+        "p95": 0.39053299999795854,
+        "p99": 0.5333020000034594,
+        "max": 27.41527500000302,
+        "over16": 1,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.007552198663192387,
+        "median": 0.005818999999974039,
+        "p95": 0.018215999996755272,
+        "p99": 0.0314970000035828,
+        "max": 2.0433980000016163,
+        "over16": 0,
+        "over50": 0
+      }
+    }
+  },
+  "paired": [
+    {
+      "A": "r1-A1",
+      "B": "r1-B1",
+      "meanDeltaPercent": -0.05595798590847245
+    },
+    {
+      "A": "r1-A2",
+      "B": "r1-B2",
+      "meanDeltaPercent": 2.908917828023694
+    },
+    {
+      "A": "r2-A1",
+      "B": "r2-B1",
+      "meanDeltaPercent": 0.9125780449119603
+    },
+    {
+      "A": "r2-A2",
+      "B": "r2-B2",
+      "meanDeltaPercent": 0.6371500026011168
+    }
+  ],
+  "blockMeanDeltaPercent": [
+    1.3980971474035764,
+    0.7756263251808226
+  ],
+  "meanDeltaPercent": 1.0866688619596943,
+  "allSlowSamplesColdTicksAndSparseMemoryRetained": true,
+  "plain": {
+    "r1-Bplain": {
+      "count": 14400,
+      "mean": 3.5450186043055583,
+      "median": 1.8499440000014147,
+      "p95": 15.879036999998789,
+      "p99": 26.018212999999378,
+      "max": 93.489466,
+      "over16": 706,
+      "over50": 6
+    },
+    "r2-Bplain": {
+      "count": 14400,
+      "mean": 3.451246842013894,
+      "median": 1.8321670000004815,
+      "p95": 15.143981000000167,
+      "p99": 25.486423000002105,
+      "max": 76.62574200000017,
+      "over16": 641,
+      "over50": 6
+    }
+  },
+  "correctnessReported": {
+    "status": "PASS",
+    "candidateHead": "77be19f73578ab8d2f6efa0c6f727e3884c63cf1",
+    "base": "0ea5beaee063c8443d66f7654333032b070d51ad",
+    "branch": "perf/cache-builder-miss-dispatch",
+    "source": "/tmp/sketch-rts-cache-builder-miss-dispatch",
+    "candidateTerrainSha256": "41af4f873a264f57b2e0bf576f6e02c37ebcb81983aa23eb096dc6149f509528",
+    "originalTerrainSha256": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+    "onlyProductionFile": "src/shared/terrain.ts",
+    "cleanCommittedSource": true,
+    "sourceCount": 241,
+    "allNonDocsPackageFilesVerified": 1669,
+    "originalFunctionBytes": {
+      "grow": {
+        "bytes": 2075,
+        "sha256": "f0aa8b572d4fce00250c9bfe4252db47f1e476e3fb82e83fc574392ad9d66bb0",
+        "exactOriginalBytes": true
+      },
+      "growBoxInto": {
+        "bytes": 3028,
+        "sha256": "9d5adc3ee075fad3f350cf7394bb4602fa8664af5f02837d50921cd76d98cb7a",
+        "exactOriginalBytes": true
+      },
+      "nextStep": {
+        "bytes": 542,
+        "sha256": "0161423acd9f8a0ea62c8be9ff819aed5684dfb0dcd757769a7b040a677132d4",
+        "exactOriginalBytes": true
+      },
+      "createRuntime": {
+        "bytes": 1047,
+        "sha256": "b85f2a353535973e292f5a0db7584a64798d953bdf910b48de7176599704e463",
+        "exactOriginalBytes": true
+      }
+    },
+    "privatePublicProof": {
+      "comparisons": 1877,
+      "actualModules": 4,
+      "ordinaryFieldNextFull": true,
+      "canonicalAliasGraphsCompared": true,
+      "groups": [
+        {
+          "label": "AA-mixed",
+          "totals": {
+            "exact": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 6
+            },
+            "weighted": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 6
+            }
+          },
+          "sharedBackedViews": false
+        },
+        {
+          "label": "AA-identities",
+          "publicIdentityCases": 56
+        },
+        {
+          "label": "AA-overlay",
+          "overlayOperations": [
+            "create",
+            "share",
+            "same bodies",
+            "copy-on-write dirty update",
+            "remove"
+          ]
+        },
+        {
+          "label": "AB-mixed",
+          "totals": {
+            "exact": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 6
+            },
+            "weighted": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 6
+            }
+          },
+          "sharedBackedViews": false
+        },
+        {
+          "label": "AB-shared-buffers",
+          "totals": {
+            "exact": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 7
+            },
+            "weighted": {
+              "hits": 70,
+              "misses": 70,
+              "evictions": 6,
+              "reuses": 6
+            }
+          },
+          "sharedBackedViews": true
+        },
+        {
+          "label": "AB-identities",
+          "publicIdentityCases": 56
+        },
+        {
+          "label": "AB-overlay",
+          "overlayOperations": [
+            "create",
+            "share",
+            "same bodies",
+            "copy-on-write dirty update",
+            "remove"
+          ]
+        }
+      ]
+    },
+    "tests": {
+      "files": 26,
+      "passed": 204,
+      "sdkOriginalPassed": 7
+    },
+    "build": {
+      "argv": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "tscNoEmitPassed": true,
+      "viteBuildPassed": true,
+      "originalPublicInputCount": 68,
+      "copiedPublicPayloadCount": 68,
+      "manifestAssetCount": 89,
+      "fullPayloadVerification": "build-output-verification.json"
+    },
+    "steps": {
+      "source-closure-01": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 0.274358636001125,
+        "startedUtc": "2026-10-15T02:34:03.732773+00:00",
+        "endedUtc": "2026-10-15T02:34:03.872712+00:00"
+      },
+      "private-public-proof-02": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 1.3708718179841526,
+        "startedUtc": "2026-10-15T02:35:09.123981+00:00",
+        "endedUtc": "2026-10-15T02:35:10.404148+00:00"
+      },
+      "regression-03": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 17.488260463025654,
+        "startedUtc": "2026-10-15T02:38:43.177994+00:00",
+        "endedUtc": "2026-10-15T02:39:00.563268+00:00"
+      },
+      "sdk-boundaries-01": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 30.545744802977424,
+        "startedUtc": "2026-10-15T02:40:13.963276+00:00",
+        "endedUtc": "2026-10-15T02:40:44.378025+00:00"
+      },
+      "build-01": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 20.280577793018892,
+        "startedUtc": "2026-10-15T02:40:49.442629+00:00",
+        "endedUtc": "2026-10-15T02:41:09.579341+00:00"
+      },
+      "build-output-01": {
+        "exitCode": 0,
+        "wrapperWallSeconds": 0.1825696260202676,
+        "startedUtc": "2026-10-15T02:42:04.283048+00:00",
+        "endedUtc": "2026-10-15T02:42:04.327333+00:00"
+      }
+    },
+    "retainedFailures": [
+      {
+        "attempt": "private-public-proof-01",
+        "classification": "AA harness realm-prototype canonicalization failure before candidate comparison; fixed with host Array.from and explicit realm calibration; candidate unchanged."
+      },
+      {
+        "attempt": "regression-01",
+        "classification": "Sparse setup omitted original config dependency tools; zero test cases loaded."
+      },
+      {
+        "attempt": "regression-02",
+        "classification": "203 passed, one original boundary test could not read omitted scripts input; restored all original non-docs inputs; no assertion changes."
+      }
+    ],
+    "timingMetadataNote": "Wrapper wallSeconds includes post-command source closure/pin checks; endedUtc is captured immediately after the child. These are correctness execution records, never performance samples.",
+    "notExecuted": [
+      "native whole-match",
+      "micro-performance",
+      "V8 optimizer trace",
+      "cold timing"
+    ],
+    "performanceAdoption": "NOT EVALUATED; keep separate from next payload and558 lazy tile fields.",
+    "pushed": false,
+    "prCreated": false,
+    "allToolsStop": true
+  },
+  "sourceOriginalFunctionChecksReported": {
+    "grow": {
+      "bytes": 2075,
+      "sha256": "f0aa8b572d4fce00250c9bfe4252db47f1e476e3fb82e83fc574392ad9d66bb0",
+      "exactOriginalBytes": true
+    },
+    "growBoxInto": {
+      "bytes": 3028,
+      "sha256": "9d5adc3ee075fad3f350cf7394bb4602fa8664af5f02837d50921cd76d98cb7a",
+      "exactOriginalBytes": true
+    },
+    "nextStep": {
+      "bytes": 542,
+      "sha256": "0161423acd9f8a0ea62c8be9ff819aed5684dfb0dcd757769a7b040a677132d4",
+      "exactOriginalBytes": true
+    },
+    "createRuntime": {
+      "bytes": 1047,
+      "sha256": "b85f2a353535973e292f5a0db7584a64798d953bdf910b48de7176599704e463",
+      "exactOriginalBytes": true
+    }
+  },
+  "noNewColdOrV8PerformanceRuns": true,
+  "priorLightOnly": true,
+  "noGcJitOrOsCauseInferred": true
+}

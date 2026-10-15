@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "oldEvidenceHead": "ea30afc9a121c0a502af3309daa99c990c563594",
+  "oldClosedPathsUnchanged": true,
+  "allNewObjectsAndArchivesUnderTmp": true,
+  "candidateDecision": "REJECTED_NOT_ADOPTED",
+  "wholeTargetPassed": false,
+  "runtimeProductBranchNotPublished": true,
+  "archiveOnlyNoEngineRerun": true,
+  "originalAssertionsUnchanged": true,
+  "finalSdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.441351879009744
+  },
+  "sdkOldOffenderExactClosedBlob": true,
+  "allNewScopeBytesUnchangedDuringSdk": true,
+  "sourceGraphCount": 10,
+  "originalSourceRecords": 2410,
+  "extraColdOrV8Run": false,
+  "failureScopesRetained": [
+    "AA external harness realm issue",
+    "regression01 missing config tools; zero tests loaded",
+    "regression02 missing scripts input;203pass then original boundary failure"
+  ],
+  "priorLightSourcesOnly": true,
+  "inventoryCutpoint": "库存按2026-10-15 02:56:32.360783 UTC准备快照与03:04:55 UTC首批捕获固定；共享review-tools目录只纳入当时5个原文件。03:13:51 UTC新增lazy-whole-next-plan.prepared.json属于下一候选未执行source-only计划，排除于Stage10库存与分析结论。",
+  "laterSourceOnlyPlanExcluded": "/tmp/terrain-cache-followup-native-review-tools/lazy-whole-next-plan.prepared.json"
+}

@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "archiveOnly": true,
+  "allOriginalBytesReadbackPassed": true,
+  "allSourceAndCommandAndStatisticsReadbacksPassed": true,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.441351879009744
+  }
+}
