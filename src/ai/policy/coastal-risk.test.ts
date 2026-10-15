@@ -79,3 +79,12 @@ describe('fleet coastal risk',()=>{
     expect(outmatchingCoast(snapshot,'player',ship,refuge,context())).toEqual([]);
   });
 });
+
+it('assesses the hull heading at the proposed firing station, not its departure heading',()=>{
+ const {game,ship,context}=shore();ship.x=1600;ship.sailing!.heading=0;
+ const snapshot=snapshotGame(game),station={x:1150,y:1600,heading:Math.PI/2};
+ const posed={...ship,x:station.x,y:station.y,sailing:{...ship.sailing!,heading:station.heading}};
+ const atStation={...snapshot,units:snapshot.units.map(unit=>unit.id===ship.id?posed:unit)};
+ expect(outmatchingCoast(snapshot,'player',ship,station,context()).map(unit=>unit.id))
+  .toEqual(outmatchingCoast(atStation,'player',posed,posed,context()).map(unit=>unit.id));
+});

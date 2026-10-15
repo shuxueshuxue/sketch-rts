@@ -13,6 +13,7 @@ import { sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute, routeArrivals, routeWithinDistance } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { GOLD_MINE_RULES } from '../../shared/mining';
+import { strikeGap } from '../../shared/combat-geometry';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
@@ -160,7 +161,18 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       return coveredDefenseTarget(view, world);
     },
     towerWaiting: holdCoveredPost,
-    waitForTowers: waitsForTowers,
+    waitForTowers: (world, defense, strength, line) => {
+      // A ranged besieger already firing beyond the towers will not walk into
+      // their cover. Let the existing field/guard decision answer it instead.
+      const unanswered = world.intrusion?.attackers.some(attacker => {
+        const order = attacker.order;
+        const targetId = order.type === 'attack' || order.type === 'attackMove' ? order.targetId : undefined;
+        const target = targetId && snapshot.buildings.find(building => building.id === targetId && building.owner === owner);
+        return attacker.attackRange > 100 && target && strikeGap(attacker, target) <= attacker.attackRange
+          && !world.ownTowers.some(tower => tower.complete && strikeGap(tower, attacker) <= tower.attackRange);
+      });
+      return !unanswered && waitsForTowers(world, defense, strength, line);
+    },
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.

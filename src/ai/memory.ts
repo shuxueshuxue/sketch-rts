@@ -54,7 +54,8 @@ export type V6PolicyMemory = {
 // lands at, the assault's target and its water, the raid's water.
 export type NavalPlanMemory = {
   combat?: Record<string, { targetId: string; commandTargetId?: string }>;
-  coastalRetreat?: Record<string, { x: number; y: number }>;
+  coastalRetreat?: Record<string, { x: number; y: number; astern?: true }>;
+  coastalVoyages?: Record<string, { targetId: string; goal: {x:number;y:number}; waypoint: {x:number;y:number}; proof: "complete" | "prefix" }>;
   muster?:{at:{x:number;y:number};goal:{x:number;y:number};leader:string;sinceTick:number;launched:boolean;heading?:number};
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};
   outfitRetryUntil?: number;

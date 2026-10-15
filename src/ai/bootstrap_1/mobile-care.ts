@@ -1,28 +1,32 @@
-import { unitMover } from '../../shared/catalog';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { sameGround } from '../../shared/terrain';
-import type { GameSnapshot, PlayerId } from '../../shared/types';
-import { navalUnitIds } from '../policy/naval';
-import type { AiPolicyContext, AiScript } from '../policy/types';
-import { landRecoveryAssignments, patientRendezvousCommands } from './expedition-recovery';
-
-function assignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
-  if (!home) return [];
-  const own = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land'
-    && unit.kind !== 'worker' && unit.order.type !== 'board' && sameGround(snapshot.map, unit, home));
-  if (!own.some(unit => unit.expiresTick === undefined && unit.hp < unit.maxHp)) return [];
-  const reserved = navalUnitIds(snapshot, owner, options, () => false);
-  const care = landRecoveryAssignments(snapshot, owner, options, own.filter(unit => !reserved.has(unit.id)));
-  const medics = new Set(care.recovering.map(({ healer }) => healer.id));
-  return care.recovering.filter(({ patient }) => !medics.has(patient.id)
-    && !options.memory.v6?.creep?.group.includes(patient.id))
-    .map(pair => ({ ...pair, foes: care.foes, medics }));
-}
+import type { GameCommand } from '../../shared/types';
+import { distance } from '../policy/spatial';
+import type { AiScript } from '../policy/types';
+import { mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
+import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { retreatLandRoad } from './safe-land-route';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 
 /** Home-ground patients rendezvous with an existing medic while expeditions and camps keep their own care. */
 export const mobileCare: AiScript = {
   id: 'mobileCare', phase: 'tactics',
-  claimsUnits: (snapshot, owner, options) => new Set(assignments(snapshot, owner, options).map(({ patient }) => patient.id)),
-  run: (snapshot, owner, options) => assignments(snapshot, owner, options)
-    .flatMap(({ patient, healer, foes, medics }) => patientRendezvousCommands(snapshot, [{ patient, healer }], foes, medics)),
+  claimsUnits: (snapshot, owner, options) => {
+    const care = mainlandCareAssignments(snapshot, owner, options);
+    return new Set([...(care?.recovering ?? []), ...(care?.unmedicated ?? [])].map(({ patient }) => patient.id));
+  },
+  run(snapshot, owner, options): GameCommand[] {
+    const care = mainlandCareAssignments(snapshot, owner, options);
+    if (!care) return [];
+    return [...care.recovering.flatMap(({ patient, healer, foes, medics }) => patientRendezvousCommands(snapshot, [{ patient, healer }], foes, medics)),
+      ...care.unmedicated.map(({ patient, cover }): GameCommand => {
+        const threats = care.foes.filter(foe => sameGround(snapshot.map, patient, foe)
+          && distance(patient, foe) <= mountedThreatReach(snapshot, foe, patient, THINK_TICKS)
+            + ('speed' in foe ? foe.speed : 0) * (THINK_TICKS + 2) / SIM_TICKS_PER_SECOND);
+        if (distance(patient, cover) > MOVE_ORDER_ARRIVAL_RANGE && retreatLandRoad(snapshot, patient, cover, care.foes))
+          return { type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true };
+        return threats.length ? mountedEscape(snapshot, patient, threats, 0, cover, true)
+          : { type: 'holdPosition', unitIds: [patient.id] };
+      })];
+  },
 };

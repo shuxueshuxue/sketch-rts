@@ -1,8 +1,11 @@
 import {mineProspect} from '../../shared/mining-prospect';
 import {shipMotionLimits} from '../../shared/ship-motion';
+import {coastalVoyagePrefixSafe} from './coastal-voyage';
+import { coastalBatteryWaypoint, coastalBombardment } from './coastal-bombardment';
 import { miningHallSite } from "../../shared/mining-site";
 import { automaticShoreTargetReachable, shoreFiringStation } from '../../shared/shore-fire';
-import { coastalRefuge, outmatchingCoast } from './coastal-risk';
+import { coastalAsternPassageClear, coastalAsternStep, coastalRefuge, outmatchingCoast } from './coastal-risk';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute, routeArrivals, routeTravelTicks } from '../../shared/route-selection';
 import { distanceToHull, localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
@@ -410,6 +413,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         && navalMemory(options).ferries?.[unit.id]?.purpose !== 'creep');
     const fighters=own.filter(unit=>combatHull(unit)&&combatCapability(snapshot,unit).armed&&!services.reserved.has(unit.id)&&unit.id!==outfit?.shipId&&!navalMemory(options).ferries?.[unit.id]);
     for (const id of Object.keys(navalMemory(options).combat ?? {})) if (!fighters.some(ship => ship.id === id)) delete navalMemory(options).combat![id];
+    for (const id of Object.keys(navalMemory(options).coastalVoyages ?? {})) if (!fighters.some(ship=>ship.id===id)) delete navalMemory(options).coastalVoyages![id];
     for (const id of Object.keys(navalMemory(options).coastalRetreat ?? {})) if (!own.some(ship=>ship.id===id)) delete navalMemory(options).coastalRetreat![id];
     const escortShips = fighters.filter(unit => unit.kind !== "bombardShip");
     const escorts = new Map<string, Unit>();
@@ -419,9 +423,18 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             .sort((a,b) => [...escorts.values()].filter(boat => boat.id === a.id).length - [...escorts.values()].filter(boat => boat.id === b.id).length || distance(ship,a)-distance(ship,b))[0];
         if (boat) escorts.set(ship.id, boat);
     }
+    // A battery with a safe coastal firing objective keeps its voyage when
+    // the escort fleet assembles again; joining that muster would erase the
+    // objective before the battery ever reached the enemy coast.
+    const bombardments=new Map(fighters.filter(ship=>ship.kind==='bombardShip' && ship.hp>=ship.maxHp*HURT)
+        .flatMap(ship=>{
+            const plan=coastalBombardment(snapshot,ship,snapshot.buildings.filter(building=>isOpponentOwner(snapshot,owner,building.owner,options)
+                && targetAvailable(building)),options);
+            return plan ? [[ship.id,plan] as const] : [];
+        }));
     const assigned = new Set<string>();
     const fleetGoal=assault?offshore(snapshot,assault.landing,assault.target):plan?offshore(snapshot,plan.landing,plan.mine):raidPlan(snapshot,owner,options)?.water;
-    const stations=fleetStations(snapshot,fighters.filter(ship=>!escorts.has(ship.id)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
+    const stations=fleetStations(snapshot,fighters.filter(ship=>!escorts.has(ship.id)&&!bombardments.has(ship.id)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
     for (const ship of fighters) {
         const foes = foesForCombat();
         const withdrawal=navalMemory(options).coastalRetreat?.[ship.id];
@@ -429,9 +442,13 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             // Finish leaving the firing zone before another coastal target or
             // the repair trip can replace the escape maneuver. This intent is
             // saved with policy memory, so restoring a match keeps the order.
-            if (distance(ship,withdrawal)>70 && !outmatchingCoast(snapshot,owner,ship,withdrawal,options).length) {
-                if (needsMove(ship,withdrawal) || ship.order.type!=='move' || !ship.order.avoidCombat)
-                    commands.push({type:'move',unitIds:[ship.id],...withdrawal,avoidCombat:true});
+            const continuing=withdrawal.astern
+                ? distance(ship,withdrawal)>MOVE_ORDER_ARRIVAL_RANGE && coastalAsternPassageClear(snapshot,ship,withdrawal,options)
+                : distance(ship,withdrawal)>70 && !outmatchingCoast(snapshot,owner,ship,withdrawal,options).length;
+            if (continuing) {
+                const sameMove=ship.order.type==='move' && distance(ship.order,withdrawal)<1e-5
+                    && !!ship.order.avoidCombat===!withdrawal.astern;
+                if (!sameMove) commands.push({type:'move',unitIds:[ship.id],x:withdrawal.x,y:withdrawal.y,...(withdrawal.astern?{}:{avoidCombat:true})});
                 continue;
             }
             delete navalMemory(options).coastalRetreat![ship.id];
@@ -456,13 +473,39 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             if (recruits.length) { commands.push({ type: "board", unitIds: recruits.map(unit=>unit.id), transportId: ship.id }); continue; }
         }
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
-        const local = foes.filter(target => distance(ship, target) < Math.max(900, combatCapability(snapshot,ship).range + 150)
-            && canReach(snapshot.map, ship, target, snapshot.units, combatCapability(snapshot,ship).range)
-            && automaticShoreTargetReachable(snapshot, ship, target));
+        const bombardmentIntent=bombardments.has(ship.id);
+        const onShore=(target:Unit|Building)=>!('order' in target)
+            || unitMover(target.kind)==='land' && !target.deck && !isInCabin(target);
+        const localShots=new Set<string>();
+        const local = foes.filter(target => {
+            if (distance(ship,target)>=Math.max(900,combatCapability(snapshot,ship).range+150)
+                || !canReach(snapshot.map,ship,target,snapshot.units,combatCapability(snapshot,ship).range)) return false;
+            if (!bombardmentIntent) return automaticShoreTargetReachable(snapshot,ship,target);
+            // Reuse the acquisition query's actual firing pose. A shore unit
+            // inside the broad local radius is not yet a shot from this hull.
+            const firing=shoreFiringStation(snapshot,ship,target);
+            if (firing && distance(ship,firing)<1e-5) localShots.add(target.id);
+            return !onShore(target) || !!firing;
+        });
         const danger = local.filter(target => "order" in target && combatCapability(snapshot,target).armed);
         const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
-        // Ordinary guns avoid tower coverage; bombard vessels counter the coast from outside it.
-        const targets = local.filter(target => targetAvailable(target) && (ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options))))
+        // A committed coastal battery does not divert into an idle neutral
+        // camp while travelling to the enemy. Live attacks on our force still
+        // take priority; the existing coastal-risk check also owns retreat.
+        const targets = local.filter(target => {
+            const attackedId='order' in target && 'targetId' in target.order ? target.order.targetId : undefined;
+            const attackingUs='order' in target && (target.order.type==='attack' || target.order.type==='attackMove')
+                && own.some(unit=>unit.id===attackedId);
+            const landing='order' in target && target.order.type==='unload' ? target.order : undefined;
+            const seaThreat='order' in target && unitMover(target.kind)==='sea'
+                && (combatCapability(snapshot,target).armed || landing
+                    && shipPassengers(snapshot.units,target).some(unit=>combatCapability(snapshot,unit).armed)
+                    && buildings(snapshot,owner).some(hall=>hall.kind==='townHall' && sameGround(snapshot.map,hall,landing)));
+            return targetAvailable(target)
+                && (!bombardmentIntent || isOpponentOwner(snapshot,owner,target.owner,options) || own.some(unit=>unit.id===attackedId))
+                && (!bombardmentIntent || seaThreat || attackingUs || localShots.has(target.id))
+                && (ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options)));
+        })
             .sort((a, b) => (ship.kind === "bombardShip" ? Number("order" in a) - Number("order" in b) : Number(!("order" in a)) - Number(!("order" in b))) || distance(a, ship) - distance(b, ship));
         const boat = escorts.get(ship.id);
         const mission = boat ? navalMemory(options).ferries?.[boat.id] : undefined;
@@ -473,17 +516,19 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
         const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));
         const candidates = attackers.length ? attackers : threats.length ? threats : !gathering && (!boat || station && distance(ship,station)<250) ? targets.filter(target=>!boat || station && distance(target,station)<450) : [];
-        const target = fleetTarget(ship, candidates, navalMemory(options));
-        const attackStation=target && (!('order' in target) || unitMover(target.kind)==='land') ? shoreFiringStation(snapshot,ship,target) : undefined;
+        const bombardment=!candidates.length ? bombardments.get(ship.id) : undefined;
+        const target = fleetTarget(ship, bombardment ? [bombardment.target] : candidates, navalMemory(options));
+        const attackStation=bombardment ?? (target && (!('order' in target) || unitMover(target.kind)==='land') ? shoreFiringStation(snapshot,ship,target) : undefined);
         const destination=attackStation ?? station;
         const immediateCoast=outmatchingCoast(snapshot,owner,ship,ship,options);
         const destinationCoast=immediateCoast.length ? immediateCoast : destination ? outmatchingCoast(snapshot,owner,ship,destination,options) : [];
         if (destinationCoast.length) {
             if (immediateCoast.length) {
-                const refuge=coastalRefuge(snapshot,ship,immediateCoast);
+                const astern=coastalAsternStep(snapshot,ship,immediateCoast,options);
+                const refuge=astern ?? coastalRefuge(snapshot,ship,immediateCoast);
                 if (refuge) {
-                    (navalMemory(options).coastalRetreat ??= {})[ship.id]={x:refuge.x,y:refuge.y};
-                    if (needsMove(ship,refuge)) commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,avoidCombat:true});
+                    (navalMemory(options).coastalRetreat ??= {})[ship.id]={x:refuge.x,y:refuge.y,...(astern?{astern:true as const}:{})};
+                    if (astern || needsMove(ship,refuge)) commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,...(astern?{}:{avoidCombat:true})});
                 }
             } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
             continue;
@@ -495,7 +540,16 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         // The planner chooses the engagement area; mechanical attack-move
         // chooses and revises threats between planning frames. A player's
         // explicit attack command continues to retain its chosen target.
-        if (target) {
+        if (bombardment && distance(ship,bombardment)>70) {
+            const waypoint=coastalBatteryWaypoint(snapshot,ship,bombardment,options);
+            if(waypoint){
+                const unsafe=!!ship.sailing?.route?.points.length && !coastalVoyagePrefixSafe(snapshot,ship,ship.sailing.route,options);
+                if(unsafe)commands.push({type:'stop',unitIds:[ship.id]});
+                if(unsafe || needsMove(ship,waypoint))commands.push({type:'move',unitIds:[ship.id],...waypoint,avoidCombat:true});
+            }
+            else if(ship.order.type!=='hold')commands.push({type:'holdPosition',unitIds:[ship.id]});
+        }
+        else if (target) {
             const command = fleetAttackCommand(ship, target, navalMemory(options));
             if (command) commands.push(command);
         }
@@ -545,7 +599,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -572,7 +626,7 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
     }
     return claimed;
 }
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -752,7 +806,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Reserve payload for the expedition's engineers; geometric reservations below also leave actual floor space.
     if (mission.purpose === "settle")
         room -= 75 * Math.max(0, 2 - workerCount - crew.filter(unit => unit.kind === "worker").length);
-    const soldiers = orderCrew(own.filter(unit => !reservedElsewhere.has(unit.id) && !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
+    const soldiers = orderCrew(own.filter(unit => (mission!.purpose !== 'assault' || troopAvailable(unit)) && !reservedElsewhere.has(unit.id) && !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
@@ -760,9 +814,10 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         || engineersAboard>=1 && (workerCount<2 || snapshot.tick-mission.progress!.tick>seconds(20));
     // An explicitly unloading convoy already threatens this shore. Reserving
     // guards only after its passengers land can export the last defenders.
-    const incoming = snapshot.units.filter(ship => unitMover(ship.kind)==='sea'
-        && isOpponentOwner(snapshot,owner,ship.owner,options) && ship.order.type==='unload'
-        && sameGround(map,loadGround,ship.order)).flatMap(ship=>shipPassengers(snapshot.units,ship));
+    const landings = snapshot.units.filter(ship => unitMover(ship.kind)==='sea'
+        && isOpponentOwner(snapshot,owner,ship.owner,options) && ship.order.type==='unload');
+    const incoming = landings.filter(ship=>ship.order.type==='unload' && sameGround(map,loadGround,ship.order))
+        .flatMap(ship=>shipPassengers(snapshot.units,ship));
     const threats = [...new Map([...snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
         && !unit.deck && unitMover(unit.kind)==='land' && sameGround(map, unit, loadGround)), ...incoming]
         .filter(unit=>combatCapability(snapshot,unit).armed).map(unit=>[unit.id,unit])).values()];
@@ -787,15 +842,6 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             if (boat.order.type === "move") commands.push({ type: "stop", unitIds: [boat.id] });
         }
     }
-    // Board orders own a real hull pose and shore meeting point. Requiring the
-    // hull to touch a coarse coastal coordinate first can keep it circling an
-    // occupied quay forever, before its passengers can even request a berth.
-    if (!cargo.length && !boarding.length && !crew.length
-        && distanceToHull(boat, loadGround) > UNIT_DEFS.worker.radius + BOARDING_GAP) {
-        if (needsMove(boat, mission.pickup ?? mission.from))
-            commands.push({ type: "move", unitIds: [boat.id], ...(mission.pickup ?? mission.from), avoidCombat:true });
-        return commands;
-    }
     // Loading an engineer first does not mean this is the landing force.
     // Finish the requested rendezvous before judging the assembled invasion;
     // the normal physical-progress check still cancels a blocked transfer.
@@ -807,25 +853,63 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             .filter(unit => unit.kind !== 'worker' && !unit.expiresTick)
             .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
         if (strength < required) {
+            const targetId = mission.targetId, destination = mission.to;
+            // Armies collected on different islands must meet before either
+            // can pass the nearby-convoy departure gate. Count actual cargo;
+            // a boarding rendezvous still belongs to its requested crew.
+            const assembled = own.flatMap(ship => {
+                const other = ferries[ship.id];
+                if (other?.purpose!=='assault' || other.phase!=='loading' || other.targetId!==targetId
+                    || !sameGround(map,boat,ship,'sea')) return [];
+                const passengers = shipPassengers(snapshot.units,ship);
+                if (!passengers.some(unit=>unit.kind!=='worker' && !unit.expiresTick)
+                    || other.crewIds.some(id=>!passengers.some(unit=>unit.id===id))
+                    || own.some(unit=>unit.order.type==='board' && unit.order.transportId===ship.id)) return [];
+                return [{ship,passengers}];
+            });
+            const combined = [...assembled.flatMap(entry=>entry.passengers),...landed]
+                .filter(unit=>unit.kind!=='worker' && !unit.expiresTick)
+                .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
+            if (combined>=required) {
+                const anchor = assembled.sort((a,b)=>(walkingDistance(map,a.ship,destination,'sea')??Infinity)
+                    -(walkingDistance(map,b.ship,destination,'sea')??Infinity))[0]!.ship;
+                const rally = {x:anchor.x,y:anchor.y};
+                for (const {ship} of assembled) ferries[ship.id]!.rally={...rally};
+                if (distance(boat,rally)>150) return needsMove(boat,rally)
+                    ? [{type:'move',unitIds:[boat.id],...rally,avoidCombat:true}] : [];
+                return boat.order.type==='idle' ? [] : [{type:'stop',unitIds:[boat.id]}];
+            }
             // Gather across depleted colonies before sailing into the enemy.
             // Select by actual sea route; keep the original coast for cancellation.
-            const pickups = own.filter(unit=>!unit.deck && unit.kind!=='worker' && unitMover(unit.kind)==='land'
+            const pickups = own.filter(unit=>troopAvailable(unit) && !reservedElsewhere.has(unit.id) && !unit.deck && unit.kind!=='worker' && unitMover(unit.kind)==='land'
                 && !unit.expiresTick && unit.order.type!=='board' && !sameGround(map,unit,loadGround) && !sameGround(map,unit,target)
                 && convoyCanCarry(snapshot,[boat],[unit]))
                 .map(unit=>({unit,shore:coastOnWater(snapshot,unit,boat)}))
                 .filter(entry=>entry.shore && !snapshot.units.some(foe=>isOpponentOwner(snapshot,owner,foe.owner,options)
-                    && combatCapability(snapshot,foe).armed && sameGround(map,foe,entry.unit)))
+                    && combatCapability(snapshot,foe).armed && sameGround(map,foe,entry.unit))
+                    && !landings.some(ship=>ship.order.type==='unload' && sameGround(map,ship.order,entry.unit)
+                        && shipPassengers(snapshot.units,ship).some(passenger=>combatCapability(snapshot,passenger).armed)))
                 .map(entry=>({...entry,route:walkingDistance(map,boat,entry.shore!,'sea')}))
                 .filter(entry=>entry.route!==undefined).sort((a,b)=>a.route!-b.route!);
             const next = pickups[0]?.shore;
             if (next) {
                 mission.pickup=next;
                 mission.sinceTick=snapshot.tick;
-                delete mission.progress;
+                // A changed destination is not physical progress. Preserve
+                // the last measured hull/crew record for the waiting convoy.
                 return [{type:'move',unitIds:[boat.id],...next,avoidCombat:true}];
             }
-            return commands;
+            if (cargo.length) return commands;
         }
+    }
+    // An empty ferry first reconsiders an abandoned source above. A coarse
+    // berth with no army must not keep the loaded convoy waiting forever.
+    // Board orders already own the real hull pose and shore meeting point.
+    if (!cargo.length && !boarding.length && !crew.length
+        && distanceToHull(boat, loadGround) > UNIT_DEFS.worker.radius + BOARDING_GAP) {
+        if (needsMove(boat, mission.pickup ?? mission.from))
+            commands.push({ type: "move", unitIds: [boat.id], ...(mission.pickup ?? mission.from), avoidCombat:true });
+        return commands;
     }
     const hasWorkers = cargo.some(unit => unit.kind === "worker");
     const hasSoldiers = cargo.some(unit => unit.kind !== "worker");
