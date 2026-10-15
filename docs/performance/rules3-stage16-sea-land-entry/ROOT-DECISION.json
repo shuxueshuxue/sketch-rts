@@ -1,0 +1,438 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-10-15T08:57:06.654933+00:00",
+  "status": "REJECTED_NOT_ADOPTED",
+  "wholeGoal": "FAILED",
+  "candidateHead": "69e778602a5f8700c482574787cb7b82087ea713",
+  "baselineHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "candidateBranch": "perf/sea-distance-frontiers-land-entry",
+  "productAction": "NO_NEW_PR_PUSH_MERGE_OR_DEPLOY",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "target": {
+    "wholeP99MsAtMost": 16,
+    "wholeMaxMsAtMost": 50,
+    "includesColdTick0AndAllOutliers": true
+  },
+  "native": {
+    "runs": 10,
+    "timedGamesPerArm": 4,
+    "ticksPerArm": 57600,
+    "orderPerRound": [
+      "A1",
+      "B1",
+      "B2",
+      "A2",
+      "Bplain"
+    ],
+    "rounds": [
+      "/tmp/whole-performance-abba-0ea-sea-land-entry-r1",
+      "/tmp/whole-performance-abba-0ea-sea-land-entry-r2"
+    ],
+    "pooled": {
+      "A": {
+        "wholeMs": {
+          "count": 57600,
+          "mean": 3.6395410838020923,
+          "median": 1.9044639999992796,
+          "p95": 15.941797000001316,
+          "p99": 27.223900999997568,
+          "max": 99.0691119999999,
+          "over16": 2869,
+          "over50": 24
+        },
+        "simMs": {
+          "count": 57600,
+          "mean": 2.7829570115972353,
+          "median": 1.8274400000009337,
+          "p95": 9.48200899999938,
+          "p99": 19.208287999997992,
+          "max": 61.811588999997184,
+          "over16": 959,
+          "over50": 8
+        },
+        "aiMs": {
+          "count": 57600,
+          "mean": 0.8372494352256875,
+          "median": 0.0014420000006793998,
+          "p95": 7.924253999999564,
+          "p99": 18.49474999999802,
+          "max": 87.04013400000008,
+          "over16": 1032,
+          "over50": 6
+        },
+        "renderSnapshotMs": {
+          "count": 57600,
+          "mean": 0.22179938532986745,
+          "median": 0.230187000001024,
+          "p95": 0.3930449999970733,
+          "p99": 0.5485749999970722,
+          "max": 63.232395999999426,
+          "over16": 3,
+          "over50": 1
+        },
+        "observerMs": {
+          "count": 57600,
+          "mean": 0.007725372621522592,
+          "median": 0.005937999999332533,
+          "p95": 0.017835999999078922,
+          "p99": 0.03171600000496255,
+          "max": 4.222429999997985,
+          "over16": 0,
+          "over50": 0
+        }
+      },
+      "B": {
+        "wholeMs": {
+          "count": 57600,
+          "mean": 3.623460438472224,
+          "median": 1.8953999999939697,
+          "p95": 15.812271999995573,
+          "p99": 26.875852999997733,
+          "max": 90.47269000000006,
+          "over16": 2819,
+          "over50": 32
+        },
+        "simMs": {
+          "count": 57600,
+          "mean": 2.7894684296874934,
+          "median": 1.8189080000001923,
+          "p95": 9.570282000000589,
+          "p99": 19.806683999995585,
+          "max": 75.71499200000017,
+          "over16": 960,
+          "over50": 18
+        },
+        "aiMs": {
+          "count": 57600,
+          "mean": 0.8150695636805518,
+          "median": 0.0013819999985571485,
+          "p95": 7.798289000000295,
+          "p99": 17.64454300000034,
+          "max": 77.76293700000019,
+          "over16": 906,
+          "over50": 11
+        },
+        "renderSnapshotMs": {
+          "count": 57600,
+          "mean": 0.21907675170138274,
+          "median": 0.23350200000277255,
+          "p95": 0.3914540000005218,
+          "p99": 0.530918999998903,
+          "max": 12.376714999998512,
+          "over16": 0,
+          "over50": 0
+        },
+        "observerMs": {
+          "count": 57600,
+          "mean": 0.007796394895840907,
+          "median": 0.00602900000376394,
+          "p95": 0.017685999999230262,
+          "p99": 0.03227799999876879,
+          "max": 2.0589899999977206,
+          "over16": 0,
+          "over50": 0
+        }
+      }
+    },
+    "meanDeltaPercent": -0.441831674917359,
+    "blockMeanDeltaPercent": [
+      0.3965254405684071,
+      -1.278374284674566
+    ],
+    "paired": [
+      {
+        "A": "r1-A1",
+        "B": "r1-B1",
+        "meanDeltaPercent": 0.6823597865543318
+      },
+      {
+        "A": "r1-A2",
+        "B": "r1-B2",
+        "meanDeltaPercent": 0.12001443817317714
+      },
+      {
+        "A": "r2-A1",
+        "B": "r2-B1",
+        "meanDeltaPercent": -2.3487795250218935
+      },
+      {
+        "A": "r2-A2",
+        "B": "r2-B2",
+        "meanDeltaPercent": -0.1828179717502154
+      }
+    ],
+    "planningAndNonplanning": {
+      "A": {
+        "planning": {
+          "wholeMs": {
+            "count": 3840,
+            "mean": 16.660349274218767,
+            "median": 16.541771000000153,
+            "p95": 31.90034499999456,
+            "p99": 43.77638900000602,
+            "max": 99.0691119999999,
+            "over16": 2013,
+            "over50": 16
+          },
+          "simMs": {
+            "count": 3840,
+            "mean": 3.908070450520842,
+            "median": 2.8308319999996456,
+            "p95": 11.613264999999956,
+            "p99": 20.999265999998897,
+            "max": 42.61652999999933,
+            "over16": 104,
+            "over50": 0
+          },
+          "aiMs": {
+            "count": 3840,
+            "mean": 12.538646772135479,
+            "median": 12.122071999998298,
+            "p95": 22.623642999998992,
+            "p99": 30.65224599999783,
+            "max": 87.04013400000008,
+            "over16": 1032,
+            "over50": 6
+          },
+          "frameMs": {
+            "count": 3840,
+            "mean": 16.657151341145827,
+            "median": 16.539207000001625,
+            "p95": 31.896749999999884,
+            "p99": 43.76966999999422,
+            "max": 98.8790140000001,
+            "over16": 2012,
+            "over50": 16
+          }
+        },
+        "nonplanning": {
+          "wholeMs": {
+            "count": 53760,
+            "mean": 2.7094833559151867,
+            "median": 1.800119999999879,
+            "p95": 9.280042000000321,
+            "p99": 18.929519000001164,
+            "max": 61.82250500000009,
+            "over16": 856,
+            "over50": 8
+          },
+          "simMs": {
+            "count": 53760,
+            "mean": 2.7025917659598355,
+            "median": 1.792779999996128,
+            "p95": 9.271899999999732,
+            "p99": 18.91142299999774,
+            "max": 61.811588999997184,
+            "over16": 855,
+            "over50": 8
+          },
+          "aiMs": {
+            "count": 53760,
+            "mean": 0.0014353397321308602,
+            "median": 0.0014020000016898848,
+            "p95": 0.0022030000000086147,
+            "p99": 0.0028839999995398102,
+            "max": 0.17068099999960396,
+            "over16": 0,
+            "over50": 0
+          },
+          "frameMs": {
+            "count": 53760,
+            "mean": 2.707498741387649,
+            "median": 1.7979969999996683,
+            "p95": 9.277177999998457,
+            "p99": 18.923431000002893,
+            "max": 61.817888999998104,
+            "over16": 855,
+            "over50": 8
+          }
+        }
+      },
+      "B": {
+        "planning": {
+          "wholeMs": {
+            "count": 3840,
+            "mean": 16.314232051302067,
+            "median": 16.17357400000037,
+            "p95": 30.404569000000265,
+            "p99": 41.53946400000132,
+            "max": 90.47269000000006,
+            "over16": 1951,
+            "over50": 15
+          },
+          "simMs": {
+            "count": 3840,
+            "mean": 3.902974970312519,
+            "median": 2.755429999997432,
+            "p95": 11.827081999996153,
+            "p99": 21.044426000000385,
+            "max": 55.74403099999472,
+            "over16": 95,
+            "over50": 1
+          },
+          "aiMs": {
+            "count": 3840,
+            "mean": 12.205978353385438,
+            "median": 12.042553999999654,
+            "p95": 21.313968000002205,
+            "p99": 27.599514000001363,
+            "max": 77.76293700000019,
+            "over16": 906,
+            "over50": 11
+          },
+          "frameMs": {
+            "count": 3840,
+            "mean": 16.311156877083317,
+            "median": 16.170450000001438,
+            "p95": 30.401044000000184,
+            "p99": 41.535878999995475,
+            "max": 90.31863499999986,
+            "over16": 1951,
+            "over50": 15
+          }
+        },
+        "nonplanning": {
+          "wholeMs": {
+            "count": 53760,
+            "mean": 2.7169767518415213,
+            "median": 1.7913380000027246,
+            "p95": 9.34200299999793,
+            "p99": 19.680105999999796,
+            "max": 75.73007400000006,
+            "over16": 868,
+            "over50": 17
+          },
+          "simMs": {
+            "count": 53760,
+            "mean": 2.7099322482142774,
+            "median": 1.7838260000025912,
+            "p95": 9.328026000002865,
+            "p99": 19.666715999999724,
+            "max": 75.71499200000017,
+            "over16": 865,
+            "over50": 17
+          },
+          "aiMs": {
+            "count": 53760,
+            "mean": 0.0014332215587741512,
+            "median": 0.0013319999998202547,
+            "p95": 0.002112999998644227,
+            "p99": 0.002723999998124782,
+            "max": 2.05279999999766,
+            "over16": 0,
+            "over50": 0
+          },
+          "frameMs": {
+            "count": 53760,
+            "mean": 2.7150318809523855,
+            "median": 1.7891840000011143,
+            "p95": 9.33911900000021,
+            "p99": 19.676039000005403,
+            "max": 75.72507700000006,
+            "over16": 868,
+            "over50": 17
+          }
+        }
+      }
+    },
+    "allCompleteCommandsByteEqual": true,
+    "allInitialSnapshotsAndOriginalProbeBytesExact": true,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8",
+    "sourceInputsPerRun": 241,
+    "bplainExcludedFromPool": true,
+    "originalReadersUnchanged": true,
+    "noRetryDropOrReplacement": true
+  },
+  "cold": {
+    "sourcePrepared": true,
+    "binding": "NOT_BOUND",
+    "execution": "NOT_RUN",
+    "reason": "Whole-game candidate already lacks stable benefit and increases long ticks; no cold run to rescue it."
+  },
+  "engineering": {
+    "actualModuleQueries": 849,
+    "actualModuleGroups": 10,
+    "inputSemanticChecks": 1698,
+    "regressionTests": 704,
+    "passed": 700,
+    "failed": 4,
+    "failuresFullStderrByteEqualToProduction0ea": true,
+    "failuresNotDeclaredTestBugs": true,
+    "typecheckPassed": true,
+    "sdkTestsPassed": 7,
+    "viteBuildPassed": true,
+    "buildFiles": 83,
+    "publicBodiesChecked": 68,
+    "manifestBodiesChecked": 82
+  },
+  "causalLimits": {
+    "old11970And6893SpikesNotReproduced": true,
+    "oldSpikeCause": "UNRESOLVED",
+    "newSimTailCause": "NOT_ATTRIBUTED",
+    "noCrossCohortCausalityClaim": true,
+    "memory": "13 sparse samples per game, not peak/allocation/leak proof; no stable resource improvement demonstrated",
+    "renderSnapshot": "Data extraction outside whole tick, not GPU/browser FPS"
+  },
+  "ownership": {
+    "ours": "exact on-demand sea distance fields and cold connectivity; this candidate changes terrain.ts only",
+    "notOurs": [
+      "ship-navigation.ts planning private job lifecycle",
+      "ship-planning-job.ts lifecycle",
+      "arrival geometry reuse",
+      "sailing.ts waitForTraffic to replan(false) local duplicate result experiment"
+    ],
+    "heldHullCarry": "Only prior hullPassageClear same-call adjacent endpoint/outline carry; no cross-tick/job cache",
+    "pr381": {
+      "draftHeadRead": "3b4d778e469d3ec5d3b6ebc1970881c4f524b6ef",
+      "autoMerge": false,
+      "terrainFullBytesEqualOldF13": true,
+      "oldJointProofScope": "f13 COW plus bccc sea only; does not certify new 3b4 planning lifecycle or arrival integration",
+      "mutableContinuationQueueReview": "Must not shallow-share mutable continuation queues into old snapshots; combined current-head ownership still needs review"
+    }
+  },
+  "evidenceReferences": [
+    {
+      "path": "/tmp/sea-land-hot-entry-native-analysis-v1/FINAL-MANIFEST.json",
+      "bytes": 4453,
+      "sha256": "722c1ed5b7a60468eadcf1de576fbbf1dce1b3385f2b91c205daa3bd9de85967"
+    },
+    {
+      "path": "/tmp/sea-land-hot-entry-native-independent-readback-v1/FINAL-MANIFEST-v2.json",
+      "bytes": 1519,
+      "sha256": "d5889e2e0f6d677aa653fd91e308de23794700dd0a31ae13446eefd13c1995d2"
+    },
+    {
+      "path": "/tmp/sea-land-hot-entry-validation-v1/FINAL-VALIDATION.json",
+      "bytes": 4169,
+      "sha256": "e9bf0d385b02808a7f8148929e37c366f423d50095df36645ef9e639f3b20003"
+    },
+    {
+      "path": "/tmp/sea-land-hot-entry-proof-independent-readback-v1/FINAL-MANIFEST.json",
+      "bytes": 904,
+      "sha256": "da3769a29a156f047847389b621a5e6464bfe50e38fea42bef70123b044f21d0"
+    },
+    {
+      "path": "/tmp/sea-land-hot-entry-cold-source-closure-v1/SOURCE-CLOSURE.json",
+      "bytes": 2009,
+      "sha256": "0b56ddb943506294786dc3540dc15905b931118617b163ebfa4c4926f9aac82c"
+    },
+    {
+      "path": "/tmp/sea-distance-frontiers-attribution-decision-v1/FINAL-MANIFEST.json",
+      "bytes": 372,
+      "sha256": "3d45457dcb6706c5008fbc143948f62ab09345f52fa8efdf78d757d7a0022b72"
+    },
+    {
+      "path": "/tmp/pr381-head-followup-source-review-v1/SOURCE-REVIEW.json",
+      "bytes": 3292,
+      "sha256": "1c70aa952254599033a9c1083cf15775722fbd47326e639e72d94d7d19cba957"
+    },
+    {
+      "path": "/tmp/ship-planning-sailing-boundary-review-v2/RESULT.json",
+      "bytes": 2546,
+      "sha256": "672feefae6a4def9cb151ff9430d61ac8ce7cea6498e1032678cc0e3e07f4fe6"
+    }
+  ]
+}

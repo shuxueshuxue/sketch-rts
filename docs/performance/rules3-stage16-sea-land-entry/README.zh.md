@@ -1,0 +1,13 @@
+# Stage16：海路陆路入口隔离的拒绝证据
+
+69e778602a5f8700c482574787cb7b82087ea713 相对0ea5beaee063c8443d66f7654333032b070d51ad保持REJECTED_NOT_ADOPTED，整局目标FAILED。两轮原始ABBA+plain整体mean约−0.44%，两块一坏一好，>50ms24→32。Bplain单列，所有慢点、冷点与原始内存保留；不能归因到GC/JIT/OS，也不据此采用。完整原始证明、构建83文件/7,542,358B、所有原失败和独立读回随manifest全文保留。
+
+冷测只有SOURCE准备，NOT_BOUND/NOT_RUN，没有冷样本、构建或计时结果。本scope同时保留此前focused profile与计数诊断；它们不能当作未插桩候选收益。PR381的f13联合证明、3b4源码边界和最新281a的只读状态各有原归属；最新状态不是新代码或联合正确性认证。没有产品PR/push/merge/deploy。
+
+这是Git-logical schema3归档：canonical gzip经RAM/stdin写Git，工作payload从首次捕获保持S/缺席，metadata/README/脚本物化。旧固定4a2a195f0cd4264ecab731f8314d191b1888dc48的20190条mode/blob及全部flags、20080缺席路径、110物化文件全文/模式保持不变。旧SDK14未恢复payload、未重跑；Stage13历史13/14中原Stage5单一命名失败仍保留，不能宣称本scopeSDK14通过。
+
+verify-git.py从Git完整校验header/OID、gzip与解压SHA、alias及原权限；原绝对路径仍存在时加--originals。需要物化payload时须有全部storedBytes按文件系统块上取整之和、索引/临时空间和32MiB余量，精确移除本scope payload排除pattern后再restore；物化后用--hydrated校验。实际restore命令和空间门将在storage-method中记录，不能用缺少旧payload的物理遍历蒙过旧校验器。
+
+69相对0ea的全部新Git对象在manifest对应portable/object-package.json.gz原路径记录中，恢复脚本先要求完整base，再逐type/body/OID校验与缺失对象门后创建独立evidence ref。未复制base旧docs祖先树；原Git对象正文单份保存。
+
+实际续接：首轮capture-01因工具3MiB分项超限被guard终止（exit−15），不是PASS；原source与完整日志保留。续接使用新prefix和已封adapter，保留旧partial Git objects并重新比较全文。storage-method.json列精确恢复pattern、argv及空间门；analysis.json从归档raw重算10臂分布和2410份源码记录，Bplain保持独立。完整新增日志以标准tar/gzip的Git-only支持对象保存，tar成员名为原绝对路径去掉首个斜线，正文/权限可独立读回，不能覆盖原件。
