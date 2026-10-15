@@ -242,7 +242,20 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
           const maneuver=first.exact || first.pivot
             || (first.x-origin.x)*detCos(first.heading)+(first.y-origin.y)*detSin(first.heading)<-1e-7;
           const liveUnits=maneuver?units:strategicUnits;
-          if(!hullPassageClear(map,ship,origin,first) || !reservationTraffic(probe,liveUnits.filter(unit=>unit!==ship))(origin,first))return false;
+          if(!hullPassageClear(map,ship,origin,first))return false;
+          if(!reservationTraffic(probe,liveUnits.filter(unit=>unit!==ship))(origin,first)){
+            // A coastal voyage plans past moving companions as passing
+            // traffic, but its maneuver must clear every live hull. Two such
+            // companions waiting on each other's plans get the same blocked
+            // maneuver back every time (a transport and its carrier sat out
+            // the last 18 minutes of a game that way): plan the replacement
+            // around every live hull, from the live pose.
+            if(maneuver && !completed.anchor && strategicUnits!==units){
+              beginShipPlanningJob(ship,point,map,reservedUnits(ship,units),undefined,recoveryOnly);
+              tryAdmitShipPlan(ship);
+            }
+            return false;
+          }
         }
         planned={points:completed.points,partial:completed.partial};
         if(completed.anchor && previous){
