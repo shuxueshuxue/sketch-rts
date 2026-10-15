@@ -19,3 +19,5 @@
 存储协议为最多32 MiB全部新增临时空间，保持至少32 MiB空闲；工作 payload 与 Git loose 两份、索引锁、portable、工具与收据一起计量。Git 禁用自动 GC/maintenance，以单线程 `pack-objects --stdout` 推送，不生成本地 pack/spool。固定提交正常 TLS 全字节读回 README、manifest、闭合报告及最大 payload，并校验 gzip 解码 SHA。闭合后仅本 scope tracked gzip 工作副本可逆稀疏化，原 raw、所有 metadata/media/source、Git 对象与 refs不删；完整恢复 argv、空间门与实际校验收据另存。
 
 本轮归档离线复算首次因 Python tuple 与原写入 JSON array 的表示差异退出1；初版源码与完整日志保留。第二版先执行与原 writer 一致的 JSON 序列化，再对相同原件复算通过；没有修改原数据、样本或原断言，也没有重跑应用。
+
+闭合后 sparse 的精确追加规则为 `/docs/performance/rules3-stage14-tail-attribution/` 和 `!/docs/performance/rules3-stage14-tail-attribution/payloads/`。恢复本 scope 工作 payload 使用 `git -c gc.auto=0 -c maintenance.auto=false -C /tmp/whole-stage67-evidence-repo sparse-checkout set --no-cone --stdin < /tmp/whole-stage14-archive-tools/stage14-restore.patterns`，先预留全部 payload 实际 filesystem blocks 加4 MiB临时空间，并另留32 MiB空闲；它保留之前3,876个旧排除项。实际 sparse 及完整 Git gzip 解码读回收据位于本机 `SPARSE-FINAL-CLOSURE.json`，只改变工作副本物化状态。
