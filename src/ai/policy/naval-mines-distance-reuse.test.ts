@@ -164,9 +164,9 @@ describe('naval mine road reuse preserves exact distances and choices', () => {
     const failure = (call: () => unknown) => { try { call(); return null; } catch (error) {
       return { name: (error as Error).name, message: (error as Error).message };
     } };
-    const expectedFailure = failure(() => referenceChooseNavalMine(unreachable, 'us', invalidCoasts, {}));
+    const expectedFailure = failure(() => referenceChooseNavalMine(unreachable, 'us', invalidCoasts, { memory: createAiPolicyMemory() }));
     expect(expectedFailure?.name).toBe('TypeError');
-    expect(failure(() => chooseNavalMine(unreachable, 'us', invalidCoasts, {}))).toEqual(expectedFailure);
+    expect(failure(() => chooseNavalMine(unreachable, 'us', invalidCoasts, { memory: createAiPolicyMemory() }))).toEqual(expectedFailure);
     for (const terrainPresent of [true, false]) for (const boatsPresent of [true, false]) for (const contested of [true, false]) {
       const snapshot = structuredClone(original);
       if (!terrainPresent) delete snapshot.map.terrain;
