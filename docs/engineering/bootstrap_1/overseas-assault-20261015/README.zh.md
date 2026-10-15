@@ -451,3 +451,12 @@ v10 控制树在进程已启动后又被编辑四文件，已明确封 pre/post 
 本次稳定生产组合为71c加岸军landed-v2、上述维修绕行、两项测试owner接线修正，**不含v11与未验证陆战joint**。10个生产测试文件112项不同检查通过、生产构建通过，原chunk体积提示保留；明确排除.playtest历史源码镜像。准确父提交、源码增量与fixture、原始测试/构建日志归 `stable-landed-service-validation-evidence.tar.gz`（149,580字节，SHA256 `0989c8b250f0f3fe531025dfe45ccc3e040a987636006fa108ac86d1b57868b5`）。这是检查后源码封存，不冒充比赛启动前源胶囊。
 
 下一项固定组合真实普通0测试为v9_summoner Ember side1对正常冻结v8 Grove，未见生成种子 `bootstrap_1-unseen-summoner-v8-20261015-01`；sapphireArchipelago factory加--unseen实际生成map.id=ladder，不能称官方固定地图。启动与结果将独立记录。另一个陆战joint普通开局13870自然败北，旧50160续至96000仍无胜；未将其并入稳定组合，继续拆分护理与攻坚因果。规则2、184项冻结清单与原生产API等价基线逐字保留；main与另行性能工作未改，原坏容器未提交修改恢复缺口仍在，bootstrap三家族完整对局及泛化验收尚未完成。
+
+
+### 岸军后排查询的敌岛炮塔范围
+
+只读交叉审查查明：共享casterScreen的默认enemyBuildings只看我方已殖民陆块，新的海外landed owner复用它时漏掉无我厅的敌岛塔。最小修复给既有helper追加可选塔列表，由landed传真实同岛敌方建筑；非bootstrap默认、center范围、close分支、原射程数值与冻结对手不改。真实100410/100650/100800三个岸军完整档没有敌塔，3档×3路线81条命令及subject完整记忆逐字节一致，因此**这不是已证明的原局死因**。
+
+明确反事实组件场景中，施法者初始塔射击gap494.9747大于原480，旧微操公开move后实际gap403.1129，240tick被原生塔命中4次，95→31HP；候选保持95HP且0塔击。三家族、友塔及共享默认边界均验证，120tick JSON中途恢复后的完整世界/nextId/双方记忆相同，独立源前后0变化。准确两版源、真实档字节等价、原生起中终世界、命中与red/green/tsc归`landed-caster-tower-scope-evidence.tar.gz`（8,045,924字节，43payload全核，SHA256 `45c1f3bb37528f6b0f87af2cdbc9e794528bf5385a374083fa4c8bef659ac8fc`）。root整合另跑3文件22项及tsc全部通过，日志与准确源归`landed-caster-tower-root-validation.tar.gz`。当前召唤未见种子普通局仍在独立183b固定源码上，不把后续此修复拼进去。
+
+前述v11完整失败长局现已另封`failed-game-full-v11-88110-120000-evidence.tar.gz`（15,052,306字节，173payload全核，SHA256 `9a2e1cd56737ed6b121a6d4724181e3737e884f22a878ec5745a467d4767d24c`）：136个完整frame、54个sample（53个在89040取消之后）、原56.8MB报告/日志、1589源胶囊、输入、完整策略记忆、因果查询与4张实际client存档图齐全。120000原29人15甲板/14亡、无人敌岛，敌22单位/21建筑/厅900且无胜者。历史loader路径tar是事后由冻结Git重建并显式标注；未冒充比赛启动前捕获。原观察器活引用勘误仍保留，未篡改原报告。原坏容器未提交恢复缺口与全bootstrap验收未完成的边界不变。

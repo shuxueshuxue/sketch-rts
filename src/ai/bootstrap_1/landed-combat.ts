@@ -12,6 +12,7 @@ import { averagePoint, distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { casterScreenNeighbors, isBacklineKind, planCasterScreen } from '../policy/v6/backline';
 import { SUMMONING_UNIT_KINDS } from '../policy/versions';
+import { isOpponentOwner } from '../policy/ownership';
 import { casterMeleeMicro } from './caster-screen';
 
 function healer(unit: Unit) {
@@ -76,8 +77,12 @@ export function planLandedCombat(snapshot: GameSnapshot, owner: PlayerId, option
     const casters = army.filter(isBacklineKind);
     const fightingMicro = casterMeleeMicro(snapshot, owner, options);
     const micro = (caster: Unit, threats: Unit[]) => healer(caster) ? undefined : fightingMicro(caster, threats);
+    // The shared mainland query intentionally hides uncolonized islands.
+    // This expedition already owns the actual fight on this island.
+    const towers = snapshot.buildings.filter(building => isOpponentOwner(snapshot, owner, building.owner, options)
+      && sameGround(snapshot.map, anchor, building));
     for (const close of [false, true]) accept(planCasterScreen(snapshot, owner, options, cover, cover, front,
-      casters.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind) !== close), close, true, micro, caster => !healer(caster)));
+      casters.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind) !== close), close, true, micro, caster => !healer(caster), towers));
     accept(planRangedKiting(snapshot, owner, options, army.filter(unit => !occupied.has(unit.id) && !healer(unit)), enemies, cover));
     const focus = planFocusFireCommand(snapshot, owner, options, {
       army: army.filter(unit => !occupied.has(unit.id) && !healer(unit) && unit.attackDamage > 0),

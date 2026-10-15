@@ -1,5 +1,5 @@
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
-import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
+import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { aimingProfile } from "../../../shared/aiming";
 import { UNIT_DEFS } from "../../../shared/catalog";
 import { resolveAiCommandIntent } from "../commands";
@@ -57,10 +57,10 @@ export function casterScreenNeighbors(front: Unit[]) {
 }
 
 export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined,
-  allowAttack: (caster: Unit) => boolean = () => true): GameCommand[] {
+  allowAttack: (caster: Unit) => boolean = () => true, localTowers?: readonly Building[]): GameCommand[] {
   if (casters.length === 0) return [];
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
-  const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
+  const towers = (localTowers ?? enemyBuildings(snapshot, owner, options.teams)).filter((building) => building.complete && building.attackDamage > 0);
   const frontNear = casterScreenNeighbors(front);
   const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
