@@ -9,7 +9,6 @@ import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { cancelFerry, planNavalTacticsWithAssignments } from '../policy/naval';
 import { units } from '../policy/snapshot';
-import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { isEnemyOwner } from '../policy/ownership';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import { distance } from '../policy/spatial';
@@ -19,7 +18,7 @@ import { planMedicalRecovery } from './medical-recovery';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 import { planSettlerBoarding } from './ferry-preparation';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
-import { transportRecovery } from './transport-recovery';
+import { transportNeedsRecovery, transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
 
 function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
@@ -124,7 +123,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const commands = [...cancelled, ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
-    transportReady: boat => !shipNeedsRepair(snapshot, boat),
+    transportReady: boat => !transportNeedsRecovery(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));

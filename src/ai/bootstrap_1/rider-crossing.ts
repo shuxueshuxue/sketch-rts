@@ -1,12 +1,13 @@
 import { shipPassengers } from '../../shared/ship-geometry';
 import { isTransportKind } from '../../shared/transport-role';
-import { shipNeedsRepair } from '../../shared/ship-equipment';
+import { transportNeedsRecovery } from './transport-recovery';
 import { routeArrivals, routeTravelTicks } from '../../shared/route-selection';
 import { sameGround, walkingDistance, walkableGoal } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { coastOnWater } from '../policy/naval';
+import { assaultExpedition, coastOnWater } from '../policy/naval';
+import { convoyCanCarry } from '../policy/convoy-load';
 import { navalServices } from '../policy/naval-services';
 import { activeUnitClaim } from '../policy/claims';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
@@ -35,10 +36,22 @@ export function planRiderCrossing(snapshot: GameSnapshot, owner: PlayerId, optio
     && unit.hp >= unit.maxHp * .8 && !busy.has(unit.id) && !activeUnitClaim(snapshot, owner, unit, options)
     && ['idle', 'hold', 'move', 'attackMove'].includes(unit.order.type));
   if (!riders.length) return;
+  // A ready invasion gets its required lift before optional clearing trips.
+  // Already assigned assault hulls can satisfy that need, leaving spare
+  // ferries available to riders without reserving the entire fleet.
+  const assaultBoats = snapshot.units.filter(boat=>boat.owner===owner && isTransportKind(boat.kind)
+    && ferries[boat.id]?.purpose==='assault' && ferries[boat.id]?.phase!=='return');
+  const home=snapshot.buildings.find(building=>building.owner===owner && building.kind==='townHall');
+  const needsLift = snapshot.buildings.filter(building=>building.kind==='townHall' && home && !sameGround(snapshot.map,home,building)
+    && isOpponentOwner(snapshot,owner,building.owner,options)).some(target=>{
+      const expedition=assaultExpedition(snapshot,owner,options,target);
+      return expedition.ready && expedition.crew.length>0 && !convoyCanCarry(snapshot,assaultBoats,expedition.crew);
+    });
+  if (needsLift) return;
   const reserved = navalServices(snapshot, owner, options).reserved;
   const camps = mountedMinePlan(snapshot, options.memory);
   const boats = snapshot.units.filter(boat => boat.owner === owner && isTransportKind(boat.kind) && !ferries[boat.id]
-    && !shipNeedsRepair(snapshot, boat)
+    && !transportNeedsRecovery(snapshot, boat)
     && !reserved.has(boat.id) && naval.outfit?.shipId !== boat.id && !shipPassengers(snapshot.units, boat).length
     && boat.order.type === 'idle');
   const mines = snapshot.resources.filter(mine => mine.amount > 0 && !mineClaimedByAlly(snapshot, owner, mine, options)

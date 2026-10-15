@@ -3,14 +3,25 @@ import { BOARDING_GAP } from '../../shared/naval';
 import { nearestByRoute } from '../../shared/route-selection';
 import { distanceToHull } from '../../shared/ship-geometry';
 import { nearestShipPose } from '../../shared/ship-navigation';
-import { shipNeedsRepair } from '../../shared/ship-equipment';
+import { shipNeedsRepair, shipPartMax } from '../../shared/ship-equipment';
 import { isTransportKind } from '../../shared/transport-role';
 import { walkableGoal, walkDestination } from '../../shared/terrain';
-import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
+import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { navalServices } from '../policy/naval-services';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
+
+/** Do not strand an operational ferry for unaffordable minor maintenance.
+ * Keep the last dock repair quantum pending; substantial hull damage and any
+ * propulsion or steering damage still require recovery before a trip. */
+export function transportNeedsRecovery(snapshot: GameSnapshot, boat: Unit): boolean {
+  if (!shipNeedsRepair(snapshot,boat)) return false;
+  if ((snapshot.players[boat.owner]?.gold ?? 0) >= DOCK_REPAIR.goldPerSecond) return true;
+  const max=shipPartMax(boat);
+  return boat.maxHp-boat.hp>DOCK_REPAIR.hpPerSecond || (boat.shipParts?.rigging ?? max.rigging)<max.rigging
+    || (boat.shipParts?.rudder ?? max.rudder)<max.rudder;
+}
 
 /** Finish the current crossing, then repair at a reachable port before taking another payload. */
 export function transportRecovery(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -18,7 +29,7 @@ export function transportRecovery(snapshot: GameSnapshot, owner: PlayerId, optio
   const services = navalServices(snapshot, owner, options).reserved;
   const ids = new Set<string>(), commands: GameCommand[] = [];
   for (const boat of snapshot.units.filter(unit => unit.owner === owner && isTransportKind(unit.kind)
-    && shipNeedsRepair(snapshot, unit) && !options.memory.naval?.ferries?.[unit.id] && !services.has(unit.id)
+    && transportNeedsRecovery(snapshot, unit) && !options.memory.naval?.ferries?.[unit.id] && !services.has(unit.id)
     && options.memory.naval?.outfit?.shipId !== unit.id)) {
     if (docks.some(dock => distance(boat, dock) < DOCK_REPAIR.range)) {
       ids.add(boat.id);

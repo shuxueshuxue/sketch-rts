@@ -1,7 +1,9 @@
+import { DOCK_REPAIR } from '../../shared/catalog';
+import { transportNeedsRecovery } from './transport-recovery';
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
-import { shipNeedsRepair } from '../../shared/ship-equipment';
+import { shipNeedsRepair, shipPartMax } from '../../shared/ship-equipment';
 import { boardUnit } from '../../shared/decks';
 import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
 import { snapshotGame, stepGame } from '../../shared/sim';
@@ -85,3 +87,33 @@ it.each(cases)('$version finishes the current injured ferry crossing before retu
   expect(game.match.stats.unitsLost.us).toBe(0);
   expect(game.match.stats.goldSpent.us).toBe(0);
 }, 60000);
+
+it.each(cases)('$version earns maintenance from a operational ferry with unpaid minor repairs (mirror=$mirror)',({version,mirror})=>{
+ const game=field(mirror),boat=game.units.find(u=>u.id==='ferry')!,rider=game.units.find(u=>u.id==='rider')!;
+ boat.hp=boat.maxHp-DOCK_REPAIR.hpPerSecond;boat.shipParts={...shipPartMax(boat),cabin:shipPartMax(boat).cabin-17};
+ game.players.us!.gold=.06;const memory=createAiPolicyMemory();
+ const scripts=bootstrapScripts(version).filter(script=>['naval','mountedTasks'].includes(script.id));
+ let sailed=false,earned=false;
+ for(let tick=0;tick<12000 && (game.units.some(u=>u.id.startsWith('guard-'))||shipNeedsRepair(game,boat));tick++){
+  if(tick%15===0){
+   const snapshot=snapshotGame(game),options=bootstrapPolicyContext(snapshot,'us',version,{memory,teams:game.teams});
+   issueCommandFrame(game,runAiCommandEntriesFromScripts(snapshot,'us',scripts,options).map(e=>({...e,playerId:'us'})));
+   sailed ||= memory.naval?.ferries?.ferry?.purpose==='creep';
+  }
+  stepGame(game);earned ||= game.players.us!.gold>1;
+ }
+ expect(sailed).toBe(true);expect(earned).toBe(true);
+ expect(game.units.some(u=>u.id.startsWith('guard-'))).toBe(false);
+ expect(shipNeedsRepair(game,boat)).toBe(false);
+ expect(game.match.stats.goldSpent.us).toBeGreaterThan(0);
+ expect(game.match.stats.unitsLost.us).toBe(0);
+ expect(rider.hp).toBe(rider.maxHp);
+},60000);
+
+ it.each(['hull','rigging','rudder'] as const)('keeps an unfunded ferry with substantial %s damage in recovery',part=>{
+  const game=field(false),boat=game.units.find(u=>u.id==='ferry')!;
+  game.players.us!.gold=.06;boat.hp=boat.maxHp;boat.shipParts={...shipPartMax(boat)};
+  if(part==='hull')boat.hp-=DOCK_REPAIR.hpPerSecond+1;
+  else boat.shipParts[part]-=1;
+  expect(transportNeedsRecovery(snapshotGame(game),boat)).toBe(true);
+ });

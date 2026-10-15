@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util';
 import { bootstrapGame, bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runAiGameLoop } from '../src/ai/game-runner';
 import { createAiMemoryProvider } from '../src/ai/planner-context';
-import { createBootstrapCommandPlanner } from './bootstrap_1-planner';
+import { createBootstrapCommandPlanner, frozenPolicyManifest } from './bootstrap_1-planner';
 import type { BootstrapAiVersion, MapId, PlayerId } from '../src/shared/types';
 import { restoreSnapshotIntoGame, snapshotGame } from '../src/shared/sim';
 import type { AiPolicyMemory } from '../src/ai/policy';
@@ -11,6 +11,8 @@ import { rankBootstrapGoals } from '../src/ai/bootstrap_1/economy';
 import { bootstrapPolicyContext } from '../src/ai/bootstrap_1/policy';
 const { values } = parseArgs({ options: {
   map: { type: 'string', default: 'pineshade' },
+  seed: { type: 'string', default: 'bootstrap_1-development' },
+  unseen: { type: 'boolean', default: false },
   subject: { type: 'string', default: 'v9_summoner' },
   opponents: { type: 'string', default: 'v5+v7' },
   race: { type: 'string', default: 'grove' },
@@ -23,7 +25,7 @@ const { values } = parseArgs({ options: {
 } });
 const subject = values.subject as BootstrapAiVersion;
 const sampleTicks = Number(values['sample-ticks']);
-const match = bootstrapMatches('bootstrap_1-development', [values.map as MapId], Number(values.ticks)).find(match =>
+const match = bootstrapMatches(values.seed, [values.map as MapId], Number(values.ticks), values.unseen).find(match =>
   match.subject === subject && match.agents.p0!.race === values.race && match.side === Number(values.side)
   && Object.values(match.agents).slice(1).map(agent => agent.version).join('+') === values.opponents)!;
 const rows: unknown[] = [];
@@ -33,7 +35,7 @@ const memories = createAiMemoryProvider();
 const game = bootstrapGame(match);
 function saveReport(completed: boolean) {
   const temporary=values.out+'.tmp';
-  writeFileSync(temporary,JSON.stringify({subject,result:{tick:game.tick,winner:game.match.winner,completed},rows,purchases})+'\n');
+  writeFileSync(temporary,JSON.stringify({subject,setup:{map:match.mapId,seed:match.seed,unseen:match.unseen,side:match.side,agents:match.agents,thinkInterval:match.thinkInterval,rulesVersion:frozenPolicyManifest.rulesVersion,frozenRevision:frozenPolicyManifest.revision},result:{tick:game.tick,winner:game.match.winner,completed},rows,purchases})+'\n');
   renameSync(temporary,values.out!);
 }
 if (values.resume) {

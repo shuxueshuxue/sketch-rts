@@ -158,3 +158,19 @@ it.each(cases)('$version clears before dispatching settlers (mirror=$mirror)', (
   expect(damage).toBe(0);
   expect(game.match.stats.unitsLost.us).toBe(0);
 }, 60000);
+
+it.each(['unready','needs-lift','already-covered'] as const)('shares spare ferries with a prepared invasion: %s',state=>{
+ const game=field(false),memory=createAiPolicyMemory();
+ game.map.terrain={...game.map.terrain!,cells:Array.from({length:128*128},(_,i)=>{const x=i%128,y=Math.floor(i/128);return x<39||x>=93||x>=65&&x<76&&y<31?'.':x===39||x===92?',':'~';}).join('')};
+ const enemy=game.buildings.find(b=>b.owner==='foe')!;enemy.x=2256;enemy.y=496;
+ setBuildingBodies(game.map,game.buildings);
+ for(let i=0;i<6;i++)game.spawnUnit('foe','footman',2200+i*10,700);
+ if(state!=='unready')for(let i=0;i<12;i++)game.spawnUnit('us','footman',1000,1800+i*20);
+ if(state==='already-covered'){
+  const carrier=game.spawnUnit('us','carrier',1800,2800);
+  memory.naval={ferries:{[carrier.id]:{purpose:'assault',targetId:enemy.id,phase:'loading',from:{x:1232,y:2200},to:{x:2064,y:500},crewIds:[],sinceTick:0}}};
+ }
+ const snapshot=snapshotGame(game),options=bootstrapPolicyContext(snapshot,'us','v9_archer',{memory,teams:game.teams});
+ planRiderCrossing(snapshot,'us',options);
+ expect(memory.naval!.ferries!.ferry?.purpose).toBe(state==='needs-lift'?undefined:'creep');
+});
