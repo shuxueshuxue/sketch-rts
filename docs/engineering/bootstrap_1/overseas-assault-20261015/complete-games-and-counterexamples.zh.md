@@ -56,6 +56,10 @@
 
 独立纯API4bc50增加可选候选中心搜索域，默认21测试/tsc与42真实默认结果和accept回调顺序等价；仍未合生产。按原450真实cohort几何域的55200二船查询，找到同岛/无guard/全body/hull不相交方案（船间海230.4），但冷搜79.7CPU秒，不能进15tick AI。stored plan在55200 warm约25–33CPU毫秒，到真实55500已被移动守军覆盖而正确拒绝，不能永久缓存“safe”。未有v3实际执行局，不能将几何可行、减少pose数或API测试写成比赛改善。
 
+只增量加入25a3的单一底层优化：landingSpot的同点distanceToHull纯值复用，bounds/open-ground/同岛/上下限/遍历与平局顺序不变。没有合入4bc搜索域API、AABB或联合登陆草稿。独立69实际姿态（35成功/34失败）返回完整落点/Unit均相同，5轮交替CPU合计2048.456→1787.909ms（12.72%）；该数字仅属这批查询，不外推整局或79.7秒冷搜索达标。原测量/原始profile及AABB数值反例归 `bootstrap-landing-gap-query-evidence.tar.gz`。
+
+root再验证69姿态全等且输入未变；四文件38项原生回归、tsc/vite构建通过。原3bdb真实33600完整world/nextId/双方memory运行到33688，末世界、nextId、双方全部记忆和九条公开命令逐值一致，归 `bootstrap-landing-gap-root-integration-evidence.tar.gz`。外部TS harness最初因缺package type被按CJS加载，在还原/step前失败；原log保留，补harness-local type module后实际重跑成功，未改生产源码。原38项已完成后误启动的两例子集补跑已立即中断，不计为第二次通过。此为等价查询优化，不是bootstrap里程碑或新的比赛成绩。
+
 `knight-unmedicated-preplan-evidence.tar.gz` 区分护理提前释放与到达后自动攻击：65205/65280本naval owner显式attackMove覆盖尚距原cover114.86/81.80/180.90的move，并非先idle。实际原care门槛是V7_WOUNDED_SHARE=.35；.36来自focus，不可混用。后续typed waypoint候选只续已有未完成原撤退腿，不锁到满血、不发hold；其局部/完整比赛结果仍独立归属，不在本只读证据包冒认。
 
 上述失败与混合结果用于下一轮实战因果，不作为里程碑完成。三条风格路线、全部v5/v7/v8单敌及六种配对、官方图与未见生成种子的最终完整对局及泛化要求仍未满足。不改main，不回灌另行合并的新规则船只平衡或规则3/4性能工作。原故障容器未提交修改的恢复缺口继续保留。

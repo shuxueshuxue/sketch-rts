@@ -138,10 +138,13 @@ export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, 
   const edge=localToWorld(transport,{x:detCos(angle)*((profile?.length ?? transport.radius*2)/2+radius+2),y:detSin(angle)*((profile?.beam ?? transport.radius*2)/2+radius+2)});
   const shore=transport.order.type==="unload"?walkableGoal(map,transport.order.x,transport.order.y):undefined;
   const preferred=shore??edge;
-  const clear=(p:{x:number;y:number})=>p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height
-    && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))
-    && distanceToHull(transport,p)>=radius+1 && distanceToHull(transport,p)<=LANDING_REACH
-    && !units.some(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land"&&Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  const clear=(p:{x:number;y:number})=>{
+    if(!(p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height
+      && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))))return false;
+    const gap=distanceToHull(transport,p);
+    return gap>=radius+1 && gap<=LANDING_REACH
+      && !units.some(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land"&&Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  };
   const nearest=walkableGoal(map,preferred.x,preferred.y);
   if(clear(nearest))return nearest;
   const span=(profile?.length??transport.radius*2)/2+LANDING_REACH;

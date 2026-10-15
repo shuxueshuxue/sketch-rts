@@ -115,6 +115,16 @@
       "file": "bootstrap-workforce-safe-board-e7-three-way-evidence.tar.gz",
       "bytes": 4565590,
       "sha256": "97c5cf07f1a8454bc71fecf18076acee5a3773ba2142a16d22889abbb8472692"
+    },
+    {
+      "file": "bootstrap-landing-gap-root-integration-evidence.tar.gz",
+      "bytes": 141732,
+      "sha256": "8486970af3a9ac7232a3878d990160b8c92d4af3b1768a7344da83a2ae0bb65d"
+    },
+    {
+      "file": "bootstrap-landing-gap-query-evidence.tar.gz",
+      "bytes": 3439733,
+      "sha256": "7490a9ae096eaddc6f19670b8b1ae058ea3ec4cb9d552e4d4d178346d860a41b"
     }
   ]
 }
