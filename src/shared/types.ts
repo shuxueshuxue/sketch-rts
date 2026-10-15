@@ -31,7 +31,7 @@ export type ShipEquipmentKind = "shipCannon" | "shipMortar" | "flameProjector";
 export type ItemKind = ShipEquipmentKind | "issuedWeapon" | "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
 export type ShopItemKind = "leatherArmor" | "roundShield" | "greatSword" | "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
-export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
+export type UpgradeKind = "shipbuilding" | "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
   // @@@creep-status - slow (a murloc's net), stun (a golem's stomp), root (a spider queen's web), poison (a venom spider's

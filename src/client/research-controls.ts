@@ -18,6 +18,7 @@ export type ResearchProgressButton = ResearchCommandButton & {
 };
 
 export const RESEARCH_COMMANDS = [
+  { upgradeKind: "shipbuilding", label: "Shipbuilding", icon: "⚓", hotkey: "n" },
   { upgradeKind: "weaponTraining", label: "Weapon Training", icon: "⚔", hotkey: "w" },
   { upgradeKind: "reinforcedPlating", label: "Reinforced Plating", icon: "▣", hotkey: "p" },
   { upgradeKind: "buildingDurability", label: "Building Durability", icon: "▥", hotkey: "d" },

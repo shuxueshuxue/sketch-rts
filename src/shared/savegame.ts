@@ -6,7 +6,7 @@ import { rollVeteranSkillChoices, veteranSkillFitsUnitClass, VETERAN_COMMON_SKIL
 import { unitClassOf } from "./unit-targeting";
 import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { weaponRules } from "./equipment";
-import { UPGRADE_KINDS } from "./catalog";
+import { UNIT_DEFS, UPGRADE_KINDS } from "./catalog";
 import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
 
 export const SAVEGAME_SCHEMA_VERSION = 1;
@@ -95,7 +95,7 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
   const canonical = migration?.snapshot ?? save.snapshot;
   assertCanonicalSavedKinds(canonical);
   const snapshot = olderCombatRules ? upgradeSavedCombat(canonical) : canonical;
-  restoreSnapshotIntoGame(game, { ...snapshot, teams: save.runtime.teams, players: normalizeSavedPlayers(snapshot.players) }, save.runtime.nextId);
+  restoreSnapshotIntoGame(game, { ...snapshot, teams: save.runtime.teams, players: normalizeSavedPlayers(snapshot.players, savedRulesVersion(save.rulesVersion)) }, save.runtime.nextId);
   game.activePlayers = [...save.runtime.activePlayers];
   // Canonical stats may differ; keep the exact living/dead HP, capped by the
   // new maximum. No percentage heal, cooldown reset, or veteran-choice reroll.
@@ -118,6 +118,18 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
       unit.cargo?.forEach(refresh);
     };
     game.units.forEach(refresh);
+  }
+  if (savedRulesVersion(save.rulesVersion) < 4) {
+    const refreshShips = (unit: Game["units"][number]) => {
+      if (UNIT_DEFS[unit.kind].naval) {
+        const hp = unit.hp;
+        if (unit.owner === "neutral") unit.maxHp = weaponRules(game, unit).hp;
+        else refreshUnitStats(game, unit);
+        unit.hp = Math.min(hp, unit.maxHp);
+      }
+      unit.cargo?.forEach(refreshShips);
+    };
+    game.units.forEach(refreshShips);
   }
   if (olderCombatRules) {
     for (const unit of game.units) {
@@ -178,9 +190,10 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function normalizeSavedPlayers(players: PlayerStateMap): PlayerStateMap {
+function normalizeSavedPlayers(players: PlayerStateMap, rulesVersion: number): PlayerStateMap {
   const cloned = clone(players);
   for (const player of Object.values(cloned)) {
+    if (rulesVersion < 4) player.upgrades.shipbuilding ??= 0;
     player.upgrades = normalizeUpgradeLevels(player.upgrades);
   }
   return cloned;
