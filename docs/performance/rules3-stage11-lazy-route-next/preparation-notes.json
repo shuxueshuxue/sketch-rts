@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "oldEvidenceHead": "d19082b1d2fe1d14e99e1303479ef187db1a1c95",
+  "oldClosedPathsUnchanged": true,
+  "allNewObjectsAndArchivesUnderTmp": true,
+  "candidateDecision": "HELD_UNSTABLE_NOT_ADOPTED",
+  "wholeTargetPassed": false,
+  "runtimeProductBranchNotPublished": true,
+  "archiveOnlyNoEngineRerun": true,
+  "originalAssertionsUnchanged": true,
+  "finalSdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.726531078020344
+  },
+  "sdkOldOffenderExactClosedBlob": true,
+  "allSevenScopesUnchangedDuringSdk": true,
+  "nativeSourceGraphCount": 10,
+  "nativeSourceRecords": 2410,
+  "coldBuildSourceGraphCount": 2,
+  "coldBuildSourceRecords": 482,
+  "coldSamples": 24,
+  "coldIndependentReviewPassed": true,
+  "historicalDecisionPendingStateRetained": true,
+  "firstSealHistoricalPayloadClosureComplete": false,
+  "firstSealMissingHistoricalPayloads": [
+    "METHOD.md 4768B",
+    "commands.json 62058B"
+  ],
+  "firstCheckerJsonlFailureSourceAndLogRetained": true,
+  "noSampleRerunsOrReplacement": true,
+  "inventoryCutpoint": "2026-10-15T03:47:34.779875+00:00",
+  "futureV2ToolsExcluded": true,
+  "newChildReviewBelongsToStage11Only": true
+}
