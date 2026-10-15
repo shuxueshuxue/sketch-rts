@@ -90,6 +90,13 @@ const hullIds = new WeakMap<readonly Point[], string>(), hullShapes = new Map<st
 const PASSAGE_MEMO_LIMIT = 32768, FIT_MEMO_LIMIT = 16384;
 /** Number keys must keep every distinct value apart; template text merges -0 with 0. */
 export const exactKey = (value: number) => value === 0 && 1 / value < 0 ? '-0' : `${value}`;
+// @@@bits-key - The sweep and fit memos are asked hundreds of thousands of times a game, and printing each pose in
+// decimal was most of a query's own cost. Their keys carry each double's raw bits instead (four UTF-16 units apiece):
+// equal keys still mean bit-equal inputs, -0 stays apart from 0, and nothing is printed.
+const keyBits = new Float64Array(9), keyUnits = new Uint16Array(keyBits.buffer);
+function bitsKey(prefix: string, doubles: number): string {
+  return prefix + String.fromCharCode.apply(null, keyUnits.subarray(0, doubles * 4) as unknown as number[]);
+}
 export function hullId(hull: readonly Point[]) {
   let id = hullIds.get(hull);
   if (id === undefined) {
@@ -150,7 +157,7 @@ function coastOutlineClear(map: SeaMap, polygon: readonly Point[], left: number,
 export function hullFits(map: SeaMap, ship: Unit, pose: ShipPose = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 }) {
   const profile = shipProfile(ship);
   return Boolean(profile && clearOutline(map, outline(profile.hull, pose),
-    () => `${hullId(profile.hull)}|${exactKey(pose.x)}|${exactKey(pose.y)}|${exactKey(pose.heading)}`));
+    () => { keyBits[0] = pose.x; keyBits[1] = pose.y; keyBits[2] = pose.heading; return bitsKey(`${hullId(profile.hull)}|`, 3); }));
 }
 /** Continuous sweep: bounded rotational curvature expands each endpoint envelope. */
 export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: ShipPose) {
@@ -174,7 +181,11 @@ export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: Sh
     return coastPassageClear(map, ship, hull, from, to, turn, radius);
   // Every input of the sweep below: the hull, both poses, the incoming
   // curvature and pivot (other waypoint metadata never reaches the geometry).
-  const memo = hullMemo(map), key = `${hullId(hull)}|${exactKey(from.x)}|${exactKey(from.y)}|${exactKey(from.heading)}|${exactKey(to.x)}|${exactKey(to.y)}|${exactKey(to.heading)}|${to.curvature === undefined ? 'u' : exactKey(to.curvature)}|${to.pivot ? `${exactKey(to.pivot.x)},${exactKey(to.pivot.y)}` : '-'}`;
+  keyBits[0] = from.x; keyBits[1] = from.y; keyBits[2] = from.heading; keyBits[3] = to.x; keyBits[4] = to.y; keyBits[5] = to.heading;
+  let doubles = 6, present = 0;
+  if (to.curvature !== undefined) { keyBits[doubles++] = to.curvature; present |= 1; }
+  if (to.pivot) { keyBits[doubles++] = to.pivot.x; keyBits[doubles++] = to.pivot.y; present |= 2; }
+  const memo = hullMemo(map), key = bitsKey(`${hullId(hull)}|${present}|`, doubles);
   const known = memo.passages.get(key);
   return known ?? remember(memo.passages, key, coastPassageClear(map, ship, hull, from, to, turn, radius), PASSAGE_MEMO_LIMIT);
 }
