@@ -144,7 +144,7 @@ function supportPoint(polygon: readonly Point[], normal: Point) {
   }
   return { x: x / count, y: y / count };
 }
-function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined {
+function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: readonly Point[], sum = minkowskiSum): Omit<Contact, 'kind'> | undefined {
   const radius = polygonRadius(shipProfile(ship)!.hull), turn = headingDifference(from.heading, to.heading);
   const lever = to.pivot ? Math.hypot(from.x - to.pivot.x, from.y - to.pivot.y) : 0;
   const steps = Math.max(1, Math.ceil(Math.abs(turn) * Math.sqrt((radius + lever) / (8 * .025))));
@@ -152,12 +152,12 @@ function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: reado
     const a = shipPoseAt(from, to, i / steps), b = shipPoseAt(from, to, (i + 1) / steps);
     const shape = convexHull([...hullOutline(ship, { ...a, x: 0, y: 0 }), ...hullOutline(ship, { ...b, x: 0, y: 0 })]);
     const error = turn ? (radius + lever) * (turn / steps) ** 2 / 8 + 1e-7 : 0;
-    const configuration = minkowskiSum(bodyPolygon, (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })));
+    const configuration = sum(bodyPolygon, (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })));
     let contact = segmentContact(a, b, configuration);
     // A rotating hull has no center translation. Its swept outline still supplies a contact face.
     if (!contact && Math.abs(turn) > 1e-8) {
       const inside = polygonPlanes(configuration).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6);
-      const before = minkowskiSum(bodyPolygon, hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
+      const before = sum(bodyPolygon, hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
       if (inside && !polygonPlanes(before).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6)) {
         const plane = polygonPlanes(configuration).reduce((best, p) => (a.x * p.x + a.y * p.y - p.min) / Math.hypot(p.x, p.y) < (a.x * best.x + a.y * best.y - best.min) / Math.hypot(best.x, best.y) ? p : best);
         const length = Math.hypot(plane.x, plane.y); contact = { fraction: 0, normal: { x: plane.x / length, y: plane.y / length } };
@@ -226,9 +226,31 @@ export function shipSolidTraffic(map: GameMap, ship: Unit, units: readonly Unit[
   const frame = frameFor(units, map), radius = polygonRadius(shipProfile(ship)!.hull);
   const solid = (body: Body) => !('kind' in body && isShipKind(body.kind as Unit['kind'])) && activeBody(map, body);
   const hasTraffic = [...frame.entries.keys()].some(solid);
+  // This traffic view revisits a small set of exact configuration polygons.
+  // A changed body outline invalidates its entries; each retained input is a
+  // value copy, and the numeric key only indexes a full Object.is comparison.
+  const sums = new Map<Body, { a: Point[]; byHull: Map<string, { b: Point[]; result: Point[] }> }>();
+  const samePolygon = (a: readonly Point[], b: readonly Point[]) => a.length === b.length
+    && a.every((point, i) => Object.is(point.x, b[i]!.x) && Object.is(point.y, b[i]!.y));
+  const copyPolygon = (polygon: readonly Point[]) => polygon.map(point => ({ x: point.x, y: point.y }));
+  const numberKey = (value: number) => Object.is(value, -0) ? '-0' : String(value);
+  const polygonKey = (polygon: readonly Point[]) => `${polygon.length}:`
+    + polygon.map(point => `${numberKey(point.x)},${numberKey(point.y)}`).join(';');
+  const bodySweep = (from: ShipPose, to: ShipPose, body: Body) => sweepShape(ship, from, to, outline(map, body), (a, b) => {
+    let cached = sums.get(body);
+    if (!cached || !samePolygon(a, cached.a)) {
+      cached = { a: copyPolygon(a), byHull: new Map() };
+      sums.set(body, cached);
+    }
+    const key = polygonKey(b), previous = cached.byHull.get(key);
+    if (previous && samePolygon(b, previous.b)) return previous.result;
+    const result = minkowskiSum(a, b);
+    cached.byHull.set(key, { b: copyPolygon(b), result });
+    return result;
+  });
   return Object.assign((from: ShipPose, to: ShipPose) => !nearby(frame, from, to, radius)
     .some(({ body }) => solid(body)
-      && sweepShape(ship, from, to, outline(map, body)) !== undefined), { hasTraffic });
+      && bodySweep(from, to, body) !== undefined), { hasTraffic });
 }
 
 /** The continuous contact occurs even when the desired end pose is clear beyond a thin obstacle. */
