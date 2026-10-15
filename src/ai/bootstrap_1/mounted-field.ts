@@ -1,15 +1,15 @@
 import { strikeGap } from '../../shared/combat-geometry';
 import { routeWithinDistance } from '../../shared/route-selection';
 import { walkingDistance } from '../../shared/terrain';
-import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
+import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { LOCAL_RANGE } from '../policy/v6/general';
 import { mountedMicro, mountedTargetOrder, mountedThreatReach } from './mounted-micro';
-import { availableMountedRiders, mountedFiringPoint } from './mounted-tasks';
+import { availableMountedRiders, mountedFiringPoint, mountedFiringRouter } from './mounted-tasks';
 import { armedFoes } from './safe-land-route';
-import { threatLandRouter, threatRoadCommands } from './threat-roads';
+import { threatRoadCommands } from './threat-roads';
 import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
 
 const allocations = new WeakMap<GameSnapshot, Map<PlayerId, ReadonlySet<string>>>();
@@ -20,12 +20,19 @@ export function mountedFieldOwns(snapshot: GameSnapshot, owner: PlayerId, unitId
   return frame !== undefined && frame.has(owner) && frame.get(owner)!.has(unitId);
 }
 
+/** Finished towers and armed fighters: what a field target is admitted against and its rider then rides through. */
+function fieldCover(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return {
+    towers: snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
+      && isOpponentOwner(snapshot, owner, building.owner, options)),
+    enemies: snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.kind !== 'worker'
+      && isOpponentOwner(snapshot, owner, unit.owner, options)),
+  };
+}
+
 /** Prospective recruits and active riders assess the same opponent, road and firing cover. */
 export function mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
-  const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
-    && isOpponentOwner(snapshot, owner, building.owner, options));
-  const enemies = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.kind !== 'worker'
-    && isOpponentOwner(snapshot, owner, unit.owner, options));
+  const { towers, enemies } = fieldCover(snapshot, owner, options);
   const engaged = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId !== undefined
       && crew.has(target.order.targetId);
@@ -65,15 +72,14 @@ export const mountedField: AiScript = {
     const frame = allocations.get(snapshot);
     if (frame === undefined) allocations.set(snapshot, new Map([[owner, new Set(plans.map(plan => plan.rider.id))]]));
     else frame.set(owner, new Set(plans.map(plan => plan.rider.id)));
-    const foes = armedFoes(snapshot, owner, options);
+    const foes = armedFoes(snapshot, owner, options), { towers, enemies } = fieldCover(snapshot, owner, options);
     return plans.flatMap(({ rider, target }) => {
       if (strikeGap(rider, target) > rider.attackRange
         && !foes.some(foe => 'order' in foe && (foe.order.type === 'attack' || foe.order.type === 'attackMove')
           && foe.order.targetId === rider.id)) {
-        const towers = foes.filter((foe): foe is Building => !('order' in foe));
-        const defenders = foes.filter((foe): foe is Unit => 'order' in foe && foe.owner !== 'neutral');
-        const point = mountedFiringPoint(snapshot, rider, target, towers, defenders)!;
-        return threatRoadCommands(rider, threatLandRouter(snapshot, rider, foes)(point)!);
+        // The station and road the admission found, against the same cover.
+        const point = mountedFiringPoint(snapshot, rider, target, towers, enemies)!;
+        return threatRoadCommands(rider, mountedFiringRouter(snapshot, rider, towers, enemies)(point)!);
       }
       return [mountedMicro(snapshot, rider, target, foes, { kind: 'field' })];
     });
