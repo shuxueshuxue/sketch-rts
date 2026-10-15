@@ -1,12 +1,14 @@
 import { unitMover } from '../../shared/catalog';
 import { walkDestination, isWalkable } from '../../shared/terrain';
-import { canBoard, deckPlacement, deckPointFits, deckWalkPathExists } from '../../shared/decks';
+import { canBoard, deckLoad, deckPlacement, deckPointFits, deckWalkPathExists } from '../../shared/decks';
 import { connectedSurfacePath, decksCanTransfer } from '../../shared/connected-decks';
 import { capsuleClearsCircles } from '../../shared/navigation-math';
 import { distanceToHull, localToWorld, shipProfile, worldToLocal } from '../../shared/ship-geometry';
 import type { GameCommand, GameSnapshot, PlayerId, Unit, GameMap } from '../../shared/types';
 import { distance } from './spatial';
 import { followStopDistance } from '../../shared/follow-distance';
+import { bodyMass } from '../../shared/physical-body';
+import { isInCabin } from '../../shared/ship-cabin';
 
 const cache = new WeakMap<GameSnapshot, Map<PlayerId, GameCommand[]>>();
 /** AI troops clear a crowded quay with ordinary movement. The usable crossing
@@ -64,13 +66,21 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
     const boarding=pendingDeckBoarding(passenger)!;
     const source=snapshot.units.find(unit=>unit.id===passenger.deck!.shipId);
     const target=snapshot.units.find(unit=>unit.id===boarding.transportId);
-    if(!source || !target || source.id===target.id || target.owner!==owner
-      || !decksCanTransfer(source,target,passenger) || !canBoard(target,passenger,snapshot.units))continue;
+    const profile=target && shipProfile(target);
+    // Preserve physical load and floor eligibility while a bystander still
+    // occupies the worker's receiving spot. Actual boarding remains canBoard.
+    if(!source || !target || !profile || source.id===target.id || target.owner!==owner
+      || shipProfile(passenger) || isInCabin(passenger)
+      || deckLoad(snapshot.units,target)+bodyMass(passenger)>profile.loadCapacity
+      || !deckPlacement(target,passenger,snapshot.units,{x:0,y:0},false)
+      || !decksCanTransfer(source,target,passenger))continue;
     if(passenger.order.type!=='board') {
-      if((passenger.order.type==='hold' || passenger.order.type==='follow')
-        && connectedSurfacePath(passenger,target,snapshot.units,snapshot.map)?.complete)
+      if(passenger.order.type!=='hold' && passenger.order.type!=='follow')continue;
+      if(canBoard(target,passenger,snapshot.units)
+        && connectedSurfacePath(passenger,target,snapshot.units,snapshot.map)?.complete) {
         commands.push({type:'board',unitIds:[passenger.id],transportId:target.id});
-      continue;
+        continue;
+      }
     }
     const bystanders=snapshot.units.filter(unit=>unit.owner===owner && unit.id!==passenger.id && unit.deck
       && [source.id,target.id].includes(unit.deck.shipId) && !unit.cabin && !unit.gangway && !assigned.has(unit.id)

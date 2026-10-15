@@ -525,10 +525,9 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         })
             .sort((a, b) => (ship.kind === "bombardShip" ? Number("order" in a) - Number("order" in b) : Number(!("order" in a)) - Number(!("order" in b))) || distance(a, ship) - distance(b, ship));
         const boat = escorts.get(ship.id);
-        const mission = boat ? navalMemory(options).ferries?.[boat.id] : undefined;
-        // While loading, clear and cover the landing coast. At sea, accompany the boat. On return, cover its retreat.
-        const station = boat ? mission?.phase === "loading" ? offshore(snapshot, mission.to, foes.find(target => target.id === mission.targetId) ?? mission.to) : boat
-            : stations.get(ship.id) ?? fleetGoal ?? home;
+        // Protect the actual ferry through loading, sailing and return. A
+        // remote landing coast is not the loading convoy's current station.
+        const station = boat ?? stations.get(ship.id) ?? fleetGoal ?? home;
         const attackers = boat ? danger.filter(target => "order" in target && (distance(target, boat) < combatCapability(snapshot,target).range + 160 || target.order.type === "attack" && target.order.targetId === boat.id)) : [];
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
         const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));
