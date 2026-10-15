@@ -51,6 +51,6 @@ SDK归档核验使用原四文件14 tests（7+5+1+1），与候选原单文件7 
 
 ## 最终归档闭合
 
-**468个完整原路径、326个gzip、142个显式alias**；原件101,922,966 B，unique gzip 20,241,652 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
+**503个完整原路径、349个gzip、154个显式alias**；原件101,986,044 B，unique gzip 20,253,045 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
 
 原四文件SDK实际 **13/14 pass、1个既有Stage5文档命名失败，exit1，32.132257秒**。唯一offender与旧9f3101闭合blob全文相同；新scope未被列为offender。旧文档及原断言未改，原stdout/stderr/UTC/argv/cwd/exit和精确归因全部保留。SDK执行期间四个追加scope全部SHA不变；随后仅追加归档receipts和明确闭合状态。

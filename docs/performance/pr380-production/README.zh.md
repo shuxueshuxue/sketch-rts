@@ -30,8 +30,25 @@ python3 verify.py --out . --extract /absolute/new-parent/restored
 
 schema3采用lossless gzip与明确alias，去重前全文比较。`analyze-native.py`只读本scope压缩件，独立核对冻结252文件、官方tar91成员、API/CD/digest、三次实际查看记录和56/59边界，不运行游戏或访问网络。最终完整库存、哈希与支持文件pins见`manifest.json`和`verified-closure.json`。同次原SDK四文件执行的真实14项结果独立列入`preparation-notes.json`；不隐去旧文档失败或改原断言。
 
+## 原始首屏图片
+
+以下三张为已实际查看的冻结原PNG的全文副本，尺寸1440×900；直接下载文件与原件长度/SHA一致。图片不改变56/59的严格检查结论。
+
+[fleet 原PNG](media/fleet.png)
+
+![fleet production startup](media/fleet.png)
+
+[capital 原PNG](media/capital.png)
+
+![capital production startup](media/capital.png)
+
+[woods 原PNG](media/woods.png)
+
+![woods production startup](media/woods.png)
+
+
 ## 最终归档闭合
 
-**394个完整原路径、313个gzip、81个显式alias**；原件21,381,548 B，unique gzip 8,954,236 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
+**429个完整原路径、336个gzip、93个显式alias**；原件21,444,626 B，unique gzip 8,965,629 B。全部原件与解压canonical逐块全文比较、全部SHA和精确库存校验通过。
 
 原四文件SDK实际 **13/14 pass、1个既有Stage5文档命名失败，exit1，32.132257秒**。唯一offender与旧9f3101闭合blob全文相同；新scope未被列为offender。旧文档及原断言未改，原stdout/stderr/UTC/argv/cwd/exit和精确归因全部保留。SDK执行期间四个追加scope全部SHA不变；随后仅追加归档receipts和明确闭合状态。
