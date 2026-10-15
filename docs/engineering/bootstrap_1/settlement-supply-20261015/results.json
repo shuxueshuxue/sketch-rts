@@ -1,0 +1,278 @@
+{
+  "full-match": {
+    "tick": 48000,
+    "winner": null,
+    "gold": 386.54,
+    "supply": 109,
+    "cap": 112,
+    "bases": 5,
+    "farmCommands": 12,
+    "stats": {
+      "unitsKilled": {
+        "p0": 4,
+        "p1": 2,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 1
+      },
+      "unitsLost": {
+        "p0": 3,
+        "p1": 4,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 15380,
+        "p1": 5721,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 1,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "continued-match": {
+    "tick": 96000,
+    "winner": null,
+    "gold": 521.74,
+    "supply": 168,
+    "cap": 168,
+    "bases": 9,
+    "farmCommands": 4,
+    "stats": {
+      "unitsKilled": {
+        "p0": 12,
+        "p1": 2,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 1
+      },
+      "unitsLost": {
+        "p0": 3,
+        "p1": 4,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 8
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 22162,
+        "p1": 5721,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 8,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 1,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "resume": {
+    "tick": 54000,
+    "winner": null,
+    "gold": 17,
+    "supply": 129,
+    "cap": 138,
+    "bases": 6,
+    "farmCommands": 6,
+    "stats": {
+      "unitsKilled": {
+        "p0": 2,
+        "p1": 2,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "unitsLost": {
+        "p0": 2,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 2
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 16703,
+        "p1": 5467,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 2,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "control-resume": {
+    "tick": 54000,
+    "winner": null,
+    "gold": 2277.82,
+    "supply": 102,
+    "cap": 102,
+    "bases": 6,
+    "farmCommands": 0,
+    "stats": {
+      "unitsKilled": {
+        "p0": 2,
+        "p1": 2,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "unitsLost": {
+        "p0": 2,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 2
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 14603,
+        "p1": 5467,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 2,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  }
+}

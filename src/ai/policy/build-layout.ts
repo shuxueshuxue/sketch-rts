@@ -128,7 +128,11 @@ function neutralClearanceScore(snapshot: GameSnapshot, owner: PlayerId, point: P
 }
 
 export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot: number, buildingKind: BuildingKind = "farm"): Point {
-  const base = mainBase(snapshot, owner);
+  return safeBuildPointAt(snapshot,owner,mainBase(snapshot,owner),slot,buildingKind);
+}
+
+/** The same spacing and threat scoring at a chosen settlement. */
+export function safeBuildPointAt(snapshot: GameSnapshot, owner: PlayerId, base: Point, slot: number, buildingKind: BuildingKind = "farm"): Point {
   const direction = ownerDirection(snapshot, owner);
   const xSteps = [120, 190, 260, 330].map((x) => x + Math.floor(slot / 4) * 34);
   const ySteps = [100, -100, 180, -180, 260, -260].map((y) => y + (slot % 2 === 0 ? 0 : 28));

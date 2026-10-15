@@ -15,7 +15,7 @@ import { isOpponentOwner } from '../policy/ownership';
 import { recoveryPatients } from './medical-recovery';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { bootstrapExpansionMine, enemyExpansionPower } from './expansion-target';
-import { towerPointFor } from '../policy/build-layout';
+import { safeBuildPointAt, towerPointFor } from '../policy/build-layout';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
@@ -65,6 +65,23 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 // One pending construction of each kind: a walking colony builder does not lock home tech.
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
+  // Supply belongs to the whole player. Once settlers have left the opening
+  // island, an empty original capital must not stop every production queue.
+  // Select a staffed settlement by its builder's actual road, retaining the
+  // common legal spacing and threat scoring at each candidate base.
+  if (kind === 'farm') {
+    const slot=economy.own.filter(building=>building.kind==='farm').length+4;
+    const sites=economy.own.filter(building=>building.kind==='townHall' && building.complete).flatMap(base=>{
+      const site=safeBuildPointAt(economy.snapshot,economy.owner,base,slot,kind);
+      if (!isBuildPlacementClear(economy.snapshot,kind,site)) return [];
+      const arrivals=routeArrivals(economy.snapshot.map,availableV6ConstructionWorkers(economy,site,used)
+        .filter(worker=>worker.carryingGold===0),site,'land');
+      const builder=arrivals.sort((a,b)=>Number(a.unit.order.type!=='idle')-Number(b.unit.order.type!=='idle') || a.ticks-b.ticks)[0];
+      return builder ? [{point:site,idle:builder.unit.order.type==='idle',ticks:builder.ticks}] : [];
+    }).sort((a,b)=>Number(b.idle)-Number(a.idle) || a.ticks-b.ticks);
+    if (!sites.length) return undefined;
+    point=sites[0]!.point;
+  }
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
   const issue = (workers: Unit[]) => issueV6Construction({ ...economy,
