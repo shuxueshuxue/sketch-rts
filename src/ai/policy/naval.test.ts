@@ -576,8 +576,10 @@ describe("the AI on the water", () => {
     expect(command.x).toBeLessThan(at(10, 0).x);
     game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: command.x, y: command.y, radius: 44 });
     expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
-    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ship", kind: "warship", ...at(12, 9), order: { type: "idle" }, hp: 180, maxHp: 180, attackRange: 390 });
-    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attackMove", unitIds: ["ship"], ...at(21, 10) });
+    // A native launch supplies the actual gun and hull. Relabeling a worker
+    // as a warship leaves no battery for the shore-station query to operate.
+    const ship=game.spawnUnit('player','warship',at(12,9).x,at(12,9).y);
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attackMove", unitIds: [ship.id], ...at(21, 10) });
   });
 
   it("raises no shipyard on water an enemy's warship sails, where the ship would sink the site, but under a tower of its own", () => {

@@ -1,4 +1,6 @@
 import { miningHallSite } from "../../shared/mining-site";
+import { automaticShoreTargetReachable } from '../../shared/shore-fire';
+import { outmatchingCoast } from './coastal-risk';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute } from '../../shared/route-selection';
 import { distanceToHull, localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
@@ -394,7 +396,9 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             if (recruits.length) { commands.push({ type: "board", unitIds: recruits.map(unit=>unit.id), transportId: ship.id }); continue; }
         }
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
-        const local = foes.filter(target => canReach(snapshot.map, ship, target, snapshot.units, combatCapability(snapshot,ship).range) && distance(ship, target) < Math.max(900, combatCapability(snapshot,ship).range + 150));
+        const local = foes.filter(target => distance(ship, target) < Math.max(900, combatCapability(snapshot,ship).range + 150)
+            && canReach(snapshot.map, ship, target, snapshot.units, combatCapability(snapshot,ship).range)
+            && automaticShoreTargetReachable(snapshot, ship, target));
         const danger = local.filter(target => "order" in target && combatCapability(snapshot,target).armed);
         const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
         if (ship.hp < ship.maxHp * HURT && home && distance(ship, home) > 250) {
@@ -410,6 +414,19 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         // While loading, clear and cover the landing coast. At sea, accompany the boat. On return, cover its retreat.
         const station = boat ? mission?.phase === "loading" ? offshore(snapshot, mission.to, foes.find(target => target.id === mission.targetId) ?? mission.to) : boat
             : stations.get(ship.id) ?? fleetGoal ?? home;
+        const immediateCoast=outmatchingCoast(snapshot,owner,ship,ship,options);
+        const destinationCoast=immediateCoast.length ? immediateCoast : station ? outmatchingCoast(snapshot,owner,ship,station,options) : [];
+        if (destinationCoast.length) {
+            if (immediateCoast.length) {
+                const center={x:immediateCoast.reduce((sum,unit)=>sum+unit.x,0)/immediateCoast.length,
+                    y:immediateCoast.reduce((sum,unit)=>sum+unit.y,0)/immediateCoast.length};
+                const bearing=Math.atan2(ship.y-center.y,ship.x-center.x);
+                const refuge=nearestShipPose(snapshot.map,ship,{x:ship.x+Math.cos(bearing)*600,y:ship.y+Math.sin(bearing)*600},ship,
+                    pose=>immediateCoast.every(foe=>distanceToHull({...ship,x:pose.x,y:pose.y,sailing:{...ship.sailing!,heading:pose.heading}},foe)>combatCapability(snapshot,foe).range+200));
+                if (refuge && needsMove(ship,refuge)) commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,avoidCombat:true});
+            } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
+            continue;
+        }
         const attackers = boat ? danger.filter(target => "order" in target && (distance(target, boat) < combatCapability(snapshot,target).range + 160 || target.order.type === "attack" && target.order.targetId === boat.id)) : [];
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
         const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));

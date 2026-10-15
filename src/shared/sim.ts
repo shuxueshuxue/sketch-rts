@@ -23,6 +23,7 @@ import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, itemEquippe
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
+import { automaticShoreTargetReachable } from './shore-fire';
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
@@ -1633,7 +1634,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
     // direct array replacement. A stale hull or passenger still uses its
     // original geometry even when this frame's current bodies are grounded.
     if (!navalFrame && target && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
-    if (target && target.hp > 0 && (!navalFrame || automaticTargetAllowed(game.units,unit.owner,target)) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && (!navalFrame && !game.map.terrain || canReach(game.map, unit, target, game.units))) {
+    if (target && target.hp > 0 && (!navalFrame || automaticTargetAllowed(game.units,unit.owner,target)) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && (!navalFrame && !game.map.terrain || canReach(game.map, unit, target, game.units)) && (!navalFrame || automaticShoreTargetReachable(game,unit,target))) {
       const chosen = automaticCombatTarget(game, unit, target, navalFrame);
       if (chosen.id !== order.targetId) unit.order = { ...order, targetId: chosen.id };
       attackMoveTowardTarget(game, unit, chosen, navalFrame);
@@ -3732,6 +3733,7 @@ function shipReachPadding(units: readonly Unit[]) {
 
 function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building, navalFrame = true): boolean {
   if ((navalFrame || game.map.terrain) && !canReach(game.map, unit, candidate, game.units)) return false;
+  if (navalFrame && !automaticShoreTargetReachable(game,unit,candidate)) return false;
   if (unit.owner !== "neutral") return true;
   const origin = neutralResponseOrigin(unit);
   return !origin || distance(candidate, origin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE;
