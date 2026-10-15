@@ -112,12 +112,12 @@ export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     isV9Policy(options) ? v9ExpansionMine : nextExpansionMine, wellGoals));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"], capabilities: typeof wellGoals): Goal[] {
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"], capabilities: typeof wellGoals, farmLimit = FARM_LIMIT): Goal[] {
   const economy = readEconomy(snapshot, owner, options, construct, naval, prepareExpansion, chooseMine);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
-  return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...capabilities(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
+  return [...supplyGoals(economy, farmLimit), ...workerGoals(economy), ...threatGoals(economy), ...capabilities(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"], prepareExpansion: Economy["prepareExpansion"], chooseMine: Economy["chooseMine"]): Economy {
@@ -188,10 +188,10 @@ function have(economy: Omit<Economy, "phase">, kind: TrainableUnitKind) {
   return economy.intel.army.filter((unit) => unit.kind === kind).length + economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === kind).length, 0);
 }
 
-function supplyGoals(economy: Economy): Goal[] {
+function supplyGoals(economy: Economy, farmLimit: number): Goal[] {
   const player = playerState(economy.snapshot, economy.owner);
   const farms = economy.own.filter((building) => building.kind === "farm");
-  if (farms.some((farm) => !farm.complete) || farms.length >= FARM_LIMIT) return [];
+  if (farms.some((farm) => !farm.complete) || farms.length >= farmLimit) return [];
   const producers = economy.own.filter((building) => building.complete && (building.kind === "townHall" || isCoreProductionBuilding(building))).length;
   if (player.supplyCap - projectedSupplyUsed(economy.snapshot, economy.owner) > producers * 2) return [];
   const point = safeMainBuildPoint(economy.snapshot, economy.owner, farms.length + 4, "farm");

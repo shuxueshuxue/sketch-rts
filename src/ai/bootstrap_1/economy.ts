@@ -134,7 +134,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
     (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
-    economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)]);
+    economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)],
+    // Candidate supply follows the next production wave, not the legacy
+    // fifteen-farm ceiling. Construction still pays ordinary gold.
+    Number.POSITIVE_INFINITY);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
