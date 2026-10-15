@@ -186,12 +186,14 @@ function coastPassageClear(map: SeaMap, ship: Unit, hull: readonly Point[], from
   // Linear interpolation error of a rotating vertex is at most R Δθ² / 8.
   // The expanded convex envelope contains the entire intermediate hull.
   const error = turn ? radius * (turn / steps) ** 2 / 8 + 1e-7 : 0;
+  // A step's end pose is the next step's start pose (the same fraction), so its outline is computed once.
+  let start = outline(hull, shipPoseAt(from,to,0/steps));
   for (let i = 0; i < steps; i++) {
-    const a = shipPoseAt(from,to,i/steps);
-    const b = shipPoseAt(from,to,(i+1)/steps);
-    const envelope = convexHull([...outline(hull, a), ...outline(hull, b)]);
+    const end = outline(hull, shipPoseAt(from,to,(i+1)/steps));
+    const envelope = convexHull(start.concat(end));
     if (!clearOutline(map, error ? expandConvex(envelope, error) : envelope))
       return false;
+    start = end;
   }
   return true;
 }
