@@ -1,3 +1,4 @@
+import { planShoreTransfers } from './shore-transfer';
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
@@ -120,7 +121,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
     ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
-  const commands = [...cancelled, ...planNavalTacticsWithAssignments(snapshot, owner, options, {
+  const commands = [...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),

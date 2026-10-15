@@ -153,6 +153,14 @@ export function deckStaticPathExists(ship:Unit,passenger:Unit,goal:Point) {
   const next=deckWaypoint(ship,passenger,goal,[],false);
   return Math.hypot(next.x-start.x,next.y-start.y)>1e-7;
 }
+/** Query the single-deck walking graph with live crew bodies included. */
+export function deckWalkPathExists(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[]) {
+  const start=passenger.deck;
+  if(start?.shipId!==ship.id || !deckPointFits(ship,passenger,goal,units))return false;
+  if(Math.hypot(goal.x-start.x,goal.y-start.y)<1e-7)return true;
+  const next=deckWaypoint(ship,passenger,goal,units,true);
+  return Math.hypot(next.x-start.x,next.y-start.y)>1e-7;
+}
 export function moveOnDeck(passenger:Unit,ship:Unit,world:Point,units:readonly Unit[],pace=1,avoidCrew=true) {
   if(!passenger.deck)return;
   const goal=deckPlacement(ship,passenger,units,worldToLocal(ship,world),avoidCrew);
