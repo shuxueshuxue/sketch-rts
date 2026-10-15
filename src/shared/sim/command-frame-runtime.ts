@@ -3,7 +3,7 @@ import { stepGame, type Game } from "../sim";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
 import { partitionDeliveredPlannerCommands } from "./planner-schedule";
-import type { GameCommand } from "../types";
+import type { GameCommand, GameSnapshot } from "../types";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
@@ -34,7 +34,7 @@ export type RuntimeAdmissionOptions = {
   rejectionLabel?: RuntimeFrameOptions["rejectionLabel"];
 };
 
-type ValidationPurpose = "admission" | "apply";
+export type ValidationPurpose = "admission" | "apply";
 
 export function normalizeCommandFrameEntries<Entry extends { command: GameCommand }>(entries: Entry[]): Entry[] {
   const normalized: Entry[] = [];
@@ -132,12 +132,22 @@ export class CommandFrameRuntime<State = unknown> {
   private validate(commands: CommandEnvelope[], options: { purpose: ValidationPurpose; rejectionLabel?: RuntimeFrameOptions["rejectionLabel"] }): void {
     if (commands.length === 0) return;
     // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in frame.ts).
-    const game = this.options.game;
     for (const [index, entry] of commands.entries()) {
-      const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
-      if (!currentCommand) continue;
-      const legality = checkCommandLegality(game, entry.playerId, currentCommand);
-      if (legality && (options.purpose === "admission" || !legality.transient)) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${legality.message}`);
+      const rejection = commandRejection(this.options.game, entry, options.purpose);
+      if (rejection) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${rejection}`);
     }
   }
+}
+
+/**
+ * Why the world would refuse this command now, if it would: on admission any refusal counts, on apply only one that
+ * cannot pass later. The world may be a snapshot of the game, which carries every list these checks read (a page checks
+ * a command against its latest snapshot before the match on its own thread checks it again).
+ */
+export function commandRejection(world: Game | GameSnapshot, entry: CommandEnvelope, purpose: ValidationPurpose): string | undefined {
+  const game = world as Game;
+  const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
+  if (!currentCommand) return undefined;
+  const legality = checkCommandLegality(game, entry.playerId, currentCommand);
+  return legality && (purpose === "admission" || !legality.transient) ? legality.message : undefined;
 }

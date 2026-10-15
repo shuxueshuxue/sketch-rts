@@ -4,24 +4,31 @@ import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
 import { createRoomLifecycleHost, liveRoomToGameSetup } from "../../shared/room-lifecycle";
 import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
-import { createGame } from "../../shared/sim";
-import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
+import { createGame, snapshotGame } from "../../shared/sim";
+import type { GameSetupOptions, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
+import { MatchThreadGameAdapter } from "../match-worker/adapter";
+import type { MatchThreadFactory } from "../match-worker/browser";
 import { LocalGameAdapter, type LocalGameAdapterOptions } from "../net/local-adapter";
 import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
 
 export type StaticSoloDeploymentRuntimeOptions = {
   now?: () => number;
   tickMs?: number;
-  // Where a local match's AI thinks (see @@@think-thread); on the page's thread when absent.
+  // Threads for a local match (see @@@match-thread); without them it runs on the page's thread.
+  matchThreads?: MatchThreadFactory;
+  // Where a page-thread match's AI thinks (see @@@think-thread); on the page's thread when absent.
   aiThinkExecutor?: AiThinkExecutorFactory;
   onRuntimeReady?: () => void;
+  onRuntimeError?: (message: string) => void;
 };
+
+type LocalMatchAdapter = LocalGameAdapter | MatchThreadGameAdapter;
 
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "static" as const;
   private readonly lifecycle = createRoomLifecycleHost();
-  private readonly matches = new Map<string, { adapter: LocalGameAdapter; onRoom: (room: RoomState) => void }>();
+  private readonly matches = new Map<string, { adapter: LocalMatchAdapter; onRoom: (room: RoomState) => void }>();
   private readonly emptyAdapter = new EmptyGameAdapter();
 
   constructor(private readonly options: StaticSoloDeploymentRuntimeOptions = {}) {}
@@ -83,40 +90,52 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     const setup = this.lifecycle.prepareStartRoom(roomId);
     const slot = setup.playerSlots.find((candidate) => candidate.userId === user.id);
     const playerId = slot?.playerId ?? "player";
-    const game = createGame(setup.mapId, setup.options);
-    const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
     const { room } = this.lifecycle.startRoom(roomId);
-    const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
-      aiRuntime,
-      room,
-      finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
-      onClose: () => { if (this.matches.get(room.id)?.adapter === adapter) this.matches.delete(room.id); },
-      onRoomEnded: (ended) => {
-        adapter.close();
-        onRoom(ended);
-      },
-    }));
-    this.matches.set(room.id, { adapter, onRoom });
-    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId, this.options.now), snapshot: adapter.currentSnapshot() };
+    return this.playLocally(room, playerId, setup, onRoom);
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
     if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
     if (!this.lifecycle.hasRoom(room.id)) throw new Error(`Unknown room ${room.id}`);
     this.matches.get(room.id)?.adapter.close();
-    const setup = liveRoomToGameSetup(room);
+    return this.playLocally(room, playerId, liveRoomToGameSetup(room), onRoom);
+  }
+
+  private playLocally(room: RoomState, playerId: PlayerId, setup: { mapId: MapId; options: GameSetupOptions }, onRoom: (room: RoomState) => void): StartedMatch {
     const game = createGame(setup.mapId, setup.options);
-    const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
-    const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
-      aiRuntime,
-      room,
-      finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
-      onClose: () => { if (this.matches.get(room.id)?.adapter === adapter) this.matches.delete(room.id); },
-      onRoomEnded: (ended) => {
-        adapter.close();
-        onRoom(ended);
-      },
-    }));
+    const aiPlayers = setup.options.aiPlayers ?? [];
+    let adapter: LocalMatchAdapter;
+    const onClose = () => { if (this.matches.get(room.id)?.adapter === adapter) this.matches.delete(room.id); };
+    const ended = (finished: RoomState) => {
+      adapter.close();
+      onRoom(finished);
+    };
+    if (this.options.matchThreads) {
+      // The match runs on its own thread and the page only draws it (see @@@match-thread).
+      const threads = this.options.matchThreads({ ai: aiPlayers.length > 0 });
+      adapter = new MatchThreadGameAdapter(threads.port, {
+        type: "local", room, playerId, mapId: setup.mapId, options: setup.options, aiPlayers,
+        ...(setup.options.aiVersions ? { aiVersions: setup.options.aiVersions } : {}),
+        ...(this.options.tickMs === undefined ? {} : { tickMs: this.options.tickMs }),
+        now: this.options.now?.() ?? performance.now(),
+        ...(threads.aiPort ? { aiPort: threads.aiPort } : {}),
+      }, snapshotGame(game), {
+        playerId,
+        checkCommands: true,
+        ...(this.options.now ? { now: this.options.now } : {}),
+        onEnded: (snapshot) => ended(this.lifecycle.finishRoom(room.id, snapshot)),
+        ...(this.options.onRuntimeError ? { onError: this.options.onRuntimeError } : {}),
+        onClose: () => { threads.terminate(); onClose(); },
+      }, threads.aiPort ? [threads.aiPort] : []);
+    } else {
+      adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
+        aiRuntime: createAiRuntime(aiPlayers, setup.options.aiVersions ? { versions: setup.options.aiVersions } : {}),
+        room,
+        finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
+        onClose,
+        onRoomEnded: ended,
+      }));
+    }
     this.matches.set(room.id, { adapter, onRoom });
     return { room, playerId, adapter, chat: createLocalChat(room.id, playerId, this.options.now), snapshot: adapter.currentSnapshot() };
   }
