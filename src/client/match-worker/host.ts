@@ -2,9 +2,9 @@ import { createAiRuntime, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createAiThinkClientExecutor } from "../../ai/think-worker/client";
 import type { AiThinkReply } from "../../ai/think-worker/protocol";
 import type { ServerNetMessage } from "../../shared/net/types";
-import { createGame } from "../../shared/sim";
+import { createGame, warmGameCaches, type Game } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
-import type { GameSnapshot, RoomState } from "../../shared/types";
+import type { GameSetupOptions, GameSnapshot, MapId, RoomState } from "../../shared/types";
 import { LocalGameAdapter } from "../net/local-adapter";
 import { LockstepClient } from "../net/lockstep-client";
 import type { MatchThreadEvent, MatchThreadMessage, MatchThreadSnapshot } from "./protocol";
@@ -26,7 +26,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
         if (message.type === "local") {
           now = message.now;
           const room = message.room;
-          local = new LocalGameAdapter(createGame(message.mapId, message.options), message.playerId, {
+          local = new LocalGameAdapter(warmedGame(message.mapId, message.options), message.playerId, {
             now: () => now,
             ...(message.tickMs === undefined ? {} : { tickMs: message.tickMs }),
             aiRuntime: createAiRuntime(message.aiPlayers, message.aiVersions ? { versions: message.aiVersions } : {}),
@@ -43,7 +43,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
           lockstep = new LockstepClient({
             roomId: message.roomId,
             playerId: message.playerId,
-            engine: new SimulationEngine(createGame(message.mapId, message.options)),
+            engine: new SimulationEngine(warmedGame(message.mapId, message.options)),
             transport: { send: (net) => post({ type: "net", message: net }), onMessage: (handler) => { netHandlers.push(handler); }, close() {} },
             onError: (error) => post({ type: "error", message: error }),
           });
@@ -83,6 +83,13 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
 function withoutGround(snapshot: GameSnapshot): MatchThreadSnapshot {
   const { terrain: _terrain, landmarks: _landmarks, ...map } = snapshot.map;
   return { ...snapshot, map };
+}
+
+// The match's derived navigation is built before its first tick, off the clock.
+function warmedGame(mapId: MapId, options: GameSetupOptions): Game {
+  const game = createGame(mapId, options);
+  warmGameCaches(game);
+  return game;
 }
 
 // The match's AI thinks on its own thread, reached through a port the page connected (see @@@think-thread).

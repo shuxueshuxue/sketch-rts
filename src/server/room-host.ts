@@ -3,7 +3,7 @@ import type { CreateRoomInput, GrandStressRoomOptions, SlotPatch } from "../shar
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiRuntimeFramePlannerState, type AiRuntimeState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../ai/runtime";
 import type { AiScript, AiScriptVersion } from "../ai/policy";
-import { createGame, snapshotGame, type Game } from "../shared/sim";
+import { createGame, snapshotGame, warmGameCaches, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { checksumGame } from "../shared/sim/checksum";
 import { prepareShipPlanningJobs } from "../shared/ship-planning-job";
@@ -280,7 +280,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     startRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       const setup = lifecycle.prepareStartRoom(roomId);
-      const game = createGame(setup.mapId, setup.options);
+      const game = warmedGame(createGame(setup.mapId, setup.options));
       const aiRuntime = createHostedAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions);
       const { room } = lifecycle.startRoom(roomId);
       hosted.room = room;
@@ -307,7 +307,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         ...(options.races ?? setup.options.races ? { races: options.races ?? setup.options.races } : {}),
         ...(options.layout ?? setup.options.layout ? { layout: options.layout ?? setup.options.layout } : {}),
       };
-      const game = createGame(mapId, mergedOptions);
+      const game = warmedGame(createGame(mapId, mergedOptions));
       const aiRuntime = createHostedAiRuntime(mergedOptions.aiPlayers ?? [], mergedOptions.aiVersions);
       const { room } = lifecycle.resetRoom(roomId, mapId);
       hosted.room = room;
@@ -428,7 +428,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const save = saveInput ?? this.readSave(saveId);
       saves.set(save.id, save);
       const room = lifecycle.adoptRoom({ ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const });
-      const game = restoreGameFromSave(save);
+      const game = warmedGame(restoreGameFromSave(save));
       const hosted: HostedRoom = {
         room,
         history: createRoomHistory(),
@@ -562,6 +562,12 @@ function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
   delete hosted.aiRuntime;
   delete hosted.frameRuntime;
   releaseThinkExecutor(hosted);
+}
+
+// A hosted match's derived navigation is built before its first tick, off the room ticker's clock.
+function warmedGame(game: Game): Game {
+  warmGameCaches(game);
+  return game;
 }
 
 function releaseThinkExecutor(hosted: HostedRoom) {

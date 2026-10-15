@@ -4,7 +4,7 @@ import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
 import { createRoomLifecycleHost, liveRoomToGameSetup } from "../../shared/room-lifecycle";
 import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
-import { createGame, snapshotGame } from "../../shared/sim";
+import { createGame, snapshotGame, warmGameCaches } from "../../shared/sim";
 import type { GameSetupOptions, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
 import { MatchThreadGameAdapter } from "../match-worker/adapter";
@@ -128,6 +128,8 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
         onClose: () => { threads.terminate(); onClose(); },
       }, threads.aiPort ? [threads.aiPort] : []);
     } else {
+      // The match ticks here, so its derived navigation is built here, before its first tick.
+      warmGameCaches(game);
       adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
         aiRuntime: createAiRuntime(aiPlayers, setup.options.aiVersions ? { versions: setup.options.aiVersions } : {}),
         room,

@@ -1,4 +1,4 @@
-import { createGame, snapshotGame } from "../../shared/sim";
+import { createGame, snapshotGame, warmGameCaches } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import { MatchThreadGameAdapter } from "../match-worker/adapter";
 import type { MatchThreadFactory } from "../match-worker/browser";
@@ -133,6 +133,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
       adapter = threaded;
       join = () => threaded.join();
     } else {
+      warmGameCaches(game);
       const client = new LockstepClient({
         roomId: room.id,
         playerId,
