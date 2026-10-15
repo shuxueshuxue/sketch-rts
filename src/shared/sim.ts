@@ -52,7 +52,8 @@ import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shi
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
-import { beginShipMotionFrame } from './ship-motion';
+import { beginShipMotionFrame, retainedShipYawRate } from './ship-motion';
+import { followStopDistance } from './follow-distance';
 import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
 import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
@@ -867,6 +868,7 @@ export function stepGame(game: Game) {
     if (!ship.sailing) continue;
     ship.sailing.velocityX = start ? (ship.x - start.x) * SIM_TICKS_PER_SECOND : 0;
     ship.sailing.velocityY = start ? (ship.y - start.y) * SIM_TICKS_PER_SECOND : 0;
+    ship.sailing.yawRate = retainedShipYawRate(ship, start?.heading);
   }
   for (const unit of game.units) if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
   removeExpiredUnits(game);
@@ -1573,7 +1575,7 @@ function updateFollowOrder(game: Game, unit: Unit) {
     if (goal && pace > 0) sailToward(unit, goal, game.map, game.units, pace);
     return;
   }
-  if (distance(unit, target) > Math.max(72, target.radius + unit.radius + 26)) {
+  if (distance(unit, target) > followStopDistance(unit, target)) {
     moveToward(unit, target.x, target.y, game.map, game.units);
   }
 }

@@ -1,11 +1,12 @@
 import { unitMover } from '../../shared/catalog';
 import { walkDestination, isWalkable } from '../../shared/terrain';
-import { canBoard, deckPlacement, deckPointFits, deckStaticPathExists } from '../../shared/decks';
+import { canBoard, deckPlacement, deckPointFits, deckWalkPathExists } from '../../shared/decks';
 import { connectedSurfacePath, decksCanTransfer } from '../../shared/connected-decks';
 import { capsuleClearsCircles } from '../../shared/navigation-math';
 import { distanceToHull, localToWorld, shipProfile, worldToLocal } from '../../shared/ship-geometry';
 import type { GameCommand, GameSnapshot, PlayerId, Unit, GameMap } from '../../shared/types';
 import { distance } from './spatial';
+import { followStopDistance } from '../../shared/follow-distance';
 
 const cache = new WeakMap<GameSnapshot, Map<PlayerId, GameCommand[]>>();
 /** AI troops clear a crowded quay with ordinary movement. The usable crossing
@@ -66,7 +67,8 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
     if(!source || !target || source.id===target.id || target.owner!==owner
       || !decksCanTransfer(source,target,passenger) || !canBoard(target,passenger,snapshot.units))continue;
     if(passenger.order.type!=='board') {
-      if(passenger.order.type==='hold' && connectedSurfacePath(passenger,target,snapshot.units,snapshot.map)?.complete)
+      if((passenger.order.type==='hold' || passenger.order.type==='follow')
+        && connectedSurfacePath(passenger,target,snapshot.units,snapshot.map)?.complete)
         commands.push({type:'board',unitIds:[passenger.id],transportId:target.id});
       continue;
     }
@@ -90,12 +92,14 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
           if(!retreat)continue;
           const at=localToWorld(source,retreat);
           if(distance(passenger,at)<passenger.radius || !connectedSurfacePath(passenger,at,snapshot.units,snapshot.map)?.complete)continue;
+          if(passenger.kind==='worker' && distance(at,source)>followStopDistance(passenger,source))continue;
           const backed={...passenger,...at,deck:{shipId:source.id,...retreat}};
           const units=snapshot.units.map(other=>other.id===passenger.id?backed:other);
           goal=deckYieldPoint(unit,ships,units,snapshot.map,blocks);
           if(!goal)continue;
           commands.push({type:'move',unitIds:[passenger.id],...at,avoidCombat:true},
-            {type:'holdPosition',unitIds:[passenger.id],queued:true},
+            passenger.kind==='worker' ? {type:'follow',unitIds:[passenger.id],targetId:source.id,queued:true}
+              : {type:'holdPosition',unitIds:[passenger.id],queued:true},
             {type:'board',unitIds:[passenger.id],transportId:target.id,queued:true});
           assigned.add(passenger.id);
           break;
@@ -112,7 +116,9 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
 /** Queued boarding keeps a physical yielding maneuver attached to its original crossing. */
 export function pendingDeckBoarding(unit:Unit) {
   return unit.order.type==='board' ? unit.order : unit.deck && (unit.order.type==='hold'
-    || unit.order.type==='move' && unit.order.avoidCombat) ? unit.orderQueue?.find(order=>order.type==='board') : undefined;
+    || unit.order.type==='move' && unit.order.avoidCombat
+    || unit.kind==='worker' && unit.order.type==='follow' && unit.order.targetId===unit.deck.shipId)
+    ? unit.orderQueue?.find(order=>order.type==='board') : undefined;
 }
 function deckYieldPoint(unit:Unit,ships:Unit[],units:readonly Unit[],map:GameMap,blocks:(body:{x:number;y:number;radius:number})=>boolean) {
   for(const ship of [...ships].sort((a,b)=>Number(b.id===unit.deck!.shipId)-Number(a.id===unit.deck!.shipId))) {
@@ -122,13 +128,14 @@ function deckYieldPoint(unit:Unit,ships:Unit[],units:readonly Unit[],map:GameMap
       && !blocks({...unit,...localToWorld(ship,point)});
     const saved=unit.order.type==='move' && (unit.order.deckShipId??unit.deck!.shipId)===ship.id
       ? worldToLocal(ship,unit.order) : undefined;
-    if(saved && clear(saved))return localToWorld(ship,saved);
+    const reachable=(point:{x:number;y:number})=>ship.id===unit.deck!.shipId ? deckWalkPathExists(ship,unit,point,units)
+      : connectedSurfacePath(unit,localToWorld(ship,point),units,map)?.complete;
+    if(saved && clear(saved) && reachable(saved))return localToWorld(ship,saved);
     const candidates:{x:number;y:number}[]=[];
     for(let y=-profile.beam/2;y<=profile.beam/2;y+=4)
       for(let x=-profile.length/2;x<=profile.length/2;x+=4)if(clear({x,y}))candidates.push({x,y});
     const point=candidates.sort((a,b)=>distance(localToWorld(ship,a),unit)-distance(localToWorld(ship,b),unit))
-      .find(point=>ship.id===unit.deck!.shipId ? deckStaticPathExists(ship,unit,point)
-        : connectedSurfacePath(unit,localToWorld(ship,point),units,map)?.complete);
+      .find(reachable);
     if(point)return localToWorld(ship,point);
   }
 }

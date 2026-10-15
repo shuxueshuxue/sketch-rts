@@ -282,6 +282,7 @@ export function recordShipCollision(map: GameMap, ship: Unit, units: readonly Un
     const v = frame.velocities.get(other)!;
     if (v.x * normal.x + v.y * normal.y < 0 && other.sailing) {
       other.sailing.speed = 0; other.sailing.yawRate = 0; other.sailing.velocityX = 0; other.sailing.velocityY = 0;
+      return other;
     }
   }
 }

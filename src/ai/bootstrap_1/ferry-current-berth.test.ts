@@ -72,20 +72,32 @@ it('uses real sequential portrait landings where the original whole-hull unload 
     expect(passengerLandingSpot(candidate.game.map, candidate.boat, passengerId, candidate.game.units)).toEqual(point);
     issuePlayerCommand(candidate.game, 'p0', { type: 'unloadPassenger', transportId: candidate.boat.id, passengerId });
     const passenger = candidate.game.units.find(unit => unit.id === passengerId)!;
+    expect(passenger.hp).toBe(candidate.saved.snapshot.units.find((unit: { id: string }) => unit.id === passengerId).hp);
     expect(passenger.deck).toBeUndefined(); expect(passenger.x).toBe(point.x); expect(passenger.y).toBe(point.y);
     expect(sameGround(candidate.game.map, goal, passenger)).toBe(true);
     expect(candidate.boat.order).toEqual(originalOrder);
   }
   const checkpoint = JSON.parse(JSON.stringify({ snapshot: snapshotGame(candidate.game), nextId: candidate.game.nextId, memories: candidate.saved.memories }));
   const restored = createGame('bareDuel'); restoreSnapshotIntoGame(restored, checkpoint.snapshot, checkpoint.nextId);
-  for (let tick = 0; tick < 45; tick++) { stepGame(original.game); stepGame(candidate.game); stepGame(restored); }
+  const collisionHits: { tick: number; unitId: string; damage: number }[] = [], seenHits = new Set<string>();
+  for (let tick = 0; tick < 45; tick++) {
+    stepGame(original.game); stepGame(candidate.game); stepGame(restored);
+    for (const effect of candidate.game.effects) if (effect.type === 'hit' && effect.unitId === 'unit-p0-archer-2882' && !seenHits.has(effect.id)) {
+      seenHits.add(effect.id); collisionHits.push({ tick: candidate.game.tick, unitId: effect.unitId, damage: effect.damage! });
+    }
+  }
   expect(shipPassengers(original.game.units, original.boat)).toHaveLength(7);
   expect(shipPassengers(candidate.game.units, candidate.boat)).toHaveLength(0);
   expect(snapshotGame(restored)).toEqual(snapshotGame(candidate.game)); expect(restored.nextId).toBe(candidate.game.nextId);
   expect(checkpoint.memories).toEqual(candidate.saved.memories);
   expect(candidate.saved.memories.p0.naval.ferries[candidate.boat.id].phase).toBe('return');
+  // The portrait itself is harmless. The continuing native hull rotates into
+  // this landed archer at 92427; saved actual yaw supplies its kinetic energy.
+  expect(collisionHits).toHaveLength(1); expect(collisionHits[0]).toMatchObject({ tick: 92427, unitId: 'unit-p0-archer-2882' });
+  expect(collisionHits[0]!.damage).toBeCloseTo(.71671636235299, 10);
   for (const { passengerId } of landings) expect(candidate.game.units.find(unit => unit.id === passengerId)!.hp)
-    .toBe(candidate.saved.snapshot.units.find((unit: { id: string }) => unit.id === passengerId).hp);
+    .toBeCloseTo(candidate.saved.snapshot.units.find((unit: { id: string }) => unit.id === passengerId).hp
+      - (passengerId === 'unit-p0-archer-2882' ? collisionHits[0]!.damage : 0), 10);
 });
 
 it('accepts current exposed deck geometry while the stationary hull is turning in place', () => {

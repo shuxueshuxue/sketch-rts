@@ -254,7 +254,7 @@ export type Unit = {
     velocityX?: number;
     velocityY?: number;
     sail?: { angle: number; billow: number; set: number; mode: 'sail' | 'tacking' | 'maneuver' | 'calm-assist' | 'idle' };
-    /** The helm retains its turn rate across ticks and target updates. */
+    /** Actual angular travel per second since the last contact in this tick; retained by the helm. */
     yawRate?: number;
     pursuit?: { targetId: string; phase: 'approach' | 'engage'; moving: boolean };
     /** An idle fleet's saved guard station and current defensive engagement. */

@@ -3,7 +3,8 @@ import { shipSolidTraffic } from './ship-collisions';
 import { reservationTraffic, shipContactGoal, shipRouteTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
-import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, planBeatDeparture, shipPoseAt, shipTackRoute } from "./ship-navigation";
+import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, shipPoseAt } from "./ship-navigation";
+import { planVoyageWindLeg, voyageCompanion as nativeVoyageCompanion } from './ship-voyage-wind';
 import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
 import { advanceShip, shipMotionLimits } from './ship-motion';
@@ -91,19 +92,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const start={x:ship.x,y:ship.y,heading:motion.heading};
   let aim:Point,desired:number;
   const length=shipProfile(ship)!.length;
-  const voyageCompanion=(other:Unit,bearing:number,windPlan=false)=>{
-    if(ship.order.type!=='move' || ship.order.heading!==undefined || ship.order.rendezvousFor!==undefined
-      || point.intent!==undefined || point.heading!==undefined || other===ship || other.owner!==ship.owner
-      || other.order.type!=='move' || other.order.heading!==undefined || other.order.rendezvousFor!==undefined || !other.sailing)return false;
-    if((other.shipParts?.rigging ?? shipPartMax(other).rigging)<=0 || other.sailing.route?.cruise===false)return false;
-    const onward=Math.atan2(other.order.y-other.y,other.order.x-other.x);
-    const otherLength=shipProfile(other)?.length ?? length;
-    const remaining=Math.hypot(other.order.x-other.x,other.order.y-other.y);
-    const clearFinish=Math.hypot(other.order.x-point.x,other.order.y-point.y)>(length+otherLength)*.5;
-    return remaining>1 && (remaining>otherLength || clearFinish)
-      && Math.abs(headingDifference(bearing,onward))<=Math.PI/6
-      && (windPlan || Math.abs(headingDifference(other.sailing.heading,onward))<=Math.PI/6);
-  };
+  const voyageCompanion=(other:Unit,bearing:number,windPlan=false)=>nativeVoyageCompanion(ship,other,point,bearing,windPlan);
   const closeDepartureLeader=(other:Unit,bearing:number)=>{
     const own=shipProfile(ship)!,companion=shipProfile(other);
     if(!companion)return false;
@@ -448,27 +437,22 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         if(next && !route.points.slice(0,index+1).some(point=>point.pivot)){
           const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
           const traffic=shipRouteTraffic(map,ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity);
-          const departure=movingPursuit ? planBeatDeparture(map,ship,next,traffic,route.tackHeading) : undefined;
-          const tack=!departure ? shipTackRoute(map,ship,next,traffic,route.tackHeading) : undefined;
-          if(departure){
+          const adjustment=planVoyageWindLeg(map,ship,next,traffic,units,!!movingPursuit,route.tackHeading);
+          if(adjustment?.kind==='departure'){
             // A moving interception point can lie too close for a full pair
             // of laylines. Start on a productive beat now and re-evaluate
             // after this finite leg, instead of crawling at the no-go edge.
-            route.points=departure;route.end=departure.at(-1)!;route.partial=true;
+            route.points=adjustment.points;route.end=adjustment.points.at(-1)!;route.partial=true;
             route.legX=ship.x;route.legY=ship.y;
           }
-          if(tack){
-            const finish=tack.at(-1)!;
-            const reaches=Math.hypot(finish.x-next.x,finish.y-next.y)<1;
-            if(reaches)route.points.splice(0,index+1,...tack);
+          if(adjustment?.kind==='tack'){
+            if(adjustment.reaches)route.points.splice(0,index+1,...adjustment.points);
             else {
               // A bounded tack replaces the old departure, too. Reusing its
               // original turn arc would send us back to where we set sail.
-              const onward={...ship,x:finish.x,y:finish.y,sailing:{...motion,heading:finish.heading}};
-              const suffix=planVoyageRoute(map,onward,{x:next.x,y:next.y},shipRouteTraffic(map,onward,units.filter(unit=>unit!==ship),Infinity),1024);
-              route.points.splice(0,index+1,...tack,...suffix.points);
-              route.partial ||= suffix.partial;
-              route.end=route.points.at(-1)??finish;
+              route.points.splice(0,index+1,...adjustment.points);
+              route.partial ||= adjustment.partial;
+              route.end=route.points.at(-1)!;
             }
             route.legX=ship.x;route.legY=ship.y;
           }
