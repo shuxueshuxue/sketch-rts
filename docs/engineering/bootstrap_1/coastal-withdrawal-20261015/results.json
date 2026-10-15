@@ -1,0 +1,102 @@
+{
+  "result": {
+    "tick": 96000,
+    "winner": null,
+    "completed": true
+  },
+  "gold": 1861.42,
+  "supply": 146,
+  "cap": 146,
+  "bases": 7,
+  "goals": [],
+  "originalShips": [
+    {
+      "id": "unit-p0-warship-1071",
+      "kind": "warship",
+      "x": 3715.977532780547,
+      "y": 3499.535058492359,
+      "hp": 414.40570585502473,
+      "maxHp": 464,
+      "order": {
+        "type": "hold",
+        "x": 3715.977532780547,
+        "y": 3499.535058492359
+      },
+      "cooldown": 0
+    },
+    {
+      "id": "unit-p0-warship-1119",
+      "kind": "warship",
+      "x": 3456.4589913965124,
+      "y": 3389.46757417263,
+      "hp": 464,
+      "maxHp": 464,
+      "order": {
+        "type": "hold",
+        "x": 3456.4589913965124,
+        "y": 3389.46757417263
+      },
+      "cooldown": 0
+    }
+  ],
+  "stats": {
+    "unitsKilled": {
+      "p0": 7,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 0
+    },
+    "unitsLost": {
+      "p0": 0,
+      "p1": 3,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 4
+    },
+    "buildingsDestroyed": {
+      "p0": 0,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "nonBaseBuildingsDestroyed": {
+      "p0": 0,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "goldSpent": {
+      "p0": 18452,
+      "p1": 5707,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "mercenaryKills": {
+      "p0": 0,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "neutralUnitsKilled": {
+      "p0": 4,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    },
+    "unitsKilledByNeutral": {
+      "p0": 0,
+      "p1": 0,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0
+    }
+  }
+}

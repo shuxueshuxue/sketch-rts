@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { bootstrapGame, bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runAiGameLoop } from '../src/ai/game-runner';
@@ -31,6 +31,11 @@ const purchases: unknown[] = [];
 if (values.frames) mkdirSync(values.out + '.frames', { recursive: true });
 const memories = createAiMemoryProvider();
 const game = bootstrapGame(match);
+function saveReport(completed: boolean) {
+  const temporary=values.out+'.tmp';
+  writeFileSync(temporary,JSON.stringify({subject,result:{tick:game.tick,winner:game.match.winner,completed},rows,purchases})+'\n');
+  renameSync(temporary,values.out!);
+}
 if (values.resume) {
   const previous: { rows: { tick: number; players: Record<PlayerId, { policy: AiPolicyMemory }> }[] } = JSON.parse(readFileSync(values.resume, 'utf8'));
   const row = previous.rows.at(-1)!;
@@ -72,9 +77,12 @@ const result = runAiGameLoop({ ...match, game, commandPlanner }, { onStep: ({ ga
   const context = bootstrapPolicyContext(snapshot, 'p0', subject, { teams: game.teams, memory: structuredClone(memories.get('p0')!) });
   const goals = rankBootstrapGoals(snapshot, 'p0', context).map(({ id, priority, cost }) => ({ id, priority, cost }));
   rows.push(structuredClone({ ...row, goals }));
+  // Write the world first, then publish its matching policy memory. An
+  // interrupted long experiment can resume the last complete checkpoint.
+  saveReport(false);
   console.log(JSON.stringify({ tick: game.tick, players: Object.fromEntries(Object.entries(row.players).map(([owner, player]) => [owner, {
     gold: player.gold, supply: player.supply, cap: player.cap, bases: player.bases.length,
     army: player.units.filter(unit => unit.kind !== 'worker').length,
   }])) }));
 } });
-writeFileSync(values.out, JSON.stringify({ subject, result: { tick: result.game.tick, winner: result.game.match.winner }, rows, purchases }) + '\n');
+saveReport(true);

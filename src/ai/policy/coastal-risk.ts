@@ -3,6 +3,7 @@ import { combatCapability } from '../../shared/combat-capabilities';
 import { canReach } from '../../shared/naval';
 import { isInCabin } from '../../shared/ship-cabin';
 import { distanceToHull, shipProfile } from '../../shared/ship-geometry';
+import { headingDifference, nearestShipPose } from '../../shared/ship-navigation';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isEnemyOwner } from './ownership';
 import { distance, type Point } from './spatial';
@@ -29,4 +30,23 @@ export function outmatchingCoast(snapshot: GameSnapshot, owner: PlayerId, ship: 
   const ours=support.reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
   const theirs=threats.reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
   return theirs*attackMargin(options)>ours ? threats : [];
+}
+
+/** A heading-compatible escape, rather than a point directly opposite the
+ * enemy that makes the hull describe a large turn through its firing zone.
+ * Ordinary movement still plans and executes the actual collision-free road.
+ */
+export function coastalRefuge(snapshot: GameSnapshot, ship: Unit, threats: Unit[]): Point | undefined {
+  const heading=ship.sailing?.heading ?? 0;
+  const candidates=[];
+  for (let i=0;i<16;i++) {
+    const angle=heading+i*Math.PI/8;
+    const pose=nearestShipPose(snapshot.map,ship,{x:ship.x+Math.cos(angle)*600,y:ship.y+Math.sin(angle)*600});
+    if (!pose || distance(ship,pose)<200) continue;
+    const hull={...ship,x:pose.x,y:pose.y,sailing:{...ship.sailing!,heading:pose.heading}};
+    if (threats.some(foe=>distanceToHull(hull,foe)<=combatCapability(snapshot,foe).range+200)) continue;
+    candidates.push({pose,turn:Math.abs(headingDifference(heading,Math.atan2(pose.y-ship.y,pose.x-ship.x))),distance:distance(ship,pose)});
+  }
+  candidates.sort((a,b)=>a.turn-b.turn || a.distance-b.distance);
+  return candidates[0]?.pose;
 }
