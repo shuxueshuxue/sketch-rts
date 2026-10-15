@@ -113,10 +113,23 @@ function coastalBaseThreat(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 }
 /** An unloading enemy convoy is a land threat before its first fighter steps ashore. */
 function incomingLanding(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, hall: Building) {
-    return snapshot.units.some(ship => unitMover(ship.kind) === 'sea'
-        && isOpponentOwner(snapshot, owner, ship.owner, options) && ship.order.type === 'unload'
-        && sameGround(snapshot.map, hall, ship.order)
-        && shipPassengers(snapshot.units, ship).some(unit => combatCapability(snapshot, unit).armed));
+    return snapshot.units.some(ship => {
+        if (unitMover(ship.kind) !== 'sea' || !isOpponentOwner(snapshot, owner, ship.owner, options)
+            || ship.order.type !== 'unload' || !sameGround(snapshot.map, hall, ship.order)) return false;
+        const armed = shipPassengers(snapshot.units, ship).filter(unit => combatCapability(snapshot, unit).armed);
+        if (!armed.length) return false;
+        // An ocean-wide unload intention must not consume a colony's capital.
+        // Keep the existing warning distance, measured along the actual sea
+        // to this destination's connected shore, before anyone steps ashore.
+        const shore = coastOnWater(snapshot, walkableGoal(snapshot.map, ship.order.x, ship.order.y), ship);
+        const approach = shore && walkingDistance(snapshot.map, ship, shore, 'sea');
+        if (approach !== undefined && approach <= HOME_WATERS) return true;
+        // A different usable quay on this same land is already a real landing,
+        // even when the hall or the nominal unload goal is farther away.
+        const ids = new Set(armed.map(unit => unit.id));
+        return currentBerthLandings(snapshot.map, ship, ship.order, snapshot.units)
+            .some(landing => ids.has(landing.passengerId));
+    });
 }
 function economicFerry(unit: Unit, options: AiPolicyContext): boolean {
     if (!ferryCapacity(unit)) return false;
