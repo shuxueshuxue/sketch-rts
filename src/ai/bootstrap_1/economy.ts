@@ -209,15 +209,24 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const bought = new Set<string>();
   const producers = new Set<string>();
   const labs = new Set<string>();
+  let savingDiscretionary = false;
   for (const goal of goals) {
+    const reservedPurchase = navalReservePurchase(goal.id);
+    if (savingDiscretionary && !reservedPurchase) continue;
     if (goal.producer && producers.has(goal.producer)) continue;
     // Fund the existing production wave before spending the remainder on more factories.
     if (goal.productionReserve > 0 && gold < goal.cost + goal.productionReserve) continue;
     const research = goal.id.startsWith('upgrade:')
       ? goal.issue(builders) as Extract<GameCommand, { type: 'research' }> : undefined;
     if (research !== undefined && labs.has(research.buildingId)) continue;
-    if (goal.cost > gold - (navalReservePurchase(goal.id) ? 0 : navalReserve)) {
-      if (goal.save && goal.cost > gold) break;
+    const spendable = gold - (reservedPurchase ? 0 : navalReserve);
+    if (goal.cost > spendable) {
+      if (goal.save) {
+        if (reservedPurchase || navalReserve === 0) break;
+        // Save the discretionary pool against this same affordability gate.
+        // A colony can still spend its protected funds on its own purchases.
+        savingDiscretionary = true;
+      }
       continue;
     }
     const command = research === undefined ? goal.issue(builders) : research;
