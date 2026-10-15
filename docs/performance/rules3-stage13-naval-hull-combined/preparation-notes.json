@@ -1,0 +1,25 @@
+{
+  "previousEvidenceHead": "a02899e4542336ba5cb44bdbf14e7fcddd889ef5",
+  "oldPathsUnchanged": true,
+  "inventoryCutpoint": "2026-10-15T04:55:07.168004+00:00",
+  "frozenOriginalPaths": 1330,
+  "candidateDecision": "HELD_PENDING_FOCUSED_TAIL_ATTRIBUTION_NOT_ADOPTED",
+  "jointCandidateOnly": true,
+  "standaloneNativeRuns": 0,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 33.590561729011824
+  },
+  "allNineScopesUnchangedDuringSdk": true,
+  "oldSdkOffenderExactBlob": true,
+  "originalAssertionsUnchanged": true,
+  "archiveNoEngineRerun": true,
+  "profileTailOutputsExcluded": true,
+  "allFailedAttemptsAndSourceVersionsRetained": true,
+  "proofArrayHashLimitExplicit": true,
+  "storagePlan": "Two capped copies; safe stdout pack;32MiB hard reserve; no deletion."
+}

@@ -1,0 +1,16 @@
+{
+  "complete": true,
+  "archiveOnly": true,
+  "allOriginalBytesCompared": true,
+  "allSourceCommandPhaseRawArithmeticReadbacksPassed": true,
+  "wholeTargetPassed": false,
+  "candidateDecision": "HELD_PENDING_FOCUSED_TAIL_ATTRIBUTION_NOT_ADOPTED",
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 33.590561729011824
+  }
+}
