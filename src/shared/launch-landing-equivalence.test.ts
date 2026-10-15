@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { unitMover } from './catalog';
 import { createBuilding, createUnit } from './map';
 import { LANDING_REACH, landingSpot } from './naval';
-import { distanceToHull, localToWorld, shipProfile } from './ship-geometry';
+import { deckPlacement, deckPointFits } from './decks';
+import { polygonPlanes } from './navigation-math';
+import { isInCabin } from './ship-cabin';
+import { distanceToHull, localToWorld, shipPassengers, shipProfile, type Point } from './ship-geometry';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { createGame } from './sim';
 import { isOpenGround, sameGround, setBuildingBodies, walkableGoal } from './terrain';
@@ -34,6 +37,29 @@ function referenceLandingSpot(map: Pick<GameMap, 'terrain' | 'width' | 'height'>
   return best;
 }
 
+// deckPlacement as it was before its scan stopped allocating a point per grid point.
+function referenceDeckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true, spacing=4) {
+  const profile=shipProfile(ship);
+  if(!profile)return undefined;
+  if(deckPointFits(ship,passenger,preferred,units,occupied))return preferred;
+  const axes=polygonPlanes(profile.deck), radius=passenger.radius+1, thresholds:number[]=[];
+  let crew:Unit[]|undefined;
+  const fits=(point:Point)=>{
+    if(!axes.every((axis,index)=>{
+      const threshold=index<thresholds.length ? thresholds[index]! : (thresholds[index]=axis.min+radius*Math.hypot(axis.x,axis.y)-1e-6);
+      return point.x*axis.x+point.y*axis.y>=threshold;
+    }))return false;
+    if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6))return false;
+    return !occupied || !(crew ??= shipPassengers(units,ship)).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
+  };
+  let best:Point|undefined, score=Infinity;
+  for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
+    const point={x,y}, value=(x-preferred.x)**2+(y-preferred.y)**2;
+    if(value<score && fits(point)){best=point;score=value;}
+  }
+  return best;
+}
+
 // A coast with a ragged shoreline and a few inland lakes, 32-unit cells.
 function coast(): GameMap {
   let cells = '';
@@ -49,7 +75,7 @@ function random(seed: number) {
   return () => { state = (state * 1664525 + 1013904223) >>> 0; return state / 2 ** 32; };
 }
 
-describe('landing and launch searches answer exactly as before', () => {
+describe('landing, launch and deck searches answer exactly as before', () => {
   it('finds the same landing spot as the full scan for every passenger, crowd and unload order', () => {
     const map = coast(), next = random(20261015);
     const kinds: UnitKind[] = ['transport', 'cutter', 'warship', 'carrier'];
@@ -99,6 +125,45 @@ describe('landing and launch searches answer exactly as before', () => {
     }
     expect(landed).toBeGreaterThan(100);
     expect(refused).toBeGreaterThan(10);
+  });
+
+  it('places a passenger on deck exactly where the full scan did, crowded or not, at either spacing', () => {
+    const next = random(616);
+    const kinds: UnitKind[] = ['transport', 'cutter', 'warship', 'carrier'];
+    let placed = 0, full = 0, preferredKept = 0;
+    for (let trial = 0; trial < 400; trial++) {
+      const ship = createUnit('ship', 'player', kinds[trial % kinds.length]!, 600, 600);
+      const profile = shipProfile(ship)!;
+      // Crew on deck (some fallen, some sheltering in a cabin), scattered over and beyond the floor.
+      const crew = Array.from({ length: Math.floor(next() * 16) }, (_, index) => {
+        const unit = createUnit(`crew-${index}`, 'player', (['footman', 'archer', 'knight', 'worker'] as const)[Math.floor(next() * 4)]!, 0, 0);
+        unit.deck = { shipId: ship.id, x: (next() - 0.5) * profile.length, y: (next() - 0.5) * profile.beam };
+        if (next() < 0.1) unit.hp = 0;
+        if (next() < 0.05) unit.cabin = { shipId: ship.id } as unknown as Unit["cabin"];
+        return unit;
+      });
+      const passenger = next() < 0.3 && crew.length ? crew[Math.floor(next() * crew.length)]!
+        : createUnit('boarding', 'player', (['footman', 'archer', 'knight'] as const)[Math.floor(next() * 3)]!, 0, 0);
+      const units = [ship, ...crew, passenger];
+      const occupied = next() < 0.75, spacing = next() < 0.5 ? 2 : 4;
+      // Off the rail and midway between two grid columns (summed as the scan sums them), every row holds a tie that the
+      // scan settles by order.
+      const between = () => {
+        let x = -profile.length / 2;
+        for (let column = Math.floor(next() * profile.length / spacing - 1); column > 0; column--) x += spacing;
+        return { x: x + spacing / 2, y: (next() < 0.5 ? -1 : 1) * (profile.beam / 2 + 5 + next() * 20) };
+      };
+      const shape = next();
+      const preferred = shape < 0.15 ? undefined : shape < 0.45 ? between()
+        : { x: (next() - 0.5) * profile.length * 1.6, y: (next() - 0.5) * profile.beam * 1.6 };
+      const expected = referenceDeckPlacement(ship, passenger, units, preferred, occupied, spacing);
+      expect(deckPlacement(ship, passenger, units, preferred, occupied, spacing)).toEqual(expected);
+      if (!expected) full++; else if (preferred && expected.x === preferred.x && expected.y === preferred.y) preferredKept++; else placed++;
+    }
+    // The preferred fast path, a scanned placement and a full deck are all covered.
+    expect(placed).toBeGreaterThan(150);
+    expect(preferredKept).toBeGreaterThan(10);
+    expect(full).toBeGreaterThan(5);
   });
 
   it('keeps choosing the berth a fresh search would choose while the harbor crowd moves', () => {

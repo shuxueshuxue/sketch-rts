@@ -26,18 +26,34 @@ export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[
   // reached by the original point checks; live crew fields remain per-point.
   const axes=polygonPlanes(profile.deck), radius=passenger.radius+1, thresholds:number[]=[];
   let crew:Unit[]|undefined;
+  // Reached for every grid point that would improve on the best so far, many times a tick (a deck attacker's reach,
+  // walks on deck): plain loops over one probe point, so a scan allocates only the points it keeps.
   const fits=(point:Point)=>{
-    if(!axes.every((axis,index)=>{
+    for(let index=0;index<axes.length;index++){
+      const axis=axes[index]!;
       const threshold=index<thresholds.length ? thresholds[index]! : (thresholds[index]=axis.min+radius*Math.hypot(axis.x,axis.y)-1e-6);
-      return point.x*axis.x+point.y*axis.y>=threshold;
-    }))return false;
-    if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6))return false;
-    return !occupied || !(crew ??= shipPassengers(units,ship)).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
+      if(!(point.x*axis.x+point.y*axis.y>=threshold))return false;
+    }
+    const obstacles=profile.obstacles;
+    for(let index=0;index<obstacles.length;index++){
+      const o=obstacles[index]!;
+      if(Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6)return false;
+    }
+    if(!occupied)return true;
+    crew ??= shipPassengers(units,ship);
+    for(let index=0;index<crew.length;index++){
+      const other=crew[index]!;
+      if(other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6)return false;
+    }
+    return true;
   };
+  const probe={x:0,y:0};
   let best:Point|undefined, score=Infinity;
   for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
-    const point={x,y}, value=(x-preferred.x)**2+(y-preferred.y)**2;
-    if(value<score && fits(point)){best=point;score=value;}
+    const value=(x-preferred.x)**2+(y-preferred.y)**2;
+    if(!(value<score))continue;
+    probe.x=x;probe.y=y;
+    if(fits(probe)){best={x,y};score=value;}
   }
   return best;
 }
