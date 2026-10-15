@@ -2,13 +2,14 @@
  * 1: separate Grove/Ember support casters (also all records without a version).
  * 2: canonical shared priest/summoner and race-specific production relations.
  * 3: guardian scroll cast radius reduced from 280 to 180 world units.
+ * 4: stronger ship hulls, shipyard shipbuilding, ships excluded from barracks attack/health research.
  */
-export const RULES_VERSION = 3;
+export const RULES_VERSION = 4;
 export const PREVIOUS_RULES_VERSION = 1;
 
 export function savedRulesVersion(version: unknown): number {
   if (version === undefined) return PREVIOUS_RULES_VERSION;
-  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
+  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== 3 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
   return version;
 }
 

@@ -48,7 +48,7 @@ describe("projectile looks", () => {
     const effect:WorldEffect={id:'orb',type:'projectile',x:190,y:80,fromX:30,fromY:80,toX:190,toY:80,sourceKind:'priest',owner:'caster',attackKind:'magic',duration:20,remaining:10};
     const images:Uint8ClampedArray[]=[];
     for(const race of ['grove','ember'] as const){
-      const player:PlayerState={race,gold:0,supplyUsed:0,supplyCap:0,upgrades:{weaponTraining:0,reinforcedPlating:0,buildingDurability:0,speedTraining:0,rangeTraining:0,leadership:0}};
+      const player:PlayerState={race,gold:0,supplyUsed:0,supplyCap:0,upgrades:{weaponTraining:0,reinforcedPlating:0,buildingDurability:0,speedTraining:0,rangeTraining:0,leadership:0, shipbuilding: 0}};
       const players:GameSnapshot['players']={caster:player,player,enemy:player,enemy2:player};
       const canvas=createCanvas(220,140),expected=createCanvas(220,140);
       renderWorldEffects({ctx:canvas.getContext('2d') as unknown as CanvasRenderingContext2D,effects:[effect],players,worldToScreen:point=>point,nearScreen:()=>true});

@@ -246,7 +246,7 @@ function snapshotWithPlayerUpgrades(upgrades: Partial<PlayerState["upgrades"]>):
     gold: 0,
     supplyUsed: 0,
     supplyCap: 0,
-    upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0, ...upgrades },
+    upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0, shipbuilding: 0, ...upgrades },
   };
   return {
     tick: 0,

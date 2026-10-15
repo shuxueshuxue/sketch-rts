@@ -61,7 +61,7 @@ const player: PlayerState = {
   gold: 500,
   supplyUsed: 3,
   supplyCap: 10,
-  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0 },
+  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0, shipbuilding: 0 },
 };
 
 const emberForge: Building = {

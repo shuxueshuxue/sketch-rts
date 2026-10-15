@@ -214,14 +214,14 @@ export const UNIT_RULES = {
   gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
   // @@@ships - Both races can board every ship. Troop ferry passengers deal half damage;
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
-  transport: { unitClass: "mechanical", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
-  warship: { unitClass: "mechanical", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  transport: { unitClass: "mechanical", hp: 337.5, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
+  warship: { unitClass: "mechanical", hp: 400, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
   // Four removable cannons are included in the purchase; the hull has no extra intrinsic shot.
-  shipOfTheLine: { unitClass: "mechanical", hp: 740, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { unitClass: "mechanical", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
-  bombardShip: { unitClass: "mechanical", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
-  fireShip: { unitClass: "mechanical", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { unitClass: "mechanical", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
+  shipOfTheLine: { unitClass: "mechanical", hp: 925, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  cutter: { unitClass: "mechanical", hp: 137.5, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
+  bombardShip: { unitClass: "mechanical", hp: 325, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { unitClass: "mechanical", hp: 425, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  carrier: { unitClass: "mechanical", hp: 600, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
   siegeRam: { unitClass: "mechanical", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
   ballista: { unitClass: "mechanical", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
   catapult: { unitClass: "mechanical", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
@@ -376,7 +376,7 @@ export const BUILDING_RULES = {
   // Supply is the tech (see unit-tiers), so it is dear: a farm's 6 cost 120, a hall's 8 are priced the same inside its 400.
   farm: { hp: 320, radius: 30, cost: 120, buildTime: seconds(7), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
   // Ships are built here (see @@@naval); every race builds it, as it does a tower or a farm.
-  shipyard: { hp: 600, radius: 44, cost: 170, buildTime: seconds(12), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0, shore: true },
+  shipyard: { hp: 600, radius: 44, cost: 170, buildTime: seconds(12), researches: ["shipbuilding"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0, shore: true },
 } satisfies Record<string, BuildingRules>;
 
 export const BUILDABLE_BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];
@@ -446,6 +446,8 @@ export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = Object.fromEntri
   BUILDABLE_BUILDING_KINDS.map((kind) => [kind, { ...BUILDING_RULES[kind], trains: TRAINABLE_UNIT_KINDS.filter(unit => Object.values(PRODUCTION).some(units => units[unit]?.at === kind)) }]),
 ) as Record<BuildingKind, BuildingDef>;
 
+const SHIPS = TRAINABLE_UNIT_KINDS.filter(kind => UNIT_DEFS[kind].naval);
+const LAND_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter(kind => kind !== "worker" && !UNIT_DEFS[kind].naval);
 const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "worker");
 
 // @@@share-of-own-stats - Weapons and plating scale each unit's own attack and health, as speed and range already do. A flat
@@ -456,8 +458,17 @@ const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "wo
 // prices return about 1.8 times their gold on that reach, as weapons I and II already did for light units.
 
 const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds">> = {
+  shipbuilding: {
+    affectedUnitKinds: SHIPS,
+    // Cumulative bonuses relative to the hull base, not compounded per level.
+    levels: [
+      { cost: 500, researchTime: seconds(40.5), maxHpMultiplier: 4 / 3, speedMultiplier: 1.2 },
+      { cost: 1000, researchTime: seconds(52.5), maxHpMultiplier: 5 / 3, speedMultiplier: 1.4 },
+      { cost: 1500, researchTime: seconds(66), maxHpMultiplier: 2, speedMultiplier: 1.6 },
+    ],
+  },
   weaponTraining: {
-    affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    affectedUnitKinds: LAND_COMBAT_UNITS,
     levels: [
       { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
       { cost: 175, researchTime: seconds(46.5), attackMultiplier: 1.3 },
@@ -465,7 +476,7 @@ const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds
     ],
   },
   reinforcedPlating: {
-    affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    affectedUnitKinds: LAND_COMBAT_UNITS,
     levels: [
       { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
       { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
@@ -511,7 +522,7 @@ const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds
   },
 };
 
-export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability", "speedTraining", "rangeTraining", "leadership"];
+export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability", "speedTraining", "rangeTraining", "leadership", "shipbuilding"];
 // Building rules are the single source for where a technology can be researched.
 export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = Object.fromEntries(
   UPGRADE_KINDS.map(kind => [kind, {
