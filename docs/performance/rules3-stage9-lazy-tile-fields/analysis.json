@@ -1,0 +1,2124 @@
+{
+  "complete": true,
+  "candidate": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+  "base": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "decision": "HOLD_NOT_ADOPTED; no candidate code push, PR or merge",
+  "wholeTargetPassed": false,
+  "rawCommitCount": 2,
+  "rawTreeCount": 23,
+  "sourceGraphs": {
+    "r1-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B1": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B2": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-Bplain": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B1": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B2": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-Bplain": {
+      "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "v14": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "light-r1-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "light-r1-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "light-r2-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "light-r2-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    }
+  },
+  "originalFullCommandFiles": 15,
+  "commandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "allFullCommandsByteEqual": true,
+  "sourceRecords": 3615,
+  "pooled": {
+    "A": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.561125179392352,
+        "median": 1.8777650000010908,
+        "p95": 15.692654999998922,
+        "p99": 26.476269999999204,
+        "max": 90.66191299999991,
+        "over16": 2787,
+        "over50": 21
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.7293306216492943,
+        "median": 1.8005120000016177,
+        "p95": 9.293707999999242,
+        "p99": 18.985597000006237,
+        "max": 78.94977700000163,
+        "over16": 892,
+        "over50": 5
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8126102746701397,
+        "median": 0.001401999998051906,
+        "p95": 7.632110000000466,
+        "p99": 17.851795999995375,
+        "max": 68.69340800000009,
+        "over16": 996,
+        "over50": 7
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21619121072916886,
+        "median": 0.2273830000012822,
+        "p95": 0.39449900000181515,
+        "p99": 0.5390909999987343,
+        "max": 18.556749999999738,
+        "over16": 2,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.007350533888889407,
+        "median": 0.0056979999999384745,
+        "p95": 0.017665999999735504,
+        "p99": 0.031967000000804546,
+        "max": 1.041748000003281,
+        "over16": 0,
+        "over50": 0
+      }
+    },
+    "B": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.4840292892534666,
+        "median": 1.850535999998101,
+        "p95": 15.222117000001163,
+        "p99": 25.59284099999786,
+        "max": 104.75976999999989,
+        "over16": 2644,
+        "over50": 14
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.6708391192708354,
+        "median": 1.7744239999956335,
+        "p95": 8.962569999999687,
+        "p99": 18.029193000002124,
+        "max": 67.54084199999988,
+        "over16": 787,
+        "over50": 6
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.7942976193576399,
+        "median": 0.0013819999949191697,
+        "p95": 7.621761999999762,
+        "p99": 17.396004000001994,
+        "max": 93.65001900000016,
+        "over16": 895,
+        "over50": 4
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.2096374349826316,
+        "median": 0.22494999999980791,
+        "p95": 0.378074000000197,
+        "p99": 0.5018370000034338,
+        "max": 13.12644199999977,
+        "over16": 0,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.007240417899311496,
+        "median": 0.005627999998978339,
+        "p95": 0.01785600000221166,
+        "p99": 0.031425999994098675,
+        "max": 0.6198490000024321,
+        "over16": 0,
+        "over50": 0
+      }
+    }
+  },
+  "paired": [
+    {
+      "A": "r1-A1",
+      "B": "r1-B1",
+      "meanDeltaPercent": -2.2625033856678245
+    },
+    {
+      "A": "r1-A2",
+      "B": "r1-B2",
+      "meanDeltaPercent": -1.0965159450966322
+    },
+    {
+      "A": "r2-A1",
+      "B": "r2-B1",
+      "meanDeltaPercent": -1.551597982103392
+    },
+    {
+      "A": "r2-A2",
+      "B": "r2-B2",
+      "meanDeltaPercent": -3.7359360977909595
+    }
+  ],
+  "meanDeltaPercent": -2.1649306400411517,
+  "plain": {
+    "r1-Bplain": {
+      "count": 14400,
+      "mean": 3.5308264686111075,
+      "median": 1.849223000001075,
+      "p95": 15.403879999998026,
+      "p99": 26.247040000002016,
+      "max": 93.29181799999992,
+      "over16": 671,
+      "over50": 5
+    },
+    "r2-Bplain": {
+      "count": 14400,
+      "mean": 3.5239713588888573,
+      "median": 1.8708050000022922,
+      "p95": 15.578857999993488,
+      "p99": 26.29497099999935,
+      "max": 81.22043200000007,
+      "over16": 687,
+      "over50": 2
+    }
+  },
+  "tick9659": {
+    "A": [
+      54.65584200000012,
+      49.32652700000108,
+      48.20763799999986,
+      50.01673800000208
+    ],
+    "B": [
+      21.566687999998976,
+      20.372321000002557,
+      25.32574999999997,
+      20.186248000001797
+    ]
+  },
+  "coldFormalTick0": {
+    "A": [
+      78.16190500000016,
+      79.83883500000002,
+      80.26627800000006,
+      77.42237899999986
+    ],
+    "B": [
+      84.54329900000016,
+      96.55454899999995,
+      79.56528400000002,
+      104.75976999999989
+    ]
+  },
+  "allSlowSamplesAndMinutesVerified": true,
+  "correctnessProofReportedAndAuthenticated": {
+    "status": "PASS",
+    "baselineRef": "0ea5beaee063c8443d66f7654333032b070d51ad",
+    "hashes": {
+      "baseline": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+      "candidate": "6f3815bee4a66875857428c2eaf236f8ffcce2dabd2bb6e192a69badc975166f"
+    },
+    "publicQueries": 42,
+    "privateQueries": 35231,
+    "stateComparisons": 208,
+    "materializedNodeComparisons": 7476,
+    "deferredNodeComparisons": 4136,
+    "coverage": [
+      "cold/warm same-sector",
+      "cross-sector and nonmultiple boundary sectors",
+      "unreachable weighted land/sea and corner rules",
+      "dirty terrain, linked/unlinked mixed windows, retained node/field/edge aliases",
+      "building dirty updates goal seeds snapshot/COW and restore",
+      "in-place cells/levels existing stale-cache contract and fresh Terrain replacement"
+    ],
+    "allocationScope": "Node fields currently retained, distinct nonempty Int32 ArrayBuffer identities only; excludes goals, scratch, process peak and allocation rate.",
+    "allocations": [
+      {
+        "label": "cold same-sector query",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 0,
+          "uniqueInt32Buffers": 0,
+          "int32Bytes": 0
+        }
+      },
+      {
+        "label": "after full local/cross-sector public query sequence",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 36,
+          "uniqueInt32Buffers": 72,
+          "int32Bytes": 26096
+        }
+      },
+      {
+        "label": "local/cross-sector: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        }
+      },
+      {
+        "label": "land: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 56,
+          "fields": 56,
+          "uniqueInt32Buffers": 112,
+          "int32Bytes": 32288
+        },
+        "candidate": {
+          "nodes": 56,
+          "fields": 56,
+          "uniqueInt32Buffers": 112,
+          "int32Bytes": 32288
+        }
+      },
+      {
+        "label": "sea: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 56,
+          "fields": 56,
+          "uniqueInt32Buffers": 112,
+          "int32Bytes": 32288
+        },
+        "candidate": {
+          "nodes": 56,
+          "fields": 56,
+          "uniqueInt32Buffers": 112,
+          "int32Bytes": 32288
+        }
+      },
+      {
+        "label": "sector-corners: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 24,
+          "fields": 24,
+          "uniqueInt32Buffers": 48,
+          "int32Bytes": 10416
+        },
+        "candidate": {
+          "nodes": 24,
+          "fields": 24,
+          "uniqueInt32Buffers": 48,
+          "int32Bytes": 10416
+        }
+      },
+      {
+        "label": "dirty terrain: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        }
+      },
+      {
+        "label": "snapshot: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 64,
+          "fields": 64,
+          "uniqueInt32Buffers": 128,
+          "int32Bytes": 41944
+        },
+        "candidate": {
+          "nodes": 64,
+          "fields": 64,
+          "uniqueInt32Buffers": 128,
+          "int32Bytes": 41944
+        }
+      },
+      {
+        "label": "restored overlay: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        }
+      },
+      {
+        "label": "identity-mutated raw source with cached walk: forced actual consumption of all fields",
+        "baseline": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        },
+        "candidate": {
+          "nodes": 62,
+          "fields": 62,
+          "uniqueInt32Buffers": 124,
+          "int32Bytes": 41216
+        }
+      }
+    ]
+  },
+  "originalTestCoverage": {
+    "status": "PASS",
+    "originalAcceptanceFiles": 23,
+    "originalAcceptanceTests": 185,
+    "originalFiles": [
+      {
+        "path": "src/shared/terrain.test.ts",
+        "tests": 16
+      },
+      {
+        "path": "src/shared/terrain-arrival.test.ts",
+        "tests": 7
+      },
+      {
+        "path": "src/shared/terrain-flow-equivalence.test.ts",
+        "tests": 6
+      },
+      {
+        "path": "src/shared/terrain-multi-source.test.ts",
+        "tests": 9
+      },
+      {
+        "path": "src/shared/terrain-reachable-target.test.ts",
+        "tests": 5
+      },
+      {
+        "path": "src/shared/ship-navigation.test.ts",
+        "tests": 16
+      },
+      {
+        "path": "src/shared/ship-navigation-workspace.test.ts",
+        "tests": 8
+      },
+      {
+        "path": "src/shared/ship-navigation-heuristic.test.ts",
+        "tests": 4
+      },
+      {
+        "path": "src/shared/ship-navigation-potential.test.ts",
+        "tests": 4
+      },
+      {
+        "path": "src/shared/naval.test.ts",
+        "tests": 21
+      },
+      {
+        "path": "src/shared/naval-map-spacing.test.ts",
+        "tests": 11
+      },
+      {
+        "path": "src/shared/sim/restore.test.ts",
+        "tests": 4
+      },
+      {
+        "path": "src/shared/sim/canonical.test.ts",
+        "tests": 4
+      },
+      {
+        "path": "src/shared/sim/command-frame-runtime.test.ts",
+        "tests": 14
+      },
+      {
+        "path": "src/shared/sim/snapshot-building-copy.test.ts",
+        "tests": 6
+      },
+      {
+        "path": "src/shared/sim/snapshot-unit-copy.test.ts",
+        "tests": 5
+      },
+      {
+        "path": "src/shared/snapshot-ground.test.ts",
+        "tests": 1
+      },
+      {
+        "path": "src/shared/savegame.test.ts",
+        "tests": 7
+      },
+      {
+        "path": "src/server/room-planning-restore.test.ts",
+        "tests": 3
+      },
+      {
+        "path": "src/server/room-frame-snapshot.test.ts",
+        "tests": 5
+      },
+      {
+        "path": "src/client/deployment/static-runtime.test.ts",
+        "tests": 9
+      },
+      {
+        "path": "src/shared/map-pool.test.ts",
+        "tests": 6
+      },
+      {
+        "path": "src/shared/generated-map.test.ts",
+        "tests": 14
+      }
+    ],
+    "addedPermanentTests": 3,
+    "shipLaunchTests": 13,
+    "broadRegression": {
+      "files": 56,
+      "passTests": 765,
+      "existingFailTests": 4
+    },
+    "supplement": {
+      "files": 9,
+      "passTests": 63
+    }
+  },
+  "existingFourFailuresExactlyReproducedOnCleanBase": true,
+  "baselineWasTargetedFourFailuresOnly": true,
+  "v14CpuWindows": [
+    {
+      "tick": 0,
+      "negativeTimeDeltas": [
+        {
+          "index": 3,
+          "microseconds": -1
+        }
+      ],
+      "entireDurationWindowAccepted": false,
+      "rawSamplesRetained": 137
+    },
+    {
+      "tick": 6990,
+      "negativeTimeDeltas": [],
+      "entireDurationWindowAccepted": true,
+      "rawSamplesRetained": 76
+    },
+    {
+      "tick": 9375,
+      "negativeTimeDeltas": [],
+      "entireDurationWindowAccepted": true,
+      "rawSamplesRetained": 51
+    },
+    {
+      "tick": 9659,
+      "negativeTimeDeltas": [],
+      "entireDurationWindowAccepted": true,
+      "rawSamplesRetained": 62
+    }
+  ],
+  "v14TilesOfInstrumentedScope": {
+    "name": "tilesOf",
+    "calls": 10,
+    "inclusiveMs": 45.128875000002154,
+    "exclusiveMs": 45.128875000002154,
+    "maxMs": 45.125818000000436
+  },
+  "v14IsDiagnosticNotAcceptance": true,
+  "cold24": {
+    "scope": "Archive-only independent arithmetic and byte checks; no new runtime execution.",
+    "samples": 24,
+    "freshProcessesPerArm": 12,
+    "blocks": 6,
+    "sequence": [
+      {
+        "block": 1,
+        "position": 1,
+        "arm": "A",
+        "label": "01-1-A"
+      },
+      {
+        "block": 1,
+        "position": 2,
+        "arm": "B",
+        "label": "01-2-B"
+      },
+      {
+        "block": 1,
+        "position": 3,
+        "arm": "B",
+        "label": "01-3-B"
+      },
+      {
+        "block": 1,
+        "position": 4,
+        "arm": "A",
+        "label": "01-4-A"
+      },
+      {
+        "block": 2,
+        "position": 1,
+        "arm": "A",
+        "label": "02-1-A"
+      },
+      {
+        "block": 2,
+        "position": 2,
+        "arm": "B",
+        "label": "02-2-B"
+      },
+      {
+        "block": 2,
+        "position": 3,
+        "arm": "B",
+        "label": "02-3-B"
+      },
+      {
+        "block": 2,
+        "position": 4,
+        "arm": "A",
+        "label": "02-4-A"
+      },
+      {
+        "block": 3,
+        "position": 1,
+        "arm": "A",
+        "label": "03-1-A"
+      },
+      {
+        "block": 3,
+        "position": 2,
+        "arm": "B",
+        "label": "03-2-B"
+      },
+      {
+        "block": 3,
+        "position": 3,
+        "arm": "B",
+        "label": "03-3-B"
+      },
+      {
+        "block": 3,
+        "position": 4,
+        "arm": "A",
+        "label": "03-4-A"
+      },
+      {
+        "block": 4,
+        "position": 1,
+        "arm": "A",
+        "label": "04-1-A"
+      },
+      {
+        "block": 4,
+        "position": 2,
+        "arm": "B",
+        "label": "04-2-B"
+      },
+      {
+        "block": 4,
+        "position": 3,
+        "arm": "B",
+        "label": "04-3-B"
+      },
+      {
+        "block": 4,
+        "position": 4,
+        "arm": "A",
+        "label": "04-4-A"
+      },
+      {
+        "block": 5,
+        "position": 1,
+        "arm": "A",
+        "label": "05-1-A"
+      },
+      {
+        "block": 5,
+        "position": 2,
+        "arm": "B",
+        "label": "05-2-B"
+      },
+      {
+        "block": 5,
+        "position": 3,
+        "arm": "B",
+        "label": "05-3-B"
+      },
+      {
+        "block": 5,
+        "position": 4,
+        "arm": "A",
+        "label": "05-4-A"
+      },
+      {
+        "block": 6,
+        "position": 1,
+        "arm": "A",
+        "label": "06-1-A"
+      },
+      {
+        "block": 6,
+        "position": 2,
+        "arm": "B",
+        "label": "06-2-B"
+      },
+      {
+        "block": 6,
+        "position": 3,
+        "arm": "B",
+        "label": "06-3-B"
+      },
+      {
+        "block": 6,
+        "position": 4,
+        "arm": "A",
+        "label": "06-4-A"
+      }
+    ],
+    "removedOutliers": 0,
+    "retries": 0,
+    "observations": [
+      {
+        "block": 1,
+        "position": 1,
+        "arm": "A",
+        "label": "01-1-A",
+        "pid": 334005,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 394.35155100000003,
+          "firstModuleImportMs": 40.422077,
+          "frameObserverInstallMs": 0.007441000000000031,
+          "runtimeConstructionMs": 0.08394300000000499,
+          "createRoomMs": 0.459975,
+          "startRoomMs": 258.25501499999996,
+          "beforeFirstTickMs": 0.0016630000000077416,
+          "firstNativeAdapterTickMs": 95.12143700000001
+        },
+        "parentSpawnToExitWallMs": 442.90969400000006
+      },
+      {
+        "block": 1,
+        "position": 2,
+        "arm": "B",
+        "label": "01-2-B",
+        "pid": 334012,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 401.918245,
+          "firstModuleImportMs": 40.46214499999999,
+          "frameObserverInstallMs": 0.006480000000010477,
+          "runtimeConstructionMs": 0.08362299999998868,
+          "createRoomMs": 0.46286900000001197,
+          "startRoomMs": 264.096025,
+          "beforeFirstTickMs": 0.001511999999991076,
+          "firstNativeAdapterTickMs": 96.80559099999999
+        },
+        "parentSpawnToExitWallMs": 455.2755480000001
+      },
+      {
+        "block": 1,
+        "position": 3,
+        "arm": "B",
+        "label": "01-3-B",
+        "pid": 334019,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 430.161673,
+          "firstModuleImportMs": 42.935546,
+          "frameObserverInstallMs": 0.0063689999999922975,
+          "runtimeConstructionMs": 0.08715800000000229,
+          "createRoomMs": 0.5449600000000032,
+          "startRoomMs": 286.845923,
+          "beforeFirstTickMs": 0.0014820000000099753,
+          "firstNativeAdapterTickMs": 99.74023499999998
+        },
+        "parentSpawnToExitWallMs": 479.1241030000001
+      },
+      {
+        "block": 1,
+        "position": 4,
+        "arm": "A",
+        "label": "01-4-A",
+        "pid": 334026,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 389.742259,
+          "firstModuleImportMs": 47.82318500000001,
+          "frameObserverInstallMs": 0.007751999999996428,
+          "runtimeConstructionMs": 0.08897999999999229,
+          "createRoomMs": 0.4705510000000004,
+          "startRoomMs": 259.734161,
+          "beforeFirstTickMs": 0.001511999999991076,
+          "firstNativeAdapterTickMs": 81.61611800000003
+        },
+        "parentSpawnToExitWallMs": 439.83651599999985
+      },
+      {
+        "block": 2,
+        "position": 1,
+        "arm": "A",
+        "label": "02-1-A",
+        "pid": 334033,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 399.72152900000003,
+          "firstModuleImportMs": 42.803262000000004,
+          "frameObserverInstallMs": 0.006810000000001537,
+          "runtimeConstructionMs": 0.08497399999998834,
+          "createRoomMs": 0.42522400000000005,
+          "startRoomMs": 264.861403,
+          "beforeFirstTickMs": 0.0017019999999661195,
+          "firstNativeAdapterTickMs": 91.53815400000002
+        },
+        "parentSpawnToExitWallMs": 449.85023500000034
+      },
+      {
+        "block": 2,
+        "position": 2,
+        "arm": "B",
+        "label": "02-2-B",
+        "pid": 334040,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 406.42785599999996,
+          "firstModuleImportMs": 42.750203,
+          "frameObserverInstallMs": 0.0066599999999965576,
+          "runtimeConstructionMs": 0.0814500000000038,
+          "createRoomMs": 0.4521029999999939,
+          "startRoomMs": 271.681898,
+          "beforeFirstTickMs": 0.001462000000003627,
+          "firstNativeAdapterTickMs": 91.45407999999998
+        },
+        "parentSpawnToExitWallMs": 454.82092699999976
+      },
+      {
+        "block": 2,
+        "position": 3,
+        "arm": "B",
+        "label": "02-3-B",
+        "pid": 334047,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 387.237304,
+          "firstModuleImportMs": 41.073322999999995,
+          "frameObserverInstallMs": 0.007120000000000459,
+          "runtimeConstructionMs": 0.08473500000000911,
+          "createRoomMs": 0.419754999999995,
+          "startRoomMs": 253.194769,
+          "beforeFirstTickMs": 0.001561999999978525,
+          "firstNativeAdapterTickMs": 92.45604000000003
+        },
+        "parentSpawnToExitWallMs": 433.749957
+      },
+      {
+        "block": 2,
+        "position": 4,
+        "arm": "A",
+        "label": "02-4-A",
+        "pid": 334054,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 371.29037,
+          "firstModuleImportMs": 40.63305700000001,
+          "frameObserverInstallMs": 0.007270999999988703,
+          "runtimeConstructionMs": 0.1112330000000128,
+          "createRoomMs": 0.42319099999998855,
+          "startRoomMs": 246.26238800000002,
+          "beforeFirstTickMs": 0.0013920000000098298,
+          "firstNativeAdapterTickMs": 83.85183799999999
+        },
+        "parentSpawnToExitWallMs": 417.5726249999998
+      },
+      {
+        "block": 3,
+        "position": 1,
+        "arm": "A",
+        "label": "03-1-A",
+        "pid": 334061,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 405.016205,
+          "firstModuleImportMs": 44.42571100000001,
+          "frameObserverInstallMs": 0.0051569999999969696,
+          "runtimeConstructionMs": 0.07907600000000059,
+          "createRoomMs": 0.5232879999999938,
+          "startRoomMs": 279.73881800000004,
+          "beforeFirstTickMs": 0.0015020000000163236,
+          "firstNativeAdapterTickMs": 80.24265299999996
+        },
+        "parentSpawnToExitWallMs": 454.22216000000026
+      },
+      {
+        "block": 3,
+        "position": 2,
+        "arm": "B",
+        "label": "03-2-B",
+        "pid": 334068,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 413.307477,
+          "firstModuleImportMs": 43.620209,
+          "frameObserverInstallMs": 0.03367899999999224,
+          "runtimeConstructionMs": 0.11249499999999557,
+          "createRoomMs": 0.43925500000000284,
+          "startRoomMs": 253.86423000000002,
+          "beforeFirstTickMs": 0.0015220000000226719,
+          "firstNativeAdapterTickMs": 115.236087
+        },
+        "parentSpawnToExitWallMs": 465.8679810000003
+      },
+      {
+        "block": 3,
+        "position": 3,
+        "arm": "B",
+        "label": "03-3-B",
+        "pid": 334075,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 406.82160799999997,
+          "firstModuleImportMs": 41.21012400000001,
+          "frameObserverInstallMs": 0.005228000000002453,
+          "runtimeConstructionMs": 0.07849499999998955,
+          "createRoomMs": 0.45568900000000667,
+          "startRoomMs": 265.835245,
+          "beforeFirstTickMs": 0.0017629999999826396,
+          "firstNativeAdapterTickMs": 99.23506400000002
+        },
+        "parentSpawnToExitWallMs": 461.18891799999983
+      },
+      {
+        "block": 3,
+        "position": 4,
+        "arm": "A",
+        "label": "03-4-A",
+        "pid": 334082,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 387.379212,
+          "firstModuleImportMs": 41.172358,
+          "frameObserverInstallMs": 0.005808999999999287,
+          "runtimeConstructionMs": 0.08398299999998926,
+          "createRoomMs": 0.43085200000000157,
+          "startRoomMs": 266.407871,
+          "beforeFirstTickMs": 0.0016019999999912216,
+          "firstNativeAdapterTickMs": 79.27673699999997
+        },
+        "parentSpawnToExitWallMs": 432.31950700000016
+      },
+      {
+        "block": 4,
+        "position": 1,
+        "arm": "A",
+        "label": "04-1-A",
+        "pid": 334089,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 380.775955,
+          "firstModuleImportMs": 42.271541000000006,
+          "frameObserverInstallMs": 0.005718000000001666,
+          "runtimeConstructionMs": 0.10913999999999646,
+          "createRoomMs": 0.4239019999999982,
+          "startRoomMs": 255.95368599999998,
+          "beforeFirstTickMs": 0.001472000000035223,
+          "firstNativeAdapterTickMs": 82.01049599999999
+        },
+        "parentSpawnToExitWallMs": 444.1958400000003
+      },
+      {
+        "block": 4,
+        "position": 2,
+        "arm": "B",
+        "label": "04-2-B",
+        "pid": 334096,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 381.82514499999996,
+          "firstModuleImportMs": 39.829559,
+          "frameObserverInstallMs": 0.00544800000000123,
+          "runtimeConstructionMs": 0.08008699999999891,
+          "createRoomMs": 0.4498299999999986,
+          "startRoomMs": 256.270701,
+          "beforeFirstTickMs": 0.0014520000000288746,
+          "firstNativeAdapterTickMs": 85.18806799999999
+        },
+        "parentSpawnToExitWallMs": 424.9347550000002
+      },
+      {
+        "block": 4,
+        "position": 3,
+        "arm": "B",
+        "label": "04-3-B",
+        "pid": 334103,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 363.649261,
+          "firstModuleImportMs": 41.73551500000001,
+          "frameObserverInstallMs": 0.006208999999998355,
+          "runtimeConstructionMs": 0.12258900000000494,
+          "createRoomMs": 0.4257949999999937,
+          "startRoomMs": 243.70492700000003,
+          "beforeFirstTickMs": 0.001481999999953132,
+          "firstNativeAdapterTickMs": 77.65274400000004
+        },
+        "parentSpawnToExitWallMs": 409.06679600000007
+      },
+      {
+        "block": 4,
+        "position": 4,
+        "arm": "A",
+        "label": "04-4-A",
+        "pid": 334110,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 370.30494500000003,
+          "firstModuleImportMs": 40.38527400000001,
+          "frameObserverInstallMs": 0.0073110000000014,
+          "runtimeConstructionMs": 0.11366699999999241,
+          "createRoomMs": 0.5108689999999996,
+          "startRoomMs": 246.77476,
+          "beforeFirstTickMs": 0.0013519999999971333,
+          "firstNativeAdapterTickMs": 82.51171200000005
+        },
+        "parentSpawnToExitWallMs": 419.99907000000076
+      },
+      {
+        "block": 5,
+        "position": 1,
+        "arm": "A",
+        "label": "05-1-A",
+        "pid": 334117,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 365.603448,
+          "firstModuleImportMs": 40.279289000000006,
+          "frameObserverInstallMs": 0.00595799999999258,
+          "runtimeConstructionMs": 0.08054800000000739,
+          "createRoomMs": 0.513773999999998,
+          "startRoomMs": 245.17360200000002,
+          "beforeFirstTickMs": 0.0015020000000163236,
+          "firstNativeAdapterTickMs": 79.54877499999998
+        },
+        "parentSpawnToExitWallMs": 412.02583799999957
+      },
+      {
+        "block": 5,
+        "position": 2,
+        "arm": "B",
+        "label": "05-2-B",
+        "pid": 334124,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 365.133779,
+          "firstModuleImportMs": 40.812411,
+          "frameObserverInstallMs": 0.005747999999996978,
+          "runtimeConstructionMs": 0.0812790000000092,
+          "createRoomMs": 0.44614500000000135,
+          "startRoomMs": 245.533459,
+          "beforeFirstTickMs": 0.0013720000000034815,
+          "firstNativeAdapterTickMs": 78.25336499999997
+        },
+        "parentSpawnToExitWallMs": 410.1109639999995
+      },
+      {
+        "block": 5,
+        "position": 3,
+        "arm": "B",
+        "label": "05-3-B",
+        "pid": 334131,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 377.389994,
+          "firstModuleImportMs": 44.39085000000001,
+          "frameObserverInstallMs": 0.0071199999999862484,
+          "runtimeConstructionMs": 0.08246100000000922,
+          "createRoomMs": 0.4497300000000024,
+          "startRoomMs": 247.13831400000004,
+          "beforeFirstTickMs": 0.0013619999999718857,
+          "firstNativeAdapterTickMs": 85.320157
+        },
+        "parentSpawnToExitWallMs": 423.273478000001
+      },
+      {
+        "block": 5,
+        "position": 4,
+        "arm": "A",
+        "label": "05-4-A",
+        "pid": 334138,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 397.70153500000004,
+          "firstModuleImportMs": 39.34644,
+          "frameObserverInstallMs": 0.007441000000000031,
+          "runtimeConstructionMs": 0.08023700000000389,
+          "createRoomMs": 0.4204769999999982,
+          "startRoomMs": 266.824904,
+          "beforeFirstTickMs": 0.0017920000000231084,
+          "firstNativeAdapterTickMs": 91.02024399999999
+        },
+        "parentSpawnToExitWallMs": 443.8284969999986
+      },
+      {
+        "block": 6,
+        "position": 1,
+        "arm": "A",
+        "label": "06-1-A",
+        "pid": 334145,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 413.371645,
+          "firstModuleImportMs": 52.15463,
+          "frameObserverInstallMs": 0.0059180000000083055,
+          "runtimeConstructionMs": 0.08316200000000151,
+          "createRoomMs": 0.43547900000000084,
+          "startRoomMs": 277.815788,
+          "beforeFirstTickMs": 0.0016620000000102664,
+          "firstNativeAdapterTickMs": 82.87500599999998
+        },
+        "parentSpawnToExitWallMs": 461.250317
+      },
+      {
+        "block": 6,
+        "position": 2,
+        "arm": "B",
+        "label": "06-2-B",
+        "pid": 334152,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 393.672187,
+          "firstModuleImportMs": 42.886373000000006,
+          "frameObserverInstallMs": 0.008082000000001699,
+          "runtimeConstructionMs": 0.08769900000000064,
+          "createRoomMs": 0.47014899999999216,
+          "startRoomMs": 261.536438,
+          "beforeFirstTickMs": 0.0015220000000226719,
+          "firstNativeAdapterTickMs": 88.68192399999998
+        },
+        "parentSpawnToExitWallMs": 446.84060899999895
+      },
+      {
+        "block": 6,
+        "position": 3,
+        "arm": "B",
+        "label": "06-3-B",
+        "pid": 334159,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 386.593978,
+          "firstModuleImportMs": 42.694061000000005,
+          "frameObserverInstallMs": 0.007089999999990937,
+          "runtimeConstructionMs": 0.08193099999999731,
+          "createRoomMs": 0.4555880000000059,
+          "startRoomMs": 264.035388,
+          "beforeFirstTickMs": 0.002043000000014672,
+          "firstNativeAdapterTickMs": 79.31787700000001
+        },
+        "parentSpawnToExitWallMs": 442.052995
+      },
+      {
+        "block": 6,
+        "position": 4,
+        "arm": "A",
+        "label": "06-4-A",
+        "pid": 334166,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": 379.150334,
+          "firstModuleImportMs": 41.602539,
+          "frameObserverInstallMs": 0.033179000000004066,
+          "runtimeConstructionMs": 0.08778900000000078,
+          "createRoomMs": 0.4250329999999991,
+          "startRoomMs": 255.12488199999999,
+          "beforeFirstTickMs": 0.001642000000003918,
+          "firstNativeAdapterTickMs": 81.87527
+        },
+        "parentSpawnToExitWallMs": 428.45616399999926
+      }
+    ],
+    "byArm": {
+      "A": {
+        "count": 12,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": {
+            "count": 12,
+            "median": 387.379212,
+            "p95": 413.371645,
+            "p99": 413.371645,
+            "max": 413.371645,
+            "mean": 387.86741566666666,
+            "over16": 12,
+            "over50": 12
+          },
+          "firstModuleImportMs": {
+            "count": 12,
+            "median": 41.172358,
+            "p95": 52.15463,
+            "p99": 52.15463,
+            "max": 52.15463,
+            "mean": 42.77661358333334,
+            "over16": 12,
+            "over50": 1
+          },
+          "frameObserverInstallMs": {
+            "count": 12,
+            "median": 0.006810000000001537,
+            "p95": 0.033179000000004066,
+            "p99": 0.033179000000004066,
+            "max": 0.033179000000004066,
+            "mean": 0.008813749999999251,
+            "over16": 0,
+            "over50": 0
+          },
+          "runtimeConstructionMs": {
+            "count": 12,
+            "median": 0.08398299999998926,
+            "p95": 0.11366699999999241,
+            "p99": 0.11366699999999241,
+            "max": 0.11366699999999241,
+            "mean": 0.09056099999999923,
+            "over16": 0,
+            "over50": 0
+          },
+          "createRoomMs": {
+            "count": 12,
+            "median": 0.43085200000000157,
+            "p95": 0.5232879999999938,
+            "p99": 0.5232879999999938,
+            "max": 0.5232879999999938,
+            "mean": 0.45521791666666483,
+            "over16": 0,
+            "over50": 0
+          },
+          "startRoomMs": {
+            "count": 12,
+            "median": 258.25501499999996,
+            "p95": 279.73881800000004,
+            "p99": 279.73881800000004,
+            "max": 279.73881800000004,
+            "mean": 260.24393983333334,
+            "over16": 12,
+            "over50": 12
+          },
+          "beforeFirstTickMs": {
+            "count": 12,
+            "median": 0.001511999999991076,
+            "p95": 0.0017920000000231084,
+            "p99": 0.0017920000000231084,
+            "max": 0.0017920000000231084,
+            "mean": 0.0015662500000056905,
+            "over16": 0,
+            "over50": 0
+          },
+          "firstNativeAdapterTickMs": {
+            "count": 12,
+            "median": 82.01049599999999,
+            "p95": 95.12143700000001,
+            "p99": 95.12143700000001,
+            "max": 95.12143700000001,
+            "mean": 84.29070333333333,
+            "over16": 12,
+            "over50": 12
+          }
+        },
+        "parentSpawnToExitWallMs": {
+          "count": 12,
+          "median": 439.83651599999985,
+          "p95": 461.250317,
+          "p99": 461.250317,
+          "max": 461.250317,
+          "mean": 437.20553858333324,
+          "over16": 12,
+          "over50": 12
+        }
+      },
+      "B": {
+        "count": 12,
+        "timing": {
+          "contiguousImportThroughFirstNativeTickMs": {
+            "count": 12,
+            "median": 387.237304,
+            "p95": 430.161673,
+            "p99": 430.161673,
+            "max": 430.161673,
+            "mean": 392.8448755833333,
+            "over16": 12,
+            "over50": 12
+          },
+          "firstModuleImportMs": {
+            "count": 12,
+            "median": 41.73551500000001,
+            "p95": 44.39085000000001,
+            "p99": 44.39085000000001,
+            "max": 44.39085000000001,
+            "mean": 42.03335991666667,
+            "over16": 12,
+            "over50": 0
+          },
+          "frameObserverInstallMs": {
+            "count": 12,
+            "median": 0.006480000000010477,
+            "p95": 0.03367899999999224,
+            "p99": 0.03367899999999224,
+            "max": 0.03367899999999224,
+            "mean": 0.008769416666664162,
+            "over16": 0,
+            "over50": 0
+          },
+          "runtimeConstructionMs": {
+            "count": 12,
+            "median": 0.08246100000000922,
+            "p95": 0.12258900000000494,
+            "p99": 0.12258900000000494,
+            "max": 0.12258900000000494,
+            "mean": 0.0886668333333341,
+            "over16": 0,
+            "over50": 0
+          },
+          "createRoomMs": {
+            "count": 12,
+            "median": 0.4498299999999986,
+            "p95": 0.5449600000000032,
+            "p99": 0.5449600000000032,
+            "max": 0.5449600000000032,
+            "mean": 0.45598900000000064,
+            "over16": 0,
+            "over50": 0
+          },
+          "startRoomMs": {
+            "count": 12,
+            "median": 256.270701,
+            "p95": 286.845923,
+            "p99": 286.845923,
+            "max": 286.845923,
+            "mean": 259.47810975,
+            "over16": 12,
+            "over50": 12
+          },
+          "beforeFirstTickMs": {
+            "count": 12,
+            "median": 0.0014820000000099753,
+            "p95": 0.002043000000014672,
+            "p99": 0.002043000000014672,
+            "max": 0.002043000000014672,
+            "mean": 0.0015446666666652693,
+            "over16": 0,
+            "over50": 0
+          },
+          "firstNativeAdapterTickMs": {
+            "count": 12,
+            "median": 88.68192399999998,
+            "p95": 115.236087,
+            "p99": 115.236087,
+            "max": 115.236087,
+            "mean": 90.778436,
+            "over16": 12,
+            "over50": 12
+          }
+        },
+        "parentSpawnToExitWallMs": {
+          "count": 12,
+          "median": 442.052995,
+          "p95": 479.1241030000001,
+          "p99": 479.1241030000001,
+          "max": 479.1241030000001,
+          "mean": 442.19225258333336,
+          "over16": 12,
+          "over50": 12
+        }
+      }
+    },
+    "pairedBlocks": [
+      {
+        "block": 1,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 392.04690500000004,
+            "firstModuleImportMs": 44.122631000000005,
+            "frameObserverInstallMs": 0.00759649999999823,
+            "runtimeConstructionMs": 0.08646149999999864,
+            "createRoomMs": 0.4652630000000002,
+            "startRoomMs": 258.99458799999996,
+            "beforeFirstTickMs": 0.0015874999999994088,
+            "firstNativeAdapterTickMs": 88.36877750000002
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 416.039959,
+            "firstModuleImportMs": 41.6988455,
+            "frameObserverInstallMs": 0.0064245000000013874,
+            "runtimeConstructionMs": 0.08539049999999548,
+            "createRoomMs": 0.5039145000000076,
+            "startRoomMs": 275.470974,
+            "beforeFirstTickMs": 0.0014970000000005257,
+            "firstNativeAdapterTickMs": 98.27291299999999
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": 23.993053999999972,
+          "firstModuleImportMs": -2.423785500000008,
+          "frameObserverInstallMs": -0.0011719999999968422,
+          "runtimeConstructionMs": -0.0010710000000031528,
+          "createRoomMs": 0.03865150000000739,
+          "startRoomMs": 16.476386000000048,
+          "beforeFirstTickMs": -9.049999999888314e-05,
+          "firstNativeAdapterTickMs": 9.904135499999967
+        }
+      },
+      {
+        "block": 2,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 385.50594950000004,
+            "firstModuleImportMs": 41.718159500000006,
+            "frameObserverInstallMs": 0.00704049999999512,
+            "runtimeConstructionMs": 0.09810350000000057,
+            "createRoomMs": 0.4242074999999943,
+            "startRoomMs": 255.5618955,
+            "beforeFirstTickMs": 0.0015469999999879747,
+            "firstNativeAdapterTickMs": 87.694996
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 396.83258,
+            "firstModuleImportMs": 41.91176299999999,
+            "frameObserverInstallMs": 0.006889999999998508,
+            "runtimeConstructionMs": 0.08309250000000645,
+            "createRoomMs": 0.43592899999999446,
+            "startRoomMs": 262.4383335,
+            "beforeFirstTickMs": 0.001511999999991076,
+            "firstNativeAdapterTickMs": 91.95506
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": 11.326630499999965,
+          "firstModuleImportMs": 0.1936034999999876,
+          "frameObserverInstallMs": -0.00015049999999661168,
+          "runtimeConstructionMs": -0.015010999999994112,
+          "createRoomMs": 0.011721500000000162,
+          "startRoomMs": 6.876438000000007,
+          "beforeFirstTickMs": -3.499999999689862e-05,
+          "firstNativeAdapterTickMs": 4.260064
+        }
+      },
+      {
+        "block": 3,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 396.1977085,
+            "firstModuleImportMs": 42.799034500000005,
+            "frameObserverInstallMs": 0.005482999999998128,
+            "runtimeConstructionMs": 0.08152949999999493,
+            "createRoomMs": 0.47706999999999766,
+            "startRoomMs": 273.0733445,
+            "beforeFirstTickMs": 0.0015520000000037726,
+            "firstNativeAdapterTickMs": 79.75969499999997
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 410.0645425,
+            "firstModuleImportMs": 42.415166500000005,
+            "frameObserverInstallMs": 0.019453499999997348,
+            "runtimeConstructionMs": 0.09549499999999256,
+            "createRoomMs": 0.44747200000000475,
+            "startRoomMs": 259.8497375,
+            "beforeFirstTickMs": 0.0016425000000026557,
+            "firstNativeAdapterTickMs": 107.23557550000001
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": 13.86683400000004,
+          "firstModuleImportMs": -0.38386799999999965,
+          "frameObserverInstallMs": 0.01397049999999922,
+          "runtimeConstructionMs": 0.013965499999997633,
+          "createRoomMs": -0.029597999999992908,
+          "startRoomMs": -13.223607000000015,
+          "beforeFirstTickMs": 9.049999999888314e-05,
+          "firstNativeAdapterTickMs": 27.475880500000045
+        }
+      },
+      {
+        "block": 4,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 375.54045,
+            "firstModuleImportMs": 41.32840750000001,
+            "frameObserverInstallMs": 0.006514500000001533,
+            "runtimeConstructionMs": 0.11140349999999444,
+            "createRoomMs": 0.4673854999999989,
+            "startRoomMs": 251.36422299999998,
+            "beforeFirstTickMs": 0.001412000000016178,
+            "firstNativeAdapterTickMs": 82.26110400000002
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 372.737203,
+            "firstModuleImportMs": 40.782537000000005,
+            "frameObserverInstallMs": 0.005828499999999792,
+            "runtimeConstructionMs": 0.10133800000000193,
+            "createRoomMs": 0.43781249999999616,
+            "startRoomMs": 249.98781400000001,
+            "beforeFirstTickMs": 0.0014669999999910033,
+            "firstNativeAdapterTickMs": 81.42040600000001
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": -2.803246999999999,
+          "firstModuleImportMs": -0.5458705000000066,
+          "frameObserverInstallMs": -0.0006860000000017408,
+          "runtimeConstructionMs": -0.010065499999992511,
+          "createRoomMs": -0.029573000000002736,
+          "startRoomMs": -1.376408999999967,
+          "beforeFirstTickMs": 5.499999997482519e-05,
+          "firstNativeAdapterTickMs": -0.8406980000000033
+        }
+      },
+      {
+        "block": 5,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 381.6524915,
+            "firstModuleImportMs": 39.8128645,
+            "frameObserverInstallMs": 0.006699499999996306,
+            "runtimeConstructionMs": 0.08039250000000564,
+            "createRoomMs": 0.4671254999999981,
+            "startRoomMs": 255.999253,
+            "beforeFirstTickMs": 0.001647000000019716,
+            "firstNativeAdapterTickMs": 85.28450949999998
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 371.2618865,
+            "firstModuleImportMs": 42.6016305,
+            "frameObserverInstallMs": 0.006433999999991613,
+            "runtimeConstructionMs": 0.08187000000000921,
+            "createRoomMs": 0.4479375000000019,
+            "startRoomMs": 246.33588650000002,
+            "beforeFirstTickMs": 0.0013669999999876836,
+            "firstNativeAdapterTickMs": 81.78676099999998
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": -10.390604999999994,
+          "firstModuleImportMs": 2.7887659999999954,
+          "frameObserverInstallMs": -0.00026550000000469254,
+          "runtimeConstructionMs": 0.0014775000000035732,
+          "createRoomMs": -0.019187999999996208,
+          "startRoomMs": -9.663366499999995,
+          "beforeFirstTickMs": -0.0002800000000320324,
+          "firstNativeAdapterTickMs": -3.4977485
+        }
+      },
+      {
+        "block": 6,
+        "means": {
+          "A": {
+            "contiguousImportThroughFirstNativeTickMs": 396.2609895,
+            "firstModuleImportMs": 46.8785845,
+            "frameObserverInstallMs": 0.019548500000006186,
+            "runtimeConstructionMs": 0.08547550000000115,
+            "createRoomMs": 0.43025599999999997,
+            "startRoomMs": 266.470335,
+            "beforeFirstTickMs": 0.0016520000000070922,
+            "firstNativeAdapterTickMs": 82.37513799999999
+          },
+          "B": {
+            "contiguousImportThroughFirstNativeTickMs": 390.1330825,
+            "firstModuleImportMs": 42.790217000000005,
+            "frameObserverInstallMs": 0.007585999999996318,
+            "runtimeConstructionMs": 0.08481499999999897,
+            "createRoomMs": 0.462868499999999,
+            "startRoomMs": 262.785913,
+            "beforeFirstTickMs": 0.001782500000018672,
+            "firstNativeAdapterTickMs": 83.9999005
+          }
+        },
+        "deltaBMinusA": {
+          "contiguousImportThroughFirstNativeTickMs": -6.127906999999993,
+          "firstModuleImportMs": -4.088367499999997,
+          "frameObserverInstallMs": -0.011962500000009868,
+          "runtimeConstructionMs": -0.0006605000000021732,
+          "createRoomMs": 0.032612499999999045,
+          "startRoomMs": -3.6844219999999837,
+          "beforeFirstTickMs": 0.0001305000000115797,
+          "firstNativeAdapterTickMs": 1.6247625000000028
+        }
+      }
+    ],
+    "pairedParentSpawnToExitWallMs": [
+      {
+        "block": 1,
+        "means": {
+          "A": 441.37310499999995,
+          "B": 467.1998255000001
+        },
+        "deltaBMinusA": 25.826720500000135
+      },
+      {
+        "block": 2,
+        "means": {
+          "A": 433.71143000000006,
+          "B": 444.2854419999999
+        },
+        "deltaBMinusA": 10.574011999999811
+      },
+      {
+        "block": 3,
+        "means": {
+          "A": 443.2708335000002,
+          "B": 463.5284495000001
+        },
+        "deltaBMinusA": 20.25761599999987
+      },
+      {
+        "block": 4,
+        "means": {
+          "A": 432.09745500000054,
+          "B": 417.00077550000015
+        },
+        "deltaBMinusA": -15.096679500000391
+      },
+      {
+        "block": 5,
+        "means": {
+          "A": 427.9271674999991,
+          "B": 416.69222100000025
+        },
+        "deltaBMinusA": -11.234946499998841
+      },
+      {
+        "block": 6,
+        "means": {
+          "A": 444.85324049999963,
+          "B": 444.4468019999995
+        },
+        "deltaBMinusA": -0.40643850000014936
+      }
+    ],
+    "comparisons": {
+      "contiguousImportThroughFirstNativeTickMs": {
+        "mean": {
+          "A": 387.86741566666666,
+          "B": 392.8448755833333,
+          "deltaBMinusA": 4.977459916666646,
+          "deltaPercent": 1.2832890094960379
+        },
+        "median": {
+          "A": 387.379212,
+          "B": 387.237304,
+          "deltaBMinusA": -0.1419080000000008,
+          "deltaPercent": -0.03663283821228921
+        },
+        "p95": {
+          "A": 413.371645,
+          "B": 430.161673,
+          "deltaBMinusA": 16.790028000000007,
+          "deltaPercent": 4.061727068870437
+        },
+        "p99": {
+          "A": 413.371645,
+          "B": 430.161673,
+          "deltaBMinusA": 16.790028000000007,
+          "deltaPercent": 4.061727068870437
+        },
+        "max": {
+          "A": 413.371645,
+          "B": 430.161673,
+          "deltaBMinusA": 16.790028000000007,
+          "deltaPercent": 4.061727068870437
+        }
+      },
+      "firstModuleImportMs": {
+        "mean": {
+          "A": 42.77661358333334,
+          "B": 42.03335991666667,
+          "deltaBMinusA": -0.7432536666666678,
+          "deltaPercent": -1.7375233904823522
+        },
+        "median": {
+          "A": 41.172358,
+          "B": 41.73551500000001,
+          "deltaBMinusA": 0.5631570000000039,
+          "deltaPercent": 1.3678036123167974
+        },
+        "p95": {
+          "A": 52.15463,
+          "B": 44.39085000000001,
+          "deltaBMinusA": -7.76377999999999,
+          "deltaPercent": -14.886080104489267
+        },
+        "p99": {
+          "A": 52.15463,
+          "B": 44.39085000000001,
+          "deltaBMinusA": -7.76377999999999,
+          "deltaPercent": -14.886080104489267
+        },
+        "max": {
+          "A": 52.15463,
+          "B": 44.39085000000001,
+          "deltaBMinusA": -7.76377999999999,
+          "deltaPercent": -14.886080104489267
+        }
+      },
+      "frameObserverInstallMs": {
+        "mean": {
+          "A": 0.008813749999999251,
+          "B": 0.008769416666664162,
+          "deltaBMinusA": -4.4333333335089264e-05,
+          "deltaPercent": -0.5030019382793139
+        },
+        "median": {
+          "A": 0.006810000000001537,
+          "B": 0.006480000000010477,
+          "deltaBMinusA": -0.00032999999999105967,
+          "deltaPercent": -4.845814977841192
+        },
+        "p95": {
+          "A": 0.033179000000004066,
+          "B": 0.03367899999999224,
+          "deltaBMinusA": 0.0004999999999881766,
+          "deltaPercent": 1.5069773048859678
+        },
+        "p99": {
+          "A": 0.033179000000004066,
+          "B": 0.03367899999999224,
+          "deltaBMinusA": 0.0004999999999881766,
+          "deltaPercent": 1.5069773048859678
+        },
+        "max": {
+          "A": 0.033179000000004066,
+          "B": 0.03367899999999224,
+          "deltaBMinusA": 0.0004999999999881766,
+          "deltaPercent": 1.5069773048859678
+        }
+      },
+      "runtimeConstructionMs": {
+        "mean": {
+          "A": 0.09056099999999923,
+          "B": 0.0886668333333341,
+          "deltaBMinusA": -0.0018941666666651286,
+          "deltaPercent": -2.091592039249947
+        },
+        "median": {
+          "A": 0.08398299999998926,
+          "B": 0.08246100000000922,
+          "deltaBMinusA": -0.0015219999999800393,
+          "deltaPercent": -1.8122715311196718
+        },
+        "p95": {
+          "A": 0.11366699999999241,
+          "B": 0.12258900000000494,
+          "deltaBMinusA": 0.008922000000012531,
+          "deltaPercent": 7.8492438438712435
+        },
+        "p99": {
+          "A": 0.11366699999999241,
+          "B": 0.12258900000000494,
+          "deltaBMinusA": 0.008922000000012531,
+          "deltaPercent": 7.8492438438712435
+        },
+        "max": {
+          "A": 0.11366699999999241,
+          "B": 0.12258900000000494,
+          "deltaBMinusA": 0.008922000000012531,
+          "deltaPercent": 7.8492438438712435
+        }
+      },
+      "createRoomMs": {
+        "mean": {
+          "A": 0.45521791666666483,
+          "B": 0.45598900000000064,
+          "deltaBMinusA": 0.0007710833333358091,
+          "deltaPercent": 0.16938773829072243
+        },
+        "median": {
+          "A": 0.43085200000000157,
+          "B": 0.4498299999999986,
+          "deltaBMinusA": 0.018977999999997053,
+          "deltaPercent": 4.40476079953139
+        },
+        "p95": {
+          "A": 0.5232879999999938,
+          "B": 0.5449600000000032,
+          "deltaBMinusA": 0.02167200000000946,
+          "deltaPercent": 4.141505251412171
+        },
+        "p99": {
+          "A": 0.5232879999999938,
+          "B": 0.5449600000000032,
+          "deltaBMinusA": 0.02167200000000946,
+          "deltaPercent": 4.141505251412171
+        },
+        "max": {
+          "A": 0.5232879999999938,
+          "B": 0.5449600000000032,
+          "deltaBMinusA": 0.02167200000000946,
+          "deltaPercent": 4.141505251412171
+        }
+      },
+      "startRoomMs": {
+        "mean": {
+          "A": 260.24393983333334,
+          "B": 259.47810975,
+          "deltaBMinusA": -0.7658300833333556,
+          "deltaPercent": -0.29427393537917235
+        },
+        "median": {
+          "A": 258.25501499999996,
+          "B": 256.270701,
+          "deltaBMinusA": -1.9843139999999835,
+          "deltaPercent": -0.7683544886824304
+        },
+        "p95": {
+          "A": 279.73881800000004,
+          "B": 286.845923,
+          "deltaBMinusA": 7.10710499999999,
+          "deltaPercent": 2.54062165945092
+        },
+        "p99": {
+          "A": 279.73881800000004,
+          "B": 286.845923,
+          "deltaBMinusA": 7.10710499999999,
+          "deltaPercent": 2.54062165945092
+        },
+        "max": {
+          "A": 279.73881800000004,
+          "B": 286.845923,
+          "deltaBMinusA": 7.10710499999999,
+          "deltaPercent": 2.54062165945092
+        }
+      },
+      "beforeFirstTickMs": {
+        "mean": {
+          "A": 0.0015662500000056905,
+          "B": 0.0015446666666652693,
+          "deltaBMinusA": -2.158333334042117e-05,
+          "deltaPercent": -1.3780260712110297
+        },
+        "median": {
+          "A": 0.001511999999991076,
+          "B": 0.0014820000000099753,
+          "deltaBMinusA": -2.99999999811007e-05,
+          "deltaPercent": -1.984126982888741
+        },
+        "p95": {
+          "A": 0.0017920000000231084,
+          "B": 0.002043000000014672,
+          "deltaBMinusA": 0.00025099999999156353,
+          "deltaPercent": 14.006696427920023
+        },
+        "p99": {
+          "A": 0.0017920000000231084,
+          "B": 0.002043000000014672,
+          "deltaBMinusA": 0.00025099999999156353,
+          "deltaPercent": 14.006696427920023
+        },
+        "max": {
+          "A": 0.0017920000000231084,
+          "B": 0.002043000000014672,
+          "deltaBMinusA": 0.00025099999999156353,
+          "deltaPercent": 14.006696427920023
+        }
+      },
+      "firstNativeAdapterTickMs": {
+        "mean": {
+          "A": 84.29070333333333,
+          "B": 90.778436,
+          "deltaBMinusA": 6.487732666666673,
+          "deltaPercent": 7.696854350604351
+        },
+        "median": {
+          "A": 82.01049599999999,
+          "B": 88.68192399999998,
+          "deltaBMinusA": 6.671427999999992,
+          "deltaPercent": 8.134846544520341
+        },
+        "p95": {
+          "A": 95.12143700000001,
+          "B": 115.236087,
+          "deltaBMinusA": 20.114649999999983,
+          "deltaPercent": 21.14628482746742
+        },
+        "p99": {
+          "A": 95.12143700000001,
+          "B": 115.236087,
+          "deltaBMinusA": 20.114649999999983,
+          "deltaPercent": 21.14628482746742
+        },
+        "max": {
+          "A": 95.12143700000001,
+          "B": 115.236087,
+          "deltaBMinusA": 20.114649999999983,
+          "deltaPercent": 21.14628482746742
+        }
+      }
+    },
+    "firstNativeTickMeanAdversePercent": 7.696854350604351,
+    "allInitialBytesEqual": true,
+    "allNativeFrameBytesEqual": true,
+    "allTick1SnapshotBytesEqual": true,
+    "reportedFirstTickChecksum": "21709a99",
+    "snapshotBytes": {
+      "initial": 147891,
+      "tick1": 149578
+    },
+    "firstNativeFrameBytes": 1232,
+    "firstNativeCommands": 10,
+    "sourceEpochs": {
+      "A": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "B": "558550bd1e530df1be246cdf299d87f9f0457ec7"
+    },
+    "builds": {
+      "A": {
+        "gitHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+        "buildMs": 150.74205,
+        "bundleBytes": 2218896,
+        "bundleSha256": "4ea4db214d4a192c8a7f19c0168f76bd10619d41238abe456199da2901d1d57e",
+        "sourceInputCount": 241,
+        "sourceInputBytes": 2811947,
+        "sourceManifestSha256": "1e7fd434649c758e9ff720d42f2e789858d0197972e0ca6e2150e57e209731c1",
+        "parentSpawnToExitWallMs": 346.320856
+      },
+      "B": {
+        "gitHead": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+        "buildMs": 153.423182,
+        "bundleBytes": 2218446,
+        "bundleSha256": "9de78f6da7c24e4e320ee6f81534a62eac166e9ebf002f45cf30fca1dc392361",
+        "sourceInputCount": 241,
+        "sourceInputBytes": 2812451,
+        "sourceManifestSha256": "ef4ca4ba9abadf67f8ef3a7ac628b96ca65a1574286bacea6d9d5d04f128510e",
+        "parentSpawnToExitWallMs": 354.05595400000004
+      }
+    },
+    "sourcePathsChanged": [
+      "src/shared/terrain.ts"
+    ],
+    "gitAuthenticationPerformed": true,
+    "gitInputsAuthenticated": 482,
+    "generatedEntries": {
+      "A": {
+        "path": "/tmp/sketch-rts-cached-connectivity/cold-start-probe-entry.ts",
+        "evidence": "build-A/entry.ts",
+        "bytes": 447,
+        "sha256": "867ae7fb27111f99ee636c64475fc152139dcd27058d3374aa94e83bc7ea6e61",
+        "gitAuthenticationRequired": false
+      },
+      "B": {
+        "path": "/tmp/sketch-rts-lazy-tile-fields/cold-start-probe-entry.ts",
+        "evidence": "build-B/entry.ts",
+        "bytes": 435,
+        "sha256": "03aac5dc2f1481efe00bc113e9282a2c6d37f170f220998a47108c0aaeceb39a",
+        "gitAuthenticationRequired": false
+      }
+    },
+    "toolPinsVerified": [
+      {
+        "path": "METHOD.md",
+        "bytes": 12445,
+        "sha256": "35e79741de89df655082eca9ee8039c239fbcff2ab4c1075465547a1ec57599c"
+      },
+      {
+        "path": "PREPARED-ONLY.txt",
+        "bytes": 133,
+        "sha256": "a060425ed53a6bccd10acebe7b9ca1edd35fede586239fc6db79e3858338f377"
+      },
+      {
+        "path": "SHA256SUMS",
+        "bytes": 1159,
+        "sha256": "f6a57fa4c1c30f9844d0d54ab4803da18631a5c43bbdb3b2a7891921afbf18a5"
+      },
+      {
+        "path": "build-arm.mjs",
+        "bytes": 5352,
+        "sha256": "1bd9e6e7131a1d6073f7b1259e03130af458c341f2b6c3fc9dba9bb4c3cd3544"
+      },
+      {
+        "path": "cold-child.mjs",
+        "bytes": 7358,
+        "sha256": "bc15e72c2a80ed99aa8e6179eaf48824c8ef5f508d7fd98d3e0ac4f25220755e"
+      },
+      {
+        "path": "harness-adaptation.diff",
+        "bytes": 31353,
+        "sha256": "2b82a053aef00bcce58b3ec928a825598fbbb3333f1626b7429e75ce3bf21950"
+      },
+      {
+        "path": "oracle-pins.json",
+        "bytes": 3000,
+        "sha256": "be3dcb648b2c4d93560bc50a8b18f45d9dd70af70fe1429a4b4a143747874528"
+      },
+      {
+        "path": "run-cold-start-abba.mjs",
+        "bytes": 23149,
+        "sha256": "e69ae2a010dc33ff4ebf3b772ad005a655d0414277ed93c8a4a419a2dd84ec0a"
+      },
+      {
+        "path": "source-preparation.json",
+        "bytes": 7031,
+        "sha256": "56330be8189860362ab33645eded0f04c5ac34a544a4033ef2cbc415574089fe"
+      }
+    ],
+    "toolAdaptation": {
+      "scope": "Static archived tool bytes and hunk reconstruction only; no tool execution or JIT/GC causality.",
+      "predeclarationToolPinsVerified": 9,
+      "originalToolPinsVerified": 5,
+      "adaptedToolPinsVerified": 5,
+      "sha256SumsEntriesVerified": 13,
+      "byteIdenticalWorkers": [
+        "build-arm.mjs",
+        "cold-child.mjs"
+      ],
+      "originalArchive": "/tmp/terrain-lazy-fields-cold-proof-tools/original-tools",
+      "diffSha256": "2b82a053aef00bcce58b3ec928a825598fbbb3333f1626b7429e75ce3bf21950",
+      "reconstructedFiles": [
+        {
+          "file": "run-cold-start-abba.mjs",
+          "hunks": 4,
+          "originalBytes": 18032,
+          "originalSha256": "f23bc498ed2d1b2afb023445db6101f88be906be56e4d43b8ee9bfc9206e2e22",
+          "adaptedBytes": 23149,
+          "adaptedSha256": "e69ae2a010dc33ff4ebf3b772ad005a655d0414277ed93c8a4a419a2dd84ec0a",
+          "exactReconstruction": true
+        },
+        {
+          "file": "oracle-pins.json",
+          "hunks": 3,
+          "originalBytes": 1333,
+          "originalSha256": "e103db34a28686b7f78303fd421ab8dc1a23f6465ab5b44a9a5ae736c2279884",
+          "adaptedBytes": 3000,
+          "adaptedSha256": "be3dcb648b2c4d93560bc50a8b18f45d9dd70af70fe1429a4b4a143747874528",
+          "exactReconstruction": true
+        },
+        {
+          "file": "METHOD.md",
+          "hunks": 5,
+          "originalBytes": 10712,
+          "originalSha256": "24c9374733d8f0b1d7f9246b536567f988f829c888e06897253500a378e236b9",
+          "adaptedBytes": 12445,
+          "adaptedSha256": "35e79741de89df655082eca9ee8039c239fbcff2ab4c1075465547a1ec57599c",
+          "exactReconstruction": true
+        }
+      ],
+      "oraclePinsEqualPredeclaration": true
+    },
+    "harness": {
+      "forcedGc": false,
+      "inspector": false,
+      "eagerWarmup": false,
+      "nodeCompileCacheDisabled": true,
+      "predeclarationVerified": true
+    },
+    "limits": [
+      "All 24 observations and their maxima are retained; no discarded samples or retries.",
+      "Nearest-rank median is the sixth ordered observation of twelve; p95/p99 equal the largest of twelve.",
+      "Process-cold JavaScript state only; OS page/disk caches are uncontrolled.",
+      "Contiguous timer and parent spawn-to-exit wall have different boundaries; their difference is not pure launcher cost.",
+      "No JIT or GC causal attribution; no forced-GC, peak-memory, retained-heap or leak conclusion.",
+      "Tick1 checksum is a recorded historical cold-proof value, not a tick1 artifact saved by original V5.",
+      "14400-tick oracle metadata is a separate full-native run; these 24 samples each execute only the first tick.",
+      "Cold-start samples do not establish a population-tail SLA or full-run p99<=16/max<=50."
+    ]
+  },
+  "coldScalarDiagnostic": {
+    "complete": true,
+    "diagnosticOnly": true,
+    "freshProcesses": 2,
+    "counterSlots": 25,
+    "phases": 9,
+    "allComparableCountsEqual": true,
+    "changedTilesPathNotExecutedImportThroughClose": true,
+    "baselineEnsureUnavailableIsNull": true,
+    "coldTick0": {
+      "terrain.tilesOf.entry": 0,
+      "terrain.tilesOf.cold": 0,
+      "terrain.ensureSector.entry": null,
+      "terrain.linkSector.entry": 0,
+      "terrain.redoTiles.entry": 0,
+      "terrain.growBox.entry": 0,
+      "terrain.createRuntime.entry": 4,
+      "terrain.fillClearance.entry": 1,
+      "terrain.wholesOf.cold": 2,
+      "terrain.shoreSpots.cold": 1,
+      "terrain.grow.entry": 18,
+      "terrain.steerPoint.entry": 5,
+      "terrain.walkDestination.entry": 0,
+      "terrain.setBuildingBodies.entry": 6,
+      "sim.stepGame.entry": 1,
+      "sim.snapshotGame.entry": 1,
+      "sim.updateTraining.entry": 1,
+      "ship.shipLaunchPose.entry": 0,
+      "ai.planPresetAiRuntimeCommands.entry": 1,
+      "ai.planAiOwnerCommandEntries.entry": 5,
+      "ai.unitClaims.entry": 5,
+      "ai.navalUnitIds.entry": 5,
+      "ai.islandPlan.entry": 5,
+      "ai.assaultPlan.entry": 5,
+      "ai.shoreSpot.entry": 5
+    },
+    "sourceGraphs": [
+      {
+        "arm": "A",
+        "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+        "originalGitSourceFiles": 241,
+        "exactInverseFromInstrumentedSource": true
+      },
+      {
+        "arm": "B",
+        "head": "558550bd1e530df1be246cdf299d87f9f0457ec7",
+        "originalGitSourceFiles": 241,
+        "exactInverseFromInstrumentedSource": true
+      }
+    ],
+    "allInitialFrameAndTick1FullBytesEqual": true,
+    "firstTickChecksum": "21709a99",
+    "timingIsNotPerformanceEvidence": true,
+    "doesNotExplainUninstrumentedColdAdverse": true,
+    "noGcJitOrOsCauseEstablished": true
+  },
+  "independentColdReportRetained": true,
+  "firstIndependentColdCheckerSourceFrozenBeforeExecution": false,
+  "firstIndependentColdCheckerOnlyExecutionLogsRetained": true,
+  "finalIndependentColdCheckerFullSourceRetained": true,
+  "nearestRank": "ceil(n*p)-1",
+  "removedOutliers": 0,
+  "noGcJitOrOsCausalAttribution": true
+}

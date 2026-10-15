@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "oldEvidenceHead": "608bbb03cc084a7a50c244cfa677a5f6eb260ecd",
+  "oldClosedPathsUnchanged": true,
+  "allNewObjectsAndArchivesUnderTmp": true,
+  "candidateDecision": "HOLD_NOT_ADOPTED",
+  "runtimeCandidateCodeNotPublished": true,
+  "wholeTargetPassed": false,
+  "archiveOnlyNoEngineOrPerformanceRerun": true,
+  "originalAssertionsUnchanged": true,
+  "finalSdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.011161762988195
+  },
+  "sdkOldOffenderExactClosedBlob": true,
+  "allNewScopesShaUnchangedDuringSdk": true,
+  "firstIndependentMedianCheckerSourceWasNotFrozen": true,
+  "finalIndependentCheckerSourceAndFirstExecutionLogsRetained": true,
+  "postSdkCounterDiagnosticAdded": true,
+  "finalNewScopeNamingScanRequired": true,
+  "scopePartitions": [
+    "10 formal native arms; 8 in benefit pool and 2 plain separate",
+    "1 v14 diagnostic; tick0 entire CPU duration window rejected",
+    "4 historical A only, no additional samples",
+    "24 fresh cold processes, separate population"
+  ],
+  "toolFailuresPreserved": [
+    "Missing main480 raw Git object in candidate clone; full frozen API JSON used instead, no fetch",
+    "Dependent initial compression input absent after failed prepare",
+    "Independent external cold checker used two-center average median; corrected checker uses original nearest rank on same24samples"
+  ]
+}

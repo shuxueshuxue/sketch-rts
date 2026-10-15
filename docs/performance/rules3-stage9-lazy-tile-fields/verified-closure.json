@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "complete": true,
+  "scope": "rules3-stage9-lazy-tile-fields",
+  "sourceFiles": 877,
+  "uniquePayloads": 559,
+  "aliases": 318,
+  "originalBytes": 84357132,
+  "storedBytes": 22552850,
+  "allStoredAndDecodedSha256Exact": true,
+  "everyOriginalFullBytesEqualDecodedCanonical": true,
+  "allPinnedSupportFilesExact": true,
+  "strictInventoryAndAliasesVerified": true,
+  "oldClosedPathsUnchanged": true,
+  "originalEvidenceUnmodified": true,
+  "manifestSha256": "08870cbaa4c0102b99dd294b0a1ab6d72abac1078e5bf673e4714460288235f2",
+  "candidateDecision": "HOLD_NOT_ADOPTED",
+  "wholeTargetPassed": false,
+  "wholeNativeOriginalSourceGraphs": 15,
+  "wholeNativeOriginalSourceRecords": 3615,
+  "coldBuildOriginalSourceGraphs": 2,
+  "coldOriginalSourceRecords": 482,
+  "counterOriginalSourceGraphs": 2,
+  "counterOriginalSourceRecords": 482,
+  "counterInstrumentedSourceGraphs": 2,
+  "counterStrippedSourceGraphs": 2,
+  "totalOriginalSourceGraphs": 19,
+  "totalOriginalSourceRecords": 4579,
+  "fullWholeCommandFiles": 15,
+  "freshColdSamples": 24,
+  "archiveAnalysisPassed": true,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.011161762988195
+  },
+  "execution": {
+    "argv": [
+      "/tmp/whole-stage9-archive-tools/finish-v3.py"
+    ],
+    "cwd": "/tmp/whole-stage9-archive-tools",
+    "startedAt": "2026-10-15T02:28:01.145351+00:00",
+    "endedAt": "2026-10-15T02:28:01.608649+00:00",
+    "wallSeconds": 0.46330012200633064
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "complete": true,
+  "archiveOnly": true,
+  "allOriginalFullBytesEqualDecoded": true,
+  "allSourceAndWholeAndColdReadbacksPassed": true,
+  "positiveAliasAndEightRejectCasesPassed": true,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.011161762988195
+  }
+}
