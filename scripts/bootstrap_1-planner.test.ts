@@ -1,4 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { sketchScene } from '../src/sdk/scene';
 import { issueCommandFrame } from '../src/sdk/commands/frame';
 import { snapshotGame, stepGame } from '../src/shared/sim';
@@ -11,6 +17,119 @@ import { createGame } from '../src/shared/sim';
 import { legalBuildPointNear } from '../src/ai/policy/build-layout';
 import { bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runBenchmarkParallelMatch } from '../src/ai/bootstrap_1/worker';
+
+const loaderUrl = new URL('./bootstrap_1-planner.ts', import.meta.url).href;
+const loaderChildPrelude = `
+  import assert from 'node:assert/strict';
+  import childProcess from 'node:child_process';
+  import fs from 'node:fs';
+  import { createHash } from 'node:crypto';
+  import { syncBuiltinESMExports } from 'node:module';
+  import { join } from 'node:path';
+  import { fileURLToPath } from 'node:url';
+  const loader = await import(${JSON.stringify(loaderUrl)});
+  const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+  async function verify() {
+    const directory = loader.frozenPolicyRoot();
+    const first = loader.frozenPolicyModules();
+    assert.equal(loader.frozenPolicyModules(), first);
+    const exported = await first;
+    assert.equal(await loader.frozenPolicyModules(), exported);
+    const names = Object.keys(exported).sort();
+    assert.deepEqual(names, ['checksumGame', 'isOpenGround', 'planAiOwnerCommandEntries', 'runAiGameLoop', 'setBuildingBodies']);
+    const hashes = Object.fromEntries(Object.entries(loader.frozenPolicyManifest.files).map(([name, hash]) => {
+      assert.equal(sha(fs.readFileSync(join(directory, name))), hash);
+      return [name, hash];
+    }));
+    assert.equal(Object.keys(hashes).length, 184);
+    assert.equal(loader.frozenPolicyManifest.rulesVersion, 2);
+    assert.equal(loader.frozenPolicyManifest.revision, 'd1ae110f2edd99f9c7d899ed61557891ab587639');
+    return { files: hashes, exports: Object.fromEntries(names.map(name => {
+      assert.equal(typeof exported[name], 'function');
+      return [name, sha(exported[name].toString())];
+    })) };
+  }
+`;
+
+function loaderChild(code: string, cwd: string) {
+  return JSON.parse(execFileSync(process.execPath, ['--import', createRequire(import.meta.url).resolve('tsx'),
+    '--input-type=module', '--eval', loaderChildPrelude + code], { cwd, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 }));
+}
+
+describe('bootstrap_1 frozen loader initialization', () => {
+  it('exports identical frozen code from the repository and an unrelated non-Git working directory', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'bootstrap_1-loader-cwd-'));
+    try {
+      const code = 'await loader.createBootstrapCommandPlanner(); console.log(JSON.stringify(await verify()));';
+      const external = loaderChild(`
+        assert.notEqual(childProcess.spawnSync('git', ['rev-parse', '--show-toplevel']).status, 0);
+        ${code}`, directory);
+      expect(external).toEqual(loaderChild(code, fileURLToPath(new URL('../', import.meta.url))));
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  }, 15000);
+
+  it.each(['git', 'tar', 'cleanup'])('retries the public planner after %s failure without caching an incomplete tree or masking the error', stage => {
+    const directory = mkdtempSync(join(tmpdir(), 'bootstrap_1-loader-retry-'));
+    try {
+      expect(loaderChild(`
+        const stage = ${JSON.stringify(stage)}, original = new Error('injected archive/extraction failure');
+        const exec = childProcess.execFileSync, make = fs.mkdtempSync, remove = fs.rmSync;
+        const directories = []; let fail = true;
+        fs.mkdtempSync = (...args) => { const path = make(...args); directories.push(path); return path; };
+        childProcess.execFileSync = (command, args, options) => {
+          if (command === 'git') assert.equal(fileURLToPath(options.cwd), fileURLToPath(new URL('../', ${JSON.stringify(loaderUrl)})));
+          if (fail && command === (stage === 'tar' ? 'tar' : 'git')) {
+            fail = false;
+            if (stage === 'tar') fs.writeFileSync(join(directories[0], 'partial'), 'incomplete extraction');
+            throw original;
+          }
+          return exec(command, args, options);
+        };
+        fs.rmSync = (...args) => {
+          if (stage === 'cleanup') throw new Error('injected cleanup failure');
+          return remove(...args);
+        };
+        syncBuiltinESMExports();
+        try {
+          const attempts = await Promise.allSettled([loader.createBootstrapCommandPlanner(), loader.createBootstrapCommandPlanner()]);
+          for (const attempt of attempts) { assert.equal(attempt.status, 'rejected'); assert.equal(attempt.reason, original); }
+          assert.equal(directories.length, 1);
+          assert.equal(fs.existsSync(directories[0]), stage === 'cleanup');
+          fs.rmSync = remove; syncBuiltinESMExports();
+          if (stage === 'cleanup') remove(directories[0], { recursive: true, force: true });
+          await loader.createBootstrapCommandPlanner();
+          assert.equal(directories.length, 2);
+          assert.notEqual(loader.frozenPolicyRoot(), directories[0]);
+          await verify();
+          console.log(JSON.stringify({ retries: 1, originalErrorPreserved: true, files: 184 }));
+        } finally {
+          childProcess.execFileSync = exec; fs.mkdtempSync = make; fs.rmSync = remove; syncBuiltinESMExports();
+          for (const path of directories) remove(path, { recursive: true, force: true });
+        }
+      `, directory)).toEqual({ retries: 1, originalErrorPreserved: true, files: 184 });
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  }, 15000);
+
+  it('retries a failed esbuild while reusing a successfully extracted frozen tree', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'bootstrap_1-loader-build-retry-'));
+    try {
+      expect(loaderChild(`
+        const root = loader.frozenPolicyRoot(), output = join(root, 'planner.mjs');
+        fs.mkdirSync(output);
+        const attempts = await Promise.allSettled([loader.createBootstrapCommandPlanner(), loader.createBootstrapCommandPlanner()]);
+        assert.equal(attempts[0].status, 'rejected'); assert.equal(attempts[1].status, 'rejected');
+        assert.equal(attempts[0].reason, attempts[1].reason);
+        assert.match(attempts[0].reason.message, /planner\\.mjs/);
+        assert.equal(loader.frozenPolicyRoot(), root);
+        fs.rmSync(output, { recursive: true });
+        await loader.createBootstrapCommandPlanner();
+        assert.equal(loader.frozenPolicyRoot(), root);
+        await verify();
+        console.log(JSON.stringify({ reusedRoot: true, files: 184 }));
+      `, directory)).toEqual({ reusedRoot: true, files: 184 });
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  }, 15000);
+});
 
 describe('bootstrap_1 historical opponents on the current engine', () => {
   it('gives the archived planner the same building obstruction field and updates it after native construction', async () => {

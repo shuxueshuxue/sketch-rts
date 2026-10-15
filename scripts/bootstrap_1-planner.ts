@@ -24,12 +24,18 @@ let modules: Promise<HistoricalModules> | undefined;
 /** The acceptance opponents execute their frozen source tree, independent of later live AI changes. */
 export function frozenPolicyRoot(): string {
   if (root) return root;
-  root = mkdtempSync(join(tmpdir(), 'bootstrap_1-frozen-'));
-  const directory = root;
-  process.once('exit', () => rmSync(directory, { recursive: true }));
-  const archive = execFileSync('git', ['archive', frozenPolicyManifest.revision, 'package.json', 'src/ai', 'src/sdk', 'src/shared'],
-    { maxBuffer: 64 * 1024 * 1024 });
-  execFileSync('tar', ['-x', '-C', root], { input: archive });
+  const directory = mkdtempSync(join(tmpdir(), 'bootstrap_1-frozen-'));
+  try {
+    const archive = execFileSync('git', ['archive', frozenPolicyManifest.revision, 'package.json', 'src/ai', 'src/sdk', 'src/shared'],
+      { cwd: new URL('../', import.meta.url), maxBuffer: 64 * 1024 * 1024 });
+    execFileSync('tar', ['-x', '-C', directory], { input: archive });
+  } catch (error) {
+    try { rmSync(directory, { recursive: true, force: true }); }
+    catch { /* Preserve the archive or extraction error if cleanup also fails. */ }
+    throw error;
+  }
+  root = directory;
+  process.once('exit', () => rmSync(directory, { recursive: true, force: true }));
   return root;
 }
 
@@ -41,7 +47,10 @@ export function frozenPolicyModules(): Promise<HistoricalModules> {
       + "export { setBuildingBodies, isOpenGround } from './src/shared/terrain';",
       resolveDir: directory, loader: 'ts' }, bundle: true, platform: 'node', format: 'esm', outfile });
     return import(pathToFileURL(outfile).href) as Promise<HistoricalModules>;
-  })();
+  })().catch(error => {
+    modules = undefined;
+    throw error;
+  });
 }
 
 export async function createBootstrapCommandPlanner(memoryProvider: AiMemoryProvider = createAiMemoryProvider()): Promise<SdkGameCommandPlanner<AiGameAgent>> {
