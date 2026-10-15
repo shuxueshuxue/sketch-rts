@@ -225,24 +225,42 @@ export function capsuleClearsBodies(a: Point, b: Point, radius: number, bodies: 
 export function diskInConvex(p: Point, radius: number, polygon: readonly Point[]) {
   return polygonPlanes(polygon).every(axis => p.x * axis.x + p.y * axis.y >= axis.min + radius * Math.hypot(axis.x, axis.y) - 1e-6);
 }
-// @@@hull-insertion-sort - Hull inputs are a few dozen points. A stable sort with one consistent comparator has a single
-// result, so an insertion sort reproduces the built-in sort's order exactly, without its calls back into the comparator
-// or its scratch arrays; a large input still goes to the built-in sort.
+// @@@hull-insertion-sort - A stable sort with one consistent comparator has a single result, so these sorts reproduce
+// the built-in sort's order exactly, without its calls back into the comparator or its scratch arrays: an insertion
+// sort for the usual few dozen points, and for a swept hull's hundreds a merge of insertion-sorted runs that takes the
+// left run's point on a tie.
 const INSERTION_SORT_LIMIT = 64;
-function sortByXThenY(points: readonly Point[]): Point[] {
-  const sorted = points.slice();
-  if (sorted.length > INSERTION_SORT_LIMIT) return sorted.sort((a, b) => a.x - b.x || a.y - b.y);
-  for (let i = 1; i < sorted.length; i++) {
+const after = (a: Point, b: Point) => (a.x - b.x || a.y - b.y) > 0;
+function insertionSort(sorted: Point[], start: number, end: number) {
+  for (let i = start + 1; i < end; i++) {
     const p = sorted[i]!;
     let j = i - 1;
-    for (; j >= 0; j--) {
+    for (; j >= start; j--) {
       const q = sorted[j]!;
-      if (!((q.x - p.x || q.y - p.y) > 0)) break;
+      if (!after(q, p)) break;
       sorted[j + 1] = q;
     }
     sorted[j + 1] = p;
   }
-  return sorted;
+}
+function sortByXThenY(points: readonly Point[]): Point[] {
+  const n = points.length;
+  let from = points.slice();
+  if (n <= INSERTION_SORT_LIMIT) { insertionSort(from, 0, n); return from; }
+  const RUN = 32;
+  for (let start = 0; start < n; start += RUN) insertionSort(from, start, Math.min(start + RUN, n));
+  let to = points.slice();
+  for (let width = RUN; width < n; width *= 2) {
+    for (let left = 0; left < n; left += 2 * width) {
+      const middle = Math.min(left + width, n), right = Math.min(left + 2 * width, n);
+      let i = left, j = middle, k = left;
+      while (i < middle && j < right) to[k++] = after(from[i]!, from[j]!) ? from[j++]! : from[i++]!;
+      while (i < middle) to[k++] = from[i++]!;
+      while (j < right) to[k++] = from[j++]!;
+    }
+    const swap = from; from = to; to = swap;
+  }
+  return from;
 }
 // One monotone chain of Andrew's hull over sorted[first..limit) in the given direction.
 // The chain is a stack kept in `out` up to `size`: entries past it are overwritten, and the array is cut to size once.

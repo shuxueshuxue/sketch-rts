@@ -76,6 +76,16 @@ describe('convex hull kernels without closures', () => {
     }
   });
 
+  it('return the original hull of a swept outline with hundreds of points', () => {
+    const next = random(61);
+    for (let round = 0; round < 120; round++) {
+      const points = cloud(next, 65 + Math.floor(next() * 400));
+      const hull = convexHull(points), reference = referenceConvexHull(points);
+      expect(hull.length).toBe(reference.length);
+      hull.forEach((p, i) => expect(p).toBe(reference[i]));
+    }
+  });
+
   it('sum convex polygons into the same vertices with the same bits', () => {
     const next = random(29);
     for (let round = 0; round < 300; round++) {
