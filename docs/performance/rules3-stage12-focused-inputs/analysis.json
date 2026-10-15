@@ -1,0 +1,461 @@
+{
+  "complete": true,
+  "scope": "rules3-stage12-focused-inputs",
+  "completedOriginalDiagnosticRuns": 2,
+  "runtimeBaselineHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "nativeSourceGraphs": 2,
+  "nativeSourceRecords": 482,
+  "historicalOracleSourceGraphs": 1,
+  "beforeSourceGraphs": 3,
+  "candidateNativeRuns": 0,
+  "candidateCountLimitedToThisScope": true,
+  "preparedStatusIsHistoricalNotCurrentGlobalExecutionStatus": true,
+  "performanceAcceptance": false,
+  "wholePerformanceGoalEstablished": false,
+  "runs": [
+    {
+      "directory": "/tmp/ship-sweep-capture-v2",
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "sourceInputs": 241,
+      "allPortableGitBytesExact": true,
+      "originalExecution": {
+        "startedUtc": "2026-10-15T03:54:02.578942+00:00",
+        "endedUtc": "2026-10-15T03:54:59.728586+00:00",
+        "native": {
+          "startedUtc": "2026-10-15T03:54:02.811971+00:00",
+          "endedUtc": "2026-10-15T03:54:59.398255+00:00",
+          "wallSeconds": 56.58631157001946,
+          "exitCode": 0
+        },
+        "analysis": {
+          "startedUtc": "2026-10-15T03:54:59.412437+00:00",
+          "endedUtc": "2026-10-15T03:54:59.727841+00:00",
+          "wallSeconds": 0.3154181400022935,
+          "exitCode": 0
+        },
+        "complete": true,
+        "exitCode": 0,
+        "performanceAcceptance": false
+      }
+    },
+    {
+      "directory": "/tmp/ship-nav-hull-9375-count",
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "sourceInputs": 241,
+      "allPortableGitBytesExact": true,
+      "originalExecution": {
+        "startedUtc": "2026-10-15T04:08:23.081081+00:00",
+        "endedUtc": "2026-10-15T04:09:20.921194+00:00",
+        "native": {
+          "startedUtc": "2026-10-15T04:08:23.310708+00:00",
+          "endedUtc": "2026-10-15T04:09:20.580782+00:00",
+          "wallSeconds": 57.27010299099493,
+          "exitCode": 0
+        },
+        "analysis": {
+          "startedUtc": "2026-10-15T04:09:20.590411+00:00",
+          "endedUtc": "2026-10-15T04:09:20.919772+00:00",
+          "wallSeconds": 0.32938193599693477,
+          "exitCode": 0
+        },
+        "complete": true,
+        "exitCode": 0,
+        "performanceAcceptance": false
+      }
+    }
+  ],
+  "allFullCommandsAndInitialBytesEqual": true,
+  "commandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "finalChecksum": "7d94a5e8",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "phaseRowsCompared": {
+    "sweepV2": 14400,
+    "nav9375": 14400
+  },
+  "physicalLimitedRepetition": {
+    "roots": 24,
+    "shapeCalls": 16,
+    "segments": 16,
+    "sameRootBitExactScalarDuplicateGroups": [
+      {
+        "root": 27,
+        "shapeCalls": [
+          28,
+          29
+        ],
+        "extraInstances": 1
+      },
+      {
+        "root": 30,
+        "shapeCalls": [
+          31,
+          32
+        ],
+        "extraInstances": 1
+      }
+    ],
+    "extraRepeatedInstances": 2,
+    "supportsBroadCacheImplementation": false,
+    "implementationPerformed": false
+  },
+  "navalCounterfactualOnly": {
+    "calls": 1,
+    "fleetSize": 1,
+    "candidateRows": 12,
+    "minimumActualThreat": 2.6127479111061525,
+    "nativeWinnerIndex": 11,
+    "fullFleetAndDepartureOctile": {
+      "cell": 32.0,
+      "orthogonalIntegerCost": 5,
+      "diagonalIntegerCost": 7,
+      "floorGridMapping": true,
+      "allSourcesIncluded": true
+    },
+    "counterfactualRows": [
+      {
+        "index": 0,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 3468.8,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          3635.2,
+          3424.0
+        ],
+        "minimumOctileBound": 3424.0,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 1,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 4377.6,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          4473.6,
+          4185.6
+        ],
+        "minimumOctileBound": 4185.6,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 2,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 5356.8,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          4646.4,
+          5100.8
+        ],
+        "minimumOctileBound": 4646.4,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 3,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 4320.0,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          4224.0,
+          4883.2
+        ],
+        "minimumOctileBound": 4224.0,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 4,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 3315.2,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          3315.2,
+          3974.4
+        ],
+        "minimumOctileBound": 3315.2,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 5,
+        "nativeThreat": 5.02831668385801,
+        "nativeRoad": 3084.8,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          3084.8,
+          3206.4
+        ],
+        "minimumOctileBound": 3084.8,
+        "bestRoadBefore": null,
+        "action": "skip-higher-threat",
+        "bestRoadAfter": null,
+        "bestIndexAfter": null
+      },
+      {
+        "index": 6,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 4819.2,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          5145.6,
+          4678.4
+        ],
+        "minimumOctileBound": 4678.4,
+        "bestRoadBefore": null,
+        "action": "requires-road-evaluation",
+        "bestRoadAfter": 4819.2,
+        "bestIndexAfter": 6
+      },
+      {
+        "index": 7,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 5740.8,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          5779.2,
+          5568.0
+        ],
+        "minimumOctileBound": 5568.0,
+        "bestRoadBefore": 4819.2,
+        "action": "skip-lower-bound",
+        "bestRoadAfter": 4819.2,
+        "bestIndexAfter": 6
+      },
+      {
+        "index": 8,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 6457.6,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          6336.0,
+          6995.2
+        ],
+        "minimumOctileBound": 6336.0,
+        "bestRoadBefore": 4819.2,
+        "action": "skip-lower-bound",
+        "bestRoadAfter": 4819.2,
+        "bestIndexAfter": 6
+      },
+      {
+        "index": 9,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 4025.6,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          4025.6,
+          4684.8
+        ],
+        "minimumOctileBound": 4025.6,
+        "bestRoadBefore": 4819.2,
+        "action": "requires-road-evaluation",
+        "bestRoadAfter": 4025.6,
+        "bestIndexAfter": 9
+      },
+      {
+        "index": 10,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 2329.6,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          2208.0,
+          3136.0
+        ],
+        "minimumOctileBound": 2208.0,
+        "bestRoadBefore": 4025.6,
+        "action": "requires-road-evaluation",
+        "bestRoadAfter": 2329.6,
+        "bestIndexAfter": 10
+      },
+      {
+        "index": 11,
+        "nativeThreat": 2.6127479111061525,
+        "nativeRoad": 1683.2,
+        "sourceCount": 2,
+        "fleetAndDepartureOctileBounds": [
+          2028.8,
+          1638.4
+        ],
+        "minimumOctileBound": 1638.4,
+        "bestRoadBefore": 2329.6,
+        "action": "requires-road-evaluation",
+        "bestRoadAfter": 1683.2,
+        "bestIndexAfter": 11
+      }
+    ],
+    "requiresRoadIndices": [
+      6,
+      9,
+      10,
+      11
+    ],
+    "higherThreatSkipIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "lowerBoundSkipIndices": [
+      7,
+      8
+    ],
+    "totalCounterfactualSkipped": 8,
+    "counterfactualWinnerEqualsNative": true,
+    "candidateWasExecuted": false,
+    "candidateMissCountMeasured": false,
+    "timeSavingMeasured": false
+  },
+  "navHullActualExecutedPrefix": {
+    "allHull": {
+      "calls": 272,
+      "stepsHistogram": {
+        "1": 30,
+        "4": 37,
+        "66": 2,
+        "27": 9,
+        "53": 6,
+        "65": 2,
+        "67": 2,
+        "64": 2,
+        "12": 1,
+        "57": 12,
+        "19": 12,
+        "76": 6,
+        "38": 10,
+        "69": 1,
+        "7": 1,
+        "50": 1,
+        "26": 1,
+        "45": 1,
+        "31": 1
+      },
+      "executedSegmentHistogram": {
+        "1": 30,
+        "0": 135,
+        "4": 37,
+        "66": 2,
+        "27": 9,
+        "53": 6,
+        "65": 2,
+        "67": 2,
+        "64": 2,
+        "12": 1,
+        "57": 10,
+        "19": 11,
+        "76": 5,
+        "38": 10,
+        "69": 1,
+        "7": 1,
+        "50": 1,
+        "26": 1,
+        "45": 1,
+        "31": 1,
+        "13": 3,
+        "36": 1
+      },
+      "exitCodes": {
+        "4": 125,
+        "1": 132,
+        "3": 12,
+        "2": 3
+      },
+      "actualSegments": 3117,
+      "adjacentOpportunities": 2980,
+      "bitExactAdjacentRepeats": 2980
+    },
+    "withinPlan": {
+      "calls": 106,
+      "stepsHistogram": {
+        "66": 2,
+        "1": 20,
+        "27": 9,
+        "53": 6,
+        "65": 2,
+        "67": 2,
+        "64": 2,
+        "12": 1,
+        "57": 12,
+        "19": 12,
+        "76": 6,
+        "38": 10,
+        "69": 1,
+        "7": 1,
+        "50": 1,
+        "26": 1,
+        "45": 1,
+        "31": 1
+      },
+      "executedSegmentHistogram": {
+        "66": 2,
+        "1": 20,
+        "27": 9,
+        "53": 6,
+        "65": 2,
+        "67": 2,
+        "64": 2,
+        "12": 1,
+        "57": 10,
+        "19": 11,
+        "76": 5,
+        "38": 10,
+        "69": 1,
+        "7": 1,
+        "50": 1,
+        "26": 1,
+        "0": 16,
+        "45": 1,
+        "31": 1,
+        "13": 3,
+        "36": 1
+      },
+      "exitCodes": {
+        "4": 80,
+        "3": 10,
+        "1": 16
+      },
+      "actualSegments": 2959,
+      "adjacentOpportunities": 2869,
+      "bitExactAdjacentRepeats": 2869
+    },
+    "outsidePlan": {
+      "calls": 166,
+      "stepsHistogram": {
+        "1": 10,
+        "4": 37
+      },
+      "executedSegmentHistogram": {
+        "1": 10,
+        "0": 119,
+        "4": 37
+      },
+      "exitCodes": {
+        "4": 45,
+        "1": 116,
+        "3": 2,
+        "2": 3
+      },
+      "actualSegments": 158,
+      "adjacentOpportunities": 111,
+      "bitExactAdjacentRepeats": 111
+    },
+    "uncomputedSubdivisionCalls": 135,
+    "pairsAreRawBitsWithinSameCall": true
+  },
+  "preparedPlansRemainUnexecutedHistoricalProvenance": true,
+  "noNewApplicationExecution": true,
+  "noTimingGainOrVerticesEquivalenceClaim": true
+}

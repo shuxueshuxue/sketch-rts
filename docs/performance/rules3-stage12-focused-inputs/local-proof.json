@@ -1,0 +1,16 @@
+{
+  "complete": true,
+  "archiveOnly": true,
+  "allOriginalBytesCompared": true,
+  "allSourceCommandPhaseAndNumericReadbacksPassed": true,
+  "performanceAcceptance": false,
+  "candidateNativeRuns": 0,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 33.103974044002825
+  }
+}

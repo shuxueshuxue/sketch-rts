@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "previousEvidenceHead": "50280adb4da54f1d7c4f1de07c931bf1256a34b1",
+  "oldClosedPathsUnchanged": true,
+  "allNewObjectsAndArchivesUnderTmp": true,
+  "inventoryCutpoint": "2026-10-15T04:35:29.909714+00:00",
+  "completedOriginalDiagnosticRuns": 2,
+  "runtimeBaselineHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "candidateNativeRuns": 0,
+  "performanceAcceptance": false,
+  "archiveOnlyNoEngineRerun": true,
+  "originalAssertionsUnchanged": true,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 33.103974044002825
+  },
+  "allEightScopesUnchangedDuringSdk": true,
+  "sdkOldOffenderExactClosedBlob": true,
+  "activeCombinedProofAndColdPreparationExcluded": true,
+  "correctnessReservedForSeparateStage": true,
+  "preparedPlansAreUnexecutedHistoricalProvenance": true,
+  "preparedStatusAppliesToHistoricalCutpointOnly": true,
+  "subsequentCombinedNativeAndColdExcludedForStage13": true,
+  "noTimeOrVerticesProofClaim": true
+}

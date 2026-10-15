@@ -1,0 +1,43 @@
+{
+  "complete": true,
+  "scope": "rules3-stage12-focused-inputs",
+  "sourceFiles": 350,
+  "uniquePayloads": 259,
+  "aliases": 91,
+  "originalBytes": 21265736,
+  "storedBytes": 6633256,
+  "manifestSha256": "064bf5cc931e53d8b8605d902481f0053fa6f1e112d744cfd5c7304e02f6d7eb",
+  "allStoredDecodedOriginalBytesExact": true,
+  "strictInventoryAndAliasesVerified": true,
+  "supportingFilePinsExact": true,
+  "oldClosedPathsUnchanged": true,
+  "originalEvidenceUnmodified": true,
+  "completedOriginalDiagnosticRuns": 2,
+  "candidateNativeRuns": 0,
+  "performanceAcceptance": false,
+  "nativeSourceGraphs": 2,
+  "nativeSourceRecords": 482,
+  "historicalOracleSourceGraphs": 1,
+  "beforeSourceGraphs": 3,
+  "physicalExtraRepeatedInstances": 2,
+  "navalCounterfactualSkip": 8,
+  "actualHullSameCallAdjacentBitPairs": 2980,
+  "unexecutedPlansProvenanceOnly": true,
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 33.103974044002825
+  },
+  "execution": {
+    "argv": [
+      "/tmp/whole-stage12-archive-tools/finish-v3.py"
+    ],
+    "cwd": "/tmp/whole-stage12-archive-tools",
+    "startedUTC": "2026-10-15T04:46:29.776407+00:00",
+    "endedUTC": "2026-10-15T04:46:29.946676+00:00",
+    "wallSeconds": 0.17026925800018944
+  }
+}
