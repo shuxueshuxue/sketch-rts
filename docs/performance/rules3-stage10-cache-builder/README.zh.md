@@ -54,7 +54,7 @@ python3 verify.py --out . --extract /absolute/new-parent/restored
 
 ## 最终归档闭合
 
-**428个完整原路径、263个gzip、165个显式alias**；原件52,268,302 B，unique gzip 13,683,365 B。所有stored/decoded SHA、原件全文和精确库存校验通过。
+**457个完整原路径、281个gzip、176个显式alias**；原件52,314,643 B，unique gzip 13,690,918 B。所有stored/decoded SHA、原件全文和精确库存校验通过。
 
 原四文件SDK实际 **13/14 pass、1个既有Stage5文档命名失败，exit1，32.441352秒**。唯一offender与旧9f3101闭合blob全文相同，新scope未被列为offender；未改旧文档或断言，原stdout/stderr/UTC/argv/cwd/exit保留。SDK执行期间全部六个追加scope SHA不变；后续仅追加receipts与闭合状态。
 
