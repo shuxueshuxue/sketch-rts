@@ -20,6 +20,15 @@ const TRAFFIC_SWEEP_SCRATCH_POINTS=2_048;
 const trafficSweeps=new Map<string,Point[]>();
 const TRAFFIC_SWEEPS=2_048;
 
+// @@@folded-bits-key - Configuration keys used to print each double in decimal, which folds -0 into 0 and every NaN
+// into one. These keys carry raw bits after the same folding, so exactly the same calls share an entry as before,
+// without printing anything.
+const keyBits=new Float64Array(6),keyUnits=new Uint16Array(keyBits.buffer);
+const fold=(value:number)=>value===0?0:value!==value?NaN:value;
+function foldedKey(prefix:string,doubles:number){
+  return prefix+String.fromCharCode.apply(null,keyUnits.subarray(0,doubles*4) as unknown as number[]);
+}
+
 function cacheTrafficBase(key:string,polygon:Point[]) {
   if(polygon.length>TRAFFIC_BASE_POINTS)return;
   while(trafficBases.size>=512 || trafficBasePoints+polygon.length>TRAFFIC_BASE_POINTS){
@@ -290,10 +299,11 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   }
   const configurations=new Map<string,Point[]>(),sweeps=new Map<string,Point[]>();
   const configuration=(from:number,to:number,body:typeof bodies[number],padding:number)=>{
-    const key=`${from}:${to}:${body.other.id}:${padding}`,known=configurations.get(key);if(known)return known;
+    keyBits[0]=fold(from);keyBits[1]=fold(to);keyBits[2]=fold(padding);
+    const key=foldedKey(`${body.other.id}:`,3),known=configurations.get(key);if(known)return known;
     const profile=body.profile,angle=body.heading;
-    const baseKey=`${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}`;
-    const shapeKey=`${baseKey}:${padding}`;
+    keyBits[0]=fold(ownProfile.length);keyBits[1]=fold(from);keyBits[2]=fold(to);keyBits[3]=fold(profile.length);keyBits[4]=fold(angle);keyBits[5]=fold(padding);
+    const kinds=`${ship.kind}:${body.other.kind}:`,baseKey=foldedKey(kinds,5),shapeKey=foldedKey(kinds,6);
     let polygon=trafficShapes.get(shapeKey);
     if(!polygon){
       let base=trafficBases.get(baseKey);
