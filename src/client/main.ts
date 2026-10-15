@@ -50,6 +50,7 @@ import {
 } from "./control-groups";
 import { deploymentModeFromEnv } from "./deployment/mode";
 import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
+import { createBrowserAiThinkExecutor } from "./ai-think-worker";
 import { createSketchRtsDebugView, type SketchRtsDebugView } from "./debug-view";
 import { edgeScrollDelta } from "./edge-scroll";
 import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
@@ -291,6 +292,7 @@ const pendingVeteranChoices = new Map<string, number>();
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
+  aiThinkExecutor: createBrowserAiThinkExecutor,
   onRuntimeReady() {
     menuStatus.textContent = t("app.serverOnline");
     statusLabel.textContent = t("app.connectedGuide");

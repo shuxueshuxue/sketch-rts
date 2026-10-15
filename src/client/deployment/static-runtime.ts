@@ -1,4 +1,4 @@
-import { createAiRuntime } from "../../ai/runtime";
+import { createAiRuntime, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
@@ -13,6 +13,8 @@ import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
 export type StaticSoloDeploymentRuntimeOptions = {
   now?: () => number;
   tickMs?: number;
+  // Where a local match's AI thinks (see @@@think-thread); on the page's thread when absent.
+  aiThinkExecutor?: AiThinkExecutorFactory;
   onRuntimeReady?: () => void;
 };
 
@@ -150,6 +152,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       ...options,
       ...(this.options.tickMs === undefined ? {} : { tickMs: this.options.tickMs }),
       ...(this.options.now === undefined ? {} : { now: this.options.now }),
+      ...(this.options.aiThinkExecutor === undefined ? {} : { aiThinkExecutor: this.options.aiThinkExecutor }),
     };
   }
 }

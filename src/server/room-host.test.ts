@@ -272,8 +272,8 @@ describe("server room host", () => {
 
     const playerCommand = { type: "move" as const, unitIds: [hostedWorker!.id], x: hostedWorker!.x + 80, y: hostedWorker!.y };
     local.sendCommand({ ...playerCommand, unitIds: [localWorker!.id] });
-    // Both run on until the AI's tick-0 think has landed.
-    for (let tick = 0; tick < PLANNER_COMMAND_DELAY_TICKS; tick += 1) {
+    // Both run on until the AI's tick-0 think has landed; the local command rides the first tick.
+    for (let tick = 0; tick <= PLANNER_COMMAND_DELAY_TICKS; tick += 1) {
       now += 50;
       local.updateToRenderTime();
     }

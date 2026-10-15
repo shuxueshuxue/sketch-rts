@@ -105,7 +105,11 @@ export type AiThinkExecutor = {
   // Whether every think due by this tick has been planned.
   ready(tick: number): boolean;
   take(tick: number): CommandEnvelope[];
+  // Releases whatever the executor holds for the match (a thinking thread's session).
+  close?(): void;
 };
+
+export type AiThinkExecutorFactory = (runtime: AiRuntimeState, game: Game) => AiThinkExecutor;
 
 export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExecutor {
   const planned = new Map<number, CommandEnvelope[]>();

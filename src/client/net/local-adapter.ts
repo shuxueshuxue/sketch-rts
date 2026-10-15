@@ -1,4 +1,4 @@
-import { createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState } from "../../ai/runtime";
+import { createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
 import type { CommandEnvelope } from "../../shared/net/types";
 import { snapshotGame, type Game } from "../../shared/sim";
 import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
@@ -9,6 +9,8 @@ export type LocalGameAdapterOptions = {
   now?: () => number;
   tickMs?: number;
   aiRuntime?: AiRuntimeState;
+  // Where the AI thinks (see @@@think-thread); on this thread when absent.
+  aiThinkExecutor?: AiThinkExecutorFactory;
   room?: RoomState;
   finishRoom?: (snapshot: GameSnapshot) => RoomState;
   onRoomEnded?: (room: RoomState) => void;
@@ -21,6 +23,8 @@ export class LocalGameAdapter implements GameAdapter {
   private closed = false;
   private snapshot: GameSnapshot | undefined;
   private readonly frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>;
+  private readonly thinkExecutor: AiThinkExecutor | undefined;
+  private queued: CommandEnvelope[] = [];
 
   constructor(
     private readonly game: Game,
@@ -29,17 +33,21 @@ export class LocalGameAdapter implements GameAdapter {
   ) {
     this.lastUpdate = this.now();
     this.room = options.room;
+    this.thinkExecutor = options.aiRuntime && options.aiThinkExecutor ? options.aiThinkExecutor(options.aiRuntime, game) : undefined;
     this.frameRuntime = new CommandFrameRuntime({
       game,
       roomId: this.room?.id ?? "local",
       rejectionLabel: "Local command rejected",
-      ...(options.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(this.game, options.aiRuntime) } : {}),
+      ...(options.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(this.game, options.aiRuntime, this.thinkExecutor ? { executor: this.thinkExecutor } : {}) } : {}),
     });
   }
 
+  // A player's command lands on the next tick, as a hosted room's lands on a later one; a rejection is reported now.
   sendCommand(command: GameCommand): void {
     if (this.closed) throw new Error('Local match is closed');
-    this.applyAndStep([{ playerId: this.playerId, command }]);
+    const entry = { playerId: this.playerId, command };
+    this.frameRuntime.admit([entry]);
+    this.queued.push(entry);
   }
 
   currentSnapshot(): GameSnapshot {
@@ -57,8 +65,9 @@ export class LocalGameAdapter implements GameAdapter {
     this.lastUpdate = Math.max(this.lastUpdate, current - tickMs * 4);
     const started = performance.now();
     let changed = false;
-    while (!this.closed && current - this.lastUpdate >= tickMs && !this.game.match.winner) {
-      this.applyAndStep([]);
+    // A think still running on its thread holds the match until it lands (see @@@planner-schedule).
+    while (!this.closed && current - this.lastUpdate >= tickMs && !this.game.match.winner && this.frameRuntime.ready()) {
+      this.applyAndStep(this.queued.splice(0));
       this.lastUpdate += tickMs;
       changed = true;
       if (performance.now() - started >= 8) break;
@@ -69,6 +78,7 @@ export class LocalGameAdapter implements GameAdapter {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    this.thinkExecutor?.close?.();
     this.options.onClose?.();
   }
 

@@ -6,8 +6,10 @@ import { createRoomHost } from "./room-host";
 const hostUser: LocalUserProfile = { id: "user-host", name: "Host" };
 const guestUser: LocalUserProfile = { id: "user-guest", name: "Guest" };
 
+let now = 0;
+
 async function startStaticTwoHumanRoom() {
-  const runtime = new StaticSoloDeploymentRuntime({ tickMs: 1_000_000 });
+  const runtime = new StaticSoloDeploymentRuntime({ tickMs: 50, now: () => now });
   await runtime.createRoom({ id: "static-command-core", host: hostUser, mapId: "bareDuel", humanCount: 2, aiCount: 0 });
   await runtime.enterRoom("static-command-core", guestUser);
   await runtime.updateRoomSlot("static-command-core", "slot-2", { ready: true, team: "south" });
@@ -36,7 +38,10 @@ describe("deployment command-frame gameplay core", () => {
     expect(staticWorker!.id).toBe(hostedWorker!.id);
     const command = { type: "move" as const, unitIds: [staticWorker!.id], x: staticWorker!.x + 96, y: staticWorker!.y + 32 };
 
+    // A local command lands on the next tick, as the hosted frame below lands on its own.
     staticMatch.adapter.sendCommand(command);
+    now += 50;
+    staticMatch.adapter.updateToRenderTime();
     const hostedAfter = hosted.tickRoomFrame("hosted-command-core", { roomId: "hosted-command-core", tick: 0, sequence: 0, commands: [{ playerId: "player", command }] }, "browser").snapshot;
     const staticAfter = staticMatch.adapter.currentSnapshot();
     expect(staticAfter).toBeDefined();
