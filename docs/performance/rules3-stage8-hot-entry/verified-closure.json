@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "complete": true,
+  "scope": "rules3-stage8-hot-entry",
+  "sourceFiles": 394,
+  "uniquePayloads": 279,
+  "aliases": 115,
+  "originalBytes": 101757101,
+  "storedBytes": 20216300,
+  "allStoredAndDecodedSha256Exact": true,
+  "everyOriginalFullBytesEqualDecodedCanonical": true,
+  "allPinnedSupportFilesExact": true,
+  "strictInventoryAndExplicitAliasesVerified": true,
+  "rawOriginalEvidenceNotRewritten": true,
+  "oldScopesUnchanged": true,
+  "manifestSha256": "984ae0a2f61150b4470c154940573d1f8331ffdd20258c69a839b48bd204d451",
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.132256609009346
+  },
+  "execution": {
+    "argv": [
+      "/tmp/whole-stage8-archive-tools/finish.py"
+    ],
+    "cwd": "/tmp/whole-stage8-archive-tools",
+    "startedAt": "2026-10-15T01:37:02.297618+00:00",
+    "endedAt": "2026-10-15T01:37:02.702865+00:00",
+    "wallSeconds": 0.4052493240160402
+  },
+  "candidateDecision": "REJECTED",
+  "wholeTargetPassed": false,
+  "completeSourceGraphs": 12,
+  "sourceRecords": 2892,
+  "commandLogs": 12,
+  "archiveAnalysisPassed": true
+}

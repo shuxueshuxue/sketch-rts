@@ -1,0 +1,292 @@
+{
+  "complete": true,
+  "candidate": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+  "base": "0ea5beaee063c8443d66f7654333032b070d51ad",
+  "decision": "REJECTED; no candidate code publication",
+  "rawCommitCount": 2,
+  "rawTreeCount": 23,
+  "changedSourceFiles": [
+    "src/shared/terrain.ts"
+  ],
+  "sourceChecks": {
+    "r1-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B1": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-B2": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r1-Bplain": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A1": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B1": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-B2": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-A2": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "r2-Bplain": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "v8-A": {
+      "head": "0ea5beaee063c8443d66f7654333032b070d51ad",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    },
+    "v8-B": {
+      "head": "909886a7f61397e1c5fdbbc455eae181072c5a60",
+      "files": 241,
+      "allGitBlobAndDeclaredBytesExact": true
+    }
+  },
+  "fullCommandFiles": 12,
+  "allCommandFullBytesEqual": true,
+  "commandBytes": 618189,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "finalChecksum": "7d94a5e8",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "pooled": {
+    "A": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.5440553904861103,
+        "median": 1.8602589999991324,
+        "p95": 15.478229000000283,
+        "p99": 26.06679500000064,
+        "max": 93.08511300000009,
+        "over16": 2732,
+        "over50": 22
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.71784991284723,
+        "median": 1.788393000002543,
+        "p95": 9.322476000001188,
+        "p99": 18.75583799999731,
+        "max": 68.94602200000008,
+        "over16": 886,
+        "over50": 9
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8076389255902744,
+        "median": 0.0013820000021951273,
+        "p95": 7.636855000000651,
+        "p99": 17.85320199999842,
+        "max": 80.17283800000018,
+        "over16": 932,
+        "over50": 5
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21335947251735807,
+        "median": 0.2262219999993249,
+        "p95": 0.38338199999998324,
+        "p99": 0.5343940000020666,
+        "max": 15.358473999993294,
+        "over16": 0,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.007345199565972698,
+        "median": 0.0056390000027022325,
+        "p95": 0.01760499999363674,
+        "p99": 0.031677000002673594,
+        "max": 0.6676499999957741,
+        "over16": 0,
+        "over50": 0
+      }
+    },
+    "B": {
+      "wholeMs": {
+        "count": 57600,
+        "mean": 3.5831682268923624,
+        "median": 1.8715960000045015,
+        "p95": 15.66682099999889,
+        "p99": 26.602562000000034,
+        "max": 262.83105200000136,
+        "over16": 2776,
+        "over50": 24
+      },
+      "simMs": {
+        "count": 57600,
+        "mean": 2.7497254747048703,
+        "median": 1.794912999997905,
+        "p95": 9.416575000000194,
+        "p99": 19.026316000003135,
+        "max": 262.78862999999546,
+        "over16": 886,
+        "over50": 10
+      },
+      "aiMs": {
+        "count": 57600,
+        "mean": 0.8142482547743028,
+        "median": 0.001382000000376138,
+        "p95": 7.815697,
+        "p99": 17.919692000003124,
+        "max": 76.04546199999982,
+        "over16": 955,
+        "over50": 6
+      },
+      "renderSnapshotMs": {
+        "count": 57600,
+        "mean": 0.21667567550346908,
+        "median": 0.22903600000063307,
+        "p95": 0.38974099999904865,
+        "p99": 0.5582689999937429,
+        "max": 11.379284999995434,
+        "over16": 0,
+        "over50": 0
+      },
+      "observerMs": {
+        "count": 57600,
+        "mean": 0.0075874359722096175,
+        "median": 0.005678999999872758,
+        "p95": 0.01811699999962002,
+        "p99": 0.03141699999832781,
+        "max": 3.410723999997572,
+        "over16": 0,
+        "over50": 0
+      }
+    }
+  },
+  "paired": [
+    {
+      "A": "r1-A1",
+      "B": "r1-B1",
+      "meanDeltaPercent": -1.8234202060571802
+    },
+    {
+      "A": "r1-A2",
+      "B": "r1-B2",
+      "meanDeltaPercent": 2.8872242917349578
+    },
+    {
+      "A": "r2-A1",
+      "B": "r2-B1",
+      "meanDeltaPercent": 2.8664458228487177
+    },
+    {
+      "A": "r2-A2",
+      "B": "r2-B2",
+      "meanDeltaPercent": 0.6658128679587261
+    }
+  ],
+  "meanDeltaPercent": 1.1036180899217651,
+  "targetPassed": false,
+  "plain": {
+    "r1-Bplain": {
+      "count": 14400,
+      "mean": 3.441740428680535,
+      "median": 1.806551000001491,
+      "p95": 15.26120400000218,
+      "p99": 25.476403000000573,
+      "max": 108.0830910000002,
+      "over16": 674,
+      "over50": 2
+    },
+    "r2-Bplain": {
+      "count": 14400,
+      "mean": 3.5388758078472304,
+      "median": 1.8608899999999267,
+      "p95": 15.52282600000035,
+      "p99": 26.754113999995752,
+      "max": 105.73508599999695,
+      "over16": 689,
+      "over50": 8
+    }
+  },
+  "allSlowSamplesVerifiedAgainstSavedReviews": true,
+  "allMinuteStatisticsVerified": true,
+  "coldTick0Included": true,
+  "correctness": {
+    "files": 24,
+    "tests": 192,
+    "privateCases": 40,
+    "typedBytes": 11544,
+    "originalAssertionsPreserved": true
+  },
+  "v8": {
+    "A": {
+      "wholesOf": {
+        "bytecode": [
+          {
+            "length": 445,
+            "headerLine": 13701,
+            "lengthLine": 13702
+          }
+        ],
+        "inlineAsCallee": 4,
+        "deoptReasons": {
+          "exit from OSR'd inner loop": 14,
+          "Insufficient type feedback for generic keyed access": 1,
+          "wrong map": 1,
+          "Insufficient type feedback for object literal": 1
+        }
+      },
+      "buildWholes": {
+        "bytecode": [],
+        "inlineAsCallee": 0,
+        "deoptReasons": {}
+      }
+    },
+    "B": {
+      "wholesOf": {
+        "bytecode": [
+          {
+            "length": 19,
+            "headerLine": 13494,
+            "lengthLine": 13495
+          }
+        ],
+        "inlineAsCallee": 16,
+        "deoptReasons": {}
+      },
+      "buildWholes": {
+        "bytecode": [],
+        "inlineAsCallee": 0,
+        "deoptReasons": {
+          "exit from OSR'd inner loop": 14,
+          "Insufficient type feedback for generic keyed access": 3,
+          "wrong map": 1,
+          "prepare for on stack replacement (OSR)": 1
+        }
+      }
+    }
+  },
+  "v8IsNotPerformanceEvidence": true,
+  "originalHookOrderFailureAndNormalizationRetained": true
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "oldClosedPathsUnchanged": true,
+  "oldEvidenceHead": "a5bfd25969d06f38e9dc42f2274367032b45bf5d",
+  "allNewObjectsAndArchivesUnderTmp": true,
+  "archiveOnlyNoRuntimeOrNativeRerun": true,
+  "originalAssertionsUnchanged": true,
+  "finalSdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.132256609009346
+  },
+  "oldSdkDocumentExactClosedBlob": true,
+  "allNewScopesShaUnchangedDuringSdk": true,
+  "initialSnapshotsNotRewritten": true,
+  "stage8InitialArchiveAnalysisFailure": {
+    "retained": true,
+    "cause": "Single-pass witness byte sum5324 differs from original repeated comparison counter11544; only new archive assertion corrected; original proof unchanged and not rerun."
+  }
+}

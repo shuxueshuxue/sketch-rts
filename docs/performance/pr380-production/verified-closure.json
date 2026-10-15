@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "complete": true,
+  "scope": "pr380-production",
+  "sourceFiles": 320,
+  "uniquePayloads": 266,
+  "aliases": 54,
+  "originalBytes": 21215683,
+  "storedBytes": 8928884,
+  "allStoredAndDecodedSha256Exact": true,
+  "everyOriginalFullBytesEqualDecodedCanonical": true,
+  "allPinnedSupportFilesExact": true,
+  "strictInventoryAndExplicitAliasesVerified": true,
+  "rawOriginalEvidenceNotRewritten": true,
+  "oldScopesUnchanged": true,
+  "manifestSha256": "87f7d4eff0cede68648327399dc307f5a55ded6d25938b0c56fa19ebdefb0cc9",
+  "sdkActual": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.132256609009346
+  },
+  "execution": {
+    "argv": [
+      "/tmp/whole-stage8-archive-tools/finish.py"
+    ],
+    "cwd": "/tmp/whole-stage8-archive-tools",
+    "startedAt": "2026-10-15T01:37:02.705910+00:00",
+    "endedAt": "2026-10-15T01:37:02.869574+00:00",
+    "wallSeconds": 0.16367056901799515
+  },
+  "productionFrozenFiles": 252,
+  "officialPackageFiles": 91,
+  "startupChecksPassed": 56,
+  "startupChecksTotal": 59,
+  "startupAutomatedPass": false
+}

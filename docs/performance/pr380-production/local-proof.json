@@ -1,0 +1,16 @@
+{
+  "complete": true,
+  "archiveOnly": true,
+  "allStoredDecodedAndOriginalFullBytesChecked": true,
+  "strictPositiveAliasAndEightRejectCasesPassed": true,
+  "newArchiveAnalysisPassed": true,
+  "originalEvidenceAndOldScopesUnchanged": true,
+  "sdk": {
+    "files": 4,
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "exitCode": 1,
+    "wallSeconds": 32.132256609009346
+  }
+}

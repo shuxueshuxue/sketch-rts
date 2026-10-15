@@ -1,0 +1,163 @@
+{
+  "scope": "Static verification of archived production evidence only; no new execution or network access.",
+  "frozen": {
+    "filesVerified": 252,
+    "regularFilesIncludingManifest": 253,
+    "listedBytes": 18721114,
+    "manifestBytes": 43124,
+    "manifestSha256": "a66f8e1c033964a7d2e7f5f6a888f8fd69dcf8bc51b62643e00bf4eb1668f21b",
+    "closedUtc": "2026-10-15T01:11:13.989797+00:00",
+    "excludedFromOwnList": "FROZEN-REVIEW.json"
+  },
+  "source": {
+    "measuredHead": "0ea5beaee063c8443d66f7654333032b070d51ad",
+    "mergeSha": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+    "sameGitTree": "4e2a28c42bea617bb69a5526a35f4a3523988bc7",
+    "allTreeBytesIdentical": true
+  },
+  "deployment": {
+    "run": 38662669848,
+    "job": 116187340616,
+    "conclusion": "success",
+    "jobCompletedAt": "2026-10-15T01:00:36Z",
+    "stepsSuccessful": 42,
+    "mainTagReleaseAndWorkflowSha": "4804631c22f7be3f83dc6374e71ce03d86068dd8"
+  },
+  "artifact": {
+    "assetId": 642214724,
+    "bytes": 2467699,
+    "sha256": "66189832ff0b3a6a9c30a26381b368a082c7514fe9b2180d071906059ccf7bc7",
+    "officialDigestMatch": true,
+    "tarMembers": 102,
+    "directories": 11,
+    "regularFiles": 91,
+    "unpackedBytes": 11328103,
+    "allTarAndRetainedFileBytesIdentical": true,
+    "resourceManifestEntriesVerified": 89,
+    "expectedDistFilesVerified": 90
+  },
+  "maskedLog": {
+    "exactJsonStringRoundtrip": true,
+    "bytes": 334163,
+    "sha256": "b3ff7426f77654ceb532ad7c8756b85c7de4d5e36ff809bf2a2117e82a4c3c5d",
+    "deploymentReceipt": "2026-10-15T01:00:28.7525103Z deployed 4804631c***f7be3f83dc6374e71ce03d86068dd8",
+    "receiptCompatibleWithExpectedSha": true,
+    "receiptAloneProvesFullSha": false,
+    "fullIdentitySources": [
+      "release-deploy-run.json",
+      "release-main.json",
+      "release-tag.json",
+      "release-current.json"
+    ]
+  },
+  "startup": {
+    "url": "https://lexicalmathical.com/sketch-rts/",
+    "startedUtc": "2026-10-15T01:08:37.512837+00:00",
+    "endedUtc": "2026-10-15T01:10:10.710945+00:00",
+    "toolSha256": "977f87d3dc24697e99166872f43a3dfa73fb017eb50961b9ce1a7e9c16345dc8",
+    "automatedPass": false,
+    "exitCode": 1,
+    "checksPassed": 56,
+    "checksTotal": 59,
+    "originalAssertionRetained": true,
+    "images": [
+      {
+        "scene": "fleet",
+        "evidence": "public-startup/fleet-desktop-normal-native-bootstrap.png",
+        "bytes": 1029271,
+        "sha256": "a3eca580c336e00ddd128744463042db20531445547ac6149bee48c4c6cb9546",
+        "size": [
+          1440,
+          900
+        ],
+        "rootActuallyViewed": true,
+        "gpuFenceStatus": 37148
+      },
+      {
+        "scene": "capital",
+        "evidence": "public-startup/capital-desktop-normal-native-bootstrap.png",
+        "bytes": 1002430,
+        "sha256": "86da1d7bcc3ed4f498a590a1ca32e92b40f93105b56ab0b6736efa87294ce87c",
+        "size": [
+          1440,
+          900
+        ],
+        "rootActuallyViewed": true,
+        "gpuFenceStatus": 37148
+      },
+      {
+        "scene": "woods",
+        "evidence": "public-startup/woods-desktop-normal-native-bootstrap.png",
+        "bytes": 1147666,
+        "sha256": "f18ed3b15e235c9522534d48167d3a2258c07ccfe146c00e168bb4fb42b791a1",
+        "size": [
+          1440,
+          900
+        ],
+        "rootActuallyViewed": true,
+        "gpuFenceStatus": 37148
+      }
+    ],
+    "audioDifferences": [
+      {
+        "scene": "fleet",
+        "evidence": "public-startup/fleet-desktop-normal.json",
+        "requestId": "324748.25",
+        "check": "public-assets-entity-or-exact-cdp-representation",
+        "relativePath": "audio-packs/served.json",
+        "expected": {
+          "bytes": 16,
+          "sha256": "4b7c27887eaf204ea1f0324f1b13a90eb1f8fb3b4940f807cca1f5233a033b5c",
+          "match": false
+        },
+        "body": {
+          "bytes": 41,
+          "sha256": "5b8fe19449089ceae78086a7cd6b5415e82dc364116922344af6845c9fe27ead",
+          "relativePath": "audio-packs/served.json"
+        }
+      },
+      {
+        "scene": "capital",
+        "evidence": "public-startup/capital-desktop-normal.json",
+        "requestId": "324918.25",
+        "check": "public-assets-entity-or-exact-cdp-representation",
+        "relativePath": "audio-packs/served.json",
+        "expected": {
+          "bytes": 16,
+          "sha256": "4b7c27887eaf204ea1f0324f1b13a90eb1f8fb3b4940f807cca1f5233a033b5c",
+          "match": false
+        },
+        "body": {
+          "bytes": 41,
+          "sha256": "5b8fe19449089ceae78086a7cd6b5415e82dc364116922344af6845c9fe27ead",
+          "relativePath": "audio-packs/served.json"
+        }
+      },
+      {
+        "scene": "woods",
+        "evidence": "public-startup/woods-desktop-normal.json",
+        "requestId": "325058.25",
+        "check": "public-assets-entity-or-exact-cdp-representation",
+        "relativePath": "audio-packs/served.json",
+        "expected": {
+          "bytes": 16,
+          "sha256": "4b7c27887eaf204ea1f0324f1b13a90eb1f8fb3b4940f807cca1f5233a033b5c",
+          "match": false
+        },
+        "body": {
+          "bytes": 41,
+          "sha256": "5b8fe19449089ceae78086a7cd6b5415e82dc364116922344af6845c9fe27ead",
+          "relativePath": "audio-packs/served.json"
+        }
+      }
+    ],
+    "independentAudioConfigSha256": "5b8fe19449089ceae78086a7cd6b5415e82dc364116922344af6845c9fe27ead",
+    "existingNssTrustUnchanged": true,
+    "limits": [
+      "Three startup images only.",
+      "SwiftShader is not hardware FPS.",
+      "No full-game, all-animation, storyline or audible-audio proof.",
+      "The three strict audio configuration failures remain failures."
+    ]
+  }
+}
