@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "sourceSHA": {
+    "A": {
+      "path": "/tmp/sanity-control/src/shared/terrain.ts",
+      "sha256": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+      "bundleSha256": "5c393cd1f143d88754e9de7a1b8ea6d73f3a37977da778f273150553401e70f6",
+      "dependencyRoot": "/tmp/sanity-control",
+      "inputs": [
+        "../../tmp/sanity-control/src/shared/terrain.ts",
+        "<stdin>"
+      ]
+    },
+    "B": {
+      "path": "/tmp/sanity-terrain-cow-regions.ts",
+      "sha256": "180c5db12b8fe53559cbd41c437298568b547d613445dadbefb87c4341a3bd9d",
+      "bundleSha256": "4c398975a7f12622915fc3d24ab714c22a0033a852bcb67c8de54a76f7dc077b",
+      "dependencyRoot": "/tmp/sanity-control",
+      "inputs": [
+        "../../tmp/sanity-control/src/shared/terrain.ts",
+        "<stdin>"
+      ]
+    }
+  },
+  "comparisons": 21032,
+  "cellsCompared": 5437968,
+  "routingCalls": 31487,
+  "patterns": 5120,
+  "generations": 24,
+  "snapshots": 44,
+  "phases": [
+    "shapes",
+    "patterns",
+    "updates"
+  ],
+  "context": null
+}

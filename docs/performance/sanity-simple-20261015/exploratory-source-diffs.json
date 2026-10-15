@@ -1,0 +1,56 @@
+{
+  "sanity-lazy-explore": {
+    "files": 241,
+    "changed": {
+      "src/shared/ship-navigation.ts": {
+        "before": "c2dafdf507ff2df1cafded34b6af8cdf9be89dcf643b1150673f5fc6ccb0678b",
+        "after": "104d4f3b316198b940e8ba2fc826655398c2df611dab9a76e36c20172f0fbb13"
+      }
+    }
+  },
+  "sanity-sweep-explore": {
+    "files": 241,
+    "changed": {
+      "src/shared/ship-collisions.ts": {
+        "before": "81013c83e051792651211ebe5dc3a6eb868672d938d59903fbb144f85022ba21",
+        "after": "a42be1e553018c2b13d6250339b938bf401a1bc6afe1bf3ffc31930921d24f30"
+      }
+    }
+  },
+  "sanity-aabb-explore": {
+    "files": 241,
+    "changed": {
+      "src/shared/ship-collisions.ts": {
+        "before": "81013c83e051792651211ebe5dc3a6eb868672d938d59903fbb144f85022ba21",
+        "after": "7905cba8832bba1a4f33352c481fa4732bf1e7b80f372d2aa958eaff225e40f4"
+      }
+    }
+  },
+  "sanity-witness-explore": {
+    "files": 241,
+    "changed": {
+      "src/shared/terrain.ts": {
+        "before": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+        "after": "f1c980be8d2f4e62cf4604ab35cc146381f285ad911d0d42c6e72add3f73d272"
+      }
+    }
+  },
+  "sanity-transpose-explore": {
+    "files": 241,
+    "changed": {
+      "src/ai/policy/naval-mines.ts": {
+        "before": "5e7889de4f043a4323293d685e72acf03b04115697a6c5b281beaca0a5947d7e",
+        "after": "bb79f417a8d939aee99eb9d5515bf85de463ee47db31429efe35d31b0b744c16"
+      }
+    }
+  },
+  "sanity-cow-explore": {
+    "files": 241,
+    "changed": {
+      "src/shared/terrain.ts": {
+        "before": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+        "after": "2a6de13d64b6cb86c48cf2f8a9d8c16cc495726dc57bd7b905451871d870e5f0"
+      }
+    }
+  }
+}

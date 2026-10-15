@@ -1,0 +1,381 @@
+{
+  "control": {
+    "inclusiveCounters": {
+      "setBuildingBodies": {
+        "calls": 4846,
+        "ms": 81.77415100010398,
+        "work": 156976,
+        "maxWork": 51
+      },
+      "createRuntime": {
+        "calls": 46,
+        "ms": 50.28770299999405,
+        "work": 4710400,
+        "maxWork": 102400
+      },
+      "walkingDistance": {
+        "calls": 1463687,
+        "ms": 520.6588170022429,
+        "work": 0,
+        "maxWork": 0
+      },
+      "grow": {
+        "calls": 240,
+        "ms": 270.09225300002277,
+        "work": 24884160,
+        "maxWork": 103684
+      },
+      "beginShipCollisionFrame": {
+        "calls": 14404,
+        "ms": 1834.000313000187,
+        "work": 1254731,
+        "maxWork": 113
+      },
+      "growBoxInto": {
+        "calls": 49313,
+        "ms": 385.1883049986984,
+        "work": 0,
+        "maxWork": 0
+      },
+      "hullPassageClear": {
+        "calls": 1284343,
+        "ms": 9128.522656003008,
+        "work": 0,
+        "maxWork": 0
+      },
+      "convexHull": {
+        "calls": 1575565,
+        "ms": 7548.509564000386,
+        "work": 44715927,
+        "maxWork": 1300
+      },
+      "minkowskiSum": {
+        "calls": 429178,
+        "ms": 2663.639612998239,
+        "work": 12238139,
+        "maxWork": 283
+      },
+      "expandConvex": {
+        "calls": 929540,
+        "ms": 2859.807400999562,
+        "work": 15292968,
+        "maxWork": 270
+      },
+      "planShipRouteImpl": {
+        "calls": 3325,
+        "ms": 12214.710438000064,
+        "work": 1765840,
+        "maxWork": 31755
+      },
+      "sweepShipCollision": {
+        "calls": 303736,
+        "ms": 6876.605974999969,
+        "work": 0,
+        "maxWork": 0
+      },
+      "nearby": {
+        "calls": 543560,
+        "ms": 823.3432450008554,
+        "work": 0,
+        "maxWork": 0
+      },
+      "sweepShape": {
+        "calls": 213157,
+        "ms": 4621.910080999993,
+        "work": 0,
+        "maxWork": 0
+      },
+      "arrivalConnectorFor": {
+        "calls": 3656,
+        "ms": 4325.350142000047,
+        "work": 0,
+        "maxWork": 0
+      }
+    }
+  },
+  "transpose": {
+    "inclusiveCounters": {
+      "setBuildingBodies": {
+        "calls": 4846,
+        "ms": 91.17303899985109,
+        "work": 156976,
+        "maxWork": 51
+      },
+      "createRuntime": {
+        "calls": 46,
+        "ms": 52.40628100000367,
+        "work": 4710400,
+        "maxWork": 102400
+      },
+      "walkingDistance": {
+        "calls": 1463003,
+        "ms": 526.9871759999309,
+        "work": 0,
+        "maxWork": 0
+      },
+      "grow": {
+        "calls": 256,
+        "ms": 284.95449700002246,
+        "work": 26543104,
+        "maxWork": 103684
+      },
+      "beginShipCollisionFrame": {
+        "calls": 14404,
+        "ms": 1797.0199869999128,
+        "work": 1254731,
+        "maxWork": 113
+      },
+      "growBoxInto": {
+        "calls": 49313,
+        "ms": 353.21350600007816,
+        "work": 0,
+        "maxWork": 0
+      },
+      "hullPassageClear": {
+        "calls": 1284343,
+        "ms": 8753.348715003534,
+        "work": 0,
+        "maxWork": 0
+      },
+      "convexHull": {
+        "calls": 1575565,
+        "ms": 7357.443833997888,
+        "work": 44715927,
+        "maxWork": 1300
+      },
+      "minkowskiSum": {
+        "calls": 429178,
+        "ms": 2548.475299000424,
+        "work": 12238139,
+        "maxWork": 283
+      },
+      "expandConvex": {
+        "calls": 929540,
+        "ms": 2797.056855998277,
+        "work": 15292968,
+        "maxWork": 270
+      },
+      "planShipRouteImpl": {
+        "calls": 3325,
+        "ms": 12056.021917000024,
+        "work": 1765840,
+        "maxWork": 31755
+      },
+      "sweepShipCollision": {
+        "calls": 303736,
+        "ms": 6629.193231001271,
+        "work": 0,
+        "maxWork": 0
+      },
+      "nearby": {
+        "calls": 543560,
+        "ms": 772.5963370017162,
+        "work": 0,
+        "maxWork": 0
+      },
+      "sweepShape": {
+        "calls": 213157,
+        "ms": 4435.788743000636,
+        "work": 0,
+        "maxWork": 0
+      },
+      "arrivalConnectorFor": {
+        "calls": 3656,
+        "ms": 4193.143633000029,
+        "work": 0,
+        "maxWork": 0
+      }
+    }
+  },
+  "cow": {
+    "inclusiveCounters": {
+      "setBuildingBodies": {
+        "calls": 4846,
+        "ms": 224.82014800003628,
+        "work": 156976,
+        "maxWork": 51
+      },
+      "createRuntime": {
+        "calls": 46,
+        "ms": 85.97910899999806,
+        "work": 4710400,
+        "maxWork": 102400
+      },
+      "walkingDistance": {
+        "calls": 1463687,
+        "ms": 606.4698919999141,
+        "work": 0,
+        "maxWork": 0
+      },
+      "grow": {
+        "calls": 240,
+        "ms": 317.29032199999756,
+        "work": 24884160,
+        "maxWork": 103684
+      },
+      "beginShipCollisionFrame": {
+        "calls": 14404,
+        "ms": 1987.889446999938,
+        "work": 1254731,
+        "maxWork": 113
+      },
+      "growBoxInto": {
+        "calls": 6105,
+        "ms": 129.25859599981186,
+        "work": 0,
+        "maxWork": 0
+      },
+      "hullPassageClear": {
+        "calls": 1284343,
+        "ms": 9405.187974994818,
+        "work": 0,
+        "maxWork": 0
+      },
+      "convexHull": {
+        "calls": 1575565,
+        "ms": 7771.945721999753,
+        "work": 44715927,
+        "maxWork": 1300
+      },
+      "minkowskiSum": {
+        "calls": 429178,
+        "ms": 2645.3603949984913,
+        "work": 12238139,
+        "maxWork": 283
+      },
+      "expandConvex": {
+        "calls": 929540,
+        "ms": 3106.007012002903,
+        "work": 15292968,
+        "maxWork": 270
+      },
+      "planShipRouteImpl": {
+        "calls": 3325,
+        "ms": 12940.866199999935,
+        "work": 1765840,
+        "maxWork": 31755
+      },
+      "sweepShipCollision": {
+        "calls": 303736,
+        "ms": 7058.780117000886,
+        "work": 0,
+        "maxWork": 0
+      },
+      "nearby": {
+        "calls": 543560,
+        "ms": 878.1920060034131,
+        "work": 0,
+        "maxWork": 0
+      },
+      "sweepShape": {
+        "calls": 213157,
+        "ms": 4671.245306001296,
+        "work": 0,
+        "maxWork": 0
+      },
+      "arrivalConnectorFor": {
+        "calls": 3656,
+        "ms": 4488.084691000087,
+        "work": 0,
+        "maxWork": 0
+      }
+    }
+  },
+  "profile": {
+    "inclusiveMs": {
+      "(root)": 60438.36000000073,
+      "runProbe": 56373.14000000094,
+      "updateToRenderTime": 52879.098000001126,
+      "applyAndStep": 52866.70900000113,
+      "api.CommandFrameRuntime.tick": 52850.60000000112,
+      "tick": 52835.98100000109,
+      "advanceCommandFrameTick": 40629.494000001185,
+      "stepGame": 40354.775000001166,
+      "updateUnits": 30654.199000000997,
+      "moveToward": 24476.981000000495,
+      "sailToward": 23404.421000000366,
+      "advanceMoveOrder": 18991.343999999946,
+      "": 18700.428999999887,
+      "replan": 12622.672999999872,
+      "completeFrame": 12201.861999999883,
+      "planAiCommands": 12189.032999999883,
+      "planPresetAiRuntimeCommands": 12142.160999999887,
+      "planAiCommandFrame": 12107.318999999889,
+      "planAiCommandFrameRequestsFromSnapshot": 11947.372999999889,
+      "planAiOwnerCommandEntries": 11941.935999999892,
+      "runAiCommandEntriesFromScripts": 11623.247999999889,
+      "withCombatReadinessReuse": 11617.69199999989,
+      "run": 11610.003999999895,
+      "runScriptsWithContext": 11582.284999999893,
+      "planAiCommandFrameFromSnapshot": 11215.167999999903,
+      "planShipRouteImpl": 11080.539999999894,
+      "hullPassageClear": 7721.144000000052,
+      "convexHull": 7056.298999999999,
+      "advanceShip": 6663.95400000001,
+      "planShipRoute": 6645.567000000028,
+      "sweepShipCollision": 6111.188000000003,
+      "waitForTraffic": 5766.264000000033,
+      "advanceShipPlanningJob": 5575.611000000019,
+      "updateAttackMoveOrder": 4691.909000000005,
+      "advanceLiveShipRouteSearch": 4492.683000000019,
+      "advanceShipRouteSearchImpl": 4491.599000000019,
+      "followShipRoute": 4246.364000000004,
+      "sweepShape": 4142.917000000001,
+      "(garbage collector)": 3986.091999999995,
+      "arrivalConnectorFor": 3819.0880000000125
+    },
+    "selfMs": {
+      "": 8900.462000000034,
+      "convexHull": 5393.385000000006,
+      "(garbage collector)": 3986.091999999995,
+      "planShipRouteImpl": 1509.3679999999993,
+      "stepGame": 1477.9570000000006,
+      "appendSupportingPlane": 1347.1870000000017,
+      "polygonPlaneState": 1280.577,
+      "expandConvex": 1069.4740000000006,
+      "hullPassageClear": 1054.012999999999,
+      "updateEntry": 835.2899999999993,
+      "pop": 753.4819999999994,
+      "sailToward": 638.6629999999998,
+      "beginShipCollisionFrame": 627.2170000000002,
+      "clearOutline": 617.381,
+      "deckPlacement": 612.6150000000005,
+      "nearby": 589.3400000000001,
+      "configuration": 525.0020000000001,
+      "snapshotGame": 524.6430000000004,
+      "clear": 520.4830000000001,
+      "shipProfile": 501.7860000000006,
+      "visit": 472.75000000000006,
+      "detSin": 468.5150000000003,
+      "syncDecks": 447.6750000000004,
+      "half": 440.00900000000007,
+      "combatCapability": 439.3409999999998,
+      "minkowskiSum": 432.416,
+      "followShipRoute": 416.00000000000034,
+      "forEachNearbyEntity": 404.69200000000023,
+      "supportScale": 383.44900000000007,
+      "detCos": 374.42699999999996,
+      "moveToward": 364.57900000000046,
+      "updateUnits": 353.49700000000024,
+      "circleInPolygon": 336.34800000000035,
+      "bestFiringHeading": 328.7160000000004,
+      "growBoxInto": 324.6949999999999,
+      "sweepShape": 324.6050000000002,
+      "isShipKind": 322.8550000000002,
+      "advanceShip": 320.7790000000001,
+      "neutralCamps": 303.32200000000034,
+      "grow": 263.5270000000001
+    }
+  },
+  "gc": {
+    "count": 869,
+    "totalDurationMs": 3502.8447430000233,
+    "selectedOverlaps": {
+      "0": 0,
+      "3345": 14.707845000026282,
+      "5971": 4.791213999997126,
+      "6990": 11.614879999979166,
+      "9659": 0
+    }
+  }
+}
