@@ -56,6 +56,10 @@ export function alongside(unit: Unit, transport: Unit) {
 /** One reachable shore for the whole boat, rather than chasing each passenger in turn. */
 export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
   if (!map.terrain) return { x: transport.x, y: transport.y };
+  // A terrain-clear hull can still be out of boarding reach. Keep searching
+  // its other poses instead of rejecting the whole shore after the first one.
+  const reachesShore = (shore: {x:number;y:number}) => (pose: {x:number;y:number;heading:number}) =>
+    distanceToHull({...transport,...pose,sailing:{heading:pose.heading,speed:0,load:0,balance:0}},shore)<=passenger.radius+BOARDING_GAP;
   const terrain = map.terrain;
   const candidates: { x: number; y: number; score: number }[] = [];
   for (let index = 0; index < terrain.cells.length; index++) {
@@ -68,13 +72,13 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
   }
   for (const point of candidates.sort((a,b) => a.score-b.score)) {
     const land = walkDestination(map, passenger, point);
-    const sea = nearestShipPose(map,transport,point);
+    const sea = nearestShipPose(map,transport,point,transport,reachesShore(land));
     if(!sea)continue;
     const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
     if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP)return {x:sea.x,y:sea.y,heading:sea.heading,shore:land};
   }
   const land = walkDestination(map, passenger, walkableGoal(map, transport.x, transport.y));
-  const sea = nearestShipPose(map,transport,walkableGoal(map,land.x,land.y,"sea"));
+  const sea = nearestShipPose(map,transport,walkableGoal(map,land.x,land.y,"sea"),transport,reachesShore(land));
   if(!sea)return undefined;
   const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
   return distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP ? {x:sea.x,y:sea.y,heading:sea.heading,shore:land} : undefined;

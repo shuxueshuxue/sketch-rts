@@ -57,7 +57,12 @@ it.each(cases)('$version ferries toward the free island instead of allied $claim
     }
     expect(memory.naval?.island?.plan?.mineId).toBe('free-island');
     expect(memory.naval?.ferries?.boat?.targetId).toBe('free-island');
-    expect(game.units.find(unit => unit.id === 'boat')!.order.type).toBe('move');
+    const boat = game.units.find(unit => unit.id === 'boat')!;
+    // Native boarding sails an idle hull to its passengers without replacing
+    // its order. Verify the physical rendezvous instead of an explicit helm.
+    expect(Math.hypot(boat.x - (mirror ? 3096 : 1000), boat.y - 1800)).toBeGreaterThan(32);
+    expect(game.units.some(unit => unit.owner === 'us' && unit.order.type === 'board'
+      && unit.order.transportId === boat.id && unit.order.berth)).toBe(true);
     expect(game.match.stats.unitsLost.us).toBe(0);
     expect(game.match.stats.goldSpent.us).toBe(0);
     expect(game.match.winner).toBeNull();

@@ -21,6 +21,7 @@ import { planSettlerBoarding } from './ferry-preparation';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportNeedsRecovery, transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
+import { expeditionDeparture } from './expedition-departure';
 
 function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
   return foes.filter(foe => sameGround(snapshot.map, patient, foe)
@@ -104,7 +105,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  planRiderCrossing(snapshot, owner, options);
+  const crossing = planRiderCrossing(snapshot, owner, options);
   const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
   if (ferries) for (const boat of units(snapshot, owner)) {
     const mission = ferries[boat.id];
@@ -118,10 +119,13 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const ports = transportRecovery(snapshot, owner, options);
   const { recovering, unmedicated, foes, posts } = recoveryAssignments(snapshot, owner, options);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
+  const departing = expeditionDeparture(snapshot, owner, options, ports.ids,
+    new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
+      ...posts.map(({ patient }) => patient.id), ...medics]));
   const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
-    ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
+    ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids, ...departing.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
-  const commands = [...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
+  const commands = [...crossing, ...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),
@@ -138,5 +142,10 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     const unitIds = command.unitIds.filter(id => !reserved.has(id));
     return unitIds.length ? [{ ...command, unitIds }] : [];
   }), ...postRecoveryCommands(posts), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
-    ({ type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true })), ...healing, ...ports.commands];
+    ({ type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true })), ...healing,
+    ...ports.commands.flatMap((command): GameCommand[] => {
+      if (!('unitIds' in command)) return [command];
+      const unitIds = command.unitIds.filter(id => !departing.ids.has(id));
+      return unitIds.length ? [{ ...command, unitIds }] : [];
+    }), ...departing.commands];
 }
