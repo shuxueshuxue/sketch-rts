@@ -2,7 +2,7 @@ import { miningHallSite } from "../../shared/mining-site";
 import { automaticShoreTargetReachable, shoreFiringStation } from '../../shared/shore-fire';
 import { coastalRefuge, outmatchingCoast } from './coastal-risk';
 import { GOLD_MINE_RULES } from '../../shared/mining';
-import { nearestByRoute } from '../../shared/route-selection';
+import { nearestByRoute, routeArrivals } from '../../shared/route-selection';
 import { distanceToHull, localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import {combatCapability} from '../../shared/combat-capabilities';
 import {navalServices} from './naval-services';
@@ -699,13 +699,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
         return commands;
     }
-    const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     const loadGround = walkableGoal(map, (mission.pickup ?? mission.from).x, (mission.pickup ?? mission.from).y);
-    if (distanceToHull(boat, loadGround) > UNIT_DEFS.worker.radius + BOARDING_GAP && (!shipPassengers(snapshot.units,boat).length || mission.pickup) && !waiting.length) {
-        if (needsMove(boat, mission.pickup ?? mission.from))
-            commands.push({ type: "move", unitIds: [boat.id], ...(mission.pickup ?? mission.from), avoidCombat:true });
-        return commands;
-    }
     if (mission.purpose === "settle" && shipPassengers(snapshot.units,boat).length && !shipPassengers(snapshot.units,boat).some(unit => unit.kind === "worker") && shipPassengers(snapshot.units,boat).reduce((n, unit) => n + bodyMass(unit), 0) >= ferryCapacity(boat) - 1) {
         return [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
     }
@@ -714,7 +708,13 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const attached = new Set([...cargo, ...boarding].map(unit => unit.id));
     mission.crewIds = mission.crewIds.filter(id => attached.has(id));
     let room = ferryCapacity(boat) - [...cargo, ...boarding].reduce((n, unit) => n + bodyMass(unit), 0);
-    const workers = own.filter(unit => !unit.deck && !attached.has(unit.id) && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle"));
+    // Earlier ferries in this planning frame already own their requested crew,
+    // even though the immutable snapshot still shows those walkers as idle.
+    const reservedElsewhere=new Set(Object.entries(ferries).filter(([id,other])=>id!==boat.id && other.phase!=='return').flatMap(([,other])=>other.crewIds));
+    const workers = routeArrivals(map, own.filter(unit => !reservedElsewhere.has(unit.id) && !unit.deck && !attached.has(unit.id)
+        && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle")
+        && options.memory.unitClaims[unit.id]?.kind !== 'build' && options.memory.unitClaims[unit.id]?.kind !== 'retreat'), loadGround, 'land')
+        .sort((a,b)=>Number(b.unit.order.type==='idle')-Number(a.unit.order.type==='idle')).map(({unit})=>unit);
     const crew: Unit[] = [];
     const workerCount = [...cargo, ...boarding].filter(unit => unit.kind === "worker").length;
     const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, mine, loadGround) && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;
@@ -730,7 +730,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Reserve payload for the expedition's engineers; geometric reservations below also leave actual floor space.
     if (mission.purpose === "settle")
         room -= 75 * Math.max(0, 2 - workerCount - crew.filter(unit => unit.kind === "worker").length);
-    const soldiers = orderCrew(own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
+    const soldiers = orderCrew(own.filter(unit => !reservedElsewhere.has(unit.id) && !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
@@ -758,6 +758,19 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             if (boat.order.type === "move") commands.push({ type: "stop", unitIds: [boat.id] });
         }
     }
+    // Board orders own a real hull pose and shore meeting point. Requiring the
+    // hull to touch a coarse coastal coordinate first can keep it circling an
+    // occupied quay forever, before its passengers can even request a berth.
+    if (!cargo.length && !boarding.length && !crew.length
+        && distanceToHull(boat, loadGround) > UNIT_DEFS.worker.radius + BOARDING_GAP) {
+        if (needsMove(boat, mission.pickup ?? mission.from))
+            commands.push({ type: "move", unitIds: [boat.id], ...(mission.pickup ?? mission.from), avoidCombat:true });
+        return commands;
+    }
+    // Loading an engineer first does not mean this is the landing force.
+    // Finish the requested rendezvous before judging the assembled invasion;
+    // the normal physical-progress check still cancels a blocked transfer.
+    if(mission.purpose==='assault' && (boarding.length || crew.length))return commands;
     if (mission.purpose === 'assault' && !boarding.length && !crew.length) {
         const required = assaultExpedition(snapshot, owner, options, target).required;
         const landed = own.filter(unit=>!unit.deck && unit.kind!=='worker' && unitMover(unit.kind)==='land' && sameGround(map,unit,target));

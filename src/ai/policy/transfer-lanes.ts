@@ -28,7 +28,7 @@ export function clearTransferLanes(snapshot: GameSnapshot, owner: PlayerId): Gam
     if (distance(passenger, shore) > 300) continue;
     const dx = passenger.x - shore.x, dy = passenger.y - shore.y, length = Math.hypot(dx, dy) || 1;
     for (const unit of own) {
-      if (assigned.has(unit.id) || unit.kind === 'worker' || distance(unit, shore) > 220) continue;
+      if (assigned.has(unit.id) || distance(unit, shore) > 220) continue;
       if (unit.order.type === 'move' && unit.order.avoidCombat) {
         assigned.add(unit.id);
         commands.push({ type: 'move', unitIds: [unit.id], x: unit.order.x, y: unit.order.y, avoidCombat: true });
