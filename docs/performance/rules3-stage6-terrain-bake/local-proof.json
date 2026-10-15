@@ -1,0 +1,1688 @@
+{
+  "complete": true,
+  "stage": 6,
+  "localReadback": {
+    "v13": {
+      "scalarRows": 33,
+      "allWholeCounters": {
+        "createRuntimeCalls": 46,
+        "baseCreateLand": 1,
+        "baseCreateSea": 1,
+        "overlayCreate": 44,
+        "semanticsCalls": 3,
+        "wholesCalls": 4128613,
+        "wholesHit": 4128611,
+        "wholesMiss": 2,
+        "wholesPrepared": 2,
+        "wholesOriginal": 0,
+        "shoreCalls44": 126,
+        "shoreCallsOther": 0,
+        "shoreHit": 125,
+        "shoreMiss": 1,
+        "shoreOpenWater": 1,
+        "shoreNoOpenWater": 0,
+        "shorePrepared": 1,
+        "shoreOriginal": 0,
+        "rememberCalls": 46,
+        "creationSnapshotCalls": 46,
+        "inputSnapshotCalls": 50,
+        "currentSnapshotCalls": 4,
+        "eligibleCalls": 4,
+        "eligibleMissingState": 0,
+        "eligibleCreationIdentityReject": 0,
+        "eligibleCreationCurrentReject": 0,
+        "eligibleAssetOrSemanticsReject": 0,
+        "eligibleAssetMatch": 4,
+        "eligibleAssetMismatch": 0,
+        "sameInputCalls": 8,
+        "loadAssetCalls": 4,
+        "decodedInputInitialize": 1,
+        "bakeWholesCalls": 2,
+        "bakeWholesSuccess": 2,
+        "bakeShoreCalls44": 1,
+        "bakeShoreCallsOther": 0,
+        "bakeShoreDecodeAttempt": 1,
+        "decodeErrorFallback": 0,
+        "providerCalls": 1,
+        "decodeInt32Calls": 4,
+        "decodeUtf16Calls": 1,
+        "decodeIndicesCalls": 1
+      },
+      "missRows": [
+        {
+          "scope": "tick",
+          "phase": "whole",
+          "index": 0,
+          "counts": {
+            "createRuntimeCalls": 4,
+            "baseCreateLand": 1,
+            "baseCreateSea": 1,
+            "overlayCreate": 2,
+            "semanticsCalls": 3,
+            "wholesCalls": 1384,
+            "wholesHit": 1382,
+            "wholesMiss": 2,
+            "wholesPrepared": 2,
+            "wholesOriginal": 0,
+            "shoreCalls44": 5,
+            "shoreCallsOther": 0,
+            "shoreHit": 4,
+            "shoreMiss": 1,
+            "shoreOpenWater": 1,
+            "shoreNoOpenWater": 0,
+            "shorePrepared": 1,
+            "shoreOriginal": 0,
+            "rememberCalls": 4,
+            "creationSnapshotCalls": 4,
+            "inputSnapshotCalls": 8,
+            "currentSnapshotCalls": 4,
+            "eligibleCalls": 4,
+            "eligibleMissingState": 0,
+            "eligibleCreationIdentityReject": 0,
+            "eligibleCreationCurrentReject": 0,
+            "eligibleAssetOrSemanticsReject": 0,
+            "eligibleAssetMatch": 4,
+            "eligibleAssetMismatch": 0,
+            "sameInputCalls": 8,
+            "loadAssetCalls": 4,
+            "decodedInputInitialize": 1,
+            "bakeWholesCalls": 2,
+            "bakeWholesSuccess": 2,
+            "bakeShoreCalls44": 1,
+            "bakeShoreCallsOther": 0,
+            "bakeShoreDecodeAttempt": 1,
+            "decodeErrorFallback": 0,
+            "providerCalls": 1,
+            "decodeInt32Calls": 4,
+            "decodeUtf16Calls": 1,
+            "decodeIndicesCalls": 1
+          }
+        }
+      ],
+      "fourInstrumentedSourcePaths": [
+        "src/shared/terrain-bake-assets.generated.ts",
+        "src/shared/terrain-bake-codec.ts",
+        "src/shared/terrain-bake.ts",
+        "src/shared/terrain.ts"
+      ],
+      "notPerformanceAcceptance": true,
+      "highFrequencyRuntimeRegistrationNotSupported": true,
+      "doesNotEstablishWholeRegressionCause": true
+    },
+    "cold24": {
+      "samples": [
+        {
+          "label": "01-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 384.59155000000004,
+            "firstModuleImportMs": 45.292212,
+            "frameObserverInstallMs": 0.0057380000000080145,
+            "runtimeConstructionMs": 0.08631699999999398,
+            "createRoomMs": 0.5102480000000043,
+            "startRoomMs": 252.326705,
+            "beforeFirstTickMs": 0.0014520000000288746,
+            "firstNativeAdapterTickMs": 86.368878
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29880320,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99127296,
+              "heapTotal": 28704768,
+              "heapUsed": 16733504,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "01-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 341.411739,
+            "firstModuleImportMs": 39.587491,
+            "frameObserverInstallMs": 0.005538000000001375,
+            "runtimeConstructionMs": 0.07881600000000333,
+            "createRoomMs": 0.4145379999999932,
+            "startRoomMs": 236.87281299999998,
+            "beforeFirstTickMs": 0.001462000000003627,
+            "firstNativeAdapterTickMs": 64.45108100000004
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29880320,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100139008,
+              "heapTotal": 29491200,
+              "heapUsed": 17260936,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "01-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 350.217018,
+            "firstModuleImportMs": 39.184630999999996,
+            "frameObserverInstallMs": 0.005418000000005918,
+            "runtimeConstructionMs": 0.07994799999999458,
+            "createRoomMs": 0.45818200000000786,
+            "startRoomMs": 243.678027,
+            "beforeFirstTickMs": 0.0016120000000228174,
+            "firstNativeAdapterTickMs": 66.80919999999998
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 101523456,
+              "heapTotal": 29491200,
+              "heapUsed": 11676288,
+              "external": 30751507,
+              "arrayBuffers": 25953126
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "01-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 372.6052,
+            "firstModuleImportMs": 39.052507000000006,
+            "frameObserverInstallMs": 0.006037999999996657,
+            "runtimeConstructionMs": 0.08462500000000261,
+            "createRoomMs": 0.4052039999999977,
+            "startRoomMs": 242.561749,
+            "beforeFirstTickMs": 0.001462000000003627,
+            "firstNativeAdapterTickMs": 90.49361500000003
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 98500608,
+              "heapTotal": 29229056,
+              "heapUsed": 18476936,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "02-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 381.28576,
+            "firstModuleImportMs": 41.250069999999994,
+            "frameObserverInstallMs": 0.005929000000008955,
+            "runtimeConstructionMs": 0.08520500000000197,
+            "createRoomMs": 0.4201059999999899,
+            "startRoomMs": 254.71491000000003,
+            "beforeFirstTickMs": 0.001902999999970234,
+            "firstNativeAdapterTickMs": 84.807637
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100036608,
+              "heapTotal": 28966912,
+              "heapUsed": 14117088,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "02-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 379.850435,
+            "firstModuleImportMs": 40.358603,
+            "frameObserverInstallMs": 0.006048999999990201,
+            "runtimeConstructionMs": 0.07972700000000543,
+            "createRoomMs": 0.5308490000000035,
+            "startRoomMs": 258.63724399999995,
+            "beforeFirstTickMs": 0.0013520000000539767,
+            "firstNativeAdapterTickMs": 80.23661099999998
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29880320,
+              "heapTotal": 6549504,
+              "heapUsed": 5438080,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100401152,
+              "heapTotal": 28966912,
+              "heapUsed": 13293952,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "02-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 362.14995500000003,
+            "firstModuleImportMs": 41.19384799999999,
+            "frameObserverInstallMs": 0.0050880000000006476,
+            "runtimeConstructionMs": 0.07920599999999922,
+            "createRoomMs": 0.41046200000000965,
+            "startRoomMs": 254.324297,
+            "beforeFirstTickMs": 0.0013920000000098298,
+            "firstNativeAdapterTickMs": 66.13566200000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29880320,
+              "heapTotal": 6811648,
+              "heapUsed": 5438080,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 98234368,
+              "heapTotal": 28966912,
+              "heapUsed": 17843816,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "02-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 395.416429,
+            "firstModuleImportMs": 51.738961,
+            "frameObserverInstallMs": 0.0063689999999922975,
+            "runtimeConstructionMs": 0.08901099999999929,
+            "createRoomMs": 0.43093199999999854,
+            "startRoomMs": 264.06933000000004,
+            "beforeFirstTickMs": 0.0015219999999658285,
+            "firstNativeAdapterTickMs": 79.08030400000001
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 96382976,
+              "heapTotal": 29229056,
+              "heapUsed": 17941872,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "03-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 408.60679600000003,
+            "firstModuleImportMs": 42.559903,
+            "frameObserverInstallMs": 0.006229000000004703,
+            "runtimeConstructionMs": 0.07902599999999893,
+            "createRoomMs": 0.4464849999999956,
+            "startRoomMs": 253.326008,
+            "beforeFirstTickMs": 0.001561999999978525,
+            "firstNativeAdapterTickMs": 112.18758300000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 30007296,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99459072,
+              "heapTotal": 29229056,
+              "heapUsed": 11711696,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "03-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 382.960953,
+            "firstModuleImportMs": 42.841306,
+            "frameObserverInstallMs": 0.005767999999989115,
+            "runtimeConstructionMs": 0.103422000000009,
+            "createRoomMs": 0.4236709999999988,
+            "startRoomMs": 258.986647,
+            "beforeFirstTickMs": 0.0016929999999888423,
+            "firstNativeAdapterTickMs": 80.59844600000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6549504,
+              "heapUsed": 5438080,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99512320,
+              "heapTotal": 28966912,
+              "heapUsed": 16005168,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "03-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 395.55969799999997,
+            "firstModuleImportMs": 43.606919000000005,
+            "frameObserverInstallMs": 0.005748999999994453,
+            "runtimeConstructionMs": 0.08811900000000605,
+            "createRoomMs": 0.537468000000004,
+            "startRoomMs": 281.032257,
+            "beforeFirstTickMs": 0.0014829999999506072,
+            "firstNativeAdapterTickMs": 70.28770300000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99172352,
+              "heapTotal": 29753344,
+              "heapUsed": 19442360,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "03-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 382.01750400000003,
+            "firstModuleImportMs": 45.021173000000005,
+            "frameObserverInstallMs": 0.006028999999998064,
+            "runtimeConstructionMs": 0.08347299999999791,
+            "createRoomMs": 0.42882900000000745,
+            "startRoomMs": 248.857977,
+            "beforeFirstTickMs": 0.0015919999999596257,
+            "firstNativeAdapterTickMs": 87.61843100000004
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 95010816,
+              "heapTotal": 29491200,
+              "heapUsed": 12077304,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "04-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 371.888333,
+            "firstModuleImportMs": 43.227441,
+            "frameObserverInstallMs": 0.005859000000000947,
+            "runtimeConstructionMs": 0.08090900000000545,
+            "createRoomMs": 0.4615270000000038,
+            "startRoomMs": 244.13673999999997,
+            "beforeFirstTickMs": 0.0015920000000164691,
+            "firstNativeAdapterTickMs": 83.974265
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100818944,
+              "heapTotal": 28966912,
+              "heapUsed": 17688080,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "04-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 418.160242,
+            "firstModuleImportMs": 41.859258999999994,
+            "frameObserverInstallMs": 0.005748000000011189,
+            "runtimeConstructionMs": 0.07944699999998761,
+            "createRoomMs": 0.45797200000001226,
+            "startRoomMs": 248.49606599999998,
+            "beforeFirstTickMs": 0.0013020000000096843,
+            "firstNativeAdapterTickMs": 127.260448
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 7073792,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99586048,
+              "heapTotal": 28966912,
+              "heapUsed": 16382112,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "04-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 357.776279,
+            "firstModuleImportMs": 41.183093,
+            "frameObserverInstallMs": 0.005909000000002607,
+            "runtimeConstructionMs": 0.08140900000000784,
+            "createRoomMs": 0.45832299999999293,
+            "startRoomMs": 248.55587300000002,
+            "beforeFirstTickMs": 0.0014820000000099753,
+            "firstNativeAdapterTickMs": 67.49018999999998
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 7073792,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100249600,
+              "heapTotal": 29491200,
+              "heapUsed": 17699288,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "04-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 369.90962,
+            "firstModuleImportMs": 40.70281800000001,
+            "frameObserverInstallMs": 0.005797999999998638,
+            "runtimeConstructionMs": 0.08061899999999866,
+            "createRoomMs": 0.41687100000000044,
+            "startRoomMs": 245.53175699999997,
+            "beforeFirstTickMs": 0.0014219999999909305,
+            "firstNativeAdapterTickMs": 83.17033500000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 98095104,
+              "heapTotal": 28704768,
+              "heapUsed": 11532632,
+              "external": 30669888,
+              "arrayBuffers": 25933835
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "05-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 364.636864,
+            "firstModuleImportMs": 41.815881,
+            "frameObserverInstallMs": 0.006389999999996121,
+            "runtimeConstructionMs": 0.12554400000000498,
+            "createRoomMs": 0.46850700000000245,
+            "startRoomMs": 240.471683,
+            "beforeFirstTickMs": 0.0014719999999783795,
+            "firstNativeAdapterTickMs": 81.747387
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6811648,
+              "heapUsed": 5438080,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 99241984,
+              "heapTotal": 28966912,
+              "heapUsed": 18548216,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "05-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 354.09493699999996,
+            "firstModuleImportMs": 41.427652,
+            "frameObserverInstallMs": 0.006328999999993812,
+            "runtimeConstructionMs": 0.08698800000000517,
+            "createRoomMs": 0.4791629999999998,
+            "startRoomMs": 244.247082,
+            "beforeFirstTickMs": 0.0016219999999975698,
+            "firstNativeAdapterTickMs": 67.84610099999998
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 97812480,
+              "heapTotal": 29753344,
+              "heapUsed": 15951512,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "05-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 346.640841,
+            "firstModuleImportMs": 39.80868699999999,
+            "frameObserverInstallMs": 0.0052770000000066375,
+            "runtimeConstructionMs": 0.07953700000000197,
+            "createRoomMs": 0.442939999999993,
+            "startRoomMs": 242.065731,
+            "beforeFirstTickMs": 0.0016029999999886968,
+            "firstNativeAdapterTickMs": 64.23706600000003
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 97280000,
+              "heapTotal": 28966912,
+              "heapUsed": 18866776,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "05-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 370.04720199999997,
+            "firstModuleImportMs": 40.48161400000001,
+            "frameObserverInstallMs": 0.005887999999998783,
+            "runtimeConstructionMs": 0.08103899999999697,
+            "createRoomMs": 0.4537260000000032,
+            "startRoomMs": 241.350842,
+            "beforeFirstTickMs": 0.0014719999999783795,
+            "firstNativeAdapterTickMs": 87.67262099999999
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29745152,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 96706560,
+              "heapTotal": 28966912,
+              "heapUsed": 17249280,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "06-1-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 453.620517,
+            "firstModuleImportMs": 40.814381,
+            "frameObserverInstallMs": 0.005929000000008955,
+            "runtimeConstructionMs": 0.11166399999999044,
+            "createRoomMs": 0.4608259999999973,
+            "startRoomMs": 291.63617899999997,
+            "beforeFirstTickMs": 0.0014330000000200016,
+            "firstNativeAdapterTickMs": 120.590105
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29876224,
+              "heapTotal": 6811648,
+              "heapUsed": 5438080,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 101937152,
+              "heapTotal": 28966912,
+              "heapUsed": 14958288,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "06-2-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 362.762329,
+            "firstModuleImportMs": 46.493112999999994,
+            "frameObserverInstallMs": 0.0062500000000085265,
+            "runtimeConstructionMs": 0.08189999999999031,
+            "createRoomMs": 0.455087000000006,
+            "startRoomMs": 248.34099400000002,
+            "beforeFirstTickMs": 0.0014019999999845822,
+            "firstNativeAdapterTickMs": 67.38358299999999
+          },
+          "memory": {
+            "preImport": {
+              "rss": 30011392,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 96518144,
+              "heapTotal": 29229056,
+              "heapUsed": 16898064,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "06-3-B",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 244,
+            "sourceInputBytes": 2881050,
+            "sourceManifestSha256": "4752a598c174d2bf8a4b1f026b9a7e98e8d3a3413361d6ee8553641a4b4e16bf",
+            "bundleSha256": "61e98399b2c64bed279b92046f8fcea1ff3db7d49adf1bbb8100634567fbc4e3"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 356.075193,
+            "firstModuleImportMs": 40.59485000000001,
+            "frameObserverInstallMs": 0.0058989999999994325,
+            "runtimeConstructionMs": 0.08000699999999483,
+            "createRoomMs": 0.44900900000000377,
+            "startRoomMs": 248.97170300000002,
+            "beforeFirstTickMs": 0.0014919999999847278,
+            "firstNativeAdapterTickMs": 65.97223300000002
+          },
+          "memory": {
+            "preImport": {
+              "rss": 29880320,
+              "heapTotal": 6549504,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 100286464,
+              "heapTotal": 28704768,
+              "heapUsed": 17592320,
+              "external": 30751507,
+              "arrayBuffers": 26367862
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        },
+        {
+          "label": "06-4-A",
+          "facts": {
+            "rulesVersion": 3,
+            "checksumVersion": 18,
+            "initialTick": 0,
+            "tickAfter": 1,
+            "changed": true,
+            "nativeFrameCalls": 1,
+            "snapshotTickAfter": 1,
+            "firstTickChecksum": "21709a99",
+            "aiVersions": {
+              "enemy": "v9_archer",
+              "enemy2": "v9_archer",
+              "player-4": "v9_knight",
+              "player-5": "v9_summoner",
+              "player-6": "v9_knight"
+            },
+            "initialSnapshotBytes": 147891,
+            "initialSnapshotSha256": "5375d4a54cf3e0cc1d4c614c4442b07118c1f1e0dd47b6ea96c73206c2b882c7",
+            "firstNativeFrameBytes": 1232,
+            "firstNativeFrameSha256": "4e6ed57f16fa06a821c8a97405399036d06bf4580e6c8e9cc4ce7c603c2920e5",
+            "firstNativeFrameTick": 0,
+            "firstNativeFrameSequence": 0,
+            "firstNativeFrameRoomId": "six-player-perf-512",
+            "firstNativeCommandCount": 10,
+            "firstTickSnapshotBytes": 149578,
+            "firstTickSnapshotSha256": "dc947112397d5ed9ca8c5fab70e31399ef97530f32e78b2e854587258a734b23",
+            "initialUnits": 48,
+            "initialBuildings": 6,
+            "firstTickUnits": 48,
+            "firstTickBuildings": 6,
+            "sourceInputCount": 241,
+            "sourceInputBytes": 2811780,
+            "sourceManifestSha256": "b5b98b9e9682a8d4497a10b59e478a0d41c720728c2bbf83c9b05f37cfe0dabe",
+            "bundleSha256": "2e4331e400e389514efe94cd943e940d7f46d698bec95a5705d4009b4b4970c9"
+          },
+          "timing": {
+            "contiguousImportThroughFirstNativeTickMs": 375.69586,
+            "firstModuleImportMs": 43.24005000000001,
+            "frameObserverInstallMs": 0.005998999999988541,
+            "runtimeConstructionMs": 0.11863400000000013,
+            "createRoomMs": 0.4647319999999979,
+            "startRoomMs": 248.95773300000002,
+            "beforeFirstTickMs": 0.001622999999995045,
+            "firstNativeAdapterTickMs": 82.90708899999998
+          },
+          "memory": {
+            "preImport": {
+              "rss": 30007296,
+              "heapTotal": 6811648,
+              "heapUsed": 5438008,
+              "external": 2184761,
+              "arrayBuffers": 143647
+            },
+            "afterTick": {
+              "rss": 97132544,
+              "heapTotal": 29229056,
+              "heapUsed": 19322656,
+              "external": 30669888,
+              "arrayBuffers": 26348571
+            },
+            "meaning": "Two process snapshots outside contiguous timer; not a peak, retained heap, leak estimate, or forced-GC comparison."
+          }
+        }
+      ],
+      "allCompleteSnapshotAndFrameBytesVerified": true,
+      "firstTickChecksum": "21709a99"
+    },
+    "originalValidationManifest": {
+      "files": 53,
+      "allRawShaExact": true
+    }
+  },
+  "execution": {
+    "startedAt": "2026-10-15T00:45:04.525998+00:00",
+    "endedAt": "2026-10-15T00:45:05.874002+00:00",
+    "wallSeconds": 1.348009153996827
+  }
+}

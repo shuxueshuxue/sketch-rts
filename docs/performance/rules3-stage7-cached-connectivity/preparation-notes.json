@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "stage": 7,
+  "oldClosedPathsUnchanged": true,
+  "oldEvidenceHead": "9f3101feb4865644e2f0d914dd709c5a614f055f",
+  "allNewOutputsUnderTmp": true,
+  "initialStatsOnlyPreparation": "/tmp/whole-stage6-terrain-bake-evidence-preparation",
+  "scopeFinalActual": "Stage6 bake+5native+24cold+actualv13; Stage7 cached connectivity+10native+correctness+aggregate replay; distinct reports.",
+  "sdkTerminology": {
+    "stage5": "Four real Vitest files: package boundaries7 + production bootstrap5 + driver1 + planner1 =14; not archive-schema cases.",
+    "runtimeCandidates": "Original package-boundaries file7 tests; earlier correctness receipts preserved.",
+    "thisArchive": "Same four-file command on evidence branch, including complete new docs via temporary explicitly recorded symlinks; no game benchmark."
+  },
+  "firstArchiveAnalysisFailures": [
+    {
+      "attempt": "analyze-stage6-01",
+      "cause": "Incorrect new assertion expected transformed source differences; originalInputs captured before onLoad; all244 original source texts are equal and Git-authenticated. Full helper/hooks/bundle separately checked."
+    },
+    {
+      "attempt": "analyze-stage7-01",
+      "cause": "Incorrect new assertion expected early private tiles allocation equality; original proof explicitly permits delayed tiles. All original semantic fields/full final private fingerprints equal, early exact differences separately kept."
+    }
+  ],
+  "candidatePublicationAsOf": {
+    "bake": "Rejected; unpublished.",
+    "cached": "PR380 head0ea, CI38661452635/job116183424785 34steps success ended00:46:10UTC; at00:47:06 main618 and merge/deploy pending."
+  },
+  "finalSdkActual": {
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "oldClosedStage5Only": true,
+    "runtimeAssertionsUnchanged": true,
+    "wholeSeconds": 32.19241586601129,
+    "allNewArchivesShaUnchangedDuringSdk": true
+  }
+}

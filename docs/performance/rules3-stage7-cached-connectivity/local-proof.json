@@ -1,0 +1,698 @@
+{
+  "complete": true,
+  "stage": 7,
+  "localReadback": {
+    "actualFullTypedSnapshots": [
+      {
+        "mode": "none",
+        "instance": "one",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": false,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": false,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "e3c105c9646d5c0d98cada49759dfb0e790bb042b207876e88b97ac0d1025410",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "e3c105c9646d5c0d98cada49759dfb0e790bb042b207876e88b97ac0d1025410",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": false
+      },
+      {
+        "mode": "none",
+        "instance": "two",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": false,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": false,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "e3c105c9646d5c0d98cada49759dfb0e790bb042b207876e88b97ac0d1025410",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "e3c105c9646d5c0d98cada49759dfb0e790bb042b207876e88b97ac0d1025410",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": false
+      },
+      {
+        "mode": "groundWholes",
+        "instance": "one",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": false,
+          "groundTiles": false,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "5882eb29620c3740e719a0db20fdf971aeffeddab3825c5d28adce8955bbb225",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "38ef0e8ffdc992a8082d04c568393521d9e7bd0798dbcf7b9db85c07dd7a2d1c",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": true
+      },
+      {
+        "mode": "groundWholes",
+        "instance": "two",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": false,
+          "groundTiles": false,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "5882eb29620c3740e719a0db20fdf971aeffeddab3825c5d28adce8955bbb225",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "38ef0e8ffdc992a8082d04c568393521d9e7bd0798dbcf7b9db85c07dd7a2d1c",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": true
+      },
+      {
+        "mode": "shoreSpots44",
+        "instance": "one",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": false,
+          "groundTiles": false,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "b39a206a0eb098bca7eaa73ef9b35f0e22e948267584150a6d703170376b1837",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "f78c8b5d1a09a08dd80866ddef3ea96af17714ec5c74b17c489ad4a77229730d",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": true
+      },
+      {
+        "mode": "shoreSpots44",
+        "instance": "two",
+        "allOriginalSemanticFieldsIncludingFullPostRequiredTilesFingerprintsEqual": true,
+        "earlyAfterQueriesA": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": true,
+          "groundTiles": true,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyAfterQueriesB": {
+          "groundExists": true,
+          "routeExists": true,
+          "routingEqualsGround": true,
+          "overlayExists": false,
+          "wholes": true,
+          "tiles": false,
+          "groundTiles": false,
+          "clock": 0,
+          "fields": 0,
+          "spare": 0,
+          "nearest": 1,
+          "boxBucketsEmpty": true
+        },
+        "earlyRawPrivateA": {
+          "rawExactGraphSha256": "b39a206a0eb098bca7eaa73ef9b35f0e22e948267584150a6d703170376b1837",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "tiles",
+            "clearance",
+            "buckets"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "earlyRawPrivateB": {
+          "rawExactGraphSha256": "f78c8b5d1a09a08dd80866ddef3ea96af17714ec5c74b17c489ad4a77229730d",
+          "groundOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "stateOwnKeys": [
+            "terrain",
+            "width",
+            "walk",
+            "weight",
+            "fields",
+            "clock",
+            "spare",
+            "nearest",
+            "tops",
+            "boxBuckets",
+            "offsets",
+            "shores",
+            "wholes",
+            "clearance",
+            "buckets",
+            "tiles"
+          ],
+          "overlayOwnKeys": {
+            "$undefined": true
+          }
+        },
+        "deferredPrivateTilesAreOriginalProofContract": true
+      }
+    ],
+    "combinedReplayAllSubstantiveJSONEqual": true
+  },
+  "execution": {
+    "startedAt": "2026-10-15T00:46:03.887133+00:00",
+    "endedAt": "2026-10-15T00:46:06.087344+00:00",
+    "wallSeconds": 2.200219810998533
+  }
+}

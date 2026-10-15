@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "complete": true,
+  "stage": 7,
+  "sourceFiles": 386,
+  "uniquePayloads": 278,
+  "aliases": 108,
+  "originalBytes": 58012818,
+  "storedBytes": 14586750,
+  "allStoredAndDecodedSha256Exact": true,
+  "everyOriginalFullBytesEqualDecodedCanonical": true,
+  "strictInventoryAndAliasPathChecks": true,
+  "allPinnedSupportFilesExact": true,
+  "rawOriginalEvidenceNotRewritten": true,
+  "noFullEvidenceExtractionOrRawBufferCopies": true,
+  "manifestSha256": "6dc0029a07f5d7020be549672d375d7c425fbbe0084cb6bafb5626ba35f8f1f4",
+  "fullNativeCommandLogs": 11,
+  "completeSourceGraphs": 11,
+  "fullSourceRecords": 2651,
+  "sourceCounts": [
+    241,
+    241,
+    241,
+    241,
+    241,
+    241,
+    241,
+    241,
+    241,
+    241,
+    241
+  ],
+  "sdkActual": {
+    "total": 14,
+    "passed": 13,
+    "failed": 1,
+    "oldClosedStage5DocumentNamingOnly": true,
+    "exitCode": 1,
+    "wallSeconds": 32.19241586601129
+  },
+  "wholeTargetPassed": false,
+  "execution": {
+    "argv": [
+      "/tmp/whole-stage67-archive-tools/finalize.py"
+    ],
+    "cwd": "/tmp/whole-stage67-archive-tools",
+    "startedAt": "2026-10-15T00:52:46.541353+00:00",
+    "endedAt": "2026-10-15T00:52:46.823757+00:00",
+    "wallSeconds": 0.2824123369937297
+  }
+}
