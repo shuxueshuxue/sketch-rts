@@ -123,7 +123,11 @@ export function colonyNavalWant(snapshot: GameSnapshot, owner: PlayerId, options
 export function colonyNavalWantWithMineEligibility(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
     return planNavalWant(snapshot, owner, options, "colonies", eligible);
 }
-function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies", eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
+// Internal synchronous economy execution owns this world until issue returns.
+export function prepareColonyNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
+    return planNavalWant(snapshot, owner, options, "colonies", eligible, true);
+}
+function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies", eligible: (mine: ResourceNode) => boolean, preparedShore = false): NavalWant | undefined {
     const outfit = outfitting(snapshot, owner, options);
     if (outfit && !outfit.itemId && playerState(snapshot, owner).gold >= SHIP_WEAPONS[outfit.kind].cost + navalBudgetReserve(snapshot, owner, options) + OUTFIT_RESERVE) {
         const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
@@ -147,7 +151,7 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         return undefined;
     const home = halls[0];
     const closeout = Boolean(assault && home && lastFight(snapshot, owner, options, home));
-    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls);
+    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls, preparedShore);
     return want && closeout ? { ...want, closeout: true } : want;
 }
 /** A beachhead produces and defends locally instead of waiting indefinitely for the original mainland army. */
@@ -206,7 +210,7 @@ function settlementHallWant(snapshot: GameSnapshot, owner: PlayerId, plan: Islan
 }
 
 // The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[], preparedShore = false): NavalWant | undefined {
     const capital = settlementHallWant(snapshot, owner, plan);
     if (capital) return capital;
     const engineers = units(snapshot, owner).filter(unit => unit.kind === "worker");
@@ -216,7 +220,8 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
             return { id: "naval:engineer", cost: UNIT_DEFS.worker.cost, issue: () => ({ type: "train", buildingId: hall.id, unitKind: "worker" }) };
     }
     const yard = shipyardOf(snapshot, owner, water);
-    if (!yard && !shoreSpot(snapshot, owner, water, options)) {
+    const shore = yard ? undefined : shoreSpot(snapshot, owner, water, options);
+    if (!yard && !shore) {
         // Every shore of the water under an enemy ship's guns: a tower that outshoots the nearest of them first (see
         // @@@coast-tower), one at a time, from the hall nearest the shore by walking: asked again while the first still
         // rose, one AI laid three on a shore 1500 off but 4500 to walk, and none went up (pool-elderwood-4 at 2a189fd).
@@ -235,7 +240,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
             issue: (builders) => {
                 if (builders.size || units(snapshot, owner).some(unit => unit.order.type === "build"))
                     return undefined;
-                const spot = shoreSpot(snapshot, owner, water, options);
+                const spot = preparedShore ? shore : shoreSpot(snapshot, owner, water, options);
                 const builder = spot && nearestWorker(snapshot, owner, spot, builders);
                 if (!spot || !builder)
                     return undefined;

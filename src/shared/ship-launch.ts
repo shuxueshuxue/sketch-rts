@@ -11,15 +11,17 @@ import type { Building, GameMap, GameSnapshot, Obstacle, Unit, UnitKind } from '
 
 type Harbor = Pick<GameSnapshot, 'map' | 'units' | 'buildings' | 'obstacles'> & Partial<Pick<GameSnapshot, 'resources'>>;
 type Body = Unit | Building | Obstacle;
+type RankedBerth = {pose:ShipPose;reachable:boolean;exit:number;bound:number;index:number;travel?:number;difference?:number};
 type Berths = {
   geometry: string;
   terrain: Harbor['map']['terrain'];
   cells: string | undefined;
   poses: ShipPose[];
-  entries: Map<ShipPose, ShipPose>;
+  entries: Map<ShipPose, ShipPose & { outward: number }>;
+  clear: Map<ShipPose, boolean>;
   range: number;
   rally?: string;
-  ranked?: ShipPose[];
+  ranked?: RankedBerth[];
   bodies?: string;
   result?: ShipPose | undefined;
 };
@@ -63,8 +65,10 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
     const {poses,entries} = harborPoses(snapshot, dock, ship);
     const radius = polygonRadius(profile.hull);
     const range = poses.reduce((maximum, pose) => Math.max(maximum, Math.hypot(pose.x - dock.x, pose.y - dock.y) + radius), 0);
-    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, range };
+    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, clear: new Map(), range };
     yards.set(dock, cached);
+    // A pier without any legal static berth never enters terrain routing.
+    if(!poses.some(pose=>berthClear(snapshot.map,ship,cached!,pose)))poses.length=0;
   }
   if (!cached.poses.length) return undefined;
   const bodies: Body[] = [];
@@ -89,19 +93,42 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
     const rally=`${aim.x}:${aim.y}`;
     if(cached.rally!==rally || !cached.ranked) {
       cached.rally=rally;
-      const ordered=cached.poses.map(pose=>{
-        const exit=Math.hypot(pose.x-dock.x,pose.y-dock.y), leg=steerPoint(snapshot.map,pose,goal,'sea');
-        const angle=Math.atan2(leg.y-pose.y,leg.x-pose.x)-pose.heading;
-        const difference=Math.abs(Math.atan2(detSin(angle),detCos(angle)));
-        return {pose,reachable:sameGround(snapshot.map,pose,goal,'sea'),travel:exit+Math.hypot(pose.x-aim.x,pose.y-aim.y)+profile.length*difference,difference,exit};
-      }).sort((a,b)=>Number(b.reachable)-Number(a.reachable) || a.travel-b.travel || a.difference-b.difference || a.exit-b.exit);
-      const reachable=ordered.some(candidate=>candidate.reachable);
-      cached.ranked=ordered.filter(candidate=>!reachable || candidate.reachable).map(candidate=>candidate.pose);
+      cached.ranked=cached.poses.map((pose,index)=>{
+        const exit=Math.hypot(pose.x-dock.x,pose.y-dock.y);
+        return {pose,index,exit,reachable:sameGround(snapshot.map,pose,goal,'sea'),bound:exit+Math.hypot(pose.x-aim.x,pose.y-aim.y)};
+      }).sort((a,b)=>Number(b.reachable)-Number(a.reachable) || a.bound-b.bound || a.index-b.index);
     }
-    cached.result = cached.ranked.find(pose=>shipBodyClearAtPose(snapshot.map,ship,pose,bodies)
-      && launchPathClear(snapshot,ship,cached!.entries.get(pose)!,pose,bodies));
+    // Travel is at least exit + straight distance. Only a candidate that
+    // can beat a safe best berth needs exact routing and collision checks.
+    let reachable=false;
+    let best:RankedBerth|undefined;
+    for(const candidate of cached.ranked) {
+      if(reachable && !candidate.reachable)break;
+      if(best && candidate.bound>best.travel!)break;
+      const pose=candidate.pose,entry=cached.entries.get(pose)!;
+      if(!berthClear(snapshot.map,ship,cached,pose))continue;
+      reachable ||= candidate.reachable;
+      if(candidate.travel===undefined) {
+        const leg=steerPoint(snapshot.map,pose,goal,'sea'),angle=Math.atan2(leg.y-pose.y,leg.x-pose.x)-pose.heading;
+        candidate.difference=Math.abs(Math.atan2(detSin(angle),detCos(angle)));
+        candidate.travel=candidate.bound+profile.length*candidate.difference;
+      }
+      if(best && (candidate.travel-best.travel! || candidate.difference!-best.difference! || candidate.exit-best.exit || candidate.index-best.index)>=0)continue;
+      if(shipBodyClearAtPose(snapshot.map,ship,pose,bodies) && launchPathClear(snapshot,ship,entry,pose,bodies))best=candidate;
+    }
+    cached.result=best?.pose;
   }
   return cached.result ? { ...cached.result } : undefined;
+}
+
+function berthClear(map:GameMap,ship:Unit,cached:Berths,pose:ShipPose):boolean {
+  let clear=cached.clear.get(pose);
+  if(clear===undefined) {
+    const entry=cached.entries.get(pose)!;
+    clear=hullFits(map,ship,pose) && (!entry.outward || hullPassageClear(map,ship,entry,pose));
+    cached.clear.set(pose,clear);
+  }
+  return clear;
 }
 
 function solidHalf(snapshot: Harbor, body: Building | Obstacle) {
@@ -127,12 +154,12 @@ function launchPathClear(snapshot:Harbor, ship:Unit, entry:ShipPose, pose:ShipPo
 
 /** The hull support on each face determines its center, so even a broadside
  * carrier clears the square pier without replacing its hull with a circle. */
-function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose>} {
+function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose & { outward:number }>} {
   const map = snapshot.map, profile = shipProfile(ship)!, half = solidHalf(snapshot, dock);
   const connected = harborWater(map, dock, half + polygonRadius(profile.hull) + 64 + (map.terrain?.cell ?? 0));
   const offsets = [0, -half / 2, half / 2, -half, half];
   const candidates: ShipPose[] = [];
-  const entries=new Map<ShipPose,ShipPose>();
+  const entries=new Map<ShipPose,ShipPose & { outward:number }>();
   for (let direction = 0; direction < 16; direction++) {
     const heading = direction * Math.PI / 8, c = detCos(heading), s = detSin(heading);
     const hull = profile.hull.map(point => ({ x: point.x * c - point.y * s, y: point.x * s + point.y * c }));
@@ -152,8 +179,8 @@ function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipP
           : face === 2 ? { x: dock.x + offset, y: dock.y + half - top + gap }
           : { x: dock.x + offset, y: dock.y - half - bottom - gap };
         const pose = { ...point, heading };
-        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading};
-        if (hullFits(map, ship, pose) && connected(anchor, point) && (!outward || hullPassageClear(map,ship,entry,pose))) {
+        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading,outward};
+        if (connected(anchor, point)) {
           candidates.push(pose); entries.set(pose,entry);
         }
       }
