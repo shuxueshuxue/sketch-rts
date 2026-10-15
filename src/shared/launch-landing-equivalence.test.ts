@@ -5,7 +5,7 @@ import { LANDING_REACH, landingSpot } from './naval';
 import { distanceToHull, localToWorld, shipProfile } from './ship-geometry';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { createGame } from './sim';
-import { isOpenGround, sameGround, walkableGoal } from './terrain';
+import { isOpenGround, sameGround, setBuildingBodies, walkableGoal } from './terrain';
 import { detCos, detSin } from './det-math';
 import type { GameMap, Unit, UnitKind } from './types';
 
@@ -69,6 +69,35 @@ describe('landing and launch searches answer exactly as before', () => {
     }
     // Both the nearest-spot shortcut and the scan, found and refused, are covered.
     expect(landed).toBeGreaterThan(50);
+    expect(refused).toBeGreaterThan(10);
+  });
+
+  it('keeps answering as the full scan while a ship waits at a shore and its ground, orders and crowd change', () => {
+    const map = coast(), next = random(20261016);
+    const ship = createUnit('ship', 'player', 'transport', 470, 620);
+    ship.sailing = { heading: 1.3, speed: 0, load: 0, balance: 0 };
+    let landed = 0, refused = 0;
+    for (let step = 0; step < 160; step++) {
+      // Mostly the same pose tick after tick; now and then it drifts or turns, a building goes up or comes down, a new
+      // terrain arrives, or the unload order names another shore.
+      if (next() < 0.12) { ship.x += (next() - 0.5) * 50; ship.y += (next() - 0.5) * 50; }
+      if (next() < 0.08) ship.sailing.heading += next() - 0.5;
+      if (next() < 0.1) setBuildingBodies(map, next() < 0.4 ? [] : [{ x: 260 + next() * 200, y: ship.y - 160 + next() * 320, radius: 30 + next() * 40 }]);
+      if (next() < 0.03) map.terrain = { ...map.terrain! };
+      if (next() < 0.1) ship.order = next() < 0.3 ? { type: 'idle' }
+        : { type: 'unload', unitIds: [ship.id], x: 100 + next() * 300, y: ship.y - 300 + next() * 600 } as unknown as Unit["order"];
+      const crowd = Array.from({ length: Math.floor(next() * 12) }, (_, index) => createUnit(`wait-${index}`, 'player',
+        next() < 0.5 ? 'footman' : 'worker', ship.x - 220 + next() * 160, ship.y - 150 + next() * 300));
+      const count = 1 + Math.floor(next() * 6);
+      for (let index = 0; index < count; index++) {
+        const passenger = createUnit(`rider-${index}`, 'player', (['footman', 'archer', 'worker', 'knight'] as const)[Math.floor(next() * 4)]!, ship.x, ship.y);
+        const units = [ship, passenger, ...crowd];
+        const expected = referenceLandingSpot(map, ship, index, count, units, passenger);
+        expect(landingSpot(map, ship, index, count, units, passenger)).toEqual(expected);
+        if (expected) { landed++; crowd.push({ ...passenger, ...expected }); } else refused++;
+      }
+    }
+    expect(landed).toBeGreaterThan(100);
     expect(refused).toBeGreaterThan(10);
   });
 
