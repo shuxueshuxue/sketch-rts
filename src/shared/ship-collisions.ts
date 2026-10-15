@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { clipToConvex, convexHull, expandConvex, insideSupportingPlanes, minkowskiSum, polygonPlanes, polygonRadius } from './navigation-math';
+import { clipToConvex, convexHull, expandConvex, insideSupportingPlanes, minkowskiSum, pointSegmentDistanceSquared, polygonPlanes, polygonRadius } from './navigation-math';
 import { bodyMass } from './physical-body';
 import { isShipKind, shipProfile, type Point } from './ship-geometry';
 import { exactKey, headingDifference, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
@@ -189,10 +189,21 @@ function sweepStep(sweep: Sweep, i: number): SweepStep {
   }
   return step;
 }
+// @@@sweep-reach-bound - Every configuration vertex is a body vertex plus a reach vertex, so a step whose centre segment
+// stays farther from the body's first vertex than the body's own extent plus the reach's radius cannot touch it: that
+// step is skipped before its configuration is built. The extra unit dwarfs any rounding in the sums.
+function outlineExtent(polygon: readonly Point[]) {
+  const anchor = polygon[0]!;
+  let extent = 0;
+  for (const p of polygon) extent = Math.max(extent, Math.hypot(p.x - anchor.x, p.y - anchor.y));
+  return extent;
+}
 function sweepShape(sweep: Sweep, bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined {
   const { ship, from, to, turn, steps } = sweep;
+  const extent = bodyPolygon.length ? outlineExtent(bodyPolygon) : Infinity;
   for (let i = 0; i < steps; i++) {
     const { a, b, swept } = sweepStep(sweep, i);
+    if (pointSegmentDistanceSquared(bodyPolygon[0] ?? a, a, b) > (extent + polygonRadius(swept.reach) + 1) ** 2) continue;
     const configuration = minkowskiSum(bodyPolygon, swept.reach);
     let contact = segmentContact(a, b, configuration);
     // A rotating hull has no center translation. Its swept outline still supplies a contact face.
@@ -313,9 +324,13 @@ export function constrainGroundShipStep(map: GameMap, unit: Unit, from: Point, t
   const ships = nearby(frame, from, to, unit.radius, true);
   if (!ships.length) return to;
   const own = circleOutline({ x: 0, y: 0, radius: unit.radius });
+  let negated: Point[] | undefined, ownReach = 0;
+  for (const p of own) ownReach = Math.max(ownReach, Math.hypot(p.x, p.y));
   for (const { body } of ships) {
     if (!unitBody(body) || !shipProfile(body) || body.hp <= 0) continue;
-    const configuration = minkowskiSum(outline(map, body), own.map(p => ({ x: -p.x, y: -p.y })));
+    // The hull's outline lies within its radius of the ship and the circle's within its own (see @@@sweep-reach-bound).
+    if (pointSegmentDistanceSquared(body, from, to) > (polygonRadius(shipProfile(body)!.hull) + ownReach + 1) ** 2) continue;
+    const configuration = minkowskiSum(outline(map, body), negated ??= own.map(p => ({ x: -p.x, y: -p.y })));
     const contact = segmentContact(from, to, configuration);
     if (contact) fraction = Math.min(fraction, Math.max(0, contact.fraction - 1e-5 / Math.max(1, Math.hypot(to.x - from.x, to.y - from.y))));
   }
