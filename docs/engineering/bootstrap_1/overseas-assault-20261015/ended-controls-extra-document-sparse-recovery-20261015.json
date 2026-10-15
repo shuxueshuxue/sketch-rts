@@ -1,0 +1,30 @@
+{
+  "createdAt": 1792104736.7929125,
+  "records": [
+    {
+      "root": "/tmp/sketch-rts-mercenary-courier-safe-stop-control",
+      "result": "previous command completed supported sparse reapply and all non-doc tracked hashes remained equal; command stopped on next dirty source control before final record write",
+      "removedDocumentBytes": 408915524
+    },
+    {
+      "root": "/tmp/sketch-rts-knight-evacuation-6f80-control",
+      "head": "6f80a9365e591cbfba9148260806cd4f9033788e",
+      "runtimeFileCount": 1565,
+      "runtimeChanged": [],
+      "removedTrackedDocs": 1251,
+      "sparseBefore": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n",
+      "sparseAfter": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n!/docs/art/\n!/docs/reviews/\n",
+      "sourceStatusUnchanged": "M src/ai/policy/naval.ts\n?? src/ai/policy/__fixtures__/\n?? src/ai/policy/naval-evacuation-reassessment.test.ts"
+    },
+    {
+      "root": "/tmp/sketch-rts-knight-6f80a-ordinary-control",
+      "head": "6f80a9365e591cbfba9148260806cd4f9033788e",
+      "runtimeFileCount": 1565,
+      "runtimeChanged": [],
+      "removedTrackedDocs": 1251,
+      "sparseBefore": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n",
+      "sparseAfter": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n!/docs/art/\n!/docs/reviews/\n",
+      "sourceStatusUnchanged": ""
+    }
+  ]
+}

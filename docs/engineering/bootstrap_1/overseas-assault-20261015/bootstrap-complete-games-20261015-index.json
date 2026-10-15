@@ -1,5 +1,5 @@
 {
-  "productionHead": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "productionHead": "37597f17",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -125,6 +125,33 @@
       "file": "bootstrap-landing-gap-query-evidence.tar.gz",
       "bytes": 3439733,
       "sha256": "7490a9ae096eaddc6f19670b8b1ae058ea3ec4cb9d552e4d4d178346d860a41b"
+    },
+    {
+      "file": "bootstrap-caster-coast-scope-20261015-evidence.tar.gz",
+      "bytes": 15543229,
+      "sha256": "3f44d7a4d56585ab04d4eeaa8ba9695adfe1fd234e966b99b3c579d3853ab8a5"
+    },
+    {
+      "file": "bootstrap-production3bdb-archer-first-boundary-evidence.tar.gz",
+      "bytes": 6065238,
+      "sha256": "f7f97f5b3caca259dc87c5530cb573b4f3f1bc456849206127b226e139a82b34"
+    },
+    {
+      "file": "bootstrap-production-arrival-horizon4a52-evidence.tar.gz",
+      "bytes": 6031487,
+      "sha256": "5cfda074b7c95804024b9c66b175971889d5aec35fbb39ce4281bbb40778b5be"
+    },
+    {
+      "file": "knight-recovery-waypoint-6f80-win-evidence.tar.gz",
+      "bytes": 15363231,
+      "sha256": "4888e582368bfc164af2c141caa853e62796bda94341ab942dc6330704477654"
+    },
+    {
+      "file": "knight-escort-transfer-v2-evidence.tar.gz",
+      "bytes": 14189015,
+      "sha256": "029b2eac82374eadc6f2ca57fab2a5a8561b2a2f228cd7607e1c6d0c8e5ef40d"
     }
-  ]
+  ],
+  "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "productionDelta": "Only equivalent same-point landingSpot hull-distance reuse; no unmerged AI candidate."
 }
