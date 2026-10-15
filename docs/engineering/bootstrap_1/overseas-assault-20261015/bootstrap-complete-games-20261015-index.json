@@ -1,0 +1,65 @@
+{
+  "productionHead": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "packages": [
+    {
+      "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
+      "bytes": 46543849,
+      "sha256": "03bdde3f2d3af2b0d52a514f7a7dfe45dfd16f980aa81bac23b39fd836d4363b"
+    },
+    {
+      "file": "bootstrap-root-3bdb-ordinary0-33688-evidence.tar.gz",
+      "bytes": 37732357,
+      "sha256": "7d4204b3136b028e55b0971d2a97cc543f8f1ce2d5e82a02b0b5d3e6c7c91bb7"
+    },
+    {
+      "file": "bootstrap-knight-6f80a-ordinary-135692-evidence.tar.gz",
+      "bytes": 30653394,
+      "sha256": "42188d0170aed2006b153aee4d2616a1fa34b1f24673bf28b3df03d3a9aa7b1b"
+    },
+    {
+      "file": "bootstrap-knight-assault-approach-v1-negative-evidence.tar.gz",
+      "bytes": 4581999,
+      "sha256": "63272c21df56b08d753cd7cd83a0f948f4eedd495c0df5ac9fd6285f453d03a0"
+    },
+    {
+      "file": "bootstrap-care-follow-v10-v12-evidence.tar.gz",
+      "bytes": 67292899,
+      "sha256": "9157e6647611ed0f418b056281e9b233bb7c23782634b97b18460c547c91b953"
+    },
+    {
+      "file": "knight-colony-defense-6f80-evidence.tar.gz",
+      "bytes": 12721877,
+      "sha256": "302e1a5743cfb0dc261f061d9d709f48fb56a194620df00e8bf326e038328964"
+    },
+    {
+      "file": "knight-evacuation-6f80-mixed-evidence.tar.gz",
+      "bytes": 11741881,
+      "sha256": "35739796920f0acace7d40d9585710140014e5896e247763b3f6dad8ac2c5f4b"
+    },
+    {
+      "file": "knight-shore-v1-negative-evidence.tar.gz",
+      "bytes": 14021058,
+      "sha256": "278c2c3f33376bb2ffcf3e99ce7a655947695bab79193cc8e523203d1b0b0ad1"
+    },
+    {
+      "file": "knight-shore-v2-negative-evidence.tar.gz",
+      "bytes": 8106202,
+      "sha256": "92e2646775d634a4b091b9b5a6e23ed704f0d4ad1c848889e71b67b3a12b96b9"
+    },
+    {
+      "file": "bootstrap-colony-escape-v1-candidate-evidence.tar.gz",
+      "bytes": 8152992,
+      "sha256": "653e9cff252359123ffd1aab1b2b95725072a93ebb913ca1f2ddddb030b24161"
+    },
+    {
+      "file": "bootstrap-workforce-114dd-complete-evidence.tar.gz",
+      "bytes": 4432452,
+      "sha256": "da423bbdb4de99ff0fe04647d6604462429bd3f89ef43836ccef2626d30a9c52"
+    },
+    {
+      "file": "bootstrap-knight-current-shore-v2-negative-evidence.tar.gz",
+      "bytes": 8975384,
+      "sha256": "fa20295104f2f00e1db9da31d432e937c6b4fe047d31d61cbec1d3d0f9c553bc"
+    }
+  ]
+}

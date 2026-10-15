@@ -567,3 +567,5 @@ root组合验证分列：部署广泛批次213/214，通过项包括3条历史�
 主分支/规则3或4性能工作未改；用户已合的船只平衡属于另一规则版本，不回灌规则2验收。原故障容器未提交修改仍未恢复。三路线、所有旧单路线与六种配对、官方地图及未见种子最终完整比赛要求尚未满足。当前6f80骑士官方普通0仍在运行，已观察首航母与11船载部队阵亡、敌方反登陆殖民岛，具体完整实战反证需继续推进，不以本次测试/提交数替代任务完成。
 
 本次root整合最终26项目标/整队/身体到达回归及独立38项护理微操通过；原beach10项与courier4项在整合中通过，最后`npm run build`（tsc+vite）exit0。既有附近集结测试在干净25cce也失败的事实保留，未以本轮局测声称全套通过。新6项强负对照小包 `bootstrap-retarget-deployment-integration-regression-evidence.tar.gz` 106,552B /20payload，SHA256 `29d78b706c49b33e8b54aa2c30aef76d138942876167eca0c6a51ae4bee8fde7`；最终root源码快照/日志包 `root-retarget-care-integration-validation.tar.gz` 115020B，SHA256 `c7f694069e6a83608e2b51bd99d1053c796cc6fe3b7964cfe30cab315ac68c29`。提交后继续独立完整对局验证新整组版本，不将局测或归档算最终验收。
+
+后续两项3bdb独立验证及骑士6f80官方普通0均已自然结束。准确的完整比赛、首波失败、永久/临时死亡与残余敌人边界，以及未合正负候选，统一记录于 [后续完整比赛与反证](complete-games-and-counterexamples.zh.md)；包字节数与SHA见 [索引](bootstrap-complete-games-20261015-index.json)。上文“仍在运行”属于先前记录，不能代表当前运行状态。继续护航、实际岸防、危险候船与骑射任务归属实战诊断，没有将此归档视为验收完成。
