@@ -1,0 +1,31 @@
+{
+  "baseline": "281a75d0862246de8943cbf2b5aa31d8a82c08a5",
+  "candidate": "3898911213a3dbe9220e3da7a036cd61d84ce552",
+  "sequence": [
+    "A",
+    "P",
+    "P",
+    "A",
+    "P",
+    "A",
+    "A",
+    "P"
+  ],
+  "ticks": 14400,
+  "targets": [
+    0,
+    15,
+    30,
+    1859,
+    6990,
+    9659,
+    12825,
+    13380,
+    13806,
+    14370
+  ],
+  "targetsReason": "Original four native maxima at tick0; stable/profiled peaks and P2 screen top13380. Complete 14400 ticks, all maxima retained, no target-only claim.",
+  "recordedAt": "2026-10-15T10:16:33.030175+00:00",
+  "execution": "Original source, --plain disables all four official boundary wrappers as well as focused hooks/inspector/GC. External whole-tick clock remains.",
+  "reason": "Explicitly verify instrumentation as a peak cause; preceding formal-* retained four official timing boundaries. Do not label those source-unmodified."
+}

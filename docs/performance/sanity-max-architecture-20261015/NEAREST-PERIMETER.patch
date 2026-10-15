@@ -1,0 +1,12 @@
+--- a/src/shared/terrain.ts
++++ b/src/shared/terrain.ts
+@@ -1503,8 +1503,7 @@
+     // A cell on this ring is at least `ring` cells away; stop once none can beat the best.
+     if (ring * ring > bestDistance) break;
+     for (let r = row - ring; r <= row + ring; r += 1) {
+-      for (let c = col - ring; c <= col + ring; c += 1) {
+-        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring) continue;
++      for (let c = col - ring; c <= col + ring; c += (r === row - ring || r === row + ring ? 1 : 2 * ring)) {
+         if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
+         const index = pad(state, c, r);
+         if (state.walk[index] !== 1) continue;

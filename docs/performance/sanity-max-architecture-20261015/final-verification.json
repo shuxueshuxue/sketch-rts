@@ -1,0 +1,14 @@
+{
+  "shadowCalls": 721,
+  "strictHitEvents": 321,
+  "hitEventsExactlyFixedPlan": true,
+  "allResultValuesInternalAndExternalAliasGraphsEqual": true,
+  "shadowEveryTickFullStateEqual": true,
+  "freshColdWarmSortedFullSnapshotsEqualTicks": 14400,
+  "coldRawJSONKeyOrderDifferenceTicks": 434,
+  "plainUnmodifiedSourceRuns": 8,
+  "allCommandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "finalChecksum": "7d94a5e8",
+  "finalProductionRuntimeEqualsAInputs": 241,
+  "rollbackCommit": "ea24955cfb3756bb175ebc6287a2ec4ef1dabe7d"
+}
