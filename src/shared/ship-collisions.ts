@@ -13,10 +13,13 @@ type ContactKind = 'ship' | 'unit' | 'building' | 'obstacle' | 'terrain';
 type Contact = { fraction: number; normal: Point; point: Point; other?: Body; kind: ContactKind };
 /** Damage is proposed here; the simulation applies its usual armor, cabin and death rules. */
 export type ShipCollisionImpact = Contact & { ship: Unit; closingSpeed: number; energy: number; shipDamage: number; otherDamage: number };
-type Entry = { body: Body; radius: number; keys: string[]; bounds?: string };
-type Frame = { map?: GameMap; hasShips: boolean; buckets: Map<string, Set<Entry>>; shipBuckets: Map<string, Set<Entry>>; entries: Map<Body, Entry>; velocities: Map<Body, Point>; yawRates: Map<Unit, number>; impacts: ShipCollisionImpact[]; hitPairs: Set<string> };
+type Entry = { body: Body; radius: number; keys: number[]; left: number; right: number; top: number; bottom: number };
+type Frame = { map?: GameMap; hasShips: boolean; buckets: Map<number, Set<Entry>>; shipBuckets: Map<number, Set<Entry>>; entries: Map<Body, Entry>; velocities: Map<Body, Point>; yawRates: Map<Unit, number>; impacts: ShipCollisionImpact[]; hitPairs: Set<string> };
 const frames = new WeakMap<readonly Unit[], Frame>();
 const CELL = 192;
+// A bucket's key packs its column and row into one integer (2^20 cells either way of the origin, far past any map):
+// every body is filed again each tick, and printing "x,y" for each of its cells was most of a frame's cost.
+const cellKey = (x: number, y: number) => (x + 1048576) * 2097152 + (y + 1048576);
 /** Gentle mooring, stationary contact and matching velocities do not wear down hulls. */
 export const SHIP_IMPACT_SAFE_SPEED = 10;
 
@@ -65,16 +68,16 @@ function radiusOf(map: GameMap | undefined, body: Body) {
 function updateEntry(frame: Frame, entry: Entry) {
   const { body } = entry, radius = entry.radius + 24;
   const left = Math.floor((body.x - radius) / CELL), right = Math.floor((body.x + radius) / CELL), top = Math.floor((body.y - radius) / CELL), bottom = Math.floor((body.y + radius) / CELL);
-  const bounds = `${left},${right},${top},${bottom}`;
-  if (entry.bounds === bounds) return;
+  if (entry.left === left && entry.right === right && entry.top === top && entry.bottom === bottom) return;
   const ship = unitBody(body) && shipProfile(body);
-  for (const key of entry.keys) for (const buckets of ship ? [frame.buckets, frame.shipBuckets] : [frame.buckets]) {
-    const bucket = buckets.get(key); bucket?.delete(entry); if (bucket?.size === 0) buckets.delete(key);
+  for (const key of entry.keys) {
+    const bucket = frame.buckets.get(key); bucket?.delete(entry); if (bucket?.size === 0) frame.buckets.delete(key);
+    if (ship) { const ships = frame.shipBuckets.get(key); ships?.delete(entry); if (ships?.size === 0) frame.shipBuckets.delete(key); }
   }
-  entry.keys = []; entry.bounds = bounds;
+  entry.keys = []; entry.left = left; entry.right = right; entry.top = top; entry.bottom = bottom;
   for (let y = top; y <= bottom; y++)
     for (let x = left; x <= right; x++) {
-      const key = `${x},${y}`; let bucket = frame.buckets.get(key);
+      const key = cellKey(x, y); let bucket = frame.buckets.get(key);
       if (!bucket) frame.buckets.set(key, bucket = new Set());
       bucket.add(entry); entry.keys.push(key);
       if (ship) { let ships = frame.shipBuckets.get(key); if (!ships) frame.shipBuckets.set(key, ships = new Set()); ships.add(entry); }
@@ -95,7 +98,7 @@ export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, s
   for (let i = 0; i < units.length + solids.length; i++) {
     const body = i < units.length ? units[i]! : solids[i - units.length]!;
     if (body.hp <= 0 || unitBody(body) && body.deck) continue;
-    const entry = { body, radius: radiusOf(map, body), keys: [] };
+    const entry: Entry = { body, radius: radiusOf(map, body), keys: [], left: NaN, right: NaN, top: NaN, bottom: NaN };
     frame.entries.set(body, entry); frame.velocities.set(body, velocity(body)); updateEntry(frame, entry);
     if (unitBody(body) && body.sailing) frame.yawRates.set(body, body.sailing.yawRate ?? 0);
   }
@@ -109,7 +112,7 @@ function nearby(frame: Frame, from: Point, to: Point, radius: number, shipsOnly 
   const buckets = shipsOnly ? frame.shipBuckets : frame.buckets;
   for (let y = Math.floor((Math.min(from.y, to.y) - radius) / CELL); y <= Math.floor((Math.max(from.y, to.y) + radius) / CELL); y++)
     for (let x = Math.floor((Math.min(from.x, to.x) - radius) / CELL); x <= Math.floor((Math.max(from.x, to.x) + radius) / CELL); x++)
-      for (const entry of buckets.get(`${x},${y}`) ?? []) found.add(entry);
+      for (const entry of buckets.get(cellKey(x, y)) ?? []) found.add(entry);
   return [...found].sort((a, b) => a.body.id.localeCompare(b.body.id));
 }
 function segmentContact(from: Point, to: Point, polygon: readonly Point[]) {
