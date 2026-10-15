@@ -1,0 +1,29 @@
+{
+  "utc": "2026-10-15T22:33:06.292175+00:00",
+  "controls": [
+    {
+      "worktree": "/tmp/sketch-rts-colony-capital-control",
+      "head": "b0c8bd7e173c9038071d01531b8a752d3e9ebb48",
+      "classification": "Ended old root-owned experiment control. Supported sparse exclusion only of tracked unchanged duplicate art/review documents; all runtime source and frozen manifest retained. No active gameplay tree altered.",
+      "previousPatterns": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n",
+      "patterns": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n!/docs/art/\n!/docs/reviews/\n",
+      "trackedDuplicateFiles": 1251,
+      "bytesReleased": 408915524,
+      "runtimeAndDataFilesVerified": 1390,
+      "runtimeChanges": [],
+      "status": ""
+    },
+    {
+      "worktree": "/tmp/sketch-rts-summoner-25cce-ordinary-control",
+      "head": "25cce06f1567bc68cf08a2b278122f88eebf6b6f",
+      "classification": "Ended old root-owned experiment control. Supported sparse exclusion only of tracked unchanged duplicate art/review documents; all runtime source and frozen manifest retained. No active gameplay tree altered.",
+      "previousPatterns": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n",
+      "patterns": "/*\n!/docs/engineering/bootstrap_1/overseas-assault-20261015/*.tar.gz\n!/docs/art/\n!/docs/reviews/\n",
+      "trackedDuplicateFiles": 1251,
+      "bytesReleased": 408915524,
+      "runtimeAndDataFilesVerified": 1391,
+      "runtimeChanges": [],
+      "status": ""
+    }
+  ]
+}

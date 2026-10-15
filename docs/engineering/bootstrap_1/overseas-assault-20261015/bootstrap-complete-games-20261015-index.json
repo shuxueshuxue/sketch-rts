@@ -60,6 +60,61 @@
       "file": "bootstrap-knight-current-shore-v2-negative-evidence.tar.gz",
       "bytes": 8975384,
       "sha256": "fa20295104f2f00e1db9da31d432e937c6b4fe047d31d61cbec1d3d0f9c553bc"
+    },
+    {
+      "file": "bootstrap-mounted-mineguard-v1-and-care-errata-evidence.tar.gz",
+      "bytes": 15818678,
+      "sha256": "7924a14cfa9389732b2324ede80593896b37cb3a20d5ae0e3ed4e3887c7c0d59"
+    },
+    {
+      "file": "bootstrap-mounted-mineguard-v1-first-loss-followup.tar.gz",
+      "bytes": 44402,
+      "sha256": "2cd7e297234a83978ced8416ffc17aa3a68829bb7e90e8dd8a46ea0786b0855a"
+    },
+    {
+      "file": "bootstrap-mounted-mineguard-v2-evidence.tar.gz",
+      "bytes": 7460206,
+      "sha256": "5e626eed2fb59d96f4586209bd54c2415156d3cab2593a46e0ff5b5e71b86836"
+    },
+    {
+      "file": "bootstrap-production-root3bdb-archer-ordinary0-evidence.tar.gz",
+      "bytes": 1134278,
+      "sha256": "0d4b83429de9b5ff3736b23f88985574ef1ed240e54bfdf1b0d366a6cabda7ac"
+    },
+    {
+      "file": "bootstrap-unsafe-board-mechanism-114dd-evidence.tar.gz",
+      "bytes": 2613601,
+      "sha256": "e3417c4e1a65a778d9f7346657a2ad818add80a4668ef6a5613aa707d14ca8a1"
+    },
+    {
+      "file": "bootstrap-first-wave-threat-metrics-20261015-evidence.tar.gz",
+      "bytes": 342958,
+      "sha256": "33cc67c479d6617a87bf3f3da0e3a38c93baa754f44c82f7ea1dc0bb36c36629"
+    },
+    {
+      "file": "bootstrap-worker-defense-score-only-20261015-evidence.tar.gz",
+      "bytes": 5917,
+      "sha256": "00d4244fdbb71ce4167e77074539f48cc5e0b2e84ca205e1629c04aaaffc8a2d"
+    },
+    {
+      "file": "knight-loading-escort-v1-evidence.tar.gz",
+      "bytes": 26594423,
+      "sha256": "e988bcc68955b7f2ddf3e772f7cd4a8058764ce32e632e8bd99b36f7b57830e6"
+    },
+    {
+      "file": "bootstrap-knight-joint-geometry-api-review-evidence.tar.gz",
+      "bytes": 8600140,
+      "sha256": "7c68eef66a38d39ab0bb8c2f4ad40eafaf81944601a99ec11fca7ad3b566d194"
+    },
+    {
+      "file": "knight-unmedicated-preplan-evidence.tar.gz",
+      "bytes": 3670940,
+      "sha256": "5ca86e4e5964da935b50fb872190252e2937d5f089c41dcf55e7e62b93e2a0dc"
+    },
+    {
+      "file": "bootstrap-workforce-safe-board-e7-three-way-evidence.tar.gz",
+      "bytes": 4565590,
+      "sha256": "97c5cf07f1a8454bc71fecf18076acee5a3773ba2142a16d22889abbb8472692"
     }
   ]
 }
