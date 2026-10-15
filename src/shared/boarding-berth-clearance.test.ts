@@ -24,3 +24,12 @@ it('finds a full-hull-clear pickup berth beside the waiting army and starts the 
  for(let i=0;i<300;i++)stepGame(game);
  expect(Math.hypot(boat.x-clear.x,boat.y-clear.y)).toBeLessThan(before-100);
 },60000);
+
+it('continues a distant partial pickup voyage while the army shifts at its destination',()=>{
+ const saved=JSON.parse(gunzipSync(readFileSync(new URL('../ai/bootstrap_1/fixtures/archer-partial-pickup.json.gz',import.meta.url))).toString());
+ const game=createGame('bareDuel');restoreSnapshotIntoGame(game,saved.snapshot,saved.nextId);
+ const boat=game.units.find(u=>u.id==='unit-p0-carrier-3777')!,before={x:boat.x,y:boat.y};
+ expect(boat.sailing?.route?.partial).toBe(true);
+ for(let i=0;i<300;i++)stepGame(game);
+ expect(Math.hypot(boat.x-before.x,boat.y-before.y)).toBeGreaterThan(50);
+},60000);

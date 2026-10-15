@@ -1939,9 +1939,12 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     if(requested?.shore && distanceToHull(boat,requested.shore)<=passenger.radius+BOARDING_GAP)continue;
     const route=boat.sailing?.route;
     // A complete approach may board everyone before its nominal final turn.
-    // Keep that live route; its swept traffic checks still stop new obstacles.
-    const approaching=requested && route && !route.partial && route.points.length>0
-      && route.goalX===requested.x && route.goalY===requested.y;
+    // A distant partial voyage also retains its course when the waiting army
+    // shifts at the destination. Recheck its berth near shore, not mid-ocean;
+    // the live route still applies swept terrain and traffic collision checks.
+    const approaching=requested && route && route.points.length>0
+      && (!route.partial || distance(boat,requested)>(shipProfile(boat)?.length ?? boat.radius*2)*2)
+      && Math.hypot(route.goalX-requested.x,route.goalY-requested.y)<=(game.map.terrain?.cell ?? 0)/2;
     const berth=requested && (approaching ? requested : clearBoardingBerth(game.map,passenger,boat,requested,game.units));
     if(berth && berth!==requested)for(const waiting of boarding)
       if(waiting.order.type==='board' && waiting.order.transportId===boat.id)waiting.order.berth=berth;

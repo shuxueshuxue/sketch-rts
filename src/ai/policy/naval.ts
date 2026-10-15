@@ -736,7 +736,14 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
     const engineersReady=mission.purpose!=='settle' || engineersAboard>=2
         || engineersAboard>=1 && (workerCount<2 || snapshot.tick-mission.progress!.tick>seconds(20));
-    const threats = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(map, unit, loadGround) && combatCapability(snapshot,unit).armed);
+    // An explicitly unloading convoy already threatens this shore. Reserving
+    // guards only after its passengers land can export the last defenders.
+    const incoming = snapshot.units.filter(ship => unitMover(ship.kind)==='sea'
+        && isOpponentOwner(snapshot,owner,ship.owner,options) && ship.order.type==='unload'
+        && sameGround(map,loadGround,ship.order)).flatMap(ship=>shipPassengers(snapshot.units,ship));
+    const threats = [...new Map([...snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
+        && !unit.deck && unitMover(unit.kind)==='land' && sameGround(map, unit, loadGround)), ...incoming]
+        .filter(unit=>combatCapability(snapshot,unit).armed).map(unit=>[unit.id,unit])).values()];
     let strengthLeft = strengthOf(soldiers);
     for (const soldier of mission.purpose === "rebase" || !engineersReady ? [] : soldiers) {
         if (bodyMass(soldier) > room || (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3))
