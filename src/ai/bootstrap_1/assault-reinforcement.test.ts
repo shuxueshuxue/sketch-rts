@@ -8,6 +8,7 @@ import { boardUnit } from '../../shared/decks';
 import { unitMover } from '../../shared/catalog';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { assaultExpedition } from '../policy/naval';
+import { effectiveCombatRating } from '../policy/v6/strength';
 import { BOOTSTRAP_VERSIONS, bootstrapPolicyContext } from './policy';
 
 const emptyId = 'unit-p0-carrier-3824', loadedId = 'unit-p0-carrier-3510';
@@ -31,7 +32,8 @@ it.each(BOOTSTRAP_VERSIONS)('%s sends the real empty assault ferry to a remainin
   const target = snapshot.buildings.find(building => building.id === memory.naval.ferries[emptyId].targetId)!;
   const options = bootstrapPolicyContext(snapshot, 'p0', version, { memory: structuredClone(memory), teams: game.teams });
   const expedition = assaultExpedition(snapshot, 'p0', options, target);
-  expect(expedition.required).toBeCloseTo(19.010608934197393);
+  // The real same-island worker adds 0.618592920110924 at the existing margin.
+  expect(expedition.required).toBeCloseTo(19.629201854308317);
   expect(expedition.ready).toBe(true);
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: 'p0', version, memory }, { teams: game.teams });
   const mission = memory.naval.ferries[emptyId];
@@ -50,7 +52,7 @@ it.each(BOOTSTRAP_VERSIONS)('%s sends the real empty assault ferry to a remainin
   expect(JSON.stringify(snapshot)).toBe(original);
 });
 
-it.each(BOOTSTRAP_VERSIONS)('%s assembles the actually loaded sufficient convoy before sailing to the enemy', version => {
+it.each(BOOTSTRAP_VERSIONS)('%s keeps the real loaded convoy gathering after its worker defender makes that cargo insufficient', version => {
   const { game, memory } = checkpoint(true), snapshot = snapshotGame(game), original = JSON.stringify(snapshot);
   const first = snapshot.units.find(unit => unit.id === loadedId)!, second = snapshot.units.find(unit => unit.id === emptyId)!;
   expect(snapshot.tick).toBe(80400);
@@ -59,14 +61,16 @@ it.each(BOOTSTRAP_VERSIONS)('%s assembles the actually loaded sufficient convoy 
   expect(walkingDistance(snapshot.map, first, second, 'sea')!).toBeGreaterThan(6000);
   const target = snapshot.buildings.find(building => building.id === memory.naval.ferries[loadedId].targetId)!;
   expect(assaultExpedition(snapshot, 'p0', bootstrapPolicyContext(snapshot, 'p0', version,
-    { memory: structuredClone(memory), teams: game.teams }), target).required).toBeCloseTo(19.010608934197393);
+    { memory: structuredClone(memory), teams: game.teams }), target).required).toBeCloseTo(19.629201854308317);
+  const power = [first, second].flatMap(ship => shipPassengers(snapshot.units, ship))
+    .filter(unit => unit.kind !== 'worker' && !unit.expiresTick)
+    .reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
+  expect(power).toBeCloseTo(19.166738171101542);
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: 'p0', version, memory }, { teams: game.teams });
-  const rally = memory.naval.ferries[emptyId].rally;
-  expect(rally).toBeDefined();
-  expect(memory.naval.ferries[loadedId].rally).toEqual(rally);
-  expect(walkingDistance(snapshot.map, second, rally, 'sea')).toBeDefined();
-  expect(entries.some(entry => entry.command.type === 'move' && entry.command.unitIds.includes(emptyId)
-    && Math.hypot(entry.command.x - rally.x, entry.command.y - rally.y) < 1)).toBe(true);
+  for (const id of [emptyId, loadedId]) {
+    expect(memory.naval.ferries[id].rally).toBeUndefined();
+    expect(memory.naval.ferries[id].phase).toBe('loading');
+  }
   expect(entries.some(entry => entry.command.type === 'unload' && entry.command.unitIds.some(id => id === loadedId || id === emptyId))).toBe(false);
   expect(JSON.stringify(snapshot)).toBe(original);
 });

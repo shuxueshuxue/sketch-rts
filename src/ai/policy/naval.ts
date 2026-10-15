@@ -30,7 +30,7 @@ import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../sh
 import { BOARDING_GAP, canReach, carries, boardingBerth, currentBerthLandings } from "../../shared/naval";
 import { purchasePlacement } from "../../shared/purchase";
 import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
-import { seconds } from "../../shared/time";
+import { seconds, SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { Building, GameCommand, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import { legalBuildPointNear } from "./build-layout";
 import { shipsAfloat } from "./ground";
@@ -43,7 +43,7 @@ import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
 import { engagementTargets } from "./engagements";
 import { readV6Intel } from "./v6/intel";
-import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
+import { TOWER_STRENGTH, effectiveCombatRating, strengthOf, structureRating } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
 function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
 /** A mining outpost must recover its own construction cost at current upkeep. */
@@ -1009,7 +1009,12 @@ function evacuationRoute(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
 export function assaultExpedition(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, target: Point) {
     const hostile = snapshot.units.filter(unit=>!unit.deck && combatCapability(snapshot,unit).armed
         && isOpponentOwner(snapshot,owner,unit.owner,options));
-    const defense = hostile.filter(unit=>sameGround(snapshot.map,unit,target)).reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0)
+    // Workers do not belong to an invasion army, but their real bodies and
+    // working weapons still defend the landmass the army must take.
+    const defense = hostile.filter(unit=>sameGround(snapshot.map,unit,target)).reduce((sum,unit)=>sum+(unit.kind==='worker'
+        ? structureRating({hp:unit.maxHp,attackDamage:combatCapability(snapshot,unit).dps,attackCooldown:SIM_TICKS_PER_SECOND})
+            *Math.max(0.1,unit.hp/Math.max(1,unit.maxHp))
+        : effectiveCombatRating(snapshot,unit)),0)
         + enemyTowers(snapshot,owner,options).filter(tower=>sameGround(snapshot.map,tower,target)).length*TOWER_STRENGTH;
     const required = Math.max(1,defense*1.4);
     const landed = units(snapshot,owner).filter(unit=>!unit.deck && unitMover(unit.kind)==='land' && unit.kind!=='worker'

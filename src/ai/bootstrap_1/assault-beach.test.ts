@@ -6,6 +6,7 @@ import { shipPassengers } from '../../shared/ship-geometry';
 import { setBuildingBodies, walkingDistance } from '../../shared/terrain';
 import { bootstrapPolicyContext } from './policy';
 import { assaultExpedition } from '../policy/naval';
+import { effectiveCombatRating } from '../policy/v6/strength';
 import { assaultBeachBodies, assaultBeachExposure, orderBootstrapAssaultLanding, reviseAssaultBeaches } from './assault-beach';
 
 // Full real worlds + both policy memories. 88110 is the unmanipulated saved
@@ -18,7 +19,7 @@ const fixture = (tick: number) => {
 };
 
 describe('native assault deployment shore', () => {
-  it.each(['v9_archer', 'v9_summoner', 'v9_knight'] as const)('keeps %s admission and assigns a beach with actual clear passenger bodies', version => {
+  it.each(['v9_archer', 'v9_summoner', 'v9_knight'] as const)('does not admit %s\'s real convoy after counting its worker defender', version => {
     const f = fixture(88110), snapshot = f.snapshot;
     const beforeWorld = structuredClone(snapshot);
     const context = bootstrapPolicyContext(snapshot, 'p0', version, { teams: snapshot.teams, memory: f.memories.p0 });
@@ -27,21 +28,25 @@ describe('native assault deployment shore', () => {
     const before = structuredClone(Object.fromEntries(ids.map(id => [id, ferries[id]])));
     const target = snapshot.buildings.find((building: any) => building.id === 'building-p1-shipyard-1016')!;
     const requirement = assaultExpedition(snapshot, 'p0', context, target).required;
+    expect(requirement).toBeCloseTo(19.629201854308317);
+    const power = ids.flatMap(id => shipPassengers(snapshot.units, snapshot.units.find((unit: any) => unit.id === id)!))
+      .filter(unit => unit.kind !== 'worker' && !unit.expiresTick)
+      .reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
+    expect(power).toBeCloseTo(19.271213354543637);
+    expect(power).toBeLessThan(requirement);
     const old = ids.map(id => assaultBeachExposure(snapshot, 'p0', context,
       snapshot.units.find((unit: any) => unit.id === id)!, ferries[id]!.to, target)!);
     expect(old.every(query => query.guards.length >= 20)).toBe(true);
     reviseAssaultBeaches(snapshot, 'p0', context);
-    expect(ferries[ids[0]!]!.to).toEqual(ferries[ids[1]!]!.to);
-    expect(ferries[ids[0]!]!.to).not.toEqual(before[ids[0]!]!.to);
+    expect(Object.fromEntries(ids.map(id => [id, ferries[id]]))).toEqual(before);
     for (const id of ids) {
       const boat = snapshot.units.find((unit: any) => unit.id === id)!;
-      const selected = assaultBeachExposure(snapshot, 'p0', context, boat, ferries[id]!.to, target)!;
+      // The previous clear beach still has native passenger bodies. Geometry
+      // alone must not admit a convoy that fails the updated force estimate.
+      const selected = assaultBeachExposure(snapshot, 'p0', context, boat, { x: 2416, y: 6736 }, target)!;
       expect(selected.landed).toHaveLength(id.endsWith('3510') ? 14 : 15);
       expect(selected.guards).toEqual([]);
       expect(walkingDistance(snapshot.map, boat, selected.pose, 'sea')).toBeDefined();
-      const { approach, ...mission } = ferries[id]!;
-      expect(approach).toEqual({ x: selected.pose.x, y: selected.pose.y });
-      expect({ ...mission, to: before[id]!.to }).toEqual(before[id]);
     }
     expect(assaultExpedition(snapshot, 'p0', context, target).required).toBe(requirement);
     expect(snapshot).toEqual(beforeWorld);
@@ -64,7 +69,7 @@ describe('native assault deployment shore', () => {
 });
 
 
-it('keeps the real 89145 incidental north-shore pause in movement until the selected beach can receive all actual passengers', () => {
+it('keeps the 89145 native shore geometry when a clear beach approach has already been assigned', () => {
   const f = fixture(89145);
   expect(f.provenance.replayProof).toEqual({ snapshot: true, nextId: true, memories: true });
   const branches = [structuredClone(f), JSON.parse(JSON.stringify(f))].map(frame => {
@@ -82,8 +87,12 @@ it('keeps the real 89145 incidental north-shore pause in movement until the sele
   const context = bootstrapPolicyContext(world, 'p0', 'v9_archer', { teams: world.teams, memory: controlled.memory });
   const mission = context.memory.naval!.ferries![shipId]!;
   const target = world.buildings.find((building: any) => building.id === mission.targetId)!;
-  reviseAssaultBeaches(world, 'p0', context);
-  expect(mission.approach).toBeDefined();
+  // Geometry component seam: the updated force estimate no longer admits
+  // this historical convoy. Supply its previous planner's observed clear
+  // beach explicitly; no native world, passengers or resources are altered.
+  expect(assaultExpedition(world, 'p0', context, target).required).toBeCloseTo(19.629201854308317);
+  mission.to = { x: 2384, y: 6832 };
+  mission.approach = { x: 2480, y: 6832 };
   const placement = assaultBeachBodies(world, boat, mission.to, target)!;
   expect(mission.approach).toEqual({ x: placement.pose.x, y: placement.pose.y });
   const ordinary = [{ type: 'unload' as const, unitIds: [shipId], ...mission.to }];
