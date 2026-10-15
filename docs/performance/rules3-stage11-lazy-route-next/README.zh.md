@@ -64,7 +64,7 @@ first seal 元数据可核对，但两个历史 payload 原字节未留存：当
 
 库存截点 **2026-10-15T03:47:34.779875+00:00**：按精确文件表捕获13个Next原目录、7个共享controller/plan文件和明确列出的历史语义/工具引用，后续v2候选材料排除。`/tmp/stage9-static-summary/next-source-review.md`是本轮新子审材料，只作为Stage11 provenance，不冒称旧Stage9原件；旧冻结文件与manifest不改写。便携Git只包含0ea/591的2个raw commit、23个所需raw tree及terrain/两永久test的changed blobs和patch。
 
-**879个完整原路径、505个gzip、374个显式alias**；原件73,673,429 B，unique gzip 15,999,063 B。全部stored/decoded SHA、原件全文、精确库存及支持文件pins通过。离线重算10×241整局source、2×241冷测build source、10份完整commands、初始/首帧/tick1全文、全部分布/配对/分钟/慢样本与24冷测。
+**908个完整原路径、523个gzip、385个显式alias**；原件73,744,826 B，unique gzip 16,007,462 B。全部stored/decoded SHA、原件全文、精确库存及支持文件pins通过。离线重算10×241整局source、2×241冷测build source、10份完整commands、初始/首帧/tick1全文、全部分布/配对/分钟/慢样本与24冷测。
 
 正式整局外层2026-10-15 03:22:00.315045–03:31:21.460311 UTC，561.145256199s；cold外层03:36:13.009959–03:36:24.586947 UTC，11.576972357s，均exit0。10份完整commands SHA256 `771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997`，每份618,189B/14,400frames/612nonempty。
 

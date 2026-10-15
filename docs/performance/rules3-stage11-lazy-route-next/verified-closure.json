@@ -2,18 +2,18 @@
   "schema": 1,
   "complete": true,
   "scope": "rules3-stage11-lazy-route-next",
-  "sourceFiles": 879,
-  "uniquePayloads": 505,
-  "aliases": 374,
-  "originalBytes": 73673429,
-  "storedBytes": 15999063,
+  "sourceFiles": 908,
+  "uniquePayloads": 523,
+  "aliases": 385,
+  "originalBytes": 73744826,
+  "storedBytes": 16007462,
   "allStoredAndDecodedSha256Exact": true,
   "everyOriginalFullBytesEqualDecodedCanonical": true,
   "allPinnedSupportFilesExact": true,
   "strictInventoryAndAliasesVerified": true,
   "oldClosedPathsUnchanged": true,
   "originalEvidenceUnmodified": true,
-  "manifestSha256": "2daf82b0074b9d70932fca100f29b85ae80b4e724cbc78b3461b5bc04f9f128f",
+  "manifestSha256": "18545630c8765b4d495c78180699bd3e6b307b5ca901d5bded54b99f98f77eb1",
   "candidateDecision": "HELD_UNSTABLE_NOT_ADOPTED",
   "wholeTargetPassed": false,
   "originalNativeSourceGraphs": 10,
@@ -38,8 +38,8 @@
       "/tmp/whole-stage11-archive-tools/finish.py"
     ],
     "cwd": "/tmp/whole-stage11-archive-tools",
-    "startedAt": "2026-10-15T03:51:49.847862+00:00",
-    "endedAt": "2026-10-15T03:51:50.279148+00:00",
-    "wallSeconds": 0.4312866279797163
+    "startedAt": "2026-10-15T03:52:52.838778+00:00",
+    "endedAt": "2026-10-15T03:52:53.269923+00:00",
+    "wallSeconds": 0.4311486819933634
   }
 }
