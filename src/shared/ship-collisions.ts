@@ -1,5 +1,5 @@
 import { detCos, detSin } from './det-math';
-import { clipToConvex, convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonRadius } from './navigation-math';
+import { clipToConvex, convexHull, expandConvex, insideSupportingPlanes, minkowskiSum, polygonPlanes, polygonRadius } from './navigation-math';
 import { bodyMass } from './physical-body';
 import { isShipKind, shipProfile, type Point } from './ship-geometry';
 import { exactKey, headingDifference, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
@@ -208,12 +208,12 @@ function sweepShape(sweep: Sweep, bodyPolygon: readonly Point[]): Omit<Contact, 
 }
 /** Shared placement check for launching and physical motion. */
 export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bodies: readonly Body[]) {
-  const hull = hullOutline(ship, pose);
+  let reflected: Point[] | undefined;
   for (const body of bodies) {
     if (body === ship || !activeBody(map, body)) continue;
     if (Math.hypot(body.x - pose.x, body.y - pose.y) > polygonRadius(shipProfile(ship)!.hull) + radiusOf(map, body)) continue;
-    const config = minkowskiSum(outline(map, body), hull.map(p => ({ x: pose.x - p.x, y: pose.y - p.y })));
-    if (polygonPlanes(config).every(p => pose.x * p.x + pose.y * p.y > p.min + 1e-6)) return false;
+    reflected ??= hullOutline(ship, pose).map(p => ({ x: pose.x - p.x, y: pose.y - p.y }));
+    if (insideSupportingPlanes(minkowskiSum(outline(map, body), reflected), pose.x, pose.y)) return false;
   }
   return true;
 }
