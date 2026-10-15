@@ -40,7 +40,7 @@ import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
 import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
+import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination, warmTerrainRouting } from "./terrain";
 import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { canBoard, boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks, settleGangwayCrossings } from "./decks";
@@ -889,6 +889,12 @@ function syncBuildingBodies(game: Game) {
   if (seen && seen.length === count + obstacles.length && game.buildings.every((building, index) => building === seen[index]) && obstacles.every((obstacle, index) => obstacle === seen[count + index])) return;
   game.buildingBodiesSeen = [...game.buildings, ...obstacles];
   setBuildingBodies(game.map, game.buildingBodiesSeen);
+}
+
+/** A runtime loading a game calls this before its first tick: the routing its first walks and launches would build cold
+ * from the map and the buildings standing now (see @@@terrain-warmup). Only caches change, never the game. */
+export function warmGameCaches(game: Game) {
+  warmTerrainRouting(game.map, [...game.buildings, ...(game.obstacles ?? [])], [BUILDING_DEFS.shipyard.radius]);
 }
 
 function copyUnitOrder(order:UnitOrder):UnitOrder {

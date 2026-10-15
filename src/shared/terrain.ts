@@ -1147,22 +1147,30 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
       && body.y === current.bodies[index]!.y && body.radius === current.bodies[index]!.radius)) return;
   const ground = runtime(terrain, "land");
   let overlay = current;
-  if (!overlay || overlay.terrain !== terrain || overlay.shared) {
-    const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
+  if (!overlay || overlay.terrain !== terrain) {
+    // A copy warmed for this map (see @@@terrain-warmup) holds the bodies it was built with; the diff below redoes what
+    // differs, exactly as for any unshared copy.
+    const warmed = warmedOverlays.get(map);
+    warmedOverlays.delete(map);
+    if (warmed?.terrain === terrain) overlay = warmed;
+    else {
+      const fresh = createRuntime(terrain, "land");
+      overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
+    }
+    overlays.set(map, overlay);
+  } else if (overlay.shared) {
+    // The snapshot keeps the shared copy. This map continues from a private
+    // copy of it and redoes only the squares the change reaches, as an unshared
+    // copy would, instead of rebuilding every square on its next walk.
+    const copy = copyRouting(overlay.state);
+    overlay = { terrain, state: copy, previous: new Uint8Array(copy.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
     overlays.set(map, overlay);
   }
   overlay.bodies = bodies.map(({ x, y, radius }) => ({ x, y, radius }));
   const state = overlay.state;
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);
-  const size = terrain.cell;
-  for (const body of bodies) {
-    const { left, right, top, bottom } = footprintCells(size, body.x, body.y, body.radius);
-    for (let row = Math.max(0, top); row <= Math.min(terrain.rows - 1, bottom); row += 1) {
-      for (let col = Math.max(0, left); col <= Math.min(terrain.cols - 1, right); col += 1) state.walk[pad(state, col, row)] = 0;
-    }
-  }
+  blockFootprints(state, bodies);
   const dirty = new Set<number>();
   for (let at = 0; at < state.walk.length; at += 1) {
     if (state.walk[at] === overlay.previous[at]) continue;
@@ -1177,6 +1185,39 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   if (state.clearance) { state.clearance.fill(0); fillClearance(state); }
   state.nearest.clear();
   if (state.tiles) redoTiles(state, state.tiles, dirty);
+}
+
+// @@@terrain-warmup - What a game's first walks would build from its terrain and the buildings it starts with, built
+// before its first tick instead: each mover's wholes, the sea's clearance and tiles (they first served a ship's launch
+// steer at minute eight, 33 ms inside one tick), the sea's shore spots for the given radii, and the building copy with
+// its tiles and clearance. Each is a cache of a pure function of the cells (see @@@terrain-runtime). The copy waits beside
+// the map until the first setBuildingBodies hands it these bodies: until then walks read the bare land, as they would cold.
+const warmedOverlays = new WeakMap<object, Overlay>();
+export function warmTerrainRouting(map: Pick<GameMap, "terrain">, bodies: readonly Body[], shoreRadii: readonly number[] = []) {
+  const terrain = map.terrain;
+  if (!terrain) return;
+  wholesOf(runtime(terrain, "land"));
+  const sea = runtime(terrain, "sea");
+  wholesOf(sea);
+  if (!sea.clearance) fillClearance(sea);
+  tilesOf(sea);
+  for (const radius of shoreRadii) shoreSpots(map, radius);
+  if (bodies.length === 0 || overlays.get(map)?.terrain === terrain) return;
+  const state = createRuntime(terrain, "land");
+  blockFootprints(state, bodies);
+  fillClearance(state);
+  tilesOf(state);
+  warmedOverlays.set(map, { terrain, state, previous: new Uint8Array(state.walk.length), revision: nextGroundRevision++, bodies: bodies.map(({ x, y, radius }) => ({ x, y, radius })), shared: false });
+}
+
+function blockFootprints(state: TerrainRuntime, bodies: readonly Body[]) {
+  const { terrain } = state, size = terrain.cell;
+  for (const body of bodies) {
+    const { left, right, top, bottom } = footprintCells(size, body.x, body.y, body.radius);
+    for (let row = Math.max(0, top); row <= Math.min(terrain.rows - 1, bottom); row += 1) {
+      for (let col = Math.max(0, left); col <= Math.min(terrain.cols - 1, right); col += 1) state.walk[pad(state, col, row)] = 0;
+    }
+  }
 }
 
 // The runtime a mover's routing runs on: the land's with this game's buildings when it has any.
@@ -1266,6 +1307,44 @@ function createRuntime(terrain: Terrain, mover: Mover): TerrainRuntime {
     offsets,
   };
   return state;
+}
+
+// A private copy of a building copy's routing (see @@@building-pathing), for a map that changes its buildings while a
+// snapshot still reads the original: its own cells, clearance, nearest cells and tiles. A redo (see redoTiles) hands the
+// copy's window sides new fields and edges and never writes into the old ones; a field both copies keep belongs to a square
+// whose cells neither changed, so the steps it remembers (see downhill) are the same for both.
+function copyRouting(state: TerrainRuntime): TerrainRuntime {
+  return {
+    terrain: state.terrain,
+    width: state.width,
+    walk: state.walk.slice(),
+    weight: state.weight,
+    ...(state.clearance ? { clearance: state.clearance.slice() } : {}),
+    fields: new Map(),
+    spare: [],
+    clock: 0,
+    nearest: new Map(state.nearest),
+    tops: new Int32Array(8),
+    boxBuckets: Array.from({ length: BUCKETS }, () => []),
+    offsets: state.offsets,
+    ...(state.tiles ? { tiles: copyTiles(state.tiles) } : {}),
+  };
+}
+
+function copyTiles(tiles: Tiles): Tiles {
+  const nodes = new Map<number, TileNode>();
+  for (const [key, node] of tiles.nodes) nodes.set(key, { ...node });
+  return {
+    columns: tiles.columns,
+    rows: tiles.rows,
+    nodes,
+    borders: new Map(tiles.borders),
+    region: tiles.region.slice(),
+    island: tiles.island.slice(),
+    goals: new Map(tiles.goals),
+    exits: new Map(tiles.exits),
+    nearest: new Map(tiles.nearest),
+  };
 }
 
 function pad(state: TerrainRuntime, col: number, row: number) {
