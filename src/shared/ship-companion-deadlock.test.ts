@@ -27,7 +27,8 @@ describe('stopped coastal companions', () => {
   it('get under way instead of waiting on each other\'s blocked turns', () => {
     const game = pocket();
     const start = game.units.map((unit) => ({ x: unit.x, y: unit.y }));
-    for (let tick = 0; tick < 400; tick++) stepGame(game);
+    // 40 s: the transport works its way out of the pocket by turns (about 170 units by then); waiting, neither moves at all.
+    for (let tick = 0; tick < 800; tick++) stepGame(game);
     game.units.forEach((unit, index) => {
       expect(Math.hypot(unit.x - start[index]!.x, unit.y - start[index]!.y), unit.id).toBeGreaterThan(100);
     });
