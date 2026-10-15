@@ -1,0 +1,7 @@
+{
+  "moduleCount": 241,
+  "changedModules": [
+    "src/shared/ship-navigation.ts",
+    "src/shared/ship-planning-job.ts"
+  ]
+}
