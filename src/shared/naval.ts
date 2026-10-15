@@ -86,11 +86,28 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
  * Every candidate still needs hull, body and actual boarding-reach clearance. */
 export function clearBoardingBerth(map: GameMap, passenger: Unit, boat: Unit,
   berth: NonNullable<Extract<Unit["order"], {type:"board"}>["berth"]>, units: readonly Unit[]) {
+  // A coarse shore-cell center can miss an already reachable side of the
+  // stationary hull. Refine that same shore cell before sending the ship on
+  // a new maneuver away from the approaching passengers.
+  const shore=berth.shore ?? passenger;
+  const cell=map.terrain?.cell;
+  if(cell && Math.hypot(boat.x-shore.x,boat.y-shore.y)<(shipProfile(boat)?.length ?? boat.radius*2)/2+cell) {
+    const candidates=[] as {x:number;y:number}[];
+    const left=Math.floor(shore.x/cell)*cell,top=Math.floor(shore.y/cell)*cell;
+    for(let y=top+1;y<top+cell;y+=cell/4)for(let x=left+1;x<left+cell;x+=cell/4)candidates.push({x,y});
+    candidates.sort((a,b)=>distanceToHull(boat,a)-distanceToHull(boat,b));
+    const reachable=candidates.find(point=>{
+      if(distanceToHull(boat,point)>passenger.radius+BOARDING_GAP || !isOpenGround(map,point.x,point.y)
+        || !sameGround(map,passenger,point))return false;
+      const arrival=walkDestination(map,passenger,point);
+      return Math.hypot(arrival.x-point.x,arrival.y-point.y)<1e-7;
+    });
+    if(reachable)return {x:boat.x,y:boat.y,heading:boat.sailing?.heading ?? 0,shore:reachable};
+  }
   const heading=berth.heading ?? boat.sailing?.heading ?? 0;
   const bodiesClear=shipBodyClearanceAtHeading(map,boat,heading,units);
   const clear=(x:number,y:number)=>bodiesClear({x,y}) && hullFits(map,boat,{x,y,heading});
   if(clear(berth.x,berth.y))return berth;
-  const shore=berth.shore ?? passenger;
   const searchRadius=(shipProfile(boat)?.length ?? boat.radius*2)/2+passenger.radius+BOARDING_GAP;
   for(let radius=8;radius<=searchRadius;radius+=8) {
     const candidates=[] as {x:number;y:number}[];
