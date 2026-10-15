@@ -88,19 +88,28 @@ export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, 
   const edge=localToWorld(transport,{x:detCos(angle)*((profile?.length ?? transport.radius*2)/2+radius+2),y:detSin(angle)*((profile?.beam ?? transport.radius*2)/2+radius+2)});
   const shore=transport.order.type==="unload"?walkableGoal(map,transport.order.x,transport.order.y):undefined;
   const preferred=shore??edge;
-  const clear=(p:{x:number;y:number})=>p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height
-    && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))
-    && distanceToHull(transport,p)>=radius+1 && distanceToHull(transport,p)<=LANDING_REACH
-    && !units.some(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land"&&Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  const clearAmong=(standing:readonly Unit[])=>(p:{x:number;y:number})=>{
+    if(!(p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))))return false;
+    const gap=distanceToHull(transport,p);
+    return gap>=radius+1 && gap<=LANDING_REACH && !standing.some(u=>Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  };
+  const ashore=units.filter(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land");
   const nearest=walkableGoal(map,preferred.x,preferred.y);
-  if(clear(nearest))return nearest;
+  if(clearAmong(ashore)(nearest))return nearest;
   const span=(profile?.length??transport.radius*2)/2+LANDING_REACH;
   const step=map.terrain?map.terrain.cell/4:Math.max(8,radius);
+  // The square below starts at most half a step before its span; a unit farther out than that plus both radii cannot
+  // stand on any of its points.
+  const clear=clearAmong(ashore.filter(u=>Math.abs(u.x-transport.x)<span+step+radius+u.radius+1 && Math.abs(u.y-transport.y)<span+step+radius+u.radius+1));
+  // Unloading asks this many times a tick: one probe point serves the whole square, and only an improvement is kept.
+  const probe={x:0,y:0};
   let best:{x:number;y:number}|undefined,score=Infinity;
   for(let y=Math.max(step/2,Math.floor((transport.y-span)/step)*step+step/2);y<Math.min(map.height,transport.y+span);y+=step)
     for(let x=Math.max(step/2,Math.floor((transport.x-span)/step)*step+step/2);x<Math.min(map.width,transport.x+span);x+=step) {
-      const p={x,y},value=Math.hypot(x-preferred.x,y-preferred.y);
-      if(value<score && clear(p)){best=p;score=value;}
+      const value=Math.hypot(x-preferred.x,y-preferred.y);
+      if(!(value<score))continue;
+      probe.x=x;probe.y=y;
+      if(clear(probe)){best={x,y};score=value;}
     }
   return best;
 }
