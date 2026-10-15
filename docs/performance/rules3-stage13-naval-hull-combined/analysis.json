@@ -63,6 +63,7 @@
   "standaloneBuildSourceRecords": 241,
   "coldBuildSourceGraphs": 2,
   "coldBuildSourceRecords": 482,
+  "all144000TickPhasesEntityAndPerformanceOwnerSequencesExact": true,
   "commandFiles": 10,
   "allCompleteCommandAndInitialBytesEqual": true,
   "commandBytes": 618189,

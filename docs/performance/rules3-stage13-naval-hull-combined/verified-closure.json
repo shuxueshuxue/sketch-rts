@@ -1,12 +1,12 @@
 {
   "complete": true,
   "scope": "rules3-stage13-naval-hull-combined",
-  "sourceFiles": 1531,
-  "uniquePayloads": 783,
-  "aliases": 748,
-  "originalBytes": 101010492,
-  "storedBytes": 20472973,
-  "manifestSha256": "a220cbf9c54c944a9c2f8c141e2105a90ef50e683ffa56e5f5c16eeaeaa9c119",
+  "sourceFiles": 1614,
+  "uniquePayloads": 836,
+  "aliases": 778,
+  "originalBytes": 101265210,
+  "storedBytes": 20505092,
+  "manifestSha256": "feed71871acaa3b8886ab36b0564467c89262f6b6c135edcf56f6237224d15c7",
   "allStoredDecodedOriginalBytesExact": true,
   "strictInventoryAndAliasesVerified": true,
   "supportingFilePinsExact": true,
@@ -34,5 +34,5 @@
     "exitCode": 1,
     "wallSeconds": 33.590561729011824
   },
-  "utc": "2026-10-15T05:09:01.468992+00:00"
+  "utc": "2026-10-15T05:11:14.170516+00:00"
 }

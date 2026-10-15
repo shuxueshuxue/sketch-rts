@@ -104,7 +104,7 @@ direct cold正确性fixture确实由3个goal field变1个，并新增wholes构�
 
 库存截点 **2026-10-15T04:55:07.168004+00:00**；完整保留1,330份冻结原路径及所有字节，后续profile输出没有混入本scope。便携源码仅0ea/23b/1cf三个raw commit、所需27个raw tree，以及standalone两路径和combined四路径Git差异（含两份永久测试）；没有完整树复制。
 
-**1531个原路径，783份gzip，748个显式alias**；原件101,010,492 B，unique gzip 20,472,973 B。stored/decoded/original全文、inventory、alias witness与支持文件pins均逐项闭合。10份完整commands均618,189B／SHA `771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997`；2410条native source、单独23b build241条、cold build482条以及所有14,400tick相位、cold/slow全文和稀疏memory分列认证。
+**1614个原路径，836份gzip，778个显式alias**；原件101,265,210 B，unique gzip 20,505,092 B。stored/decoded/original全文、inventory、alias witness与支持文件pins均逐项闭合。10份完整commands均618,189B／SHA `771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997`；2410条native source、单独23b build241条、cold build482条以及所有14,400tick相位、cold/slow全文和稀疏memory分列认证。
 
 离线重读重新计算全部整局分布、配对／分钟及所有24个cold样本锚点、统计与完整初始／首帧／tick1字节。正确性部分认证原执行源码、日志及原报告，并重算保存的proof记录算术；原proof只保存部分trace hash，不能从hash独立重建未保存的全field／polygon数组。本轮不重跑Node proof或引擎，也不把这些hash当成全数组重放。原proof专用import图为111／35，完整生产图仍严格241。
 

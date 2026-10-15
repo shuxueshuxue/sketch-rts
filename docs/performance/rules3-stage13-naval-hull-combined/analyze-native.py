@@ -74,6 +74,12 @@ def main():
   m={a:dist([t['wholeMs'] for k in keys for t in runs[k]['ticks'][minute*1200:(minute+1)*1200]]) for a,keys in groups.items()};minutes.append({'minute':minute,**m,'meanDeltaPercent':100*(m['B']['mean']/m['A']['mean']-1)})
  eq(minutes,combined['perMinute']);delta=100*(pooled['B']['wholeMs']['mean']/pooled['A']['wholeMs']['mean']-1);eq(delta,combined['meanDeltaPercent']);assert combined['targetPassed'] is False
 
+ reference=runs['r1-A1']['ticks']
+ for runlabel,run in runs.items():
+  for index,t in enumerate(run['ticks']):
+   assert t['tickAfter']==index+1 and t['mod15']==index%15
+   assert t['units']==reference[index]['units'] and t['buildings']==reference[index]['buildings']
+   if not runlabel.endswith('Bplain'):assert [(x['owner'],x['version']) for x in t['ownerPlans']]==[(x['owner'],x['version']) for x in reference[index]['ownerPlans']]
  standalone='23b09f4ce6618c286a26545b422bb89f21ddc69f';assert set(g['heads'])=={base,standalone,candidate}
  for h,change in g['changedSnapshots'].items():
   for r in change['files']:
@@ -89,7 +95,7 @@ def main():
  assert decision['coldIndependentReportSha256']==sha(raw('/tmp/naval-hull-combined-cold-independent-review-v1/report-v2.json'))
  phase_slow={a:{'planning':sum(t['wholeMs']>50 and t['mod15']==0 for k in keys for t in runs[k]['ticks']),'nonplanning':sum(t['wholeMs']>50 and t['mod15']!=0 for k in keys for t in runs[k]['ticks'])} for a,keys in groups.items()}
  assert phase_slow['A']['nonplanning']==6 and phase_slow['B']['nonplanning']==8
- return {'complete':True,'candidate':candidate,'standalone':standalone,'base':base,'decision':decision['decision'],'wholeTargetPassed':False,'jointCandidateOnly':True,'standaloneNativeRuns':0,'originalNativeSourceGraphs':sources,'originalNativeSourceRecords':2410,'standaloneBuildSourceRecords':241,'coldBuildSourceGraphs':2,'coldBuildSourceRecords':482,'commandFiles':10,'allCompleteCommandAndInitialBytesEqual':True,'commandBytes':len(oracle),'commandSha256':hashes,'rulesVersion':3,'checksumVersion':18,'finalChecksum':'7d94a5e8','pooled':pooled,'paired':pairs,'blockMeanDeltaPercent':combined['blockMeanDeltaPercent'],'meanDeltaPercent':delta,'phaseOver50':phase_slow,'firstMinute':minutes[0],'allSlowColdAndSparseMemoryRetained':True,'plain':{k:v['whole'] for k,v in special.items() if k.endswith('Bplain')},'correctnessOriginalReportsAndRecordArithmetic':correctness,'coldIndependentArithmeticAndBytes':cold,'historicalAndAfterColdDecisionsBothRetained':True,'currentDecision':decision,'noNewEngineOrPerformanceRun':True,'noGcJitOrOsCauseInferred':True}
+ return {'complete':True,'candidate':candidate,'standalone':standalone,'base':base,'decision':decision['decision'],'wholeTargetPassed':False,'jointCandidateOnly':True,'standaloneNativeRuns':0,'originalNativeSourceGraphs':sources,'originalNativeSourceRecords':2410,'standaloneBuildSourceRecords':241,'coldBuildSourceGraphs':2,'coldBuildSourceRecords':482,'all144000TickPhasesEntityAndPerformanceOwnerSequencesExact':True,'commandFiles':10,'allCompleteCommandAndInitialBytesEqual':True,'commandBytes':len(oracle),'commandSha256':hashes,'rulesVersion':3,'checksumVersion':18,'finalChecksum':'7d94a5e8','pooled':pooled,'paired':pairs,'blockMeanDeltaPercent':combined['blockMeanDeltaPercent'],'meanDeltaPercent':delta,'phaseOver50':phase_slow,'firstMinute':minutes[0],'allSlowColdAndSparseMemoryRetained':True,'plain':{k:v['whole'] for k,v in special.items() if k.endswith('Bplain')},'correctnessOriginalReportsAndRecordArithmetic':correctness,'coldIndependentArithmeticAndBytes':cold,'historicalAndAfterColdDecisionsBothRetained':True,'currentDecision':decision,'noNewEngineOrPerformanceRun':True,'noGcJitOrOsCauseInferred':True}
 def load_gzip(p):return json.loads(gzip.decompress(raw(p)))
 def read_correctness(base,standalone,candidate,runs):
  root='/tmp/naval-mine-pruning-validation-v1';v=load(root+'/VALIDATION.json');p=load(root+'/public-proof.json')
