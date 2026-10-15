@@ -341,6 +341,8 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
   const near = nearestWalkable(state, start);
   if (near < 0) return goal;
+  const wholes = state === ground ? ground.wholes : undefined;
+  if (wholes && wholes.labels[near]! > 0 && wholes.labels[near] === wholes.labels[target]) return goal;
   const tiles = tilesOf(state);
   const aim = reachableTarget(state, ground, tiles, near, target);
   if (state.walk[aim] === 1) return aim === target ? goal : centerOf(state, aim);
