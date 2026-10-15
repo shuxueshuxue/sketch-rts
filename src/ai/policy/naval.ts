@@ -606,7 +606,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32
         || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
-    else if(snapshot.tick-progress.tick>seconds(40)){
+    else if(snapshot.tick-progress.tick>seconds(40) && !(mission.purpose==='assault' && mission.phase==='sailing'
+        && Object.entries(ferries).some(([id,other])=>id!==boat.id && other.purpose==='assault' && other.phase==='sailing'
+            && other.targetId===mission.targetId && other.progress && snapshot.tick-other.progress.tick<=seconds(40)))){
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
         if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:aboardIds};
@@ -651,7 +653,28 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             mission.crewIds = [];
             return commands;
         }
-        if ((mission.purpose === "assault" || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission, options);
+        if (mission.purpose === 'assault' && (mission.rally || distance(boat, mission.to) < HOME_WATERS)) {
+            const landed = own.filter(unit=>!unit.deck && unit.kind!=='worker' && unitMover(unit.kind)==='land'
+                && !unit.expiresTick && sameGround(map,unit,target));
+            const power = [...nearbyAssaultCrew(snapshot,owner,options,boat,450),...landed]
+                .filter(unit=>unit.kind!=='worker' && !unit.expiresTick)
+                .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
+            if (power < assaultExpedition(snapshot,owner,options,target).required) {
+                // Faster ferries wait outside the coast's fire for the actual
+                // convoy, rather than counting a slow hull across the ocean.
+                const companions = Object.values(ferries).filter(other=>other.purpose==='assault'
+                    && other.phase==='sailing' && other.targetId===mission.targetId);
+                const danger = outmatchingCoast(snapshot,owner,boat,boat,options);
+                const refuge = danger.length ? coastalRefuge(snapshot,boat,danger) : undefined;
+                const rally = refuge ?? mission.rally ?? companions.find(other=>other.rally)?.rally ?? {x:boat.x,y:boat.y};
+                for (const other of companions) other.rally={...rally};
+                if (distance(boat,rally)>150) return needsMove(boat,rally) ? [{type:'move',unitIds:[boat.id],...rally,avoidCombat:true}] : [];
+                return boat.order.type==='idle' ? [] : [{type:'stop',unitIds:[boat.id]}];
+            }
+            for (const other of Object.values(ferries)) if(other.purpose==='assault' && other.targetId===mission.targetId) delete other.rally;
+        }
+        if ((mission.purpose === "settle" || mission.purpose === "assault" && distance(boat,mission.to)<HOME_WATERS)
+            && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission, options);
         if (boat.order.type !== "unload")
             commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
         return commands;
@@ -718,7 +741,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (mission.purpose === 'assault' && !boarding.length && !crew.length) {
         const required = assaultExpedition(snapshot, owner, options, target).required;
         const landed = own.filter(unit=>!unit.deck && unit.kind!=='worker' && unitMover(unit.kind)==='land' && sameGround(map,unit,target));
-        const strength = [...cargo,...landed].reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
+        const strength = [...nearbyAssaultCrew(snapshot, owner, options, boat), ...landed]
+            .filter(unit => unit.kind !== 'worker' && !unit.expiresTick)
+            .reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
         if (strength < required) {
             // Gather across depleted colonies before sailing into the enemy.
             // Select by actual sea route; keep the original coast for cancellation.
@@ -822,6 +847,19 @@ export function assaultExpedition(snapshot: GameSnapshot, owner: PlayerId, optio
     return {required,crew,ready:strength>=required};
 }
 
+/** Only physically nearby ships committed to this assault can join its departure. */
+function nearbyAssaultCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, reach = HOME_WATERS): Unit[] {
+    const missions = navalMemory(options).ferries ?? {}, mission = missions[boat.id];
+    return units(snapshot, owner).filter(ship => {
+        const other = missions[ship.id];
+        if (!other || other.purpose !== 'assault' || other.phase === 'return' || other.targetId !== mission?.targetId) return false;
+        if (ship.id === boat.id) return true;
+        if (distance(ship, boat) > reach) return false;
+        const road = walkingDistance(snapshot.map, ship, boat, 'sea');
+        return road !== undefined && road <= reach;
+    }).flatMap(ship => shipPassengers(snapshot.units, ship));
+}
+
 function landingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, target: Point) {
     const guards = snapshot.units.filter(unit => combatCapability(snapshot,unit).armed && distance(unit, target) < 400 && sameGround(snapshot.map, unit, target)
         && (unit.owner === "neutral" || isOpponentOwner(snapshot, owner, unit.owner, options)));
@@ -831,7 +869,9 @@ function landingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     const support = units(snapshot, owner).filter(unit => unitMover(unit.kind) === "sea" && combatCapability(snapshot,unit).armed
         && guards.some(guard => distance(unit, guard) <= combatCapability(snapshot,unit).range + guard.radius && canReach(snapshot.map, unit, guard, snapshot.units, combatCapability(snapshot,unit).range)));
     const convoy = units(snapshot, owner).filter(unit => ferryCapacity(unit) > 0 && sameGround(snapshot.map, unit, boat, "sea")
-        && navalMemory(options).ferries?.[unit.id]?.targetId === navalMemory(options).ferries?.[boat.id]?.targetId);
+        && navalMemory(options).ferries?.[unit.id]?.phase !== 'return'
+        && navalMemory(options).ferries?.[unit.id]?.targetId === navalMemory(options).ferries?.[boat.id]?.targetId
+        && (walkingDistance(snapshot.map,unit,boat,'sea') ?? Infinity) <= HOME_WATERS);
     return [...convoy.flatMap(unit => shipPassengers(snapshot.units,unit)), ...landed, ...support].reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0) >= defenders * 1.4;
 }
 

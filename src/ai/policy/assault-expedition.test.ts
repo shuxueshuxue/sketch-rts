@@ -73,3 +73,53 @@ it('collects a second island before committing an understrength loaded carrier',
  expect(resumed.nextId).toBe(game.nextId);
  expect(resumedOptions.memory).toEqual(memory);
 },60000);
+
+it.each(['nearby','distant','returning','ahead','enroute'] as const)('coordinates loaded assault ships with %s reinforcements',async(position)=>{
+ const {boardUnit}=await import('../../shared/decks');
+ const {planNavalTactics}=await import('./naval');
+ const game=scenario();game.units=game.units.filter(u=>u.owner==='foe');
+ game.map.terrain!.cells=Array.from({length:128*128},(_,i)=>{const x=i%128,y=Math.floor(i/128);return x<32||x>70&&x<92&&y<64||x>102?'.':'~';}).join('');
+ const first=game.spawnUnit('us','transport',position==='ahead'?3100:1400,1400),second=game.spawnUnit('us','carrier',1400,position==='distant'||position==='enroute'?3200:1800);
+ for(const boat of [first,second])for(let i=0;i<5;i++){
+  const soldier=game.spawnUnit('us','footman',boat.x,boat.y);expect(boardUnit(boat,soldier,game.units)).toBe(true);
+ }
+ const memory=createAiPolicyMemory();memory.naval={ferries:{}};
+ for(const boat of [first,second])memory.naval.ferries![boat.id]={purpose:'assault',targetId:game.buildings[1]!.id,
+  from:{x:1008,y:1400},to:{x:3280,y:1400},phase:boat===second&&position==='returning'?'return':position==='ahead'||position==='enroute'?'sailing':'loading',crewIds:[],sinceTick:0};
+ if(position==='ahead')first.order={type:'unload',x:3280,y:1400};
+ if(position==='enroute')for(const unit of game.units.filter(u=>u.owner==='foe'))unit.y=1400;
+ const options={version:'v9' as const,memory,teams:game.teams};
+ const commands=planNavalTactics(snapshotGame(game),'us',options);
+ const launches=commands.filter(c=>c.type==='unload'&&c.x===3280);
+ expect(launches.some(c=>'unitIds' in c&&c.unitIds.includes(first.id))).toBe(position==='nearby'||position==='enroute');
+ if(position==='ahead')expect(commands.some(c=>c.type==='stop'&&c.unitIds.includes(first.id))).toBe(true);
+ if(position==='nearby'||position==='ahead'){
+  if(position==='nearby')expect(launches).toHaveLength(2);
+  const {issuePlayerCommand,stepGame}=await import('../../shared/sim');
+  const {sameGround}=await import('../../shared/terrain');
+  for(const command of commands)issuePlayerCommand(game,'us',command);
+  const landed=()=>game.units.filter(u=>u.owner==='us'&&u.kind==='footman'&&!u.deck&&sameGround(game.map,u,game.buildings[1]!)).length;
+  let checkpoint:{snapshot:ReturnType<typeof snapshotGame>;nextId:number;memory:typeof memory}|undefined;
+  for(let tick=0;tick<9000&&landed()<8;tick++){
+   if(tick%15===0)for(const command of planNavalTactics(snapshotGame(game),'us',options))issuePlayerCommand(game,'us',command);
+   stepGame(game);
+   if(position==='ahead' && game.tick===600)checkpoint={snapshot:snapshotGame(game),nextId:game.nextId,memory:structuredClone(memory)};
+  }
+  expect(landed(),JSON.stringify({first,second,missions:memory.naval.ferries})).toBeGreaterThanOrEqual(8);
+  expect(game.units.some(unit=>unit.id===first.id)).toBe(true);
+  expect(game.units.some(unit=>unit.id===second.id)).toBe(true);
+  if(position==='ahead'){
+   expect(checkpoint!.memory.naval!.ferries![first.id]!.rally).toBeDefined();
+   const {restoreSnapshotIntoGame}=await import('../../shared/sim');
+   const restored=scenario();restoreSnapshotIntoGame(restored,checkpoint!.snapshot,checkpoint!.nextId);
+   const restoredOptions={...options,memory:checkpoint!.memory};
+   while(restored.tick<game.tick){
+    if(restored.tick%15===0)for(const command of planNavalTactics(snapshotGame(restored),'us',restoredOptions))issuePlayerCommand(restored,'us',command);
+    stepGame(restored);
+   }
+   expect(snapshotGame(restored)).toEqual(snapshotGame(game));
+   expect(restoredOptions.memory).toEqual(memory);
+  }
+ }
+
+});

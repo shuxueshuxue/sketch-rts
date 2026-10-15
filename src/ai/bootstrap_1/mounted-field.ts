@@ -1,8 +1,6 @@
 import { strikeGap } from '../../shared/combat-geometry';
 import { routeWithinDistance } from '../../shared/route-selection';
-import { walkingDistance } from '../../shared/terrain';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { LOCAL_RANGE } from '../policy/v6/general';
@@ -22,24 +20,35 @@ export function mountedFieldOwns(snapshot: GameSnapshot, owner: PlayerId, unitId
 
 /** Prospective recruits and active riders assess the same opponent, road and firing cover. */
 export function mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
-  const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
-    && isOpponentOwner(snapshot, owner, building.owner, options));
-  const enemies = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.kind !== 'worker'
-    && isOpponentOwner(snapshot, owner, unit.owner, options));
+  return mountedFieldChoices(snapshot, owner, rider, crew, options).map(choice => choice.target);
+}
+
+function mountedFieldChoices(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
+  const foes = armedFoes(snapshot, owner, options);
+  const towers = foes.filter((foe): foe is Building => !('order' in foe));
+  const defenders = foes.filter((foe): foe is Unit => 'order' in foe && foe.owner !== 'neutral');
+  const enemies = defenders.filter(unit => !unit.deck && unit.kind !== 'worker');
   const engaged = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId !== undefined
       && crew.has(target.order.targetId);
+  const pursued = foes.some(foe => 'order' in foe && (foe.order.type === 'attack' || foe.order.type === 'attackMove')
+    && foe.order.targetId === rider.id);
+  const route = threatLandRouter(snapshot, rider, foes);
+  const admit = (target: Unit): {target: Unit; road: ReturnType<typeof route>}[] => {
+    if (strikeGap(rider, target) <= rider.attackRange || pursued) return [{target, road: undefined}];
+    const point = mountedFiringPoint(snapshot, rider, target, towers, defenders);
+    const road = point && route(point);
+    return road ? [{target, road}] : [];
+  };
   const local = enemies.filter(target => engaged(target)
     || routeWithinDistance(snapshot.map, rider, target, 'land', LOCAL_RANGE));
-  const admitted = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
-    || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId === rider.id
-    || mountedFiringPoint(snapshot, rider, target, towers, enemies) !== undefined;
-  const nearby = local.filter(admitted);
-  // Fight the current front before evaluating an independent journey across the map.
-  const targets = nearby.length ? nearby : enemies.filter(target => !local.includes(target)
+  const nearby = local.flatMap(admit);
+  // Admission retains the exact road checked against the execution threat set,
+  // including armed workers. A target alone is not a promised firing position.
+  const choices = nearby.length ? nearby : enemies.filter(target => !local.includes(target)
     && target.speed < rider.speed && mountedThreatReach(snapshot, target, rider, rider.attackCooldown) < rider.attackRange)
-    .filter(admitted);
-  return targets.sort((a, b) => Number(engaged(b)) - Number(engaged(a))
+    .flatMap(admit);
+  return choices.sort(({target:a}, {target:b}) => Number(engaged(b)) - Number(engaged(a))
     || mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b));
 }
 
@@ -52,12 +61,12 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
       && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)));
   const crew = new Set(riders.map(rider => rider.id));
   return riders.flatMap(rider => {
-    const targets = mountedFieldTargets(snapshot, owner, rider, crew, options);
-    return targets.length ? [{ rider, target: targets[0]! }] : [];
+    const choices = mountedFieldChoices(snapshot, owner, rider, crew, options);
+    return choices.length ? [{ rider, ...choices[0]! }] : [];
   });
 }
 
-export const mountedField: AiScript = {
+export const mountedField = {
   id: 'mountedField', phase: 'tactics',
   claimsUnits: (snapshot, owner, options) => new Set(mountedFieldPlans(snapshot, owner, options).map(plan => plan.rider.id)),
   run(snapshot, owner, options) {
@@ -66,17 +75,8 @@ export const mountedField: AiScript = {
     if (frame === undefined) allocations.set(snapshot, new Map([[owner, new Set(plans.map(plan => plan.rider.id))]]));
     else frame.set(owner, new Set(plans.map(plan => plan.rider.id)));
     const foes = armedFoes(snapshot, owner, options);
-    return plans.flatMap(({ rider, target }) => {
-      if (strikeGap(rider, target) > rider.attackRange
-        && !foes.some(foe => 'order' in foe && (foe.order.type === 'attack' || foe.order.type === 'attackMove')
-          && foe.order.targetId === rider.id)) {
-        const towers = foes.filter((foe): foe is Building => !('order' in foe));
-        const defenders = foes.filter((foe): foe is Unit => 'order' in foe && foe.owner !== 'neutral');
-        const point = mountedFiringPoint(snapshot, rider, target, towers, defenders)!;
-        return threatRoadCommands(rider, threatLandRouter(snapshot, rider, foes)(point)!);
-      }
-      return [mountedMicro(snapshot, rider, target, foes, { kind: 'field' })];
-    });
+    return plans.flatMap(({ rider, target, road }) => road
+      ? threatRoadCommands(rider, road)
+      : [mountedMicro(snapshot, rider, target, foes, { kind: 'field' })]);
   },
-};
-
+} satisfies AiScript;
