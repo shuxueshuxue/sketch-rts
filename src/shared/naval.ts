@@ -160,3 +160,34 @@ export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "h
   const index = passengers.findIndex(passenger => passenger.id === passengerId);
   return index < 0 ? undefined : landingSpot(map, transport, index, passengers.length,units,passengers[index]);
 }
+
+/** Portraits execute immediately without replacing a ferry's helm order.
+ * Check the existing native unload and its intended landmass, then reserve
+ * each actual landing body in command order against this immutable frame.
+ * This proves only the returned landings, not completion of the whole crew.
+ */
+export function currentBerthLandings(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit,
+  intended: { x: number; y: number }, units: readonly Unit[]): { passengerId: string; point: { x: number; y: number } }[] {
+  const motion = transport.sailing;
+  if (transport.order.type !== 'unload' || !shipProfile(transport) || !motion || Math.abs(motion.speed) > .1
+    || Math.hypot(motion.velocityX ?? 0, motion.velocityY ?? 0) > 1e-6) return [];
+  const passengers = shipPassengers(units, transport).filter(passenger => passenger.owner === transport.owner && !isInCabin(passenger));
+  if (!passengers.length) return [];
+  const shore = walkableGoal(map, intended.x, intended.y);
+  if (!sameGround(map, shore, walkableGoal(map, transport.order.x, transport.order.y))) return [];
+  const shadow = units.slice(), failedRadii = new Set<number>(), landings: ReturnType<typeof currentBerthLandings> = [];
+  for (const passenger of passengers) {
+    if (failedRadii.has(passenger.radius)) continue;
+    const point = passengerLandingSpot(map, transport, passenger.id, shadow);
+    if (!point || !sameGround(map, shore, point)) {
+      // With an explicit unload, the preferred shore ignores crew index and
+      // count. Remaining deck bodies never block landingSpot; radius is the
+      // only passenger parameter. Adding landed bodies cannot clear a failure.
+      failedRadii.add(passenger.radius);
+      continue;
+    }
+    landings.push({ passengerId: passenger.id, point });
+    shadow[shadow.indexOf(passenger)] = { ...passenger, ...point, deck: undefined, cabin: undefined };
+  }
+  return landings;
+}

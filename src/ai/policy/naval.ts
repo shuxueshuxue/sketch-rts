@@ -16,7 +16,7 @@ import { fleetAttackCommand, fleetTarget } from './fleet-engagement';
 import { combatHull } from '../../shared/ship-defense';
 import { isInCabin } from '../../shared/ship-cabin';
 import { isTransportKind } from '../../shared/transport-role';
-import { clearTransferLanes } from './transfer-lanes';
+import { clearTransferLanes, pendingDeckBoarding } from './transfer-lanes';
 import { convoyCanCarry } from './convoy-load';
 import { headingDifference, nearestShipPose } from "../../shared/ship-navigation";
 import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts, shipNeedsRepair } from "../../shared/ship-equipment";
@@ -27,7 +27,7 @@ import { bodyMass } from "../../shared/physical-body";
 import { boardUnit } from "../../shared/decks";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
-import { BOARDING_GAP, canReach, carries, boardingBerth } from "../../shared/naval";
+import { BOARDING_GAP, canReach, carries, boardingBerth, currentBerthLandings } from "../../shared/naval";
 import { purchasePlacement } from "../../shared/purchase";
 import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
@@ -626,6 +626,21 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
     }
     return claimed;
 }
+/** The ferry has already chosen this destination and passed its safety gates. */
+function ferryUnloadCommands(snapshot: GameSnapshot, boat: Unit, goal: Point, avoidCombat = false): GameCommand[] {
+    const order = boat.order;
+    if (order.type !== 'unload' || order.x !== goal.x || order.y !== goal.y || !!order.avoidCombat !== avoidCombat)
+        return [{ type: 'unload', unitIds: [boat.id], ...goal, ...(avoidCombat ? { avoidCombat: true } : {}) }];
+    // An existing cross-deck transfer may run before these commands. Its
+    // native board changes this hull's helm; let that task finish first.
+    if (shipPassengers(snapshot.units, boat).some(passenger => {
+        const boarding = pendingDeckBoarding(passenger);
+        return boarding && boarding.transportId !== boat.id;
+    })) return [];
+    return currentBerthLandings(snapshot.map, boat, goal, snapshot.units).map(({ passengerId }) =>
+        ({ type: 'unloadPassenger', transportId: boat.id, passengerId }));
+}
+
 function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
@@ -698,7 +713,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
     if (mission.phase === "return") {
-        if (shipPassengers(snapshot.units,boat).some(unit => unit.expiresTick === undefined)) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
+        if (shipPassengers(snapshot.units,boat).some(unit => unit.expiresTick === undefined)) return ferryUnloadCommands(snapshot, boat, mission.from, true);
         // A ferry without permanent crew can be dispatched from its actual location.
         // Returning ephemeral summons to a stale coast must not delay the next crew.
         delete ferries[boat.id];
@@ -771,8 +786,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         }
         if ((mission.purpose === "settle" || mission.purpose === "assault" && distance(boat,mission.to)<HOME_WATERS)
             && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission, options);
-        if (boat.order.type !== "unload")
-            commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
+        commands.push(...ferryUnloadCommands(snapshot, boat, mission.to));
         return commands;
     }
     const loadGround = walkableGoal(map, (mission.pickup ?? mission.from).x, (mission.pickup ?? mission.from).y);
