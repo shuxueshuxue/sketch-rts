@@ -518,7 +518,7 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
   for(const {distance,side} of choices){
     const end={x:start.x+dx*distance/gap,y:start.y+dy*distance/gap};
     const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
-    let best:ShipPose[]|undefined,bestCost=Infinity;
+    const candidates:{points:ShipPose[];cost:number}[]=[];
     const startingTurn=Math.abs(headingDifference(start.heading,angles[side]!))>1e-7;
     for(const startupRadius of startingTurn?departureRadii(map,ship):[voyageTurnRadius(ship)])for(const radius of voyageRadii(ship)){
       const speedLimit=curveSpeedLimit(ship,radius),startupSpeed=curveSpeedLimit(ship,startupRadius);
@@ -536,12 +536,29 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
       const tack=circleArc(entry,angles[other]!,radius,speedLimit);
       const finish:ShipPose={...end,heading:angles[other]!,curvature:0};
       const points=[...lead,...startup,entry,...tack,finish].map(point=>({...point,tack:true}));
-      const cost=voyageTime(map,ship,start,points);
-      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
-      best=points;bestCost=cost;
+      candidates.push({points,cost:voyageTime(map,ship,start,points)});
     }
+    const best=cheapestClear(candidates,points=>voyageCorridorClear(map,ship,start,points,traffic));
     if(best)return best;
   }
+}
+/** What scanning candidates in order, keeping each strictly cheaper one whose
+ * corridor is clear, ends with: the least-cost clear candidate, ties to the
+ * earlier. Corridors are tested from the cheapest up, so the first clear one
+ * ends the scan. A NaN or -Infinity cost keeps the original scan. */
+function cheapestClear(candidates:readonly {points:ShipPose[];cost:number}[],clear:(points:ShipPose[])=>boolean):ShipPose[]|undefined {
+  if(candidates.some(candidate=>Number.isNaN(candidate.cost) || candidate.cost===-Infinity)){
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const {points,cost} of candidates){
+      if(cost>=bestCost || !clear(points))continue;
+      best=points;bestCost=cost;
+    }
+    return best;
+  }
+  const order=candidates.map((_,index)=>index).filter(index=>candidates[index]!.cost<Infinity)
+    .sort((a,b)=>candidates[a]!.cost-candidates[b]!.cost || a-b);
+  for(const index of order)if(clear(candidates[index]!.points))return candidates[index]!.points;
+  return undefined;
 }
 /** A moving interception point is not a berth. When a complete rounded tack
  * cannot fit before that near point, establish useful close-hauled headway on
@@ -559,15 +576,15 @@ export function planBeatDeparture(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:
   useful.sort((a,b)=>Math.abs(headingDifference(preferred,a))-Math.abs(headingDifference(preferred,b)));
   const length=shipProfile(ship)!.length*2;
   for(const heading of useful){
-    let best:ShipPose[]|undefined,bestCost=Infinity;
+    const candidates:{points:ShipPose[];cost:number}[]=[];
     for(const radius of departureRadii(map,ship)){
       const speedLimit=curveSpeedLimit(ship,radius),lead=Math.abs(headingDifference(start.heading,heading))>1e-7?brakingEntry(ship,start,speedLimit):[];
       const arc=circleArc(lead.at(-1) ?? start,heading,radius,speedLimit),entry=arc.at(-1) ?? lead.at(-1) ?? start;
       const finish:ShipPose={x:entry.x+length*detCos(heading),y:entry.y+length*detSin(heading),heading,curvature:0};
-      const points=[...lead,...arc,finish].map(point=>({...point,tack:true})),cost=voyageTime(map,ship,start,points);
-      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
-      best=points;bestCost=cost;
+      const points=[...lead,...arc,finish].map(point=>({...point,tack:true}));
+      candidates.push({points,cost:voyageTime(map,ship,start,points)});
     }
+    const best=cheapestClear(candidates,points=>voyageCorridorClear(map,ship,start,points,traffic));
     if(best)return best;
   }
 }
