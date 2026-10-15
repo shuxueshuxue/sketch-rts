@@ -202,6 +202,15 @@ function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose):
   for (const polygon of polygons) { const contact = sweepShape(ship, from, to, polygon); if (contact && (!best || contact.fraction < best.fraction)) best = { ...contact, kind: 'terrain' }; }
   return best;
 }
+/** Route guidance must avoid the same building and obstacle footprints as motion. */
+export function shipSolidTraffic(map: GameMap, ship: Unit, units: readonly Unit[]) {
+  const frame = frameFor(units, map), radius = polygonRadius(shipProfile(ship)!.hull);
+  const hasTraffic = [...frame.entries.keys()].some(body => !unitBody(body) && activeBody(map, body));
+  return Object.assign((from: ShipPose, to: ShipPose) => !nearby(frame, from, to, radius)
+    .some(({ body }) => !unitBody(body) && activeBody(map, body)
+      && sweepShape(ship, from, to, outline(map, body)) !== undefined), { hasTraffic });
+}
+
 /** The continuous contact occurs even when the desired end pose is clear beyond a thin obstacle. */
 export function sweepShipCollision(map: GameMap, ship: Unit, units: readonly Unit[], from: ShipPose, to: ShipPose): Contact | undefined {
   const frame = frameFor(units, map), radius = polygonRadius(shipProfile(ship)!.hull);

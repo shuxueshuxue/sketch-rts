@@ -1,0 +1,1513 @@
+{
+  "scope": "Existing saved orders, no new commands, no AI decisions, unchanged ordinary resources",
+  "samples": [
+    {
+      "tick": 9600,
+      "ships": [
+        {
+          "id": "unit-p0-warship-1121",
+          "x": 7743.2867517605555,
+          "y": 3737.034186117241,
+          "hp": 320,
+          "maxHp": 320,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 2.6460410782813333,
+            "speed": 0,
+            "load": 330,
+            "balance": 0.15084237196712624,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "route": {
+              "goalX": 2282.509667991878,
+              "goalY": 6005.490332008122,
+              "points": [
+                {
+                  "x": 7743.2867517605555,
+                  "y": 3737.034186117241,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7664,
+                  "y": 3792,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7632,
+                  "y": 3824,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7600,
+                  "y": 3856,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7568,
+                  "y": 3888,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7536,
+                  "y": 3920,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7504,
+                  "y": 3952,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7472,
+                  "y": 3984,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7440,
+                  "y": 4016,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7408,
+                  "y": 4048,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7376,
+                  "y": 4080,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7344,
+                  "y": 4112,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7312,
+                  "y": 4144,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7280,
+                  "y": 4176,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7216,
+                  "y": 4240,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7184,
+                  "y": 4272,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7152,
+                  "y": 4304,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7120,
+                  "y": 4336,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7088,
+                  "y": 4368,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7056,
+                  "y": 4400,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7024,
+                  "y": 4432,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6992,
+                  "y": 4464,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6960,
+                  "y": 4496,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6928,
+                  "y": 4528,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6896,
+                  "y": 4560,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6864,
+                  "y": 4592,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6832,
+                  "y": 4624,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6800,
+                  "y": 4656,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4688,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4688,
+                  "heading": 1.5707963267948966,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4688,
+                  "heading": 0.7853981633974483,
+                  "exact": true
+                }
+              ],
+              "end": {
+                "x": 6768,
+                "y": 4688,
+                "heading": 0.7853981633974483,
+                "exact": true
+              },
+              "trafficKey": "unit-p0-cutter-1303:488:224:6",
+              "partial": true,
+              "startX": 7743.2867517605555,
+              "startY": 3737.034186117241,
+              "startHeading": 2.6460410782813333,
+              "windKey": "1.9634954084936211:80",
+              "age": 0,
+              "blockedTicks": 1,
+              "cruise": false
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        },
+        {
+          "id": "unit-p0-cutter-1303",
+          "x": 7804.553574942914,
+          "y": 3581.94759910576,
+          "hp": 110,
+          "maxHp": 110,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 1.2568154243087584,
+            "speed": 0,
+            "load": 0,
+            "balance": 0,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        }
+      ]
+    },
+    {
+      "tick": 10200,
+      "ships": [
+        {
+          "id": "unit-p0-warship-1121",
+          "x": 7743.2867517605555,
+          "y": 3737.034186117241,
+          "hp": 320,
+          "maxHp": 320,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 2.6460410782813333,
+            "speed": 0,
+            "load": 330,
+            "balance": 0.15084237196712624,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "route": {
+              "goalX": 2282.509667991878,
+              "goalY": 6005.490332008122,
+              "points": [
+                {
+                  "x": 7743.2867517605555,
+                  "y": 3737.034186117241,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7664,
+                  "y": 3792,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7632,
+                  "y": 3824,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7600,
+                  "y": 3856,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7568,
+                  "y": 3888,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7536,
+                  "y": 3920,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7504,
+                  "y": 3952,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7472,
+                  "y": 3984,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7440,
+                  "y": 4016,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7408,
+                  "y": 4048,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7376,
+                  "y": 4080,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7344,
+                  "y": 4112,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7312,
+                  "y": 4144,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7280,
+                  "y": 4176,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7216,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7184,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7152,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7120,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7088,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7056,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7024,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6992,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6960,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6928,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6896,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6864,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6832,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6800,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6736,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6704,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6672,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6640,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                }
+              ],
+              "end": {
+                "x": 6640,
+                "y": 4208,
+                "heading": 3.141592653589793,
+                "exact": true
+              },
+              "trafficKey": "unit-p0-cutter-1303:488:224:6",
+              "partial": true,
+              "startX": 7743.2867517605555,
+              "startY": 3737.034186117241,
+              "startHeading": 2.6460410782813333,
+              "windKey": "1.9634954084936211:80",
+              "age": 0,
+              "blockedTicks": 0,
+              "cruise": false
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        },
+        {
+          "id": "unit-p0-cutter-1303",
+          "x": 7804.553574942914,
+          "y": 3581.94759910576,
+          "hp": 110,
+          "maxHp": 110,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 1.2568154243087584,
+            "speed": 0,
+            "load": 0,
+            "balance": 0,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0,
+            "planningJob": "{\"version\":1,\"phase\":\"direct\",\"ship\":{\"id\":\"unit-p0-cutter-1303\",\"owner\":\"p0\",\"kind\":\"cutter\",\"hp\":110,\"maxHp\":110,\"radius\":28.799999999999997,\"bodyRadius\":28.799999999999997,\"x\":7804.553574942914,\"y\":3581.94759910576,\"speed\":84,\"fittings\":[],\"shipParts\":{\"rigging\":84,\"rudder\":49,\"cabin\":0},\"order\":{\"type\":\"move\",\"x\":2282.509667991878,\"y\":6005.490332008122},\"orderQueue\":[],\"sailing\":{\"heading\":1.2568154243087584,\"speed\":0,\"load\":0,\"balance\":0,\"velocityX\":0,\"velocityY\":0,\"sail\":{\"angle\":0,\"billow\":0,\"set\":0.15,\"mode\":\"maneuver\"}}},\"traffic\":[],\"goal\":{\"x\":2282.509667991878,\"y\":6005.490332008122},\"windKey\":\"1.9634954084936211:80\",\"guard\":\"cutter:153.12:60.720000000000006:110\"}",
+            "planningJobLastRequestedAtTick": 10200,
+            "planningRequestedAtTick": 10200,
+            "planningLastRequestedAtTick": 10200
+          }
+        }
+      ]
+    },
+    {
+      "tick": 10800,
+      "ships": [
+        {
+          "id": "unit-p0-warship-1121",
+          "x": 7743.2867517605555,
+          "y": 3737.034186117241,
+          "hp": 320,
+          "maxHp": 320,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 2.6460410782813333,
+            "speed": 0,
+            "load": 330,
+            "balance": 0.15084237196712624,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "route": {
+              "goalX": 2282.509667991878,
+              "goalY": 6005.490332008122,
+              "points": [
+                {
+                  "x": 7743.2867517605555,
+                  "y": 3737.034186117241,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7664,
+                  "y": 3792,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7632,
+                  "y": 3824,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7600,
+                  "y": 3856,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7568,
+                  "y": 3888,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7536,
+                  "y": 3920,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7504,
+                  "y": 3952,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7472,
+                  "y": 3984,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7440,
+                  "y": 4016,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7408,
+                  "y": 4048,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7376,
+                  "y": 4080,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7344,
+                  "y": 4112,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7312,
+                  "y": 4144,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7280,
+                  "y": 4176,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7216,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7184,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7152,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7120,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7088,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7056,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7024,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6992,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6960,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6928,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6896,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6864,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6832,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6800,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6736,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6704,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6672,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6640,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                }
+              ],
+              "end": {
+                "x": 6640,
+                "y": 4208,
+                "heading": 3.141592653589793,
+                "exact": true
+              },
+              "trafficKey": "unit-p0-cutter-1303:488:224:6",
+              "partial": true,
+              "startX": 7743.2867517605555,
+              "startY": 3737.034186117241,
+              "startHeading": 2.6460410782813333,
+              "windKey": "1.9634954084936211:80",
+              "age": 0,
+              "blockedTicks": 0,
+              "cruise": false
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        },
+        {
+          "id": "unit-p0-cutter-1303",
+          "x": 7804.553574942914,
+          "y": 3581.94759910576,
+          "hp": 110,
+          "maxHp": 110,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 1.2568154243087584,
+            "speed": 0,
+            "load": 0,
+            "balance": 0,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0,
+            "planningJob": "{\"version\":1,\"phase\":\"direct\",\"ship\":{\"id\":\"unit-p0-cutter-1303\",\"owner\":\"p0\",\"kind\":\"cutter\",\"hp\":110,\"maxHp\":110,\"radius\":28.799999999999997,\"bodyRadius\":28.799999999999997,\"x\":7804.553574942914,\"y\":3581.94759910576,\"speed\":84,\"fittings\":[],\"shipParts\":{\"rigging\":84,\"rudder\":49,\"cabin\":0},\"order\":{\"type\":\"move\",\"x\":2282.509667991878,\"y\":6005.490332008122},\"orderQueue\":[],\"sailing\":{\"heading\":1.2568154243087584,\"speed\":0,\"load\":0,\"balance\":0,\"velocityX\":0,\"velocityY\":0,\"sail\":{\"angle\":0,\"billow\":0,\"set\":0.15,\"mode\":\"maneuver\"}}},\"traffic\":[],\"goal\":{\"x\":2282.509667991878,\"y\":6005.490332008122},\"windKey\":\"1.9634954084936211:80\",\"guard\":\"cutter:153.12:60.720000000000006:110\"}",
+            "planningJobLastRequestedAtTick": 10800,
+            "planningRequestedAtTick": 10800,
+            "planningLastRequestedAtTick": 10800
+          }
+        }
+      ]
+    },
+    {
+      "tick": 11400,
+      "ships": [
+        {
+          "id": "unit-p0-warship-1121",
+          "x": 7743.2867517605555,
+          "y": 3737.034186117241,
+          "hp": 320,
+          "maxHp": 320,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 2.6460410782813333,
+            "speed": 0,
+            "load": 330,
+            "balance": 0.15084237196712624,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "route": {
+              "goalX": 2282.509667991878,
+              "goalY": 6005.490332008122,
+              "points": [
+                {
+                  "x": 7743.2867517605555,
+                  "y": 3737.034186117241,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7664,
+                  "y": 3792,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7632,
+                  "y": 3824,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7600,
+                  "y": 3856,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7568,
+                  "y": 3888,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7536,
+                  "y": 3920,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7504,
+                  "y": 3952,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7472,
+                  "y": 3984,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7440,
+                  "y": 4016,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7408,
+                  "y": 4048,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7376,
+                  "y": 4080,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7344,
+                  "y": 4112,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7312,
+                  "y": 4144,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7280,
+                  "y": 4176,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7216,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7184,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7152,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7120,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7088,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7056,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7024,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6992,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6960,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6928,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6896,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6864,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6832,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6800,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6736,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6704,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6672,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6640,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                }
+              ],
+              "end": {
+                "x": 6640,
+                "y": 4208,
+                "heading": 3.141592653589793,
+                "exact": true
+              },
+              "trafficKey": "unit-p0-cutter-1303:488:224:6",
+              "partial": true,
+              "startX": 7743.2867517605555,
+              "startY": 3737.034186117241,
+              "startHeading": 2.6460410782813333,
+              "windKey": "1.9634954084936211:80",
+              "age": 0,
+              "blockedTicks": 0,
+              "cruise": false
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        },
+        {
+          "id": "unit-p0-cutter-1303",
+          "x": 7804.553574942914,
+          "y": 3581.94759910576,
+          "hp": 110,
+          "maxHp": 110,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 1.2568154243087584,
+            "speed": 0,
+            "load": 0,
+            "balance": 0,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0,
+            "planningJob": "{\"version\":1,\"phase\":\"direct\",\"ship\":{\"id\":\"unit-p0-cutter-1303\",\"owner\":\"p0\",\"kind\":\"cutter\",\"hp\":110,\"maxHp\":110,\"radius\":28.799999999999997,\"bodyRadius\":28.799999999999997,\"x\":7804.553574942914,\"y\":3581.94759910576,\"speed\":84,\"fittings\":[],\"shipParts\":{\"rigging\":84,\"rudder\":49,\"cabin\":0},\"order\":{\"type\":\"move\",\"x\":2282.509667991878,\"y\":6005.490332008122},\"orderQueue\":[],\"sailing\":{\"heading\":1.2568154243087584,\"speed\":0,\"load\":0,\"balance\":0,\"velocityX\":0,\"velocityY\":0,\"sail\":{\"angle\":0,\"billow\":0,\"set\":0.15,\"mode\":\"maneuver\"}}},\"traffic\":[],\"goal\":{\"x\":2282.509667991878,\"y\":6005.490332008122},\"windKey\":\"1.9634954084936211:80\",\"guard\":\"cutter:153.12:60.720000000000006:110\"}",
+            "planningJobLastRequestedAtTick": 11400,
+            "planningRequestedAtTick": 11400,
+            "planningLastRequestedAtTick": 11400
+          }
+        }
+      ]
+    },
+    {
+      "tick": 12000,
+      "ships": [
+        {
+          "id": "unit-p0-warship-1121",
+          "x": 7743.2867517605555,
+          "y": 3737.034186117241,
+          "hp": 320,
+          "maxHp": 320,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 2.6460410782813333,
+            "speed": 0,
+            "load": 330,
+            "balance": 0.15084237196712624,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "route": {
+              "goalX": 2282.509667991878,
+              "goalY": 6005.490332008122,
+              "points": [
+                {
+                  "x": 7743.2867517605555,
+                  "y": 3737.034186117241,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.6894736461542608,
+                  "exact": true
+                },
+                {
+                  "x": 7696,
+                  "y": 3760,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7664,
+                  "y": 3792,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7632,
+                  "y": 3824,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7600,
+                  "y": 3856,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7568,
+                  "y": 3888,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7536,
+                  "y": 3920,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7504,
+                  "y": 3952,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7472,
+                  "y": 3984,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7440,
+                  "y": 4016,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7408,
+                  "y": 4048,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7376,
+                  "y": 4080,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7344,
+                  "y": 4112,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7312,
+                  "y": 4144,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7280,
+                  "y": 4176,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 2.356194490192345,
+                  "exact": true
+                },
+                {
+                  "x": 7248,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7216,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7184,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7152,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7120,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7088,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7056,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 7024,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6992,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6960,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6928,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6896,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6864,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6832,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6800,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6768,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6736,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6704,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6672,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                },
+                {
+                  "x": 6640,
+                  "y": 4208,
+                  "heading": 3.141592653589793,
+                  "exact": true
+                }
+              ],
+              "end": {
+                "x": 6640,
+                "y": 4208,
+                "heading": 3.141592653589793,
+                "exact": true
+              },
+              "trafficKey": "unit-p0-cutter-1303:488:224:6",
+              "partial": true,
+              "startX": 7743.2867517605555,
+              "startY": 3737.034186117241,
+              "startHeading": 2.6460410782813333,
+              "windKey": "1.9634954084936211:80",
+              "age": 0,
+              "blockedTicks": 0,
+              "cruise": false
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0
+          }
+        },
+        {
+          "id": "unit-p0-cutter-1303",
+          "x": 7804.553574942914,
+          "y": 3581.94759910576,
+          "hp": 110,
+          "maxHp": 110,
+          "order": {
+            "type": "move",
+            "x": 2282.509667991878,
+            "y": 6005.490332008122
+          },
+          "sailing": {
+            "heading": 1.2568154243087584,
+            "speed": 0,
+            "load": 0,
+            "balance": 0,
+            "sail": {
+              "angle": 0,
+              "billow": 0,
+              "set": 0.15,
+              "mode": "maneuver"
+            },
+            "yawRate": 0,
+            "velocityX": 0,
+            "velocityY": 0,
+            "planningJob": "{\"version\":1,\"phase\":\"direct\",\"ship\":{\"id\":\"unit-p0-cutter-1303\",\"owner\":\"p0\",\"kind\":\"cutter\",\"hp\":110,\"maxHp\":110,\"radius\":28.799999999999997,\"bodyRadius\":28.799999999999997,\"x\":7804.553574942914,\"y\":3581.94759910576,\"speed\":84,\"fittings\":[],\"shipParts\":{\"rigging\":84,\"rudder\":49,\"cabin\":0},\"order\":{\"type\":\"move\",\"x\":2282.509667991878,\"y\":6005.490332008122},\"orderQueue\":[],\"sailing\":{\"heading\":1.2568154243087584,\"speed\":0,\"load\":0,\"balance\":0,\"velocityX\":0,\"velocityY\":0,\"sail\":{\"angle\":0,\"billow\":0,\"set\":0.15,\"mode\":\"maneuver\"}}},\"traffic\":[],\"goal\":{\"x\":2282.509667991878,\"y\":6005.490332008122},\"windKey\":\"1.9634954084936211:80\",\"guard\":\"cutter:153.12:60.720000000000006:110\"}",
+            "planningJobLastRequestedAtTick": 12000,
+            "planningRequestedAtTick": 12000,
+            "planningLastRequestedAtTick": 12000
+          }
+        }
+      ]
+    }
+  ]
+}

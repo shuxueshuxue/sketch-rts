@@ -1,0 +1,215 @@
+{
+  "scope": "Isolated rules2 handoff, native navigation repair; no AI strength acceptance",
+  "baseline": "a3486bda6fe3a5c4a953e71b4a064efd9927bc30",
+  "mainAtAudit": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+  "branch": "codex/bootstrap-1-resume-20261015",
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "uncommittedOriginalWorkspaceRecovered": false,
+  "frozenDependencyHashesVerified": 184,
+  "frozenTracesVerified": 6,
+  "baselineRelatedChecks": 238,
+  "finalNavalChecks": {
+    "total": 768,
+    "passed": 764,
+    "failed": 4,
+    "allFourFailuresReproducedOnExactParent": true,
+    "newFailures": 0
+  },
+  "nativeMirrorDeparture": {
+    "parentPassed": 0,
+    "parentFailed": 2,
+    "finalPassed": 2
+  },
+  "productionBuildExitCode": 0,
+  "typecheckExitCode": 0,
+  "fixture": "sapphireArchipelago/v9_archer/v5/grove/0",
+  "thinkInterval": 15,
+  "maxTicks": 48000,
+  "baselineMatch": {
+    "result": {
+      "tick": 48000,
+      "winner": null
+    },
+    "p0": {
+      "halls": 4,
+      "workers": 17,
+      "nonWorkerUnits": 29,
+      "gold": 2853.54,
+      "supply": 79
+    },
+    "stats": {
+      "unitsKilled": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "unitsLost": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 11270,
+        "p1": 5380,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "finalMatch": {
+    "result": {
+      "tick": 48000,
+      "winner": null
+    },
+    "p0": {
+      "halls": 5,
+      "workers": 20,
+      "nonWorkerUnits": 46,
+      "gold": 62.38,
+      "supply": 113
+    },
+    "stats": {
+      "unitsKilled": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 3
+      },
+      "unitsLost": {
+        "p0": 3,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "buildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "nonBaseBuildingsDestroyed": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "goldSpent": {
+        "p0": 12443,
+        "p1": 5377,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "mercenaryKills": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "neutralUnitsKilled": {
+        "p0": 0,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      },
+      "unitsKilledByNeutral": {
+        "p0": 3,
+        "p1": 0,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0
+      }
+    }
+  },
+  "partialPrototype": {
+    "completed": false,
+    "lastSavedTick": 21600,
+    "reason": "Interrupted after discovering missing callback metadata; final source rerun from zero"
+  },
+  "remaining": [
+    "No final matrix or unseen-seed acceptance",
+    "Both full matches timed out with zero enemy kills",
+    "Candidate lost three units to creeps",
+    "Four existing naval tests fail on this frozen source",
+    "Incremental serialized voyage planning does not yet include building views"
+  ],
+  "deployed": false,
+  "artifacts": {
+    "native-ships-parent.json": "71608f57c05a0f769bde44ceadf672d36df862bc26b153412dfbbf862975da46",
+    "maneuver-parent.log.gz": "2f6feca705235978d9f6a261b4eb1abe0382d3c171e3787c025b37102fdd9b9c",
+    "sailing-parent-tests.log.gz": "c127d4860e1227faf7ba93b24ad5f32a535aebc5ce0e501f0d93c9bee43aff03",
+    "naval-parent-existing.log.gz": "8feb1d60beb01abe7cdd959e709f398f47ce0089b36f2a8b8c8ed901cd723af4",
+    "baseline-match.tar.gz": "98dc5c0695f8dd6b0b531135bbf929df64c920a77261e561ffa9bd8488a2c5fe",
+    "final-9600.png": "1011b647b34ef649ee861809741aca41011e3ce6ab6830cb22e26a5d2a8bca23",
+    "final-match.tar.gz": "e9ef951467a7b4847487f6407750b5f0d5d04bfc60148d6ac39ce20935ce0c55",
+    "baseline-9600.json.gz": "033709e06c40aff2636d19d1ec6a2a051553278476e23d77fb1ff77fa0627ad2",
+    "final-integration.log.gz": "ad140a884b4281b405c2e7b9df81f6aabd97c5f3aa22c80671914027256c1f49",
+    "native-ships-final.json": "0e6032c1036c41ba0be25dc083ef84ca1f7267366a2926b9fb21fb00660776de",
+    "source-hashes.json": "e9406a4c8910774950439a32dddc3b2d4cf38e2d444c3b3fc9f13a4aaadf0a6d",
+    "baseline-match.json.gz": "20fa2dafe88c63466e9c0db62120ee3bb0f45cd7600df7635495aa3bc0a7cc4a",
+    "native-ships.mts": "54c17d016db9305fea45d1d19d9242205d3f4385ccc7fc26111259ac0c969ae3",
+    "remote-branches.txt": "9243e75858da4be293b3e05ba067944a0de8b2e663e0aa97e40a2a9468d2eeb7",
+    "traffic-parent.log.gz": "572f05bc002d0693270e266f6167b9931de692cc15cdf67e839e614cd90c1a49",
+    "build-production.log.gz": "b1bf6ffb255fe2e0d673f700477b8dfa9a7d7457d370c78ee2cba2b4886f5a5f",
+    "README.zh.md": "f20d821d9a0b6f3c08f6b9d405b225b6dab7991ab2b0ad0fbb842892d5b9b62b",
+    "frozen-traces.log": "81479bb4a377e93ad152024f11571f4e1fa5014fc2ab6113fe32cdd9c8fed09d",
+    "rules-tests.log.gz": "19e89b9dfcf697c4ddb5e76168b22c626aa46cd4622975f7f8b1c09a03fcf9cf",
+    "baseline-9600.png": "7b8e109efe6eba16ccc3d307f05b4b35749d9aeeb9f26cac12df189fcf62317d",
+    "naval-final-regression.log.gz": "60aecca2dff2aa219371265debd0cc9438f96faba7c9050287bac850f9230a2a"
+  },
+  "finalIntegrationChecks": {
+    "total": 120,
+    "passed": 120
+  }
+}

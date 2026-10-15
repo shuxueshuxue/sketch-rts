@@ -1,4 +1,5 @@
 import { shipPartMax } from "./ship-equipment";
+import { shipSolidTraffic } from './ship-collisions';
 import { reservationTraffic, shipContactGoal, shipTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
@@ -161,7 +162,10 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       // The local helmsman and every physical sweep still see all ships.
       return !voyageCompanion(other,bearing);
     }) : units;
-    const traffic=reservationTraffic(ship,strategicUnits);
+    const hullTraffic=reservationTraffic(ship,strategicUnits);
+    const solidTraffic=shipSolidTraffic(map,ship,units);
+    const traffic: typeof hullTraffic=Object.assign((from: Parameters<typeof hullTraffic>[0],to: Parameters<typeof hullTraffic>[1],padding?:number)=>
+      hullTraffic(from,to,padding) && solidTraffic(from,to), {hasTraffic:hullTraffic.hasTraffic || solidTraffic.hasTraffic});
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps

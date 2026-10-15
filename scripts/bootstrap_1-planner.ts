@@ -5,12 +5,15 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { groundRevision } from '../src/shared/terrain';
+import { assertCurrentRulesVersion } from '../src/shared/rules-version';
 import { createAiMemoryProvider, planAiOwnerCommandEntries, type AiMemoryProvider } from '../src/ai/planner-context';
 import type { AiGameAgent } from '../src/ai/game-runner';
 import type { SdkGameCommandPlanner } from '../src/sdk/game-runner';
 
-export const frozenPolicyManifest: { revision: string; files: Record<string, string> } = JSON.parse(
+export const frozenPolicyManifest: { revision: string; rulesVersion: number; files: Record<string, string> } = JSON.parse(
   readFileSync(new URL('../docs/engineering/bootstrap_1/frozen-policy.json', import.meta.url), 'utf8'));
+// Acceptance is authorized for the manifest's rules, even when main moves ahead.
+assertCurrentRulesVersion(frozenPolicyManifest.rulesVersion, 'bootstrap_1 frozen policy manifest');
 let root: string | undefined;
 type HistoricalModules = Pick<typeof import('../src/ai/planner-context'), 'planAiOwnerCommandEntries'>
   & Pick<typeof import('../src/ai/game-runner'), 'runAiGameLoop'>
