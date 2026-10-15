@@ -13,6 +13,7 @@ import { transportNeedsRecovery, transportRecovery } from './transport-recovery'
 import { postRecoveryCommands } from './front-recovery';
 import { expeditionDeparture } from './expedition-departure';
 import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
+import { planLandedCombat } from './landed-combat';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -62,15 +63,21 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
 
+  // The same naval owner runs local combat; a new boarding/care/departure
+  // assignment takes precedence over micro, including one made this think.
+  const local = planLandedCombat(snapshot, owner, options, new Set([...reserved, ...mounted,
+    ...commands.flatMap(command => command.type === 'board' ? command.unitIds : [])]));
+  const tactical = new Set(local.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
   const retreat = patientRendezvousCommands(snapshot, recovering, foes, medics);
   return [...commands.flatMap((command): GameCommand[] => {
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];
-    const unitIds = command.unitIds.filter(id => !reserved.has(id));
+    const unitIds = command.unitIds.filter(id => !reserved.has(id) && !tactical.has(id));
     return unitIds.length ? [{ ...command, unitIds }] : [];
-  }), ...postRecoveryCommands(posts), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
+  }), ...local, ...postRecoveryCommands(posts), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
     ({ type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true })), ...healing,
     ...ports.commands.flatMap((command): GameCommand[] => {
       if (!('unitIds' in command)) return [command];

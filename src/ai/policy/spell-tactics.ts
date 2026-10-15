@@ -161,26 +161,32 @@ function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def:
   return candidates.sort((a, b) => distance(a, caster) - distance(b, caster))[0];
 }
 
-export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+export type FocusFireScope = {
+  army: readonly Unit[];
+  enemies: Unit[];
+  canJoinTarget: (fighter: Unit, target: Unit) => boolean;
+};
+
+export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, scope?: FocusFireScope): GameCommand | undefined {
   if (options.version !== "v2") return undefined;
-  const fighters = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && unit.hp >= unit.maxHp * 0.36 && focusFireReadyUnit(snapshot, owner, unit, options));
+  const fighters = (scope?.army ?? units(snapshot, owner)).filter((unit) => unit.kind !== "worker" && unit.hp >= unit.maxHp * 0.36 && focusFireReadyUnit(snapshot, owner, unit, options));
   if (fighters.length === 1) {
-    const target = soloFinisherTarget(fighters[0]!, enemyCombatUnits(snapshot, owner, options.teams));
+    const target = soloFinisherTarget(fighters[0]!, scope ? scope.enemies.filter(enemy => scope.canJoinTarget(fighters[0]!, enemy)) : enemyCombatUnits(snapshot, owner, options.teams));
     return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: [fighters[0]!.id], targetId: target.id }, options) : undefined;
   }
   if (fighters.length < 2) return undefined;
-  const enemies = enemyCombatUnits(snapshot, owner, options.teams);
-  const canJoin = focusFireJoinIndex(snapshot, owner, fighters, options);
+  const enemies = scope?.enemies ?? enemyCombatUnits(snapshot, owner, options.teams);
+  const canJoin = focusFireJoinIndex(snapshot, owner, fighters, options, scope?.canJoinTarget);
   const candidates = enemies.filter((enemy) => canJoin(enemy));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
-  const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(snapshot, owner, rememberedTarget, fighters, options) ? rememberedTarget : undefined;
+  const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(snapshot, owner, rememberedTarget, fighters, options, scope?.canJoinTarget) ? rememberedTarget : undefined;
   const finisherCanInterruptMemory = anchoredRememberedTarget && (options.policyMode !== "combat" || anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4);
   const center = averagePoint(fighters);
   const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(candidates, canJoin, center) : undefined;
   const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
   const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, center) - focusFireTargetScore(a, center))[0];
   if (!target) return undefined;
-  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options);
+  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options, scope?.canJoinTarget);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   const canPickOffWoundedTarget = focusFireCanPickOffWoundedTarget(attackers, target);
@@ -209,16 +215,16 @@ function partialTailFocusIsSupportedByStrongerEnemy(fighters: Unit[], attackers:
   return armyPower(support) > armyPower(attackers) * 1.12;
 }
 
-function rememberedFocusStillAnchored(snapshot: GameSnapshot, owner: PlayerId, target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {
+function rememberedFocusStillAnchored(snapshot: GameSnapshot, owner: PlayerId, target: Unit, fighters: Unit[], options: PresetAiPolicyOptions, join?: FocusFireScope['canJoinTarget']) {
   if (options.policyMode !== "combat" || fighters.length < 6) return true;
-  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options);
+  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options, join);
   if (rememberedWoundedTargetCanBeFinished(target, attackers)) return true;
   // @@@focus-tail-release - Combat focus memory should stabilize a fight, not let a tiny tail drag the main army out of formation.
   return attackers.length >= Math.max(3, Math.ceil(fighters.length * 0.45));
 }
 
-function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], target: Unit, options: PresetAiPolicyOptions) {
-  return fighters.filter((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options));
+function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], target: Unit, options: PresetAiPolicyOptions, join?: FocusFireScope['canJoinTarget']) {
+  return fighters.filter((fighter) => (!join || join(fighter, target)) && focusFireCanJoinTarget(snapshot, owner, fighter, target, options));
 }
 
 // @@@v9-melee-focus - A V9 melee fighter joins a focus only standing at the target already: sent at it from its whole join
@@ -240,7 +246,7 @@ function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter
 // target tests only the fighters in the 3x3 cells around it; any other fighter is out of its join range. The v5
 // arrived-mercenary exception is not a matter of range, so the fighters that may take it are tested against every target,
 // as before. Every test is the same pure one, so the answer is the same; only the fighters that cannot pass go untested.
-function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], options: PresetAiPolicyOptions) {
+function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], options: PresetAiPolicyOptions, join?: FocusFireScope['canJoinTarget']) {
   const cell = Math.max(...fighters.map(focusFireJoinRange)) + 1;
   const cells = new Map<number, Unit[]>();
   for (const fighter of fighters) {
@@ -253,14 +259,14 @@ function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: U
   return (target: Unit, test?: (fighter: Unit) => boolean) => {
     const cx = Math.floor(target.x / cell);
     const cy = Math.floor(target.y / cell);
-    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return fighters.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return fighters.some((fighter) => (!join || join(fighter, target)) && focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
     for (let x = cx - 1; x <= cx + 1; x += 1) {
       for (let y = cy - 1; y <= cy + 1; y += 1) {
         const bucket = cells.get(focusFireCellKey(x, y));
-        if (bucket?.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)))) return true;
+        if (bucket?.some((fighter) => (!join || join(fighter, target)) && focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)))) return true;
       }
     }
-    return counterFocusers.some((fighter) => v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
+    return counterFocusers.some((fighter) => (!join || join(fighter, target)) && v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
   };
 }
 

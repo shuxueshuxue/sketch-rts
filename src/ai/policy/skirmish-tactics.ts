@@ -236,6 +236,17 @@ const STUTTER_MAX_STEP = 160;
 const STUTTER_THREAT_MARGIN = 60;
 const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "fieldMedic"]);
 
+/** The owning task supplies its real fighting group and reachable local cover.
+ * This is the same shot/contact decision as mainland preservation, without
+ * borrowing that army's overseas home or its strategic recovery orders. */
+export function planRangedKiting(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions,
+  army: readonly Unit[], enemies: Unit[], cover: Point): GameCommand[] {
+  return army.flatMap(unit => {
+    const command = rangedKiteCommand(snapshot, owner, unit, enemies, cover, options);
+    return command ? [command] : [];
+  });
+}
+
 function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
   const threat = enemies

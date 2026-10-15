@@ -7,6 +7,8 @@ import { planBootstrapGeneral } from './mine-defense';
 import { bootstrapPolicyContext } from './policy';
 import { recoverBootstrapFront } from './front-recovery';
 import { walkingDistance } from '../../shared/terrain';
+import { planAiOwnerCommandEntries } from '../planner-context';
+import { issueCommandFrame } from '../../sdk/commands/frame';
 
 const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ version, race, mirror }))));
@@ -64,12 +66,27 @@ it.each(cases)('$version heals a genuinely wounded $race front soldier at its ex
 
 it.each((['absent', 'incomplete', 'covered'] as const).flatMap(well =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror => ({ well, race, mirror })))))
-('keeps the ordinary hall retreat when the $race well is $well (mirror=$mirror)', ({ well, race, mirror }) => {
+('keeps the $race patient under mobile care when its well is $well (mirror=$mirror)', ({ well, race, mirror }) => {
   const { game, patient } = field(race, mirror, well);
-  const hall = game.buildings.find(building => building.owner === 'us' && building.kind === 'townHall')!;
-  const snapshot = snapshotGame(game), memory = createAiPolicyMemory();
-  const context = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
-  expect(planBootstrapGeneral(snapshot, 'us', context)).toContainEqual({ type: 'move', unitIds: [patient.id], x: hall.x, y: hall.y });
+  const memory = createAiPolicyMemory(), hp = patient.hp;
+  for (let tick = 0; tick < 1200; tick++) {
+    if (tick % 15 === 0) {
+      const entries = planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version: 'v9_knight', memory }, { teams: game.teams, policyMode: 'combat' });
+      if (tick === 0) expect(entries).toContainEqual(expect.objectContaining({
+        scriptId: 'mobileCare', command: expect.objectContaining({
+          type: 'move', unitIds: [patient.id], avoidCombat: true,
+        }),
+      }));
+      issueCommandFrame(game, entries);
+    }
+    stepGame(game);
+  }
+  expect(game.units).toContain(patient);
+  expect(patient.hp).toBe(hp);
+  expect(game.players.us!.gold).toBe(500);
+  expect(game.match.stats.goldSpent.us).toBe(0);
+  expect(game.match.winner).toBeNull();
 });
 
 it.each(cases)('$version sends a wounded $race soldier to the shorter healing route (mirror=$mirror)', ({ version, race, mirror }) => {

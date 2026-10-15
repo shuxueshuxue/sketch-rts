@@ -84,8 +84,14 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
     for(const unit of bystanders) {
       if(!blocks(unit))continue;
       const ships=[source,target];
-      let goal=deckYieldPoint(unit,ships,snapshot.units,snapshot.map,blocks);
-      if(!goal && passenger.order.type==='board') {
+      const direct=deckYieldPoint(unit,ships,snapshot.units,snapshot.map,blocks,passenger,target);
+      let selected=direct ? {yield:direct,retreat:undefined as {x:number;y:number}|undefined} : undefined;
+      const needsWait=(yieldPoint:NonNullable<typeof direct>)=>passenger.kind==='worker'
+        && unit.deck!.shipId!==target.id && yieldPoint.shipId===target.id && !assigned.has(passenger.id);
+      if(direct && needsWait(direct) && distance(passenger,source)>followStopDistance(passenger,source))selected=undefined;
+      // Rank the original clear corridor first, including an existing legal
+      // engineer retreat. Replanning broadens the same placement contract.
+      if(!selected?.yield.clearsOriginal && passenger.order.type==='board') {
         const profile=shipProfile(source)!;
         for(const preferred of [{x:0,y:0},{x:profile.length/4,y:0},{x:-profile.length/4,y:0}]) {
           const retreat=deckPlacement(source,passenger,snapshot.units,preferred);
@@ -95,19 +101,28 @@ function clearDeckTransfers(snapshot:GameSnapshot,owner:PlayerId,assigned:Set<st
           if(passenger.kind==='worker' && distance(at,source)>followStopDistance(passenger,source))continue;
           const backed={...passenger,...at,deck:{shipId:source.id,...retreat}};
           const units=snapshot.units.map(other=>other.id===passenger.id?backed:other);
-          goal=deckYieldPoint(unit,ships,units,snapshot.map,blocks);
-          if(!goal)continue;
-          commands.push({type:'move',unitIds:[passenger.id],...at,avoidCombat:true},
-            passenger.kind==='worker' ? {type:'follow',unitIds:[passenger.id],targetId:source.id,queued:true}
-              : {type:'holdPosition',unitIds:[passenger.id],queued:true},
-            {type:'board',unitIds:[passenger.id],transportId:target.id,queued:true});
-          assigned.add(passenger.id);
-          break;
+          const alternative=deckYieldPoint(unit,ships,units,snapshot.map,blocks,passenger,target);
+          if(!alternative)continue;
+          if(!selected || alternative.clearsOriginal)selected={yield:alternative,retreat:at};
+          if(alternative.clearsOriginal)break;
         }
       }
-      if(!goal)continue;
+      if(!selected)continue;
+      if(selected.retreat) {
+        commands.push({type:'move',unitIds:[passenger.id],...selected.retreat,avoidCombat:true},
+          passenger.kind==='worker' ? {type:'follow',unitIds:[passenger.id],targetId:source.id,queued:true}
+            : {type:'holdPosition',unitIds:[passenger.id],queued:true},
+          {type:'board',unitIds:[passenger.id],transportId:target.id,queued:true});
+        assigned.add(passenger.id);
+      } else if(needsWait(selected.yield)) {
+        // Crossing bodies briefly consume every receiving slot. Preserve the
+        // real boarding task until the actual lane and capacity reopen.
+        commands.push({type:'follow',unitIds:[passenger.id],targetId:source.id},
+          {type:'board',unitIds:[passenger.id],transportId:target.id,queued:true});
+        assigned.add(passenger.id);
+      }
       assigned.add(unit.id);
-      commands.push({type:'move',unitIds:[unit.id],...goal,avoidCombat:true});
+      commands.push({type:'move',unitIds:[unit.id],...selected.yield.point,avoidCombat:true});
     }
   }
   return commands;
@@ -120,22 +135,30 @@ export function pendingDeckBoarding(unit:Unit) {
     || unit.kind==='worker' && unit.order.type==='follow' && unit.order.targetId===unit.deck.shipId)
     ? unit.orderQueue?.find(order=>order.type==='board') : undefined;
 }
-function deckYieldPoint(unit:Unit,ships:Unit[],units:readonly Unit[],map:GameMap,blocks:(body:{x:number;y:number;radius:number})=>boolean) {
+function deckYieldPoint(unit:Unit,ships:Unit[],units:readonly Unit[],map:GameMap,blocks:(body:{x:number;y:number;radius:number})=>boolean,passenger:Unit,target:Unit) {
+  const candidates:{ship:Unit;point:{x:number;y:number};saved:boolean;blocksOriginal:boolean}[]=[];
   for(const ship of [...ships].sort((a,b)=>Number(b.id===unit.deck!.shipId)-Number(a.id===unit.deck!.shipId))) {
     if(ship.id!==unit.deck!.shipId && !canBoard(ship,unit,units))continue;
     const profile=shipProfile(ship)!;
-    const clear=(point:{x:number;y:number})=>deckPointFits(ship,unit,point,units)
-      && !blocks({...unit,...localToWorld(ship,point)});
     const saved=unit.order.type==='move' && (unit.order.deckShipId??unit.deck!.shipId)===ship.id
       ? worldToLocal(ship,unit.order) : undefined;
-    const reachable=(point:{x:number;y:number})=>ship.id===unit.deck!.shipId ? deckWalkPathExists(ship,unit,point,units)
-      : connectedSurfacePath(unit,localToWorld(ship,point),units,map)?.complete;
-    if(saved && clear(saved) && reachable(saved))return localToWorld(ship,saved);
-    const candidates:{x:number;y:number}[]=[];
+    const add=(point:{x:number;y:number},saved=false)=>{
+      if(deckPointFits(ship,unit,point,units))candidates.push({ship,point,saved,blocksOriginal:blocks({...unit,...localToWorld(ship,point)})});
+    };
+    if(saved)add(saved,true);
     for(let y=-profile.beam/2;y<=profile.beam/2;y+=4)
-      for(let x=-profile.length/2;x<=profile.length/2;x+=4)if(clear({x,y}))candidates.push({x,y});
-    const point=candidates.sort((a,b)=>distance(localToWorld(ship,a),unit)-distance(localToWorld(ship,b),unit))
-      .find(reachable);
-    if(point)return localToWorld(ship,point);
+      for(let x=-profile.length/2;x<=profile.length/2;x+=4)add({x,y});
+  }
+  candidates.sort((a,b)=>Number(a.blocksOriginal)-Number(b.blocksOriginal)
+    || Number(b.ship.id===unit.deck!.shipId)-Number(a.ship.id===unit.deck!.shipId)
+    || Number(b.saved)-Number(a.saved) || distance(localToWorld(a.ship,a.point),unit)-distance(localToWorld(b.ship,b.point),unit));
+  for(const {ship,point,blocksOriginal} of candidates) {
+    const at=localToWorld(ship,point),reachable=ship.id===unit.deck!.shipId ? deckWalkPathExists(ship,unit,point,units)
+      : connectedSurfacePath(unit,at,units,map)?.complete;
+    if(!reachable)continue;
+    if(!blocksOriginal)return{point:at,shipId:ship.id,clearsOriginal:true};
+    const placed={...unit,...at,deck:{shipId:ship.id,...point}},projected=units.map(other=>other.id===unit.id?placed:other);
+    const boarder=projected.find(other=>other.id===passenger.id)!;
+    if(connectedSurfacePath(boarder,target,projected,map)?.complete)return{point:at,shipId:ship.id,clearsOriginal:false};
   }
 }

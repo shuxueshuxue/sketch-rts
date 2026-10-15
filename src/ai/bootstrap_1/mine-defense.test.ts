@@ -143,9 +143,9 @@ describe('bootstrap_1 independent mine defense', () => {
     expect(game.match.stats.goldSpent.us).toBe(0);
   });
 
-  it('protects the working mine before fighting a larger group at a forward outpost', () => {
+  it('protects the working mine through the full bootstrap stack before fighting at a forward outpost', () => {
     function fight(prioritizeMine: boolean) {
-      const { game, context } = twoFronts(8, 'knight');
+      const { game, memory, context } = twoFronts(8, 'knight');
       for (const unit of game.units.filter(unit => unit.id.startsWith('raider-'))) unit.y -= 520;
       const outpost = sketchScene('outpost-battle').replaceDefaults().player('us').player('fa')
         .tower('us', 3000, 2600, { id: 'outpost' });
@@ -156,9 +156,11 @@ describe('bootstrap_1 independent mine defense', () => {
       game.buildings.push(...battle.buildings);
       game.units.push(...battle.units);
       issuePlayerCommand(game, 'fa', { type: 'holdPosition', unitIds: battle.units.map(unit => unit.id) });
-      const general = prioritizeMine ? { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral } : AI_SCRIPT_LIBRARY.v6General;
       for (let tick = 0; tick < 1400; tick++) {
-        if (tick % 15 === 0) for (const { command } of runAiCommandEntriesFromScripts(snapshotGame(game), 'us', [mineDefense, general], context())) {
+        if (tick % 15 === 0) for (const { command } of prioritizeMine
+          ? planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version: 'v9_archer', memory },
+            { teams: game.teams, policyMode: 'combat' })
+          : runAiCommandEntriesFromScripts(snapshotGame(game), 'us', [mineDefense, AI_SCRIPT_LIBRARY.v6General], context())) {
           issuePlayerCommand(game, 'us', command);
         }
         stepGame(game);

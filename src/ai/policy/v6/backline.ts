@@ -52,11 +52,16 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
     units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), () => undefined);
 }
 
-export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined): GameCommand[] {
+export function casterScreenNeighbors(front: Unit[]) {
+  return withinRangeOf(front, FRONT_GROUP_RANGE);
+}
+
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined,
+  allowAttack: (caster: Unit) => boolean = () => true): GameCommand[] {
   if (casters.length === 0) return [];
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
-  const frontNear = withinRangeOf(front, FRONT_GROUP_RANGE);
+  const frontNear = casterScreenNeighbors(front);
   const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
@@ -64,7 +69,7 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
     const screen = frontNear(caster);
     const local = threatsNear(caster);
     const quarry = local.filter(enemy => distance(caster, enemy) <= caster.attackRange).sort((a, b) => distance(caster, a) - distance(caster, b))[0];
-    if (quarry && caster.hp >= caster.maxHp * .6 && screen.length >= MIN_SCREEN && caster.order.type !== "cast" && caster.order.type !== "board"
+    if (quarry && allowAttack(caster) && caster.hp >= caster.maxHp * .6 && screen.length >= MIN_SCREEN && caster.order.type !== "cast" && caster.order.type !== "board"
       && screen.filter(guard => guard.attackRange <= 80 && distance(guard, quarry) + guard.radius + caster.radius < distance(caster, quarry)).length >= 2
       && !towers.some(tower => distance(caster, tower) <= tower.attackRange)) {
       const profile = aimingProfile(UNIT_DEFS[caster.kind])!;
