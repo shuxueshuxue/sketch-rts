@@ -1,0 +1,66 @@
+--- a/src/shared/terrain.ts
++++ b/src/shared/terrain.ts
+@@ -1522,0 +1523,2 @@
++
++export { runtime as __probeRuntime, padAt as __probePadAt };
+--- a/src/ai/policy/naval.ts
++++ b/src/ai/policy/naval.ts
+@@ -0,0 +1 @@
++import { __probeRuntime, __probePadAt, isShoreFootprint } from '../../shared/terrain';
+@@ -219 +220 @@
+-    if (!yard && !shoreSpot(snapshot, owner, water, options)) {
++    if (!yard && !shoreSpot(snapshot, owner, water, options, false, true)) {
+@@ -1008 +1009 @@
+-                if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true)) {
++                if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true, true)) {
+@@ -1076 +1077 @@
+-            if (!served && !shoreSpot(snapshot, owner, water, options)) {
++            if (!served && !shoreSpot(snapshot, owner, water, options, false, true)) {
+@@ -1111 +1112 @@
+-function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false): Point | undefined {
++function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false, any = false): Point | undefined {
+@@ -1141,0 +1143,11 @@
++    const state = any && map.terrain ? __probeRuntime(map.terrain, 'land') : undefined;
++    const cell = map.terrain?.cell;
++    // These bounds use the existing graph embedding, not the current cols.
++    const safeBound = state && Number.isSafeInteger(state.width) && state.width > 2 && state.walk.length < 0x3fffffff / 7
++        && Number.isFinite(cell) && cell! > 0 && Number.isFinite((state.walk.length * 7 * cell!) / 5);
++    const bound = (spot: Point, hall: Point) => {
++        const a = __probePadAt(state!, spot.x, spot.y), b = __probePadAt(state!, hall.x, hall.y);
++        if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b) || a < 0 || b < 0 || state!.walk[a] !== 1 || state!.walk[b] !== 1) return 0;
++        const steps = Math.max(Math.abs(a % state!.width - b % state!.width), Math.abs(Math.floor(a / state!.width) - Math.floor(b / state!.width)));
++        return ((steps * 5) * cell!) / 5;
++    };
+@@ -1143,2 +1155,24 @@
+-    for (const spot of shoreSpots(map, BUILDING_DEFS.shipyard.radius)) {
+-        const gap=gapOf(spot,ours);
++    function* candidates() {
++        const t = map.terrain;
++        if (!any || !t || !Number.isFinite(home.x) || !Number.isFinite(home.y) || !Number.isFinite(t.cell) || t.cell <= 0
++            || !Number.isSafeInteger(t.cols) || !Number.isSafeInteger(t.rows) || t.cols <= 0 || t.rows <= 0) {
++            yield* shoreSpots(map, BUILDING_DEFS.shipyard.radius); return;
++        }
++        const hc = Math.floor(home.x / t.cell), hr = Math.floor(home.y / t.cell);
++        if (hc < 0 || hc >= t.cols || hr < 0 || hr >= t.rows) { yield* shoreSpots(map, BUILDING_DEFS.shipyard.radius); return; }
++        for (let ring = 0; ring <= Math.max(t.cols, t.rows); ring++) {
++            for (let r = hr - ring; r <= hr + ring; r++) {
++                if (r < 0 || r >= t.rows) continue;
++                const step = r === hr - ring || r === hr + ring ? 1 : 2 * ring;
++                for (let c = hc - ring; c <= hc + ring; c += step) {
++                    if (c < 0 || c >= t.cols) continue;
++                    const spot = { x: (c + .5) * t.cell, y: (r + .5) * t.cell };
++                    if (isShoreFootprint(map, spot.x, spot.y, BUILDING_DEFS.shipyard.radius)) yield spot;
++                }
++            }
++        }
++    }
++    for (const spot of candidates()) {
++        const certified = safeBound && halls.some(hall => sameGround(map, spot, hall))
++            && theirs.every(hall => !sameGround(map, spot, hall)) && ours.every(hall => bound(spot, hall) >= HALL_BERTH);
++        const gap=certified ? HALL_BERTH : gapOf(spot,ours);
+@@ -1147 +1181 @@
+-        if(gap<HALL_BERTH || gap>=bestGap || gap>=gapOf(spot,theirs) || covered(spot,enemy,BUILDING_DEFS.shipyard.radius))continue;
++        if(gap<HALL_BERTH || gap>=bestGap || (!certified && gap>=gapOf(spot,theirs)) || covered(spot,enemy,BUILDING_DEFS.shipyard.radius))continue;
+@@ -1152 +1186 @@
+-            {best=spot;bestGap=gap;}
++            {if(any)return spot;best=spot;bestGap=gap;}

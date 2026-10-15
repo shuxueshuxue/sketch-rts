@@ -1,0 +1,634 @@
+{
+  "calls": 57,
+  "allCandidates": 684,
+  "minThreatCandidates": 342,
+  "contexts": [
+    {
+      "tick": 6990,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 7395,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 7560,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 7965,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 8370,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 8775,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 8850,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 9000,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 9255,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 9405,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 9660,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 9810,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10065,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10215,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10470,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10620,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10665,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 10860,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11025,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11070,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11085,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11265,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11430,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11475,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11490,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11670,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11835,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11880,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 11895,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12075,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12240,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12285,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12300,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12480,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12645,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12690,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12705,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12885,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 12945,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13050,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13095,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13110,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13290,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13350,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13455,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13500,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13515,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13695,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13755,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13860,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13905,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 13920,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 14100,
+      "owner": "enemy2",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 14160,
+      "owner": "player-6",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 14265,
+      "owner": "player-4",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 14310,
+      "owner": "player-5",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    },
+    {
+      "tick": 14325,
+      "owner": "enemy",
+      "candidates": 12,
+      "minimalThreat": 2.6127479111061525,
+      "minimumThreatCandidates": 6,
+      "distinctThreats": {
+        "5.02831668385801": 6,
+        "2.6127479111061525": 6
+      }
+    }
+  ]
+}

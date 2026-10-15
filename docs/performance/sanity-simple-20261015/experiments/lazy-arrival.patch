@@ -1,0 +1,23 @@
+diff --git a/src/shared/ship-navigation.ts b/src/shared/ship-navigation.ts
+index 119487ca..e6156358 100644
+--- a/src/shared/ship-navigation.ts
++++ b/src/shared/ship-navigation.ts
+@@ -924,7 +924,8 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
+   }
+   const target=preparedTarget!;
+   const destination=requested?target:{x:target.x,y:target.y};
+-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
++  // Empty traffic has no observable checks: prepare arrival arcs only if used.
++  let arrive=noTraffic ? undefined : arrivalConnectorFor(map,ship,target,trafficClear);
+   const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
+     basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
+   // A local traffic budget and a short berth search should stay local. The
+@@ -1039,7 +1040,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
+     }
+     if(gap<=lattice.cell*1.5){
+       const at = p ?? {x:px,y:py,heading:h*ANGLE};
+-      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? arrive(at);
++      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? (arrive ??= arrivalConnectorFor(map,ship,target,trafficClear))(at);
+       if(connection){best=id;terminal=connection;break;}
+     }
+     visit(id, nodeCost, p, cell * DIRECTIONS + (h + 1) % DIRECTIONS, ANGLE / turnSpeed, grid.turns, id * 2, grid.masks[h]![1]!);

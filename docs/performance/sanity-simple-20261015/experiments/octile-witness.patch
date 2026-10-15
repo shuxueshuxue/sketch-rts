@@ -1,0 +1,25 @@
+diff --git a/src/shared/terrain.ts b/src/shared/terrain.ts
+index d730abf0..3c9a6010 100644
+--- a/src/shared/terrain.ts
++++ b/src/shared/terrain.ts
+@@ -967,6 +967,20 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
+   const start = padAt(state, from.x, from.y);
+   const target = padAt(state, goal.x, goal.y);
+   if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
++  // A legal monotone octile walk attains the obstacle-free lower bound.
++  // It proves this scalar answer without constructing a whole-map field.
++  if (!state.fields.has(target)) {
++    let at = start, x = start % state.width, y = Math.floor(start / state.width);
++    const tx = target % state.width, ty = Math.floor(target / state.width);
++    let cost = 0;
++    while (at !== target) {
++      const dx = Math.sign(tx - x), dy = Math.sign(ty - y), next = at + dx + dy * state.width;
++      if (state.walk[next] !== 1 || dx && dy && (state.walk[at + dx] !== 1 || state.walk[at + dy * state.width] !== 1)) break;
++      cost += dx && dy ? DIAGONAL : STRAIGHT;
++      at = next; x += dx; y += dy;
++    }
++    if (at === target) return (cost * terrain.cell) / STRAIGHT;
++  }
+   const cost = exactField(state, target).dist[start]!;
+   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
+ }

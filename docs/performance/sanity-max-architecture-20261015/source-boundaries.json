@@ -1,0 +1,16 @@
+{
+  "differentInputs": [
+    "src/ai/bootstrap_1/economy.ts",
+    "src/ai/policy/naval.ts",
+    "src/shared/ship-launch.ts",
+    "src/shared/ship-navigation.ts"
+  ],
+  "byteIdenticalInputs": 237,
+  "versions": {
+    "rules": 3,
+    "checksum": 18
+  },
+  "diffStat": "6\t3\tsrc/ai/bootstrap_1/economy.ts\n10\t5\tsrc/ai/policy/naval.ts\n56\t0\tsrc/shared/ship-launch-lazy.test.ts\n44\t17\tsrc/shared/ship-launch.ts\n7\t0\tsrc/shared/ship-navigation.ts\n",
+  "shipNavigationPrefixThroughPlannerIdentical": true,
+  "terrainSha256": "2a6de13d64b6cb86c48cf2f8a9d8c16cc495726dc57bd7b905451871d870e5f0"
+}

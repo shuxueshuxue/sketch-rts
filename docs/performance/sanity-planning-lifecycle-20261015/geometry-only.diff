@@ -1,0 +1,216 @@
+diff --git a/src/shared/ship-navigation.ts b/src/shared/ship-navigation.ts
+index 119487ca..1d6f1595 100644
+--- a/src/shared/ship-navigation.ts
++++ b/src/shared/ship-navigation.ts
+@@ -551,14 +551,23 @@ function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:Sh
+ /** A berth can be reached with a turning arc even when a straight final leg
+  * would point its bow through the coast. Stage in open water, then swing the
+  * bow/stern around a fixed point on the keel. No sideways docking shortcut. */
+-function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean) {
++type PlanningSearchRuntime={arrival?:{profile:ReturnType<typeof shipProfile>;cells:string|undefined;key:string;checks:{fits?:boolean;passage?:boolean}[]}};
++function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,runtime?:PlanningSearchRuntime) {
++  const profile=shipProfile(ship),t=map.terrain;
++  const key=runtime?`${map.width}:${map.height}:${t?.cell}:${t?.cols}:${t?.rows}:${goal.x}:${goal.y}:${goal.heading}`:'';
++  if(runtime && (!runtime.arrival || runtime.arrival.profile!==profile || runtime.arrival.cells!==t?.cells || runtime.arrival.key!==key))
++    runtime.arrival={profile,cells:t?.cells,key,checks:[]};
++  let index=0;
+   const length=shipProfile(ship)!.length;
+   const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
+   for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
+     const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
+     const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
+-    if(!hullFits(map,ship,stage) || !traffic(stage,stage))continue;
+-    if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))continue;
++    // Retain only pure terrain answers. Fresh poses and the current traffic
++    // wrapper preserve callback identity/order and this slice's blocked flag.
++    const check=runtime ? runtime.arrival!.checks[index++]??(runtime.arrival!.checks[index-1]={}) : undefined;
++    if(!(check ? check.fits??(check.fits=hullFits(map,ship,stage)) : hullFits(map,ship,stage)) || !traffic(stage,stage))continue;
++    if(!(check ? check.passage??(check.passage=hullPassageClear(map,ship,stage,end)) : hullPassageClear(map,ship,stage,end)) || !traffic(stage,end))continue;
+     arcs.push({stage,end,angle});
+   }
+   // These swept arrival arcs depend only on the berth. Validate them once
+@@ -832,6 +841,12 @@ export type ShipRouteSearchState={
+   entrances?:{cell:number;points:ShipPose[][]}[]; entranceCursor?:number;
+   best?:number; bestGap?:number; visited?:number; path?:ShipPose[]; fallback?:ShipRouteSearchState; result?:RouteResult;
+ };
++/** Job-owned derived state: inputs and traffic geometry are frozen by the job.
++ * The public continuation APIs keep their observable arrays and identities. */
++export function createShipPlanningSearch(ship:Unit,goal:Point & {heading?:number},traffic:(from:ShipPose,to:ShipPose)=>boolean,budget:number,voyage:boolean) {
++  const state:ShipRouteSearchState={phase:'prepare'},runtime:PlanningSearchRuntime={};
++  return (map:SeaMap):RouteResult|undefined=>advanceShipRouteSearchImpl(map,ship,goal,traffic,budget,voyage,state,true,runtime);
++}
+ const livePlanningSearches=new WeakSet<ShipRouteSearchState>();
+ /** Internal planner-only fresh state; decoded jobs never acquire this identity. */
+ export function beginLiveShipRouteSearch():ShipRouteSearchState {
+@@ -848,7 +863,7 @@ export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {headin
+   return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false);
+ }
+ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
+-  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean):RouteResult|undefined {
++  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean,runtime?:PlanningSearchRuntime):RouteResult|undefined {
+   if(state.phase==='done')return state.result;
+   // Fallback owns no active workspace. Resume it at this caller's depth,
+   // retaining nested isolation only for a real reentrant traffic callback.
+@@ -861,11 +876,11 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
+   }
+   routeSearchDepth++;
+   try {
+-    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
++    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned,runtime);
+     if(result){state.result=result;state.phase='done';}return result;
+   }finally{routeSearchDepth--;}
+ }
+-function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
++function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false,runtime?:PlanningSearchRuntime): RouteResult|undefined {
+   // The real traffic provider declares an empty frozen obstacle set. Custom
+   // callbacks without that declaration still receive every original check.
+   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
+@@ -913,7 +928,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
+     const direct=keelConnector(map,ship,start,destination,trafficClear);
+     if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
+       || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
+-    const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
++    const arrival=arrivalConnectorFor(map,ship,target,trafficClear,runtime)(start);
+     if(arrival)return {points:arrival,partial:deferred};
+     const direction=Math.atan2(target.y-start.y,target.x-start.x);
+     if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
+@@ -924,7 +939,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
+   }
+   const target=preparedTarget!;
+   const destination=requested?target:{x:target.x,y:target.y};
+-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
++  const arrive=arrivalConnectorFor(map,ship,target,trafficClear,runtime);
+   const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
+     basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
+   // A local traffic budget and a short berth search should stay local. The
+diff --git a/src/shared/ship-planning-job.ts b/src/shared/ship-planning-job.ts
+index 9a7a5fce..258b311d 100644
+--- a/src/shared/ship-planning-job.ts
++++ b/src/shared/ship-planning-job.ts
+@@ -1,6 +1,6 @@
+ import { shipTraffic } from './ship-avoidance';
+ import { isShipKind, shipProfile } from './ship-geometry';
+-import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, beginLiveShipRouteSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
++import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, createShipPlanningSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
+ import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
+ import type { ShipCourseGoal } from './sailing';
+ import type { GameMap, Unit } from './types';
+@@ -9,6 +9,7 @@ import { hasShipPlanningWork } from './ship-planning-budget';
+ type VoyageJob = { version:1; phase:'direct'|'reference'|'refine'|'finished'; ship:Unit; traffic:Unit[]; goal:ShipCourseGoal;
+   windKey:string; guard:string; anchor?:ShipPose; recovery?:boolean; limited?:boolean; partial?:boolean; points?:ShipPose[]; searchSteps?:number; search?:ShipRouteSearchState; refinement?:VoyageRefinementState };
+ const decoded=new WeakMap<Unit,{source:string;job:VoyageJob}>();
++const searches=new WeakMap<VoyageJob,ReturnType<typeof createShipPlanningSearch>>();
+ const trafficViews=new WeakMap<VoyageJob,ReturnType<typeof shipTraffic>>();
+ // Restored checkpoints keep a compact logical cursor. Reconstruct its graph
+ // separately so a browser can yield between the same deterministic slices.
+@@ -23,11 +24,15 @@ function trafficView(job:VoyageJob):ReturnType<typeof shipTraffic> {
+ function voyageReference(job:VoyageJob):boolean {
+   return job.goal.heading===undefined && Math.hypot(job.goal.x-job.ship.x,job.goal.y-job.ship.y)>shipProfile(job.ship)!.length*.5;
+ }
++function advanceReferenceSearch(job:VoyageJob,map:GameMap) {
++  const search=searches.get(job);
++  return search ? search(map) : advanceLiveShipRouteSearch(map,job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job),job.search!);
++}
+ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{ready:boolean;used:number;invalid:boolean} {
+   if(job.phase!=='reference')return {ready:true,used:0,invalid:false};
+   let state=reconstruction.get(job);
+-  if(!job.search){
+-    job.search=beginLiveShipRouteSearch();
++  if(!job.search && !searches.has(job)){
++    searches.set(job,createShipPlanningSearch(job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job)));
+     state={remaining:job.searchSteps??0,invalid:false};
+     reconstruction.set(job,state);
+   }
+@@ -36,11 +41,10 @@ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{rea
+   if(!state)return {ready:true,used:0,invalid:false};
+   if(state.invalid || state.remaining===0 || maxSlices===0)
+     return {ready:state.invalid || state.remaining===0,used:0,invalid:state.invalid};
+-  const traffic=trafficView(job);
+   let used=0;
+   while(!state.invalid && state.remaining>0 && used<maxSlices){
+     used++;
+-    if(advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyageReference(job),job.search)){
++    if(advanceReferenceSearch(job,map)){
+       // Leave authoritative fields untouched during preparation. The normal
+       // planner rejects this invalid cursor when the simulation next advances.
+       state.invalid=true;
+@@ -182,10 +186,10 @@ export function advanceShipPlanningJob(ship:Unit,map:GameMap):{points:ShipPose[]
+     // Headless and direct simulation callers retain the synchronous contract;
+     // browser callers can finish this exact reconstruction before advancing.
+     if(prepareReferenceSearch(job,map,Infinity).invalid){cancelShipPlanningJob(ship);return;}
+-    const reference=advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyage,job.search!);
++    const reference=advanceReferenceSearch(job,map);
+     job.searchSteps=(job.searchSteps??0)+1;
+     if(!reference){save(ship,job);return;}
+-    delete job.search;delete job.searchSteps;
++    searches.delete(job);delete job.search;delete job.searchSteps;
+     job.partial=reference.partial;
+     if(!voyage)points=reference.points;
+     else {
+diff --git a/src/shared/ship-planning-search.test.ts b/src/shared/ship-planning-search.test.ts
+new file mode 100644
+index 00000000..ede49703
+--- /dev/null
++++ b/src/shared/ship-planning-search.test.ts
+@@ -0,0 +1,61 @@
++import { describe, expect, it } from 'vitest';
++import { createMap, createUnit } from './map';
++import { advanceShipRouteSearch, createShipPlanningSearch, planShipRoute, type ShipPose, type ShipRouteSearchState } from './ship-navigation';
++
++function scene() {
++  const cell=32,cols=80,rows=64;
++  const map={...createMap('bareDuel'),width:cols*cell,height:rows*cell,wind:{direction:Math.PI/2,speed:80},
++    terrain:{cell,cols,rows,cells:Array.from({length:cols*rows},(_,i)=>
++      i%cols>=32 && i%cols<45 && Math.floor(i/cols)>=20 && Math.floor(i/cols)<45?'.':'~').join('')}};
++  const ship=createUnit('route','player','transport',16.5*cell,32.5*cell);
++  ship.sailing={heading:0,speed:0,load:0,balance:0};
++  return {map,ship,goal:{x:62.5*cell,y:32.5*cell}};
++}
++function recorder(blocked:boolean) {
++  const ids=new WeakMap<object,number>();let next=0;
++  const identity=(p:object)=>{let id=ids.get(p);if(id===undefined){id=next++;ids.set(p,id);}return id;};
++  const events:unknown[]=[];
++  return {events,traffic:(from:ShipPose,to:ShipPose)=>{
++    events.push([identity(from),identity(to),structuredClone(from),structuredClone(to)]);
++    return blocked?Math.min(from.y,to.y)>=20*32 && Math.max(from.y,to.y)<=45*32:Math.max(from.y,to.y)<=44*32;
++  }};
++}
++
++describe('job-owned planning search',()=>{
++  it('preserves every yield, route, callback order and pose identity across interleaved queries',()=>{
++    for(const budget of [12,1024,Infinity])for(const blocked of [false,true]){
++      const a=scene(),b=scene(),left=recorder(blocked),right=recorder(blocked);
++      const state:ShipRouteSearchState={phase:'prepare'};
++      const advance=createShipPlanningSearch(b.ship,b.goal,right.traffic,budget,true);
++      const other=createShipPlanningSearch(b.ship,{x:600,y:300},()=>true,12,false);
++      let result:ReturnType<typeof planShipRoute>|undefined,slices=0;
++      while(!result && slices++<500){
++        left.events.length=0;right.events.length=0;
++        const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left.traffic,budget,true,state);
++        result=advance(b.map);
++        expect(result).toEqual(expected);expect(right.events).toEqual(left.events);
++        other(b.map);planShipRoute(b.map,b.ship,{x:600,y:300},undefined,8,true);
++      }
++      expect(result).toBeDefined();expect(slices).toBeGreaterThan(2);
++      expect(advance(b.map)).toBe(result);
++    }
++  });
++
++  it('rechecks berth geometry after terrain contents or map dimensions change between slices',()=>{
++    const a=scene(),b=scene(),left=recorder(false),right=recorder(false),state:ShipRouteSearchState={phase:'prepare'};
++    const advance=createShipPlanningSearch(b.ship,b.goal,right.traffic,1024,true);
++    let result:ReturnType<typeof planShipRoute>|undefined;
++    for(let slice=0;slice<80 && !result;slice++){
++      if(slice===2)for(const s of [a,b]){
++        const index=31*s.map.terrain.cols+61;
++        s.map.terrain.cells=s.map.terrain.cells.slice(0,index)+'.'+s.map.terrain.cells.slice(index+1);
++      }
++      if(slice===3)for(const s of [a,b])s.map.width-=1;
++      left.events.length=0;right.events.length=0;
++      const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left.traffic,1024,true,state);
++      result=advance(b.map);
++      expect(result).toEqual(expected);expect(right.events).toEqual(left.events);
++    }
++    expect(result).toBeDefined();
++  });
++});

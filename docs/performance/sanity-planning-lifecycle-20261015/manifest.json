@@ -1,0 +1,2546 @@
+[
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/all-run-equivalence.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/all-run-equivalence.json",
+    "bytes": 3470,
+    "sha256": "7971bbbbd08e8ed859e3c1478b91ce4acc0750f5505b92268a3ca659ee220024",
+    "payload": "payloads/7971bbbbd08e8ed859e3c1478b91ce4acc0750f5505b92268a3ca659ee220024.gz",
+    "storedSha256": "f3fce4def0fd8ec7c8c64a6ebcf1e5da6ef993ea36c93d76c6b48829d268ee09"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/analyze-sync-inputs.py",
+    "path": "workspace/sanity-planning-lifecycle-20261015/analyze-sync-inputs.py",
+    "bytes": 2174,
+    "sha256": "d059d9d4463f25a599415c285633c06cec3c7223af14f36eb411cda93906f6e1",
+    "payload": "payloads/d059d9d4463f25a599415c285633c06cec3c7223af14f36eb411cda93906f6e1.gz",
+    "storedSha256": "ff6c827e9b92321220167c151caaa50664e01e43dbc42cd20a13d790a26102e4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/analyze.py",
+    "path": "workspace/sanity-planning-lifecycle-20261015/analyze.py",
+    "bytes": 2486,
+    "sha256": "aebebdfa186e3817a8e083523aefeeb115fdbfd3b2d4f64abbd8a13cba125e30",
+    "payload": "payloads/aebebdfa186e3817a8e083523aefeeb115fdbfd3b2d4f64abbd8a13cba125e30.gz",
+    "storedSha256": "fc3085c809e2d67b0f35a70de4c3e838e9dda8825e59097be35af488bdacc664"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/baseline-failure-comparison.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/baseline-failure-comparison.json",
+    "bytes": 5452,
+    "sha256": "227b4ca0c985367a904a15161a069b212cb0d3a92939ad5d4a5334a9f0fc46d7",
+    "payload": "payloads/227b4ca0c985367a904a15161a069b212cb0d3a92939ad5d4a5334a9f0fc46d7.gz",
+    "storedSha256": "6304047b308bbdf6388ef00e64bd73c8278e871d1ee2446bb3e1cc3bd812a180"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/baseline-failures.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/baseline-failures.log",
+    "bytes": 6297,
+    "sha256": "6e569f5c0c9a72fc61df4b2259f9ca00764ba8b434212242233f3df5bdf29eae",
+    "payload": "payloads/6e569f5c0c9a72fc61df4b2259f9ca00764ba8b434212242233f3df5bdf29eae.gz",
+    "storedSha256": "068a69a83766f0681a22dab054dd08a2a4f2bb98267def2770367933ffffb23f"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/build-production.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/build-production.log",
+    "bytes": 5547,
+    "sha256": "9f347b8dc2986394ca7aa0d91636beb056ce6dac23ec6b50bca692a286a30fef",
+    "payload": "payloads/9f347b8dc2986394ca7aa0d91636beb056ce6dac23ec6b50bca692a286a30fef.gz",
+    "storedSha256": "eca25297e3c74db6b381a6859cf3ddbca2a849353fcf85763ad170c745c8dc6d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/candidate-failures.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/candidate-failures.log",
+    "bytes": 6290,
+    "sha256": "5a52278caab6af6d6d303026aec8147bf5a28bc4614617767a585b3a0f4f9888",
+    "payload": "payloads/5a52278caab6af6d6d303026aec8147bf5a28bc4614617767a585b3a0f4f9888.gz",
+    "storedSha256": "dab9915b44e52d9f3246500da3f832c95a621361b43aec8a25e998545919adcd"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/comparison.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/comparison.json",
+    "bytes": 36018,
+    "sha256": "d3815d9da5e534719a1ce9caecf1e6822af61a944a425eab673aff831efe427b",
+    "payload": "payloads/d3815d9da5e534719a1ce9caecf1e6822af61a944a425eab673aff831efe427b.gz",
+    "storedSha256": "f9e07ae9f64edef1b3c8ea2afefcc6c37766a594082afb5e5934d3cd2fb6e3f1"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/cost-comparison.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/cost-comparison.json",
+    "bytes": 3764,
+    "sha256": "5591a444de8319bdfa211fc3c537c82ae036faa519acb8a6f8980e874094deb4",
+    "payload": "payloads/5591a444de8319bdfa211fc3c537c82ae036faa519acb8a6f8980e874094deb4.gz",
+    "storedSha256": "36cbfa1315bf863ae5ea8d927a3a96ef1caaef7eaff9419c6ec102d44a9053b7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/probe-source.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/probe-source.mjs",
+    "bytes": 5910,
+    "sha256": "38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703",
+    "payload": "payloads/38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703.gz",
+    "storedSha256": "3bd345a8a9a212b72fe53d700383c522742043b83e9bcc482618416081b43656"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/runtime.mjs",
+    "bytes": 2222955,
+    "sha256": "b6bfb4ab91031723370014915f67a7f87e129f4ce1718bb3e7c91553f2b1e6a5",
+    "payload": "payloads/b6bfb4ab91031723370014915f67a7f87e129f4ce1718bb3e7c91553f2b1e6a5.gz",
+    "storedSha256": "41aa3cb6e8232fb390439ae4d211c2194e0522ca405e617f1f069b607abf58ef"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/source-inputs.json.gz",
+    "bytes": 640477,
+    "sha256": "3f7da7150bf3487cbe27a4519749afe199ed4945a7b1756746b7228220c32e48",
+    "payload": "payloads/3f7da7150bf3487cbe27a4519749afe199ed4945a7b1756746b7228220c32e48.gz",
+    "storedSha256": "4ebf78d387a9fda75a2f18abe92378e2750ac860c64ef7f4697a20afefbe2621"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/states.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/summary.json",
+    "bytes": 27280,
+    "sha256": "e11e08a2d7d8fd42aa8a76bb14a9da5d64a200947c8ef1b0568c065715eede7b",
+    "payload": "payloads/e11e08a2d7d8fd42aa8a76bb14a9da5d64a200947c8ef1b0568c065715eede7b.gz",
+    "storedSha256": "34bff82f3528ed9583b2eb6c61fcebde05a8238a73de2dec84c963bf94e34bbf"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A/ticks.json.gz",
+    "bytes": 1392503,
+    "sha256": "823922d38d975a6ce952d75031b10006f124cb96aac283c4c158b22cabefc8ea",
+    "payload": "payloads/823922d38d975a6ce952d75031b10006f124cb96aac283c4c158b22cabefc8ea.gz",
+    "storedSha256": "bf833d1d00fdb838c4147cab617d200d55c4c0df0d39d123081a584632307abb"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A.log",
+    "bytes": 70,
+    "sha256": "e7dd120f0b1613357a2a5e082ff2a8789c6ecf4f95ca440fad137bc380721bd3",
+    "payload": "payloads/e7dd120f0b1613357a2a5e082ff2a8789c6ecf4f95ca440fad137bc380721bd3.gz",
+    "storedSha256": "0ac80a5a8823a510913266fecd34ca3c3d258c41cfc0dcd61e8f9f8390a22ce8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-A.time",
+    "bytes": 135,
+    "sha256": "bad15c5e7cba5bb3a670c478eceec8fd24eb9c1a74006c52fdb3cdabdda85dfa",
+    "payload": "payloads/bad15c5e7cba5bb3a670c478eceec8fd24eb9c1a74006c52fdb3cdabdda85dfa.gz",
+    "storedSha256": "4b9eb51fbd5acc67b51bcc5902ff2d27779825a78c9d4c1968481491b0dabe57"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/probe-source.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/probe-source.mjs",
+    "bytes": 5910,
+    "sha256": "38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703",
+    "payload": "payloads/38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703.gz",
+    "storedSha256": "3bd345a8a9a212b72fe53d700383c522742043b83e9bcc482618416081b43656"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/runtime.mjs",
+    "bytes": 2223299,
+    "sha256": "d360c64aa5ac13951abf4047689962ccc65d7486489f43f50ce78f389d0985b2",
+    "payload": "payloads/d360c64aa5ac13951abf4047689962ccc65d7486489f43f50ce78f389d0985b2.gz",
+    "storedSha256": "ffbdfdbe158dd882dd29f9fd5b33960eb18fadd192a92f0a786ccfd72a65857c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/source-inputs.json.gz",
+    "bytes": 639609,
+    "sha256": "815e53db53644cf74308d97580f5566a40f7788efbbfe9cb784a8f7939ee845e",
+    "payload": "payloads/815e53db53644cf74308d97580f5566a40f7788efbbfe9cb784a8f7939ee845e.gz",
+    "storedSha256": "99def25c8515525a456d07f292c8ad1b9307e1e5c6800304811b8784b27c8e2e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/states.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/summary.json",
+    "bytes": 27286,
+    "sha256": "6749fd841a3433ac4dfde86322c3284ef8854945fc08b1ef5492cfad702e4e79",
+    "payload": "payloads/6749fd841a3433ac4dfde86322c3284ef8854945fc08b1ef5492cfad702e4e79.gz",
+    "storedSha256": "e52f1bc23a07388f0be004754885457ff00d803a2c116a0cb9ec21491c0bc285"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P/ticks.json.gz",
+    "bytes": 1383991,
+    "sha256": "e72152660acc1ac93d8b4f049038c79bb3aa72a32a984c70ba502f371031eedc",
+    "payload": "payloads/e72152660acc1ac93d8b4f049038c79bb3aa72a32a984c70ba502f371031eedc.gz",
+    "storedSha256": "d20c8f3364f9ce3ad789e000eefdeabf4f457f87c3177f646be0a145f743c5b9"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P.log",
+    "bytes": 76,
+    "sha256": "cf1b59ed3cf7579ecc26a6126522f9b0fd6d5dc3fc6401ff56049e441e675f9d",
+    "payload": "payloads/cf1b59ed3cf7579ecc26a6126522f9b0fd6d5dc3fc6401ff56049e441e675f9d.gz",
+    "storedSha256": "baf79f5ed9c6a5968b6404007a19200a08cb7f885f69a3cdc235637a97e4c7c7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/counts-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/counts-P.time",
+    "bytes": 136,
+    "sha256": "3bcfb0ed84a20dceca7a258d4652873033f9fcb5b3142dab83a416890f122dde",
+    "payload": "payloads/3bcfb0ed84a20dceca7a258d4652873033f9fcb5b3142dab83a416890f122dde.gz",
+    "storedSha256": "59d10d49c2d5af4e2b969ab007ad7fcffc3e65144b8fa886d0f06a14617ab463"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/environment.json",
+    "bytes": 48637,
+    "sha256": "9397021e4bd844f3c74fd082020f83cc44417d5646474e10d48ac7962d77ade7",
+    "payload": "payloads/9397021e4bd844f3c74fd082020f83cc44417d5646474e10d48ac7962d77ade7.gz",
+    "storedSha256": "5ff1646737c04f31b7db71c6ae9649530bc7309422b4e09f9c52caf883c685f7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/report.txt",
+    "bytes": 35761,
+    "sha256": "1347450eaccbd7abf1a60a207cc324057beb3f1f492d71909f36e5acd8f8fa14",
+    "payload": "payloads/1347450eaccbd7abf1a60a207cc324057beb3f1f492d71909f36e5acd8f8fa14.gz",
+    "storedSha256": "83543c62035c368f0c7639f2ef4acead17494944f83ea85d5085b034f81f2626"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/summary.json",
+    "bytes": 45479,
+    "sha256": "325e2e973e3eb1e1dacd3d733e0b11bf637f4b20cdd72154e21448ef7dd0dcf6",
+    "payload": "payloads/325e2e973e3eb1e1dacd3d733e0b11bf637f4b20cdd72154e21448ef7dd0dcf6.gz",
+    "storedSha256": "3c97565ba79ba762d5c10edb28b9419bd4044e78e1006bc79f8ab5b385799458"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A/ticks.json.gz",
+    "bytes": 979648,
+    "sha256": "d83525ce158a84c7bf0898897e49ee984594d9a623a90d09222fa8811211df43",
+    "payload": "payloads/d83525ce158a84c7bf0898897e49ee984594d9a623a90d09222fa8811211df43.gz",
+    "storedSha256": "c605afbd0bd9ba9e4cd91c60c36e52ceb24f57caf626d4df872864332fa922c4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A.log",
+    "bytes": 35762,
+    "sha256": "615e9e628a24f297bd3aec1f8ed78ba067deebd217aad34e0362da2b620faff7",
+    "payload": "payloads/615e9e628a24f297bd3aec1f8ed78ba067deebd217aad34e0362da2b620faff7.gz",
+    "storedSha256": "936f4491c36038d36c584f74230f0b81eb866bcc8db8af1bb859d885f8940db8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-1-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-1-A.time",
+    "bytes": 145,
+    "sha256": "c90ae997760943d7fd4cb47ba554aa7b63e9e400bbf65ec66be220106106ae8e",
+    "payload": "payloads/c90ae997760943d7fd4cb47ba554aa7b63e9e400bbf65ec66be220106106ae8e.gz",
+    "storedSha256": "c6b77ed96185a4b41711d98099c777d834aae6cd4e77e7bbe9fddceb66714f32"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/entry.ts",
+    "bytes": 443,
+    "sha256": "093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e",
+    "payload": "payloads/093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e.gz",
+    "storedSha256": "680aec6d5016787606c0b32d55a2ca550d8934d42a2b8af80bdd8ae21816179a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/environment.json",
+    "bytes": 48655,
+    "sha256": "62c9ab73ead06b099ccfe9db5466dd63034b026759e006cc1db3dd8b19255d98",
+    "payload": "payloads/62c9ab73ead06b099ccfe9db5466dd63034b026759e006cc1db3dd8b19255d98.gz",
+    "storedSha256": "66b09518c87d27255f4ef47921478b502b6a6c08c95d2f0690ca7252c450d11a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/report.txt",
+    "bytes": 34628,
+    "sha256": "fa3bb57636334ae31b7c9599bf12520a407d76d1b44e3e40facb32fec16630bc",
+    "payload": "payloads/fa3bb57636334ae31b7c9599bf12520a407d76d1b44e3e40facb32fec16630bc.gz",
+    "storedSha256": "90c37a9cf31e1077e80e468ce6fcc4cc379b61dc5adf22febd13e6cc06ef3868"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/runtime.mjs",
+    "bytes": 2220922,
+    "sha256": "11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317",
+    "payload": "payloads/11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317.gz",
+    "storedSha256": "e3a80f482028dd9fa646a664cd5f519d5a2abfdd7dfff32d532a9006bbcd796e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/source-inputs.json.gz",
+    "bytes": 654554,
+    "sha256": "5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2",
+    "payload": "payloads/5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2.gz",
+    "storedSha256": "49dcfccca086465bdd7e0558d55d0de9544ff9f00df4ccfd938897acff41ce15"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/summary.json",
+    "bytes": 44242,
+    "sha256": "053901f3035408d5d25618e9f4214b71fd4e51c485562010e04910951d83acb0",
+    "payload": "payloads/053901f3035408d5d25618e9f4214b71fd4e51c485562010e04910951d83acb0.gz",
+    "storedSha256": "ae308615f358f36b47f0c290d7ca310e286cc889551670e244ba31fc66c4160b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P/ticks.json.gz",
+    "bytes": 982285,
+    "sha256": "2b71eccb793be5047271b1a401254615fa269fb74e10652f5b8972e56156551c",
+    "payload": "payloads/2b71eccb793be5047271b1a401254615fa269fb74e10652f5b8972e56156551c.gz",
+    "storedSha256": "30eb4f08ba6fa0342aa05c94fcfc605b9e47583cf5d9cf29d722ef273dd16d25"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P.log",
+    "bytes": 34629,
+    "sha256": "5adb65b86e1b73b1f0724093abb229e2ab7721a87bd9429be61d85825d95dfc4",
+    "payload": "payloads/5adb65b86e1b73b1f0724093abb229e2ab7721a87bd9429be61d85825d95dfc4.gz",
+    "storedSha256": "1ed8cd280ecfc5c03b0788aa73471944c3acd62a770638c50b9917186e14246b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-2-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-2-P.time",
+    "bytes": 135,
+    "sha256": "4c89ac35a4a53de48f77b3b5752d31141e2743e15cc2ff677c90849996559448",
+    "payload": "payloads/4c89ac35a4a53de48f77b3b5752d31141e2743e15cc2ff677c90849996559448.gz",
+    "storedSha256": "5c4b9ba8a6bcc7e8532dfb3853ad769abcc98a5fe04fac955703185d16c49b29"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/entry.ts",
+    "bytes": 443,
+    "sha256": "093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e",
+    "payload": "payloads/093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e.gz",
+    "storedSha256": "680aec6d5016787606c0b32d55a2ca550d8934d42a2b8af80bdd8ae21816179a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/environment.json",
+    "bytes": 48656,
+    "sha256": "67ca76394b61c6d5a0cd119d3104ddcbd76d86f0dc5f463d2d2a794dee3e0513",
+    "payload": "payloads/67ca76394b61c6d5a0cd119d3104ddcbd76d86f0dc5f463d2d2a794dee3e0513.gz",
+    "storedSha256": "38475b1cbb16fce8acc4340070cd1e771bc3d8cb6445dd2483c50b72a585dcc3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/report.txt",
+    "bytes": 32914,
+    "sha256": "70671845dad0b5da60a2f7c7da053bf9a72706be75edba292d31d63f6b21b7a0",
+    "payload": "payloads/70671845dad0b5da60a2f7c7da053bf9a72706be75edba292d31d63f6b21b7a0.gz",
+    "storedSha256": "780eede03573505ab0adca16a0815459a2ea956eb33a40723c7a6774a0cb551b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/runtime.mjs",
+    "bytes": 2220922,
+    "sha256": "11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317",
+    "payload": "payloads/11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317.gz",
+    "storedSha256": "e3a80f482028dd9fa646a664cd5f519d5a2abfdd7dfff32d532a9006bbcd796e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/source-inputs.json.gz",
+    "bytes": 654554,
+    "sha256": "5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2",
+    "payload": "payloads/5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2.gz",
+    "storedSha256": "49dcfccca086465bdd7e0558d55d0de9544ff9f00df4ccfd938897acff41ce15"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/summary.json",
+    "bytes": 42377,
+    "sha256": "b3cd586beeba49c600abe7ec33f7f7ecd851e1a1c32be0218dcbb352106c63fc",
+    "payload": "payloads/b3cd586beeba49c600abe7ec33f7f7ecd851e1a1c32be0218dcbb352106c63fc.gz",
+    "storedSha256": "bde6d10362d5c2810c7b35bd85dbe4bdad6f5da8d828913fe214966a89d653f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P/ticks.json.gz",
+    "bytes": 976829,
+    "sha256": "76a98bdb55c349842e89ad62084fb33dfd0591d153e4b63c4416ffef71de5283",
+    "payload": "payloads/76a98bdb55c349842e89ad62084fb33dfd0591d153e4b63c4416ffef71de5283.gz",
+    "storedSha256": "4f48005dea2c7a4395a0dc06fb71ce125ec46845f80ea646f2b1275cadf70838"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P.log",
+    "bytes": 32915,
+    "sha256": "5356cf1667fd8e292130ce55cfd267b617586c20ae97a6bfbb022bc3d319152e",
+    "payload": "payloads/5356cf1667fd8e292130ce55cfd267b617586c20ae97a6bfbb022bc3d319152e.gz",
+    "storedSha256": "b681d5342c22d4b398a9a54627c0b60217ce86857a5cdca7f9f952cd16bfbf4c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-3-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-3-P.time",
+    "bytes": 134,
+    "sha256": "c1f4d3f81a42c387fc35efba2273f6a8140d341b777dacf14f7443d20a01e4ed",
+    "payload": "payloads/c1f4d3f81a42c387fc35efba2273f6a8140d341b777dacf14f7443d20a01e4ed.gz",
+    "storedSha256": "d45804e8dec469f0c5e0f5e2e2ef9fba85f06c509a53d24acc64ff178ada7eb7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/environment.json",
+    "bytes": 48639,
+    "sha256": "b609c900e3ddf33d2ec556205b77bfcd81c7eb84a6a25bb37bc2dd8159a91331",
+    "payload": "payloads/b609c900e3ddf33d2ec556205b77bfcd81c7eb84a6a25bb37bc2dd8159a91331.gz",
+    "storedSha256": "5a425ab1004af8f11d2726db9bec432fd2c1da4f9918415a59ce67eda1620eba"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/report.txt",
+    "bytes": 36927,
+    "sha256": "53d917b9deb478f536ffe45703cb2c89d07763dcdee841515f5334d6a9eb73b1",
+    "payload": "payloads/53d917b9deb478f536ffe45703cb2c89d07763dcdee841515f5334d6a9eb73b1.gz",
+    "storedSha256": "3ceba97b94558cd9b8b44a5281be90691abf83ed9f23b21860db88270d958b35"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/summary.json",
+    "bytes": 46760,
+    "sha256": "b12bd9de7291ac09d6879670a3378cfdfea89a25ad01ef5cc46f277150378f8e",
+    "payload": "payloads/b12bd9de7291ac09d6879670a3378cfdfea89a25ad01ef5cc46f277150378f8e.gz",
+    "storedSha256": "6fe344c978f945ae5a72e5432926e12967d9b8768e9d5b09523b1827a73db154"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A/ticks.json.gz",
+    "bytes": 979349,
+    "sha256": "f7e520d51772384d9ee200cf3959d13216bc5f865165fd652f90862abc5dc315",
+    "payload": "payloads/f7e520d51772384d9ee200cf3959d13216bc5f865165fd652f90862abc5dc315.gz",
+    "storedSha256": "852668fcc3b6b6c834132b2069c79258cef520e760020ad1b893a9a6b7f84fc5"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A.log",
+    "bytes": 36928,
+    "sha256": "ee2b81db19c627d1e82bccf165814390b8514645ab3112b07a94e35ae96225a2",
+    "payload": "payloads/ee2b81db19c627d1e82bccf165814390b8514645ab3112b07a94e35ae96225a2.gz",
+    "storedSha256": "6bd3ff7ce38374106f5d7b58d8a1f65bde58314882afb2859f9961fb1920e84b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-4-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-4-A.time",
+    "bytes": 135,
+    "sha256": "fd3b962d5a9bf11400537085ac6c990f46d25f555bcff725c594bd872166dceb",
+    "payload": "payloads/fd3b962d5a9bf11400537085ac6c990f46d25f555bcff725c594bd872166dceb.gz",
+    "storedSha256": "7f0ab57a74662a8d6a5996cbe5cac0924e8f7e4c31f8355dd081fd3c8493ef8b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/entry.ts",
+    "bytes": 443,
+    "sha256": "093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e",
+    "payload": "payloads/093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e.gz",
+    "storedSha256": "680aec6d5016787606c0b32d55a2ca550d8934d42a2b8af80bdd8ae21816179a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/environment.json",
+    "bytes": 48657,
+    "sha256": "d6fe4f08811fc03c086bc524277ded54ca8374db05906b2d56f124870c5a83d6",
+    "payload": "payloads/d6fe4f08811fc03c086bc524277ded54ca8374db05906b2d56f124870c5a83d6.gz",
+    "storedSha256": "57f05bf45e55f9b32c5ab0d73410c5234f6ae2bf5dc7630e0b61c90e1e9e0053"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/report.txt",
+    "bytes": 35225,
+    "sha256": "5c274e116b76c97982d4104d6db6f723237c4ff8887050c9955a22467a74f4fc",
+    "payload": "payloads/5c274e116b76c97982d4104d6db6f723237c4ff8887050c9955a22467a74f4fc.gz",
+    "storedSha256": "5c57f4f1b881225f7f343db63a6e259b11a02c9f6867b4905586ca5d23f655fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/runtime.mjs",
+    "bytes": 2220922,
+    "sha256": "11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317",
+    "payload": "payloads/11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317.gz",
+    "storedSha256": "e3a80f482028dd9fa646a664cd5f519d5a2abfdd7dfff32d532a9006bbcd796e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/source-inputs.json.gz",
+    "bytes": 654554,
+    "sha256": "5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2",
+    "payload": "payloads/5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2.gz",
+    "storedSha256": "49dcfccca086465bdd7e0558d55d0de9544ff9f00df4ccfd938897acff41ce15"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/summary.json",
+    "bytes": 44894,
+    "sha256": "15e2ef2de776abf4aa58b2e4c2f0b44a6659e15be3e2f45b5570cc44274561df",
+    "payload": "payloads/15e2ef2de776abf4aa58b2e4c2f0b44a6659e15be3e2f45b5570cc44274561df.gz",
+    "storedSha256": "9f494c456e9f7e444b6e8e2763ded4bb81a779dd78f87ce7480533d5b50b37d7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P/ticks.json.gz",
+    "bytes": 976753,
+    "sha256": "490b824e5b4b57a7428f746359c8a2209acea920d71e9b4fa4a775161f298f62",
+    "payload": "payloads/490b824e5b4b57a7428f746359c8a2209acea920d71e9b4fa4a775161f298f62.gz",
+    "storedSha256": "2d09e30517db0d64136651f00ed9d6ac231fd8a4c9839cbcd7f4a727f3523575"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P.log",
+    "bytes": 35226,
+    "sha256": "085b091eb48c00fb138aa47b5a90d8fce696cb790e02e39908b7fd15267678c4",
+    "payload": "payloads/085b091eb48c00fb138aa47b5a90d8fce696cb790e02e39908b7fd15267678c4.gz",
+    "storedSha256": "b138d6ed1ecce5888d6b861c9a7c71218060a6a8be9972e632182be0447b9b2a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-5-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-5-P.time",
+    "bytes": 146,
+    "sha256": "1d83880eadbbdd9617a7373cd308ab32f13269b1084bc199831e52bdf07cffd7",
+    "payload": "payloads/1d83880eadbbdd9617a7373cd308ab32f13269b1084bc199831e52bdf07cffd7.gz",
+    "storedSha256": "dadbec51b9e5b09540029efbbc499959db4fdf14a1a9296ae6a8358e6e1e658b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/environment.json",
+    "bytes": 48639,
+    "sha256": "0fa12e05d93f169a51ef00999b71feeed62cb23afa097c7bda43f3e06763420a",
+    "payload": "payloads/0fa12e05d93f169a51ef00999b71feeed62cb23afa097c7bda43f3e06763420a.gz",
+    "storedSha256": "f65f2c62ca6d4cf9a780ca4ce3a62c194072f35a6d23ebd74dd7c01be6b8cffd"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/report.txt",
+    "bytes": 34667,
+    "sha256": "67aba00a59c963428a587ffa09c475c95fab6aeebf4553b7981af288c13c89c7",
+    "payload": "payloads/67aba00a59c963428a587ffa09c475c95fab6aeebf4553b7981af288c13c89c7.gz",
+    "storedSha256": "e1840fd097e672c2c0764de79235faa7362abed988948f97856e43ae1aa87aa5"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/summary.json",
+    "bytes": 44278,
+    "sha256": "68eb4bb49c0b98f9463271324ea64155d083ff3021516247dc759dbd62da9b97",
+    "payload": "payloads/68eb4bb49c0b98f9463271324ea64155d083ff3021516247dc759dbd62da9b97.gz",
+    "storedSha256": "251aa0778eed97668c229c59811f6a722cd1e64db5b0d3aa25c3306519262a23"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A/ticks.json.gz",
+    "bytes": 974827,
+    "sha256": "da7b06e372496de277d6554eb4cd1d00e44369772d81c8e0bedd4d15782ea4f6",
+    "payload": "payloads/da7b06e372496de277d6554eb4cd1d00e44369772d81c8e0bedd4d15782ea4f6.gz",
+    "storedSha256": "ddf78a81676c64efc1ef5fa9f87061b41ab46068af61a42b2a2e3ac7d27a5fd0"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A.log",
+    "bytes": 34668,
+    "sha256": "1a7cf93efa8d98527570b0a24048275c847002d9423e0a38e38a6695040df8bd",
+    "payload": "payloads/1a7cf93efa8d98527570b0a24048275c847002d9423e0a38e38a6695040df8bd.gz",
+    "storedSha256": "472b3b276574a286d455d804c574783a08ede9df62e0399036a5713ebfe02d39"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-6-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-6-A.time",
+    "bytes": 134,
+    "sha256": "a9ad607b6506ffb09cd1ddce1104a9067c959f10d48ce9f1dd53bff9772db892",
+    "payload": "payloads/a9ad607b6506ffb09cd1ddce1104a9067c959f10d48ce9f1dd53bff9772db892.gz",
+    "storedSha256": "866142e7ce55d251e9b4c67b74f54d5a5d916c7ec64a2d333fc5d69fad2af09e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/environment.json",
+    "bytes": 48639,
+    "sha256": "170a92af19857c03c5dc1fd5b848f946b4b52b67174d667dc5ec709b947085c9",
+    "payload": "payloads/170a92af19857c03c5dc1fd5b848f946b4b52b67174d667dc5ec709b947085c9.gz",
+    "storedSha256": "e08e6e6cfdf40cd550ad559561ef0be50deec1beae5115f93d6ea63554c51456"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/report.txt",
+    "bytes": 36311,
+    "sha256": "4de5a13336bda3adb8cb95b8e9611911da551d74839a674c8816d839041c8c06",
+    "payload": "payloads/4de5a13336bda3adb8cb95b8e9611911da551d74839a674c8816d839041c8c06.gz",
+    "storedSha256": "7480977820b842e102dfab2e6e9dd8c740e3cd288565b4a5092613323b96e7dd"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/summary.json",
+    "bytes": 46089,
+    "sha256": "23fce8a4f720d1b78ba99ca549e9eb8225829ffe816608638b2c965924acd8b0",
+    "payload": "payloads/23fce8a4f720d1b78ba99ca549e9eb8225829ffe816608638b2c965924acd8b0.gz",
+    "storedSha256": "51113731adb884a3a27a47fc1deb187bc575c5ce4c9596e2c593261d488e5ea9"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A/ticks.json.gz",
+    "bytes": 977019,
+    "sha256": "38643ca42c79f153cacd7832a07a5a8eb5e2520fac496f9c795ccbf8383d7211",
+    "payload": "payloads/38643ca42c79f153cacd7832a07a5a8eb5e2520fac496f9c795ccbf8383d7211.gz",
+    "storedSha256": "45827771155bc88f445f664ef9aabae9b0f88d2332378cbfa7c40c432260fefb"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A.log",
+    "bytes": 36312,
+    "sha256": "a045c1d832c8689aecb0231e0fafb08fd5e9ef3b283cd09057c399e9b778b0c8",
+    "payload": "payloads/a045c1d832c8689aecb0231e0fafb08fd5e9ef3b283cd09057c399e9b778b0c8.gz",
+    "storedSha256": "ca582727f8e05e6b9e430773e1c7031cf08afdcef4cfb2e761b3284eba635995"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-7-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-7-A.time",
+    "bytes": 136,
+    "sha256": "8ed8d695a0fc79c161dde7aca8570c0fb97c79aed623526f99e29003c36867bc",
+    "payload": "payloads/8ed8d695a0fc79c161dde7aca8570c0fb97c79aed623526f99e29003c36867bc.gz",
+    "storedSha256": "ab2f6812aeb089ccf37e953d08948a1a843fb2a8cdd406933d21e9b93b54613e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/entry.ts",
+    "bytes": 443,
+    "sha256": "093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e",
+    "payload": "payloads/093c6bb817c52d6e7504309124c2611da1cbc0b948d4838ee8de21b4348b2c4e.gz",
+    "storedSha256": "680aec6d5016787606c0b32d55a2ca550d8934d42a2b8af80bdd8ae21816179a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/environment.json",
+    "bytes": 48657,
+    "sha256": "4d92e5500b51b7de8daff349b35ab610bd56a91361d409476d5150bbfa566d94",
+    "payload": "payloads/4d92e5500b51b7de8daff349b35ab610bd56a91361d409476d5150bbfa566d94.gz",
+    "storedSha256": "7c56066d255c3a90bb917d2c4d1db5a3069f444b851aed537f5c05e121d680b3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/report.txt",
+    "bytes": 35239,
+    "sha256": "35ab80a0332293b5e8fbfe8d8043b42317dd8d9df5e2d38819e0664c677e8dec",
+    "payload": "payloads/35ab80a0332293b5e8fbfe8d8043b42317dd8d9df5e2d38819e0664c677e8dec.gz",
+    "storedSha256": "261461073338476f0dfdb65670df25ed659864a8e3b2a472f2d82b5735577c7d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/runtime.mjs",
+    "bytes": 2220922,
+    "sha256": "11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317",
+    "payload": "payloads/11eec19365284204c99ebab7b0aeb3a3e1dd4f5ceb1462b50796bfa23642d317.gz",
+    "storedSha256": "e3a80f482028dd9fa646a664cd5f519d5a2abfdd7dfff32d532a9006bbcd796e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/source-inputs.json.gz",
+    "bytes": 654554,
+    "sha256": "5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2",
+    "payload": "payloads/5915ded8ef5a5e370666b4cba77f079aef7c335c14d1cbc071e43219600398a2.gz",
+    "storedSha256": "49dcfccca086465bdd7e0558d55d0de9544ff9f00df4ccfd938897acff41ce15"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/summary.json",
+    "bytes": 44914,
+    "sha256": "7575ee51503cdb44a49c1b1ed8ded4a1d436e47aa4cdebbd6fc35c2d475a1479",
+    "payload": "payloads/7575ee51503cdb44a49c1b1ed8ded4a1d436e47aa4cdebbd6fc35c2d475a1479.gz",
+    "storedSha256": "fbc62aa721010849adfb2a1cd6f2270af62d4094fb0f8ea62cb4333de23178a3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P/ticks.json.gz",
+    "bytes": 973267,
+    "sha256": "9dcf4bfea34b5a1f85b9191d846bbc4394c38981813ebc93da08f4162a79bbc6",
+    "payload": "payloads/9dcf4bfea34b5a1f85b9191d846bbc4394c38981813ebc93da08f4162a79bbc6.gz",
+    "storedSha256": "03c21b49bd854478067df8158e26539149f067f4839f6ee792cee368129ae3ba"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P.log",
+    "bytes": 35240,
+    "sha256": "3ae48e8f566e7d5865d5c0adb106a07048c7a34d315e4b76719996a0c9ae4c15",
+    "payload": "payloads/3ae48e8f566e7d5865d5c0adb106a07048c7a34d315e4b76719996a0c9ae4c15.gz",
+    "storedSha256": "1eea06851d92fbd27fc9ce4707f28a3186f15fe0e8df6e45064b16595728b5b3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-8-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-8-P.time",
+    "bytes": 136,
+    "sha256": "aa1b73e4815c75795793d671290214b4c32c3fbaeeb3a7ea23eb3a5df9f14b26",
+    "payload": "payloads/aa1b73e4815c75795793d671290214b4c32c3fbaeeb3a7ea23eb3a5df9f14b26.gz",
+    "storedSha256": "7881d87e2172d13f7f89f0334db59ab327e3d31eebf93fe80ba3653e700fe7df"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal-plan.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal-plan.json",
+    "bytes": 491,
+    "sha256": "e90f86f74edcf9b4365f9b9c34d336b544c6486a26a83096362b2aa9c0ecf9bf",
+    "payload": "payloads/e90f86f74edcf9b4365f9b9c34d336b544c6486a26a83096362b2aa9c0ecf9bf.gz",
+    "storedSha256": "d69332ae170ec3632171651928e78e743afd2e43269b2961507724691ac7a1e4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/formal.py",
+    "path": "workspace/sanity-planning-lifecycle-20261015/formal.py",
+    "bytes": 1544,
+    "sha256": "9580d92e8818edbe390c9586d4508581674e4cfa1f519a299387b33af6368f8b",
+    "payload": "payloads/9580d92e8818edbe390c9586d4508581674e4cfa1f519a299387b33af6368f8b.gz",
+    "storedSha256": "cb43fd46c1ba95687428a01ba9fa28d9428af219773aefc61b5921bee3ea148c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/full-tests.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/full-tests.log",
+    "bytes": 138387,
+    "sha256": "cd5cbe5d80135376523e27c2437efa22d291c858be099cb7c7025dbcaa3843bf",
+    "payload": "payloads/cd5cbe5d80135376523e27c2437efa22d291c858be099cb7c7025dbcaa3843bf.gz",
+    "storedSha256": "7703f0cbe8ca3dd27d8c9480d38f23ea29af6710ce42f213d982b6ef4cd1a0b7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/main-failures.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/main-failures.log",
+    "bytes": 6287,
+    "sha256": "90345785b2699b07f9e20ebb40cd97422e5399c1f5b370fa64cd4cef2046c6bf",
+    "payload": "payloads/90345785b2699b07f9e20ebb40cd97422e5399c1f5b370fa64cd4cef2046c6bf.gz",
+    "storedSha256": "2111ca1ccb78d041a8f44f0cb8ea3d587ca637ae10ef8a415e24903aba1df35d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-A/probe.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-A/probe.mjs",
+    "bytes": 2741,
+    "sha256": "78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115",
+    "payload": "payloads/78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115.gz",
+    "storedSha256": "d7eb27428a4880baac7c85b1971921865fbaefd47e9cc6121c87dad60cdc5c0c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-A/result.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-A/result.json",
+    "bytes": 5031,
+    "sha256": "0391b4cf4ab410eebb161d1c484d7eaac77d716b95b2eca6046705490f5365f1",
+    "payload": "payloads/0391b4cf4ab410eebb161d1c484d7eaac77d716b95b2eca6046705490f5365f1.gz",
+    "storedSha256": "01006d17ad926395c2d85c5156278ec851a9f27f2f45d7fa68d32e12a151e6e8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-A/runtime.mjs",
+    "bytes": 401274,
+    "sha256": "e8497762045ffe77f5d27084a329111ceead5ce44394202d17b0023ff79fd3d4",
+    "payload": "payloads/e8497762045ffe77f5d27084a329111ceead5ce44394202d17b0023ff79fd3d4.gz",
+    "storedSha256": "38b7bf12164e82c747884a8c2e326dceabf036c26b83d49dbefeba223038d50d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-A.log",
+    "bytes": 48,
+    "sha256": "57d9321803cc17df0c34c246bcab440f29d083f39e98f3a4ab3535509ab514c7",
+    "payload": "payloads/57d9321803cc17df0c34c246bcab440f29d083f39e98f3a4ab3535509ab514c7.gz",
+    "storedSha256": "6c57967e52d8956355673d5c36b2debf8644c6bddb306d7e9aebda300a83e72a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-A.time",
+    "bytes": 145,
+    "sha256": "bfd2e760d453c9f184b12e3b0ba29b562e164a29c7f9696d618d481075290318",
+    "payload": "payloads/bfd2e760d453c9f184b12e3b0ba29b562e164a29c7f9696d618d481075290318.gz",
+    "storedSha256": "3118b5b440909c98b5be32dd6e47fe2c2830282348e81eccb1102e65a942bf9a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-P/probe.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-P/probe.mjs",
+    "bytes": 2741,
+    "sha256": "78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115",
+    "payload": "payloads/78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115.gz",
+    "storedSha256": "d7eb27428a4880baac7c85b1971921865fbaefd47e9cc6121c87dad60cdc5c0c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-P/result.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-P/result.json",
+    "bytes": 5031,
+    "sha256": "08b97f5450ffa926772084ec31425d8daacc4a1c1957b307607fc567b00aff36",
+    "payload": "payloads/08b97f5450ffa926772084ec31425d8daacc4a1c1957b307607fc567b00aff36.gz",
+    "storedSha256": "625de21baa1256736558a2e9487844364c4aade538b48a5993c2255e394953c0"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-P/runtime.mjs",
+    "bytes": 403052,
+    "sha256": "ce24731a2cde35646699d2fc67e32897cb97c6f906dc98cef327c0ade7a3cc6d",
+    "payload": "payloads/ce24731a2cde35646699d2fc67e32897cb97c6f906dc98cef327c0ade7a3cc6d.gz",
+    "storedSha256": "eca9271394d7db8c4a40f45cd2afb3f5c7e34e9628a597c1cca1afab98998d0d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-P.log",
+    "bytes": 48,
+    "sha256": "f3aa0e482be0074d656e3875c03bff0f6ca0b5812091dda514c2754a294ff5f1",
+    "payload": "payloads/f3aa0e482be0074d656e3875c03bff0f6ca0b5812091dda514c2754a294ff5f1.gz",
+    "storedSha256": "ad3e238843e96d82f84d19be800b55db59ddb9be977728e281c50f1a5f37c135"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory-P.time",
+    "bytes": 136,
+    "sha256": "78ba76fb0293c244cc860e4323379988971d269be7817353d8807505917dbbb9",
+    "payload": "payloads/78ba76fb0293c244cc860e4323379988971d269be7817353d8807505917dbbb9.gz",
+    "storedSha256": "1693449f93a0246abb7299621b498b82fceefc4e8c06f8f04f94e927a80331fd"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/memory.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/memory.mjs",
+    "bytes": 2741,
+    "sha256": "78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115",
+    "payload": "payloads/78424ba454f7c0e2cc9eb561891cba1fe9282e1d81127a5d661c5f6ea053f115.gz",
+    "storedSha256": "d7eb27428a4880baac7c85b1971921865fbaefd47e9cc6121c87dad60cdc5c0c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/predeclared-events.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/predeclared-events.json",
+    "bytes": 576,
+    "sha256": "9ed77b2f5fd038fa1c4d452f4ce387c82eb6458ffe9d0b92a74bb77bfc55cbaf",
+    "payload": "payloads/9ed77b2f5fd038fa1c4d452f4ce387c82eb6458ffe9d0b92a74bb77bfc55cbaf.gz",
+    "storedSha256": "2fd89ad6c69410cf622955a46b98d3f405794f7d58b831b984110e6b572132ff"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/runtime-source-comparison.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/runtime-source-comparison.json",
+    "bytes": 126,
+    "sha256": "fd61c309bc2936a84ec9a42a62f676733dfa203262dc695755e2b295c6cedffc",
+    "payload": "payloads/fd61c309bc2936a84ec9a42a62f676733dfa203262dc695755e2b295c6cedffc.gz",
+    "storedSha256": "319985ab47910b9b7ff66ae9730f3c5c6e8b0d5e9b922e76b542b781fecf0a8d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/environment.json",
+    "bytes": 48634,
+    "sha256": "69417f723dc732dc4fa74458568a1417c4ee805da8a8a98f88915b5b9f5d7733",
+    "payload": "payloads/69417f723dc732dc4fa74458568a1417c4ee805da8a8a98f88915b5b9f5d7733.gz",
+    "storedSha256": "60b742db3aa190f85a5dd9ae6255d81e8d34cc52fbcd219bbfeb84c2e461982d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/report.txt",
+    "bytes": 36944,
+    "sha256": "a27bc824a150c5cb5468023b38abc74f137321df9c81115396758dae3f837cb1",
+    "payload": "payloads/a27bc824a150c5cb5468023b38abc74f137321df9c81115396758dae3f837cb1.gz",
+    "storedSha256": "7983222825b410565c51a9ed69dc3a8b51012e6dd42e604f81d7866b5163c708"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/summary.json",
+    "bytes": 46787,
+    "sha256": "8472d5466be4b2b1b5822b64fb87ae46ad27fe8f29bbe67e3fb060f511c58553",
+    "payload": "payloads/8472d5466be4b2b1b5822b64fb87ae46ad27fe8f29bbe67e3fb060f511c58553.gz",
+    "storedSha256": "221ea3ce0a90ac3674e0c7ac4c21363ecad46304f2488548907f32bec403879e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A/ticks.json.gz",
+    "bytes": 989705,
+    "sha256": "5ad6731712bcc07166e4847cec86d8e4eca90aa02b8f51332c3624f9baaa6a47",
+    "payload": "payloads/5ad6731712bcc07166e4847cec86d8e4eca90aa02b8f51332c3624f9baaa6a47.gz",
+    "storedSha256": "6d720adb0f9e59e160c11a659c7a1f756c1d3439b2859d88b8acb506550a6def"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A.log",
+    "bytes": 36945,
+    "sha256": "9686a00de881502e72144edb2d12763614c9d05ac2df94d090b40e3c30b05f01",
+    "payload": "payloads/9686a00de881502e72144edb2d12763614c9d05ac2df94d090b40e3c30b05f01.gz",
+    "storedSha256": "ec8565dec56ab5a55f2dbd8323576812c3c9657891f54359f91d4c8dd0ae2a2e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-1-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-1-A.time",
+    "bytes": 136,
+    "sha256": "b7c242b7b64a37fb832f0ee3e847e3c87587f18aeec4f3516dd03ac0bb8eb707",
+    "payload": "payloads/b7c242b7b64a37fb832f0ee3e847e3c87587f18aeec4f3516dd03ac0bb8eb707.gz",
+    "storedSha256": "9e3b87bea7de40dca915cfa78056cfbd91e308059ee0153767d1783feba20e95"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/entry.ts",
+    "bytes": 423,
+    "sha256": "169d7613eb70f59d7d85e7269228b0c444b07c6615a41772e6dc654274a1d54c",
+    "payload": "payloads/169d7613eb70f59d7d85e7269228b0c444b07c6615a41772e6dc654274a1d54c.gz",
+    "storedSha256": "b1cb5814046e5dacc0e407e3c6f9786416105d1d0bb3bb985d99dd8cf31f3531"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/environment.json",
+    "bytes": 48637,
+    "sha256": "9424748b571362d3c2cf284bfea7b2b05d06467cd406f88c4b920d8290fd7b60",
+    "payload": "payloads/9424748b571362d3c2cf284bfea7b2b05d06467cd406f88c4b920d8290fd7b60.gz",
+    "storedSha256": "89a0be3992ca9ec4f2772e1c7fac4438c0fe23c49607874ba0283bc59851be5a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/report.txt",
+    "bytes": 34032,
+    "sha256": "c618e58b3d90685b7b3207047379aa1ce7840d1d7803c1ef9f0d1c5cd2ab1904",
+    "payload": "payloads/c618e58b3d90685b7b3207047379aa1ce7840d1d7803c1ef9f0d1c5cd2ab1904.gz",
+    "storedSha256": "e8d757bd13133c7210b5e8f28f0cb4c02978331aa4c0880b422125d57b819507"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/runtime.mjs",
+    "bytes": 2221966,
+    "sha256": "8066f688b5f5c9ee7ea8feab42e8912c9f519f3e58d1346c9df0615ced0a9824",
+    "payload": "payloads/8066f688b5f5c9ee7ea8feab42e8912c9f519f3e58d1346c9df0615ced0a9824.gz",
+    "storedSha256": "22609587306064239a9de993326e609b72ea801eff097afad79d0cdfb3305183"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/source-inputs.json.gz",
+    "bytes": 654293,
+    "sha256": "6c075421cbc3a2f71945f838652aba0eb7e137d9980f916b755834a31c4a9766",
+    "payload": "payloads/6c075421cbc3a2f71945f838652aba0eb7e137d9980f916b755834a31c4a9766.gz",
+    "storedSha256": "3c8c00e6d87b237c74d8eabf3368c9ed758efe60986a4ec1bb243b2884dced68"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/summary.json",
+    "bytes": 43577,
+    "sha256": "fa4828d8a550a86a9a59f8988c955ac79801111386f15f3232a66d584e031eb7",
+    "payload": "payloads/fa4828d8a550a86a9a59f8988c955ac79801111386f15f3232a66d584e031eb7.gz",
+    "storedSha256": "d7a7cd579897127ddba399fe3bc617480c37201462bc25a882e34dd8206e64dc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G/ticks.json.gz",
+    "bytes": 975487,
+    "sha256": "d3f88c40fe1a9e352f050755615787e9b8fce5857612e63577a51bbcb70536eb",
+    "payload": "payloads/d3f88c40fe1a9e352f050755615787e9b8fce5857612e63577a51bbcb70536eb.gz",
+    "storedSha256": "e35308526acb72ad03918eebe66d225f51a5b8b722bbf9aa97fe867b3ab8a2dc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G.log",
+    "bytes": 34033,
+    "sha256": "6461d03269193ecb5b879c4b6e7bfce4b49ff4eaf281746630ef744eb6e98bda",
+    "payload": "payloads/6461d03269193ecb5b879c4b6e7bfce4b49ff4eaf281746630ef744eb6e98bda.gz",
+    "storedSha256": "eb081b282253f7519f50654523c0d2058065f0d492939f22f88c3c85bcec7957"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-2-G.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-2-G.time",
+    "bytes": 135,
+    "sha256": "df272e15fe7ac3b8de529b5c9a75c9633177678856889cafd82ed18f86be7db8",
+    "payload": "payloads/df272e15fe7ac3b8de529b5c9a75c9633177678856889cafd82ed18f86be7db8.gz",
+    "storedSha256": "9f125ec0c17a7f906339b30e30c5ca8617d9b3775f960e02be878a3286d90180"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/entry.ts",
+    "bytes": 391,
+    "sha256": "81744e66f0fbc41650ea5b73521129a4d2ad6cba80259a92e12edcebf91128db",
+    "payload": "payloads/81744e66f0fbc41650ea5b73521129a4d2ad6cba80259a92e12edcebf91128db.gz",
+    "storedSha256": "6e7dbb33b0cd24da752c6941f6fd70b4b7c30143ca48f86060e988a2460b2300"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/environment.json",
+    "bytes": 48613,
+    "sha256": "74bac8e01b6143b444cdacf1ec43fbedb3e88190d04977665af03335f7c2364e",
+    "payload": "payloads/74bac8e01b6143b444cdacf1ec43fbedb3e88190d04977665af03335f7c2364e.gz",
+    "storedSha256": "bae1dc881102b844791e4ee9a816a66f09b31d88cd786e57ec2cc6bfa53cc54e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/report.txt",
+    "bytes": 35769,
+    "sha256": "2de124b84771e397e74ce79b52b1d74b965d0548b0b05ab40103af429685b683",
+    "payload": "payloads/2de124b84771e397e74ce79b52b1d74b965d0548b0b05ab40103af429685b683.gz",
+    "storedSha256": "a73413f4f37c2448a144bbdab03fe5b6986c0f0f138cec5ba1a33f57528dc9dc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/runtime.mjs",
+    "bytes": 2214472,
+    "sha256": "82d7d3e19dae3473e7e3cd75fef25690656c606e7ea639b911a2b6228b08d4f5",
+    "payload": "payloads/82d7d3e19dae3473e7e3cd75fef25690656c606e7ea639b911a2b6228b08d4f5.gz",
+    "storedSha256": "809dbff45c21055b3cc80aa8024bae7b1c69638c033194845865b4e8247bc855"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/source-inputs.json.gz",
+    "bytes": 654545,
+    "sha256": "b660112428d7d7ccc98c2841b62ad436bd932ec523910e7ea04368b9bbe81cba",
+    "payload": "payloads/b660112428d7d7ccc98c2841b62ad436bd932ec523910e7ea04368b9bbe81cba.gz",
+    "storedSha256": "8b99c5468ad1a0d6d5cb3721bd50769022cf51bec07f4f43c4b8a0fab8c253bc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/summary.json",
+    "bytes": 45489,
+    "sha256": "12717d6a5c454648a2160d15788e744ade0334b2013f0a1759601ea4f1c58148",
+    "payload": "payloads/12717d6a5c454648a2160d15788e744ade0334b2013f0a1759601ea4f1c58148.gz",
+    "storedSha256": "71da069565165ba00f2b9c987e21deb593199aa389614a080ffb029b313efb16"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P/ticks.json.gz",
+    "bytes": 977525,
+    "sha256": "43c2ffdbac23029486b9e87eacfbcdc255f3232a50d3906ea57144dd2bd9ae7e",
+    "payload": "payloads/43c2ffdbac23029486b9e87eacfbcdc255f3232a50d3906ea57144dd2bd9ae7e.gz",
+    "storedSha256": "a29d3301896781760db071fc241725e6b88ad30e5080ea683df0eee60fc0a1c4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P.log",
+    "bytes": 35770,
+    "sha256": "f25f12316f7a0673af95ee0140709b61035d7f7b3ac4541b6d49b80a80244ef9",
+    "payload": "payloads/f25f12316f7a0673af95ee0140709b61035d7f7b3ac4541b6d49b80a80244ef9.gz",
+    "storedSha256": "62148344e47e44cb075ea300e2ae583be1293f8584b675edbf26b00b645237b7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-3-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-3-P.time",
+    "bytes": 135,
+    "sha256": "a0710b9551acfb6ba8c5dfbe339fd3b47b2d4d059ec637aae6ccd5b507160ad3",
+    "payload": "payloads/a0710b9551acfb6ba8c5dfbe339fd3b47b2d4d059ec637aae6ccd5b507160ad3.gz",
+    "storedSha256": "0da31ad703549a63a0e11140a4a1a33f68d1da144545c41307f4d45c8bf018e6"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/entry.ts",
+    "bytes": 391,
+    "sha256": "81744e66f0fbc41650ea5b73521129a4d2ad6cba80259a92e12edcebf91128db",
+    "payload": "payloads/81744e66f0fbc41650ea5b73521129a4d2ad6cba80259a92e12edcebf91128db.gz",
+    "storedSha256": "6e7dbb33b0cd24da752c6941f6fd70b4b7c30143ca48f86060e988a2460b2300"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/environment.json",
+    "bytes": 48613,
+    "sha256": "50a2223f689ce9a561adffdeb1d2d55b223e45f2f4a525d92b3736ec5de66ee4",
+    "payload": "payloads/50a2223f689ce9a561adffdeb1d2d55b223e45f2f4a525d92b3736ec5de66ee4.gz",
+    "storedSha256": "6485548aea9b5ec09f271dae7facc0504cc3f1bd5520532e64a253def52644bc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/report.txt",
+    "bytes": 34084,
+    "sha256": "8ba490873dc6d091a20ee3e037d8b4f291bb5ea971c51e9234d3d2488e4bbd52",
+    "payload": "payloads/8ba490873dc6d091a20ee3e037d8b4f291bb5ea971c51e9234d3d2488e4bbd52.gz",
+    "storedSha256": "5e4034bd35c675bb9ad72f67ac0d6b1a8a3a6ba895e25a4bc8aa52cd59fad9a8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/runtime.mjs",
+    "bytes": 2214472,
+    "sha256": "82d7d3e19dae3473e7e3cd75fef25690656c606e7ea639b911a2b6228b08d4f5",
+    "payload": "payloads/82d7d3e19dae3473e7e3cd75fef25690656c606e7ea639b911a2b6228b08d4f5.gz",
+    "storedSha256": "809dbff45c21055b3cc80aa8024bae7b1c69638c033194845865b4e8247bc855"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/source-inputs.json.gz",
+    "bytes": 654545,
+    "sha256": "b660112428d7d7ccc98c2841b62ad436bd932ec523910e7ea04368b9bbe81cba",
+    "payload": "payloads/b660112428d7d7ccc98c2841b62ad436bd932ec523910e7ea04368b9bbe81cba.gz",
+    "storedSha256": "8b99c5468ad1a0d6d5cb3721bd50769022cf51bec07f4f43c4b8a0fab8c253bc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/summary.json",
+    "bytes": 43651,
+    "sha256": "c34943969801012e67d5d855013d7fbebb5880cd0f6a65b2601cc75cd5c4c6b8",
+    "payload": "payloads/c34943969801012e67d5d855013d7fbebb5880cd0f6a65b2601cc75cd5c4c6b8.gz",
+    "storedSha256": "a129e966143221ae2fb2fa7ad19439ea8564b92eac8dc7d8f0b77c5ee0ee39a3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P/ticks.json.gz",
+    "bytes": 974629,
+    "sha256": "b3035e08fb6dd385dad58d7d3d70b6ee4fef545d2645c4601ee62f697f6a1917",
+    "payload": "payloads/b3035e08fb6dd385dad58d7d3d70b6ee4fef545d2645c4601ee62f697f6a1917.gz",
+    "storedSha256": "9690a20729f0799c4c75826d0c3ff7f50fe2c2b7adc3b123933b5ada9a05da1a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P.log",
+    "bytes": 34085,
+    "sha256": "38f128348017e5f4bc2590e0ab547d846ad9a546bb4dcf6b23cb1335388f2449",
+    "payload": "payloads/38f128348017e5f4bc2590e0ab547d846ad9a546bb4dcf6b23cb1335388f2449.gz",
+    "storedSha256": "d01490d5d996c8e061b4e6de8888822ecc37b3ddc2be8268f96306ddbc17abdf"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-4-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-4-P.time",
+    "bytes": 134,
+    "sha256": "6309c617edfebc04d03b77547d3ad31fb9b4d71b247710e48a8220cfc65b9535",
+    "payload": "payloads/6309c617edfebc04d03b77547d3ad31fb9b4d71b247710e48a8220cfc65b9535.gz",
+    "storedSha256": "c28021c8a2ebbece636cbf4d3732e2861340d177162413e0eb2585f107719507"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/entry.ts",
+    "bytes": 423,
+    "sha256": "169d7613eb70f59d7d85e7269228b0c444b07c6615a41772e6dc654274a1d54c",
+    "payload": "payloads/169d7613eb70f59d7d85e7269228b0c444b07c6615a41772e6dc654274a1d54c.gz",
+    "storedSha256": "b1cb5814046e5dacc0e407e3c6f9786416105d1d0bb3bb985d99dd8cf31f3531"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/environment.json",
+    "bytes": 48637,
+    "sha256": "d040988ff5634d6489b39dfd03a1751051e84dbbeb845c73d248de2c3d66e0d7",
+    "payload": "payloads/d040988ff5634d6489b39dfd03a1751051e84dbbeb845c73d248de2c3d66e0d7.gz",
+    "storedSha256": "a6e7916bdfe383ecb827cbfe175c7138a82bd372679c3a0c317b2d39221d2b2a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/report.txt",
+    "bytes": 34651,
+    "sha256": "54a4c5d589465bdbe7e099c88115e7938f42dddcbea27449f26277ae0ad61c5c",
+    "payload": "payloads/54a4c5d589465bdbe7e099c88115e7938f42dddcbea27449f26277ae0ad61c5c.gz",
+    "storedSha256": "7ef543d1362a29332911e7166b874dac11b2b1fb0eb5cfc973e57706dad0686d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/runtime.mjs",
+    "bytes": 2221966,
+    "sha256": "8066f688b5f5c9ee7ea8feab42e8912c9f519f3e58d1346c9df0615ced0a9824",
+    "payload": "payloads/8066f688b5f5c9ee7ea8feab42e8912c9f519f3e58d1346c9df0615ced0a9824.gz",
+    "storedSha256": "22609587306064239a9de993326e609b72ea801eff097afad79d0cdfb3305183"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/source-inputs.json.gz",
+    "bytes": 654293,
+    "sha256": "6c075421cbc3a2f71945f838652aba0eb7e137d9980f916b755834a31c4a9766",
+    "payload": "payloads/6c075421cbc3a2f71945f838652aba0eb7e137d9980f916b755834a31c4a9766.gz",
+    "storedSha256": "3c8c00e6d87b237c74d8eabf3368c9ed758efe60986a4ec1bb243b2884dced68"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/summary.json",
+    "bytes": 44254,
+    "sha256": "4031cbc095e712f97920c5ad695e7fbd94d67c8029e20aba94d24c43e3a9e2d0",
+    "payload": "payloads/4031cbc095e712f97920c5ad695e7fbd94d67c8029e20aba94d24c43e3a9e2d0.gz",
+    "storedSha256": "ab3328858aa53f8208f5b454bf42bcdcaee00891ed457fcb55ed6e9a516869d1"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G/ticks.json.gz",
+    "bytes": 975411,
+    "sha256": "e8866d456a57f8ad5b709ba3f6559dd8b714f327e266c2d04fb81cc0110ab5a0",
+    "payload": "payloads/e8866d456a57f8ad5b709ba3f6559dd8b714f327e266c2d04fb81cc0110ab5a0.gz",
+    "storedSha256": "689ec7f0cc73992460663b7e5186d19899614ccf79f40b2e7d29eaee29471fbf"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G.log",
+    "bytes": 34652,
+    "sha256": "adb9cc2f7ed0d1c6eeb947b266ab2f2c2adda626ae22dfc6eab681638e67108f",
+    "payload": "payloads/adb9cc2f7ed0d1c6eeb947b266ab2f2c2adda626ae22dfc6eab681638e67108f.gz",
+    "storedSha256": "be761b34186805bd22f45d2cb707ef24f7d456be9a738a62d90a1bd0ed45e2d3"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-5-G.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-5-G.time",
+    "bytes": 135,
+    "sha256": "66fd8e8be4dac2ccc0af0b135f2428bad321b375fcd4f05b4072a79d78bf0bf9",
+    "payload": "payloads/66fd8e8be4dac2ccc0af0b135f2428bad321b375fcd4f05b4072a79d78bf0bf9.gz",
+    "storedSha256": "4763fd6e35a3d1808ad865f61455938255697ff8016f126d0a052bdaac300e0e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/entry.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/entry.ts",
+    "bytes": 419,
+    "sha256": "c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae",
+    "payload": "payloads/c28ed1caef7ecea9155a9ef099b6c9a7b20623ce334425abb3290b9c83c4f5ae.gz",
+    "storedSha256": "4220c0c561860a8529481c930eb8807d9f93ac92b8a50a502519268adc2b232a"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/environment.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/environment.json",
+    "bytes": 48634,
+    "sha256": "3675448de0232c460dd639df09d751ff959b7d468aab2b2bba1811d5983c52c3",
+    "payload": "payloads/3675448de0232c460dd639df09d751ff959b7d468aab2b2bba1811d5983c52c3.gz",
+    "storedSha256": "0ed7fd43dbb9d1f220a1fb8fc042eb1ec5756d1e30e85cf7358bdf6da7fa541f"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/initial-snapshot.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/initial-snapshot.json.gz",
+    "bytes": 10007,
+    "sha256": "94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959",
+    "payload": "payloads/94748e33c575a21e33158ca026368f8f4cb3e694809da761fff1d8dff4fd0959.gz",
+    "storedSha256": "3b4dd8a8df8d4998ed8fad0aa54d626f2b05ef9d1a65af4f512dfd3a04dc0122"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/probe-source.ts",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/probe-source.ts",
+    "bytes": 34624,
+    "sha256": "c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc",
+    "payload": "payloads/c4feb5e7d63fdbd343362754e5cb1960b765a7265ad9a04b820869f9f725f9dc.gz",
+    "storedSha256": "316f146bd76733b3aec786d724302627276125d19736f9d33692e90de1e0f4fc"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/report.txt",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/report.txt",
+    "bytes": 35228,
+    "sha256": "86a1dbaa9edd3bf63a80ecb5a24241d8ca10ff17bc017c6abd6932acd0697aee",
+    "payload": "payloads/86a1dbaa9edd3bf63a80ecb5a24241d8ca10ff17bc017c6abd6932acd0697aee.gz",
+    "storedSha256": "4ebed75f80e31e11fd41b99b250c4ca022ebf9e663e2cc2f87c0110e8c43114b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/room.json",
+    "bytes": 2109,
+    "sha256": "74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c",
+    "payload": "payloads/74ffad65814ad34dea6339e4adde22478b4416551f521e44660216257415612c.gz",
+    "storedSha256": "1a4c4afb65ca9a8880bec314630c6e5a05ca52ea951bfb09b06b0a9e91134f7b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/runtime.mjs",
+    "bytes": 2220626,
+    "sha256": "aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad",
+    "payload": "payloads/aaa19bc75b4fa5324464fa6feb1e319f6206bd01aa4887820a9935b3d9a0d5ad.gz",
+    "storedSha256": "0fddd7bc19c6ec8eec360d123cc65b6d00acb0f9a8c1e5e34416011b5bf060f8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/source-inputs.json.gz",
+    "bytes": 653741,
+    "sha256": "25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52",
+    "payload": "payloads/25afcf5eca0c40752564263dc36a9ddb7a1e8980e21697ba2831f49fff404b52.gz",
+    "storedSha256": "e9af8e2686e6bc48e5408542bfcb7335c23f60b7764f9e3032ef38b066bab50b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/summary.json",
+    "bytes": 44889,
+    "sha256": "b6b0348d66d8d89d65ed8d812189804ce93ad1ca1acbb758cb66fa5e8ae72a9c",
+    "payload": "payloads/b6b0348d66d8d89d65ed8d812189804ce93ad1ca1acbb758cb66fa5e8ae72a9c.gz",
+    "storedSha256": "3160e1f121c0d069e49ca129b843d2c34fec10f462d879185af880ef441aaa13"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A/ticks.json.gz",
+    "bytes": 984413,
+    "sha256": "0360645109679b8bd61fd54dd69c3b153f6814e519bc1080382b96bfaef1d01b",
+    "payload": "payloads/0360645109679b8bd61fd54dd69c3b153f6814e519bc1080382b96bfaef1d01b.gz",
+    "storedSha256": "03615139e4e7849c744be633bac43f6f3ea5300380e838a5bd69ea48fe1e44d9"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A.log",
+    "bytes": 35229,
+    "sha256": "e4011e95ed4cee1a63da1a1bba35db10366dbdf9996f99c18518c9b145be42d5",
+    "payload": "payloads/e4011e95ed4cee1a63da1a1bba35db10366dbdf9996f99c18518c9b145be42d5.gz",
+    "storedSha256": "ffee9dcf030ed16fedbb5ebfc256ee3b80c6dad3a3bab44ca37d5ad912bf6d5f"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-6-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-6-A.time",
+    "bytes": 136,
+    "sha256": "121d7653ac7bcb099ffc2bf43682f57a685c0c2e7ab29f5ee3a279b4dd9aa887",
+    "payload": "payloads/121d7653ac7bcb099ffc2bf43682f57a685c0c2e7ab29f5ee3a279b4dd9aa887.gz",
+    "storedSha256": "f9c43a5b2422d18f43cd7911860ab6e40928dd5691343dee21331c25446321dd"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen-plan.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen-plan.json",
+    "bytes": 516,
+    "sha256": "41cb22daa6b4d44ec6c51e5cbf9a9d27e4166ecaef4bd1f243c51ae3e9625d1b",
+    "payload": "payloads/41cb22daa6b4d44ec6c51e5cbf9a9d27e4166ecaef4bd1f243c51ae3e9625d1b.gz",
+    "storedSha256": "3d30edb9f52cfc7d931b44f4fadb8847f2cfdf80231d2575d6e1cc1c1dfc1bf7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/screen.py",
+    "path": "workspace/sanity-planning-lifecycle-20261015/screen.py",
+    "bytes": 958,
+    "sha256": "e60966d5dba8e76b9b62eb86c92c68cfbfc43dc782644915237253d68ac1304b",
+    "payload": "payloads/e60966d5dba8e76b9b62eb86c92c68cfbfc43dc782644915237253d68ac1304b.gz",
+    "storedSha256": "2aaa95c5175d1ce52b63832e1d6d977414eb24cdb0e8a130def55d64375c5e99"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/source-boundaries.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/source-boundaries.json",
+    "bytes": 851,
+    "sha256": "6f9d0ab0964b933f8b4b9f73aab3f7974617181b8b742c0c5509f7aa1c428f55",
+    "payload": "payloads/6f9d0ab0964b933f8b4b9f73aab3f7974617181b8b742c0c5509f7aa1c428f55.gz",
+    "storedSha256": "4545b1b7a56fdf0220d2a8d1ea0da9a678045bd2a40be4cf0ac8989806f57287"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/probe-source.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/probe-source.mjs",
+    "bytes": 5910,
+    "sha256": "38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703",
+    "payload": "payloads/38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703.gz",
+    "storedSha256": "3bd345a8a9a212b72fe53d700383c522742043b83e9bcc482618416081b43656"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/runtime.mjs",
+    "bytes": 2219419,
+    "sha256": "7de3ac0d8333531bd6ba7a130c32ca3f21fcc9aaf96645511e55dceb6ff7ff9b",
+    "payload": "payloads/7de3ac0d8333531bd6ba7a130c32ca3f21fcc9aaf96645511e55dceb6ff7ff9b.gz",
+    "storedSha256": "7ea1dad8e8200bd4030967c539d341598dd7a40f3b9456d0ddaf96ef4ad3fc0c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9658.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9658.json.gz",
+    "bytes": 26495,
+    "sha256": "bb390176f4fc6afb62d45ea205ff6de033c1bd755c0cbc214ff59b143aef80dd",
+    "payload": "payloads/bb390176f4fc6afb62d45ea205ff6de033c1bd755c0cbc214ff59b143aef80dd.gz",
+    "storedSha256": "d22d605d24f2baf678d1076e2a3fa1a858cc34e40ca651df8d4269df94bf5b3e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9659.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9659.json.gz",
+    "bytes": 26662,
+    "sha256": "67ae7685fcb50325fe69348d57e9a1ae5f6d45d8eb470a245f4a1d647144ebf7",
+    "payload": "payloads/67ae7685fcb50325fe69348d57e9a1ae5f6d45d8eb470a245f4a1d647144ebf7.gz",
+    "storedSha256": "5562a7164d18b2fe49eb75e11288562a56bd61ba3df0e6e0a5bf5668d126e8d4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9660.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/snapshot-after-9660.json.gz",
+    "bytes": 27460,
+    "sha256": "7b8a347f72a067c1f06511c4bca43c39631ebe7c989248d2a0457dc5a0f66d62",
+    "payload": "payloads/7b8a347f72a067c1f06511c4bca43c39631ebe7c989248d2a0457dc5a0f66d62.gz",
+    "storedSha256": "e662645053343ee4011b56ecdc7a7a645e29adbd8fb9c6b8c81ac68c5d344950"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/source-inputs.json.gz",
+    "bytes": 641297,
+    "sha256": "b82500219b6e778116d73dc347ae8fdd3ee1f493a1f003929dd4f600e017ff71",
+    "payload": "payloads/b82500219b6e778116d73dc347ae8fdd3ee1f493a1f003929dd4f600e017ff71.gz",
+    "storedSha256": "211d41f64cc87fa5fd231c60f0656488072542c35bfd2d10ea8389dfbe0b8cd1"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/states.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/states.json.gz",
+    "bytes": 667226,
+    "sha256": "c2c487390b1bb9d18a9745953b03fe71889ca9b064f1137224a78031fac9abfa",
+    "payload": "payloads/c2c487390b1bb9d18a9745953b03fe71889ca9b064f1137224a78031fac9abfa.gz",
+    "storedSha256": "2e7c313a5c2408e868c7efc93c962109ca8e625deb51dda54dc5da64742e26d8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/summary.json",
+    "bytes": 25437,
+    "sha256": "5e89959147c36730adb6598fc5acae20ca5901f5fcb32b5a7302c93df9ff7a32",
+    "payload": "payloads/5e89959147c36730adb6598fc5acae20ca5901f5fcb32b5a7302c93df9ff7a32.gz",
+    "storedSha256": "2dfecfd61c0ed365b5cb3b979c38aeddfb7e580ec1bdb2ec045db2baad9c80b1"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A/ticks.json.gz",
+    "bytes": 154297,
+    "sha256": "c9f2f983a282886212bd4aacfc12b18da6c602739bcd4e53aff819f5fc3d9e27",
+    "payload": "payloads/c9f2f983a282886212bd4aacfc12b18da6c602739bcd4e53aff819f5fc3d9e27.gz",
+    "storedSha256": "c00292ba1c6d7f37a677575207ac91fd13d668a50f3c32ce889814f6d7ead80c"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A.log",
+    "bytes": 70,
+    "sha256": "a323840f06bcaeef010e8c0233e82ace29067da8281849e08dfa1647c85da0e3",
+    "payload": "payloads/a323840f06bcaeef010e8c0233e82ace29067da8281849e08dfa1647c85da0e3.gz",
+    "storedSha256": "a80c4446f5889a1ebbd4e63c77c4a30d67eb92126f022457224761956143b03d"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-A.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-A.time",
+    "bytes": 147,
+    "sha256": "70752b2ad85c9ddd4db11281ae21e7dd1e5f557b107578aac33ee3d06e3db2cd",
+    "payload": "payloads/70752b2ad85c9ddd4db11281ae21e7dd1e5f557b107578aac33ee3d06e3db2cd.gz",
+    "storedSha256": "7c062d2e523e89feac0a071d8656db089e5ccf0f0f989bcfa18bd5682da4df70"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/probe-source.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/probe-source.mjs",
+    "bytes": 5910,
+    "sha256": "38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703",
+    "payload": "payloads/38b11c8bc5abecd28395bebc0c19c1ad46875189fbcbbabe8ff4f9d6a6231703.gz",
+    "storedSha256": "3bd345a8a9a212b72fe53d700383c522742043b83e9bcc482618416081b43656"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/runtime.mjs",
+    "bytes": 2219715,
+    "sha256": "8d4da7797bc3bb2c068c54ae503bcc314ae23eec7bc98f9652e02556acff6d2a",
+    "payload": "payloads/8d4da7797bc3bb2c068c54ae503bcc314ae23eec7bc98f9652e02556acff6d2a.gz",
+    "storedSha256": "14fa5a7cfc3010b0f678c120dab78eef5aa03a981f6988a95331da8d4bf134b6"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9658.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9658.json.gz",
+    "bytes": 26495,
+    "sha256": "bb390176f4fc6afb62d45ea205ff6de033c1bd755c0cbc214ff59b143aef80dd",
+    "payload": "payloads/bb390176f4fc6afb62d45ea205ff6de033c1bd755c0cbc214ff59b143aef80dd.gz",
+    "storedSha256": "d22d605d24f2baf678d1076e2a3fa1a858cc34e40ca651df8d4269df94bf5b3e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9659.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9659.json.gz",
+    "bytes": 26662,
+    "sha256": "67ae7685fcb50325fe69348d57e9a1ae5f6d45d8eb470a245f4a1d647144ebf7",
+    "payload": "payloads/67ae7685fcb50325fe69348d57e9a1ae5f6d45d8eb470a245f4a1d647144ebf7.gz",
+    "storedSha256": "5562a7164d18b2fe49eb75e11288562a56bd61ba3df0e6e0a5bf5668d126e8d4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9660.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/snapshot-after-9660.json.gz",
+    "bytes": 27460,
+    "sha256": "7b8a347f72a067c1f06511c4bca43c39631ebe7c989248d2a0457dc5a0f66d62",
+    "payload": "payloads/7b8a347f72a067c1f06511c4bca43c39631ebe7c989248d2a0457dc5a0f66d62.gz",
+    "storedSha256": "e662645053343ee4011b56ecdc7a7a645e29adbd8fb9c6b8c81ac68c5d344950"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/source-inputs.json.gz",
+    "bytes": 645096,
+    "sha256": "d91649320b31dd46fc9c91eb307f0b8cd521ea443fb6a82b75606670eee3ccc1",
+    "payload": "payloads/d91649320b31dd46fc9c91eb307f0b8cd521ea443fb6a82b75606670eee3ccc1.gz",
+    "storedSha256": "2b876985c0cfaac8cfee756d97843b70882836f16e95c7e39f4ce6f841160aa4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/states.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/states.json.gz",
+    "bytes": 667226,
+    "sha256": "c2c487390b1bb9d18a9745953b03fe71889ca9b064f1137224a78031fac9abfa",
+    "payload": "payloads/c2c487390b1bb9d18a9745953b03fe71889ca9b064f1137224a78031fac9abfa.gz",
+    "storedSha256": "2e7c313a5c2408e868c7efc93c962109ca8e625deb51dda54dc5da64742e26d8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/summary.json",
+    "bytes": 25442,
+    "sha256": "526ada0244e916718e9c2d108c12f090fc015ae12524fca2d7a3974db424260d",
+    "payload": "payloads/526ada0244e916718e9c2d108c12f090fc015ae12524fca2d7a3974db424260d.gz",
+    "storedSha256": "4259076033e33c366aa171966531abee12353a5d68e14adac8b264fe4be28b48"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P/ticks.json.gz",
+    "bytes": 153900,
+    "sha256": "722b6fd8b97ba8ed9c67fd75c48fb761e1de442d4a38e8147e3df40f3b522e80",
+    "payload": "payloads/722b6fd8b97ba8ed9c67fd75c48fb761e1de442d4a38e8147e3df40f3b522e80.gz",
+    "storedSha256": "66320b03238b201ebcda88d84d1f327988c7099dc3fdf6c093b9f70e3da1a171"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P.log",
+    "bytes": 75,
+    "sha256": "d5e24fdf6c757f166db50bb1320e2ffe4b6fdfe688170780c04078afda5de4be",
+    "payload": "payloads/d5e24fdf6c757f166db50bb1320e2ffe4b6fdfe688170780c04078afda5de4be.gz",
+    "storedSha256": "ad43834c2215cc2ee6c664c55e32a5ca4e662ff90572fb315bacf82e6de6307e"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-P.time",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-P.time",
+    "bytes": 137,
+    "sha256": "6d2d0286b994b18b7a4f80cfb5b6d8416fdd1a76eb56b1c2e31aca558034dab4",
+    "payload": "payloads/6d2d0286b994b18b7a4f80cfb5b6d8416fdd1a76eb56b1c2e31aca558034dab4.gz",
+    "storedSha256": "1cc740bacd0bfee5c12ee67fe8e287ece114135a4711ddc35cfc73c4c282e968"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/state-and-memory-verification.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/state-and-memory-verification.json",
+    "bytes": 11109,
+    "sha256": "3e2203c7c462f44dd3f99f05f97c96f569c53a416d530ad96c8f5c0973259ee8",
+    "payload": "payloads/3e2203c7c462f44dd3f99f05f97c96f569c53a416d530ad96c8f5c0973259ee8.gz",
+    "storedSha256": "15a6d55042b7fcf7e0150fbfd64473d45918cfd8b6a1c427f3effa978b05e9a0"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-duplicates.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-duplicates.json",
+    "bytes": 59851,
+    "sha256": "65fe15b9acb0c7e0b991206c83cd8b958a78bbb51c3f439d39c21729c13af7a5",
+    "payload": "payloads/65fe15b9acb0c7e0b991206c83cd8b958a78bbb51c3f439d39c21729c13af7a5.gz",
+    "storedSha256": "70b8d9755f2e51ea5e681f2c2d59e3f7d7f65967a49030166d9920229b531d58"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-exact-pair.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-exact-pair.json",
+    "bytes": 4099,
+    "sha256": "0413a10db554bc9ce32d3cbd036c4ef43078094593943e2fb4449b2fa909229f",
+    "payload": "payloads/0413a10db554bc9ce32d3cbd036c4ef43078094593943e2fb4449b2fa909229f.gz",
+    "storedSha256": "658cd20298f7bcf8be42be0431f17ffccabf58e548de969da9e10d28060e71f7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-input-check.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-input-check.json",
+    "bytes": 366,
+    "sha256": "20caa530992058b16ef1e0fe344f933f6a07390a91117268e666aebe805d6148",
+    "payload": "payloads/20caa530992058b16ef1e0fe344f933f6a07390a91117268e666aebe805d6148.gz",
+    "storedSha256": "32435ec3a75b34fc913b26627bcdcb11b47ff29ef94be17eeb978dcd97e586a4"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-input-diagnostic.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-input-diagnostic.mjs",
+    "bytes": 9969,
+    "sha256": "b8a903dcef33e40f8cb888cf645a5222c8a2bd4629e8730987b0343fe27684f5",
+    "payload": "payloads/b8a903dcef33e40f8cb888cf645a5222c8a2bd4629e8730987b0343fe27684f5.gz",
+    "storedSha256": "ea9cfd979c7bdf8d33aedfc15b7d63fe5474a8d04b7250d25d9684ebbe59485b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/command-frames.jsonl.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/probe-source.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/probe-source.mjs",
+    "bytes": 9969,
+    "sha256": "b8a903dcef33e40f8cb888cf645a5222c8a2bd4629e8730987b0343fe27684f5",
+    "payload": "payloads/b8a903dcef33e40f8cb888cf645a5222c8a2bd4629e8730987b0343fe27684f5.gz",
+    "storedSha256": "ea9cfd979c7bdf8d33aedfc15b7d63fe5474a8d04b7250d25d9684ebbe59485b"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/query-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/query-inputs.json.gz",
+    "bytes": 214062,
+    "sha256": "9a3d6d86b67d8d4cec94513adc4ea0184f5a4b8847d8bb5a4526d4ad929b0ff1",
+    "payload": "payloads/9a3d6d86b67d8d4cec94513adc4ea0184f5a4b8847d8bb5a4526d4ad929b0ff1.gz",
+    "storedSha256": "30da2c900961252727172802d69b34b303aa8d32ff1079d120f311e21f7a8217"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/room.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs",
+    "bytes": 2222621,
+    "sha256": "9a75338026fdd062016066adf518f2f27a5104e3db042b9ab5f66c622b11a175",
+    "payload": "payloads/9a75338026fdd062016066adf518f2f27a5104e3db042b9ab5f66c622b11a175.gz",
+    "storedSha256": "9aba4c1e229fa40c60fabd81f343dd0ad4d7277fbb339550024967f18eed46e7"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/slices.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/slices.json.gz",
+    "bytes": 258616,
+    "sha256": "6912a134533dd006a228cdb2008e3ea217e2d94037675ae5a6c2eaa244005d2c",
+    "payload": "payloads/6912a134533dd006a228cdb2008e3ea217e2d94037675ae5a6c2eaa244005d2c.gz",
+    "storedSha256": "d8bd7c0454202fe9b69b1c58bec1105e3ac8f8978be66e2a443dbab6d9079dff"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/source-inputs.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/source-inputs.json.gz",
+    "bytes": 641008,
+    "sha256": "651e680431e70463a6ffa56cd5b0cec272964d654371d34c9f65ec0cd4627db1",
+    "payload": "payloads/651e680431e70463a6ffa56cd5b0cec272964d654371d34c9f65ec0cd4627db1.gz",
+    "storedSha256": "8ed7a02ed46e58582f0984ad53ed8e02d41bf6e58f4cca1c89bae2e87f01abb5"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/states.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/summary.json",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/summary.json",
+    "bytes": 27382,
+    "sha256": "b4db65220054bf656638398e6dfd7efead0c48c73ed1729904bac549ffe74126",
+    "payload": "payloads/b4db65220054bf656638398e6dfd7efead0c48c73ed1729904bac549ffe74126.gz",
+    "storedSha256": "c7abe962b118a0ad52db3df1cba55cdd2a00a8e0e2636c66992ade6cc200a08f"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs/ticks.json.gz",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs/ticks.json.gz",
+    "bytes": 1465449,
+    "sha256": "e183be5e35df2c580c822512a8a1200461331d5dcb1a6440700340f6858c8acf",
+    "payload": "payloads/e183be5e35df2c580c822512a8a1200461331d5dcb1a6440700340f6858c8acf.gz",
+    "storedSha256": "a41d20e47871af4704a9332c547a198b2be0bd5a8fc9ac5f04dd5d17e2f32306"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/sync-inputs.log",
+    "path": "workspace/sanity-planning-lifecycle-20261015/sync-inputs.log",
+    "bytes": 70,
+    "sha256": "97e187dea0639a5e55b332f811ea558ccb18838812685d52c64cd0a5a1150191",
+    "payload": "payloads/97e187dea0639a5e55b332f811ea558ccb18838812685d52c64cd0a5a1150191.gz",
+    "storedSha256": "9e9b5ca711af36b660788671c9dff44f0af34fa95f0ec3d4b948ba6bb434ceef"
+  },
+  {
+    "original": "/workspace/sanity-planning-lifecycle-20261015/timed.py",
+    "path": "workspace/sanity-planning-lifecycle-20261015/timed.py",
+    "bytes": 352,
+    "sha256": "829e7af5f55ffb4c613ad4506ab30f1d20a18209417aa6aed6be44046e1cc02c",
+    "payload": "payloads/829e7af5f55ffb4c613ad4506ab30f1d20a18209417aa6aed6be44046e1cc02c.gz",
+    "storedSha256": "2b0519f8e92d1211fabf33542bcd414a10273a107f3124af458d8c7b285d3a98"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/DESIGN.zh.md",
+    "path": "workspace/sanity-readonly-planning-20261015/DESIGN.zh.md",
+    "bytes": 7271,
+    "sha256": "5da02d05ba57336719258b40abc864208278a917fb6da843b58e9f4725e4fd7b",
+    "payload": "payloads/5da02d05ba57336719258b40abc864208278a917fb6da843b58e9f4725e4fd7b.gz",
+    "storedSha256": "735bc797c9838854912703466719fc1e55a28288e92912d862913bc0fa00bc9b"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/MEASUREMENTS.zh.md",
+    "path": "workspace/sanity-readonly-planning-20261015/MEASUREMENTS.zh.md",
+    "bytes": 7224,
+    "sha256": "6f41ca46abc5ba1ad8a0e6174833a822ef846c12a4bdbcc6a21e1483934fc56b",
+    "payload": "payloads/6f41ca46abc5ba1ad8a0e6174833a822ef846c12a4bdbcc6a21e1483934fc56b.gz",
+    "storedSha256": "d175fdbce566e8fc722a4a91594b55102abdbba123ac080bc784ac794e08da6d"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/analyze.py",
+    "path": "workspace/sanity-readonly-planning-20261015/analyze.py",
+    "bytes": 2282,
+    "sha256": "47a6a86322990d63535e15ff4a2605d83907a3e543e3abb1d38233a92d49ad76",
+    "payload": "payloads/47a6a86322990d63535e15ff4a2605d83907a3e543e3abb1d38233a92d49ad76.gz",
+    "storedSha256": "85664ec81bf7ae5fcd2b5b792dff77674796b2b1b21e7f8d93966471d8c4fadf"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/manifest.json",
+    "path": "workspace/sanity-readonly-planning-20261015/manifest.json",
+    "bytes": 4009,
+    "sha256": "1d80eaa95b89d19290342b7f86773baa48bf54ba6d63c2bb8189546c117a5d67",
+    "payload": "payloads/1d80eaa95b89d19290342b7f86773baa48bf54ba6d63c2bb8189546c117a5d67.gz",
+    "storedSha256": "babd3fb4b54aa877e7185e6f330033683c38bffd95e3abc4c5bd9d52eadd3524"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/measurement.json",
+    "path": "workspace/sanity-readonly-planning-20261015/measurement.json",
+    "bytes": 55487,
+    "sha256": "30dfa94757242b709f72798a50c8aa0350b2e725823a6da225ed153aec1ccb96",
+    "payload": "payloads/30dfa94757242b709f72798a50c8aa0350b2e725823a6da225ed153aec1ccb96.gz",
+    "storedSha256": "37bf0e54b1a16f1f2f2237d0e501f78cfcc7201663a57c8fe63541cc7aa18070"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/query-attribution.json",
+    "path": "workspace/sanity-readonly-planning-20261015/query-attribution.json",
+    "bytes": 847,
+    "sha256": "27eeb4aaa158fe115208497e48395acf8e4da6094237d52155ec9fe7da959385",
+    "payload": "payloads/27eeb4aaa158fe115208497e48395acf8e4da6094237d52155ec9fe7da959385.gz",
+    "storedSha256": "046dbaf48b127efc629ebe045f0ba106eea5439db94650356b403b43ee83cccb"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/analysis.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/analysis.json",
+    "bytes": 92754,
+    "sha256": "5c9e3005f1051a81e231cf01ed5459b446d83112327b322365c3e9b492f59749",
+    "payload": "payloads/5c9e3005f1051a81e231cf01ed5459b446d83112327b322365c3e9b492f59749.gz",
+    "storedSha256": "7e9219d2a6ec018d7e2a02c7ed5315f7eb43234442ce19faa0285f3914510abf"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/command-frames.jsonl.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/probe-source.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/probe-source.mjs",
+    "bytes": 7721,
+    "sha256": "6b0fb09d43c671628e53e8ab83f39e1ebbe986001e8357c230d423351c7449a6",
+    "payload": "payloads/6b0fb09d43c671628e53e8ab83f39e1ebbe986001e8357c230d423351c7449a6.gz",
+    "storedSha256": "e1630b5ed8038e83e306fee3d1592917c529bcfcabace1f459dfc119f1ac93f9"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/room.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/runtime.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/runtime.mjs",
+    "bytes": 2217845,
+    "sha256": "3fc76fa724a9e5fcff923dbbabe9f78c95b6e42ce0e96489df656386713f1041",
+    "payload": "payloads/3fc76fa724a9e5fcff923dbbabe9f78c95b6e42ce0e96489df656386713f1041.gz",
+    "storedSha256": "01dfed8f70b45c0624c00c445a6e30b5330bf545341ec8b773eb580c86f632c8"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/slices.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/slices.json.gz",
+    "bytes": 61895,
+    "sha256": "47bd9c6b7009dce9b748a783dd67a95252d4b8e0d7d8f71d91e50c63951705b9",
+    "payload": "payloads/47bd9c6b7009dce9b748a783dd67a95252d4b8e0d7d8f71d91e50c63951705b9.gz",
+    "storedSha256": "8da09ee62aa65481e06febbd5254da828fb9a4007988c4d31e93f7f851806c2b"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/source-inputs.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/source-inputs.json.gz",
+    "bytes": 640278,
+    "sha256": "0f2d83b2f3260b85c2c73555d036bfb2ba2c8f1d8df8d7e6874992d3c196f05c",
+    "payload": "payloads/0f2d83b2f3260b85c2c73555d036bfb2ba2c8f1d8df8d7e6874992d3c196f05c.gz",
+    "storedSha256": "1d54b13bae4599d477d69aa28a52f4cec18af9c8ca5dc4c7b90f91723f2669a7"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/states.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/summary.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/summary.json",
+    "bytes": 27280,
+    "sha256": "dcd191e51ade846488c3fdac349f04f89ccbef30e14fbd3625c482c174c9c43d",
+    "payload": "payloads/dcd191e51ade846488c3fdac349f04f89ccbef30e14fbd3625c482c174c9c43d.gz",
+    "storedSha256": "a88727e699c620eafefdf91b0ded7793344be59847c8a71446a5b5bd9ad3bd6b"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run1/ticks.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run1/ticks.json.gz",
+    "bytes": 1428818,
+    "sha256": "f354ef938e2d7fbddcdd11235c6fa35f201c2e205ccee0485cd577f6c6b0f62b",
+    "payload": "payloads/f354ef938e2d7fbddcdd11235c6fa35f201c2e205ccee0485cd577f6c6b0f62b.gz",
+    "storedSha256": "824c61f6ff37b47640d108b4a6e782fa39324fcc40b83f0f5078979238dd68a4"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/command-frames.jsonl.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/probe-source.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/probe-source.mjs",
+    "bytes": 8264,
+    "sha256": "d239389866d524a9b9f081077351cbebf4c0d8d73553c9774d99b764973ad26c",
+    "payload": "payloads/d239389866d524a9b9f081077351cbebf4c0d8d73553c9774d99b764973ad26c.gz",
+    "storedSha256": "2bcde3f120955950906e1be8eb5c379832836bee4fec1caf3d73febb449f90dc"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/room.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/runtime.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/runtime.mjs",
+    "bytes": 2218151,
+    "sha256": "566355fee265f5de3ded66fada1e36062f974d60d0ebc5806826cf3ca9b38750",
+    "payload": "payloads/566355fee265f5de3ded66fada1e36062f974d60d0ebc5806826cf3ca9b38750.gz",
+    "storedSha256": "357c36ee0dfd65bf8deb142c35a6d801f0a3767b394570425bd3b32f3c8621f4"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/slices.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/slices.json.gz",
+    "bytes": 61740,
+    "sha256": "a4e2f1618f3a7203ff04ce4951d5cdcf52648deb2a252916248b0499b5d8e106",
+    "payload": "payloads/a4e2f1618f3a7203ff04ce4951d5cdcf52648deb2a252916248b0499b5d8e106.gz",
+    "storedSha256": "9d89a559c0dae5e4371f155ad24ff6ac7653cff08e20b06e3e6a5f911619773e"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/source-inputs.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/source-inputs.json.gz",
+    "bytes": 639741,
+    "sha256": "f7f033255c11fffb7b0638d93393e17df059aead5490d1e9a870968c2a96bb5d",
+    "payload": "payloads/f7f033255c11fffb7b0638d93393e17df059aead5490d1e9a870968c2a96bb5d.gz",
+    "storedSha256": "3afba7f212646149015c9f9cb39ba7f7c154c9aafb3acfa3df39ea53d50de403"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/states.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/summary.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/summary.json",
+    "bytes": 27382,
+    "sha256": "3a72f1659a646bd7036c801528d620c49fca03b283f282af42e1f4a013e15620",
+    "payload": "payloads/3a72f1659a646bd7036c801528d620c49fca03b283f282af42e1f4a013e15620.gz",
+    "storedSha256": "53129d7dbd8964f8bf1fbc6122598336cbedc131de66ad329acffe224d9b9aa7"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run2/ticks.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run2/ticks.json.gz",
+    "bytes": 1471004,
+    "sha256": "32ad093be4a64ef5c17333023193458d8d98e86da18f17e3dcf79c73ea86a3d4",
+    "payload": "payloads/32ad093be4a64ef5c17333023193458d8d98e86da18f17e3dcf79c73ea86a3d4.gz",
+    "storedSha256": "004d49928ce750d42bf1fa44f7cf2d926817e0ee1eb6f333e822e5bf4c39c859"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/command-frames.jsonl.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/probe-source.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/probe-source.mjs",
+    "bytes": 8667,
+    "sha256": "ceb0e876c8cbc4c1113e46137f8c39c339eace7662f0bc226b375ff16275362a",
+    "payload": "payloads/ceb0e876c8cbc4c1113e46137f8c39c339eace7662f0bc226b375ff16275362a.gz",
+    "storedSha256": "24f36256447d1ad294523714e82da202fa786bea66049576bf971361e4bb4394"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/room.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/runtime.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/runtime.mjs",
+    "bytes": 2218151,
+    "sha256": "566355fee265f5de3ded66fada1e36062f974d60d0ebc5806826cf3ca9b38750",
+    "payload": "payloads/566355fee265f5de3ded66fada1e36062f974d60d0ebc5806826cf3ca9b38750.gz",
+    "storedSha256": "357c36ee0dfd65bf8deb142c35a6d801f0a3767b394570425bd3b32f3c8621f4"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/slices.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/slices.json.gz",
+    "bytes": 138822,
+    "sha256": "35126f3695ba6f80412c0e94cb4149c9960544cd16d510ade1907d10761bfe68",
+    "payload": "payloads/35126f3695ba6f80412c0e94cb4149c9960544cd16d510ade1907d10761bfe68.gz",
+    "storedSha256": "7f5c50fba349d2f0aaa6bf714f35455bdcef40404b6ee812c71eafd92de4dfac"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/source-inputs.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/source-inputs.json.gz",
+    "bytes": 639968,
+    "sha256": "10449d264db015cf09fed2ac905f0196c628532483dfadf6d789fe5a76f8fd10",
+    "payload": "payloads/10449d264db015cf09fed2ac905f0196c628532483dfadf6d789fe5a76f8fd10.gz",
+    "storedSha256": "46c4b312b88c9e9866f4589005f005f1809e864f24f6200cd1fef25620cdcf35"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/states.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/summary.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/summary.json",
+    "bytes": 27382,
+    "sha256": "0f100215aaa17ba3cd6ae6d894808d1fe3dc2f49d139d6ff8fa17f0555cad260",
+    "payload": "payloads/0f100215aaa17ba3cd6ae6d894808d1fe3dc2f49d139d6ff8fa17f0555cad260.gz",
+    "storedSha256": "fadc1b59307a9b192d8c598e075d9d4d480738bdb049a41e0de49de831eec3b6"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run3/ticks.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run3/ticks.json.gz",
+    "bytes": 1466325,
+    "sha256": "1490b35696f27d43ad5636026a2b126a98d21ccdf33c94aa76afe2b4cd27163a",
+    "payload": "payloads/1490b35696f27d43ad5636026a2b126a98d21ccdf33c94aa76afe2b4cd27163a.gz",
+    "storedSha256": "8c76bd4a1537e51b6fae470b7274d2cd01e3434643a7bdd44c20a352a354aa3a"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/command-frames.jsonl.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/command-frames.jsonl.gz",
+    "bytes": 69478,
+    "sha256": "3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275",
+    "payload": "payloads/3335f202ccc8456e7b0291b2f642dae00f701f8ed6632d9a05dcd9c7c5027275.gz",
+    "storedSha256": "756c9099425e44359b356c5bc31f90c07048f2170c220f85c962bdfe272dd381"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/probe-source.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/probe-source.mjs",
+    "bytes": 9029,
+    "sha256": "0488313b80130b881e3e990b60251b569ac6e7956a39d25e5502c41c5931d7c2",
+    "payload": "payloads/0488313b80130b881e3e990b60251b569ac6e7956a39d25e5502c41c5931d7c2.gz",
+    "storedSha256": "ae3f3e68c5a7622e6eb90e9f24b6e6cd94b74493b718ba301bbe17ca96ad06b7"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/room.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/room.json",
+    "bytes": 179,
+    "sha256": "b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f",
+    "payload": "payloads/b5e786b40bfe372fe1b8a8b010338e719a2215c9e2ebd5e194482392cde1038f.gz",
+    "storedSha256": "6cfbf16cc07e133610e8d295f494d9ea1c1f95901af3499c4a2de28753816110"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/runtime.mjs",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/runtime.mjs",
+    "bytes": 2218256,
+    "sha256": "94b123bf9aee4b5d432931992bbc3682701faab333f90d9999d6a737407d2729",
+    "payload": "payloads/94b123bf9aee4b5d432931992bbc3682701faab333f90d9999d6a737407d2729.gz",
+    "storedSha256": "ccb849973f0c6226f6ff914494109600f23f7de8e35014d0bb6ec595dfa40409"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/slices.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/slices.json.gz",
+    "bytes": 189065,
+    "sha256": "bc9c4a55be80d1af5d70c41d4f16c9f6eff4886e1d2ce8b013fd675f1e4cd0e0",
+    "payload": "payloads/bc9c4a55be80d1af5d70c41d4f16c9f6eff4886e1d2ce8b013fd675f1e4cd0e0.gz",
+    "storedSha256": "e025d29d98fdff37e95483dd59cf6b611140c59f7822c3258123ff379d071f96"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/source-inputs.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/source-inputs.json.gz",
+    "bytes": 639899,
+    "sha256": "f8897e20cce170e215ebc1383363d2c9091fe7aeae6e33fc4d47c02fc39d7f34",
+    "payload": "payloads/f8897e20cce170e215ebc1383363d2c9091fe7aeae6e33fc4d47c02fc39d7f34.gz",
+    "storedSha256": "fd562b65d94a72ff7142e09dc04927def28258c03f560890f080ce708bf2a7e0"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/states.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/states.json.gz",
+    "bytes": 22,
+    "sha256": "21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034",
+    "payload": "payloads/21947b02ead137acb20e602e9448c7c453b2836d1a755aadd5e1c61ecd2eb034.gz",
+    "storedSha256": "596c1ecee786261013187740cc79ccda3fd0577e5edb73919b7a2b040ab6e1b8"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/summary.json",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/summary.json",
+    "bytes": 27382,
+    "sha256": "d023de4aa96d118e0ac9eb7305b896817a7e2c55e75f25f17613563e46d3d482",
+    "payload": "payloads/d023de4aa96d118e0ac9eb7305b896817a7e2c55e75f25f17613563e46d3d482.gz",
+    "storedSha256": "14e88086905913dd793a794d3ad72d252536278217def1650235d71e2c2554a1"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/run4/ticks.json.gz",
+    "path": "workspace/sanity-readonly-planning-20261015/run4/ticks.json.gz",
+    "bytes": 1463248,
+    "sha256": "58b3b43171891a6613a15913317796ab7b2a2d943bd0bcd2c2b78efca2da594d",
+    "payload": "payloads/58b3b43171891a6613a15913317796ab7b2a2d943bd0bcd2c2b78efca2da594d.gz",
+    "storedSha256": "3a335eca1521dd4da806792b1aa704843f4f97e423f8b1529f209c6930d4b809"
+  },
+  {
+    "original": "/workspace/sanity-readonly-planning-20261015/sync-origins.json",
+    "path": "workspace/sanity-readonly-planning-20261015/sync-origins.json",
+    "bytes": 11111,
+    "sha256": "e95825b9d4be7201f22e045c152818ebe3bdb8d42003d2fac60953d632d0bc3e",
+    "payload": "payloads/e95825b9d4be7201f22e045c152818ebe3bdb8d42003d2fac60953d632d0bc3e.gz",
+    "storedSha256": "6876cb2b695c2dc3302f1eb11e73f7e49f7d4d987fe110b3875321c87b0b146e"
+  }
+]

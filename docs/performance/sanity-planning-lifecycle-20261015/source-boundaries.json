@@ -1,0 +1,27 @@
+{
+  "src/shared/terrain.ts": {
+    "unchanged": true,
+    "sha256": "2a6de13d64b6cb86c48cf2f8a9d8c16cc495726dc57bd7b905451871d870e5f0"
+  },
+  "src/shared/sailing.ts": {
+    "unchanged": true,
+    "sha256": "c34ba22e59728cbacfe49e425d9aa3fd707d3518117acaaf7054d0e17ce2270d"
+  },
+  "src/shared/rules-version.ts": {
+    "unchanged": true,
+    "sha256": "e2babd61d66f2efdcfb0d992d4fc6382dcbf863430d52632d894180e27b9ed2f"
+  },
+  "src/shared/sim/checksum.ts": {
+    "unchanged": true,
+    "sha256": "ea82bd9fae1f4c96d77aa3cde1e048362808c9425bb00b360bb532639226a13f"
+  },
+  "hullPassageClear": {
+    "unchanged": true,
+    "sha256": "0a86bd212b6746d1a66cb96d4ddfd3343139bffc0a30dc8ba44ac7a53c10266f"
+  },
+  "changedSourceFiles": [
+    "src/shared/ship-navigation.ts",
+    "src/shared/ship-planning-job.ts",
+    "src/shared/ship-planning-search.test.ts"
+  ]
+}

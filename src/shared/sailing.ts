@@ -2,7 +2,7 @@ import { shipPartMax } from "./ship-equipment";
 import { reservationTraffic, shipContactGoal, shipTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
-import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, planBeatDeparture, shipPoseAt, shipTackRoute } from "./ship-navigation";
+import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planShipTrafficRetry, clearShipTrafficRetry, planVoyageRoute, planBeatDeparture, shipPoseAt, shipTackRoute } from "./ship-navigation";
 import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
 import { advanceShip, shipMotionLimits } from './ship-motion';
@@ -118,7 +118,8 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // replacement for the player's destination.
     return shipContactGoal(ship,point,units.filter(other=>!voyageCompanion(other,bearing)));
   };
-  const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>,recoveryOnly=false)=>{
+  const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>,recoveryOnly=false,trafficRetry=false)=>{
+    if(!trafficRetry)clearShipTrafficRetry(ship);
     const previous=motion.route;
     const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
     const contact=point.intent!=='pursuit' && point.heading===undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2
@@ -162,6 +163,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       return !voyageCompanion(other,bearing);
     }) : units;
     const traffic=reservationTraffic(ship,strategicUnits);
+    if(trafficRetry && traffic.hasTraffic!==false)clearShipTrafficRetry(ship);
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps
@@ -250,7 +252,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // tack. Leave the actual wind planner its stage on this same tick.
     if(!planned && !fireCourse && !aligned && !(straight ? tryAdmitShipPlan(ship) : tryConsumeShipPlan(ship)))return false;
     const {points,partial}=planned ?? (fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
-      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity));
+      : (trafficRetry && !allowCruise && traffic.hasTraffic===false ? planShipTrafficRetry : planner)(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity));
     if(!allowCruise)for(const point of points)point.exact=true;
     motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,
       startX:ship.x,startY:ship.y,startHeading:motion.heading,windKey:wind.key,age:0,blockedTicks:0,
@@ -275,7 +277,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     route.blockedTicks=(route.blockedTicks??0)+1;
     // Contact spends momentum, not the route. A passing hull may release the
     // next physical step before another strategic search is useful.
-    if(route.blockedTicks>=10 && (route.age??0)>=SIM_TICKS_PER_SECOND)replan(false);
+    if(route.blockedTicks>=10 && (route.age??0)>=SIM_TICKS_PER_SECOND)replan(false,undefined,false,true);
   };
   {
     let route=motion.route;

@@ -1,0 +1,26 @@
+{
+  "candidate": {
+    "names": [
+      "FAIL  src/shared/ship-maneuver-recovery.test.ts > live exact ship maneuvers > starts a forward recovery when traffic permits an on-the-spot turn but blocks a sailing circle",
+      "FAIL  src/shared/ship-voyage-quality.test.ts > observable ship voyage quality > brings six incoming friendly batteries into distinct usable stations around one stopped heavy hull",
+      "FAIL  src/shared/ship-voyage.test.ts > forward voyage planning > backs less than one hull length into an aligned berth without two U-turns",
+      "FAIL  src/shared/ship-voyage.test.ts > forward voyage planning > marks a zero-margin reference for exact control instead of smoothing through it",
+      "FAIL  docs/performance/six-player-ticks/remaining-spikes/tools/current/six-player-tick-probe.test.ts > six-player production-path probe > keeps all native frame bytes and final state identical to unmodified source"
+    ],
+    "messages": [
+      "AssertionError: expected [ { x: 6279.04768839752, \u2026(3) }, \u2026(1) ] to have a length of 1 but got 2",
+      "AssertionError: expected [ 'unit-player-warship-1006' ] to deeply equal []",
+      "AssertionError: expected 0 to be greater than 0",
+      "AssertionError: expected false to be true // Object.is equality",
+      "AssertionError: expected 3 to be 2 // Object.is equality"
+    ]
+  },
+  "allFiveMatchUnchangedMainAndPreviousStage": true,
+  "counts": [
+    "Test Files  4 failed | 634 passed (638)",
+    "Tests  5 failed | 6901 passed (6906)",
+    "Duration  435.27s (transform 19.64s, setup 0ms, collect 222.47s, tests 920.26s, environment 132ms, prepare 43.38s)"
+  ],
+  "baselineEvidence": "../sanity-planning-lifecycle-20261015/baseline-failure-comparison.json",
+  "productionBuildExit": "0"
+}

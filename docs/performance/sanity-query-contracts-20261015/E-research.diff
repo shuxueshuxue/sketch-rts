@@ -1,0 +1,17 @@
+--- a/src/ai/policy/naval.ts
++++ b/src/ai/policy/naval.ts
+@@ -219 +219 @@
+-    if (!yard && !shoreSpot(snapshot, owner, water, options)) {
++    if (!yard && !shoreSpot(snapshot, owner, water, options, false, true)) {
+@@ -1008 +1008 @@
+-                if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true)) {
++                if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true, true)) {
+@@ -1076 +1076 @@
+-            if (!served && !shoreSpot(snapshot, owner, water, options)) {
++            if (!served && !shoreSpot(snapshot, owner, water, options, false, true)) {
+@@ -1111 +1111 @@
+-function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false): Point | undefined {
++function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false, any = false): Point | undefined {
+@@ -1152 +1152 @@
+-            {best=spot;bestGap=gap;}
++            {if(any)return spot;best=spot;bestGap=gap;}

@@ -1,0 +1,506 @@
+{
+  "A": {
+    "sourceInputArchive": "/workspace/sanity-max-architecture-20261015/causal-A/source-inputs.json.gz",
+    "sourceArchiveSha256": "0d018b19eb2d14a4cf8fbc0d2db1b3df00715458dbf550906f4ee1cd20742fb1",
+    "frozenFiles": {
+      "src/ai/policy/naval.ts": "c8686f240fa73c387f7a70cd2cdd14f2ecbc1b9befd07eb617a6936b8a316be4",
+      "src/ai/bootstrap_1/economy.ts": "35972230ae0a4f9dd68359c38ea1c0cbad5151961b8fa1c8b5ddc3f5af9a695a",
+      "src/ai/bootstrap_1/policy.ts": "7c7e15530346972192030cd877780d1c4e506da5e074605abe1dd294ad22f7da",
+      "src/ai/bootstrap_1/expedition-recovery.ts": "36927caff8764bfb627c3e56c24c8a743158d495ce15b77f85915601ddd6f4d9",
+      "src/ai/policy/script-runner.ts": "48041cb750c278136c366ecac617cf29e3c96e168405c7081feff45902ceefda",
+      "src/ai/policy/fleet-formation.ts": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+      "src/ai/policy/naval-mines.ts": "5e7889de4f043a4323293d685e72acf03b04115697a6c5b281beaca0a5947d7e"
+    },
+    "tick0": {
+      "tick": 0,
+      "tickAfter": 1,
+      "mod15": 0,
+      "wholeMs": 95.33683999999994,
+      "frameMs": 95.0484550000001,
+      "simMs": 10.724679999999807,
+      "aiMs": 80.50590399999987,
+      "aiSnapshotMs": 0.09843899999987116,
+      "otherSnapshotMs": 0.12833399999999529,
+      "renderSnapshotMs": 0.1706179999998767,
+      "observerMs": 0.170278000000053,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 56.15731100000016
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 6.11268999999993
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 9.428360999999995
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 5.412739999999985
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 2.953273999999965
+        }
+      ],
+      "units": 48,
+      "buildings": 6,
+      "memory": {
+        "rss": 299630592,
+        "heapTotal": 126693376,
+        "heapUsed": 89635272,
+        "external": 113600643,
+        "arrayBuffers": 97440413
+      }
+    },
+    "initialOwnUnitKinds": {
+      "worker": 15
+    },
+    "initialOwnBuildingKinds": {
+      "townHall": 5
+    },
+    "frame0": {
+      "tick": 0,
+      "frame": {
+        "roomId": "six-player-perf-512",
+        "tick": 0,
+        "sequence": 0,
+        "commands": [
+          {
+            "playerId": "enemy",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-enemy-worker-2"
+              ],
+              "resourceId": "gold-enemy-main"
+            }
+          },
+          {
+            "playerId": "enemy",
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "enemy2",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-enemy2-worker-2"
+              ],
+              "resourceId": "gold-enemy2-main"
+            }
+          },
+          {
+            "playerId": "enemy2",
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy2-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-4",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-4-worker-2"
+              ],
+              "resourceId": "gold-player-4-main"
+            }
+          },
+          {
+            "playerId": "player-4",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-4-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-5",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-5-worker-2"
+              ],
+              "resourceId": "gold-player-5-main"
+            }
+          },
+          {
+            "playerId": "player-5",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-5-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-6",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-6-worker-2"
+              ],
+              "resourceId": "gold-player-6-main"
+            }
+          },
+          {
+            "playerId": "player-6",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-6-townhall",
+              "unitKind": "worker"
+            }
+          }
+        ]
+      }
+    },
+    "profileInclusive": {
+      "unitClaims": 17,
+      "navalUnitIds": 11,
+      "planBootstrapNaval": 69,
+      "planNavalTacticsWithAssignments": 65,
+      "assaultPlan": 64,
+      "shoreSpot": 57,
+      "planBootstrapEconomy": 0,
+      "expansionEscortPoint": 6,
+      "stepGame": 16
+    },
+    "warning": "Profile samples are attribution counts, not milliseconds; inclusive categories overlap."
+  },
+  "P": {
+    "sourceInputArchive": "/workspace/sanity-max-architecture-20261015/causal-P/source-inputs.json.gz",
+    "sourceArchiveSha256": "df79048742f1d28aaca88e9f2533ab672e67acebd10216787630fcdf12124c08",
+    "frozenFiles": {
+      "src/ai/policy/naval.ts": "5ca8482a39c4cb330b1ee44cca55c1081cf1f7c76c66450133c2b9609723a295",
+      "src/ai/bootstrap_1/economy.ts": "702ad835f380c9c96c53408e1f99552b5f1f6e6ffd77cc635736d54477dfcec8",
+      "src/ai/bootstrap_1/policy.ts": "7c7e15530346972192030cd877780d1c4e506da5e074605abe1dd294ad22f7da",
+      "src/ai/bootstrap_1/expedition-recovery.ts": "36927caff8764bfb627c3e56c24c8a743158d495ce15b77f85915601ddd6f4d9",
+      "src/ai/policy/script-runner.ts": "48041cb750c278136c366ecac617cf29e3c96e168405c7081feff45902ceefda",
+      "src/ai/policy/fleet-formation.ts": "a30a4702c7a3d6a216b7ac7df37eceeaf708e0f095d2aa1b2120dcbc24c9395b",
+      "src/ai/policy/naval-mines.ts": "5e7889de4f043a4323293d685e72acf03b04115697a6c5b281beaca0a5947d7e"
+    },
+    "tick0": {
+      "tick": 0,
+      "tickAfter": 1,
+      "mod15": 0,
+      "wholeMs": 113.57916799999998,
+      "frameMs": 113.33875499999999,
+      "simMs": 10.22572799999989,
+      "aiMs": 98.49616800000013,
+      "aiSnapshotMs": 0.30467099999987113,
+      "otherSnapshotMs": 0.1259099999999762,
+      "renderSnapshotMs": 0.18199500000014268,
+      "observerMs": 0.11178900000004433,
+      "ownerPlans": [
+        {
+          "owner": "enemy",
+          "version": "v9_archer",
+          "ms": 70.56639800000016
+        },
+        {
+          "owner": "enemy2",
+          "version": "v9_archer",
+          "ms": 7.222108000000162
+        },
+        {
+          "owner": "player-4",
+          "version": "v9_knight",
+          "ms": 10.096362
+        },
+        {
+          "owner": "player-5",
+          "version": "v9_summoner",
+          "ms": 5.286151000000018
+        },
+        {
+          "owner": "player-6",
+          "version": "v9_knight",
+          "ms": 4.541975999999977
+        }
+      ],
+      "units": 48,
+      "buildings": 6,
+      "memory": {
+        "rss": 277381120,
+        "heapTotal": 133013504,
+        "heapUsed": 92429360,
+        "external": 112735151,
+        "arrayBuffers": 96584589
+      }
+    },
+    "initialOwnUnitKinds": {
+      "worker": 15
+    },
+    "initialOwnBuildingKinds": {
+      "townHall": 5
+    },
+    "frame0": {
+      "tick": 0,
+      "frame": {
+        "roomId": "six-player-perf-512",
+        "tick": 0,
+        "sequence": 0,
+        "commands": [
+          {
+            "playerId": "enemy",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-enemy-worker-2"
+              ],
+              "resourceId": "gold-enemy-main"
+            }
+          },
+          {
+            "playerId": "enemy",
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "enemy2",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-enemy2-worker-2"
+              ],
+              "resourceId": "gold-enemy2-main"
+            }
+          },
+          {
+            "playerId": "enemy2",
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy2-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-4",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-4-worker-2"
+              ],
+              "resourceId": "gold-player-4-main"
+            }
+          },
+          {
+            "playerId": "player-4",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-4-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-5",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-5-worker-2"
+              ],
+              "resourceId": "gold-player-5-main"
+            }
+          },
+          {
+            "playerId": "player-5",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-5-townhall",
+              "unitKind": "worker"
+            }
+          },
+          {
+            "playerId": "player-6",
+            "command": {
+              "type": "mine",
+              "unitIds": [
+                "unit-player-6-worker-2"
+              ],
+              "resourceId": "gold-player-6-main"
+            }
+          },
+          {
+            "playerId": "player-6",
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-6-townhall",
+              "unitKind": "worker"
+            }
+          }
+        ]
+      }
+    },
+    "profileInclusive": {
+      "unitClaims": 21,
+      "navalUnitIds": 13,
+      "planBootstrapNaval": 64,
+      "planNavalTacticsWithAssignments": 62,
+      "assaultPlan": 62,
+      "shoreSpot": 53,
+      "planBootstrapEconomy": 0,
+      "expansionEscortPoint": 6,
+      "stepGame": 16
+    },
+    "warning": "Profile samples are attribution counts, not milliseconds; inclusive categories overlap."
+  },
+  "previousDiagnosticShoreRecords": {
+    "source": "/workspace/sanity-cold-peak-audit/run2/data.json",
+    "notCleanCausalTiming": true,
+    "records": [
+      {
+        "owner": "enemy",
+        "tick": 0,
+        "water": {
+          "x": 4624,
+          "y": 9424
+        },
+        "despiteGuns": true,
+        "spots": 10430,
+        "connected": 649,
+        "finite": 649,
+        "ours": [
+          {
+            "x": 8080,
+            "y": 7312
+          }
+        ],
+        "firstBest": {
+          "index": 7056,
+          "gap": 889.6
+        },
+        "chosen": {
+          "x": 7600,
+          "y": 6832,
+          "gap": 672
+        }
+      },
+      {
+        "owner": "enemy2",
+        "tick": 0,
+        "water": {
+          "x": 8560,
+          "y": 6832
+        },
+        "despiteGuns": true,
+        "spots": 10430,
+        "connected": 719,
+        "finite": 719,
+        "ours": [
+          {
+            "x": 4720,
+            "y": 8784
+          }
+        ],
+        "firstBest": {
+          "index": 9339,
+          "gap": 896
+        },
+        "chosen": {
+          "x": 5360,
+          "y": 8784,
+          "gap": 640
+        }
+      },
+      {
+        "owner": "player-4",
+        "tick": 0,
+        "water": {
+          "x": 4624,
+          "y": 9424
+        },
+        "despiteGuns": true,
+        "spots": 10430,
+        "connected": 620,
+        "finite": 620,
+        "ours": [
+          {
+            "x": 1744,
+            "y": 6608
+          }
+        ],
+        "firstBest": {
+          "index": 6076,
+          "gap": 921.6
+        },
+        "chosen": {
+          "x": 2160,
+          "y": 6128,
+          "gap": 646.4
+        }
+      },
+      {
+        "owner": "player-5",
+        "tick": 0,
+        "water": {
+          "x": 4848,
+          "y": 1456
+        },
+        "despiteGuns": true,
+        "spots": 10430,
+        "connected": 694,
+        "finite": 694,
+        "ours": [
+          {
+            "x": 2160,
+            "y": 2928
+          }
+        ],
+        "firstBest": {
+          "index": 692,
+          "gap": 1004.8
+        },
+        "chosen": {
+          "x": 1680,
+          "y": 2512,
+          "gap": 646.4
+        }
+      },
+      {
+        "owner": "player-6",
+        "tick": 0,
+        "water": {
+          "x": 1552,
+          "y": 2640
+        },
+        "despiteGuns": true,
+        "spots": 10430,
+        "connected": 633,
+        "finite": 633,
+        "ours": [
+          {
+            "x": 5520,
+            "y": 1456
+          }
+        ],
+        "firstBest": {
+          "index": 18,
+          "gap": 985.6
+        },
+        "chosen": {
+          "x": 4880,
+          "y": 1456,
+          "gap": 640
+        }
+      }
+    ],
+    "originalCandidates": 52150,
+    "firstAcceptancePrefixCandidates": 23181,
+    "prefixFraction": 0.44450623202301054
+  }
+}

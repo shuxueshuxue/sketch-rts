@@ -1,0 +1,15 @@
+{
+  "source": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+  "baselineRuntime": "281a75d0862246de8943cbf2b5aa31d8a82c08a5",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "experimentalVariant": "L",
+  "ticks": 14400,
+  "allTickFullSnapshotHashesEqual": true,
+  "allChecksumsEqual": true,
+  "commandFramesByteEqual": true,
+  "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+  "formalTimingAcceptance": false,
+  "reason": "Per-tick state hashing/serializing is outside timing and perturbs allocation/GC; one run only; public mutation counterexamples remain",
+  "productionSourceChanged": false
+}

@@ -1,0 +1,95 @@
+diff --git a/src/shared/ship-collisions.ts b/src/shared/ship-collisions.ts
+index 1668fcb8..4e0795b0 100644
+--- a/src/shared/ship-collisions.ts
++++ b/src/shared/ship-collisions.ts
+@@ -144,20 +144,42 @@ function supportPoint(polygon: readonly Point[], normal: Point) {
+   }
+   return { x: x / count, y: y / count };
+ }
+-function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined {
++function sweepBounds(points: readonly Point[]) {
++  let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
++  for (const p of points) { left = Math.min(left, p.x); right = Math.max(right, p.x); top = Math.min(top, p.y); bottom = Math.max(bottom, p.y); }
++  return { left, right, top, bottom };
++}
++function prepareSweep(ship: Unit, from: ShipPose, to: ShipPose) {
+   const radius = polygonRadius(shipProfile(ship)!.hull), turn = headingDifference(from.heading, to.heading);
+   const lever = to.pivot ? Math.hypot(from.x - to.pivot.x, from.y - to.pivot.y) : 0;
+   const steps = Math.max(1, Math.ceil(Math.abs(turn) * Math.sqrt((radius + lever) / (8 * .025))));
++  // One attempted motion owns one sweep, shared by every body and terrain cell.
++  // Build only substeps actually reached by a narrow-phase query.
++  const parts: { a: ShipPose; b: ShipPose; negative: Point[]; bounds?: ReturnType<typeof sweepBounds>; before?: Point[] }[] = [];
++  return (bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined => {
++  const body = sweepBounds(bodyPolygon);
+   for (let i = 0; i < steps; i++) {
+-    const a = shipPoseAt(from, to, i / steps), b = shipPoseAt(from, to, (i + 1) / steps);
+-    const shape = convexHull([...hullOutline(ship, { ...a, x: 0, y: 0 }), ...hullOutline(ship, { ...b, x: 0, y: 0 })]);
+-    const error = turn ? (radius + lever) * (turn / steps) ** 2 / 8 + 1e-7 : 0;
+-    const configuration = minkowskiSum(bodyPolygon, (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })));
++    let part = parts[i];
++    if (!part) {
++      const a = shipPoseAt(from, to, i / steps), b = shipPoseAt(from, to, (i + 1) / steps);
++      const shape = convexHull([...hullOutline(ship, { ...a, x: 0, y: 0 }), ...hullOutline(ship, { ...b, x: 0, y: 0 })]);
++      const error = turn ? (radius + lever) * (turn / steps) ** 2 / 8 + 1e-7 : 0;
++      part = parts[i] = { a, b, negative: (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })) };
++    }
++    const { a, b } = part;
++    const box = part.bounds ??= sweepBounds(part.negative);
++    // Bound the actual expanded vertices, not a radius that ignores miter corners.
++    const left = body.left + box.left, right = body.right + box.right;
++    const top = body.top + box.top, bottom = body.bottom + box.bottom;
++    const margin = 1e-5 + 1e-12 * Math.max(Math.abs(left), Math.abs(right), Math.abs(top), Math.abs(bottom));
++    if (Math.max(a.x, b.x) < left - margin || Math.min(a.x, b.x) > right + margin
++      || Math.max(a.y, b.y) < top - margin || Math.min(a.y, b.y) > bottom + margin) continue;
++    const configuration = minkowskiSum(bodyPolygon, part.negative);
+     let contact = segmentContact(a, b, configuration);
+     // A rotating hull has no center translation. Its swept outline still supplies a contact face.
+     if (!contact && Math.abs(turn) > 1e-8) {
+       const inside = polygonPlanes(configuration).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6);
+-      const before = minkowskiSum(bodyPolygon, hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
++      const before = minkowskiSum(bodyPolygon, part.before ??= hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
+       if (inside && !polygonPlanes(before).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6)) {
+         const plane = polygonPlanes(configuration).reduce((best, p) => (a.x * p.x + a.y * p.y - p.min) / Math.hypot(p.x, p.y) < (a.x * best.x + a.y * best.y - best.min) / Math.hypot(best.x, best.y) ? p : best);
+         const length = Math.hypot(plane.x, plane.y); contact = { fraction: 0, normal: { x: plane.x / length, y: plane.y / length } };
+@@ -168,6 +190,7 @@ function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: reado
+     const own = supportPoint(hullOutline(ship, pose), contact.normal), other = supportPoint(bodyPolygon, { x: -contact.normal.x, y: -contact.normal.y });
+     return { fraction, normal: contact.normal, point: { x: (own.x + other.x) / 2, y: (own.y + other.y) / 2 } };
+   }
++  };
+ }
+ /** Shared placement check for launching and physical motion. */
+ export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bodies: readonly Body[]) {
+@@ -180,7 +203,7 @@ export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bo
+   }
+   return true;
+ }
+-function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose): Contact | undefined {
++function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose, sweep: ReturnType<typeof prepareSweep>): Contact | undefined {
+   const radius = polygonRadius(shipProfile(ship)!.hull), terrain = map.terrain;
+   const left = Math.min(from.x, to.x) - radius, right = Math.max(from.x, to.x) + radius;
+   const top = Math.min(from.y, to.y) - radius, bottom = Math.max(from.y, to.y) + radius;
+@@ -199,20 +222,21 @@ function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose):
+   if (top < 0) polygons.push([{ x: -margin, y: -margin }, { x: map.width + margin, y: -margin }, { x: map.width + margin, y: 0 }, { x: -margin, y: 0 }]);
+   if (bottom > map.height) polygons.push([{ x: -margin, y: map.height }, { x: map.width + margin, y: map.height }, { x: map.width + margin, y: map.height + margin }, { x: -margin, y: map.height + margin }]);
+   let best: Contact | undefined;
+-  for (const polygon of polygons) { const contact = sweepShape(ship, from, to, polygon); if (contact && (!best || contact.fraction < best.fraction)) best = { ...contact, kind: 'terrain' }; }
++  for (const polygon of polygons) { const contact = sweep(polygon); if (contact && (!best || contact.fraction < best.fraction)) best = { ...contact, kind: 'terrain' }; }
+   return best;
+ }
+ /** The continuous contact occurs even when the desired end pose is clear beyond a thin obstacle. */
+ export function sweepShipCollision(map: GameMap, ship: Unit, units: readonly Unit[], from: ShipPose, to: ShipPose): Contact | undefined {
+   const frame = frameFor(units, map), radius = polygonRadius(shipProfile(ship)!.hull);
++  const sweep = prepareSweep(ship, from, to);
+   let best: Contact | undefined;
+   for (const { body } of nearby(frame, from, to, radius)) {
+     if (body === ship || !activeBody(map, body)) continue;
+-    const contact = sweepShape(ship, from, to, outline(map, body));
++    const contact = sweep(outline(map, body));
+     if (contact && (!best || contact.fraction < best.fraction - 1e-8)) best = { ...contact, other: body, kind: kindOf(body) };
+   }
+   if (!hullPassageClear(map, ship, from, to)) {
+-    const contact = terrainContact(map, ship, from, to);
++    const contact = terrainContact(map, ship, from, to, sweep);
+     if (contact && (!best || contact.fraction < best.fraction)) best = contact;
+     // Retain the navigation sweep's conservative curvature guarantee.
+     if (!best) {

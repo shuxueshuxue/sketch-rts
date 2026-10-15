@@ -1,0 +1,30 @@
+{
+  "sequence": [
+    "A",
+    "P",
+    "P",
+    "A",
+    "P",
+    "A",
+    "A",
+    "P"
+  ],
+  "sources": {
+    "A": "/tmp/sanity-planning-control",
+    "P": "/workspace/sanity-planning-private"
+  },
+  "heads": {
+    "A": "f13b2f73100675aab75a9e8ba7a8fbd186159728",
+    "P": "884e5214faa76544fd4c9d38802ea2b5ebf0147a"
+  },
+  "ticks": 14400,
+  "events": "predeclared-events.json",
+  "post": [
+    "state-A",
+    "state-P",
+    "memory-A",
+    "memory-P",
+    "counts-A",
+    "counts-P"
+  ]
+}

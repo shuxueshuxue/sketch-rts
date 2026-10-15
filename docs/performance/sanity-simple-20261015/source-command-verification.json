@@ -1,0 +1,180 @@
+{
+  "verified": [
+    {
+      "run": "/tmp/sanity-baseline-1",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-explore",
+      "head": "90cacfbc1bd4ba2b67d9f14ce52887c57935b08f",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r1-A1",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r1-A2",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r1-B1",
+      "head": "eaaf9afd0eeb5303757f599a7f5880951e2cdf7c",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r1-B2",
+      "head": "eaaf9afd0eeb5303757f599a7f5880951e2cdf7c",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r2-A1",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r2-A2",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r2-B1",
+      "head": "eaaf9afd0eeb5303757f599a7f5880951e2cdf7c",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/r2-B2",
+      "head": "eaaf9afd0eeb5303757f599a7f5880951e2cdf7c",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/plain-A",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-formal-rerun/plain-B",
+      "head": "eaaf9afd0eeb5303757f599a7f5880951e2cdf7c",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r1-A1",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r1-A2",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r1-B1",
+      "head": "b6af347b80278156e0dbe81e3bbef0fcface8337",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r1-B2",
+      "head": "b6af347b80278156e0dbe81e3bbef0fcface8337",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r2-A1",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r2-A2",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r2-B1",
+      "head": "b6af347b80278156e0dbe81e3bbef0fcface8337",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/r2-B2",
+      "head": "b6af347b80278156e0dbe81e3bbef0fcface8337",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/plain-A",
+      "head": "4804631c22f7be3f83dc6374e71ce03d86068dd8",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    },
+    {
+      "run": "/tmp/sanity-cow-formal/plain-B",
+      "head": "b6af347b80278156e0dbe81e3bbef0fcface8337",
+      "sourceFiles": 241,
+      "commandsBytes": 618189,
+      "commandsSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+      "finalChecksum": "7d94a5e8"
+    }
+  ]
+}

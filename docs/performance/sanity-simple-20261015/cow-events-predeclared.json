@@ -1,0 +1,195 @@
+{
+  "method": "Before formal COW series: include EVERY diagnostic tick with baseline growBoxInto calls minus COW calls >1000; no timing threshold. Report all selected ticks, full-run tails, and all 14400 ticks separately.",
+  "events": [
+    {
+      "tick": 124,
+      "baselineGrowBoxCalls": 1145,
+      "candidateGrowBoxCalls": 1
+    },
+    {
+      "tick": 187,
+      "baselineGrowBoxCalls": 1146,
+      "candidateGrowBoxCalls": 0
+    },
+    {
+      "tick": 194,
+      "baselineGrowBoxCalls": 1145,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 243,
+      "baselineGrowBoxCalls": 1149,
+      "candidateGrowBoxCalls": 1
+    },
+    {
+      "tick": 887,
+      "baselineGrowBoxCalls": 1155,
+      "candidateGrowBoxCalls": 22
+    },
+    {
+      "tick": 902,
+      "baselineGrowBoxCalls": 1158,
+      "candidateGrowBoxCalls": 48
+    },
+    {
+      "tick": 966,
+      "baselineGrowBoxCalls": 1154,
+      "candidateGrowBoxCalls": 20
+    },
+    {
+      "tick": 985,
+      "baselineGrowBoxCalls": 1154,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 2165,
+      "baselineGrowBoxCalls": 1159,
+      "candidateGrowBoxCalls": 28
+    },
+    {
+      "tick": 2200,
+      "baselineGrowBoxCalls": 1159,
+      "candidateGrowBoxCalls": 22
+    },
+    {
+      "tick": 3957,
+      "baselineGrowBoxCalls": 1160,
+      "candidateGrowBoxCalls": 24
+    },
+    {
+      "tick": 4002,
+      "baselineGrowBoxCalls": 1160,
+      "candidateGrowBoxCalls": 24
+    },
+    {
+      "tick": 4055,
+      "baselineGrowBoxCalls": 1161,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 4512,
+      "baselineGrowBoxCalls": 1161,
+      "candidateGrowBoxCalls": 28
+    },
+    {
+      "tick": 4525,
+      "baselineGrowBoxCalls": 1162,
+      "candidateGrowBoxCalls": 1
+    },
+    {
+      "tick": 6381,
+      "baselineGrowBoxCalls": 1160,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 6671,
+      "baselineGrowBoxCalls": 1160,
+      "candidateGrowBoxCalls": 20
+    },
+    {
+      "tick": 6926,
+      "baselineGrowBoxCalls": 1164,
+      "candidateGrowBoxCalls": 39
+    },
+    {
+      "tick": 7179,
+      "baselineGrowBoxCalls": 1161,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 7256,
+      "baselineGrowBoxCalls": 1164,
+      "candidateGrowBoxCalls": 27
+    },
+    {
+      "tick": 7300,
+      "baselineGrowBoxCalls": 1161,
+      "candidateGrowBoxCalls": 27
+    },
+    {
+      "tick": 7720,
+      "baselineGrowBoxCalls": 1164,
+      "candidateGrowBoxCalls": 25
+    },
+    {
+      "tick": 8142,
+      "baselineGrowBoxCalls": 1164,
+      "candidateGrowBoxCalls": 25
+    },
+    {
+      "tick": 8718,
+      "baselineGrowBoxCalls": 1165,
+      "candidateGrowBoxCalls": 40
+    },
+    {
+      "tick": 8926,
+      "baselineGrowBoxCalls": 1167,
+      "candidateGrowBoxCalls": 25
+    },
+    {
+      "tick": 9918,
+      "baselineGrowBoxCalls": 1164,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 10195,
+      "baselineGrowBoxCalls": 1168,
+      "candidateGrowBoxCalls": 24
+    },
+    {
+      "tick": 10936,
+      "baselineGrowBoxCalls": 1172,
+      "candidateGrowBoxCalls": 42
+    },
+    {
+      "tick": 10960,
+      "baselineGrowBoxCalls": 1173,
+      "candidateGrowBoxCalls": 41
+    },
+    {
+      "tick": 11573,
+      "baselineGrowBoxCalls": 1172,
+      "candidateGrowBoxCalls": 21
+    },
+    {
+      "tick": 12522,
+      "baselineGrowBoxCalls": 1175,
+      "candidateGrowBoxCalls": 29
+    },
+    {
+      "tick": 12570,
+      "baselineGrowBoxCalls": 1175,
+      "candidateGrowBoxCalls": 35
+    },
+    {
+      "tick": 13112,
+      "baselineGrowBoxCalls": 1175,
+      "candidateGrowBoxCalls": 25
+    },
+    {
+      "tick": 13518,
+      "baselineGrowBoxCalls": 1178,
+      "candidateGrowBoxCalls": 25
+    },
+    {
+      "tick": 13600,
+      "baselineGrowBoxCalls": 1177,
+      "candidateGrowBoxCalls": 27
+    },
+    {
+      "tick": 13790,
+      "baselineGrowBoxCalls": 1179,
+      "candidateGrowBoxCalls": 44
+    },
+    {
+      "tick": 13840,
+      "baselineGrowBoxCalls": 1182,
+      "candidateGrowBoxCalls": 23
+    },
+    {
+      "tick": 13994,
+      "baselineGrowBoxCalls": 1186,
+      "candidateGrowBoxCalls": 35
+    }
+  ]
+}

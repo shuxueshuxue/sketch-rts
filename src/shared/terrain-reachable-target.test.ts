@@ -6,6 +6,7 @@ import {
   isOpenGround,
   setBuildingBodies,
   shareBuildingBodies,
+  steerPoint,
   walkDestination,
   type Mover,
   type Terrain,
@@ -199,6 +200,31 @@ describe("reachable terrain destinations preserve the square-ring result", () =>
     expect(thickLabels[target]).toBe(-1);
     compareDestination(thick, "land", thickLabels, 5 * 21, target);
     expect(walkDestination(thick, center(thick, 5 * 21), center(thick, target))).toEqual(center(thick, 10));
+  });
+
+  it("keeps warm snapshot routes independent across nonempty building replacements", () => {
+    const map = testMap(Array.from({ length: 31 }, (_, row) =>
+      Array.from({ length: 41 }, (_, col) => col === 20 && row !== 4 && row !== 24 ? "T" : ".").join("")));
+    const point = (col: number, row: number) => center(map, row * 41 + col);
+    const anchor = { ...point(5, 5), radius: 16 };
+    const north = { ...point(20, 4), radius: 16 }, south = { ...point(20, 24), radius: 16 };
+    const queries = [[point(4, 15), point(36, 15)], [point(36, 4), point(4, 24)]] as const;
+    const read = (view: TestMap) => queries.map(([from, goal]) => ({
+      destination: walkDestination(view, from, goal), steering: steerPoint(view, from, goal),
+    }));
+    const saved: { map: TestMap; answers: ReturnType<typeof read> }[] = [];
+    for (const bodies of [[anchor], [anchor, north], [anchor, south], [anchor, north, south], [anchor]]) {
+      setBuildingBodies(map, bodies);
+      const fresh = structuredClone(map);
+      setBuildingBodies(fresh, bodies);
+      expect(read(map)).toEqual(read(fresh));
+      for (const old of [...saved].reverse()) expect(read(old.map)).toEqual(old.answers);
+      // A snapshot warms lazy directions independently; later rebuilding must
+      // replace mutable node containers without changing those old answers.
+      const snapshot = { ...map };
+      shareBuildingBodies(map, snapshot);
+      saved.push({ map: snapshot, answers: read(snapshot) });
+    }
   });
 
   it("retains no-open-ground and nonwalkable/out-of-map goal fallbacks", () => {

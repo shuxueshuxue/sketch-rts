@@ -1,0 +1,193 @@
+diff --git a/src/ai/bootstrap_1/economy.ts b/src/ai/bootstrap_1/economy.ts
+index 0f2e917d..11d446bb 100644
+--- a/src/ai/bootstrap_1/economy.ts
++++ b/src/ai/bootstrap_1/economy.ts
+@@ -5 +5 @@ import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKi
+-import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
++import { colonyNavalWantWithMineEligibility, prepareColonyNavalWant, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+@@ -116,0 +117,3 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
++  return rankBootstrapGoalsImpl(snapshot, owner, options, colonyNavalWantWithMineEligibility);
++}
++function rankBootstrapGoalsImpl(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, naval: typeof colonyNavalWantWithMineEligibility) {
+@@ -118 +121 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
+-    (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
++    (view, player, context) => naval(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
+@@ -180 +183 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
+-  const goals = rankBootstrapGoals(snapshot, owner, options);
++  const goals = rankBootstrapGoalsImpl(snapshot, owner, options, prepareColonyNavalWant);
+diff --git a/src/ai/policy/naval.ts b/src/ai/policy/naval.ts
+index e6651e55..f95b0750 100644
+--- a/src/ai/policy/naval.ts
++++ b/src/ai/policy/naval.ts
+@@ -126 +126,5 @@ export function colonyNavalWantWithMineEligibility(snapshot: GameSnapshot, owner
+-function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies", eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
++// Internal synchronous economy execution owns this world until issue returns.
++export function prepareColonyNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, eligible: (mine: ResourceNode) => boolean): NavalWant | undefined {
++    return planNavalWant(snapshot, owner, options, "colonies", eligible, true);
++}
++function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies", eligible: (mine: ResourceNode) => boolean, preparedShore = false): NavalWant | undefined {
+@@ -150 +154 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
+-    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls);
++    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls, preparedShore);
+@@ -209 +213 @@ function settlementHallWant(snapshot: GameSnapshot, owner: PlayerId, plan: Islan
+-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
++function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[], preparedShore = false): NavalWant | undefined {
+@@ -219 +223,2 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
+-    if (!yard && !shoreSpot(snapshot, owner, water, options)) {
++    const shore = yard ? undefined : shoreSpot(snapshot, owner, water, options);
++    if (!yard && !shore) {
+@@ -238 +243 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
+-                const spot = shoreSpot(snapshot, owner, water, options);
++                const spot = preparedShore ? shore : shoreSpot(snapshot, owner, water, options);
+diff --git a/src/shared/ship-launch-lazy.test.ts b/src/shared/ship-launch-lazy.test.ts
+new file mode 100644
+index 00000000..182f657c
+--- /dev/null
++++ b/src/shared/ship-launch-lazy.test.ts
+@@ -0,0 +1,56 @@
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { createBuilding, createUnit } from './map';
++import { SHIP_KINDS } from './ship-geometry';
++import { shipLaunchPose } from './ship-launch';
++import * as navigation from './ship-navigation';
++import * as terrain from './terrain';
++import type { GameMap, Unit } from './types';
++
++function harbor(cells:(x:number,y:number)=>string=x=>x<10?'.':'~',dockX=304) {
++  const map:GameMap={id:'bareDuel',name:'Launch test',width:1600,height:1280,landmarks:[],
++    terrain:{cell:32,cols:50,rows:40,cells:Array.from({length:2000},(_,i)=>cells(i%50,Math.floor(i/50))).join('')}};
++  const dock=createBuilding('dock','player','shipyard',dockX,624,true);
++  dock.rallyX=1400;dock.rallyY=624;
++  return {map,dock,units:[] as Unit[],buildings:[dock]};
++}
++
++afterEach(()=>vi.restoreAllMocks());
++
++describe('launch candidates are checked only when needed',()=>{
++  it.each(SHIP_KINDS)('selects the same cold and warm %s berth with few exact probes',kind=>{
++    const world=harbor(),ship=createUnit('probe','player',kind,world.dock.x,world.dock.y);
++    const checks=vi.spyOn(navigation,'hullFits');
++    const first=shipLaunchPose(world,world.dock,ship);
++    expect(first).toBeDefined();
++    const count=checks.mock.calls.length;
++    expect(count).toBeLessThan(16*4*5*3/10);
++    expect(shipLaunchPose(world,world.dock,ship)).toEqual(first);
++    expect(checks.mock.calls.length).toBe(count);
++    const cold=JSON.parse(JSON.stringify(world));
++    expect(shipLaunchPose(cold,cold.dock,JSON.parse(JSON.stringify(ship)))).toEqual(first);
++  });
++
++  it('waits when all reachable berths are occupied even if another basin is clear',()=>{
++    const world=harbor(x=>x===20?'.':',',656);
++    const ship=createUnit('probe','player','transport',656,624);
++    expect(shipLaunchPose(world,world.dock,ship)!.x).toBeGreaterThan(656);
++    const blocker=createUnit('blocker','player','rockGolem',960,624);
++    blocker.radius=blocker.bodyRadius=350;
++    world.units.push(blocker);
++    expect(shipLaunchPose(world,world.dock,ship)).toBeUndefined();
++    world.dock.rallyX=100;
++    expect(shipLaunchPose(world,world.dock,ship)!.x).toBeLessThan(656);
++  });
++
++  it('does not start routing for an impossible static harbor before an in-place coast edit',()=>{
++    const world=harbor(x=>x===10?'~':'.'),ship=createUnit('probe','player','carrier',304,624);
++    const routed=vi.spyOn(terrain,'steerPoint'),walkable=vi.spyOn(terrain,'walkableGoal');
++    expect(shipLaunchPose(world,world.dock,ship)).toBeUndefined();
++    expect(routed).not.toHaveBeenCalled();expect(walkable).not.toHaveBeenCalled();
++    world.map.terrain!.cells='~'.repeat(2000);
++    const result=shipLaunchPose(world,world.dock,ship);
++    expect(result).toBeDefined();
++    const cold=JSON.parse(JSON.stringify(world));
++    expect(shipLaunchPose(cold,cold.dock,JSON.parse(JSON.stringify(ship)))).toEqual(result);
++  });
++});
+diff --git a/src/shared/ship-launch.ts b/src/shared/ship-launch.ts
+index c9dbbfd9..a7e03c4f 100644
+--- a/src/shared/ship-launch.ts
++++ b/src/shared/ship-launch.ts
+@@ -13,0 +14 @@ type Body = Unit | Building | Obstacle;
++type RankedBerth = {pose:ShipPose;reachable:boolean;exit:number;bound:number;index:number;travel?:number;difference?:number};
+@@ -19 +20,2 @@ type Berths = {
+-  entries: Map<ShipPose, ShipPose>;
++  entries: Map<ShipPose, ShipPose & { outward: number }>;
++  clear: Map<ShipPose, boolean>;
+@@ -22 +24 @@ type Berths = {
+-  ranked?: ShipPose[];
++  ranked?: RankedBerth[];
+@@ -66 +68 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
+-    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, range };
++    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, clear: new Map(), range };
+@@ -67,0 +70,2 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
++    // A pier without any legal static berth never enters terrain routing.
++    if(!poses.some(pose=>berthClear(snapshot.map,ship,cached!,pose)))poses.length=0;
+@@ -92,8 +96,4 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
+-      const ordered=cached.poses.map(pose=>{
+-        const exit=Math.hypot(pose.x-dock.x,pose.y-dock.y), leg=steerPoint(snapshot.map,pose,goal,'sea');
+-        const angle=Math.atan2(leg.y-pose.y,leg.x-pose.x)-pose.heading;
+-        const difference=Math.abs(Math.atan2(detSin(angle),detCos(angle)));
+-        return {pose,reachable:sameGround(snapshot.map,pose,goal,'sea'),travel:exit+Math.hypot(pose.x-aim.x,pose.y-aim.y)+profile.length*difference,difference,exit};
+-      }).sort((a,b)=>Number(b.reachable)-Number(a.reachable) || a.travel-b.travel || a.difference-b.difference || a.exit-b.exit);
+-      const reachable=ordered.some(candidate=>candidate.reachable);
+-      cached.ranked=ordered.filter(candidate=>!reachable || candidate.reachable).map(candidate=>candidate.pose);
++      cached.ranked=cached.poses.map((pose,index)=>{
++        const exit=Math.hypot(pose.x-dock.x,pose.y-dock.y);
++        return {pose,index,exit,reachable:sameGround(snapshot.map,pose,goal,'sea'),bound:exit+Math.hypot(pose.x-aim.x,pose.y-aim.y)};
++      }).sort((a,b)=>Number(b.reachable)-Number(a.reachable) || a.bound-b.bound || a.index-b.index);
+@@ -101,2 +101,19 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
+-    cached.result = cached.ranked.find(pose=>shipBodyClearAtPose(snapshot.map,ship,pose,bodies)
+-      && launchPathClear(snapshot,ship,cached!.entries.get(pose)!,pose,bodies));
++    // Travel is at least exit + straight distance. Only a candidate that
++    // can beat a safe best berth needs exact routing and collision checks.
++    let reachable=false;
++    let best:RankedBerth|undefined;
++    for(const candidate of cached.ranked) {
++      if(reachable && !candidate.reachable)break;
++      if(best && candidate.bound>best.travel!)break;
++      const pose=candidate.pose,entry=cached.entries.get(pose)!;
++      if(!berthClear(snapshot.map,ship,cached,pose))continue;
++      reachable ||= candidate.reachable;
++      if(candidate.travel===undefined) {
++        const leg=steerPoint(snapshot.map,pose,goal,'sea'),angle=Math.atan2(leg.y-pose.y,leg.x-pose.x)-pose.heading;
++        candidate.difference=Math.abs(Math.atan2(detSin(angle),detCos(angle)));
++        candidate.travel=candidate.bound+profile.length*candidate.difference;
++      }
++      if(best && (candidate.travel-best.travel! || candidate.difference!-best.difference! || candidate.exit-best.exit || candidate.index-best.index)>=0)continue;
++      if(shipBodyClearAtPose(snapshot.map,ship,pose,bodies) && launchPathClear(snapshot,ship,entry,pose,bodies))best=candidate;
++    }
++    cached.result=best?.pose;
+@@ -106,0 +124,10 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
++function berthClear(map:GameMap,ship:Unit,cached:Berths,pose:ShipPose):boolean {
++  let clear=cached.clear.get(pose);
++  if(clear===undefined) {
++    const entry=cached.entries.get(pose)!;
++    clear=hullFits(map,ship,pose) && (!entry.outward || hullPassageClear(map,ship,entry,pose));
++    cached.clear.set(pose,clear);
++  }
++  return clear;
++}
++
+@@ -130 +157 @@ function launchPathClear(snapshot:Harbor, ship:Unit, entry:ShipPose, pose:ShipPo
+-function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose>} {
++function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose & { outward:number }>} {
+@@ -135 +162 @@ function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipP
+-  const entries=new Map<ShipPose,ShipPose>();
++  const entries=new Map<ShipPose,ShipPose & { outward:number }>();
+@@ -155,2 +182,2 @@ function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipP
+-        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading};
+-        if (hullFits(map, ship, pose) && connected(anchor, point) && (!outward || hullPassageClear(map,ship,entry,pose))) {
++        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading,outward};
++        if (connected(anchor, point)) {
+diff --git a/src/shared/ship-navigation.ts b/src/shared/ship-navigation.ts
+index 93c9599a..4f4a3d1d 100644
+--- a/src/shared/ship-navigation.ts
++++ b/src/shared/ship-navigation.ts
+@@ -920,0 +921,3 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
++  // Empty-traffic connectors can finish without ever constructing the lattice.
++  // Callback queries retain their original pre-callback input capture.
++  const prepareGraph=()=>{
+@@ -932,0 +936,3 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
++    return {grid,size,limits,cruise,turnSpeed,courseSpeeds,edgeWeights,lattice,pose};
++  };
++  const eagerGraph=noTraffic?undefined:prepareGraph();
+@@ -973,0 +980 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
++  const {grid,size,limits,cruise,turnSpeed,courseSpeeds,edgeWeights,lattice,pose}=eagerGraph??prepareGraph();

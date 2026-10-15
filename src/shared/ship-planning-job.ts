@@ -1,6 +1,6 @@
 import { shipTraffic } from './ship-avoidance';
 import { isShipKind, shipProfile } from './ship-geometry';
-import { advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, beginLiveShipRouteSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
+import { clearShipTrafficRetry, advanceVoyageRefinement, beginVoyageRefinement, planDirectVoyage, createShipPlanningSearch, advanceLiveShipRouteSearch, headingDifference, type ShipRouteSearchState, type ShipPose, type VoyageRefinementState } from './ship-navigation';
 import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-field';
 import type { ShipCourseGoal } from './sailing';
 import type { GameMap, Unit } from './types';
@@ -9,6 +9,7 @@ import { hasShipPlanningWork } from './ship-planning-budget';
 type VoyageJob = { version:1; phase:'direct'|'reference'|'refine'|'finished'; ship:Unit; traffic:Unit[]; goal:ShipCourseGoal;
   windKey:string; guard:string; anchor?:ShipPose; recovery?:boolean; limited?:boolean; partial?:boolean; points?:ShipPose[]; searchSteps?:number; search?:ShipRouteSearchState; refinement?:VoyageRefinementState };
 const decoded=new WeakMap<Unit,{source:string;job:VoyageJob}>();
+const searches=new WeakMap<VoyageJob,ReturnType<typeof createShipPlanningSearch>>();
 const trafficViews=new WeakMap<VoyageJob,ReturnType<typeof shipTraffic>>();
 // Restored checkpoints keep a compact logical cursor. Reconstruct its graph
 // separately so a browser can yield between the same deterministic slices.
@@ -23,11 +24,15 @@ function trafficView(job:VoyageJob):ReturnType<typeof shipTraffic> {
 function voyageReference(job:VoyageJob):boolean {
   return job.goal.heading===undefined && Math.hypot(job.goal.x-job.ship.x,job.goal.y-job.ship.y)>shipProfile(job.ship)!.length*.5;
 }
+function advanceReferenceSearch(job:VoyageJob,map:GameMap) {
+  const search=searches.get(job);
+  return search ? search(map,trafficView(job)) : advanceLiveShipRouteSearch(map,job.ship,job.goal,trafficView(job),job.limited?1024:Infinity,voyageReference(job),job.search!);
+}
 function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{ready:boolean;used:number;invalid:boolean} {
   if(job.phase!=='reference')return {ready:true,used:0,invalid:false};
   let state=reconstruction.get(job);
-  if(!job.search){
-    job.search=beginLiveShipRouteSearch();
+  if(!job.search && !searches.has(job)){
+    searches.set(job,createShipPlanningSearch(job.ship,job.goal,job.limited?1024:Infinity,voyageReference(job)));
     state={remaining:job.searchSteps??0,invalid:false};
     reconstruction.set(job,state);
   }
@@ -36,11 +41,10 @@ function prepareReferenceSearch(job:VoyageJob,map:GameMap,maxSlices:number):{rea
   if(!state)return {ready:true,used:0,invalid:false};
   if(state.invalid || state.remaining===0 || maxSlices===0)
     return {ready:state.invalid || state.remaining===0,used:0,invalid:state.invalid};
-  const traffic=trafficView(job);
   let used=0;
   while(!state.invalid && state.remaining>0 && used<maxSlices){
     used++;
-    if(advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyageReference(job),job.search)){
+    if(advanceReferenceSearch(job,map)){
       // Leave authoritative fields untouched during preparation. The normal
       // planner rejects this invalid cursor when the simulation next advances.
       state.invalid=true;
@@ -130,7 +134,7 @@ function save(ship:Unit,job:VoyageJob):void {
   const {search:_,...saved}=job;
   const source=JSON.stringify(saved);ship.sailing!.planningJob=source;decoded.set(ship,{source,job});
 }
-export function cancelShipPlanningJob(ship:Unit):void {if(ship.sailing){delete ship.sailing.planningJob;delete ship.sailing.planningJobLastRequestedAtTick;}decoded.delete(ship);}
+export function cancelShipPlanningJob(ship:Unit):void {clearShipTrafficRetry(ship);if(ship.sailing){delete ship.sailing.planningJob;delete ship.sailing.planningJobLastRequestedAtTick;}decoded.delete(ship);}
 export function shipPlanningSliceCost(ship:Unit):number {
   const job=read(ship);return job?.phase==='finished'?0:job?.phase==='refine'?4:2;
 }
@@ -182,10 +186,10 @@ export function advanceShipPlanningJob(ship:Unit,map:GameMap):{points:ShipPose[]
     // Headless and direct simulation callers retain the synchronous contract;
     // browser callers can finish this exact reconstruction before advancing.
     if(prepareReferenceSearch(job,map,Infinity).invalid){cancelShipPlanningJob(ship);return;}
-    const reference=advanceLiveShipRouteSearch(map,job.ship,job.goal,traffic,job.limited?1024:Infinity,voyage,job.search!);
+    const reference=advanceReferenceSearch(job,map);
     job.searchSteps=(job.searchSteps??0)+1;
     if(!reference){save(ship,job);return;}
-    delete job.search;delete job.searchSteps;
+    searches.delete(job);delete job.search;delete job.searchSteps;
     job.partial=reference.partial;
     if(!voyage)points=reference.points;
     else {

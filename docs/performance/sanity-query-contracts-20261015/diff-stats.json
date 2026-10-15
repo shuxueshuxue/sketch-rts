@@ -1,0 +1,60 @@
+{
+  "E": {
+    "src/ai/policy/naval.ts": {
+      "added": 5,
+      "removed": 5,
+      "net": 0,
+      "role": "unadopted research replacement"
+    }
+  },
+  "L": {
+    "src/shared/terrain.ts": {
+      "added": 2,
+      "removed": 0,
+      "net": 2,
+      "role": "read-only test exports; not production proposal"
+    },
+    "src/ai/policy/naval.ts": {
+      "added": 42,
+      "removed": 8,
+      "net": 34,
+      "role": "unadopted research replacement"
+    }
+  },
+  "F": {
+    "src/shared/terrain.ts": {
+      "added": 2,
+      "removed": 0,
+      "net": 2,
+      "role": "read-only test exports; not production proposal"
+    },
+    "src/ai/policy/naval.ts": {
+      "added": 24,
+      "removed": 9,
+      "net": 15,
+      "role": "unadopted research replacement"
+    }
+  },
+  "M": {
+    "src/shared/terrain.ts": {
+      "added": 2,
+      "removed": 0,
+      "net": 2,
+      "role": "read-only test exports; not production proposal"
+    },
+    "src/ai/policy/naval.ts": {
+      "added": 45,
+      "removed": 10,
+      "net": 35,
+      "role": "unadopted research replacement"
+    }
+  },
+  "G": {
+    "src/ai/bootstrap_1/mine-defense.ts": {
+      "added": 5,
+      "removed": 1,
+      "net": 4,
+      "role": "unadopted research replacement"
+    }
+  }
+}

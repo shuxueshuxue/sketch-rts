@@ -551,14 +551,26 @@ function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:Sh
 /** A berth can be reached with a turning arc even when a straight final leg
  * would point its bow through the coast. Stage in open water, then swing the
  * bow/stern around a fixed point on the keel. No sideways docking shortcut. */
-function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean) {
-  const length=shipProfile(ship)!.length;
+type PlanningSearchRuntime={graph?:{
+  reached:Map<number,NonNullable<ShipRouteSearchState['nodes']>[number]>;traffic:Map<number,boolean>;frontier:Frontier;
+  prefixes:Map<number,ShipPose[]>;entrances:Map<number,ShipPose[][]>;
+};arrival?:{profile:ReturnType<typeof shipProfile>;cells:string|undefined;key:string;checks:{fits?:boolean;passage?:boolean}[]}};
+function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,runtime?:PlanningSearchRuntime) {
+  const profile=shipProfile(ship),t=map.terrain;
+  const key=runtime?`${map.width}:${map.height}:${t?.cell}:${t?.cols}:${t?.rows}:${goal.x}:${goal.y}:${goal.heading}`:'';
+  if(runtime && (!runtime.arrival || runtime.arrival.profile!==profile || runtime.arrival.cells!==t?.cells || runtime.arrival.key!==key))
+    runtime.arrival={profile,cells:t?.cells,key,checks:[]};
+  let index=0;
+  const length=profile!.length;
   const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
   for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
     const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
     const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
-    if(!hullFits(map,ship,stage) || !traffic(stage,stage))continue;
-    if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))continue;
+    // Retain only pure terrain answers. Fresh poses and the current traffic
+    // wrapper preserve callback identity/order and this slice's blocked flag.
+    const checks=runtime?.arrival?.checks,check=checks ? checks[index]??(checks[index]={}) : undefined;index++;
+    if(!(check ? check.fits??(check.fits=hullFits(map,ship,stage)) : hullFits(map,ship,stage)) || !traffic(stage,stage))continue;
+    if(!(check ? check.passage??(check.passage=hullPassageClear(map,ship,stage,end)) : hullPassageClear(map,ship,stage,end)) || !traffic(stage,end))continue;
     arcs.push({stage,end,angle});
   }
   // These swept arrival arcs depend only on the berth. Validate them once
@@ -823,6 +835,28 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
   finally { routeSearchDepth--; }
 }
 type RouteResult={points:ShipPose[];partial:boolean};
+// Only sailing's admitted, empty-traffic wait retry uses this derived state.
+// Full value guards deliberately include more than the search currently reads.
+const trafficRetries=new WeakMap<Unit,{motion:Unit['sailing'];map:SeaMap;input:unknown;result:RouteResult}>();
+function sameRetryInput(a:unknown,b:unknown):boolean {
+  if(Object.is(a,b))return true;
+  if(!a || !b || typeof a!=='object' || typeof b!=='object' || Array.isArray(a)!==Array.isArray(b))return false;
+  const left=a as Record<string,unknown>,right=b as Record<string,unknown>,keys=Object.keys(left);
+  return keys.length===Object.keys(right).length && keys.every(key=>Object.hasOwn(right,key) && sameRetryInput(left[key],right[key]));
+}
+export function clearShipTrafficRetry(ship:Unit):void {trafficRetries.delete(ship);}
+/** Internal wait retry, after the original admission and budget checks. */
+export function planShipTrafficRetry(map:SeaMap,ship:Unit,goal:Point & {heading?:number},traffic:((from:ShipPose,to:ShipPose)=>boolean)&{hasTraffic?:boolean},budget:number):RouteResult {
+  if(traffic.hasTraffic!==false || routeSearchDepth!==0){clearShipTrafficRetry(ship);return planShipRoute(map,ship,goal,traffic,budget);}
+  const input={ship,goal,map:{width:map.width,height:map.height,terrain:map.terrain,wind:map.wind},
+    profile:shipProfile(ship),limits:shipMotionLimits(ship),wind:windAt(map,ship),budget,voyage:false};
+  const cached=trafficRetries.get(ship);
+  if(cached && cached.motion===ship.sailing && cached.map===map && sameRetryInput(cached.input,input))return structuredClone(cached.result);
+  const saved=structuredClone(input),result=planShipRoute(map,ship,goal,traffic,budget);
+  trafficRetries.set(ship,{motion:ship.sailing,map,input:saved,result:structuredClone(result)});
+  return result;
+}
+
 /** Sparse, lossless continuation. Geometry caches remain recomputable; only
  * reached costs, exact heap order and deterministic loop cursors are saved. */
 export type ShipRouteSearchState={
@@ -832,6 +866,16 @@ export type ShipRouteSearchState={
   entrances?:{cell:number;points:ShipPose[][]}[]; entranceCursor?:number;
   best?:number; bestGap?:number; visited?:number; path?:ShipPose[]; fallback?:ShipRouteSearchState; result?:RouteResult;
 };
+/** Job-owned derived state: inputs and traffic geometry are frozen by the job.
+ * The public continuation APIs keep their observable arrays and identities. */
+export function createShipPlanningSearch(ship:Unit,goal:Point & {heading?:number},budget:number,voyage:boolean) {
+  const state:ShipRouteSearchState={phase:'prepare'},runtime:PlanningSearchRuntime={};
+  return (map:SeaMap,traffic:(from:ShipPose,to:ShipPose)=>boolean):RouteResult|undefined=>{
+    const result=advanceShipRouteSearchImpl(map,ship,goal,traffic,budget,voyage,state,true,runtime);
+    if(result || state.phase==='fallback')delete runtime.graph;
+    return result;
+  };
+}
 const livePlanningSearches=new WeakSet<ShipRouteSearchState>();
 /** Internal planner-only fresh state; decoded jobs never acquire this identity. */
 export function beginLiveShipRouteSearch():ShipRouteSearchState {
@@ -848,7 +892,7 @@ export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {headin
   return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false);
 }
 function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
-  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean):RouteResult|undefined {
+  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean,runtime?:PlanningSearchRuntime):RouteResult|undefined {
   if(state.phase==='done')return state.result;
   // Fallback owns no active workspace. Resume it at this caller's depth,
   // retaining nested isolation only for a real reentrant traffic callback.
@@ -861,11 +905,11 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
   }
   routeSearchDepth++;
   try {
-    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
+    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned,runtime);
     if(result){state.result=result;state.phase='done';}return result;
   }finally{routeSearchDepth--;}
 }
-function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
+function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false,runtime?:PlanningSearchRuntime): RouteResult|undefined {
   // The real traffic provider declares an empty frozen obstacle set. Custom
   // callbacks without that declaration still receive every original check.
   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
@@ -886,12 +930,17 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   });
   const lattice = grid;
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
-  const savedTraffic=new Map(state?.trafficFits?.map(entry=>[entry.id,entry.clear]));
+  const savedTraffic=runtime?.graph?.traffic ?? new Map(state?.trafficFits?.map(entry=>[entry.id,entry.clear]));
   const fits = (id: number) => {
     if (!grid.fits[id])
       grid.fits[id] = maskFits(map, grid, id, grid.masks[id % DIRECTIONS]![0]!) ? 1 : -1;
     if(grid.fits[id]!==1)return false;
     if(noTraffic)return true;
+    if(runtime){
+      let clear=savedTraffic.get(id);
+      if(clear===undefined){const at=pose(id);clear=trafficClear(at,at);savedTraffic.set(id,clear);}
+      return clear;
+    }
     // Traffic changes between searches even on unchanged terrain. Signed
     // generations retain no stale result, and avoid a map-sized allocation
     // for every replan (or any traffic array on the direct-connector path).
@@ -913,7 +962,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const direct=keelConnector(map,ship,start,destination,trafficClear);
     if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
       || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
-    const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
+    const arrival=arrivalConnectorFor(map,ship,target,trafficClear,runtime)(start);
     if(arrival)return {points:arrival,partial:deferred};
     const direction=Math.atan2(target.y-start.y,target.x-start.x);
     if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
@@ -924,9 +973,9 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   }
   const target=preparedTarget!;
   const destination=requested?target:{x:target.x,y:target.y};
-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
+  const arrive=arrivalConnectorFor(map,ship,target,trafficClear,runtime);
   const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
-    basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
+    basePotentials,baseStamps,generation } = workspace, frontier = runtime?.graph?.frontier ?? (nested || runtime ? new Frontier() : routeFrontier.reset());
   // A local traffic budget and a short berth search should stay local. The
   // reusable map field pays for itself on long, unbounded coastal voyages;
   // cap its map size as well as its retained destination count.
@@ -954,24 +1003,27 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     return basePotentials[tile]=Math.max(Math.hypot(x - target.x, y - target.y), Number.isFinite(lowerBound) ? lowerBound : 0) / cruise;
   };
   const heuristic = (id: number, x: number, y: number) => basePotential(Math.floor(id/DIRECTIONS),x,y);
-  const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
+  const cost = (id: number) => runtime ? reached.get(id)?.cost ?? Infinity : stamps[id] === generation ? costs[id]! : Infinity;
   let reached:Map<number,NonNullable<ShipRouteSearchState['nodes']>[number]>;
-  if(owned){
+  if(runtime?.graph)reached=runtime.graph.reached;
+  else if(owned){
     reached=new Map();
     // Only ordinary packed arrays of local plain records reach this branch.
     // Preserve the separate, subsequent values() replay below.
     for(const entry of state?.nodes ?? [])reached.set(entry.id,entry);
   }else reached=new Map(state?.nodes?.map(entry=>[entry.id,entry]));
-  for(const entry of reached.values()){stamps[entry.id]=generation;costs[entry.id]=entry.cost;previous[entry.id]=entry.parent;}
-  for(const [id,clear] of savedTraffic)trafficFits[id]=clear?generation:-generation;
+  if(!runtime)for(const entry of reached.values()){stamps[entry.id]=generation;costs[entry.id]=entry.cost;previous[entry.id]=entry.parent;}
+  if(!runtime)for(const [id,clear] of savedTraffic)trafficFits[id]=clear?generation:-generation;
   if(state?.heap)frontier.restore(state.heap);
   const setCost = (id: number, value: number, parent: number) => {
-    stamps[id] = generation; costs[id] = value; previous[id] = parent;
+    if(!runtime){stamps[id] = generation; costs[id] = value; previous[id] = parent;}
     if(state)reached.set(id,{id,cost:value,parent});
   };
-  const prefixes=new Map<number,ShipPose[]>(state?.prefixes?.map(entry=>[entry.id,entry.points])),
-    entrances=new Map<number,ShipPose[][]>(state?.entrances?.map(entry=>[entry.cell,entry.points]));
+  const prefixes=runtime?.graph?.prefixes ?? new Map<number,ShipPose[]>(state?.prefixes?.map(entry=>[entry.id,entry.points])),
+    entrances=runtime?.graph?.entrances ?? new Map<number,ShipPose[][]>(state?.entrances?.map(entry=>[entry.cell,entry.points]));
+  if(runtime)runtime.graph??={reached,traffic:savedTraffic,frontier,prefixes,entrances};
   const pause=()=>{
+    if(runtime){state!.trafficBlocked=trafficBlocked;return;}
     state!.nodes=Array.from(reached.values());state!.trafficFits=Array.from(savedTraffic,([id,clear])=>({id,clear}));
     state!.heap=frontier.save();state!.prefixes=Array.from(prefixes,([id,points])=>({id,points}));
     state!.entrances=Array.from(entrances,([cell,points])=>({cell,points}));state!.trafficBlocked=trafficBlocked;
@@ -1061,7 +1113,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   if (best < 0)
     return {points:[],partial:false};
   const path: ShipPose[] = [];
-  for (let at = best; at >= 0; at = previous[at]!)
+  for (let at = best; at >= 0; at = runtime ? reached.get(at)!.parent : previous[at]!)
     path.push(pose(at));
   path.reverse();
   const root=path[0]!;

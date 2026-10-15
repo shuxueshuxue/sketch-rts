@@ -1,0 +1,233 @@
+[
+  {
+    "run": "/tmp/sanity-aabb-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-baseline-1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-counts-control",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-counts-cow",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-counts-transpose",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-diagnostic",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-lazy-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-state-control",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-state-cow",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-sweep-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-transpose-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-witness-explore",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/plain-A",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/plain-B",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r1-A1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r1-A2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r1-B1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r1-B2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r2-A1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r2-A2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r2-B1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-formal-rerun/r2-B2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/plain-A",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/plain-B",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r1-A1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r1-A2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r1-B1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r1-B2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r2-A1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r2-A2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r2-B1",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  },
+  {
+    "run": "/tmp/sanity-cow-formal/r2-B2",
+    "ticks": 14400,
+    "commandBytes": 618189,
+    "commandSha256": "771222bde4c8d2c0a46a97313563ad2b5de1d52ed92fb2d3c70511ff2276c997",
+    "finalChecksum": "7d94a5e8"
+  }
+]

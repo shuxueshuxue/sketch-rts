@@ -1,0 +1,66 @@
+diff --git a/src/shared/terrain.ts b/src/shared/terrain.ts
+--- a/src/shared/terrain.ts
++++ b/src/shared/terrain.ts
+@@ -553,23 +553,29 @@
+ 
+ // The copy's islands: the areas a walk joins at all, numbered in cell order.
+ function labelIslands(state: TerrainRuntime, tiles: Tiles) {
+-  const { walk, offsets } = state;
+-  tiles.island.fill(-1);
+-  const queue = new Int32Array(walk.length);
+-  for (let seed = 0; seed < walk.length; seed += 1) {
+-    if (walk[seed] !== 1 || tiles.island[seed] !== -1) continue;
+-    tiles.island[seed] = seed;
+-    let tail = 0;
+-    queue[tail++] = seed;
+-    for (let head = 0; head < tail; head += 1) {
+-      const at = queue[head]!;
+-      for (let direction = 0; direction < 8; direction += 1) {
+-        const next = at + offsets[direction]!;
+-        if (walk[next] !== 1 || tiles.island[next] !== -1 || !stepAllowed(state, at, direction)) continue;
+-        tiles.island[next] = seed;
+-        queue[tail++] = next;
+-      }
+-    }
++  // No-corner-cut diagonals add no connectivity beyond cardinal steps. Each
++  // 10x10 sector has at most 50 components, so its region labels are distinct.
++  // Windows are exactly the cardinal edges between these local components.
++  const parents = new Int32Array(tiles.columns * tiles.rows * MAX_REGIONS).fill(-1);
++  const root = (id: number): number => {
++    let end = id;
++    while (parents[end]! >= 0) end = parents[end]!;
++    while (id !== end) { const next = parents[id]!; parents[id] = end; id = next; }
++    return end;
++  };
++  for (const node of tiles.nodes.values()) {
++    if (node.key & 1) continue;
++    const at = node.cells[0]!, a = root(tiles.region[at]!), b = root(tiles.region[at + node.across]!);
++    if (a !== b) parents[Math.max(a, b)] = Math.min(a, b);
++  }
++  for (let id = 0; id < parents.length; id++) if (parents[id]! >= 0) parents[id] = root(id);
++  // Negative roots also store the first (minimum) cell, avoiding a second array.
++  for (let at = 0; at < state.walk.length; at++) {
++    const region = tiles.region[at]!;
++    if (region < 0) { tiles.island[at] = -1; continue; }
++    const group = parents[region]! < 0 ? region : parents[region]!;
++    if (parents[group] === -1) parents[group] = -at - 2;
++    tiles.island[at] = -parents[group]! - 2;
+   }
+ }
+ 
+@@ -1149,6 +1155,15 @@
+   let overlay = current;
+   if (!overlay || overlay.terrain !== terrain || overlay.shared) {
+     const fresh = createRuntime(terrain, "land");
++    // Copy the tile graph's mutable containers, retaining unchanged local fields.
++    // Snapshot readers keep their old graph; redoTiles updates only dirty sectors.
++    if (current?.terrain === terrain && current.state.tiles) {
++      fresh.walk.set(current.state.walk);
++      const tiles = current.state.tiles;
++      fresh.tiles = { ...tiles, nodes: new Map([...tiles.nodes].map(([key, node]) => [key, { ...node }])),
++        borders: new Map(tiles.borders), region: tiles.region.slice(), island: tiles.island.slice(),
++        goals: new Map(tiles.goals), exits: new Map(), nearest: new Map() };
++    }
+     overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
+     overlays.set(map, overlay);
+   }

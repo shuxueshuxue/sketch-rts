@@ -1,0 +1,22 @@
+{
+  "sequence": [
+    "A",
+    "G",
+    "P",
+    "P",
+    "G",
+    "A"
+  ],
+  "sources": {
+    "A": "/tmp/sanity-planning-control",
+    "G": "/tmp/sanity-planning-geometry",
+    "P": "/workspace/sketch-rts"
+  },
+  "heads": {
+    "A": "f13b2f73100675aab75a9e8ba7a8fbd186159728",
+    "G": "cdb8f075d720ae942ba03e6c88818aea16b5dcdf",
+    "P": "a54852e61a90e95fada33312aa559419b23d05a2"
+  },
+  "ticks": 14400,
+  "purpose": "screen geometry alone versus geometry plus persistent sparse containers; not final acceptance"
+}

@@ -1,0 +1,59 @@
+{
+  "status": "passed",
+  "sourceSHA": {
+    "A": {
+      "path": "/tmp/sanity-control/src/shared/terrain.ts",
+      "sha256": "da87bde6be0f2067ab5c280fe20df7ab8ff10764b3ffcb201d079dc9a30eee24",
+      "bundleSha256": "aa1176e7a54a757f4946e9a3e83c48afa57e10ee6f719561a457bd0d4d6e8581",
+      "dependencyRoot": "/tmp/sanity-control",
+      "inputs": [
+        "../../tmp/sanity-control/src/shared/terrain.ts",
+        "<stdin>"
+      ]
+    },
+    "B": {
+      "path": "/tmp/sanity-terrain-cow.ts",
+      "sha256": "2a6de13d64b6cb86c48cf2f8a9d8c16cc495726dc57bd7b905451871d870e5f0",
+      "bundleSha256": "6c51931cc0e39f9859822537955bf23af6d4766ffceeb3439949bbc2c9ddb84f",
+      "dependencyRoot": "/tmp/sanity-control",
+      "inputs": [
+        "../../tmp/sanity-control/src/shared/terrain.ts",
+        "<stdin>"
+      ]
+    }
+  },
+  "comparisons": 219933,
+  "calls": {
+    "isOpenGround": 257058,
+    "openGroundNear": 26100,
+    "walkableGoal": 26100,
+    "segmentWalkable": 26100,
+    "openStep": 26100,
+    "walkDestination": 33156,
+    "steerPoint": 33156
+  },
+  "mutations": 123,
+  "snapshots": 72,
+  "seed": "0x591c0a7",
+  "fixtures": [
+    {
+      "name": "open",
+      "generations": 13,
+      "retainedSnapshots": 12,
+      "comparisonsSoFar": 73311
+    },
+    {
+      "name": "walls",
+      "generations": 13,
+      "retainedSnapshots": 12,
+      "comparisonsSoFar": 146622
+    },
+    {
+      "name": "coasts",
+      "generations": 13,
+      "retainedSnapshots": 12,
+      "comparisonsSoFar": 219933
+    }
+  ],
+  "context": null
+}

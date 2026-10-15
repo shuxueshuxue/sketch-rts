@@ -1,0 +1,10 @@
+{
+  "head": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+  "file": "src/ai/bootstrap_1/mine-defense.ts",
+  "sha256": "e3abf1f82087ff541715e053af11d08cf234ee4cfaaabdb69ef46402726056d4",
+  "netProductionLines": 4,
+  "applied": false,
+  "compiled": false,
+  "cpuTestRun": false,
+  "publicGeneralSourceSha256": "56e56b737b3c169ec18891625702765a5eea44b2b6431e2bf57e7d914bff70a6"
+}

@@ -1149,6 +1149,15 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   let overlay = current;
   if (!overlay || overlay.terrain !== terrain || overlay.shared) {
     const fresh = createRuntime(terrain, "land");
+    // Copy the tile graph's mutable containers, retaining unchanged local fields.
+    // Snapshot readers keep their old graph; redoTiles updates only dirty sectors.
+    if (current?.terrain === terrain && current.state.tiles) {
+      fresh.walk.set(current.state.walk);
+      const tiles = current.state.tiles;
+      fresh.tiles = { ...tiles, nodes: new Map([...tiles.nodes].map(([key, node]) => [key, { ...node }])),
+        borders: new Map(tiles.borders), region: tiles.region.slice(), island: tiles.island.slice(),
+        goals: new Map(tiles.goals), exits: new Map(), nearest: new Map() };
+    }
     overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++, bodies: [], shared: false };
     overlays.set(map, overlay);
   }

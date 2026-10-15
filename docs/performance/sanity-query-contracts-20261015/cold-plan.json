@@ -1,0 +1,31 @@
+{
+  "source": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+  "variants": [
+    "A",
+    "E",
+    "R"
+  ],
+  "sequence": [
+    "A",
+    "E",
+    "R",
+    "A",
+    "R",
+    "E",
+    "E",
+    "A",
+    "R",
+    "R",
+    "A",
+    "E",
+    "A",
+    "E",
+    "R",
+    "R",
+    "E",
+    "A"
+  ],
+  "ticks": 32,
+  "measurement": "original source except variant naval substitution; no timing hooks, no profiler, no forced GC; whole updateToRenderTime plus currentSnapshot",
+  "scope": "screen only; not full-run acceptance"
+}

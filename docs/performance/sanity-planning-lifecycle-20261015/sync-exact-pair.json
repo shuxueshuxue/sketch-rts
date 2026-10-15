@@ -1,0 +1,78 @@
+{
+  "prior": {
+    "fullShip": "1ec9ebf3334aba61d2b0e0f5037e9c97909fc327268ea510201a43db410cd474",
+    "mapInput": "b3b664ee68645f6bc3e21efd6f8285e205d420e782df13d8780d176c2c109b98",
+    "searchInput": "1bf83efa21e9976c968d91c9122a4a771d93a4d895ad9f66f3e828963019948d",
+    "budget": "Infinity",
+    "voyage": false,
+    "nested": false,
+    "shipId": "unit-player-5-cutter-1448",
+    "goal": {
+      "x": 4631.8917850578855,
+      "y": 1342.8089301074554
+    },
+    "noTraffic": true,
+    "stack": "Error\n    at Object.begin (file:///workspace/sanity-planning-lifecycle-20261015/sync-input-diagnostic.mjs:41:236)\n    at planShipRouteImpl (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:3930:41)\n    at planShipRoute (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:3890:12)\n    at replan (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:13916:145)\n    at waitForTraffic (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:13954:79)\n    at sailToward (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:14163:5)\n    at moveToward (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:18324:5)\n    at advanceMoveOrder (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15697:3)\n    at updateUnits (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15600:9)\n    at stepGame (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15165:17)",
+    "index": 2005,
+    "tick": 10009,
+    "id": null,
+    "nodes": 0,
+    "heap": 0,
+    "visited": 0,
+    "arrivalConnectorFor": {
+      "calls": 2,
+      "ms": 0.04591999999684049
+    },
+    "arrivalUse": {
+      "calls": 1,
+      "ms": 1.0703379999977187
+    },
+    "restore": {
+      "calls": 1,
+      "ms": 0.002113000002282206
+    },
+    "expanded": 62673,
+    "ms": 28.40041299999575,
+    "afterNodes": 0,
+    "afterHeap": 0,
+    "afterVisited": 0
+  },
+  "repeat": {
+    "fullShip": "1ec9ebf3334aba61d2b0e0f5037e9c97909fc327268ea510201a43db410cd474",
+    "mapInput": "b3b664ee68645f6bc3e21efd6f8285e205d420e782df13d8780d176c2c109b98",
+    "searchInput": "1bf83efa21e9976c968d91c9122a4a771d93a4d895ad9f66f3e828963019948d",
+    "budget": "Infinity",
+    "voyage": false,
+    "nested": false,
+    "shipId": "unit-player-5-cutter-1448",
+    "goal": {
+      "x": 4631.8917850578855,
+      "y": 1342.8089301074554
+    },
+    "noTraffic": true,
+    "stack": "Error\n    at Object.begin (file:///workspace/sanity-planning-lifecycle-20261015/sync-input-diagnostic.mjs:41:236)\n    at planShipRouteImpl (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:3930:41)\n    at planShipRoute (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:3890:12)\n    at replan (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:13916:145)\n    at waitForTraffic (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:13954:79)\n    at sailToward (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:14163:5)\n    at moveToward (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:18324:5)\n    at advanceMoveOrder (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15697:3)\n    at updateUnits (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15600:9)\n    at stepGame (file:///workspace/sanity-planning-lifecycle-20261015/sync-inputs/runtime.mjs:15165:17)",
+    "index": 2009,
+    "tick": 10029,
+    "id": null,
+    "nodes": 0,
+    "heap": 0,
+    "visited": 0,
+    "arrivalConnectorFor": {
+      "calls": 2,
+      "ms": 0.08988500000850763
+    },
+    "arrivalUse": {
+      "calls": 1,
+      "ms": 1.0393610000028275
+    },
+    "restore": {
+      "calls": 1,
+      "ms": 0.003174999998009298
+    },
+    "expanded": 62673,
+    "ms": 33.90544299999601,
+    "afterNodes": 0,
+    "afterHeap": 0,
+    "afterVisited": 0
+  }
+}
