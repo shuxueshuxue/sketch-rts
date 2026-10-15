@@ -1,3 +1,4 @@
+import { reviseAssaultBeaches, orderBootstrapAssaultLanding } from './assault-beach';
 import { planShoreTransfers } from './shore-transfer';
 import { unitMover } from '../../shared/catalog';
 import { sameGround } from '../../shared/terrain';
@@ -30,6 +31,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  reviseAssaultBeaches(snapshot, owner, options);
   const crossing = planRiderCrossing(snapshot, owner, options);
   const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
   if (ferries) for (const boat of units(snapshot, owner)) {
@@ -56,6 +58,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const mainlandCare = new Set([...(mainland?.unmedicated ?? []).map(({ patient }) => patient.id),
     ...(mainland?.recovering ?? []).flatMap(({ patient, healer }) => [patient.id, healer.id])]);
   const commands = [...crossing, ...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
+    orderAssaultLanding: (boat, goal, ordinary) => orderBootstrapAssaultLanding(snapshot, owner, options, boat, goal, ordinary),
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),

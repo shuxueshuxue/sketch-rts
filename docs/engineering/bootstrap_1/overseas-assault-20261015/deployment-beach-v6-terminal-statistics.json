@@ -1,0 +1,622 @@
+{
+  "original88110": {
+    "tick": 91820,
+    "winner": "p0",
+    "players": {
+      "p0": {
+        "units": 60,
+        "unitKinds": {
+          "worker": 23,
+          "transport": 1,
+          "warship": 2,
+          "footman": 4,
+          "archer": 20,
+          "lancer": 3,
+          "priest": 2,
+          "carrier": 2,
+          "horseArcher": 3
+        },
+        "buildings": 28,
+        "buildingKinds": {
+          "townHall": 4,
+          "barracks": 2,
+          "shipyard": 1,
+          "farm": 14,
+          "archeryRange": 1,
+          "sanctum": 1,
+          "stables": 1,
+          "defenseTower": 3,
+          "moonWell": 1
+        },
+        "halls": [
+          {
+            "id": "building-p0-townhall",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-1561",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-1811",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-2968",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          }
+        ],
+        "fullMatchUnitsLost": 25,
+        "segmentUnitsLost": 5
+      },
+      "p1": {
+        "units": 4,
+        "unitKinds": {
+          "sparkArcher": 4
+        },
+        "buildings": 0,
+        "buildingKinds": {},
+        "halls": [],
+        "fullMatchUnitsLost": 50,
+        "segmentUnitsLost": 25
+      }
+    },
+    "original29": {
+      "dead": 5,
+      "deadKinds": {
+        "archer": 4,
+        "lancer": 1
+      },
+      "survivingOnTarget": 24,
+      "deadIds": [
+        "unit-p0-archer-2610",
+        "unit-p0-archer-2767",
+        "unit-p0-archer-2858",
+        "unit-p0-lancer-5275",
+        "unit-p0-archer-8190"
+      ],
+      "lethalHits": [
+        {
+          "tick": 90191,
+          "source": {
+            "id": "unit-p1-sparkArcher-1347",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1884.2155905663146,
+            "y": 6510.234859873844,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "idle"
+            }
+          },
+          "target": {
+            "id": "unit-p0-lancer-5275",
+            "owner": "p0",
+            "kind": "lancer",
+            "x": 2149.0887311379197,
+            "y": 6491.054162114729,
+            "hp": -1,
+            "maxHp": 130,
+            "order": {
+              "type": "attackMove",
+              "x": 2150.4915884585857,
+              "y": 6861.616756556678,
+              "targetId": "unit-p1-spirit-12993"
+            }
+          },
+          "damage": 9,
+          "hpBefore": 8,
+          "lethal": true
+        },
+        {
+          "tick": 90256,
+          "source": {
+            "id": "unit-p1-sparkArcher-1047",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1980.9640694927932,
+            "y": 6588.608449565632,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-8190",
+              "leashX": 1941.71532679453,
+              "leashY": 6580.491425362027
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2767",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2317.8925915536215,
+            "y": 6513.39421920335,
+            "hp": -5,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2321.475188905571,
+              "y": 6454.102356387161,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 4,
+          "lethal": true
+        },
+        {
+          "tick": 90326,
+          "source": {
+            "id": "unit-p1-sparkArcher-3715",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 2015.9371380048124,
+            "y": 6550.547416818773,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2926"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-8190",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2318.6050845551695,
+            "y": 6408.242089129444,
+            "hp": -8,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2329.6174171853313,
+              "y": 6434.775434872655,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 1,
+          "lethal": true
+        },
+        {
+          "tick": 90346,
+          "source": {
+            "id": "unit-p1-sparkArcher-3491",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1987.9938632275969,
+            "y": 6523.537407533563,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2858"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2858",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2283.4074000589594,
+            "y": 6620.895969768461,
+            "hp": -6,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2302.4993669408527,
+              "y": 6565.546179339041,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 3,
+          "lethal": true
+        },
+        {
+          "tick": 90541,
+          "source": {
+            "id": "unit-p1-sparkArcher-1412",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 2103.03371894418,
+            "y": 6589.3638730868015,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2610"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2610",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2314.5418707230433,
+            "y": 6697.834667617746,
+            "hp": -4,
+            "maxHp": 138,
+            "order": {
+              "type": "move",
+              "x": 2271.7128506646063,
+              "y": 6737.756811107719,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 5,
+          "lethal": true
+        }
+      ]
+    }
+  },
+  "focused": {
+    "tick": 91945,
+    "winner": "p0",
+    "players": {
+      "p0": {
+        "units": 57,
+        "unitKinds": {
+          "worker": 23,
+          "transport": 1,
+          "warship": 2,
+          "footman": 4,
+          "archer": 17,
+          "lancer": 3,
+          "priest": 2,
+          "carrier": 2,
+          "horseArcher": 3
+        },
+        "buildings": 28,
+        "buildingKinds": {
+          "townHall": 4,
+          "barracks": 2,
+          "shipyard": 1,
+          "farm": 14,
+          "archeryRange": 1,
+          "sanctum": 1,
+          "stables": 1,
+          "defenseTower": 3,
+          "moonWell": 1
+        },
+        "halls": [
+          {
+            "id": "building-p0-townhall",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-1561",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-1811",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          },
+          {
+            "id": "building-p0-townHall-2968",
+            "hp": 900,
+            "maxHp": 900,
+            "complete": true
+          }
+        ],
+        "fullMatchUnitsLost": 28,
+        "segmentUnitsLost": 8
+      },
+      "p1": {
+        "units": 4,
+        "unitKinds": {
+          "sparkArcher": 4
+        },
+        "buildings": 0,
+        "buildingKinds": {},
+        "halls": [],
+        "fullMatchUnitsLost": 50,
+        "segmentUnitsLost": 25
+      }
+    },
+    "original29": {
+      "dead": 8,
+      "deadKinds": {
+        "archer": 7,
+        "lancer": 1
+      },
+      "survivingOnTarget": 21,
+      "deadIds": [
+        "unit-p0-archer-2411",
+        "unit-p0-archer-2610",
+        "unit-p0-archer-2795",
+        "unit-p0-archer-2849",
+        "unit-p0-archer-2858",
+        "unit-p0-archer-2926",
+        "unit-p0-archer-2951",
+        "unit-p0-lancer-5275"
+      ],
+      "lethalHits": [
+        {
+          "tick": 90052,
+          "source": {
+            "id": "unit-p1-sparkArcher-1277",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1938.024740908306,
+            "y": 6601.288141867139,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2893"
+            }
+          },
+          "target": {
+            "id": "unit-p0-lancer-5275",
+            "owner": "p0",
+            "kind": "lancer",
+            "x": 2130.5860311057145,
+            "y": 6470.319658818352,
+            "hp": -4,
+            "maxHp": 130,
+            "order": {
+              "type": "attackMove",
+              "x": 2150.4915884585857,
+              "y": 6861.616756556678,
+              "targetId": "unit-p1-priest-1796"
+            }
+          },
+          "damage": 9,
+          "hpBefore": 5,
+          "lethal": true
+        },
+        {
+          "tick": 90149,
+          "source": {
+            "id": "unit-p1-sparkArcher-4649",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 2031.6359384230116,
+            "y": 6630.221406774591,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2749"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2411",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2269.2420934018455,
+            "y": 6539.14321473839,
+            "hp": -7,
+            "maxHp": 83,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p1-sparkArcher-1438"
+            }
+          },
+          "damage": 9,
+          "hpBefore": 2,
+          "lethal": true
+        },
+        {
+          "tick": 90178,
+          "source": {
+            "id": "unit-p1-sparkArcher-3846",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1987.7597269901678,
+            "y": 6494.617338554865,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-8190"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2926",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2365.237158705757,
+            "y": 6539.050040382609,
+            "hp": -4,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2384.157795287108,
+              "y": 6540.104559873345,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 5,
+          "lethal": true
+        },
+        {
+          "tick": 90226,
+          "source": {
+            "id": "unit-p1-sparkArcher-1347",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1958.2787157690175,
+            "y": 6509.502526979497,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2795"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2951",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2266.606879548326,
+            "y": 6604.605874709326,
+            "hp": -5,
+            "maxHp": 111,
+            "order": {
+              "type": "move",
+              "x": 2230.9819262307697,
+              "y": 6651.070540866761,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 4,
+          "lethal": true
+        },
+        {
+          "tick": 90253,
+          "source": {
+            "id": "unit-p1-sparkArcher-3846",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1995.7626104556064,
+            "y": 6484.416172736948,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2858"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2795",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2369.6768450707923,
+            "y": 6522.958478588081,
+            "hp": -4,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2387.6039727458683,
+              "y": 6516.816769272141,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 5,
+          "lethal": true
+        },
+        {
+          "tick": 90276,
+          "source": {
+            "id": "unit-p1-sparkArcher-1347",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 1960.5855605929626,
+            "y": 6505.785025610459,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2767"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2858",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2246.7830299853285,
+            "y": 6620.4925557231745,
+            "hp": 0,
+            "maxHp": 83,
+            "order": {
+              "type": "move",
+              "x": 2264.1549998761184,
+              "y": 6582.198729039055,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 9,
+          "lethal": true
+        },
+        {
+          "tick": 90357,
+          "source": {
+            "id": "unit-p1-sparkArcher-3491",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 2037.4169414388823,
+            "y": 6604.816463174077,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2384",
+              "leashX": 2031.120828615344,
+              "leashY": 6604.595186620246
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2610",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2241.7135912159642,
+            "y": 6651.439730843715,
+            "hp": -7,
+            "maxHp": 111,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p1-siegeRam-4388"
+            }
+          },
+          "damage": 9,
+          "hpBefore": 2,
+          "lethal": true
+        },
+        {
+          "tick": 90418,
+          "source": {
+            "id": "unit-p1-sparkArcher-1376",
+            "owner": "p1",
+            "kind": "sparkArcher",
+            "x": 2029.1208825623594,
+            "y": 6661.117106220579,
+            "hp": 85,
+            "maxHp": 85,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p0-archer-2910"
+            }
+          },
+          "target": {
+            "id": "unit-p0-archer-2849",
+            "owner": "p0",
+            "kind": "archer",
+            "x": 2207.7225002179066,
+            "y": 6832.034059651422,
+            "hp": -2,
+            "maxHp": 111,
+            "order": {
+              "type": "move",
+              "x": 2223.1075961803313,
+              "y": 6824.463938764417,
+              "avoidCombat": true
+            }
+          },
+          "damage": 9,
+          "hpBefore": 7,
+          "lethal": true
+        }
+      ]
+    }
+  }
+}

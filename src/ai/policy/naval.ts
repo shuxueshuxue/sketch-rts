@@ -399,9 +399,11 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     });
 }
 
+type AssaultLandingOrder = (boat: Unit, goal: Point, ordinary: GameCommand[]) => GameCommand[];
 type FerryCrewOrder = (soldiers: Unit[], shore: Point, boat: Unit) => Unit[];
 type NavalAssignments = {
     orderCrew: FerryCrewOrder;
+    orderAssaultLanding?: AssaultLandingOrder;
     mineEligible: (mine: ResourceNode) => boolean;
     targetAvailable: (target: Unit | Building) => boolean;
     transportReady: (boat: Unit) => boolean;
@@ -410,6 +412,7 @@ type NavalAssignments = {
 
 export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assignments: NavalAssignments): GameCommand[] {
     const { orderCrew, mineEligible: eligible, targetAvailable, transportReady, troopAvailable } = assignments;
+    const orderAssaultLanding = assignments.orderAssaultLanding ?? ((_boat: Unit, _goal: Point, ordinary: GameCommand[]) => ordinary);
     const own = units(snapshot, owner);
     const plan = islandPlan(snapshot, owner, options, eligible);
     const assault = assaultPlan(snapshot, owner, options);
@@ -612,7 +615,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable, orderAssaultLanding));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -654,7 +657,7 @@ function ferryUnloadCommands(snapshot: GameSnapshot, boat: Unit, goal: Point, av
         ({ type: 'unloadPassenger', transportId: boat.id, passengerId }));
 }
 
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean, orderAssaultLanding: AssaultLandingOrder): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -799,7 +802,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         }
         if ((mission.purpose === "settle" || mission.purpose === "assault" && distance(boat,mission.to)<HOME_WATERS)
             && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission, options);
-        commands.push(...ferryUnloadCommands(snapshot, boat, mission.to));
+        commands.push(...(mission.purpose === 'assault' ? orderAssaultLanding(boat, mission.to, ferryUnloadCommands(snapshot, boat, mission.to)) : ferryUnloadCommands(snapshot, boat, mission.to)));
         return commands;
     }
     const loadGround = walkableGoal(map, (mission.pickup ?? mission.from).x, (mission.pickup ?? mission.from).y);
@@ -951,12 +954,12 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (boarding.length && cargo.length && snapshot.tick - mission.progress!.tick > seconds(20) && (mission.purpose !== "settle" || hasWorkers) && (mission.purpose === "rebase" || hasSoldiers || !guardsRemain)) {
         mission.phase = "sailing";
         mission.crewIds = [];
-        return [{ type: "stop", unitIds: boarding.map(unit => unit.id) }, { type: "unload", unitIds: [boat.id], ...mission.to }];
+        return [{ type: "stop", unitIds: boarding.map(unit => unit.id) }, ...(mission.purpose === 'assault' ? orderAssaultLanding(boat, mission.to, [{ type: 'unload', unitIds: [boat.id], ...mission.to }]) : [{ type: "unload" as const, unitIds: [boat.id], ...mission.to }])];
     }
     if (cargo.length && !boarding.length && !crew.length && (mission.purpose !== "settle" || hasWorkers) && (mission.purpose === "rebase" || hasSoldiers || (target && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, target) < 400)))) {
         mission.phase = "sailing";
         mission.crewIds = [];
-        commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
+        commands.push(...(mission.purpose === 'assault' ? orderAssaultLanding(boat, mission.to, [{ type: 'unload', unitIds: [boat.id], ...mission.to }]) : [{ type: "unload" as const, unitIds: [boat.id], ...mission.to }]));
     }
     return commands;
 }

@@ -1,4 +1,8 @@
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
+import { strikeGap } from '../../shared/combat-geometry';
+import { canReach } from '../../shared/naval';
+import { automaticTargetAllowed } from '../../shared/combat-target';
+import { AUTO_ACQUIRE_RANGE } from '../../shared/sim';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 import { ABILITY_DEFS, UNIT_DEFS, MERCENARY_UNIT_KINDS, unitMover } from '../../shared/catalog';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -9,6 +13,7 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { distance } from '../policy/spatial';
 import { nearestByRoute, routeTravelTicks } from '../../shared/route-selection';
+import { isEnemyOwner } from '../policy/ownership';
 
 function courierHome(snapshot: GameSnapshot, owner: PlayerId, unit: Unit) {
   return nearestByRoute(snapshot.map, snapshot.buildings.filter(building => building.owner === owner
@@ -111,7 +116,15 @@ export const mercenaryControl = { id: 'mercenaryControl', phase: 'tactics', clai
     const waiting = campVisitors(snapshot, owner, options).filter(({ unit }) => !returnIds.has(unit.id));
     const assignments = mercenaryAssignment(snapshot, owner, options);
     if (assignments.length) options.memory.mercenaryCourier = { unitId: assignments[0]!.unit.id, campId: assignments[0]!.camp.id };
-    return [...waiting.flatMap(({ unit }) => unit.order.type === 'hold' ? [] : [{ type: 'holdPosition' as const, unitIds: [unit.id] }]),
+    const foes = waiting.length ? [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0
+      && isEnemyOwner(snapshot, owner, foe.owner, options)) : [];
+    // A hold at the hire circle's edge can shoot a nearby neutral and pull it
+    // onto the buyer. Keep the existing safe walk while that hold would fire.
+    return [...waiting.flatMap(({ unit, camp }) => unit.order.type === 'hold'
+      || unit.order.type === 'move' && unit.order.avoidCombat && unit.order.x === camp.x && unit.order.y === camp.y
+        && foes.some(foe => strikeGap(unit, foe) <= Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange)
+          && automaticTargetAllowed(snapshot.units, owner, foe) && canReach(snapshot.map, unit, foe, snapshot.units))
+      ? [] : [{ type: 'holdPosition' as const, unitIds: [unit.id] }]),
       ...[...returns.map(({ unit, home }) => ({ unit, goal: home })), ...assignments.map(({ unit, camp }) => ({ unit, goal: camp }))]
         .flatMap(({ unit, goal }) => unit.order.type === 'move' && unit.order.avoidCombat && unit.order.x === goal.x && unit.order.y === goal.y ? [] : [{ type: 'move' as const, unitIds: [unit.id], x: goal.x, y: goal.y, avoidCombat: true }])];
   },
