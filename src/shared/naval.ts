@@ -81,8 +81,9 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
 }
 
 /** Keep a boarding pose outside waiting passengers while retaining their shore.
- * Moving the berth a few pixels offshore avoids asking navigation to reach a
- * hull pose occupied by the very soldiers it is collecting. */
+ * Search by hull length: a carrier may need more than a boarding gap of
+ * displacement to put its center outside the soldiers it is collecting.
+ * Every candidate still needs hull, body and actual boarding-reach clearance. */
 export function clearBoardingBerth(map: GameMap, passenger: Unit, boat: Unit,
   berth: NonNullable<Extract<Unit["order"], {type:"board"}>["berth"]>, units: readonly Unit[]) {
   const heading=berth.heading ?? boat.sailing?.heading ?? 0;
@@ -90,7 +91,8 @@ export function clearBoardingBerth(map: GameMap, passenger: Unit, boat: Unit,
   const clear=(x:number,y:number)=>bodiesClear({x,y}) && hullFits(map,boat,{x,y,heading});
   if(clear(berth.x,berth.y))return berth;
   const shore=berth.shore ?? passenger;
-  for(let radius=8;radius<=BOARDING_GAP*2;radius+=8) {
+  const searchRadius=(shipProfile(boat)?.length ?? boat.radius*2)/2+passenger.radius+BOARDING_GAP;
+  for(let radius=8;radius<=searchRadius;radius+=8) {
     const candidates=[] as {x:number;y:number}[];
     for(let y=-radius;y<=radius;y+=8)for(let x=-radius;x<=radius;x+=8) {
       if(Math.max(Math.abs(x),Math.abs(y))!==radius)continue;
