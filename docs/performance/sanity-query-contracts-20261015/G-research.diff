@@ -1,0 +1,10 @@
+--- a/src/ai/bootstrap_1/mine-defense.ts
++++ b/src/ai/bootstrap_1/mine-defense.ts
+@@ -0,0 +1 @@
++import { v6Doctrine } from '../policy/v6/select';
+@@ -135 +136,4 @@
+-  const commands = planV6Army(snapshot, owner, options, intel, {
++  const noRally = previous?.stage !== 'gather'
++    && !intel.army.some(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
++  if (noRally) v6Doctrine(snapshot, owner, options);
++  const commands = noRally ? [] : planV6Army(snapshot, owner, options, intel, {

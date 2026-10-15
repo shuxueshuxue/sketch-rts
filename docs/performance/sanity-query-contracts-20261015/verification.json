@@ -1,0 +1,17 @@
+{
+  "archiveOriginalFiles": 478,
+  "archiveVerified": true,
+  "productionSrcDiffAgainst281": "",
+  "localChecks": {
+    "sdkPackageBoundaries": {
+      "passed": 7,
+      "failed": 0,
+      "logSha256": "5d644b5f525133d2b2cdf4afa1ccce7c65a0fab79eb9c681e207006fac277fa4"
+    }
+  },
+  "performanceTargetAchieved": false,
+  "newProductionOptimizationAccepted": false,
+  "pr": "https://github.com/shuxueshuxue/sketch-rts/pull/381",
+  "draft": true,
+  "deployOrMerge": false
+}

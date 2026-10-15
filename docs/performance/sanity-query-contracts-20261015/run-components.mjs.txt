@@ -1,0 +1,94 @@
+/**
+ * Independent research kernel. Never imported by the game runtime.
+ * Labels a canonical zero-padded binary walk view without modifying it.
+ * runComponents includes guards; runComponentsKernel requires a validated,
+ * unchanged view so a benchmark can report validation and kernel separately.
+ */
+export function validateRunComponentsView(view) {
+  const { walk, width, terrain } = view ?? {};
+  const { cols, rows, cells } = terrain ?? {};
+  if (!(walk instanceof Uint8Array) || !Number.isSafeInteger(width)
+    || !Number.isSafeInteger(cols) || !Number.isSafeInteger(rows)
+    || cols < 0 || rows < 0 || !Number.isSafeInteger(cols * rows)
+    || width < 2 || walk.length < width * 2 || walk.length % width !== 0
+    || walk.length > 0x7fffffff || typeof cells !== "string") {
+    throw new RangeError("Expected canonical padded runtime walk/width/terrain");
+  }
+  if (typeof SharedArrayBuffer !== "undefined" && walk.buffer instanceof SharedArrayBuffer) {
+    throw new RangeError("Concurrent shared walk views are not supported");
+  }
+  const expected = [1, width, -1, -width, width + 1, width - 1, -width - 1, -width + 1];
+  if (view.offsets !== undefined && (view.offsets.length !== expected.length
+    || expected.some((offset, index) => view.offsets[index] !== offset))) {
+    throw new RangeError("Expected standard runtime neighbor offsets");
+  }
+  if (!walk.every(value => value === 0 || value === 1)) {
+    throw new RangeError("Expected binary walk values");
+  }
+  for (let x = 0; x < width; x++) {
+    if (walk[x] !== 0 || walk[walk.length - width + x] !== 0) {
+      throw new RangeError("Expected zero top and bottom padding");
+    }
+  }
+  for (let y = 1; y < walk.length / width - 1; y++) {
+    if (walk[y * width] !== 0 || walk[(y + 1) * width - 1] !== 0) {
+      throw new RangeError("Expected zero left and right padding");
+    }
+  }
+  return { walk, width, terrain: { cols, rows, cells } };
+}
+
+export function runComponents(view) {
+  return runComponentsKernel(validateRunComponentsView(view));
+}
+
+export function runComponentsKernel({ walk, width, terrain }) {
+  const starts = [], ends = [], parents = [];
+  const root = id => {
+    while (parents[id] !== id) {
+      parents[id] = parents[parents[id]];
+      id = parents[id];
+    }
+    return id;
+  };
+  const unite = (a, b) => {
+    a = root(a); b = root(b);
+    if (a > b) parents[a] = b;
+    else parents[b] = a;
+  };
+  let row = -1, rowStart = 0, previousEnd = 0, previousCursor = 0;
+  for (let start = walk.indexOf(1); start >= 0;) {
+    const nextRow = Math.floor(start / width);
+    if (nextRow !== row) {
+      previousCursor = nextRow === row + 1 ? rowStart : starts.length;
+      previousEnd = starts.length;
+      rowStart = starts.length; row = nextRow;
+    }
+    // A validated row ends at zero padding, so this native search cannot wrap.
+    const end = walk.indexOf(0, start), id = starts.length;
+    starts.push(start); ends.push(end); parents.push(id);
+    const left = start - width, right = end - width;
+    while (previousCursor < previousEnd && ends[previousCursor] <= left) previousCursor++;
+    for (let prior = previousCursor; prior < previousEnd && starts[prior] < right; prior++) {
+      unite(id, prior);
+    }
+    start = walk.indexOf(1, end);
+  }
+  // Lower run indices have lower padded seeds; union preserves that minimum.
+  const roots = [];
+  for (let id = 0; id < parents.length; id++) if (parents[id] === id) roots.push(id);
+  const count = roots.length, rootLabels = new Int32Array(parents.length);
+  for (let label = 0; label < count; label++) rootLabels[roots[label]] = label + 1;
+  const labels = new Int32Array(walk.length);
+  for (let id = 0; id < starts.length; id++) labels.fill(rootLabels[root(id)], starts[id], ends[id]);
+  const deep = new Int32Array(count + 1);
+  for (let index = 0; index < terrain.cols * terrain.rows; index += 1) {
+    if (terrain.cells[index] !== "~") continue;
+    const col = index % terrain.cols;
+    deep[labels[((index - col) / terrain.cols + 1) * width + col + 1]] += 1;
+  }
+  deep[0] = 0;
+  return { labels, count, deep };
+}
+
+export default runComponents;

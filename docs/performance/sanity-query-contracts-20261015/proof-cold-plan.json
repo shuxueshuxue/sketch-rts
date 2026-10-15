@@ -1,0 +1,40 @@
+{
+  "recordedAt": "2026-10-15T11:33:00Z",
+  "baseline": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+  "baselineRuntime": "281a75d0862246de8943cbf2b5aa31d8a82c08a5",
+  "rulesVersion": 3,
+  "checksumVersion": 18,
+  "ticks": 32,
+  "sequence": [
+    "A",
+    "M",
+    "F",
+    "F",
+    "M",
+    "A",
+    "M",
+    "A",
+    "F",
+    "F",
+    "A",
+    "M",
+    "A",
+    "F",
+    "M",
+    "M",
+    "F",
+    "A"
+  ],
+  "variants": {
+    "A": "unmodified source",
+    "F": "Boolean witness proof on original whole shore list, exact fallback",
+    "M": "query-owned local witness proof, original exact fallback; known mutation contract counterexamples; research only"
+  },
+  "scope": "cold exploratory screen, not formal whole-run timing acceptance",
+  "noTimingHooks": true,
+  "noProfiler": true,
+  "noForcedGc": true,
+  "originalClock": "updateToRenderTime plus currentSnapshot",
+  "allPrimitiveCostIncluded": true,
+  "stateHashesOutsideClock": true
+}

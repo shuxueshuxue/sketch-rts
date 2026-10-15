@@ -1,0 +1,97 @@
+{
+  "land": {
+    "walkCells": 21448,
+    "horizontalRuns": 777,
+    "components": 13,
+    "runOverlapsBetweenRows": 779,
+    "runsPerRowMin": 0,
+    "runsPerRowMax": 7,
+    "walkCellsPerRun": 27.603603603603602,
+    "eightNeighborInspectionsInOldBfs": 171584,
+    "componentData": [
+      {
+        "walkCells": 1895,
+        "runs": 63,
+        "minIndex": 6882
+      },
+      {
+        "walkCells": 1968,
+        "runs": 77,
+        "minIndex": 21183
+      },
+      {
+        "walkCells": 1147,
+        "runs": 37,
+        "minIndex": 23805
+      },
+      {
+        "walkCells": 1171,
+        "runs": 39,
+        "minIndex": 26438
+      },
+      {
+        "walkCells": 1862,
+        "runs": 79,
+        "minIndex": 28097
+      },
+      {
+        "walkCells": 3315,
+        "runs": 67,
+        "minIndex": 40157
+      },
+      {
+        "walkCells": 1158,
+        "runs": 40,
+        "minIndex": 42329
+      },
+      {
+        "walkCells": 1090,
+        "runs": 54,
+        "minIndex": 47585
+      },
+      {
+        "walkCells": 1566,
+        "runs": 91,
+        "minIndex": 57647
+      },
+      {
+        "walkCells": 1175,
+        "runs": 38,
+        "minIndex": 63798
+      },
+      {
+        "walkCells": 2006,
+        "runs": 73,
+        "minIndex": 65205
+      },
+      {
+        "walkCells": 1138,
+        "runs": 38,
+        "minIndex": 66427
+      },
+      {
+        "walkCells": 1957,
+        "runs": 81,
+        "minIndex": 79502
+      }
+    ]
+  },
+  "sea": {
+    "walkCells": 85767,
+    "horizontalRuns": 838,
+    "components": 1,
+    "runOverlapsBetweenRows": 850,
+    "runsPerRowMin": 1,
+    "runsPerRowMax": 5,
+    "walkCellsPerRun": 102.3472553699284,
+    "eightNeighborInspectionsInOldBfs": 686136,
+    "componentData": [
+      {
+        "walkCells": 85767,
+        "runs": 838,
+        "minIndex": 0
+      }
+    ]
+  },
+  "method": "Static statistics of original initial map only. Rows split by original PASSABLE char sets; vertical run overlaps produce 4-neighbor components. No game, terrain module, compiler, simulation or timing experiment executed. Components match 8-neighbor/no-corner-cut connectivity because every admitted diagonal has an admitted two-cardinal path. Timing benefit unmeasured."
+}

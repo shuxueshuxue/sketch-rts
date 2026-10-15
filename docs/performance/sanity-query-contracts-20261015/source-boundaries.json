@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-15T11:38:44.756501+00:00",
+  "main": "4804631c22f7be3f83dc6374e71ce03d86068dd8\trefs/heads/main",
+  "openPullRequests": [
+    {
+      "headRefName": "perf/sanity-simple-20261015",
+      "headRefOid": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+      "isDraft": true,
+      "number": 381,
+      "title": "perf: bounded ship planning reuse and max tick sanity evidence"
+    },
+    {
+      "headRefName": "bootstrap_1",
+      "headRefOid": "a3486bda6fe3a5c4a953e71b4a064efd9927bc30",
+      "isDraft": true,
+      "number": 192,
+      "title": "bootstrap_1: preserve frozen acceptance and continue three-family AI iteration"
+    }
+  ],
+  "localHead": "ad85c71bae879e0bfdfe29487caa8f61ac9cf9ca",
+  "productionDiffAgainst281": "",
+  "node": "v24.19.0"
+}
