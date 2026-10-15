@@ -18,7 +18,9 @@ const reconstruction=new WeakMap<VoyageJob,{remaining:number;invalid:boolean}>()
 
 function trafficView(job:VoyageJob,map:GameMap):ReturnType<typeof shipRouteTraffic> {
   let traffic=trafficViews.get(job);
-  if(!traffic){traffic=shipRouteTraffic(map,job.ship,job.traffic);trafficViews.set(job,traffic);}
+  // The body frame needs the planning hull present to activate shore-body
+  // constraints even when the frozen neighbors contain only land troops.
+  if(!traffic){traffic=shipRouteTraffic(map,job.ship,[job.ship,...job.traffic]);trafficViews.set(job,traffic);}
   return traffic;
 }
 function voyageReference(job:VoyageJob):boolean {

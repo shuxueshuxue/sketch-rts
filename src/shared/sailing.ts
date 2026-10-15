@@ -140,7 +140,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       if(other===ship || other.owner!==ship.owner || other.order.type!=='move'
         || other.order.heading!==undefined || other.order.rendezvousFor!==undefined || !other.sailing)return true;
       if((other.shipParts?.rigging ?? shipPartMax(other).rigging)<=0)return true;
-      if(coastalVoyage)return false;
+      if(coastalVoyage){
+        // Distant companions will vacate this coast before we reach them.
+        // A nearby hull still constrains the departure turn or pivot: omitting
+        // it produces a first maneuver that the live sweep rejects forever.
+        const own=shipProfile(ship)!,companion=shipProfile(other)!;
+        const radius=(hull:typeof own.hull)=>Math.max(...hull.map(point=>Math.hypot(point.x,point.y)));
+        return Math.hypot(other.x-ship.x,other.y-ship.y)<=radius(own.hull)*2+radius(companion.hull);
+      }
       // A parallel convoy follows an underway leader instead of navigating
       // around a frozen copy of its stern. Real headway and every physical
       // sweep still include that hull; disabled or docking vessels stay fixed.
