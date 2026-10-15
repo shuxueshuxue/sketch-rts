@@ -380,17 +380,20 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
  * during strategic planning. Actual helm and motion checks always call
  * shipTraffic against the live hull, so this cannot permit a ship crossing. */
 export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
+  return shipTraffic(ship,reservedUnits(ship,units),range);
+}
+/** The hulls a reservation view sees: a reciprocal partner stands at its appointed pose. */
+export function reservedUnits(ship:Unit,units:readonly Unit[]):readonly Unit[] {
   const rendezvousFor=ship.order.type==='move'?ship.order.rendezvousFor:undefined;
   const crew=rendezvousFor?units.find(unit=>unit.id===rendezvousFor):undefined;
   const boarding=crew?.order.type==='board'?crew.order:undefined,plan=boarding?.rendezvous;
-  if(!plan?.reciprocal || !boarding || ship.id!==plan.sourceId && ship.id!==boarding.transportId)return shipTraffic(ship,units,range);
+  if(!plan?.reciprocal || !boarding || ship.id!==plan.sourceId && ship.id!==boarding.transportId)return units;
   const partnerId=ship.id===plan.sourceId?boarding.transportId:plan.sourceId;
-  const reserved=units.map(other=>{
+  return units.map(other=>{
     if(other.id!==partnerId || other.order.type!=='move' || other.order.rendezvousFor!==rendezvousFor || !other.sailing)return other;
     const x=other.id===plan.sourceId?plan.sourceX:plan.targetX,y=other.id===plan.sourceId?plan.sourceY:plan.targetY;
     return{...other,x,y,sailing:{...other.sailing,heading:plan.heading}};
   });
-  return shipTraffic(ship,reserved,range);
 }
 
 export function shipTrafficKey(ship:Unit,units:readonly Unit[]) {

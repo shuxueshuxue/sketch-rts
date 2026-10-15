@@ -160,10 +160,11 @@ describe('saved incremental ship planning state', () => {
   it('restores a compact actual island checkpoint after more than 50,000 expansions', () => {
     const { game, ship } = largeIslandVoyage();
     let checkpoint: { ship: typeof ship; traffic: typeof game.units; goal: { x: number; y: number }; searchSteps: number } | undefined;
-    for (let tick = 0; tick < 80 && !checkpoint; tick++) {
+    // Slices are cut by logical work (@@@ship-search-work): about 700 plain expansions each after the entrance.
+    for (let tick = 0; tick < 300 && !checkpoint; tick++) {
       stepGame(game);
       const saved = ship.sailing!.planningJob && JSON.parse(ship.sailing!.planningJob);
-      if (saved?.phase === 'reference' && saved.searchSteps >= 19) checkpoint = saved;
+      if (saved?.phase === 'reference' && saved.searchSteps >= 80) checkpoint = saved;
     }
     expect(checkpoint, 'the authored adverse-wind island still requires a large search').toBeDefined();
     const state: ShipRouteSearchState = { phase: 'prepare' };
@@ -177,7 +178,7 @@ describe('saved incremental ship planning state', () => {
     const resumed = restoredCopy(game);
     expect(checksumGame(resumed)).toBe(checksumGame(game));
     let completed = false;
-    for (let tick = 0; tick < 80; tick++) {
+    for (let tick = 0; tick < 200; tick++) {
       stepGame(game); stepGame(resumed);
       expect(JSON.parse(JSON.stringify(snapshotGame(resumed))), `large replay tick ${tick}`)
         .toEqual(JSON.parse(JSON.stringify(snapshotGame(game))));
