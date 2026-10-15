@@ -80,8 +80,44 @@ function outline(hull: readonly Point[], pose: ShipPose) {
   const c = detCos(pose.heading), s = detSin(pose.heading);
   return hull.map(p => ({ x: pose.x + p.x * c - p.y * s, y: pose.y + p.x * s + p.y * c }));
 }
+/** Terrain-only answers are pure functions of the hull's local vertices, the
+ * map bounds, the terrain cells and the exact poses. Replans toward the same
+ * goal and continued searches repeat most coastal sweeps; a remembered answer
+ * is the boolean the sweep computes, so a hit never changes a decision. */
+type HullMemo = { cells: string; cell: number; cols: number; rows: number; width: number; height: number; passages: Map<string, boolean>; fits: Map<string, boolean> };
+const hullMemos = new WeakMap<object, HullMemo>();
+const hullIds = new WeakMap<readonly Point[], string>(), hullShapes = new Map<string, string>();
+const PASSAGE_MEMO_LIMIT = 32768, FIT_MEMO_LIMIT = 16384;
+/** Number keys must keep every distinct value apart; template text merges -0 with 0. */
+export const exactKey = (value: number) => value === 0 && 1 / value < 0 ? '-0' : `${value}`;
+function hullId(hull: readonly Point[]) {
+  let id = hullIds.get(hull);
+  if (id === undefined) {
+    // Profiles are recomputed per unit; equal vertex lists share one short id.
+    const shape = hull.map(point => `${exactKey(point.x)},${exactKey(point.y)}`).join(';');
+    id = hullShapes.get(shape);
+    if (id === undefined) { id = `${hullShapes.size}`; hullShapes.set(shape, id); }
+    hullIds.set(hull, id);
+  }
+  return id;
+}
+function hullMemo(map: SeaMap) {
+  const t = map.terrain!;
+  let memo = hullMemos.get(t);
+  if (!memo || memo.cells !== t.cells || memo.cell !== t.cell || memo.cols !== t.cols || memo.rows !== t.rows
+    || memo.width !== map.width || memo.height !== map.height) {
+    memo = { cells: t.cells, cell: t.cell, cols: t.cols, rows: t.rows, width: map.width, height: map.height, passages: new Map(), fits: new Map() };
+    hullMemos.set(t, memo);
+  }
+  return memo;
+}
+function remember(memo: Map<string, boolean>, key: string, value: boolean, limit: number) {
+  if (memo.size >= limit) memo.delete(memo.keys().next().value!);
+  memo.set(key, value);
+  return value;
+}
 /** Exact convex polygon / cell intersection, including edges crossing a cell without a vertex inside it. */
-function clearOutline(map: SeaMap, polygon: readonly Point[]) {
+function clearOutline(map: SeaMap, polygon: readonly Point[], fitKey?: () => string) {
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const point of polygon) {
     left = Math.min(left, point.x); right = Math.max(right, point.x);
@@ -94,6 +130,14 @@ function clearOutline(map: SeaMap, polygon: readonly Point[]) {
     return true;
   if (openWaterBox(map, left, top, right, bottom))
     return true;
+  if (fitKey) {
+    const memo = hullMemo(map), key = fitKey(), known = memo.fits.get(key);
+    return known ?? remember(memo.fits, key, coastOutlineClear(map, polygon, left, top, right, bottom), FIT_MEMO_LIMIT);
+  }
+  return coastOutlineClear(map, polygon, left, top, right, bottom);
+}
+function coastOutlineClear(map: SeaMap, polygon: readonly Point[], left: number, top: number, right: number, bottom: number) {
+  const terrain = map.terrain!;
   const cell = terrain.cell;
   for (let row = Math.floor(top / cell); row <= Math.floor((bottom - 1e-7) / cell); row++)
     for (let col = Math.floor(left / cell); col <= Math.floor((right - 1e-7) / cell); col++) {
@@ -105,7 +149,8 @@ function clearOutline(map: SeaMap, polygon: readonly Point[]) {
 }
 export function hullFits(map: SeaMap, ship: Unit, pose: ShipPose = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 }) {
   const profile = shipProfile(ship);
-  return Boolean(profile && clearOutline(map, outline(profile.hull, pose)));
+  return Boolean(profile && clearOutline(map, outline(profile.hull, pose),
+    () => `${hullId(profile.hull)}|${exactKey(pose.x)}|${exactKey(pose.y)}|${exactKey(pose.heading)}`));
 }
 /** Continuous sweep: bounded rotational curvature expands each endpoint envelope. */
 export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: ShipPose) {
@@ -125,6 +170,15 @@ export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: Sh
   const corridorRadius = pivotArc ? hullRadius + lever*turn*turn/8 + (lever ? 1e-5 : 0) : radius;
   if (openWaterBox(map, Math.min(from.x, to.x) - corridorRadius, Math.min(from.y, to.y) - corridorRadius, Math.max(from.x, to.x) + corridorRadius, Math.max(from.y, to.y) + corridorRadius))
     return true;
+  if (!map.terrain)
+    return coastPassageClear(map, ship, hull, from, to, turn, radius);
+  // Every input of the sweep below: the hull, both poses, the incoming
+  // curvature and pivot (other waypoint metadata never reaches the geometry).
+  const memo = hullMemo(map), key = `${hullId(hull)}|${exactKey(from.x)}|${exactKey(from.y)}|${exactKey(from.heading)}|${exactKey(to.x)}|${exactKey(to.y)}|${exactKey(to.heading)}|${to.curvature === undefined ? 'u' : exactKey(to.curvature)}|${to.pivot ? `${exactKey(to.pivot.x)},${exactKey(to.pivot.y)}` : '-'}`;
+  const known = memo.passages.get(key);
+  return known ?? remember(memo.passages, key, coastPassageClear(map, ship, hull, from, to, turn, radius), PASSAGE_MEMO_LIMIT);
+}
+function coastPassageClear(map: SeaMap, ship: Unit, hull: readonly Point[], from: ShipPose, to: ShipPose, turn: number, radius: number) {
   if(turn && (!hullFits(map,ship,from) || !hullFits(map,ship,to)))return false;
   // Subdivide by a geometric error bound, rather than vertex travel. Every
   // envelope still contains the whole arc, with at most 0.025 units padding.
@@ -902,6 +956,10 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   let preparedTarget=state?.target,deferred=state?.deferred??false;
   const length = shipProfile(ship)!.length;
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
+  // One berth's validated arrival arcs serve the whole call: the target and
+  // traffic callback are the same objects, so validating them again repeats
+  // identical checks. A continued search validates them in its own slice.
+  let arrive:ReturnType<typeof arrivalConnectorFor>|undefined;
   if(!preparedTarget){
     const terrainTarget=requested && hullFits(map,ship,requested) ? requested : nearestShipPose(map,ship,goal);
     preparedTarget=terrainTarget && trafficClear(terrainTarget,terrainTarget) ? terrainTarget : nearestShipPose(map,ship,goal,ship,pose=>trafficClear(pose,pose));
@@ -913,7 +971,8 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const direct=keelConnector(map,ship,start,destination,trafficClear);
     if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
       || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
-    const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
+    arrive=arrivalConnectorFor(map,ship,target,trafficClear);
+    const arrival=arrive(start);
     if(arrival)return {points:arrival,partial:deferred};
     const direction=Math.atan2(target.y-start.y,target.x-start.x);
     if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
@@ -924,7 +983,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   }
   const target=preparedTarget!;
   const destination=requested?target:{x:target.x,y:target.y};
-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
+  const arriveNear=arrive ?? arrivalConnectorFor(map,ship,target,trafficClear);
   const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
     basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
   // A local traffic budget and a short berth search should stay local. The
@@ -1039,7 +1098,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     }
     if(gap<=lattice.cell*1.5){
       const at = p ?? {x:px,y:py,heading:h*ANGLE};
-      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? arrive(at);
+      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? arriveNear(at);
       if(connection){best=id;terminal=connection;break;}
     }
     visit(id, nodeCost, p, cell * DIRECTIONS + (h + 1) % DIRECTIONS, ANGLE / turnSpeed, grid.turns, id * 2, grid.masks[h]![1]!);

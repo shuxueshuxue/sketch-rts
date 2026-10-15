@@ -2,7 +2,7 @@ import { detCos, detSin } from './det-math';
 import { clipToConvex, convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonRadius } from './navigation-math';
 import { bodyMass } from './physical-body';
 import { isShipKind, shipProfile, type Point } from './ship-geometry';
-import { headingDifference, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
+import { exactKey, headingDifference, hullPassageClear, shipPoseAt, type ShipPose } from './ship-navigation';
 import { CELL_GROUND, footprintHalf, isWalkable } from './terrain';
 import { SIM_TICKS_PER_SECOND } from './time';
 import type { Building, GameMap, Obstacle, Unit } from './types';
@@ -43,10 +43,13 @@ export function physicalSolidOutline(map: Pick<GameMap, 'terrain'>, body: Solid)
   const half = map.terrain ? footprintHalf(body.radius, map.terrain.cell) : body.radius;
   return [{ x: body.x - half, y: body.y - half }, { x: body.x + half, y: body.y - half }, { x: body.x + half, y: body.y + half }, { x: body.x - half, y: body.y + half }];
 }
+// Every circle shares the same 32 unit directions and circumscribing scale.
+const CIRCLE_SIDES = 32, CIRCLE_SCALE = detCos(Math.PI / CIRCLE_SIDES);
+const CIRCLE_DIRECTIONS = Array.from({ length: CIRCLE_SIDES }, (_, i) => ({ x: detCos(i * Math.PI * 2 / CIRCLE_SIDES), y: detSin(i * Math.PI * 2 / CIRCLE_SIDES) }));
 function circleOutline(body: Point & { radius: number }): Point[] {
   // Circumscribed edges keep the true circular body inside the approximation.
-  const count = 32, radius = body.radius / detCos(Math.PI / count);
-  return Array.from({ length: count }, (_, i) => ({ x: body.x + radius * detCos(i * Math.PI * 2 / count), y: body.y + radius * detSin(i * Math.PI * 2 / count) }));
+  const radius = body.radius / CIRCLE_SCALE;
+  return CIRCLE_DIRECTIONS.map(direction => ({ x: body.x + radius * direction.x, y: body.y + radius * direction.y }));
 }
 function hullOutline(ship: Unit, pose: ShipPose): Point[] {
   const c = detCos(pose.heading), s = detSin(pose.heading);
@@ -144,21 +147,55 @@ function supportPoint(polygon: readonly Point[], normal: Point) {
   }
   return { x: x / count, y: y / count };
 }
-function sweepShape(ship: Unit, from: ShipPose, to: ShipPose, bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined {
+/** The own hull swept between two step poses, negated into configuration
+ * space. It depends on the hull, both headings and the chord error alone, so
+ * every body and coast cell tested against one motion, and every later motion
+ * through the same headings, read one copy of exactly the same vertices. */
+type SweptReach = { reach: Point[]; start?: Point[] };
+const sweptReaches = new WeakMap<readonly Point[], Map<string, SweptReach>>();
+function sweptReach(ship: Unit, a: ShipPose, b: ShipPose, error: number): SweptReach {
+  const hull = shipProfile(ship)!.hull;
+  let reaches = sweptReaches.get(hull);
+  if (!reaches) sweptReaches.set(hull, reaches = new Map());
+  const key = `${exactKey(a.heading)}|${exactKey(b.heading)}|${exactKey(error)}`;
+  let swept = reaches.get(key);
+  if (!swept) {
+    const shape = convexHull([...hullOutline(ship, { ...a, x: 0, y: 0 }), ...hullOutline(ship, { ...b, x: 0, y: 0 })]);
+    swept = { reach: (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })) };
+    if (reaches.size >= 512) reaches.delete(reaches.keys().next().value!);
+    reaches.set(key, swept);
+  }
+  return swept;
+}
+type SweepStep = { a: ShipPose; b: ShipPose; swept: SweptReach };
+type Sweep = { ship: Unit; from: ShipPose; to: ShipPose; turn: number; steps: number; radius: number; lever: number; done: SweepStep[] };
+function beginSweep(ship: Unit, from: ShipPose, to: ShipPose): Sweep {
   const radius = polygonRadius(shipProfile(ship)!.hull), turn = headingDifference(from.heading, to.heading);
   const lever = to.pivot ? Math.hypot(from.x - to.pivot.x, from.y - to.pivot.y) : 0;
   const steps = Math.max(1, Math.ceil(Math.abs(turn) * Math.sqrt((radius + lever) / (8 * .025))));
-  for (let i = 0; i < steps; i++) {
+  return { ship, from, to, turn, steps, radius, lever, done: [] };
+}
+/** Steps are prepared only as far as some body's test reaches them. */
+function sweepStep(sweep: Sweep, i: number): SweepStep {
+  let step = sweep.done[i];
+  if (!step) {
+    const { ship, from, to, turn, steps, radius, lever } = sweep;
     const a = shipPoseAt(from, to, i / steps), b = shipPoseAt(from, to, (i + 1) / steps);
-    const shape = convexHull([...hullOutline(ship, { ...a, x: 0, y: 0 }), ...hullOutline(ship, { ...b, x: 0, y: 0 })]);
     const error = turn ? (radius + lever) * (turn / steps) ** 2 / 8 + 1e-7 : 0;
-    const configuration = minkowskiSum(bodyPolygon, (error ? expandConvex(shape, error) : shape).map(p => ({ x: -p.x, y: -p.y })));
+    step = sweep.done[i] = { a, b, swept: sweptReach(ship, a, b, error) };
+  }
+  return step;
+}
+function sweepShape(sweep: Sweep, bodyPolygon: readonly Point[]): Omit<Contact, 'kind'> | undefined {
+  const { ship, from, to, turn, steps } = sweep;
+  for (let i = 0; i < steps; i++) {
+    const { a, b, swept } = sweepStep(sweep, i);
+    const configuration = minkowskiSum(bodyPolygon, swept.reach);
     let contact = segmentContact(a, b, configuration);
     // A rotating hull has no center translation. Its swept outline still supplies a contact face.
-    if (!contact && Math.abs(turn) > 1e-8) {
-      const inside = polygonPlanes(configuration).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6);
-      const before = minkowskiSum(bodyPolygon, hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
-      if (inside && !polygonPlanes(before).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6)) {
+    if (!contact && Math.abs(turn) > 1e-8 && polygonPlanes(configuration).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6)) {
+      const before = minkowskiSum(bodyPolygon, swept.start ??= hullOutline(ship, { ...a, x: 0, y: 0 }).map(p => ({ x: -p.x, y: -p.y })));
+      if (!polygonPlanes(before).every(p => a.x * p.x + a.y * p.y > p.min + 1e-6)) {
         const plane = polygonPlanes(configuration).reduce((best, p) => (a.x * p.x + a.y * p.y - p.min) / Math.hypot(p.x, p.y) < (a.x * best.x + a.y * best.y - best.min) / Math.hypot(best.x, best.y) ? p : best);
         const length = Math.hypot(plane.x, plane.y); contact = { fraction: 0, normal: { x: plane.x / length, y: plane.y / length } };
       }
@@ -180,8 +217,8 @@ export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bo
   }
   return true;
 }
-function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose): Contact | undefined {
-  const radius = polygonRadius(shipProfile(ship)!.hull), terrain = map.terrain;
+function terrainContact(map: GameMap, sweep: Sweep): Contact | undefined {
+  const { from, to, radius } = sweep, terrain = map.terrain;
   const left = Math.min(from.x, to.x) - radius, right = Math.max(from.x, to.x) + radius;
   const top = Math.min(from.y, to.y) - radius, bottom = Math.max(from.y, to.y) + radius;
   const polygons: Point[][] = [];
@@ -199,20 +236,20 @@ function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose):
   if (top < 0) polygons.push([{ x: -margin, y: -margin }, { x: map.width + margin, y: -margin }, { x: map.width + margin, y: 0 }, { x: -margin, y: 0 }]);
   if (bottom > map.height) polygons.push([{ x: -margin, y: map.height }, { x: map.width + margin, y: map.height }, { x: map.width + margin, y: map.height + margin }, { x: -margin, y: map.height + margin }]);
   let best: Contact | undefined;
-  for (const polygon of polygons) { const contact = sweepShape(ship, from, to, polygon); if (contact && (!best || contact.fraction < best.fraction)) best = { ...contact, kind: 'terrain' }; }
+  for (const polygon of polygons) { const contact = sweepShape(sweep, polygon); if (contact && (!best || contact.fraction < best.fraction)) best = { ...contact, kind: 'terrain' }; }
   return best;
 }
 /** The continuous contact occurs even when the desired end pose is clear beyond a thin obstacle. */
 export function sweepShipCollision(map: GameMap, ship: Unit, units: readonly Unit[], from: ShipPose, to: ShipPose): Contact | undefined {
-  const frame = frameFor(units, map), radius = polygonRadius(shipProfile(ship)!.hull);
+  const frame = frameFor(units, map), sweep = beginSweep(ship, from, to), radius = sweep.radius;
   let best: Contact | undefined;
   for (const { body } of nearby(frame, from, to, radius)) {
     if (body === ship || !activeBody(map, body)) continue;
-    const contact = sweepShape(ship, from, to, outline(map, body));
+    const contact = sweepShape(sweep, outline(map, body));
     if (contact && (!best || contact.fraction < best.fraction - 1e-8)) best = { ...contact, other: body, kind: kindOf(body) };
   }
   if (!hullPassageClear(map, ship, from, to)) {
-    const contact = terrainContact(map, ship, from, to);
+    const contact = terrainContact(map, sweep);
     if (contact && (!best || contact.fraction < best.fraction)) best = contact;
     // Retain the navigation sweep's conservative curvature guarantee.
     if (!best) {
