@@ -185,7 +185,9 @@ function unitTargets(want: V6Want): [TrainableUnitKind, number][] {
 }
 
 function have(economy: Omit<Economy, "phase">, kind: TrainableUnitKind) {
-  return economy.intel.army.filter((unit) => unit.kind === kind).length + economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === kind).length, 0);
+  // Recruitment progress counts owned recruits wherever they are stationed.
+  // Tactical intel deliberately excludes deck crews and must not set purchase quotas.
+  return units(economy.snapshot, economy.owner).filter((unit) => unit.kind === kind).length + economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === kind).length, 0);
 }
 
 function supplyGoals(economy: Economy, farmLimit: number): Goal[] {

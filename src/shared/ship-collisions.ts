@@ -180,6 +180,24 @@ export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bo
   }
   return true;
 }
+/** Batch stationary pose queries at one heading against one unchanged world.
+ * Reuse each body's configuration polygon while searching nearby berths. */
+export function shipBodyClearanceAtHeading(map: GameMap, ship: Unit, heading: number, bodies: readonly Body[]) {
+  const negative=hullOutline(ship,{x:0,y:0,heading}).map(point=>({x:-point.x,y:-point.y}));
+  const radius=polygonRadius(shipProfile(ship)!.hull);
+  const entries=bodies.filter(body=>body!==ship && activeBody(map,body)).map(body=>({
+    body,x:body.x,y:body.y,radius:radius+radiusOf(map,body),planes:undefined as ReturnType<typeof polygonPlanes>|undefined,
+  }));
+  return (pose:Point)=>{
+    for(const entry of entries) {
+      if(Math.hypot(entry.x-pose.x,entry.y-pose.y)>entry.radius)continue;
+      const planes=entry.planes??(entry.planes=polygonPlanes(minkowskiSum(outline(map,entry.body),negative)));
+      if(planes.every(plane=>pose.x*plane.x+pose.y*plane.y>plane.min+1e-6))return false;
+    }
+    return true;
+  };
+}
+
 function terrainContact(map: GameMap, ship: Unit, from: ShipPose, to: ShipPose): Contact | undefined {
   const radius = polygonRadius(shipProfile(ship)!.hull), terrain = map.terrain;
   const left = Math.min(from.x, to.x) - radius, right = Math.max(from.x, to.x) + radius;

@@ -1,7 +1,9 @@
+import { sameGround } from './terrain';
 import { detCos, detSin } from './det-math';
 import { decksAllowCrossing,decksCanTransfer,decksSupportCrossing } from './connected-decks';
 import { gangwaySurface } from './ship-gangway';
-import { shipContactGoal, shipTraffic } from './ship-avoidance';
+import { shipContactGoal } from './ship-avoidance';
+import { shipBodyClearAtPose } from './ship-collisions';
 import { headingDifference, hullFits, type ShipPose } from './ship-navigation';
 import { shipProfile, shipsIn } from './ship-geometry';
 import { RANGED_ATTACK_RANGE_THRESHOLD } from './aiming';
@@ -37,13 +39,23 @@ function rendezvous(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,cr
       const dx=(source.x+target.x-sourcePose.x-targetPose.x)/2,dy=(source.y+target.y-sourcePose.y-targetPose.y)/2;
       sourcePose.x+=dx;sourcePose.y+=dy;targetPose.x+=dx;targetPose.y+=dy;
     }
-    const a={...source,x:sourcePose.x,y:sourcePose.y,sailing:{...source.sailing!,heading}},b={...target,x:targetPose.x,y:targetPose.y,sailing:{...target.sailing!,heading}};
-    const traffic=units.filter(unit=>unit!==source&&unit!==target);
-    if(!hullFits(map,source,sourcePose)||!hullFits(map,target,targetPose)||!decksSupportCrossing(a,b,crew)
-      ||!shipTraffic(a,traffic)(sourcePose,sourcePose)||!shipTraffic(b,traffic)(targetPose,targetPose))continue;
-    const score=Math.hypot(sourcePose.x-source.x,sourcePose.y-source.y)+Math.abs(headingDifference(source.sailing!.heading,heading))*shipProfile(source)!.length/2
-      +(reciprocal?Math.hypot(targetPose.x-target.x,targetPose.y-target.y)+Math.abs(headingDifference(target.sailing!.heading,heading))*shipProfile(target)!.length/2:0);
-    if(score<bestScore){bestScore=score;best={sourceId:source.id,sourceX:sourcePose.x,sourceY:sourcePose.y,heading,targetX:targetPose.x,targetY:targetPose.y,reciprocal};}
+    // The midpoint can be dry land even when both hulls share the ocean.
+    // Also consider keeping either endpoint at its current station. These
+    // are contact-preserving translations, not relocations of the live hulls.
+    const offsets=reciprocal ? [{x:0,y:0},{x:source.x-sourcePose.x,y:source.y-sourcePose.y},
+      {x:target.x-targetPose.x,y:target.y-targetPose.y}] : [{x:0,y:0}];
+    for(const shift of offsets){
+      const sourceAt={...sourcePose,x:sourcePose.x+shift.x,y:sourcePose.y+shift.y};
+      const targetAt={...targetPose,x:targetPose.x+shift.x,y:targetPose.y+shift.y};
+      const a={...source,x:sourceAt.x,y:sourceAt.y,sailing:{...source.sailing!,heading}},b={...target,x:targetAt.x,y:targetAt.y,sailing:{...target.sailing!,heading}};
+      const traffic=units.filter(unit=>unit!==source&&unit!==target);
+      if(!hullFits(map,source,sourceAt)||!hullFits(map,target,targetAt)||!decksSupportCrossing(a,b,crew)
+        ||!sameGround(map,source,sourceAt,'sea')||!sameGround(map,target,targetAt,'sea')
+        ||!shipBodyClearAtPose(map,a,sourceAt,traffic)||!shipBodyClearAtPose(map,b,targetAt,traffic))continue;
+      const score=Math.hypot(sourceAt.x-source.x,sourceAt.y-source.y)+Math.abs(headingDifference(source.sailing!.heading,heading))*shipProfile(source)!.length/2
+        +(reciprocal?Math.hypot(targetAt.x-target.x,targetAt.y-target.y)+Math.abs(headingDifference(target.sailing!.heading,heading))*shipProfile(target)!.length/2:0);
+      if(score<bestScore-1e-6){bestScore=score;best={sourceId:source.id,sourceX:sourceAt.x,sourceY:sourceAt.y,heading,targetX:targetAt.x,targetY:targetAt.y,reciprocal};}
+    }
   }
   return best;
 }

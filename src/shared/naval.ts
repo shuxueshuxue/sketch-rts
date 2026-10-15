@@ -4,7 +4,8 @@ import { isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } f
 import type { Building, GameMap, Obstacle, Unit } from "./types";
 import { deckPlacement } from "./decks";
 import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
-import { nearestShipPose } from "./ship-navigation";
+import { shipBodyClearanceAtHeading } from "./ship-collisions";
+import { hullFits, nearestShipPose } from "./ship-navigation";
 import { decksCanTransfer, shipShorePoints } from "./connected-decks";
 import { isInCabin } from './ship-cabin';
 
@@ -77,6 +78,32 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
   if(!sea)return undefined;
   const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
   return distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP ? {x:sea.x,y:sea.y,heading:sea.heading,shore:land} : undefined;
+}
+
+/** Keep a boarding pose outside waiting passengers while retaining their shore.
+ * Moving the berth a few pixels offshore avoids asking navigation to reach a
+ * hull pose occupied by the very soldiers it is collecting. */
+export function clearBoardingBerth(map: GameMap, passenger: Unit, boat: Unit,
+  berth: NonNullable<Extract<Unit["order"], {type:"board"}>["berth"]>, units: readonly Unit[]) {
+  const heading=berth.heading ?? boat.sailing?.heading ?? 0;
+  const bodiesClear=shipBodyClearanceAtHeading(map,boat,heading,units);
+  const clear=(x:number,y:number)=>bodiesClear({x,y}) && hullFits(map,boat,{x,y,heading});
+  if(clear(berth.x,berth.y))return berth;
+  const shore=berth.shore ?? passenger;
+  for(let radius=8;radius<=BOARDING_GAP*2;radius+=8) {
+    const candidates=[] as {x:number;y:number}[];
+    for(let y=-radius;y<=radius;y+=8)for(let x=-radius;x<=radius;x+=8) {
+      if(Math.max(Math.abs(x),Math.abs(y))!==radius)continue;
+      candidates.push({x:berth.x+x,y:berth.y+y});
+    }
+    candidates.sort((a,b)=>Math.hypot(a.x-berth.x,a.y-berth.y)-Math.hypot(b.x-berth.x,b.y-berth.y));
+    for(const point of candidates) {
+      const dock={...boat,...point,sailing:{...boat.sailing!,heading}};
+      if(distanceToHull(dock,shore)>passenger.radius+BOARDING_GAP || !clear(point.x,point.y))continue;
+      return {...berth,...point,heading};
+    }
+  }
+  return undefined;
 }
 
 // Where the transport's passenger number `index` of `count` steps ashore: the land nearest a point on the transport's side,

@@ -186,6 +186,19 @@ describe('shared dock outfitting', () => {
     expect(want?.issue(new Set())).toMatchObject({ type: 'build', buildingKind: 'farm' });
   });
 
+  it('does not spend colony capital on extra fleet population', () => {
+    const game=islandGame();
+    game.buildings.push({...game.buildings[0]!,id:'yard',kind:'shipyard',x:275,y:336,radius:44});
+    game.spawnUnit('player','transport',400,336);
+    game.players.player.supplyCap=8;
+    for(const mine of game.resources)if(mine.id!=='island')mine.amount=0;
+    game.players.player.gold=BUILDING_DEFS.townHall.cost;
+    const options={version:'v8' as const,memory:createAiPolicyMemory()};
+    const want=navalWant(snapshotGame(game),'player',options);
+    expect(want?.id).toBe('naval:fleetPopulation');
+    expect(planNavalEconomy(snapshotGame(game),'player',options)).toBeUndefined();
+    expect(game.players.player.gold).toBe(BUILDING_DEFS.townHall.cost);
+  });
   it('lets naval purchases spend their earmarked ferry budget after depletion', () => {
     const game = islandGame();
     for (const mine of game.resources) if (mine.id !== 'island') mine.amount = 0;

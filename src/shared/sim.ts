@@ -42,7 +42,7 @@ import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
-import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
+import { BOARDING_GAP, alongside, boardingBerth, clearBoardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { canBoard, boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks, settleGangwayCrossings } from "./decks";
 import { bodyMass } from "./physical-body";
@@ -1933,7 +1933,18 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     const boat=findTarget(game,passenger.order.transportId);
     if(!boat || !isUnit(boat) || boat.order.type!=="idle")continue;
     approached.add(boat.id);
-    const berth=passenger.order.berth ?? boardingBerth(game.map,passenger,boat);
+    const requested=passenger.order.berth ?? boardingBerth(game.map,passenger,boat);
+    // Once the actual hull reaches the shared shore, let the remaining
+    // walkers arrive instead of turning away toward an obsolete exact pose.
+    if(requested?.shore && distanceToHull(boat,requested.shore)<=passenger.radius+BOARDING_GAP)continue;
+    const route=boat.sailing?.route;
+    // A complete approach may board everyone before its nominal final turn.
+    // Keep that live route; its swept traffic checks still stop new obstacles.
+    const approaching=requested && route && !route.partial && route.points.length>0
+      && route.goalX===requested.x && route.goalY===requested.y;
+    const berth=requested && (approaching ? requested : clearBoardingBerth(game.map,passenger,boat,requested,game.units));
+    if(berth && berth!==requested)for(const waiting of boarding)
+      if(waiting.order.type==='board' && waiting.order.transportId===boat.id)waiting.order.berth=berth;
     // The berth is a hull pose, not just a center. Discarding its heading can
     // leave the bow offshore even after the boat reaches the correct point.
     if(berth && !alongside(passenger,boat))sailToward(boat,berth,game.map,game.units);

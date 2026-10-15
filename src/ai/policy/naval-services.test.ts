@@ -49,6 +49,23 @@ describe("physical naval service tasks", () => {
     expect(JSON.stringify(snapshot)).toBe(before);
     expect(JSON.stringify(options.memory)).toBe(memoryBefore);
   });
+  it("releases a cross-deck repair trip after the dock repairs its destination", () => {
+    const game=sea(),source=game.spawnUnit('player','warship',900,900),target=game.spawnUnit('player','transport',1600,900);
+    const worker=game.spawnUnit('player','worker',900,900);
+    expect(boardUnit(source,worker,game.units)).toBe(true);syncDecks(game.units);
+    target.hp-=1;
+    game.buildings.push(createBuilding('repair-dock','player','shipyard',1800,900,true));
+    const options={version:'v8' as const,memory:createAiPolicyMemory()};
+    for(const command of navalServices(snapshotGame(game),'player',options).commands)issuePlayerCommand(game,'player',command);
+    expect(worker.order.type).toBe('board');
+    for(let tick=0;tick<seconds(2)&&target.hp<target.maxHp;tick++)stepGame(game);
+    expect(target.hp).toBe(target.maxHp);expect(worker.deck?.shipId).toBe(source.id);
+    const service=navalServices(snapshotGame(game),'player',options);
+    expect(service.commands).toContainEqual({type:'stop',unitIds:[worker.id]});
+    expect(service.reserved.has(target.id)).toBe(false);
+    for(const command of service.commands)issuePlayerCommand(game,'player',command);
+    expect(worker.order.type).toBe('idle');
+  });
   for (const version of ["v5", "v7", "v8"] as const) {
     it(`${version} sends a repair worker across decks and the shared simulation repairs the hull`, () => {
       const game = sea(),

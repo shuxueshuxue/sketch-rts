@@ -47,7 +47,8 @@ export function navalServices(
     );
   const awaitBoarding = (target: Unit) => {
     // Shore boarding sails an idle hull to its berth; holding it strands the engineer.
-    if (target.owner === owner && target.order.type !== 'idle')
+    if (target.owner === owner && target.order.type !== 'idle'
+      && !(target.order.type === 'move' && target.order.rendezvousFor))
       result.commands.push({ type: "stop", unitIds: [target.id] });
   };
   const transfer = (crew: Unit, target: Unit) => {
@@ -66,10 +67,18 @@ export function navalServices(
       crew.order.type === "board" &&
       !options.memory.naval?.ferries?.[crew.order.transportId]
     ) {
+      const target = ships.find(ship => crew.order.type === 'board' && ship.id === crew.order.transportId);
+      // A dock can finish the repair before an engineer reaches the hull.
+      // That obsolete cross-deck trip must not reserve both ships forever.
+      // Keep shore recruits, hostile captures, live ferry crews and a worker
+      // already crossing a gangway under their existing orders.
+      if (crew.kind === 'worker' && crew.deck && !crew.gangway && target && !shipNeedsRepair(snapshot,target)) {
+        result.commands.push({type:'stop',unitIds:[crew.id]});
+        continue;
+      }
       result.reserved.add(crew.id);
       if (crew.deck) result.reserved.add(crew.deck.shipId);
       result.reserved.add(crew.order.transportId);
-      const target = ships.find(ship => crew.order.type === 'board' && ship.id === crew.order.transportId);
       if (target) awaitBoarding(target);
     }
   // Boarding reservations also cover missing or hostile destinations. Keep
