@@ -41,6 +41,23 @@ describe('job-owned planning search',()=>{
     }
   });
 
+  it('keeps empty-traffic budgets and isolates a nested public query',()=>{
+    for(const empty of [false,true]){
+      const a=scene(),b=scene(),state:ShipRouteSearchState={phase:'prepare'};
+      const traffic=(s:ReturnType<typeof scene>)=>Object.assign((from:ShipPose,to:ShipPose)=>{
+        planShipRoute(s.map,s.ship,{x:600,y:300},undefined,8,false);
+        return Math.max(from.y,to.y)<=44*32;
+      },empty?{hasTraffic:false}:{});
+      const left=traffic(a),right=traffic(b),advance=createShipPlanningSearch(b.ship,b.goal,right,Infinity,true);
+      let result:ReturnType<typeof planShipRoute>|undefined,slices=0;
+      while(!result && slices++<500){
+        const expected=advanceShipRouteSearch(a.map,a.ship,a.goal,left,Infinity,true,state);
+        result=advance(b.map);expect(result).toEqual(expected);
+      }
+      expect(result).toBeDefined();expect(slices).toBeGreaterThan(2);
+    }
+  });
+
   it('rechecks berth geometry after terrain contents or map dimensions change between slices',()=>{
     const a=scene(),b=scene(),left=recorder(false),right=recorder(false),state:ShipRouteSearchState={phase:'prepare'};
     const advance=createShipPlanningSearch(b.ship,b.goal,right.traffic,1024,true);
