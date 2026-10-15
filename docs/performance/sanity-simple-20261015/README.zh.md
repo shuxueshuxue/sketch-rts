@@ -126,3 +126,5 @@ node scripts/sanity-cow-scenario.mjs /tmp/control-tree /tmp/candidate-tree /tmp/
 series runner 保存预声明、完整命令、源 HEAD、probe hash、执行器原文、事件选择、wall/CPU/RSS/cgroup 日志。计数记录里的 grow work 是数组容量，planShipRouteImpl work 是恢复节点数，均不是“新扩展节点数”；profile/counter inclusive 时间不可相加。浏览器帧卡顿、更多地图/玩家规模、长时间 snapshot 保留以及未归因的 10710 tick 仍需下一轮独立验证。
 
 历史 stage7 文档并未存在于本轮 main；核对的是[此前证据提交中的文档](https://github.com/shuxueshuxue/sketch-rts/blob/a5bfd25969d06f38e9dc42f2274367032b45bf5d/docs/performance/rules3-stage7-cached-connectivity/README.zh.md)。本报告的基线和所有数值均来自本工作区重测，没有沿用历史基线数值。
+
+远端 CI 首轮在 SDK 的文档命名约束检查失败；只调整了研究稿措辞，原始研究文件仍保留在压缩归档。没有修改或放宽检查。对应 package-boundaries 本地复测通过，运行时源码仍与正式候选完全相同；远端检查以 PR 的最新状态为准。
