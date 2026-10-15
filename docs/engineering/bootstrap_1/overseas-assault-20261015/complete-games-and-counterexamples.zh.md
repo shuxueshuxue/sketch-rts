@@ -1,6 +1,6 @@
 # 2026-10-15 后续完整比赛与反证
 
-独立承接分支已到 `37597f17`；相对 `3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71` 的生产差异只有下述等价 landingSpot 查询优化。本记录保存独立比赛及未合候选，不将候选混入生产源码成绩。规则2、历史冻结修订 d1ae110f、184项 manifest `0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774` 均不变。完整包文件名、字节数和SHA256见同目录 `bootstrap-complete-games-20261015-index.json`。
+独立承接分支当前生产源码到 `36ae50c6`：在 `3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71` 上加入等价 landingSpot 查询优化、实际装载船护航/甲板让路、工人真实目的地记账与登船道路安全。护理、武装工人防守评分及航路首边候选仍独立，未借用其成绩。本记录保存完整比赛及未合候选。规则2、历史冻结修订 d1ae110f、184项 manifest `0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774` 均不变。完整包文件名、字节数和SHA256见同目录 `bootstrap-complete-games-20261015-index.json`。
 
 ## 新整合源码的真实普通0与续局分列
 
@@ -75,6 +75,26 @@ root再验证69姿态全等且输入未变；四文件38项原生回归、tsc/vi
 `knight-escort-transfer-v2-evidence.tar.gz` 封闭真实62400船间换乘阻塞：worker1851可用容量足、两甲板可转，但唯一witch占据所需走廊；原clearDeckTransfers过早以当前canBoard=false跳过，根本不让旁人挪开。V2先核原生结构/容量/甲板连接，允许既有让路；最终board依然要求真实canBoard及完整甲板路径。62400→63600两次公开witch让路后worker真正换船并维修；相同旧源对照零命令、零换船。没有改引擎或放宽原生入船条件。首个V1误加land-only资格的原补丁保留，V2按原生允许非船乘员修正。
 
 固定loading护航加transfer V2从原普通50400完整world/id/双方记忆另起换码续局，已在85866自然胜；首波17人全部死，后波84630才有真实两carrier共同公开卸载及13条unloadPassenger，不能冒称首波登陆已修复。详细终局证据仍在独立闭合，未归普通0。e7同源官方骑士普通0则因真实磁盘ENOSPC在68400后中断，末69600文件为空；58份完整gzip均保留。从完整68400输入以同1418项固定源重演至69600，中断前48条双方命令全等，继而继续同一恢复game。不能将空文件称作已恢复，也不将磁盘退出称作自然比赛结局。
+
+## 当前生产整合、真实普通0与后续否决
+
+40b86e40只加入上述loading护航和occupied-floor让路，另加一条实档公开命令60tick原生换船回归。root当前源对62400→63600的82份world/id、70条双方命令、全部hits和乘员换船事件均与固定V2相同；memory全程仅多原3bdb的carrier4715.targetGround，不声称和旧源全memory等同。当前源自己的63585→63600全world/id/双方mem/命令/hits闭合。原50400→51600窗口也与旧loading和完整V2的world/id及28条命令相同、0hits；该复制driver保留了错误的62400/63600分类文字，独立comparison按真实输入和实际tick纠正，raw未改。27原测试、1实档新测试和tsc通过，包 `bootstrap-escort-transfer-root-integration-evidence.tar.gz`。
+
+36ae50c6再只加入e7的14文件目的地记账/安全道路增量，保留当前targetGround、护航/transfer等代码。61相关检查加16活跃矿业检查、tsc均通过。当前36ae从原132000完整输入自然跑到135322获胜；终world、nextId、双方全部mem、全部命令、招工、原生交矿、登船及伤害记录均与e7已封候选逐值相同，135300→终局同源闭合。实付两工150、38次实收167.10，工人无伤，唯一永久死亡footman12834。包 `bootstrap-workforce-safety-root-complete-evidence.tar.gz`。这段不是36ae的新普通0，不能给当前整合版借用e7的普通0成绩。
+
+固定e7官方骑士普通0最终87735自然胜，敌0单位0楼，我方六永久死亡（四lancer、一raider、一ballista），中立损失一，原生每step记录工人零受伤/死亡。源1418项和184冻结不变；67200→68400全状态37命令闭合、68400恢复48命令、87600→终局全状态/命令闭合。76份完整记录、75个唯一tick和5766命令封入 `bootstrap-knight-e7-ordinary0-87735-evidence.tar.gz`；原ENOSPC和空69600文件一并保留。旧6f80同开发例135692胜/43永久/21中立/敌12残军仅是组合对照，不把收益单归安全hook，不作为留出泛化。
+
+完整V2 50400→85866封入 `knight-transfer-v2-original50400-complete-evidence.tar.gz`。第一批17人初东岸最多同时2人，后60739在敌岛同时6人；61068全部死，整批没有伤敌楼，不能用初子窗max2代表整波。它们杀敌14，中期本方outpost另杀8，后84630敌已削弱才有两carrier共同公开卸载13人；17.1169真实近船战力高于当时required3.2698，13人终局均活。己方19永久死亡恰为17兵加两艘空船，敌余9单位0楼。84000→85200、85200→85866全world/id/双方mem/commands/hits闭合；七个事件帧cached load/balance恢复差异保留。67200起维修再次占船：已修occupied-floor不是这次原因，native未来伙伴船体预留让规划首段穿过实际伙伴，executor正确拒绝，正在独立最低层首边候选验证。
+
+`worker-threat-37ae-ordinary0-closure-evidence.tar.gz` 完整保留混合候选80645普通0胜的代价：35永久死亡（31遗体加四沉船失踪乘员）、36临时spirit，共71原生损失；较3bdb33688晚46957tick。原首波五永久ID仍全部死，13200..78600采样敌原主岛无我方永久陆军，先打殖民岛，79200才再见ram/summoner登陆主岛；原家厅26144失去，终局四厅、敌九单位残留。136份完整档、实际乘员沉船三个短窗均闭合；74400另一个carrier的cached load/balance无法逐值还原，改用73800真实档正常重放到75000闭合，原失败保留。外层原process exit未独立观察到，不能补造exit0；自然winner和完整源/终局/重演事实均在。未合，不单归active worker效果。
+
+医疗9ba只在有医患者的move后排queued hold、保留非医疗原建筑保护，三真实短窗成功且59项测试通过，完整普通0仍24840败、53永久/1中立损失。16200→16800与24600→终局全world/id/三方mem闭合；首aim16248、CD16250、七伤转移16255，新骑手16381死、旧活过16800，但新医师反而晚81tick死，不能叙述成医师先死或单次七伤是唯一整局败因。`bootstrap-medical-arrival-three-boundaries-evidence.tar.gz` 与 `bootstrap-medical-arrival-hold9ba-evidence.tar.gz` 保留所有输入、实际视觉、源、失败记录及准确逐tick链；未合，暂停hold/follow几何变体，转查完整陆战与经济。
+
+`knight-recovery-crosswater-6f80-evidence.tar.gz` 封旧typed恢复腿的邻海/隔水边界修正：按真实Unit、原生canReach、实际炮位/射界/最小射程判断，而非按同岛硬过滤。64800→68400两固定源3601逐tick全world/id/双方mem、104双方命令、101全图hits均相同；40测试/tsc和真实原生武器正负例闭合。129158整场胜仍只属于旧组合，新边界不借用整场成绩。新worktree错误全量检出造成的满盘/common-config事件完整保留，不能声称未影响并行环境；未触旧工作文件的限度也准确记录。
+
+`bootstrap-reinforcement-rally-v1-negative-evidence.tar.gz` 是69600→70800窄援军否决：3780实际前进486px，但提前变sailing让远船进入旧incomingPower，原前锋多等，死亡从原五crew升为七crew加空运输船本体；不合、不降低原1.4/450海路门槛。测试文件名碰撞仅在独立control发生，后恢复原18例并另命名新6例，24通过；旧nearby场景在原e7同值失败，原日志保留。没有把测试或船前进距离当净收益。
+
+后续继续沿完整证据推进：召唤师武装worker防守评分已独立从普通0赢51137，较原慢17449但原首波五ID均存活、永久损失六；终局尚五敌lancer，完整归档待封，未合。弓手败局主矿枯竭后八工闲置、6000矿无第三厅，邻近消费却为200科技/300弩炮；骑士原资本阈值也错过税后可兑现资金不足。两条路线正共同核查实际经济消费链与可复用资本指标，尚未把假设写成已修。真实召唤师18600 full-planner暖查询约6秒已定位重复Minkowski几何，纯等价优化独立验证，不改正在评分的固定源，不以CPU检查代替比赛。
 
 上述失败与混合结果用于下一轮实战因果，不作为里程碑完成。三条风格路线、全部v5/v7/v8单敌及六种配对、官方图与未见生成种子的最终完整对局及泛化要求仍未满足。不改main，不回灌另行合并的新规则船只平衡或规则3/4性能工作。原故障容器未提交修改的恢复缺口继续保留。
 

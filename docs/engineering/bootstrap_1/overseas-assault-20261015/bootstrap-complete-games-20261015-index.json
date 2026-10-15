@@ -1,5 +1,5 @@
 {
-  "productionHead": "37597f17",
+  "productionHead": "36ae50c6",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -150,8 +150,53 @@
       "file": "knight-escort-transfer-v2-evidence.tar.gz",
       "bytes": 14189015,
       "sha256": "029b2eac82374eadc6f2ca57fab2a5a8561b2a2f228cd7607e1c6d0c8e5ef40d"
+    },
+    {
+      "file": "bootstrap-escort-transfer-root-integration-evidence.tar.gz",
+      "bytes": 3345672,
+      "sha256": "f2ed0253dbdc9115bceac3a60522e0b5d47eb3f7e3fc2f566018d8aaef2245cf"
+    },
+    {
+      "file": "bootstrap-workforce-safety-root-complete-evidence.tar.gz",
+      "bytes": 572169,
+      "sha256": "82b780fedb78069dcc49da45cd6ba7f0e38cabad6a17ab31c6a908e583d7137c"
+    },
+    {
+      "file": "bootstrap-knight-e7-ordinary0-87735-evidence.tar.gz",
+      "bytes": 9336930,
+      "sha256": "05de4d2a3ff10de11aca2dae64a5c840e19d652e4d4237f755c975c3285b1b1d"
+    },
+    {
+      "file": "knight-transfer-v2-original50400-complete-evidence.tar.gz",
+      "bytes": 14867447,
+      "sha256": "768c86260addb7f0cdb9208dc50880b3ef739296de590c2d32000d19ce08ec92"
+    },
+    {
+      "file": "bootstrap-medical-arrival-three-boundaries-evidence.tar.gz",
+      "bytes": 6697604,
+      "sha256": "62e4837811068754b14558e8441d755a062aeebb9c6daa5784bae201cf812382"
+    },
+    {
+      "file": "bootstrap-medical-arrival-hold9ba-evidence.tar.gz",
+      "bytes": 25017084,
+      "sha256": "986e39f6e1f7195e9c536b69bf1b7af09c0a9ba58b9fbd9d07c60794c1c55af9"
+    },
+    {
+      "file": "worker-threat-37ae-ordinary0-closure-evidence.tar.gz",
+      "bytes": 27628422,
+      "sha256": "1ea753f64bbec51eca7911fb44762e30de30c68ba895900900d0c9450e4b5cc2"
+    },
+    {
+      "file": "bootstrap-reinforcement-rally-v1-negative-evidence.tar.gz",
+      "bytes": 2407446,
+      "sha256": "baec44bdbee8a93f68c10373fdfcb43628ec9e4cf5fed35fe6bf02a3a30ebbaf"
+    },
+    {
+      "file": "knight-recovery-crosswater-6f80-evidence.tar.gz",
+      "bytes": 12002370,
+      "sha256": "ebb4f5955f92c361ab7360ff3a2b723839097b9068eab0fc5ce390003a283c44"
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-  "productionDelta": "Only equivalent same-point landingSpot hull-distance reuse; no unmerged AI candidate."
+  "productionDelta": "Equivalent landingSpot distance reuse, real-ferry loading escort and occupied-deck yielding, actual mining destination accounting and native worker boarding-road safety. Other candidates remain isolated."
 }
