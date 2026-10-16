@@ -569,6 +569,29 @@ it('paints one waiting card a frame once the raster budget is spent and draws ea
  frame();expect(painter).toHaveBeenCalledTimes(3);expect(cards.stats().rasterizations).toBe(3);cards.dispose();
 });
 
+it('paints an instance with nothing to show before one that can keep its last pose',()=>{
+ const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0});
+ const frame=(poses:Record<string,string>)=>{cards.begin();for(const [id,pose] of Object.entries(poses))cards.add(pose,2,paint,matrix,id,17);cards.finish(renderer);};
+ const drawn=(id:string)=>{const {mesh,index}=binding(cards,id);return(mesh.userData.cards[index] as {key:string}).key.split(':')[0];};
+ frame({a:'a1'});
+ // a asks first for a new pose, but b has no body yet: b is painted, a keeps a1 for a frame.
+ frame({a:'a2',b:'b1'});expect([drawn('a'),drawn('b')]).toEqual(['a1','b1']);
+ frame({a:'a2',b:'b1'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b1']);cards.dispose();
+});
+
+it('keeps the last pose of an instance still waiting for its new card when painting needs room in a full cache',()=>{
+ const policy:PaintedCardPolicy={maxTextureBanks:8},{cards}=setup(policy),units=Array.from({length:48},(_,i)=>`u${i}`);
+ const frame=(poses:Record<string,string>)=>{cards.begin();for(const [id,pose] of Object.entries(poses))cards.add(pose,4,paint,matrix,id,17,128);cards.finish(renderer);};
+ // 48 density-4 cards fill the soft budget, every one shown last frame.
+ frame(Object.fromEntries(units.map(id=>[id,`${id}-1`])));expect(cards.stats().cards).toBe(48);
+ // Two units change pose and one raster fits: u1's is painted first and needs a slot. The oldest card is u0's last
+ // pose, which u0 still shows while its own new card waits.
+ policy.rasterBudgetMs=0;
+ frame(Object.fromEntries([['u1','u1-2'],['u0','u0-2'],...units.slice(2).map(id=>[id,`${id}-1`])]));
+ const shown=cards.objects().flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count) as string[]);
+ expect(shown.sort()).toEqual([...units].sort());cards.dispose();
+});
+
 it('draws an instance whose new card is still waiting with the card it drew last frame',()=>{
  const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0});
  const frame=(poses:Record<string,string>)=>{cards.begin();for(const [id,pose] of Object.entries(poses))cards.add(pose,2,paint,matrix,id,17);cards.finish(renderer);};

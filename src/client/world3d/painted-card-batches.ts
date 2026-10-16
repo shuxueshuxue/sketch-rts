@@ -281,9 +281,17 @@ export class PaintedCardBatches {
     // A raster takes milliseconds (a hundred at once when a match opens on its armies), so a frame paints cards until it
     // has painted one and spent its budget. A card left to paint waits for a later frame; meanwhile its instance draws
     // the coarser resident mip it has, or the card it drew last frame (its previous pose), or nothing yet.
+    // Instances with nothing to show are painted first; one that can show a coarser mip or its previous pose waits, so
+    // in a battle no troop goes without a body while others refresh their poses. The previous pose a waiting instance
+    // shows is in use this frame: painting must not evict it.
+    for(const request of this.pending){
+      const card=this.cards.get(request.key);if(card&&card.baseMip<=finest.get(request.key)!.baseMip)continue;
+      const before=this.shownBefore.get(request.id),stand=before&&this.cards.get(before.key);if(stand)stand.used=stand.page.used=this.frame;
+    }
+    const showsNothing=(request:Request)=>{const before=this.shownBefore.get(request.id);return!this.cards.get(request.key)&&!(before&&this.cards.get(before.key));};
     const deadline=performance.now()+(this.policy.rasterBudgetMs??Infinity);let painted=0;
     try{
-      for(const request of this.pending){
+      for(const request of [...this.pending.filter(showsNothing),...this.pending.filter(request=>!showsNothing(request))]){
         const baseMip=finest.get(request.key)!.baseMip,card=this.cards.get(request.key);
         if(!card||card.baseMip>baseMip){
           if(painted&&performance.now()>=deadline){
