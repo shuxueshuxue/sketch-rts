@@ -1,0 +1,1309 @@
+{
+  "classification": "Latest selected unique file+Vitest-caseID evidence, NOT sum of invocations.150 cases actually executed c948;12 actually executed finalcf147. Production and remainingtest bytes are exactly identical. Original3red kept separately; mirror1800 and native52 not counted as cases.",
+  "uniqueCases": 162,
+  "passed": 162,
+  "sourceEquivalence": "/tmp/bootstrap-medical-owner-contract-v9-20261016/FINAL-CANDIDATE-SOURCE-EQUIVALENCE.json",
+  "sourceEquivalenceSHA256": "bf46fc8e8e6d26e93b8891f7dc9b5c967c8005995936b061bbd2697d7bfcfcaf",
+  "oldCaseIDEvidence": "/tmp/bootstrap-medical-landed-contact-v8-20261016/CASE-ID-EVIDENCE-162.json",
+  "oldCaseIDEvidenceSHA256": "38b4b4424fb6945c4b0781a710c47fe2abc4fc8b8bb3711ff3448c15dfeeb1e2",
+  "finalCollectionSHA256": "c9f1edad5ede2590121b19b93deeb353f8349e4ab3bd2943f7c6c870db2e1835",
+  "finalCaseSourceSHA256": "8f16c7fa467cb6a4311a8feb70d4f1bb918fe5cd7b9d4b089031fa57e74e811a",
+  "actualCases": [
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_archer preserves the actual ready volley behind its front outside native melee coverage",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_summoner preserves the actual ready volley behind its front outside native melee coverage",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_knight preserves the actual ready volley behind its front outside native melee coverage",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_archer keeps the exposed ready-soon archer moving before the next melee contact",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_summoner keeps the exposed ready-soon archer moving before the next melee contact",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_knight keeps the exposed ready-soon archer moving before the next melee contact",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_archer uses an unobstructed escape while the actual front receives its ready heal",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_summoner uses an unobstructed escape while the actual front receives its ready heal",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-contact.test.ts::v9_knight uses an unobstructed escape while the actual front receives its ready heal",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/candidate-pure9.log",
+      "logSHA256": "ca93550815ed90c1410b227d61ecc4a2ee2920c2d1c94edc349c404fde13e8b4",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_archer' preserves its 'grove' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_archer' preserves its 'grove' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_archer' preserves its 'ember' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_archer' preserves its 'ember' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_summoner' preserves its 'grove' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_summoner' preserves its 'grove' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_summoner' preserves its 'ember' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_summoner' preserves its 'ember' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_knight' preserves its 'grove' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_knight' preserves its 'grove' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_knight' preserves its 'ember' island front while clearing a camp (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/expedition-recovery.test.ts::'v9_knight' preserves its 'ember' island front while clearing a camp (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/expedition-focused12.log",
+      "logSHA256": "fc23b3ff31551982658979adc53e78abe8c141e7421d35498b0ed8a962926a49",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_archer does not recruit a mainland critical-care patient into a new assault",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_summoner does not recruit a mainland critical-care patient into a new assault",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_knight does not recruit a mainland critical-care patient into a new assault",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_archer keeps the existing healer with its mainland critical-care patient",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_summoner keeps the existing healer with its mainland critical-care patient",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::v9_knight keeps the existing healer with its mainland critical-care patient",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::keeps an already requested boarding task when its passenger becomes critical",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::does not send a new assault pickup to an island containing only a care patient and necessary healer",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/assault-care-ownership.test.ts::allows an existing evacuation mission to take a critical survivor and its healer",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_archer' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_archer' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_archer' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_archer' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_summoner' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_summoner' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_summoner' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_summoner' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_knight' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_knight' keeps its unsupported 'grove' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_knight' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/caster-melee-micro.test.ts::'v9_knight' keeps its unsupported 'ember' caster alive against slow melee pursuers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_archer' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_archer' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_archer' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_archer' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_summoner' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_summoner' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_summoner' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_summoner' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_knight' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_knight' gives an existing mainland 'grove' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_knight' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/mainland-medical-priority.test.ts::'v9_knight' gives an existing mainland 'ember' healer ownership of critical recovery (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_archer' distributes its ready 'grove' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_archer' distributes its ready 'grove' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_archer' distributes its ready 'ember' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_archer' distributes its ready 'ember' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_summoner' distributes its ready 'grove' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_summoner' distributes its ready 'grove' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_summoner' distributes its ready 'ember' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_summoner' distributes its ready 'ember' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_knight' distributes its ready 'grove' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_knight' distributes its ready 'grove' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_knight' distributes its ready 'ember' healers across critical soldiers (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-allocation.test.ts::'v9_knight' distributes its ready 'ember' healers across critical soldiers (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-island-task-safety.test.ts::v9_archer returns rejected island healing to its existing naval backline owner",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-island-task-safety.test.ts::v9_summoner returns rejected island healing to its existing naval backline owner",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-island-task-safety.test.ts::v9_knight returns rejected island healing to its existing naval backline owner",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous-record.test.ts::does not record a conceptual patient assignment without a published rendezvous",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous-record.test.ts::does not record a rendezvous displaced by a later boarding command",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous-record.test.ts::does not record a proposed rendezvous absent from the final published commands",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous-record.test.ts::records the final actual patient and healer pairing",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::finishes the actual405 medical rendezvous after the correct390 heal crosses the35percent entry",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::does not adopt a nonmedical follow order after the entry condition has cleared",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases a medical move on its actual native arrival",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the medical follow at the exact native stop distance",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after fullHealth",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after patientGone",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after healerGone",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after healerBoards",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after patientBoards",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after notHealable",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after changedOrder",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-rendezvous.test.ts::releases the actual medical task after queuedOrder",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::heals the 'grove' patient reached by the shorter road (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::heals the 'grove' patient reached by the shorter road (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::heals the 'ember' patient reached by the shorter road (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::heals the 'ember' patient reached by the shorter road (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::uses actual 'grove' spell range for an immediate heal across a wall (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::uses actual 'grove' spell range for an immediate heal across a wall (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::uses actual 'ember' spell range for an immediate heal across a wall (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::uses actual 'ember' spell range for an immediate heal across a wall (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::keeps an unreachable 'grove' island patient out of road selection (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::keeps an unreachable 'grove' island patient out of road selection (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::keeps an unreachable 'ember' island patient out of road selection (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-roads.test.ts::keeps an unreachable 'ember' island patient out of road selection (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::publishes one original-target instantaneous heal from the actual30660 opportunity",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::publishes one original-target instantaneous heal from the actual30705 opportunity",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::v9_archer publishes only its naval instantaneous island heal before global medical",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::v9_summoner publishes only its naval instantaneous island heal before global medical",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::v9_knight publishes only its naval instantaneous island heal before global medical",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::retains queued healing rather than treating it as an instantaneous spell",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::retains walk-to-heal commands outside native range",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::retains another ability and item use from the same caster",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::retains a second caster heal while keeping the first target for one caster",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-spell-publication.test.ts::does not let an instantaneous heal erase a later queued or distant order",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_archer' releases unsafe medical jobs in the actual 30346 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_summoner' releases unsafe medical jobs in the actual 30346 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_knight' releases unsafe medical jobs in the actual 30346 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_archer' releases unsafe medical jobs in the actual 30600 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_summoner' releases unsafe medical jobs in the actual 30600 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_knight' releases unsafe medical jobs in the actual 30600 retreat state",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::does not send either actual 30600 medic down the 1499 tower road to its patient",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::v9_archer does not deepen attack coverage on the actual30600 replacement road",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::v9_summoner does not deepen attack coverage on the actual30600 replacement road",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::v9_knight does not deepen attack coverage on the actual30600 replacement road",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::keeps a ready walk-to-heal whose actual spell-range entry is safe despite the covered patient center",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::does not turn the same covered patient center into a cooldown movement task",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::leaves backline ownership available while an in-range healer has no ready spell",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::keeps an immediate heal while handing unsafe old movement back to the backline",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::does not claim a stunned healer as an executable medical task",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::does not spend projected healing on stunned healers before allocating the remaining safe healer",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::preserves an instantaneous critical heal in the native240 range beyond the abilities220 planner range",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::preserves the original critical immediate heal while releasing movement in the actual 30660 opportunity",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::preserves the original critical immediate heal while releasing movement in the actual 30705 opportunity",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::keeps the native-range instantaneous cast without claiming its unchanged legacy order",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_archer' preserves the instant heal and replaces retained 'attack' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_summoner' preserves the instant heal and replaces retained 'attack' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_knight' preserves the instant heal and replaces retained 'attack' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_archer' preserves the instant heal and replaces retained 'attackMove' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_summoner' preserves the instant heal and replaces retained 'attackMove' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_knight' preserves the instant heal and replaces retained 'attackMove' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_archer' preserves the instant heal and replaces retained 'follow' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_summoner' preserves the instant heal and replaces retained 'follow' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/medical-task-safety.test.ts::'v9_knight' preserves the instant heal and replaces retained 'follow' pursuit toward fire",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > follows the actual grove screen ahead without averaging rear troops and fresh rear summons into it",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > follows the actual ember screen ahead without averaging rear troops and fresh rear summons into it",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > marches the grove host from outside tower-rush reach and pays for its first forward tower",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > marches the ember host from outside tower-rush reach and pays for its first forward tower",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > keeps the grove caster at its firing mine tower between waves, then leaves when the tower falls",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-screen.test.ts::bootstrap_1 summon host staging > keeps the ember caster at its firing mine tower between waves, then leaves when the tower falls",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'grove' summoners meet the actual assault group at its staging point (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'grove' summoners meet the actual assault group at its staging point (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'ember' summoners meet the actual assault group at its staging point (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'ember' summoners meet the actual assault group at its staging point (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'grove' gathering does not delay demolition after every enemy unit is gone (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'grove' gathering does not delay demolition after every enemy unit is gone (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'ember' gathering does not delay demolition after every enemy unit is gone (mirror=false)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/summoner-staging.test.ts::'ember' gathering does not delay demolition after every enemy unit is gone (mirror=true)",
+      "status": "passed",
+      "actualSource": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "log": "/tmp/bootstrap-medical-landed-contact-v8-20261016/neighbors-and-pure141.log",
+      "logSHA256": "7963c90d23f192bd4441e22335de55075d1af5b9c5e542087fa78046e1c0e17a",
+      "proofScope": "Prioractual execution; all1490 files except changedlandedtest equal final cf147, including this test and all production."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_archer gives the landed army local focus orders through its naval owner",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_archer keeps landed tactical moves on an actual ground road",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_archer keeps the real wounded pair and their medics out of local focus",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_archer screens the real landed priests locally before they have a care assignment",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_knight gives the landed army local focus orders through its naval owner",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_knight keeps landed tactical moves on an actual ground road",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_knight keeps the real wounded pair and their medics out of local focus",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_knight screens the real landed priests locally before they have a care assignment",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_summoner gives the landed army local focus orders through its naval owner",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_summoner keeps landed tactical moves on an actual ground road",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_summoner keeps the real wounded pair and their medics out of local focus",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    },
+    {
+      "id": "src/ai/bootstrap_1/landed-combat.test.ts::v9_summoner screens the real landed priests locally before they have a care assignment",
+      "status": "passed",
+      "actualSource": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "log": "/tmp/bootstrap-medical-owner-contract-v9-20261016/narrow-actual12.log",
+      "logSHA256": "74a19a8323d644e8a37393e1e37b59186193eedd6a538435410895c17af3ffcf",
+      "proofScope": "Actual finalsource12 invocation with strengthened cooldown-motion safety body; old3red retained in predecessor141 log."
+    }
+  ]
+}

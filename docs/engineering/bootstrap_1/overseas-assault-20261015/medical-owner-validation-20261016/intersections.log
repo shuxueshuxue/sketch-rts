@@ -1,0 +1,31 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/ai/bootstrap_1/landed-combat.test.ts (12 tests) 4446ms
+   ✓ v9_archer gives the landed army local focus orders through its naval owner 1232ms
+   ✓ v9_summoner gives the landed army local focus orders through its naval owner 635ms
+   ✓ v9_knight gives the landed army local focus orders through its naval owner 560ms
+   ✓ v9_knight keeps landed tactical moves on an actual ground road 509ms
+ ❯ .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/landed-combat.test.ts (0 test)
+ ✓ src/ai/policy/naval-dock-return.test.ts (5 tests) 127ms
+ ✓ src/ai/bootstrap_1/ground-evacuation.test.ts (6 tests) 2981ms
+   ✓ v9_archer does not create a ground evacuation pickup for healthy embarked priests 842ms
+   ✓ v9_summoner does not create a ground evacuation pickup for healthy embarked priests 455ms
+   ✓ v9_knight does not create a ground evacuation pickup for healthy embarked priests 438ms
+   ✓ v9_archer does not dispatch another empty ferry to already embarked priests 449ms
+   ✓ v9_summoner does not dispatch another empty ferry to already embarked priests 393ms
+   ✓ v9_knight does not dispatch another empty ferry to already embarked priests 402ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/landed-combat.test.ts [ .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/landed-combat.test.ts ]
+Error: Failed to load url ../../shared/sim (resolved id: ../../shared/sim) in /workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/landed-combat.test.ts. Does the file exist?
+ ❯ loadAndTransform ../sketch-rts/node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  23 passed (23)
+   Start at  11:32:02
+   Duration  16.01s (transform 4.23s, setup 0ms, collect 7.00s, tests 7.55s, environment 1ms, prepare 283ms)
+

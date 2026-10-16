@@ -1,0 +1,40 @@
+{
+  "head": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "sequential": [
+    {
+      "name": "intersections",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--pool=forks",
+        "--maxWorkers=1",
+        "--minWorkers=1",
+        "--no-file-parallelism",
+        "src/ai/bootstrap_1/ground-evacuation.test.ts",
+        "src/ai/policy/naval-dock-return.test.ts",
+        "src/ai/bootstrap_1/landed-combat.test.ts"
+      ],
+      "heapMiB": 768,
+      "startedAtUTC": "2026-10-16T11:32:01.911675+00:00",
+      "endedAtUTC": "2026-10-16T11:32:18.686112+00:00",
+      "elapsedSeconds": 16.77451041099266,
+      "exit": 1,
+      "before": {
+        "max": 17179869184,
+        "current": 13573435392,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "after": {
+        "max": 17179869184,
+        "current": 13578371072,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "sourcePrePostExact": true,
+      "childrenPeakRSSKiB": 467956,
+      "log": "intersections.log",
+      "logSHA256": "d960f105d64a27c19f0fd74cd414d8c451416c291a5be4a34c076914a80c3a48"
+    }
+  ],
+  "selectedScope": "New rootcombined naval dock/ground evacuation/landed medical fullP0 intersections; not a rerun of cf147162 distinct contracts."
+}

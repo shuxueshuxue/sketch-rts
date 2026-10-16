@@ -1,0 +1,23 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-root-medical-8da5-fixed-control
+
+ ✓ src/ai/bootstrap_1/landed-combat.test.ts (12 tests) 3967ms
+   ✓ v9_archer gives the landed army local focus orders through its naval owner 497ms
+   ✓ v9_summoner gives the landed army local focus orders through its naval owner 323ms
+   ✓ v9_knight gives the landed army local focus orders through its naval owner 436ms
+   ✓ v9_knight keeps landed tactical moves on an actual ground road 538ms
+   ✓ v9_archer keeps the real wounded pair and their medics out of local focus 564ms
+ ✓ src/ai/policy/naval-dock-return.test.ts (5 tests) 94ms
+ ✓ src/ai/bootstrap_1/ground-evacuation.test.ts (6 tests) 3146ms
+   ✓ v9_archer does not create a ground evacuation pickup for healthy embarked priests 931ms
+   ✓ v9_summoner does not create a ground evacuation pickup for healthy embarked priests 524ms
+   ✓ v9_knight does not create a ground evacuation pickup for healthy embarked priests 510ms
+   ✓ v9_archer does not dispatch another empty ferry to already embarked priests 380ms
+   ✓ v9_summoner does not dispatch another empty ferry to already embarked priests 370ms
+   ✓ v9_knight does not dispatch another empty ferry to already embarked priests 430ms
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  11:34:42
+   Duration  14.26s (transform 3.49s, setup 0ms, collect 6.01s, tests 7.21s, environment 0ms, prepare 246ms)
+

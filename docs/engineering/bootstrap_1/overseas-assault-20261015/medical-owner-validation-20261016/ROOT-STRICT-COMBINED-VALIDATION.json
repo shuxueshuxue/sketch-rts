@@ -1,0 +1,69 @@
+{
+  "head": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "fixedControl": "/workspace/sketch-rts-root-medical-8da5-fixed-control",
+  "sequential": [
+    {
+      "name": "strict-intersections",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--pool=forks",
+        "--maxWorkers=1",
+        "--minWorkers=1",
+        "--no-file-parallelism",
+        "src/ai/bootstrap_1/ground-evacuation.test.ts",
+        "src/ai/policy/naval-dock-return.test.ts",
+        "src/ai/bootstrap_1/landed-combat.test.ts"
+      ],
+      "heapMiB": 768,
+      "startedAtUTC": "2026-10-16T11:34:42.051776+00:00",
+      "endedAtUTC": "2026-10-16T11:34:57.126214+00:00",
+      "elapsedSeconds": 15.074498300993582,
+      "exit": 0,
+      "before": {
+        "max": 17179869184,
+        "current": 13611249664,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "after": {
+        "max": 17179869184,
+        "current": 13612306432,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "source1497GitLivePrePostExact": true,
+      "childrenPeakRSSKiB": 429184,
+      "log": "strict-intersections.log",
+      "logSHA256": "5143d7334df154b7f4be8e584b79c3f071c1b83fc0e4e552348ab0d17c7808b9"
+    },
+    {
+      "name": "strict-tsc",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "heapMiB": 1024,
+      "startedAtUTC": "2026-10-16T11:34:57.127535+00:00",
+      "endedAtUTC": "2026-10-16T11:35:40.695871+00:00",
+      "elapsedSeconds": 43.56839941100043,
+      "exit": 0,
+      "before": {
+        "max": 17179869184,
+        "current": 13612306432,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "after": {
+        "max": 17179869184,
+        "current": 13616521216,
+        "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+      },
+      "source1497GitLivePrePostExact": true,
+      "childrenPeakRSSKiB": 1137296,
+      "log": "strict-tsc.log",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "distinctContractsNotSummedAcrossInvocations": 23,
+  "priorExecution": "intersections.log/root cwd23passed but unrelated captured .playtest suitecollectionmissingmodule failed0tests; all original logs retained."
+}

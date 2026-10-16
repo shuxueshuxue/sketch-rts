@@ -883,6 +883,18 @@
       "source": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8 entire1480 selectedsource/config/test/manifest Git+live bytes equal root17bc; baseline945f1477 separately bound. rules2/frozen497+184 unchanged.",
       "classification": "Sameactual279885 fullworld/nextId/all3mem restored once perfixedsource, normal3AI6915ticks to286800, finite causal windows not ordinary0/completedmatch/generalization. Baseline945f emptytransport157929 killed286623 p2ravager1286(20,18to-2), not historicalD352286628 p1archer. Candidate0permanentloss/allowners,14uniqueactualgroundboards(63events/53off),0enemybuildingdamage/0resourcechanges/bothwinnernull. Four fullcarrier40s loading→returncycles preserved; at281145 strength39.1736required vs10.6217cargo+landed/28.9603allcandidates is existingplanner index, not fullymicroedbattle impossibility. Oldred6/newgreen6+11originalgreen46skip/tsc0/fullP0twoinputs+exactfirstnormalP0 and3postmem/sourcefrozenprepost/three nativevisuals; rootstrict1063payloadCRC/SHA audit. Originalfailedcontaineruncommittedgap retained."
     }
+  ,
+    {
+      "file": "bootstrap-medical-safe-owner-cf147743-20261016-evidence.tar.gz",
+      "bytes": 91144570,
+      "sha256": "c7fd569fb6a7935b55785b894ca3131da9bab85c0453497f1604a8920e09c98c",
+      "indexedPayloadFiles": 1209,
+      "archiveRegularFiles": 1210,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "cf1477432b35844d891c22aac21afc15b8e7bef6 parent760; final1491runtime+497frozen capsule independently1988SHA verified. Root8da retains17bc dock/evac plus exact27-file candidate delta,1497 source/config including Git attributes/ignore: not wholecf byte-equivalence.",
+      "classification": "Medical movement/task/instantheal and landed native-shot/contact fixes plus complete rejected intermediate history.162 distinct file+caseIDs via exact1490unchanged c948files plus corrected12actual safetycases; not suminvocations/nativecamp. Two independent realinputs30660(45tick) and30705(7tick) retain exactoriginaltarget heal then samebackline physicalroad; second still priest15352 death30712 and in-flighttowerhit30708. Rootcombined23intersections+1024tsc passed, initial unrelatedcapturedtest0-testcollectionerror preserved. Rootcombined knownordinary0 actually37789P1WIN/69ownpermanent/strict0, worse thanold38f82182/65; localchecks do not establish overall improvement. SealedINDEX/FINALREPORT presealwording historical, outerarchive actualSHA/CRC verified in expliciterratum. Originalcontainer uncommittedgap remains."
+    }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
   "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; complete1462source attribution, all-owner219removal/corpse ledger and terminal514tick full3AI closure are now sealed in complete-e566-ordinary0-evidence.tar.gz. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score. Current runtimeade41241 separately imports only e47 native crew-rendezvous/sailing/ship-navigation departure-route and shared-solid-frame fix plus its test/fixture over exacte566 AI; no078026 macro or a90c/ab0 medical import. Root52tests/8files+tsc0 and actual223200..2256002400tick normal3AI window,160saved full-state checkpoints/final/2430publiccommands equal e47, and only224370..22446090tick coldclosure are verified.39390 crosses receiver224435, normal naval helm cancels board224445; whole-body receiver support does not imply exact native goal completion. No income/attack/win,6gold paid repairs; ade has no complete ordinary0 yet. The earlier e56643714/56loss and0f44441 results remain historical source-attributed. Current independentresume runtimef5081ad3 now adds only fixed844 field-retreat delta: when originalfieldmicroalreadyescapes an actualpursuer, select an admittedroad toward currentavailablefront, retainoriginalreadyshot/chargeinnerwindow/claims/knownhazard andnativebuilding-arrival scope. Root1467files byteequal844,137/9tests+tsc0. Sameactual15255knownab0-derivedstate matchedcontinuation changesade44340p1WIN/65loss to84496245p0WIN/57loss withenemy0u0b; materiallyslower andnotordinary0/generalization. Newcoastalaf/1a andcabinferry implementations remainindependentunmerged. Pendinghall double-reservehypothesis wasrejected afternormalrunnerprotocolread; no budgetchange. Currentruntime1e955c0c adds only fixedf9a3 unifiedremote labor payback admission2productionfiles+1actualfullP0test+2fixtures,1470source byteequalcandidate,root286/16+tsc0. Known27600matchedcompletecase improves96245/57loss to69838/46loss,notordinary0. Separatefirst-useknight30778win25loss belongsf508. Current1e has now completed its ownofficialgreystonePass summoner-v5+v7 ordinary0 at82963p0WIN,59permanent+503temporarydeaths/567expiryexcluded;notunseengeneralization.",
@@ -1505,95 +1517,92 @@
     "originalUncommittedRecoveryGapRetained": true
   },
   "activeRuntime": {
-    "source": "17bc9facfb59e5b540badcf35c4b987ae648072c",
-    "byteEquivalentCandidate": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
-    "parentRuntimeSource": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
-    "selectedSourceConfigTestManifestFilesExact": 1480,
-    "sourceScope": "Complete tracked src/scripts/tools plus selected root configs/test and frozen manifest; old archive docs are outside the runtime equivalence scope.",
-    "onlyProductionFile": "src/ai/policy/naval.ts",
-    "onlyProductionChange": "Exclude actual deck occupants from new ground evacuation candidates; preserve existing ferry task memory and timeout.",
+    "source": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+    "parentRuntimeSource": "17bc9facfb59e5b540badcf35c4b987ae648072c",
+    "componentCandidate": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+    "componentParent": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+    "selectedSourceConfigTestManifestFiles": 1497,
+    "integrationScope": "Complete Git/live selected1497 map exactly parent17bc plus onlycf14727file delta. Prior rootnaval.ts unchanged. cf1491 capsule excludes two Git attributes/ignore files; entire root is not equivalentcf.",
     "rulesVersion": 2,
     "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
-    "candidateValidation": {
-      "newActualContractsPassed": 6,
-      "sameContractsOldBaselineFailed": 6,
-      "relevantOriginalContractsPassed": 11,
-      "relevantOriginalSkipped": 46,
-      "tsc1024Exit": 0
+    "componentValidation": {
+      "uniqueCases": 162,
+      "caseIdentityProof": true,
+      "sourceEquivalentCasesReusedNotRerun": true,
+      "finalActualLandedCases": 12,
+      "componentTsc1024Exit": 0,
+      "clinicalNativeWindows": [
+        {
+          "start": 30660,
+          "end": 30705,
+          "steps": 45,
+          "commands": 104,
+          "hits": 13,
+          "newPermanentOwnDeaths": 0
+        },
+        {
+          "start": 30705,
+          "end": 30712,
+          "steps": 7,
+          "commands": 35,
+          "hits": 4,
+          "newPermanentOwnDeaths": 1,
+          "death": "unit-p0-priest-15352 sameoriginaltick; anothercaster healed its actualoriginaltarget but did not eliminate allfire"
+        }
+      ],
+      "clinicalWindowsIndependentNotContiguous": true
     },
     "rootValidation": {
-      "all1480GitAndLiveFilesExact": true,
-      "allGitSrcScriptsToolsFileSetExact": true,
-      "duplicateTestsNotRerunBecauseEntireCodeConfigIdentical": true
+      "all1497GitAndLiveFilesExactParentPlusOnlyCandidateDelta": true,
+      "combinedIntersectionsPassed": 23,
+      "combinedTsc1024Exit": 0,
+      "firstCwdCollectionError": "23 tests passed but unrelated historicalcaptured .playtest test failedcollection0tests; source-controlled cleanfixedtree rerun23 passed; not46 distinct."
     },
-    "fullP0Integration": {
-      "completeActualInputTicks": [
-        279885,
-        281190
+    "ordinary0": {
+      "source": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+      "map": "pineshade generated",
+      "seed": "bootstrap_1-first-use-archer-v7-v8-20261016-0808z-a",
+      "casePreviouslyObserved": true,
+      "newUnseenEvidence": false,
+      "subject": "v9_archer Grove side0",
+      "opponents": "normal frozenv7Ember+v8Grove Bteam",
+      "normalOpeningGoldWorkersSupplyCap": [
+        500,
+        3,
+        8
       ],
-      "firstPhantomEvacuationPrevented": true,
-      "secondNewPhantomEvacuationPrevented": true,
-      "inheritedFirstTaskAt281190Preserved": true,
-      "normalAssaultBoardRequestsInstead": {
-        "279885": 12,
-        "281190": 7
+      "thinkTicks": 15,
+      "sameFactoryFullWorldNextIdNull3MemoriesSetupAs38f": true,
+      "naturalWinner": "p1",
+      "naturalTick": 37789,
+      "observationStopped": false,
+      "permanentOwnLosses": 69,
+      "ownStrictUnitsAndBuildingsZero": true,
+      "nativePermanentFatalCorpseRemovalReconciliation": true,
+      "runtime1497Frozen497Manifest184Rules2PrePostExact": true,
+      "terminalCold": {
+        "start": 37200,
+        "end": 37789,
+        "steps": 589,
+        "attempts": 925,
+        "ownerPlans": 120,
+        "hits": 419,
+        "events": 44,
+        "deaths": 10,
+        "rawAllAndFinalWorldIdAll3MemoriesSetupExact": true
       },
-      "notActualBoardingOrVictory": true,
-      "inputWorldNextIdMemoriesUnchanged": true,
-      "opponentMemoriesUnchanged": true
+      "comparisonOld38f": {
+        "naturalDefeatTick": 82182,
+        "permanentOwnLosses": 65,
+        "newDefeatEarlierTicks": 44393,
+        "newAdditionalOwnPermanentLosses": 4
+      },
+      "attribution": "Combinedsource negative.8400 exactsame fullinput firstmedical physical-plan difference; subsequent individual native chain underinvestigation. Not all69 attributed to one changed line."
     },
-    "ordinary0": null,
-    "pendingFullMatchEvidence": "No complete normal match yet on root17bc/5457. The completed279885→286800 causal windows are not whole-match results or bootstrap acceptance. Ordinary-opening/fullmatch/generalization coverage across three families and normalfrozen opponents remains outstanding.",
-    "currentEvidenceReference": "ground-evacuation-20261016.zh.md",
-    "originalUncommittedRecoveryGapRetained": true,
-    "focusedNormalCausalWindows": {
-      "startTick": 279885,
-      "endTick": 286800,
-      "ticksEach": 6915,
-      "normalAiOwners": 3,
-      "sameCompleteInputWorldNextIdAll3Memories": true,
-      "baseline": {
-        "source": "945f963a152bf46cf8560fd70fd25bba724ba33a",
-        "actualPermanentOwnDeaths": 1,
-        "selectedDeathTick": 286623,
-        "selectedDeathAttacker": "unit-p2-emberRavager-1286",
-        "actualGroundBoardingEvents": 0,
-        "enemyBuildingDamage": 0,
-        "winner": null
-      },
-      "candidate": {
-        "source": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
-        "actualPermanentDeathsAllOwners": 0,
-        "uniquePermanentOwnGroundUnitsBoarded": 14,
-        "boardingEvents": 63,
-        "disembarkingEvents": 53,
-        "enemyBuildingDamage": 0,
-        "resourceAmountChanges": 0,
-        "winner": null
-      },
-      "limitation": "Finite normal causal windows; not completed matches/fresh ordinary0/generalization or bootstrap acceptance. Zero loss and actual boarding did not produce any enemy building damage or income."
-    },
-    "nextActualBlocker": {
-      "fullCarrierLoadingToReturnTicks": [
-        281160,
-        282840,
-        284550,
-        286035
-      ],
-      "actualCargoCounts": [
-        13,
-        13,
-        14,
-        13
-      ],
-      "nativePendingBoardersAtTransitions": 0,
-      "preservedPhysicalProgressAgeTicks": 810,
-      "actual281145RequiredIndex": 39.17359977323862,
-      "actualCargoAndLandedIndex": 10.621653971904351,
-      "allExpeditionCandidateIndex": 28.96033205543644,
-      "existingReadyWithAllCandidates": false,
-      "limitation": "Existing strength leaf does not prove a fully microed battle impossible. Continue actual force/economy/convoy diagnosis; do not lower strength or timeout gates."
-    }
+    "adoptionStatus": "Integrated on independent investigationbranch, main untouched. Localmedical contracts passed but this complete knownseed match is worse. Preserve counterevidence and diagnose actualfirstnative divergence before claiming overall improvement.",
+    "pendingFullMatchEvidence": "No bootstrap acceptance; allthree families/singlev5v7v8/sixpairs/officialmaps/unseen-generated seeds requirements remain. One knownseed loss does not satisfy them.",
+    "currentEvidenceReference": "medical-owner-and-fullmatch-negative-20261016.zh.md",
+    "originalUncommittedRecoveryGapRetained": true
   }
 ,
   "previousRuntimeBeforeDock": {
@@ -1692,5 +1701,96 @@
     "pendingFullMatchEvidence": "No natural complete normal match yet on rootf7/a53; full ordinary0 and generalization still required. Prior38f/root760 byteequivalent archer82182defeat65loss remains previousRuntimeBeforeDock, not rewritten as a newf7 result.",
     "currentEvidenceReference": "dock-repair-admission-20261016.zh.md",
     "originalUncommittedRecoveryGapRetained": true
+  },
+  "previousRuntimeBeforeMedicalOwner": {
+    "source": "17bc9facfb59e5b540badcf35c4b987ae648072c",
+    "byteEquivalentCandidate": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "parentRuntimeSource": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
+    "selectedSourceConfigTestManifestFilesExact": 1480,
+    "sourceScope": "Complete tracked src/scripts/tools plus selected root configs/test and frozen manifest; old archive docs are outside the runtime equivalence scope.",
+    "onlyProductionFile": "src/ai/policy/naval.ts",
+    "onlyProductionChange": "Exclude actual deck occupants from new ground evacuation candidates; preserve existing ferry task memory and timeout.",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "candidateValidation": {
+      "newActualContractsPassed": 6,
+      "sameContractsOldBaselineFailed": 6,
+      "relevantOriginalContractsPassed": 11,
+      "relevantOriginalSkipped": 46,
+      "tsc1024Exit": 0
+    },
+    "rootValidation": {
+      "all1480GitAndLiveFilesExact": true,
+      "allGitSrcScriptsToolsFileSetExact": true,
+      "duplicateTestsNotRerunBecauseEntireCodeConfigIdentical": true
+    },
+    "fullP0Integration": {
+      "completeActualInputTicks": [
+        279885,
+        281190
+      ],
+      "firstPhantomEvacuationPrevented": true,
+      "secondNewPhantomEvacuationPrevented": true,
+      "inheritedFirstTaskAt281190Preserved": true,
+      "normalAssaultBoardRequestsInstead": {
+        "279885": 12,
+        "281190": 7
+      },
+      "notActualBoardingOrVictory": true,
+      "inputWorldNextIdMemoriesUnchanged": true,
+      "opponentMemoriesUnchanged": true
+    },
+    "ordinary0": null,
+    "pendingFullMatchEvidence": "No complete normal match yet on root17bc/5457. The completed279885→286800 causal windows are not whole-match results or bootstrap acceptance. Ordinary-opening/fullmatch/generalization coverage across three families and normalfrozen opponents remains outstanding.",
+    "currentEvidenceReference": "ground-evacuation-20261016.zh.md",
+    "originalUncommittedRecoveryGapRetained": true,
+    "focusedNormalCausalWindows": {
+      "startTick": 279885,
+      "endTick": 286800,
+      "ticksEach": 6915,
+      "normalAiOwners": 3,
+      "sameCompleteInputWorldNextIdAll3Memories": true,
+      "baseline": {
+        "source": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+        "actualPermanentOwnDeaths": 1,
+        "selectedDeathTick": 286623,
+        "selectedDeathAttacker": "unit-p2-emberRavager-1286",
+        "actualGroundBoardingEvents": 0,
+        "enemyBuildingDamage": 0,
+        "winner": null
+      },
+      "candidate": {
+        "source": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+        "actualPermanentDeathsAllOwners": 0,
+        "uniquePermanentOwnGroundUnitsBoarded": 14,
+        "boardingEvents": 63,
+        "disembarkingEvents": 53,
+        "enemyBuildingDamage": 0,
+        "resourceAmountChanges": 0,
+        "winner": null
+      },
+      "limitation": "Finite normal causal windows; not completed matches/fresh ordinary0/generalization or bootstrap acceptance. Zero loss and actual boarding did not produce any enemy building damage or income."
+    },
+    "nextActualBlocker": {
+      "fullCarrierLoadingToReturnTicks": [
+        281160,
+        282840,
+        284550,
+        286035
+      ],
+      "actualCargoCounts": [
+        13,
+        13,
+        14,
+        13
+      ],
+      "nativePendingBoardersAtTransitions": 0,
+      "preservedPhysicalProgressAgeTicks": 810,
+      "actual281145RequiredIndex": 39.17359977323862,
+      "actualCargoAndLandedIndex": 10.621653971904351,
+      "allExpeditionCandidateIndex": 28.96033205543644,
+      "existingReadyWithAllCandidates": false,
+      "limitation": "Existing strength leaf does not prove a fully microed battle impossible. Continue actual force/economy/convoy diagnosis; do not lower strength or timeout gates."
+    }
   }
 }

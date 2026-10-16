@@ -1,0 +1,74 @@
+{
+  "commands": {
+    "actualRows": 925,
+    "coldRows": 925,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "925350337dc6f5f367127df45051d97bffd5d221f0ae4ec9896d140d806797a9",
+    "coldSHA256": "b7484272eba2fa7072d5ee82b8838f38738b98c4236c70fac6721e2f3f87a604"
+  },
+  "plans": {
+    "actualRows": 120,
+    "coldRows": 120,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "59d9be9e50bfe07cac8bfbf92086a96689222997b67b69aeae9b5205a40af22f",
+    "coldSHA256": "fc5497ab2812bc093b8338a4f46be70197c604c268f4eb46cc5c6131e9c7da6b"
+  },
+  "native-hits": {
+    "actualRows": 419,
+    "coldRows": 419,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "3526cdc8a2b44c8d79a98b123ac1aa15a6af7d1e47beb791e8bb757335516729",
+    "coldSHA256": "a8e1f55180fa63105ce74558a7c63ff59f3ed6198ca0c79a81abac2c3f16b660"
+  },
+  "native-events": {
+    "actualRows": 44,
+    "coldRows": 44,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "36c7d0f840f40cce8fcadabc37e933a5234267f6a0e9b50263cd2a06a8433f96",
+    "coldSHA256": "4a832b843f6a7724181f15337583ed10c9c602824d7722228c95e1dd5e16d877"
+  },
+  "native-deaths": {
+    "actualRows": 10,
+    "coldRows": 10,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "8f2e06d64aabe7027d7ebdceb0e4e4088a44987cc6ac155633a10721e324614e",
+    "coldSHA256": "251e9756ceb4e553a5015124b244a0c80f7c4dbae6e48aa81cef87deb8ab24e8"
+  },
+  "corpse-events": {
+    "actualRows": 0,
+    "coldRows": 0,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "353d285ea0a3d9bc73c477b81cd987dd7122eb2db7685ce03012d4614b20d9e3",
+    "coldSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "health-transitions": {
+    "actualRows": 0,
+    "coldRows": 0,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "1cca7129793fa1ea2a7ce84830c779457abd3add211144cd79fcc02f1e4fe646",
+    "coldSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "healing-effects": {
+    "actualRows": 0,
+    "coldRows": 0,
+    "allObjectsExact": true,
+    "firstDifference": null,
+    "actualGzipSHA256": "c872c1a8ec623b258d755dc51d05a2408cd299cedb3daa616c12f401f1eda289",
+    "coldSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "final": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true
+  },
+  "allExact": true,
+  "classification": "One final589tick closure of original8da5 natural37789 P1win, no new match or medical attribution."
+}

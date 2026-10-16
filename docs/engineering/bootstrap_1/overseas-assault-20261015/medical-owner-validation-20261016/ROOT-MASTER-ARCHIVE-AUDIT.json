@@ -1,0 +1,18 @@
+{
+  "atUTC": "2026-10-16T11:49:51.115074+00:00",
+  "archive": "/tmp/bootstrap-medical-safe-owner-cf147743-20261016-evidence.tar.gz",
+  "bytes": 91144570,
+  "sha256": "c7fd569fb6a7935b55785b894ca3131da9bab85c0453497f1604a8920e09c98c",
+  "payloadFiles": 1209,
+  "regularArchiveFiles": 1210,
+  "payloadBytes": 102914350,
+  "indexSHA256": "4c229c619139e4a0b25e39a1c71bc119c8f21ae61ab4c5b29b55c5170924613b",
+  "strictUniquePayloadCoverageBytesSHA256AndGzipCRCPass": true,
+  "finalSourceCapsuleSHA256": "a0d8fbd18fb5938b4953ad8e3ed3563dc0ffb84c2400771872a199427ba418a3",
+  "innerFinalRuntime1491AndFrozen497All1988PayloadsSHA256Verified": true,
+  "sourceFinalCandidate": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+  "combinedRoot": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "combinedRootHasAdditionalDockAndEvacChanges": "Entire1497 bytes strictly match root17bc plus exactcf14727filedelta; not entirely equivalentcf147.",
+  "historicalInventoryWordingErratum": "Sealed INDEX.classification says inventory only/no archive yet; FINAL-REPORT.sealingStatus is preseal state. They are historical immutable preparation records. Actual archive existence/hash/strictCRC verified here and in external seal receipt; no original bytes rewritten.",
+  "fullMatchOutcome": "Rootcombined8da actualknownseed ordinary0 naturally lost37789/69permanent, worse thanold38f82182/65. Localcontracts/nativeclinical do not establish overall improvement/acceptance."
+}

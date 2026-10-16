@@ -1,0 +1,177 @@
+{
+  "atUTC": "2026-10-16T11:45:37.023503+00:00",
+  "source": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "naturalWinner": "p1",
+  "naturalTick": 37789,
+  "ownStrictUnitsBuildingsBothZero": true,
+  "permanentOwnNativeTerminalUniqueIds": 69,
+  "nativePermanentRemovalConfirmations": 69,
+  "noOwnTemporaryTerminalInTelemetry": true,
+  "all69NativeFatalPositiveToNonpositive": true,
+  "missingFatalIds": [],
+  "all69ActualCorpses": true,
+  "missingCorpseIds": [],
+  "byKind": {
+    "lancer": 14,
+    "footman": 2,
+    "archer": 14,
+    "worker": 25,
+    "horseArcher": 6,
+    "fieldMedic": 3,
+    "priest": 2,
+    "witch": 3
+  },
+  "veterans": [
+    {
+      "id": "unit-p0-archer-1125",
+      "kind": "archer",
+      "deathTick": 17509,
+      "level": 1,
+      "kills": 3
+    },
+    {
+      "id": "unit-p0-archer-3763",
+      "kind": "archer",
+      "deathTick": 22397,
+      "level": 2,
+      "kills": 5
+    },
+    {
+      "id": "unit-p0-horseArcher-9043",
+      "kind": "horseArcher",
+      "deathTick": 28117,
+      "level": 2,
+      "kills": 8
+    },
+    {
+      "id": "unit-p0-lancer-28870",
+      "kind": "lancer",
+      "deathTick": 28709,
+      "level": 1,
+      "kills": 4
+    },
+    {
+      "id": "unit-p0-fieldMedic-1602",
+      "kind": "fieldMedic",
+      "deathTick": 28953,
+      "level": 1,
+      "kills": 3
+    },
+    {
+      "id": "unit-p0-lancer-7952",
+      "kind": "lancer",
+      "deathTick": 30915,
+      "level": 1,
+      "kills": 2
+    },
+    {
+      "id": "unit-p0-archer-16155",
+      "kind": "archer",
+      "deathTick": 31007,
+      "level": 2,
+      "kills": 3
+    },
+    {
+      "id": "unit-p0-witch-4598",
+      "kind": "witch",
+      "deathTick": 31156,
+      "level": 2,
+      "kills": 29
+    },
+    {
+      "id": "unit-p0-archer-1269",
+      "kind": "archer",
+      "deathTick": 31190,
+      "level": 3,
+      "kills": 12
+    },
+    {
+      "id": "unit-p0-witch-7761",
+      "kind": "witch",
+      "deathTick": 35429,
+      "level": 1,
+      "kills": 35
+    },
+    {
+      "id": "unit-p0-horseArcher-14148",
+      "kind": "horseArcher",
+      "deathTick": 35644,
+      "level": 3,
+      "kills": 36
+    },
+    {
+      "id": "unit-p0-horseArcher-30827",
+      "kind": "horseArcher",
+      "deathTick": 36518,
+      "level": 2,
+      "kills": 14
+    }
+  ],
+  "runtime1497AndFrozen497AllPrePostExact": true,
+  "completeFinalWorldNextIdAll3MemoriesPresent": true,
+  "finalFileSHA256": "972e40ae92571df907a3a7d3bdcf66ae76a5ed2b81b3ecd2b00de5ae9d4d7ee5",
+  "comparisonBaseline": {
+    "source": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+    "root760ByteEquivalent": true,
+    "sameKnownFactory0Exact": true,
+    "naturalDefeat": 82182,
+    "permanentOwnLosses": 65,
+    "newDefeatTicksEarlier": 44393,
+    "newPermanentOwnLossesAdditional": 4
+  },
+  "attributionLimit": "8da5 has medical plus prior dock/groundevac changes against38f. Fullmatch negative belongs to combinedsource; isolate earliest original input/command difference before assigning one component. No acceptance/improvement claim.",
+  "terminalColdReplay": {
+    "start": 37200,
+    "end": 37789,
+    "steps": 589,
+    "attempts": 925,
+    "ownerPlans": 120,
+    "allOriginalPlanPostMemories": true,
+    "hits": 419,
+    "events": 44,
+    "deaths": 10,
+    "eachAttemptPlanHitEventDeathExact": true,
+    "finalWorldNextIdAll3MemoriesSetupExact": true,
+    "runtime1497Frozen497Manifest184Rules2PrePostExact": true,
+    "proof": "terminal-and-native-visual/EXACT-COLD-FINAL589-CLOSURE.json"
+  },
+  "initialTerminalRowsMissingCorpseBeforeCleanup": [
+    "unit-p0-horseArcher-3093",
+    "unit-p0-lancer-4266"
+  ],
+  "all69ActualCorpsesAcrossNativeCorpseStream": true,
+  "missingCorpseIdsAfterNativeBoundaryJoin": [],
+  "laterNativeCorpseConfirmations": {
+    "unit-p0-horseArcher-3093": {
+      "tick": 11536,
+      "corpse": {
+        "id": "corpse-unit-p0-horseArcher-3093-11536",
+        "unitId": "unit-p0-horseArcher-3093",
+        "kind": "horseArcher",
+        "owner": "p0",
+        "x": 2765.7397548146946,
+        "y": 2363.911303214599,
+        "radius": 19,
+        "diedAtTick": 11536,
+        "equipmentCaptured": true,
+        "ownerRace": "grove"
+      }
+    },
+    "unit-p0-lancer-4266": {
+      "tick": 11896,
+      "corpse": {
+        "id": "corpse-unit-p0-lancer-4266-11896",
+        "unitId": "unit-p0-lancer-4266",
+        "kind": "lancer",
+        "owner": "p0",
+        "x": 2324.790969720119,
+        "y": 1443.8758767740212,
+        "radius": 18,
+        "diedAtTick": 11896,
+        "equipmentCaptured": true,
+        "ownerRace": "grove"
+      }
+    }
+  },
+  "nativeDeathVersusCleanupTickCaution": "Two public-command fatal observations11535/11895 precede native corpse/removal boundaries11536/11896. Both supported by original corpse stream; not two extra deaths or a missing-original-world fabrication."
+}

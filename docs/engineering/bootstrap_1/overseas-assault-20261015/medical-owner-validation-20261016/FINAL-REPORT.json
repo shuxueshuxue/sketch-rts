@@ -1,0 +1,328 @@
+{
+  "classification": "Bootstrap_1 isolated rules2 medical+landed micro candidate handoff. This component is complete for integration review; bootstrap acceptance and knownseed full ordinary0 remain root responsibility. No fullmatch win inferred.",
+  "finalCommit": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+  "parent": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+  "branch": "codex/bootstrap-medical-safe-owner-final-20261016",
+  "control": "/tmp/sketch-rts-medical-owner-contract-v9-control",
+  "sourceCapsule": "/tmp/bootstrap-medical-owner-contract-v9-20261016/final-runtime-source.json",
+  "sourceCapsuleSHA256": "1f91cfad73596d12a2e6f9d9ab2229503d3105dc64e2ee2875828eaf953c5b79",
+  "sourceArchive": {
+    "path": "/tmp/bootstrap-medical-owner-contract-v9-20261016/final-source.tar.gz",
+    "bytes": 5941829,
+    "sha256": "a0d8fbd18fb5938b4953ad8e3ed3563dc0ffb84c2400771872a199427ba418a3",
+    "payloadCount": 1988,
+    "readbackVerified": true
+  },
+  "rulesVersion": 2,
+  "runtimeFiles": 1491,
+  "frozenFullFiles": 497,
+  "frozenManifestFiles": 184,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "productionChangedFiles": [
+    "src/ai/bootstrap_1/caster-screen.ts",
+    "src/ai/bootstrap_1/expedition-recovery.ts",
+    "src/ai/bootstrap_1/landed-combat.ts",
+    "src/ai/bootstrap_1/medical-recovery.ts",
+    "src/ai/bootstrap_1/medical-rendezvous.ts",
+    "src/ai/bootstrap_1/medical-task-safety.ts",
+    "src/ai/bootstrap_1/policy.ts",
+    "src/ai/bootstrap_1/safe-land-route.ts",
+    "src/ai/bootstrap_1/summoner-screen.ts",
+    "src/ai/bootstrap_1/weapon-targets.ts",
+    "src/ai/memory.ts"
+  ],
+  "allChangedFiles": [
+    "src/ai/bootstrap_1/caster-screen.ts",
+    "src/ai/bootstrap_1/expedition-recovery.ts",
+    "src/ai/bootstrap_1/fixtures/landed-contact-135.json.gz",
+    "src/ai/bootstrap_1/fixtures/landed-contact-360.json.gz",
+    "src/ai/bootstrap_1/fixtures/landed-contact-375.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-expedition-390.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-expedition-405.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-ready-heal-30660.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-ready-heal-30705.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-retreat-30346.json.gz",
+    "src/ai/bootstrap_1/fixtures/medical-retreat-30600.json.gz",
+    "src/ai/bootstrap_1/landed-combat.test.ts",
+    "src/ai/bootstrap_1/landed-combat.ts",
+    "src/ai/bootstrap_1/landed-contact.test.ts",
+    "src/ai/bootstrap_1/medical-island-task-safety.test.ts",
+    "src/ai/bootstrap_1/medical-recovery.ts",
+    "src/ai/bootstrap_1/medical-rendezvous-record.test.ts",
+    "src/ai/bootstrap_1/medical-rendezvous.test.ts",
+    "src/ai/bootstrap_1/medical-rendezvous.ts",
+    "src/ai/bootstrap_1/medical-spell-publication.test.ts",
+    "src/ai/bootstrap_1/medical-task-safety.test.ts",
+    "src/ai/bootstrap_1/medical-task-safety.ts",
+    "src/ai/bootstrap_1/policy.ts",
+    "src/ai/bootstrap_1/safe-land-route.ts",
+    "src/ai/bootstrap_1/summoner-screen.ts",
+    "src/ai/bootstrap_1/weapon-targets.ts",
+    "src/ai/memory.ts"
+  ],
+  "scope": [
+    "Medical owns physical work only when it can perform an admitted current walk-to-heal. Cooldown/unsafe legacy cast or hold returns to current native backline responsibility.",
+    "Ready/inrange nativeheal is a completed spell; preserve target/range240/55heal/cd240 and original35percent patiententry. One samecaster+sameability immediateheal publication preserves firstaccepted priority; queued/noninstant/differentability/item remain legal.",
+    "Original naval actuallypublished patient goal may finish only while currentorder matches and nativearrival/followstop notcomplete. It does not create a new healer/patientbudget after crossingentry. Death/fullheal/cancel/board/invalidhealer complete the record.",
+    "Existing landed owner keeps executable stutter/shot, repairs only absent action inside native melee coverage or originalkite actually blocked by landbody/ship on native road. ExistingmountedMicro field decision uses actual shot/contact/all armed threats/terrain+buildings+bodies; no newcommander, timer, warningcircle or30/35 threshold changes."
+  ],
+  "coverage": {
+    "uniqueCases": 162,
+    "passed": 162,
+    "proof": "/tmp/bootstrap-medical-owner-contract-v9-20261016/FINAL-CASE-ID-EVIDENCE-162.json",
+    "sha256": "d5e97ffc652862afcc1181ec7fac96aa58f05c76d5bce54c71de194ee1a32311",
+    "invocationBoundary": "c9489contact +12expedition +141(neighbor/pure/lifecycle/oldlanded=138green3red); finalcf14712landedgreen replaces its same12caseIDs. Never call141allgreen or count nativecamp as a test."
+  },
+  "tsc": {
+    "actualExit": 0,
+    "elapsedSeconds": 24.47650671005249,
+    "source": {
+      "head": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "files": 1491,
+      "capsuleSHA256": "1f91cfad73596d12a2e6f9d9ab2229503d3105dc64e2ee2875828eaf953c5b79"
+    },
+    "memoryEventsAfter": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allPriorFilesUnchanged": true
+  },
+  "clinical52": [
+    {
+      "start": 30660,
+      "end": 30705,
+      "counts": {
+        "steps": 45,
+        "commands": 104,
+        "plans": 9,
+        "runtime": 1491,
+        "frozen497": 497
+      },
+      "checks": {
+        "restore": true,
+        "fixedRuntime": true,
+        "fixedFrozen": true,
+        "steps": true,
+        "oneOriginalTargetHeal": true,
+        "instantHealApplied": true,
+        "oneExistingPhysicalOwner": true,
+        "physicalAccepted": true,
+        "roadAllowed": true,
+        "healBeforeEscape": true
+      },
+      "hits": 13,
+      "nativeP0LossCounterBefore": 18,
+      "nativeP0LossCounterAfter": 18,
+      "remainingConfirmedPermanentDeathIds": [],
+      "originalTargetCastAndPhysical": [
+        {
+          "scriptId": "medicalRecovery",
+          "command": {
+            "type": "cast",
+            "unitId": "unit-p0-fieldMedic-1602",
+            "ability": "heal",
+            "targetId": "unit-p0-priest-15352"
+          },
+          "patientHPBefore": 37,
+          "patientHPAfter": 92,
+          "nativeInstantHeal": true,
+          "physicalAccepted": null,
+          "actualRoadAllowed": null
+        },
+        {
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-p0-fieldMedic-1602"
+            ],
+            "x": 1954.694122168286,
+            "y": 2943.967105659105,
+            "avoidCombat": true
+          },
+          "patientHPBefore": 92,
+          "patientHPAfter": 92,
+          "nativeInstantHeal": null,
+          "physicalAccepted": true,
+          "actualRoadAllowed": true
+        }
+      ],
+      "inputSHA256": "ccdee285caa9e1e7f9a92049d06829b47ca912f87c89d3dd54164fcf9dd2a8a0",
+      "result": "/tmp/bootstrap-medical-owner-contract-v9-20261016/instant-30660-result.json",
+      "resultSHA256": "bd0b78779e2626f76430c319d28585b2f09e3bae6d62e80cc303df093f38b685",
+      "externalExit": {
+        "actualExit": 0,
+        "elapsedSeconds": 3.8027889728546143,
+        "memoryEventsBefore": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+        "memoryEventsAfter": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+        "classification": "Finalfixedcf147 original-input normal3AI52tick clinical component, not ordinary0/fullmatch."
+      }
+    },
+    {
+      "start": 30705,
+      "end": 30712,
+      "counts": {
+        "steps": 7,
+        "commands": 35,
+        "plans": 3,
+        "runtime": 1491,
+        "frozen497": 497
+      },
+      "checks": {
+        "restore": true,
+        "fixedRuntime": true,
+        "fixedFrozen": true,
+        "steps": true,
+        "oneOriginalTargetHeal": true,
+        "instantHealApplied": true,
+        "oneExistingPhysicalOwner": true,
+        "physicalAccepted": true,
+        "roadAllowed": true,
+        "healBeforeEscape": true
+      },
+      "hits": 4,
+      "nativeP0LossCounterBefore": 18,
+      "nativeP0LossCounterAfter": 19,
+      "remainingConfirmedPermanentDeathIds": [
+        "unit-p0-priest-15352"
+      ],
+      "originalTargetCastAndPhysical": [
+        {
+          "scriptId": "medicalRecovery",
+          "command": {
+            "type": "cast",
+            "unitId": "unit-p0-fieldMedic-1418",
+            "ability": "heal",
+            "targetId": "unit-p0-fieldMedic-1602"
+          },
+          "patientHPBefore": 34,
+          "patientHPAfter": 89,
+          "nativeInstantHeal": true,
+          "physicalAccepted": null,
+          "actualRoadAllowed": null
+        },
+        {
+          "scriptId": "v6Backline",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-p0-fieldMedic-1418"
+            ],
+            "x": 1962.5339868128103,
+            "y": 2857.6863732469824,
+            "avoidCombat": true
+          },
+          "patientHPBefore": 89,
+          "patientHPAfter": 89,
+          "nativeInstantHeal": null,
+          "physicalAccepted": true,
+          "actualRoadAllowed": true
+        }
+      ],
+      "inputSHA256": "29471303f28b886cd834787ab123664d5840203078f9dcdeec167cf79d5309a9",
+      "result": "/tmp/bootstrap-medical-owner-contract-v9-20261016/instant-30705-result.json",
+      "resultSHA256": "5fe3ce99ca7e57a4193060cd14cf5e298a1420fcd3a51f463a16a9f27516d541",
+      "externalExit": {
+        "actualExit": 0,
+        "elapsedSeconds": 1.9405465126037598,
+        "memoryEventsBefore": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+        "memoryEventsAfter": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+        "classification": "Finalfixedcf147 original-input normal3AI52tick clinical component, not ordinary0/fullmatch."
+      }
+    }
+  ],
+  "clinicalLimitations": [
+    "Two independent original beforeP0 fullworld/id/3memory/setup inputs at30660 and30705; not one continuous52tick changedcode replay.",
+    "30705->30712 still confirms originalpriest15352 death tospirit40612 at30712, matched originalbaseline death; tower1499 in-flight projectile hitsfieldMedic1418 for16 at30708 despite admittedescape. No allmedics/nohits promise.",
+    "Native52 success proves originaltarget instantaneousheal and oneaccepted existing physicalowner with nonworsening road, not fullarmy survival, wholematch improvement or generalization."
+  ],
+  "originalMatch": {
+    "head": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+    "result": "Original ordinary0 naturally ended82182 P1win/P0zeroUzeroB/65permanentlosses. Unchanged historicalscore.",
+    "seedStatus": "Predeclared firstuse seed is now observed/known; no newholdout claim.",
+    "next": "Root integrate cf147 with independent17bc dock/ground deltas, validateintersection/freezecombinedsource and run knownarcher same seed true ordinary0. Then actual fullgames/generalization across allthreefamilies, allsingles and6pairs/officialmaps/unseen seeds still required."
+  },
+  "history": [
+    {
+      "head": "acba69996f6b0c79469f5be3f8019f146b58a28a",
+      "evidenceDirectory": "/tmp/bootstrap-medical-task-safety-20261016",
+      "scope": "First road-admission candidate; original beforeP0 recovered with exact38f cold native254+112. Later instants/oldholds require explicit spell vs physical ownership. Not merged or a fullmatch score."
+    },
+    {
+      "head": "7b2a4250835b50a4e5917d12ae09937a17580609",
+      "evidenceDirectory": "/tmp/bootstrap-medical-task-safety-v3-20261016",
+      "scope": "23puregreen, later exactcampfront504 loss traced correct earlyheal crossing35 and unfinished medical motion stolen by combat. Not blameB."
+    },
+    {
+      "head": "44e22a6977bbc6497f016d56cf40ca9f1afacbae",
+      "evidenceDirectory": "/tmp/bootstrap-medical-task-safety-v4-20261016",
+      "scope": "B instantspell completes and movement returns to existingbackline; samecaster+sameability immediateheal publication.42puregreen; original83=80green3red; acba/7b/B exactrawcause retained."
+    },
+    {
+      "head": "70bf422df6ee3bf43d2e493edc6e791fb57605f3",
+      "evidenceDirectory": "/tmp/bootstrap-medical-rendezvous-v5-20261016",
+      "scope": "16puregreen but83=74green9red; conceptual continuedpair regeneratedrendezvous and healerbudget beyond originalentry. Rejected."
+    },
+    {
+      "head": "201b70498c6f5331820d0e60a56e3be60ab10b50",
+      "evidenceDirectory": "/tmp/bootstrap-medical-goal-v6-20261016",
+      "scope": "Only preserve original actually published pending patient motion.16pure green, original12=6green6red. Native1800 first shooter-2 death at441. First memory difference120, first physical command difference150, first world difference165 retained."
+    },
+    {
+      "head": "8a40ae71f9481d10a6e130fc20762469e9e20346",
+      "evidenceDirectory": "/tmp/bootstrap-medical-landed-contact-v7-20261016",
+      "scope": "6puregreen but nativefront531 dies;12=9green3red. Broad15tick microcircle stole actual135 readyvolley. Rejected. Tworesourcegates zeroGame preserved."
+    },
+    {
+      "head": "c9487c1c34a87394498d574aa5f90be62cbafb57",
+      "evidenceDirectory": "/tmp/bootstrap-medical-landed-contact-v8-20261016",
+      "scope": "Narrow existing executablekite/shot preserved; only missingaction within native melee coverage or truly blockedkite repaired via mountedMicro.9puregreen, one exactcamp1800=0ownloss/clearcamp, original12green. Extraactual oldhold12 uncovered3 stalehold assertions present sinceacba. Complete4source P0query confirms unsafeholds and unchangedescapes."
+    },
+    {
+      "head": "8d58b0acca17a933f4d8cacf59640ad90176106a",
+      "evidenceDirectory": "/tmp/bootstrap-medical-owner-contract-v9-20261016",
+      "scope": "Only strengthen oldhold test with actual cooldown/owner/unsafehold/nonworseningroad constraints. All previousbranches/history preserved."
+    },
+    {
+      "head": "cf1477432b35844d891c22aac21afc15b8e7bef6",
+      "evidenceDirectory": "/tmp/bootstrap-medical-owner-contract-v9-20261016",
+      "scope": "Final minimalparent760 commit, identicalfullGit tree to preserved8d58;1490/1491 files equalc948, solechangedtest.12actualgreen/tsc0/twooriginalnative52 checksalltrue; no ordinary0 acceptance."
+    }
+  ],
+  "priorRejectedStrategies": {
+    "stopOnlyDoc": "/workspace/sketch-rts-bootstrap-resume/docs/engineering/bootstrap_1/overseas-assault-20261015/medical-stop-negative-20261016.zh.md",
+    "careForecastNegativeArchive": "/workspace/.playtest/bootstrap-care-forecast-admission-1e955-20261016-negative-evidence.tar.gz",
+    "scope": "No repeat outer35 OR forecast or stop-onlyadmission; priorf1394 full21209loss versus original1e82963win remains separate, never use that oldwin as current38f result."
+  },
+  "resourceScope": {
+    "allOurHeavyProcessesExited": true,
+    "actualFinalExit": "12/tsc/collect-only+2native52 exit0, OOM43/2 unchanged; heavy formally handedroot, thenordercapability360 rootauthorized exited too.",
+    "oldFd": "Parent resourcecheckpoint pause at367200 winnernull/unfinished, not natural loss or stagnation."
+  },
+  "originalBrokenContainerUncommittedGap": "Unrecovered. No claim originaluncommitted workspace copied.",
+  "historyBundle": {
+    "path": "/tmp/bootstrap-medical-owner-contract-v9-20261016/medical-history.bundle",
+    "bytes": 172793,
+    "sha256": "62674a4a041db4cc0b648514a3d6ac183a1bf6f1033f949dcc6eb422565889c3",
+    "prerequisite": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+    "branches": [
+      "codex/bootstrap-medical-task-safety-20261016",
+      "codex/bootstrap-medical-task-safety-v3-20261016",
+      "codex/bootstrap-medical-task-safety-v4-20261016",
+      "codex/bootstrap-medical-rendezvous-v5-20261016",
+      "codex/bootstrap-medical-goal-v6-20261016",
+      "codex/bootstrap-landed-contact-v7-20261016",
+      "codex/bootstrap-landed-contact-v8-20261016",
+      "codex/bootstrap-medical-owner-contract-v9-20261016",
+      "codex/bootstrap-medical-safe-owner-final-20261016"
+    ],
+    "verifyExit": 0,
+    "verifyLog": "/tmp/bootstrap-medical-owner-contract-v9-20261016/medical-history-bundle-verify.log"
+  },
+  "sealingStatus": {
+    "atUTC": "2026-10-16T11:40:11.071024+00:00",
+    "scope": "Parent capacity window received after supported closed-archive duplicate reclamation. Fullraw/source/negativehistory inventory will now be streamsealed only to /tmp; outer seal-receipt is sourceoftruth for finalarchiveSHA/readback. No originalraw deleted.",
+    "inventory": "/tmp/bootstrap-medical-safe-owner-cf147743-20261016-INVENTORY.json",
+    "receipt": "/tmp/bootstrap-medical-safe-owner-cf147743-20261016-seal-receipt.json"
+  },
+  "historyEvidenceScope": "70bf has original native Vitest12/83 failure logs and committedcapsule/fixtures; do not claim a dedicated fullraw1800 capture for70bf. Dedicated complete15tick/raw/hit/firstloss diagnostics exist for acba,7b,B224,201b,8a40,c948 as indexed."
+}
