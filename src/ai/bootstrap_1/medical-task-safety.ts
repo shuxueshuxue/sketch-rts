@@ -1,6 +1,7 @@
 import { groundSteeringRoute, routeClearsDisks } from '../../shared/route-selection';
 import { pointSegmentDistanceSquared } from '../../shared/navigation-math';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
+import { steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
@@ -37,6 +38,18 @@ export function medicalRoadIsSafe(snapshot: GameSnapshot, healer: Unit, target: 
       + ('speed' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0) })),
   ...hostileDamageDisks(snapshot, healer, foes, THINK_TICKS)];
   return disks.every(disk => distance(healer, disk) > disk.radius) && routeClearsDisks(road, disks);
+}
+
+/** A covered remote range entry does not prevent safe progress this think.
+ * Publish only the first native steering waypoint; no cast can continue down
+ * the rejected remainder before the next medical/backline reassessment. */
+export function medicalApproachWaypoint(snapshot: GameSnapshot, healer: Unit, target: Point, range: number, foes: readonly (Unit | Building)[]) {
+  // A mobile threat can leave the remote road before we get there. Known fixed
+  // fire and active ground damage still need a viable complete range entry.
+  if (!medicalRoadIsSafe(snapshot, healer, target, range, foes.filter(foe => !('speed' in foe)))) return undefined;
+  const point = steerPoint(snapshot.map, healer, target);
+  return distance(healer, point) > MOVE_ORDER_ARRIVAL_RANGE
+    && medicalRoadIsSafe(snapshot, healer, point, 0, foes) ? point : undefined;
 }
 
 /** A short backline escape must not cross a worse known coverage margin on its

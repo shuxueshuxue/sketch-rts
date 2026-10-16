@@ -9,7 +9,7 @@ import { distance } from '../policy/spatial';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import type { AiScript, PresetAiPolicyOptions } from '../policy/types';
 import { armedFoes } from './safe-land-route';
-import { medicalRoadIsSafe } from './medical-task-safety';
+import { medicalApproachWaypoint, medicalRoadIsSafe } from './medical-task-safety';
 
 export function recoveryPatients(snapshot: GameSnapshot, owner: PlayerId) {
   return snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.kind !== 'worker'
@@ -62,7 +62,11 @@ export function planMedicalRecoveryTasks(snapshot: GameSnapshot, owner: PlayerId
       return true;
     }
     if (!medicalRoadIsSafe(snapshot, healer, target, ready ? ABILITY_DEFS[ability].range : 0, foes)) {
-      released.add(healer.id); return false;
+      const point = ready ? medicalApproachWaypoint(snapshot, healer, target, ABILITY_DEFS[ability].range, foes) : undefined;
+      if (!point) { released.add(healer.id); return false; }
+      occupied.add(healer.id);
+      commands.push({ type: 'move', unitIds: [healer.id], x: point.x, y: point.y });
+      return true;
     }
     occupied.add(healer.id);
     commands.push(ready ? { type: 'cast', unitId: healer.id, ability, targetId: target.id }
