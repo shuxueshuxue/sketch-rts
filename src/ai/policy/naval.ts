@@ -1441,9 +1441,21 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
             return crew.some(permanentCombat) || loading ? [mission.targetGround] : [];
         });
         const committedIsland=(target:Building)=>committed.some(ground=>sameGround(map,ground,target));
+        // A nearer defended island must not hide another island the present
+        // army meets the existing force estimate. Keep an invasion's island first;
+        // when none is ready, retain the ordinary distance-ranked objective.
+        const readiness:Array<{ground:Point;ready:boolean}>=[];
+        const readyIsland=(target:Building)=>{
+            const known=readiness.find(entry=>sameGround(map,entry.ground,target));
+            if(known)return known.ready;
+            const ready=assaultExpedition(snapshot,owner,options,target).ready;
+            readiness.push({ground:target,ready});
+            return ready;
+        };
         let assault: AssaultPlan | undefined;
         if (targets.length > 0) {
-            for (const target of targets.sort((a, b) => Number(committedIsland(b))-Number(committedIsland(a)) || distance(a, home) - distance(b, home))) {
+            for (const target of targets.sort((a, b) => Number(committedIsland(b))-Number(committedIsland(a))
+                || Number(readyIsland(b))-Number(readyIsland(a)) || distance(a, home) - distance(b, home))) {
                 const landing = walkableGoal(map, target.x, target.y, "sea");
                 if (!isWalkable(map, landing.x, landing.y, "sea"))
                     continue;
