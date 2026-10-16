@@ -223,6 +223,16 @@ export class World3DLayer {
       if(renderer.extensions.has('KHR_parallel_shader_compile'))await renderer.compileAsync(this.scene,this.camera);
       if(!this.disposed&&!this.contextLost){
         renderer.render(this.scene,this.camera);
+        // @@@shadow-depth-variants - Every shadow caster shares three's one depth material, and the renderer picks that
+        // material's program again only when another property (here, morph targets) changes between two draws; the
+        // caster's side then decides the variant. A one-sided caster drawn right after a ship's sail takes a variant no
+        // other order reaches. So each side and morph pair is drawn once right after a caster of the other morph state.
+        const casters=new Map<string,THREE.InstancedMesh>(),toggles=new Map<boolean,THREE.InstancedMesh>(),children=root.children;
+        for(const object of children)if(object instanceof THREE.InstancedMesh&&object.castShadow&&!object.customDepthMaterial&&!Array.isArray(object.material)){
+          const morph=object.morphTexture!==null;toggles.set(morph,object);casters.set(`${object.material.side}:${morph}`,object);
+        }
+        for(const caster of casters.values()){const toggle=toggles.get(caster.morphTexture===null);if(toggle){root.children=[toggle,caster];renderer.render(this.scene,this.camera);}}
+        root.children=children;
         // The GPU process links a program and builds its pipeline state only when its first draw runs there; reading a
         // pixel back waits for these draws, so that work also lands in the loading screen and not in a match frame.
         const gl=renderer.getContext();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));

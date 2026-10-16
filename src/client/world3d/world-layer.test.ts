@@ -4,14 +4,20 @@ import {describe,it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
 import type {Scene,Material} from 'three';
-const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0,compiled:[] as Mesh[]}));
+const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0,compiled:[] as Mesh[],casters:[] as {side:number;morph:boolean}[][]}));
 vi.mock('three',async importOriginal=>{
   const actual=await importOriginal<typeof import('three')>();
   return{...actual,WebGLRenderer:class{
     shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};extensions={has:()=>true};toneMapping=0;toneMappingExposure=1;
     setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
     initTexture(){}copyTextureToTexture(){}getRenderTarget(){return null;}getActiveCubeFace(){return 0;}getActiveMipmapLevel(){return 0;}setRenderTarget(){}
-    render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
+    render(scene:Scene){
+      scene.updateMatrixWorld(true);gpu.scene=scene;
+      // The shadow pass draws casters in scene order: what each render's sequence of casters was.
+      const casters:{side:number;morph:boolean}[]=[];
+      scene.traverseVisible(object=>{const mesh=object as InstancedMesh;if(mesh.isInstancedMesh&&mesh.castShadow&&!mesh.customDepthMaterial&&!Array.isArray(mesh.material))casters.push({side:mesh.material.side,morph:mesh.morphTexture!==null});});
+      gpu.casters.push(casters);
+    }
     compileAsync(scene:Scene){gpu.compiled=[];scene.traverseVisible(object=>{if((object as Mesh).isMesh)gpu.compiled.push(object as Mesh);});return Promise.resolve();}
     clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){}};}
   }};
@@ -35,7 +41,7 @@ import {UnitMotionSmoother} from '../unit-motion';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 import type {WorldFrame} from '../world-renderer';
 import {ownerInk} from '../world-renderer';
-import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial,Matrix4,Vector3,DataArrayTexture} from 'three';
+import {InstancedMesh,MeshBasicMaterial,Mesh,FrontSide,DataTexture,ShaderMaterial,Matrix4,Vector3,DataArrayTexture} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
@@ -330,7 +336,9 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
   });
 
   it('compiles every match variant while the match loads, and keeps those programs through resets',async()=>{
-    const {frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
+    const {frame,layer}=setup();gpu.casters=[];await layer.prepare(frame.snapshot,'match');
+    // A one-sided caster right after a morphing sail: the shadow depth variant only that order compiles (see @@@shadow-depth-variants).
+    expect(gpu.casters.some(casters=>casters.some((caster,i)=>i>0&&casters[i-1]!.morph&&!caster.morph&&caster.side===FrontSide))).toBe(true);
     const compiled=gpu.compiled,materials=new Set<Material>(compiled.flatMap(mesh=>Array.isArray(mesh.material)?mesh.material:[mesh.material]));
     // The variants first drawn minutes into a match: a building under construction, a selected ship's see-through sail,
     // the troop and deck remains cards, combat ink.
