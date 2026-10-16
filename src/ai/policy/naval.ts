@@ -781,19 +781,20 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             delete mission.progress;
         }
     }
-    const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
+    const passengers=shipPassengers(snapshot.units,boat), aboardIds=passengers.map(unit=>unit.id).join('|'), progress=mission.progress;
+    const permanentCargoKey=passengers.filter(unit=>unit.expiresTick===undefined).map(unit=>unit.id).join('|');
     // A precise berth turn moves the hull while its center stays still. Measure
     // the bow's angular travel against the same distance gate as translation.
-    if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32
+    if(!progress || progress.phase!==mission.phase || progress.crew!==permanentCargoKey || distance(boat,progress)>32
         || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:permanentCargoKey};
     else if(snapshot.tick-progress.tick>seconds(40) && !(mission.purpose==='assault'
         && (mission.phase==='sailing' || mission.phase==='loading' && aboardIds.length>0)
         && Object.entries(ferries).some(([id,other])=>id!==boat.id && other.purpose==='assault' && other.phase===mission.phase
             && other.targetId===mission.targetId && other.progress && snapshot.tick-other.progress.tick<=seconds(40)))){
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
         if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:aboardIds};
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:permanentCargoKey};
         return cancelFerry(snapshot,boat,mission,options);
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.

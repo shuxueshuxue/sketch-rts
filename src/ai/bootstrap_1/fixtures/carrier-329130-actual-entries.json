@@ -1,0 +1,110 @@
+[
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "naval",
+    "command": {
+      "type": "board",
+      "unitIds": [
+        "unit-p0-ashHexer-4268"
+      ],
+      "transportId": "unit-p0-carrier-25442"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-7246",
+      "ability": "summon",
+      "x": 6960.920617513819,
+      "y": 3927.955414482847
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-7979",
+      "ability": "summon",
+      "x": 7186.648357093227,
+      "y": 6642.724700411412
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-31259",
+      "ability": "summon",
+      "x": 6500.0997125521035,
+      "y": 2836.0637398568915
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-38054",
+      "ability": "summon",
+      "x": 6553.483721408963,
+      "y": 2742.6602295163752
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-39390",
+      "ability": "summon",
+      "x": 6508.427442571874,
+      "y": 2846.8461265331684
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-40241",
+      "ability": "summon",
+      "x": 6553.483721408963,
+      "y": 2742.6602295163752
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-41089",
+      "ability": "summon",
+      "x": 6553.483721408963,
+      "y": 2742.6602295163752
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-44159",
+      "ability": "summon",
+      "x": 6553.483721408963,
+      "y": 2742.6602295163752
+    }
+  }
+]
