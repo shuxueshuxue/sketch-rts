@@ -9,6 +9,8 @@ import { beginShipCollisionFrame } from '../../shared/ship-collisions';
 import { bootstrapPolicyContext } from '../bootstrap_1/policy';
 import { coastalDeadZoneThreats, outmatchingCoast } from './coastal-risk';
 import { planNavalTactics } from './naval';
+import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
+import { strikeGap } from '../../shared/combat-geometry';
 
 function actual(tick = 232380) {
   const frame = JSON.parse(gunzipSync(readFileSync(new URL(`./fixtures/coastal-mortar-dead-zone-${tick}.json.gz`, import.meta.url))).toString());
@@ -120,5 +122,33 @@ describe('actual coastal mortar dead zone', () => {
     delete enemy.deck;
     enemy.x -= 1000;
     expect(coastalDeadZoneThreats(snapshot, 'p0', ship, options)).toEqual([]);
+  });
+
+  it('uses native center minimum range when a catapult actually fires at a nearer hull edge', () => {
+    // Counterfactual unit geometry isolates the native intrinsic rule. These
+    // are real catalog units and public orders, not this match's trajectory.
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    game.units = []; game.items = []; game.buildings = []; game.resources = [];
+    delete game.map.terrain;
+    game.scriptedVictory = true;
+    const catapult = game.spawnUnit('player', 'catapult', 1000, 1000);
+    const cutter = game.spawnUnit('enemy', 'cutter', 1220, 1000);
+    cutter.sailing!.heading = .8389260535763501;
+    const snapshot = snapshotGame(game), shot = workingWeaponGeometry(snapshot, catapult, cutter)[0]!;
+    expect(shot.gap).toBeCloseTo(160, 3);
+    expect(shot.minimumGap).toBe(220);
+    expect(shot.minimum).toBe(180);
+    expect(shot.belowMinimum).toBe(false);
+    expect(shot.covers).toBe(true);
+    expect(strikeGap(catapult, cutter)).toBeLessThan(180);
+    let landed = false;
+    game.observer = { hit(attacker, target) { if (attacker.id === catapult.id && target.id === cutter.id) landed = true; } };
+    issuePlayerCommand(game, 'enemy', { type: 'holdPosition', unitIds: [cutter.id] });
+    issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [catapult.id], targetId: cutter.id });
+    for (let tick = 0; tick < 120 && !landed; tick++) stepGame(game);
+    expect(landed).toBe(true);
+    expect(catapult.x).toBe(1000);
+    expect(catapult.y).toBe(1000);
+    expect(Math.hypot(catapult.x - cutter.x, catapult.y - cutter.y)).toBe(220);
   });
 });

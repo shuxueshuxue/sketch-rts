@@ -92,7 +92,7 @@ export function coastalDeadZoneThreats(snapshot: GameSnapshot, owner: PlayerId, 
     && workingWeaponGeometry(snapshot, foe, ship).some(weapon => weapon.covers))
     .filter(foe => {
       const weapons = workingWeaponGeometry(snapshot, ship, foe);
-      return weapons.length > 0 && weapons.every(weapon => weapon.gap < weapon.minimum);
+      return weapons.length > 0 && weapons.every(weapon => weapon.belowMinimum);
     });
 }
 
