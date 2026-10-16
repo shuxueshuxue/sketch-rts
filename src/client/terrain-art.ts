@@ -1,6 +1,7 @@
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
-import { drawAtlasTree } from "./atlas-art";
+// The atlas's tree, from its own module: a chunk painter thread (see @@@terrain-chunk-thread) loads no other art.
+import { paintTree as drawAtlasTree } from "./art/environment";
 import { terrainCover, paintGroundTextures } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
 import { waterCover, waterLightMask, paintWaterRipples } from './water-art';
@@ -26,9 +27,21 @@ const MUD_DARK = "#b79e74";
 const DECK = "#c7a472";
 const DECK_INK = "#916e44";
 
-type TerrainChunk = { ground: HTMLCanvasElement; water?: HTMLCanvasElement; ripples?: HTMLCanvasElement; waterPhase?: number };
-type Cache = { chunks: Map<string, TerrainChunk>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement;
+// A chunk's pictures: canvases painted here, or bitmaps a chunk painter thread sent.
+export type PaintedTerrainChunk = { ground: HTMLCanvasElement | ImageBitmap; water?: HTMLCanvasElement | ImageBitmap };
+type TerrainChunk = PaintedTerrainChunk & { ripples?: HTMLCanvasElement; waterPhase?: number };
+type Cache = { chunks: Map<string, TerrainChunk>; requested?: Set<string>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement;
   waterView?: { canvas:HTMLCanvasElement; x:number; y:number; width:number; height:number; phase:number } };
+
+// @@@terrain-chunk-thread - Painting one chunk takes tens of milliseconds, four times that at a Retina density, and a
+// chunk painted while the camera brings it into view holds that frame. With a chunk painter (a worker, see
+// terrain-thread/browser) a missing chunk is painted there and the map's coarse picture (terrainMinimap) stands in its
+// place until it arrives. Without one (tests, the headless recorder) a chunk is painted where it is needed.
+export type TerrainChunkPainter = (terrain: Terrain, cx: number, cy: number, density: number) => Promise<PaintedTerrainChunk>;
+let chunkPainter: TerrainChunkPainter | undefined;
+export function setTerrainChunkPainter(painter: TerrainChunkPainter | undefined) {
+  chunkPainter = painter;
+}
 const SURFACE_COLORS:Record<string,string>={g:'#7c94674a',d:'#af936445',s:'#d3bd8f60',r:'#87958650'};
 const caches = new WeakMap<Terrain, Cache>();
 
@@ -67,9 +80,16 @@ export function drawTerrain(c: Brush, terrain: Terrain, camera: Point, width: nu
       let chunk = cache.chunks.get(key);
       if (chunk) {
         cache.chunks.delete(key);
+      } else if (chunkPainter) {
+        requestChunk(chunkPainter, terrain, cache, key, cx, cy, density);
+        // Until it arrives: the chunk at the other density when the zoom just crossed over, else its coarse colours.
+        const other = cache.chunks.get(`${cx},${cy},${3 - density}`);
+        if (other) c.drawImage(other.ground, cx * CHUNK - camera.x, cy * CHUNK - camera.y, CHUNK, CHUNK);
+        else drawCoarseChunk(c, terrain, cx, cy, camera);
+        continue;
       } else {
         chunk = paintChunk(terrain, cx, cy, density);
-        if (cache.chunks.size >= MAX_CHUNKS) cache.chunks.delete(cache.chunks.keys().next().value!);
+        if (cache.chunks.size >= MAX_CHUNKS) evictChunk(cache);
       }
       cache.chunks.set(key, chunk);
       c.drawImage(chunk.ground, cx * CHUNK - camera.x, cy * CHUNK - camera.y, CHUNK, CHUNK);
@@ -88,6 +108,51 @@ export function drawTerrain(c: Brush, terrain: Terrain, camera: Point, width: nu
     }
   }
   if (phase !== undefined && waterView) c.drawImage(waterView.canvas, 0, 0, width, height);
+}
+
+// Asks the painter once for a missing chunk; a painter that fails is dropped and chunks are painted here again.
+function requestChunk(painter: TerrainChunkPainter, terrain: Terrain, cache: Cache, key: string, cx: number, cy: number, density: number) {
+  const requested = cache.requested ??= new Set();
+  if (requested.has(key)) return;
+  requested.add(key);
+  painter(terrain, cx, cy, density).then((painted) => {
+    requested.delete(key);
+    if (cache.chunks.has(key)) { closeChunk(painted); return; }
+    if (cache.chunks.size >= MAX_CHUNKS) evictChunk(cache);
+    cache.chunks.set(key, painted);
+  }, (error) => {
+    requested.delete(key);
+    if (chunkPainter === painter) chunkPainter = undefined;
+    console.error("Terrain chunk painter failed; painting chunks on this thread", error);
+  });
+}
+
+// The chunk's cells from the map's one-pixel-a-cell picture, smoothed: its colours in place until its painting arrives.
+function drawCoarseChunk(c: Brush, terrain: Terrain, cx: number, cy: number, camera: Point) {
+  const cells = CHUNK / terrain.cell, col = cx * cells, row = cy * cells;
+  const cols = Math.min(cells, terrain.cols - col), rows = Math.min(cells, terrain.rows - row);
+  if (cols <= 0 || rows <= 0) return;
+  const smoothing = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = true;
+  c.drawImage(terrainMinimap(terrain), col, row, cols, rows, cx * CHUNK - camera.x, cy * CHUNK - camera.y, cols * terrain.cell, rows * terrain.cell);
+  c.imageSmoothingEnabled = smoothing;
+}
+
+function evictChunk(cache: Cache) {
+  const oldest = cache.chunks.keys().next().value!;
+  const chunk = cache.chunks.get(oldest)!;
+  cache.chunks.delete(oldest);
+  closeChunk(chunk);
+}
+
+// A bitmap's pixels are freed when it is closed, not when it is collected.
+function closeChunk(chunk: PaintedTerrainChunk) {
+  for (const picture of [chunk.ground, chunk.water]) if (picture && "close" in picture) picture.close();
+}
+
+/** One chunk's ground and water mask, as drawTerrain paints it; a chunk painter thread runs this (see @@@terrain-chunk-thread). */
+export function paintTerrainChunk(terrain: Terrain, cx: number, cy: number, density: number): PaintedTerrainChunk {
+  return paintChunk(terrain, cx, cy, density);
 }
 
 

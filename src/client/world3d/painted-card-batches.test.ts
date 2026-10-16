@@ -82,13 +82,16 @@ describe('painted card array batches',()=>{
     const hits=new THREE.Raycaster(new THREE.Vector3(0,17/Math.tan(SHIP_CAMERA.tilt),300),new THREE.Vector3(0,0,-1)).intersectObject(mesh);
     expect(hits.length).toBeGreaterThan(0);expect(hits[0]!.uv!.y).toBeCloseTo(.5);cards.dispose();
   });
-  it('does not rerasterize a warm card and releases page textures, geometry and shadow materials',()=>{
+  it('does not rerasterize a warm card, releases idle page textures and keeps its draw chunk until dispose',()=>{
     const {cards,scene}=setup(),painter=vi.fn(paint);cards.begin();cards.add('pose',4,painter,matrix,'one',17);cards.finish(renderer);
-    const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial;
-    const releases=[material,material.map!,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
+    const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial,page=vi.spyOn(material.map!,'dispose');
+    const releases=[material,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
     cards.begin();cards.add('pose',4,painter,matrix,'two',17);cards.finish(renderer);expect(painter).toHaveBeenCalledTimes(1);
     for(let i=0;i<121;i++){cards.begin();cards.finish(renderer);}
-    expect(cards.stats()).toMatchObject({pages:0,cards:0,maskBytes:0,arrayCpuBytes:0,pendingRgbaBytes:0});expect(scene.children).toHaveLength(0);for(const release of releases)expect(release).toHaveBeenCalledTimes(1);cards.dispose();
+    expect(cards.stats()).toMatchObject({pages:0,cards:0,maskBytes:0,arrayCpuBytes:0,pendingRgbaBytes:0});expect(cards.objects()).toHaveLength(0);expect(page).toHaveBeenCalledTimes(1);
+    // Its materials keep their shader programs for the next card drawn.
+    for(const release of releases)expect(release).not.toHaveBeenCalled();
+    cards.dispose();expect(scene.children).toHaveLength(0);for(const release of releases)expect(release).toHaveBeenCalledTimes(1);
   });
   it('protects later visible warm cards from an early cache miss at the soft budget',()=>{
     const {cards}=setup(),painter=vi.fn(fullPaint);cards.begin();
@@ -555,4 +558,24 @@ it.each([1,2,6])('allocates exactly %i unique finest layers below budget, protec
  expect(cards.stats()).toMatchObject({cards:count+1,rasterizations:count+1,copiedLayers:0,pixels:352*352*(count+1)});
  expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['early',...Array.from({length:count},(_,i)=>`warm:${i}`)]);
  expect(cards.stats().pixels).toBeLessThan(12*1024*1024);cards.dispose();
+});
+
+it('paints one waiting card a frame once the raster budget is spent and draws each card as it arrives',()=>{
+ const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0}),painter=vi.fn(paint),ids=()=>cards.objects().flatMap(mesh=>mesh.userData.ids);
+ const frame=()=>{cards.begin();for(const id of ['a','b','c'])cards.add(`pose:${id}`,2,painter,matrix,id,17);cards.finish(renderer);};
+ frame();expect(painter).toHaveBeenCalledTimes(1);expect(ids()).toEqual(['a']);
+ frame();expect(painter).toHaveBeenCalledTimes(2);expect(ids()).toEqual(['a','b']);
+ frame();expect(painter).toHaveBeenCalledTimes(3);expect(ids()).toEqual(['a','b','c']);
+ frame();expect(painter).toHaveBeenCalledTimes(3);expect(cards.stats().rasterizations).toBe(3);cards.dispose();
+});
+
+it('draws an instance whose new card is still waiting with the card it drew last frame',()=>{
+ const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0});
+ const frame=(poses:Record<string,string>)=>{cards.begin();for(const [id,pose] of Object.entries(poses))cards.add(pose,2,paint,matrix,id,17);cards.finish(renderer);};
+ const drawn=(id:string)=>{const {mesh,index}=binding(cards,id);return(mesh.userData.cards[index] as {key:string}).key.split(':')[0];};
+ frame({a:'a1'});frame({a:'a1',b:'b1'});expect([drawn('a'),drawn('b')]).toEqual(['a1','b1']);
+ // Both poses change; one raster fits the frame, so b keeps its last pose for a frame.
+ frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b1']);
+ frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b2']);
+ expect(cards.stats().rasterizations).toBe(4);cards.dispose();
 });

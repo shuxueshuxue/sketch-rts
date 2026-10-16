@@ -433,6 +433,9 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(const kind of Object.keys(UNIT_DEFS) as (keyof typeof UNIT_DEFS)[])if(!isShipKind(kind))game.spawnUnit('player',kind,600,600);
     frame.snapshot=snapshotGame(game);frame.view={...frame.view,zoom:.6};await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    // A frame paints only a few new cards (see CARD_RASTER_BUDGET_MS); the rest arrive over the next frames.
+    const drawn=()=>paintedMeshes().reduce((sum,card)=>sum+card.count,0);
+    for(let i=0;i<200&&drawn()<game.units.length;i++)layer.draw(frame);
     expect(layer.positions.size).toBe(game.units.length);
     for(const unit of game.units){const at=layer.positions.get(unit.id)!;expect(Number.isFinite(at.bodyY)).toBe(true);expect(at.topY).toBeLessThan(at.bodyY);}
     const cards=paintedMeshes();
@@ -443,6 +446,8 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let i=0;i<2000;i++)game.spawnUnit('player','footman',400+(i%50)*14,400+Math.floor(i/50)*12);
     frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
     const begin=performance.now();layer.draw(frame);const duration=performance.now()-begin;
+    // A frame paints only a few new cards (see CARD_RASTER_BUDGET_MS); the rest arrive over the next frames.
+    for(let i=0;i<200&&paintedMeshes().reduce((sum,card)=>sum+card.count,0)<2000;i++)layer.draw(frame);
     const actors=gpu.scene!.getObjectsByProperty('isInstancedMesh',true) as InstancedMesh[];
     const painted=actors.filter(actor=>actor.name==='PaintedCards'&&actor.visible);
     expect(painted.reduce((sum,actor)=>sum+actor.count,0)).toBe(2000);
