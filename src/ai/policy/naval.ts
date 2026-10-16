@@ -529,7 +529,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
     const bombardmentFor=(ship:Unit)=>{
         if(bombardments.has(ship.id))return bombardments.get(ship.id);
         const chosen=!escorts.has(ship.id) && !priorityEngagement.has(ship.id) && !immediateCoasts.get(ship.id)!.length && ship.hp>=ship.maxHp*HURT
-            && installedWeapons(snapshot,ship).some(item=>(item.durability ?? 1)>0)
+            && combatCapability(snapshot,ship).armed
             ? coastalBombardment(snapshot,ship,coastalTargets,options)
                 ?? coastalBombardment(snapshot,ship,guardsForCapital(),options) : undefined;
         bombardments.set(ship.id,chosen);
