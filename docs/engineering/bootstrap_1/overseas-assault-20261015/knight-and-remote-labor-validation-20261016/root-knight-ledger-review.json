@@ -1,0 +1,52 @@
+{
+  "atUTC": "2026-10-16T05:45:56.351799+00:00",
+  "classification": "Independent root read-only source/factory0/terminal/all-owner fatal-hit+corpse+removal ledger review. No new Game, planner, step or public commands. Not bootstrap acceptance.",
+  "source": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "gameDirectory": "/workspace/.playtest/bootstrap-knight-f508-v8v8-holdout-20261016",
+  "factoryRetryWorldIdNull3MemExact": true,
+  "allOwnersNormal500ThreeWorkersThreeOfEight": true,
+  "terminal": {
+    "tick": 30778,
+    "winner": "p0",
+    "enemyUnitsAndBuildingsStrictZero": true,
+    "ownUnits": 44,
+    "ownBuildings": 26,
+    "ownHalls": 5,
+    "nativeLosses": {
+      "neutral": 17,
+      "p2": 69,
+      "p1": 51,
+      "p0": 25
+    },
+    "ownLossKinds": {
+      "worker": 14,
+      "lancer": 2,
+      "raider": 3,
+      "horseArcher": 1,
+      "fieldMedic": 1,
+      "priest": 2,
+      "witch": 1,
+      "knight": 1
+    }
+  },
+  "all162UniqueDeathsHaveExactRawPositiveToNonpositiveHitMatchingCorpseAndRemovalAndNativeCounter": true,
+  "source1467EqualRootAndArchive": true,
+  "frozen497CapsulesEqualAnd184ManifestExact": true,
+  "capsule1965MembersIncludes1964SourcePayload": true,
+  "postflightSourceEqual": true,
+  "rootViewedActualNativeImages": [
+    "actual13200-field.png",
+    "final30778-overview.png"
+  ],
+  "inputFirstFactorySHA256": "81efe463551145b5e5464ef2d15c848cef68f6644c761268d5492ffbf5537e6c",
+  "inputRetryFactorySHA256": "f5e28d43a3ddb808138f555e17657965c6ff419305e222e0a7df08ee6f77d04f",
+  "finalSHA256": "324f35c24f38b4ddfb18f73975ebb9e8f73123a6be4164ebd68ab0167e879751",
+  "sourceArchiveSHA256": "4bd199dcda9b623c557d22069bcb9c3b8db2fdc9c36bc742312c9c8f84cd38a8",
+  "frozenArchiveSHA256": "32be6628cc94c753d076836ebc8ca401635c035bdb9754bd94345d0f66aeac6e",
+  "limits": [
+    "one first-use seed for knight vs v8+v8, not all routes/maps/opponents",
+    "first tick0 observer error preserved separately and not a native failure",
+    "front worker losses remain a concrete next investigation",
+    "original inaccessible container uncommitted modifications remain unrecovered"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "atUTC": "2026-10-16T06:32:37.376240+00:00",
+  "classification": "Root independent offline comparison of same sealed ordinary0 actual163terminal replay, no new native/planner/test. Cold wrapper descriptive trace labels excluded, all recorded gameplay/index/owner/command/hitfields exact.",
+  "head": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+  "from": 82800,
+  "to": 82963,
+  "inputRestoredSnapshotId3MemSetupEqual": true,
+  "finalEntireSavedObjectEqualOriginalOrdinary0": true,
+  "rawCommandFields22Exact": true,
+  "rawHitFields40Exact": true,
+  "sourceFrozenPrePostReport": {
+    "classification": "One cold normal3AI163tick replay of the sealed ordinary0 terminal. Not a second ordinary0 or extra win.",
+    "head": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+    "inputTick": 82800,
+    "result": {
+      "tick": 82963,
+      "winner": "p0"
+    },
+    "checks": {
+      "restoreExact": true,
+      "source1470": true,
+      "frozen497": true,
+      "commands": true,
+      "hits": true,
+      "finalWorld": true,
+      "finalNextId": true,
+      "final3mem": true,
+      "finalSetup": true,
+      "finalWholeSavedObject": true,
+      "actual163Steps": true
+    },
+    "allExact": true,
+    "counts": {
+      "steps": 163,
+      "commands": 22,
+      "hits": 40,
+      "plans": 33,
+      "sourceFiles": 1470,
+      "frozenFiles": 497,
+      "manifestFiles": 184
+    },
+    "firstCommandDifference": null,
+    "firstHitDifference": null,
+    "elapsedMs": 506.22,
+    "cpuMs": 792.08,
+    "telemetry": {
+      "counts": {},
+      "nativeUnitsLost": {
+        "p0": 562,
+        "p1": 55,
+        "p2": 686,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 14
+      },
+      "hitCount": 11270,
+      "terminalEntityIds": 0,
+      "pendingNativeCleanup": [],
+      "caution": "DeathObservations are nonpositive/fatal observations, not irrevocable loss totals; positive returns and later removal confirmations are separate. Native unitsLost includes temporary deaths, and expiry runs before death cleanup. Compare counters/corpses/fatal hits/full states; do not equate every missing body with a permanent death. Event frames after public commands are mid-think observations, not automatically resumable before-think checkpoints."
+    },
+    "limits": "No source/strategy/manual command/seed change. Exact original window and input only, not generalized restore or gameplay acceptance."
+  },
+  "notAnotherWinOrGeneralizationSample": true,
+  "bindings": {
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/cold-result.json": "6df66b8a625227f96ba32a8c5108157f461fc5d49f5082bdf14437fc0f497a86",
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/input82800.json.gz": "2db9627039b7272c9e974dd91e4765d8f7c6ccc0558935e896cc20677224c76f",
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/cold-restored-fullstate.json.gz": "2db9627039b7272c9e974dd91e4765d8f7c6ccc0558935e896cc20677224c76f",
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/cold-final.json.gz": "e5700c58338de79d0e7938d57b193f9e780fca95b1578353a53fde16708028bf",
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/cold-commands.jsonl": "fec13e522515498332dff3cde8f5ff9e8861ee2665170de3f67931112d791f94",
+    "/workspace/.playtest/bootstrap-summoner-1e955-terminal-restore-20261016/cold-native-hits.jsonl": "8540593f129438b8c02bbf5b7deceeaddc243a297ebe6bfac33506ad0dad6e5c"
+  }
+}

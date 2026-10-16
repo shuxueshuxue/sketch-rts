@@ -1,0 +1,28 @@
+{
+  "classification": "Initial root audit assertion expected a corpse already present at every death observation. Exactly56 provisional nonpositive rows correctly have corpse:null before nativecleanup; latercorpses/events and removal updates exist. No successfulreview was claimed. Second one-off inspection also errored by iterating the null field; preserved tooloutput, no data mutation. Correctv2 audits the complete fatal-hit→provisional→latercorpse→removal chain without counting twice.",
+  "firstActualExample": {
+    "id": "unit-p2-spirit-3134",
+    "tick": 8910,
+    "confirmation": "hp<=0-awaiting-cleanup",
+    "corpseAtProvisionalObservation": null,
+    "laterCorpse": {
+      "tick": 8911,
+      "stage": "after-step",
+      "commandIndex": null,
+      "type": "native-corpse-observed",
+      "corpse": {
+        "id": "corpse-unit-p2-spirit-3134-8911",
+        "unitId": "unit-p2-spirit-3134",
+        "kind": "spirit",
+        "owner": "p2",
+        "x": 3515.3771675566018,
+        "y": 2321.867998666891,
+        "radius": 15,
+        "diedAtTick": 8911,
+        "equipmentCaptured": true,
+        "ownerRace": "ember"
+      }
+    }
+  },
+  "affectedRows": 56
+}

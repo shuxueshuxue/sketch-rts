@@ -1,0 +1,97 @@
+{
+  "atUTC": "2026-10-16T06:25:48.117375+00:00",
+  "classification": "Root independent full archive stream SHA/bytes and exact INDEX coverage review; no runtime, planner or new game",
+  "priorToolAttempt": "First attempt assumed both INDEX payload arrays were named files; coastal uses payloads. KeyError halted before any report/write or claim of successful combined review. Corrected schema inspected explicitly, all payloads now verified.",
+  "archives": [
+    {
+      "archive": "bootstrap-knight-f508-v8v8-holdout-20261016-evidence.tar.gz",
+      "bytes": 29356743,
+      "sha256": "7b657fd1a3a705482c8bd66dcf266ef4cab20eee66bd84c58b3d31b027d29e2e",
+      "payloads": 332,
+      "regularFiles": 333,
+      "indexSHA256": "eae616bc73c78f91fc035a4e50d7d48d1bb46a312cf0c2dc0f07eb4c044c956e",
+      "payloadBytes": 48139082,
+      "allSHABytesAndExactCoverage": true,
+      "indexPayloadKey": "files"
+    },
+    {
+      "archive": "coastal-safe-legs-1a-7f68d379-focused-evidence-20261016.tar.gz",
+      "bytes": 16807315,
+      "sha256": "1f359fb3778d570edd8c030977f0928f5567bda7936582832b51961bb79e9f9c",
+      "payloads": 166,
+      "regularFiles": 167,
+      "indexSHA256": "e86404f31fa83344aca320199b7fabea9e6fe767653df31f74e00967ece0f293",
+      "payloadBytes": 19455419,
+      "allSHABytesAndExactCoverage": true,
+      "indexPayloadKey": "payloads"
+    },
+    {
+      "archive": "bootstrap-remote-labor-f9a3-natural-evidence-20261016.tar.gz",
+      "bytes": 25263785,
+      "sha256": "0a98dcfde2c72fc64425ebd69e13ec964f288f54db14cf289e7c295968673dbe",
+      "payloads": 392,
+      "regularFiles": 393,
+      "indexPath": "bootstrap-844-rebuild-gates-20261016/INDEX.json",
+      "indexSHA256": "edcc30dadc327eacf7e5adeb6c3cc247471025ed3f107d77f1e2898b9606142b",
+      "payloadBytes": 58010010,
+      "allSHABytesAndExactCoverage": true,
+      "indexPayloadKey": "files"
+    },
+    {
+      "archive": "bootstrap-remote-labor-f9a3-postseal-replay-dependencies-20261016.tar.gz",
+      "bytes": 5261,
+      "sha256": "a199082738cd8ed89593f48940e0a3d90687afbd53f97d325bc4e7a9219d5b0d",
+      "payloads": 4,
+      "regularFiles": 5,
+      "indexPath": "bootstrap-remote-labor-f9a3-postseal-replay-dependencies-20261016/INDEX.json",
+      "indexSHA256": "24d6882f221c389f8f45db698c518dedc7321d87f6264012bbe291ea2c22c0a9",
+      "payloadBytes": 14610,
+      "allSHABytesAndExactCoverage": true,
+      "indexPayloadKey": "files"
+    },
+    {
+      "archive": "coastal-safe-legs-7f68d379-natural-suffix-evidence-20261016.tar.gz",
+      "bytes": 12770187,
+      "sha256": "74f1e47dcbc7b1e632f683e257436901044ab76e28e4c404c27c46f352703f28",
+      "payloads": 206,
+      "regularFiles": 207,
+      "indexPath": "INDEX.json",
+      "indexSHA256": "1af82aa2c0aa3359a153941c631a571dd9f8882d3674de5147b3663ac4b80473",
+      "payloadBytes": 33093559,
+      "allSHABytesAndExactCoverage": true
+    },
+    {
+      "archive": "coastal-33582-capture-readonly-20261016.tar.gz",
+      "bytes": 414315,
+      "sha256": "94ab613bd03b812ef4f2789d78e7bdb31564cc51064dc1f3a20c225c00a35b46",
+      "payloads": 23,
+      "regularFiles": 24,
+      "indexPath": "coastal-33582-capture-readonly-20261016/INDEX.json",
+      "indexSHA256": "b72b980597bb2eb5bce2ba0142642d444fc98878827d7ef40cbe7c8703e64dae",
+      "payloadBytes": 995968,
+      "allSHABytesAndExactCoverage": true
+    },
+    {
+      "archive": "bootstrap-cabin-ferry-a7-complete-negative-20261016-evidence.tar.gz",
+      "bytes": 35116880,
+      "sha256": "3e3038e2e3d18d25a77722084ec7ab3cf26467998f378fab2b15482ccc9c0d19",
+      "payloads": 1151,
+      "regularFiles": 1152,
+      "indexPath": "cabin-ferry-implementation-ade-20261016/INDEX.json",
+      "indexSHA256": "20276b99a52e821559c287dd1b395249ed3a3b444397e349ae5ddcf630e51968",
+      "payloadBytes": 81625456,
+      "allSHABytesAndExactCoverage": true
+    },
+    {
+      "archive": "bootstrap-summoner-1e955-official-v5v7-20261016-evidence.tar.gz",
+      "bytes": 35318064,
+      "sha256": "de177f672a09c6230dc23e1752b45246b17785359ab967326152f8d51d54469e",
+      "payloads": 422,
+      "regularFiles": 423,
+      "indexPath": "EVIDENCE-INDEX.json",
+      "indexSHA256": "ac258f3567f10360dc4b7a9840dfcaf1acf0cfa165a407c07728c9216fda5125",
+      "payloadBytes": 36870454,
+      "allSHABytesAndExactCoverage": true
+    }
+  ]
+}

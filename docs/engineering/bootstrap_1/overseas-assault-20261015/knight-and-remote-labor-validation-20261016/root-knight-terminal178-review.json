@@ -1,0 +1,66 @@
+{
+  "atUTC": "2026-10-16T05:52:22.231542+00:00",
+  "classification": "Root independent read-only comparison of one terminal cold178tick replay with raw ordinary0 streams and full final. No additional native or planner execution; not another win/sample.",
+  "source": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "from": 30600,
+  "to": 30778,
+  "completeFinalWorldIdAll3MemExact": true,
+  "recordedColdCommandFieldsEqualSameOrderedRaw83Rows": true,
+  "recordedColdHitFieldsEqualSameOrderedRaw15Rows": true,
+  "scope": "Cold observer records contain a subset of the richer ordinary0 wrapper telemetry; every stored cold field equals the corresponding raw entry, full command objects/order/actual hit hp/pose/target data as saved are exact. Complete final world/id/all3mem compared separately. No assertion of nonexistent per-tick full captures.",
+  "authorRestoreAndSourceFrozenPrePostReport": {
+    "classification": "One unique178tick normal3AI known terminal closure from exact30600 fullworld/id/all3mem. No manual orders, altered world or source, no repeated ordinary0. Not another win/generalization sample.",
+    "start": 30600,
+    "end": 30778,
+    "winner": "p0",
+    "restored": {
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    "closed": {
+      "commands": true,
+      "hits": true,
+      "world": true,
+      "nextId": true,
+      "p0Memory": true,
+      "p1Memory": true,
+      "p2Memory": true,
+      "naturalWinner": true
+    },
+    "counts": {
+      "commands": 83,
+      "hits": 15
+    },
+    "sourcePre": {
+      "files": 1467,
+      "changed": [],
+      "head": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+      "status": ""
+    },
+    "sourcePost": {
+      "files": 1467,
+      "changed": [],
+      "head": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+      "status": ""
+    },
+    "frozenPre": {
+      "full497": true,
+      "manifest184": true,
+      "rulesVersion": 2,
+      "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+    },
+    "frozenPost": {
+      "full497": true,
+      "manifest184": true,
+      "rulesVersion": 2,
+      "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+    }
+  },
+  "bindings": {
+    "/workspace/.playtest/bootstrap-knight-f508-v8v8-holdout-20261016/terminal-closure30600-30778/report.json": "149002affeb507e940ee8bb5d42b00ea3d2dceba0f92b9667cd4ff8a9d123fd1",
+    "/workspace/.playtest/bootstrap-knight-f508-v8v8-holdout-20261016/terminal-closure30600-30778/commands.json": "41318e38b822297d07ef0760a3a6bf2ab46bf3b8d0b77ea8b68cf39a49ca5769",
+    "/workspace/.playtest/bootstrap-knight-f508-v8v8-holdout-20261016/terminal-closure30600-30778/hits.json": "811896b6da803caa114c52fe9d1eb2d98a30a46cdb3037f4dc29aa492ab0fc92",
+    "/workspace/.playtest/bootstrap-knight-f508-v8v8-holdout-20261016/terminal-closure30600-30778/final.json.gz": "e31b38873f2aa886f4282216d2455883e04bc9a3ae7d91faa9d5b207225fa32c"
+  }
+}

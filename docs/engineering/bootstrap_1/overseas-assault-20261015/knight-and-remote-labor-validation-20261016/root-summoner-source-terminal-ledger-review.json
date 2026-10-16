@@ -1,0 +1,69 @@
+{
+  "atUTC": "2026-10-16T06:20:41.332746+00:00",
+  "classification": "Independent root read-only actual ordinary0 factory/terminal/all-owner fatal-hit+corpse+removal+expiry counter review and full source capsule attribution. No Game/planner/native/test rerun. Not all bootstrap acceptance.",
+  "source": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+  "map": "greystonePass",
+  "unseen": false,
+  "subject": "v9_summoner",
+  "race": "ember",
+  "side": 1,
+  "opponents": [
+    "v5",
+    "v7"
+  ],
+  "normalFactory500ThreeWorkersThreeOfEightNull3Mem": true,
+  "result": {
+    "tick": 82963,
+    "winner": "p0",
+    "enemyUnitsBuildingsStrictZero": true,
+    "ownPermanentUnits": 20,
+    "ownUnits": 31,
+    "ownBuildings": 24
+  },
+  "allOwnerLosses": {
+    "p2": {
+      "permanent": 65,
+      "temporary": 621,
+      "expiry": 342
+    },
+    "neutral": {
+      "permanent": 14,
+      "temporary": 0,
+      "expiry": 0
+    },
+    "p0": {
+      "permanent": 59,
+      "temporary": 503,
+      "expiry": 567
+    },
+    "p1": {
+      "permanent": 54,
+      "temporary": 1,
+      "expiry": 0
+    }
+  },
+  "ownPermanentLossKinds": {
+    "emberRavager": 6,
+    "mercenary": 2,
+    "worker": 27,
+    "ashWarden": 9,
+    "priest": 4,
+    "ashHexer": 4,
+    "summoner": 7
+  },
+  "all1317UniqueNativeDeathsExactRawFatalHitCorpseAndRemoval": true,
+  "909ExpiryRemovalsNotCountedAsDeaths": true,
+  "56ProvisionalLaterConfirmedNotAddedAgain": true,
+  "source1470CurrentRootAndArchiveAndFrozen497Plus184Exact": true,
+  "postflightSourceEqual": true,
+  "imageReview": "Pendingrootviewafterthisaudit; childviewed4nativeframes",
+  "initialSHA256": "799731b39a1731c316245977d9e0e421eb616a004c910e743c77b4e2b7fd4517",
+  "finalSHA256": "e5700c58338de79d0e7938d57b193f9e780fca95b1578353a53fde16708028bf",
+  "sourceArchiveSHA256": "95a7b4c37c439f22f0adc5374beb1f66b92871d1f56bf3df34f22474e88b63cf",
+  "limits": [
+    "Officialmap/unseenfalse is not new generatedseed generalization",
+    "One complete source1e summoner-v5+v7 ordinary0, not other routes/opponents/maps",
+    "Terminalcoldwindow not performed in this rootaudit; childassignednewpostseal163window",
+    "Original broken-container uncommitted work remains unrecovered"
+  ]
+}

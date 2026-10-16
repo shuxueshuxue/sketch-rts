@@ -1,0 +1,78 @@
+{
+  "atUTC": "2026-10-16T05:57:40.173637+00:00",
+  "classification": "Root independent raw fatal-hit/corpse/removal/all-owner counter audit and source1470 disk/Git attribution. No Game/native/planner/test rerun. Changed-code known-case continuation, not ordinary0 or final acceptance.",
+  "shared27600FrameDirectlyCompared": true,
+  "strictRestoreReported": {
+    "input": "/workspace/.playtest/bootstrap-field-screen-roads-ade-20261016/v3-natural15855/frames/27600.json.gz",
+    "sha256": "1a2c11823c3f1db94d43ee78c084c095b8a75aba5bbe4c52737ff85edbd372a3",
+    "checks": {
+      "world": true,
+      "nextId": true,
+      "all3mem": true,
+      "setup": true
+    }
+  },
+  "focusEnd28200EqualsNaturalFirstCompleteWorldId3MemSetup": true,
+  "candidateSource1470DiskGitAndPrePostExact": true,
+  "runs": {
+    "baseline844": {
+      "tick": 96245,
+      "winner": "p0",
+      "nativeLosses": {
+        "p0": 57,
+        "p1": 75,
+        "p2": 69,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 19
+      },
+      "newConfirmedLosses": {
+        "p1": 27,
+        "p2": 36,
+        "p0": 15
+      },
+      "allNewUniqueCorpseIdsEqualConfirmedFatalHitRemovals": true,
+      "p0Prior27600": 42,
+      "ownStartCohort": 13,
+      "ownStartCohortEndAlive": 6,
+      "ownStartCohortEndDead": 7,
+      "rider4294End": null,
+      "finalSHA256": "0ccabb739770fe63d2568ee2caffd444a3d3cd9ea9a35bc1b9a14f4976e615c3"
+    },
+    "candidateF9a": {
+      "tick": 69838,
+      "winner": "p0",
+      "nativeLosses": {
+        "p0": 46,
+        "p1": 75,
+        "p2": 61,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 19
+      },
+      "newConfirmedLosses": {
+        "p1": 27,
+        "p0": 4,
+        "p2": 28
+      },
+      "allNewUniqueCorpseIdsEqualConfirmedFatalHitRemovals": true,
+      "p0Prior27600": 42,
+      "ownStartCohort": 13,
+      "ownStartCohortEndAlive": 11,
+      "ownStartCohortEndDead": 2,
+      "rider4294End": {
+        "hp": 316,
+        "kills": 21,
+        "level": 3
+      },
+      "finalSHA256": "f0ad937b5ee6d985a161c168f591001738c2f4be2a9b1eb77da2cf3ac999c2e5"
+    }
+  },
+  "rootViewedNativeImages": [
+    "native-candidate57000.png",
+    "native-candidate69838.png"
+  ],
+  "originalUncommittedRecoveryGapRetained": true
+}

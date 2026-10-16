@@ -1,0 +1,29 @@
+{
+  "atUTC": "2026-10-16T06:02:58.977178+00:00",
+  "classification": "Root staged source integration byteequal fixedf9a3 selected1470 files. Two production files plus actual full-P0 regression/2fixtures, existing remote payback formula unchanged. Related source-only286tests16files andtsc exit0; no new native in root or root ordinary0 result.",
+  "beforeHead": "80ff48a6bebc69993a1b7cbd4836a8e2afc85efa",
+  "parentRuntimeSource": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "candidateSource": "f9a3f731f33020605bec21099929fab0c6b14bb3",
+  "rootSelected1470SourceFilesSHA256ExactCandidate": true,
+  "onlyProductionFiles": [
+    "src/ai/bootstrap_1/economy.ts",
+    "src/ai/bootstrap_1/workforce.ts"
+  ],
+  "originalLongHaulFormulaRunnerRulesAndFrozenManifestUnchanged": true,
+  "rootRegression": {
+    "tests": 286,
+    "files": 16,
+    "exitCode": 0,
+    "sourceOnlyDir": "src/ai/bootstrap_1",
+    "oneWorker": "forks max/min1",
+    "testLog": "root-related-scoped-tests.log",
+    "typecheckExitCode": 0,
+    "typecheckLog": "root-tsc.log",
+    "scope": "15 requested filename filters also selected related island-workforce.test.ts, all16 real src files listed in raw log; no captured .playtest trees."
+  },
+  "completedChangedCodePair": "Same27600knownarcher-v8v8fullinput baseline84496245WIN/57loss vsf9a369838WIN/46loss, prior42 means15vs4newdeaths. No ordinary0/newseed/threefamilyacceptance claim.",
+  "priorFirstUseKnight30778WinSourceRemainsF508": true,
+  "unmergedCoastalCabinMinerSafetyExcluded": true,
+  "mainUnchanged": true,
+  "originalUncommittedGapUnrecovered": true
+}

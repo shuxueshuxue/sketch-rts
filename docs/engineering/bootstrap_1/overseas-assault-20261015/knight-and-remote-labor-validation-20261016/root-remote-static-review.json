@@ -1,0 +1,30 @@
+{
+  "atUTC": "2026-10-16T05:50:49.843648+00:00",
+  "classification": "Independent root static review only. No new planner, native replay or test run. Candidate is not integrated into root.",
+  "source": "f9a3f731f33020605bec21099929fab0c6b14bb3",
+  "base": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "clean": true,
+  "changedFiles": [
+    "src/ai/bootstrap_1/economy.ts",
+    "src/ai/bootstrap_1/fixtures/remote-worker-capital-27885.json.gz",
+    "src/ai/bootstrap_1/fixtures/remote-worker-capital-59400.json.gz",
+    "src/ai/bootstrap_1/remote-worker-capital.test.ts",
+    "src/ai/bootstrap_1/workforce.ts"
+  ],
+  "productionPatchSHA256": "9f4435e67a0573d14203baf8c1bf11a694d63a7533519a5f5ef8fdb8096464e8",
+  "unchangedOriginalFormulaRunnerRulesAndFrozenManifest": true,
+  "review": [
+    "Early miningWorkforce now chooses either the existing owned-mining/initial-crew staffing planner or the unchanged remote longHaulInvestment; no concatenated staffing command bypass.",
+    "When the same remote admission applies, later worker@hall goals are restricted to original payback planner producer ids, preventing bare v6 workforce fallthrough. Full normal runner still pre-debits all unpaid build commitments.",
+    "Any actual own townHall building with HP>0 near remaining mine retains normal staffing regardless complete flag. Building presence at native foundation already denotes paid construction; an unpaid walking intent does not count as a hall.",
+    "Initial/necessary construction crew uses the original TOTAL worker count and towerRushConstructionCrew number; this change does not prove an available empty-handed road-capable builder.",
+    "Normal scripts stop the economy loop after the first nonempty non-legacy purchase script. The second goal gate is a later fallback, not a second same-think successful worker purchase.",
+    "Admission scope is GLOBAL absence of any actual own remaining-mine hall, not a per-island or per-lane workforce redesign. Existing normal income regions keep original staffing."
+  ],
+  "limits": [
+    "Original long-haul payback comparison and existing thresholds are unchanged and not asserted globally optimal.",
+    "Saving one 75 gold purchase does not establish earlier rebuilding, income, fewer losses or a match win; full same-source continuation is still running.",
+    "Original exact27885/59400 full-P0 fixture protocol, candidate tests and focused native evidence were supplied by author; this report does not claim an independent rerun.",
+    "Does not repair shared/native issue-build handling: public new build admission requires400 before an accepted unpaid walking stage."
+  ]
+}

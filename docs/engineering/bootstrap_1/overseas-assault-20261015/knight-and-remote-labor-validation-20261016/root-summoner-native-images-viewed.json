@@ -1,0 +1,13 @@
+{
+  "atUTC": "2026-10-16T06:32:37.377041+00:00",
+  "rootActuallyViewedNativeClientImages": [
+    "actual64800-native.png",
+    "terminal-native.png"
+  ],
+  "finalWorldSHA256": "e5700c58338de79d0e7938d57b193f9e780fca95b1578353a53fde16708028bf",
+  "imageSHA256": {
+    "actual64800-native.png": "c4e37b3bfa99ece262c597b105e9311e7cc7e56426ab82e070d485d51fec0022",
+    "terminal-native.png": "057a9575c31db79665cb069823626ef7f8ba3ff538df44d54b705acd0aabda15"
+  },
+  "scope": "Actual savedworld drawWorld render, staticview only; not replay/video or proofofunrecordedactions."
+}
