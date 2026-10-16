@@ -127,10 +127,10 @@ export class World3DLayer {
   private bridgeAlong=new THREE.Vector3();
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
-  private constructor(private renderer:THREE.WebGLRenderer|undefined){
+  private constructor(private renderer:THREE.WebGLRenderer|undefined,rasterBudgetMs:number){
     const maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
-    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks,rasterBudgetMs:CARD_RASTER_BUDGET_MS});
-    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs:CARD_RASTER_BUDGET_MS});
+    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks,rasterBudgetMs});
+    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs});
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';
@@ -164,11 +164,12 @@ export class World3DLayer {
     for(const geometry of geometries)geometry.dispose();
     for(const texture of textures)texture.dispose();
   }
-  static create(canvas:HTMLCanvasElement,context:WebGL2RenderingContext){
+  /** rasterBudgetMs: a frame's painting of new cards (see CARD_RASTER_BUDGET_MS); Infinity paints every card the frame needs. */
+  static create(canvas:HTMLCanvasElement,context:WebGL2RenderingContext,rasterBudgetMs=CARD_RASTER_BUDGET_MS){
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
-    const layer=new World3DLayer(renderer);layer.eventCanvas=canvas;
+    const layer=new World3DLayer(renderer,rasterBudgetMs);layer.eventCanvas=canvas;
     canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
     return layer;
   }
