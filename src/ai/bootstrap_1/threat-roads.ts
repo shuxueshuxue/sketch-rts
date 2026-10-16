@@ -11,13 +11,18 @@ type Road = { points: [Point, ...Point[]]; ticks: number };
 type Router = (goal: Point) => Road | undefined;
 const routers = new WeakMap<GameSnapshot, Map<string, Router>>();
 
-/** A visibility graph joins native terrain roads around physical attack disks, including continuous maps. */
-export function threatLandRouter(snapshot: GameSnapshot, unit: Unit, foes: readonly (Unit | Building)[]): Router {
-  const disks = foes.flatMap(foe => {
+/** The current known coverage used by both road admission and its next step. */
+export function threatLandDisks(snapshot: GameSnapshot, unit: Unit, foes: readonly (Unit | Building)[]) {
+  return foes.flatMap(foe => {
     const radius = retreatThreatReach(snapshot, foe, unit, THINK_TICKS + unit.cooldown)
       + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0);
     return radius > 0 ? [{ x: foe.x, y: foe.y, radius }] : [];
   });
+}
+
+/** A visibility graph joins native terrain roads around physical attack disks, including continuous maps. */
+export function threatLandRouter(snapshot: GameSnapshot, unit: Unit, foes: readonly (Unit | Building)[]): Router {
+  const disks = threatLandDisks(snapshot, unit, foes);
   const key = `${unit.id}:${unit.x}:${unit.y}:${unit.radius}:${unit.speed}:${JSON.stringify(disks)}`;
   let cache = routers.get(snapshot);
   if (cache === undefined) { cache = new Map(); routers.set(snapshot, cache); }

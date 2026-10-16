@@ -25,7 +25,7 @@ export function mountedTargetOrder(a: Unit, b: Unit) {
   return Number(heals(b)) - Number(heals(a)) || a.hp - b.hp;
 }
 
-function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
+export function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
   return unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
     return rules.behavior === 'charge' && abilityCooldown(foe, ability) <= horizon
