@@ -1,0 +1,33 @@
+{
+  "atUTC": "2026-10-16T02:45:44.598207+00:00",
+  "rootDocsBase": "dc958b292c7757b146275a1e7fa6d1b58aa6a564",
+  "productionSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "oldEntries": 67,
+  "newEntries": 68,
+  "old67ValuesExact": true,
+  "old0fProductionOrdinary0Exact": true,
+  "newMetadataFields": [
+    "currentCombinedOrdinary0"
+  ],
+  "intentionallyChangedMetadataFields": [
+    "productionDelta",
+    "productionValidation"
+  ],
+  "archive": {
+    "file": "complete-e566-ordinary0-evidence.tar.gz",
+    "bytes": 23789538,
+    "sha256": "585c209b4ec89e7ad80563c16ea0820723359b1397fcd6f06208615d532348ee",
+    "payloads": 393,
+    "regularFilesIncludingIndex": 394,
+    "rootCopyEqualsOriginal": true
+  },
+  "rootOwnChecks": [
+    "Actual normal0 game launched by root and returned exit0, sourceEqual true",
+    "Root read actual terminalfull: p0 41units/29buildings, p1/p2 each0units0buildings",
+    "Root viewed actual native16200/24000/43714 images",
+    "Final proposal SHA/bytes and current index old67/metadata exact; archive original/root copy SHA/bytes exact"
+  ],
+  "independentStreamProof": "ordinary0-e566-root-validation-20261016/new-archive-stream-verification.json",
+  "sourceAndLedgerProof": "ordinary0-e566-root-validation-20261016/currentCombinedOrdinary0.json",
+  "qualification": "This developed known seed actual0 is not unseen or full three-family acceptance; original5f sample convergence not everytick or new tactical superiority. Summoner7905 is a separate case. Original container uncommitted gap remains."
+}

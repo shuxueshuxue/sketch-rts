@@ -1,0 +1,116 @@
+{
+  "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "family": "v9_archer",
+  "race": "grove",
+  "physicalSide": 1,
+  "factory": "pineshade",
+  "actualMap": {
+    "id": "ladder",
+    "width": 4608,
+    "height": 4608
+  },
+  "generatedLayout": true,
+  "factoryUnseenFlag": true,
+  "seed": "bootstrap_1-unseen-archer-v8-v8-20261015-01",
+  "seedStatus": "known-developed",
+  "unseenGeneralization": false,
+  "opponents": [
+    "normal frozenv8 Ember",
+    "normal frozenv8 Grove"
+  ],
+  "opponentsSameTeam": true,
+  "startingStateEach": {
+    "gold": 500,
+    "workers": 3,
+    "supplyUsed": 3,
+    "supplyCap": 8,
+    "townHalls": 1,
+    "upgrades": "none",
+    "policyMemory": null
+  },
+  "ordinaryStartTick": 0,
+  "winTick": 43714,
+  "winner": "p0",
+  "naturalComplete": true,
+  "enemyUnitsRemaining": 0,
+  "enemyBuildingsRemaining": 0,
+  "ownUnitsRemaining": 41,
+  "ownBuildingsRemaining": 29,
+  "ownHallsRemaining": 4,
+  "ownPermanentLosses": 56,
+  "ownTemporaryLosses": 0,
+  "ownLossesToNeutral": 1,
+  "sourceEvidence": {
+    "selectedLiveFilesExact": 1462,
+    "historicalArchivedFilesExact": 497,
+    "frozenManifestFilesExact": 184,
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "reference": "audit/independent-source-factory-review.tar.gz",
+    "runtimeDirectoryNote": "Original frozen temp directory was cleaned after process exit; audit verifies complete archived497 and actual pre/post hashes, not a fictitious reread of the removed directory."
+  },
+  "completeLedger": {
+    "reference": "audit/ledger-audit.json",
+    "nativeHits": 3505,
+    "acceptedPublicCommands": 41213,
+    "ownerPlans": 8745,
+    "nativeEvents": 846,
+    "deathStreamRows": 226,
+    "confirmedNativeRemovals": 219,
+    "nativeCorpses": 219,
+    "cleanupStatusUpdates": 7,
+    "nativeUnitsLost": {
+      "p0": 56,
+      "p1": 76,
+      "p2": 68,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 19
+    },
+    "allOwnerLossesAndCorpsesExact": true,
+    "all74SamplesReconcile": true,
+    "pendingNativeCleanup": 0,
+    "unconfirmedRemovals": 0,
+    "temporaryExpiries": 0,
+    "shipLossRows": 0,
+    "scope": "No ship loss or temporary expiry was exercised; zero observations are not general correctness proof."
+  },
+  "terminalNativeReplay": {
+    "reference": "audit/window43200-43714.json",
+    "from": 43200,
+    "to": 43714,
+    "nativeTicks": 514,
+    "full3AI": true,
+    "checks": {
+      "restoreExact": true,
+      "terminalWorldExact": true,
+      "terminalNextIdExact": true,
+      "terminalAll3memExact": true,
+      "terminalSetupExact": true,
+      "commandsExact": true,
+      "hitsExact": true,
+      "sourceExact": true,
+      "frozenExact": true
+    },
+    "acceptedCommandsExact": 163,
+    "nativeHitsExact": 27,
+    "unitDeathsDuringWindow": 0,
+    "scope": "Only the terminal514ticks, not an earlier death replay or another ordinary0."
+  },
+  "comparisonToOld5f": {
+    "savedWorldIdSetupExact": 74,
+    "availableSavedAll3MemoryExact": 73,
+    "old0MemoryWitnessMissing": true,
+    "newFreshNullSeparatelyVerified": true,
+    "scope": "Saved checkpoints only; no every-tick equivalence or new tactical superiority claim. New actual run remains e566 source attributed."
+  },
+  "priorCareCaseErratum": {
+    "reference": "audit/prior-care-case-attribution-errata.json",
+    "originalPackageUnchanged": "bootstrap-care-native-filter-evidence.tar.gz",
+    "correction": "7905/1079+1322 belongs to separate Ember summoner/greystonePass case, not this Grove archer pineshade10200 early causal prefix. The10200 continuation did not cover prior archer decisions from0; summoner1322 still needs its own full-game evidence."
+  },
+  "completeAcceptance": false,
+  "archive": "complete-e566-ordinary0-evidence.tar.gz",
+  "remainingScope": "One developed case, not all3families/singlefoes/sixpairs/officialmaps/unseen-seed acceptance; original inaccessible uncommitted changes remain unrecovered."
+}

@@ -1,0 +1,68 @@
+{
+  "createdAtUtc": "2026-10-16T02:39:37.318048+00:00",
+  "baseDocsCommit": "dc958b292c7757b146275a1e7fa6d1b58aa6a564",
+  "rootHeadObservedBefore": "dc958b292c7757b146275a1e7fa6d1b58aa6a564",
+  "rootHeadObservedAfter": "dc958b292c7757b146275a1e7fa6d1b58aa6a564",
+  "oldIndexSHA256": "2ddbe9c578dbe724329226d6d8814d0e2c3fd178af3d26dc5a720caf20070612",
+  "candidateIndexSHA256": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868",
+  "oldPackages": 67,
+  "newPackages": 68,
+  "old67EachValueAndRawPackageTextExact": true,
+  "old0fProductionOrdinary0ValueAndRawTextExact": true,
+  "intentionalExistingMetadataChanges": [
+    "productionDelta",
+    "productionValidation"
+  ],
+  "addedMetadataKeys": [
+    "currentCombinedOrdinary0"
+  ],
+  "allOtherMetadataUnchanged": true,
+  "productionHeadRetained": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "strategyBaselineRetained": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "rootCanonicalStillEqualsPinnedDc958": true,
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "onlyNewPackageStreamVerified": true,
+  "earlier67PackagesNotReverifiedOrRepacked": true,
+  "originalUncommittedRecoveryGapRetained": true,
+  "activeCandidate": "bootstrap-complete-games-20261015-index.68.candidate.json",
+  "archive": {
+    "file": "complete-e566-ordinary0-evidence.tar.gz",
+    "bytes": 23789538,
+    "sha256": "585c209b4ec89e7ad80563c16ea0820723359b1397fcd6f06208615d532348ee",
+    "payloads": 393,
+    "regularFilesIncludingIndex": 394
+  },
+  "files": {
+    "bootstrap-complete-games-20261015-index.68.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/bootstrap-complete-games-20261015-index.68.candidate.json",
+      "bytes": 38917,
+      "sha256": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868"
+    },
+    "currentCombinedOrdinary0.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/currentCombinedOrdinary0.json",
+      "bytes": 4001,
+      "sha256": "1e1e2845b1cff3a671472ec6b3c46e791db4efd2c59ed2c2ec618ab6c82e83f8"
+    },
+    "new-entry-68.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/new-entry-68.verified.json",
+      "bytes": 1187,
+      "sha256": "8a9a9975169ef65ac76db30b94ae947516ade0edcc296e17b002b9a2fef0573f"
+    },
+    "new-archive-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/new-archive-stream-verification.json",
+      "bytes": 66737,
+      "sha256": "8c74432be0a56e5422e31f36bbc1695faa67623cb88490cf6c5523de171506c6"
+    },
+    "README-append68.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/README-append68.candidate.zh.md",
+      "bytes": 2354,
+      "sha256": "ab1fd161de7374d9cdd60a4377a64da3a67dd9df2a7828cc25785b93b2134d09"
+    },
+    "verify-and-prepare68.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index68-20261016/verify-and-prepare68.py",
+      "bytes": 16348,
+      "sha256": "ba64f6811e1a854beeaa2ada0445e4bbee873e0b720bc359023d9d080e46a2f6"
+    }
+  },
+  "scriptUsage": "python /workspace/.playtest/root-next-evidence-index68-20261016/verify-and-prepare68.py"
+}

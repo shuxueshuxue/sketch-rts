@@ -507,10 +507,21 @@
       "payloadHashesVerified": true,
       "source": "600d67cb049f11f7a94f22735d8a2d50757ef4b2; pure native memo on19ef6d0d",
       "classification": "Exact solid byHull memo FIFO128 eviction; miss recomputes original Minkowski result, no routing cap/fallback/AI/rule change.160heading eviction/recompute geometry and real40350postcommand..40351 uncached fullworld/id fixture,24tests/tsc1024. Earlier compiler512OOM remains separate. d251 delivery manifest is not600d AI source; a26941255 hybrid win and old0f44441 are not600d ordinary0 results."
+    },
+    {
+      "file": "complete-e566-ordinary0-evidence.tar.gz",
+      "bytes": 23789538,
+      "sha256": "585c209b4ec89e7ad80563c16ea0820723359b1397fcd6f06208615d532348ee",
+      "indexedPayloadFiles": 393,
+      "archiveRegularFiles": 394,
+      "payloadManifest": "EVIDENCE-INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4 actual fresh0 Grove v9_archer physicalside1 versus normal frozenv8 Ember+Grove; developed generated pineshade case",
+      "classification": "Actual independently attributed e566 ordinary0 naturally43714p0win, both enemies0units/0buildings; own41units/29buildings/4halls and56permanent native losses incl1neutral.1462source/497historical/184manifest exact. Whole219confirmed deaths/corpses match all-owner stats;226death rows include7cleanup confirmations. Only43200..43714 terminal514native steps replay closed(world/id/3mem/setup/163commands/27hits), no unitdeath there.74savedworld/id/setup and73available3mem equal old5f; old0memory missing, newfreshnull separately verified. Known developed seed, not new tactical superiority/holdout/acceptance. Separate7905Ember summoner case is not this archer10200prefix; postseal erratum included."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; exact full source attribution/complete ledger archive follows separately. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score.",
+  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; complete1462source attribution, all-owner219removal/corpse ledger and terminal514tick full3AI closure are now sealed in complete-e566-ordinary0-evidence.tar.gz. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score.",
   "productionValidation": {
     "workerDefense": {
       "head": "e447a632cb166428f6c6ce7c30a5846527542260",
@@ -559,9 +570,13 @@
       "integrationRecord": "deck-recovery-integration-20261016.json"
     },
     "currentCombinedSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
-    "currentCombinedOrdinary0Status": "Actual fixede566 ordinary0 completed43714p0WIN on the known developed archer-v8+v8 seed, enemy0units/0buildings. Full43200..43714 native3AI restore closure exact(world/id/3mem/163commands/27hits). Complete ledger audit/archive sealing pending separately; no generalization/final acceptance.",
+    "currentCombinedOrdinary0Status": "Sealed actual fixede566 fresh0 natural43714p0WIN on known developed archer-v8+v8 case; both enemies0u0b, own41u29b/4halls,56permanent losses. Complete all-owner219removal/corpse ledger and only43200..43714 terminal514tick full3AI restore/163commands/27hits closure archived; no new holdout/tactical-superiority/acceptance claim.",
     "historical0fOrdinary0Attribution": "productionOrdinary0.source remains0f5bf01a;44441win is not transferred to this combined source.",
-    "historicalChangedContinuations": "Care10200..43714 and deck hybrid41255 are not ordinary0 or final combined-source results."
+    "historicalChangedContinuations": "Care10200..43714 and deck hybrid41255 are not ordinary0 or final combined-source results.",
+    "currentCombinedOrdinary0Archive": "complete-e566-ordinary0-evidence.tar.gz",
+    "currentCombinedOrdinary0SourceFilesExact": 1462,
+    "currentCombinedOrdinary0LedgerAllOwnerExact": true,
+    "currentCombinedOrdinary0Terminal514ClosureExact": true
   },
   "unmergedObservationStatus": {
     "provenance": "Sealed complete source-fixed archives appended2026-10-16; none integrated into production0f5bf.",
@@ -628,5 +643,121 @@
     "all13LandedArmyAlive": true,
     "completeAcceptance": false,
     "archive": "bootstrap-knight-integrated-0f5bf-ordinary0-44441-evidence.tar.gz"
+  },
+  "currentCombinedOrdinary0": {
+    "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+    "family": "v9_archer",
+    "race": "grove",
+    "physicalSide": 1,
+    "factory": "pineshade",
+    "actualMap": {
+      "id": "ladder",
+      "width": 4608,
+      "height": 4608
+    },
+    "generatedLayout": true,
+    "factoryUnseenFlag": true,
+    "seed": "bootstrap_1-unseen-archer-v8-v8-20261015-01",
+    "seedStatus": "known-developed",
+    "unseenGeneralization": false,
+    "opponents": [
+      "normal frozenv8 Ember",
+      "normal frozenv8 Grove"
+    ],
+    "opponentsSameTeam": true,
+    "startingStateEach": {
+      "gold": 500,
+      "workers": 3,
+      "supplyUsed": 3,
+      "supplyCap": 8,
+      "townHalls": 1,
+      "upgrades": "none",
+      "policyMemory": null
+    },
+    "ordinaryStartTick": 0,
+    "winTick": 43714,
+    "winner": "p0",
+    "naturalComplete": true,
+    "enemyUnitsRemaining": 0,
+    "enemyBuildingsRemaining": 0,
+    "ownUnitsRemaining": 41,
+    "ownBuildingsRemaining": 29,
+    "ownHallsRemaining": 4,
+    "ownPermanentLosses": 56,
+    "ownTemporaryLosses": 0,
+    "ownLossesToNeutral": 1,
+    "sourceEvidence": {
+      "selectedLiveFilesExact": 1462,
+      "historicalArchivedFilesExact": 497,
+      "frozenManifestFilesExact": 184,
+      "rulesVersion": 2,
+      "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+      "reference": "audit/independent-source-factory-review.tar.gz",
+      "runtimeDirectoryNote": "Original frozen temp directory was cleaned after process exit; audit verifies complete archived497 and actual pre/post hashes, not a fictitious reread of the removed directory."
+    },
+    "completeLedger": {
+      "reference": "audit/ledger-audit.json",
+      "nativeHits": 3505,
+      "acceptedPublicCommands": 41213,
+      "ownerPlans": 8745,
+      "nativeEvents": 846,
+      "deathStreamRows": 226,
+      "confirmedNativeRemovals": 219,
+      "nativeCorpses": 219,
+      "cleanupStatusUpdates": 7,
+      "nativeUnitsLost": {
+        "p0": 56,
+        "p1": 76,
+        "p2": 68,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 19
+      },
+      "allOwnerLossesAndCorpsesExact": true,
+      "all74SamplesReconcile": true,
+      "pendingNativeCleanup": 0,
+      "unconfirmedRemovals": 0,
+      "temporaryExpiries": 0,
+      "shipLossRows": 0,
+      "scope": "No ship loss or temporary expiry was exercised; zero observations are not general correctness proof."
+    },
+    "terminalNativeReplay": {
+      "reference": "audit/window43200-43714.json",
+      "from": 43200,
+      "to": 43714,
+      "nativeTicks": 514,
+      "full3AI": true,
+      "checks": {
+        "restoreExact": true,
+        "terminalWorldExact": true,
+        "terminalNextIdExact": true,
+        "terminalAll3memExact": true,
+        "terminalSetupExact": true,
+        "commandsExact": true,
+        "hitsExact": true,
+        "sourceExact": true,
+        "frozenExact": true
+      },
+      "acceptedCommandsExact": 163,
+      "nativeHitsExact": 27,
+      "unitDeathsDuringWindow": 0,
+      "scope": "Only the terminal514ticks, not an earlier death replay or another ordinary0."
+    },
+    "comparisonToOld5f": {
+      "savedWorldIdSetupExact": 74,
+      "availableSavedAll3MemoryExact": 73,
+      "old0MemoryWitnessMissing": true,
+      "newFreshNullSeparatelyVerified": true,
+      "scope": "Saved checkpoints only; no every-tick equivalence or new tactical superiority claim. New actual run remains e566 source attributed."
+    },
+    "priorCareCaseErratum": {
+      "reference": "audit/prior-care-case-attribution-errata.json",
+      "originalPackageUnchanged": "bootstrap-care-native-filter-evidence.tar.gz",
+      "correction": "7905/1079+1322 belongs to separate Ember summoner/greystonePass case, not this Grove archer pineshade10200 early causal prefix. The10200 continuation did not cover prior archer decisions from0; summoner1322 still needs its own full-game evidence."
+    },
+    "completeAcceptance": false,
+    "archive": "complete-e566-ordinary0-evidence.tar.gz",
+    "remainingScope": "One developed case, not all3families/singlefoes/sixpairs/officialmaps/unseen-seed acceptance; original inaccessible uncommitted changes remain unrecovered."
   }
 }
