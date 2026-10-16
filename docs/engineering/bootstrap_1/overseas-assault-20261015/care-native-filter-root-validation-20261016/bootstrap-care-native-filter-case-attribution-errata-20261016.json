@@ -1,0 +1,95 @@
+{
+  "classification": "Postseal case-attribution erratum; original archive/raw/source hashes remain unchanged",
+  "originalPackage": "/workspace/.playtest/bootstrap-care-native-filter-20261016/bootstrap-care-native-filter-evidence.tar.gz",
+  "originalPackageSHA256": "78c74bee9021a9e9b36d89309632066575076a01426ed1e72c6981d8cd3023e0",
+  "incorrectPotentialSameCaseImpression": "10200 continuation skips7905/1322 earlier effect",
+  "corrected": "10200 continuation does not cover prior decisions from0 in that archer case. The7905/1079+1322 boundary is a separate summoner case/seed and cannot be connected as the same archer game causal prefix.",
+  "summoner7905": {
+    "input": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-7905-candidate.frames/7905.json.gz",
+    "SHA256": "982c5707af5a73fb7d88c6c93b41797eb8c269b815ad3746bd473ebf7b25e229",
+    "setup": {
+      "map": "greystonePass",
+      "seed": "resume-20261015-knight-expansion-b",
+      "unseen": true,
+      "side": 1,
+      "agents": {
+        "p0": {
+          "version": "v9_summoner",
+          "versionLabel": "v9_summoner",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "thinkInterval": 15,
+      "rulesVersion": 2,
+      "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+    },
+    "patients": [
+      "unit-p0-emberRavager-1079",
+      "unit-p0-emberRavager-1322"
+    ],
+    "patient1322ActualKind": "emberRavager"
+  },
+  "archer10200": {
+    "input": "/workspace/.playtest/bootstrap-care-native-filter-20261016/pair-input10200-complete.json.gz",
+    "SHA256": "aac6f5cd93fd56773cf03b53bf240268a746af2b1b6182e726dd05a3dc0d10da",
+    "setup": {
+      "map": "pineshade",
+      "seed": "bootstrap_1-unseen-archer-v8-v8-20261015-01",
+      "unseen": true,
+      "side": 1,
+      "agents": {
+        "p0": {
+          "version": "v9_archer",
+          "versionLabel": "v9_archer",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "thinkInterval": 15,
+      "rulesVersion": 2,
+      "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+    }
+  },
+  "differentCases": true,
+  "scope": [
+    "New e566 archer ordinary0 independently closes its own0→terminal run.",
+    "Exact10200 archer equality does not establish convergence of the separate summoner1322 change.",
+    "Summoner7905 candidate1322 change still needs its own complete-game evaluation; short survival is not acceptance."
+  ],
+  "filesUnmodified": [
+    "all original sealed archive members",
+    "fixed candidate/source controls",
+    "original complete frames/commands/logs"
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "productionHead": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -419,10 +419,98 @@
       "payloadHashesVerified": true,
       "source": "Original0f5bf ordinary0 interrupted79800; separate1430 passenger candidate interrupted34800; finite34875 diagnostics",
       "classification": "Closed137 interruption and retained tails/checkpoints, fixed uncommitted candidate capsule, one finite75tick restore and pure34875 instrumented query, resource relocation records. No natural result/new ordinary0 or routing/OOM causation proof; cold event ledger requires explicit +69 recorder mapping and raw literal comparison remains false."
+    },
+    {
+      "file": "bootstrap-native-primitives-evidence.tar.gz",
+      "bytes": 6687114,
+      "sha256": "eb156369ea8bd73b061815b811540be80e15a49d26bf6174b8669f4b5a40f5b4",
+      "indexedPayloadFiles": 231,
+      "archiveRegularFiles": 232,
+      "payloadManifest": "native-primitives-index.json",
+      "payloadHashesVerified": true,
+      "source": "5db730d574bf6dc20e29b1874e442c043d24f122; base0f5bf native readonly queries",
+      "classification": "Native land-arrival/automatic-attack query primitives. Three recorded-public-command components7905/10425/16245,65world/nextId checkpoints and73tests belong to5db. Three stored memories readonly; no new full-pipeline strategy game or AI consumer. Original delivery counted index among payload; actual231payload+1index."
+    },
+    {
+      "file": "bootstrap-native-primitives-v2-evidence.tar.gz",
+      "bytes": 4387986,
+      "sha256": "f7f23e132d711dd14a124fd87407514b88a6d486a2225b7798fd9508820c1f4e",
+      "indexedPayloadFiles": 20,
+      "archiveRegularFiles": 21,
+      "payloadManifest": "index.json",
+      "payloadHashesVerified": true,
+      "source": "9119feec0dd4b4933d5f8940b80df98abba80259; target replacement ID relookup on5db",
+      "classification": "Final native target query re-resolves actual entity ID after replacement, preserving stale live-index behavior; runtime/arrival unchanged from5db.12query tests and stale-index witness are separate from root53tests/7files/tsc. No new ordinary0; original44441 remains0f5bf. Original delivery count corrected here only:20payload+1index."
+    },
+    {
+      "file": "bootstrap-summoner-v5-v7-holdout-0f5bf-193200-evidence.tar.gz",
+      "bytes": 70402379,
+      "sha256": "989d5ccaa1e39270c1252c62eafada6143ce08facddb5559606200bd01fb024c",
+      "indexedPayloadFiles": 855,
+      "archiveRegularFiles": 856,
+      "payloadManifest": "bootstrap-summoner-v5-v7-holdout-0f5bf-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Fixed0f5bf01a ordinary0 summoner-v5+v7 predeclared generated holdout; exact same-source79800 recovery",
+      "classification": "One genuine predeclared holdout ordinary0, original process exit137 after complete79800, exact world/id/all3mem restore plus139commands/2hits/10events persisted tail matched. Parent-authorized clean193200 observation stop/winnernull, not natural defeat or victory.132000..193200 bounded strategic stagnation; earlier two real outpost assaults do not clear22/13remaining enemy buildings.19integrity checks, normal500/3/8,1443source/frozen184 exact; seed now development, not bootstrap acceptance."
+    },
+    {
+      "file": "colony-bounty-feasibility-20261016-evidence.tar.gz",
+      "bytes": 1113317,
+      "sha256": "b931c0000ae7e8e183d7da0674529414fcbec09eaed43b664afbd916a4efb585",
+      "indexedPayloadFiles": 33,
+      "archiveRegularFiles": 34,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Read-only actual0f5bf holdout112800/145800 full planner and capital/bounty/refund evidence",
+      "classification": "Five pure full-p0 planner queries on actual112800/145800 original inputs, no game/step/issued command. Affordability removal/bounty target changes only island memory, actual6/5commands unchanged.45bounties/160paid cutter refund are real rules but not executed fixes; actual88395hall payment/88639destruction and102111/176/207bounties70+45+45 retained. Loading112800 and tiny-repair145800 blockers differ; no new ordinary0 or solved recovery."
+    },
+    {
+      "file": "bootstrap-deck-casualty-d251-focused-and-oom40350-evidence.tar.gz",
+      "bytes": 16996667,
+      "sha256": "3e87e0b1b3267db1516f69a3a5eb0a13bafeeaa6f34be829ac7ba9359609668d",
+      "indexedPayloadFiles": 282,
+      "archiveRegularFiles": 283,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "d251 deck continuation",
+      "classification": "Unmerged fixedd251 focused35460..36000 and interrupted continuation through40350, no natural result on d251; retain all512/1024OOM failures and causal memo controls. Not new ordinary0 or acceptance."
+    },
+    {
+      "file": "bootstrap-deck-casualty-a269-natural41255-evidence.tar.gz",
+      "bytes": 11003089,
+      "sha256": "e2c46a95ec692b0ccf34f5a3eacfab233004aad0b2d22bb3a84b9abf3884f5de",
+      "indexedPayloadFiles": 97,
+      "archiveRegularFiles": 98,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "d251+a269 hybrid native continuation",
+      "classification": "Hybrid changed-code continuation: switch35460 todeckd251,40350 to native bounded memoa269, naturalp0win41255/enemy0/intervalownloss0.8of13original army landed,5still aboard. Not ordinary0 or a new combined-production result; full terminal closure is separate."
+    },
+    {
+      "file": "bootstrap-care-native-filter-evidence.tar.gz",
+      "bytes": 28752166,
+      "sha256": "78c74bee9021a9e9b36d89309632066575076a01426ed1e72c6981d8cd3023e0",
+      "indexedPayloadFiles": 318,
+      "archiveRegularFiles": 319,
+      "payloadManifest": "evidence-index.json",
+      "payloadHashesVerified": true,
+      "source": "ceedc2f13a0dd2986db3a26089855dd1866660f1; base9119feec",
+      "classification": "Care native-arrival/pursuit filter, unchanged rule/owner/triage. Three real short pairs plus actual3AI same10200input tails: baseline26107p1win, candidate43714p0win/enemy0. Not ordinary0 or holdout; skips early7905effects. New samples restore old3bdb/5f trajectories, not demonstrated beyond5f.7905patient1079 alive18HP on both;1322also changes.65tests/tsc and static JS-identical sim type narrowing separately recorded."
+    },
+    {
+      "file": "bootstrap-solid-memo-bounded600d-evidence.tar.gz",
+      "bytes": 6789108,
+      "sha256": "ad1732d4ee7825ced003e76d262187e96f664c99d8a17bafb6cbb703da6f7788",
+      "indexedPayloadFiles": 12,
+      "archiveRegularFiles": 13,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "600d67cb049f11f7a94f22735d8a2d50757ef4b2; pure native memo on19ef6d0d",
+      "classification": "Exact solid byHull memo FIFO128 eviction; miss recomputes original Minkowski result, no routing cap/fallback/AI/rule change.160heading eviction/recompute geometry and real40350postcommand..40351 uncached fullworld/id fixture,24tests/tsc1024. Earlier compiler512OOM remains separate. d251 delivery manifest is not600d AI source; a26941255 hybrid win and old0f44441 are not600d ordinary0 results."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; e447 armed worker defender-only score;4d373 frozen planner cwd/retry tool repair;1d26 exact pure solid configuration memo;0f5bf reciprocal rendezvous actual-origin live-hull planning constraint. Other care/capital candidates remain isolated. No new combined-root ordinary0 result yet.",
+  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; exact full source attribution/complete ledger archive follows separately. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score.",
   "productionValidation": {
     "workerDefense": {
       "head": "e447a632cb166428f6c6ce7c30a5846527542260",
@@ -442,8 +530,38 @@
       "newCapturedCallbackTests": 2
     },
     "logs": "current-batch-root-validation/",
-    "newCombinedRootOrdinary0Completed": false,
-    "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71"
+    "newCombinedRootOrdinary0Completed": true,
+    "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+    "nativeBoundedMemo": {
+      "head": "3ff9a747ae7aec4e5e66cc1198ef2baf9d2454b3",
+      "testsPassedAcrossTwoRuns": 24,
+      "testFiles": 4,
+      "separateRunPassedCounts": [
+        22,
+        2
+      ],
+      "typecheckExitCode": 0,
+      "countNote": "Two distinct runs; do not present as one24test run or add other batches into a new independent coverage total.",
+      "integrationRecord": "bounded-memo-integration-20261016.json"
+    },
+    "careNativeFilter": {
+      "head": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
+      "testsPassed": 59,
+      "testFiles": 9,
+      "typecheckExitCode": 0,
+      "integrationRecord": "care-native-filter-integration-20261016.json"
+    },
+    "deckRecovery": {
+      "head": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+      "testsPassed": 70,
+      "testFiles": 7,
+      "typecheckExitCode": 0,
+      "integrationRecord": "deck-recovery-integration-20261016.json"
+    },
+    "currentCombinedSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+    "currentCombinedOrdinary0Status": "Actual fixede566 ordinary0 completed43714p0WIN on the known developed archer-v8+v8 seed, enemy0units/0buildings. Full43200..43714 native3AI restore closure exact(world/id/3mem/163commands/27hits). Complete ledger audit/archive sealing pending separately; no generalization/final acceptance.",
+    "historical0fOrdinary0Attribution": "productionOrdinary0.source remains0f5bf01a;44441win is not transferred to this combined source.",
+    "historicalChangedContinuations": "Care10200..43714 and deck hybrid41255 are not ordinary0 or final combined-source results."
   },
   "unmergedObservationStatus": {
     "provenance": "Sealed complete source-fixed archives appended2026-10-16; none integrated into production0f5bf.",

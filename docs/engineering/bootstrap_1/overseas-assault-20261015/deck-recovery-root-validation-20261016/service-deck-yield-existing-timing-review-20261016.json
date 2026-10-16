@@ -1,0 +1,282 @@
+{
+  "classification": "Readonly existing-log/source review; no native/query/tests and no source edits",
+  "conclusion": "Known slow fixture. Current88.495s per39600 case and94.612s four-test suite are within historical ranges; these uncontrolled logs do not establish FIFO128 regression.",
+  "logs": [
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/root-deck-recovery-integration-tests-20261016.log",
+      "sha256": "f8a61e701e192655de2841e8725b460c69c941818b755f1698a25544e68ff2f6",
+      "suite": {
+        "line": 8,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 94612ms",
+        "ms": 94612
+      },
+      "fixture39600": {
+        "line": 9,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 88495ms",
+        "ms": 88495
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  195.60s (transform 4.14s, setup 0ms, collect 8.35s, tests 185.06s, environment 1ms, prepare 515ms)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/transport-transit-v12-v2-components.log",
+      "sha256": "fd2f3c01f452a0f4600b484dd475ed2fd19b9cf1b23d741426db58226370068a",
+      "suite": {
+        "line": 30,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 118298ms",
+        "ms": 118298
+      },
+      "fixture39600": {
+        "line": 31,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 50352ms",
+        "ms": 50352
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-transit-v12-control",
+      "durationLine": "   Duration  122.16s (transform 3.16s, setup 0ms, collect 11.92s, tests 153.19s, environment 3ms, prepare 784ms)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/stable-landed-service-root-integration-tests.log",
+      "sha256": "c593014454a61378eb90590a26797715a108554fcee0bd795233bf19e49095c8",
+      "suite": {
+        "line": 57,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 127299ms",
+        "ms": 127299
+      },
+      "fixture39600": {
+        "line": 58,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 115673ms",
+        "ms": 115673
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  183.07s (transform 8.89s, setup 0ms, collect 49.84s, tests 368.25s, environment 2ms, prepare 3.32s)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/service-reroute-root-integration-tests.log",
+      "sha256": "45307798bdcbf9ffe51472b10ae85f2b4df6f20c49b196e8f7ad310d8286c064",
+      "suite": {
+        "line": 20,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 127129ms",
+        "ms": 127129
+      },
+      "fixture39600": {
+        "line": 21,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 110997ms",
+        "ms": 110997
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  184.20s (transform 8.09s, setup 0ms, collect 25.55s, tests 337.06s, environment 1ms, prepare 956ms)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/service-budget-contact-integration-tests.log",
+      "sha256": "a781830035dff008c906168da29ac22315dacc86ce996e07b50b1381a9e3a094",
+      "suite": {
+        "line": 36,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 137806ms",
+        "ms": 137806
+      },
+      "fixture39600": {
+        "line": 37,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 129816ms",
+        "ms": 129816
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  157.07s (transform 9.81s, setup 0ms, collect 33.68s, tests 335.03s, environment 2ms, prepare 2.26s)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/service-budget-integration-tests.log",
+      "sha256": "e430e7de559b61516667d020c2b23663552f042fb64be028aef21216458c1284",
+      "suite": {
+        "line": 54,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 63811ms",
+        "ms": 63811
+      },
+      "fixture39600": {
+        "line": 55,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 57911ms",
+        "ms": 57911
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  136.33s (transform 14.96s, setup 0ms, collect 28.41s, tests 333.92s, environment 3ms, prepare 1.45s)",
+      "includesPlaytestSourceTests": true,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/landed-transit-care-root-integration-tests.log",
+      "sha256": "877378bb273cc66e43e66f8b15f94bbbc566c3e58bad60f94c0003b4434b0fd5",
+      "suite": {
+        "line": 50,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 63167ms",
+        "ms": 63167
+      },
+      "fixture39600": {
+        "line": 51,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 54217ms",
+        "ms": 54217
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume",
+      "durationLine": "   Duration  82.93s (transform 7.26s, setup 0ms, collect 24.17s, tests 148.33s, environment 2ms, prepare 1.29s)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    },
+    {
+      "path": "/workspace/.playtest/relocated-tmp-evidence/bootstrap-transit-v12-evidence/v13-final-components.log",
+      "sha256": "31ec5af5854231ef1c6d1f4aab548d0ce75d3364b10d7680bb5da84f50137e49",
+      "suite": {
+        "line": 29,
+        "text": " ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 107949ms",
+        "ms": 107949
+      },
+      "fixture39600": {
+        "line": 30,
+        "text": "   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 98264ms",
+        "ms": 98264
+      },
+      "runHeader": " RUN  v2.1.9 /workspace/sketch-rts-transit-v13-control",
+      "durationLine": "   Duration  117.05s (transform 7.52s, setup 0ms, collect 29.79s, tests 183.90s, environment 1ms, prepare 1.75s)",
+      "includesPlaytestSourceTests": false,
+      "fixedRuntimeCommitRecordedInThisLog": false
+    }
+  ],
+  "historicalFixtureMs": {
+    "min": 50352,
+    "max": 129816,
+    "median": 98264
+  },
+  "historicalSuiteMs": {
+    "min": 63167,
+    "max": 137806
+  },
+  "testAndTwoFixtureBytesEqualAcrossRefsAndLive": true,
+  "fixtureSourceAudit": [
+    {
+      "ref": "71c2261913fc7e234bbf176cc52e99b1945a0cd2",
+      "commit": "71c2261913fc7e234bbf176cc52e99b1945a0cd2",
+      "files": {
+        "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+          "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+          "bytes": 6381
+        },
+        "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+          "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+          "bytes": 18814
+        },
+        "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+          "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+          "bytes": 18692
+        }
+      }
+    },
+    {
+      "ref": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+      "commit": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+      "files": {
+        "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+          "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+          "bytes": 6381
+        },
+        "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+          "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+          "bytes": 18814
+        },
+        "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+          "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+          "bytes": 18692
+        }
+      }
+    },
+    {
+      "ref": "3ff9a747^",
+      "commit": "5968fb787120ff854cae41a900f2bf6f1b76fbd0",
+      "files": {
+        "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+          "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+          "bytes": 6381
+        },
+        "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+          "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+          "bytes": 18814
+        },
+        "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+          "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+          "bytes": 18692
+        }
+      }
+    },
+    {
+      "ref": "3ff9a747",
+      "commit": "3ff9a747ae7aec4e5e66cc1198ef2baf9d2454b3",
+      "files": {
+        "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+          "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+          "bytes": 6381
+        },
+        "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+          "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+          "bytes": 18814
+        },
+        "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+          "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+          "bytes": 18692
+        }
+      }
+    },
+    {
+      "ref": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
+      "commit": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
+      "files": {
+        "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+          "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+          "bytes": 6381
+        },
+        "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+          "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+          "bytes": 18814
+        },
+        "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+          "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+          "bytes": 18692
+        }
+      }
+    }
+  ],
+  "liveFiles": {
+    "src/ai/bootstrap_1/service-deck-yield.test.ts": {
+      "sha256": "5b4c8e1a134518242056d9007b58bb2d87637f24756e8525b62ab377ae667a34",
+      "bytes": 6381
+    },
+    "src/shared/sim/fixtures/ordinary-service-yaw-39600.json.gz": {
+      "sha256": "bc21b5c011bd89ebcd643f78bf4c6c0cf871cb822b4ce2374d3b7a887957a241",
+      "bytes": 18814
+    },
+    "src/ai/bootstrap_1/fixtures/service-yaw-only-41400.json.gz": {
+      "sha256": "ba9c774f33bc7e4fd92e1afaa2412d887a8dbf17f3355785b65db134b22a1e06",
+      "bytes": 18692
+    }
+  },
+  "sourceCostScope": {
+    "file": "src/ai/bootstrap_1/service-deck-yield.test.ts",
+    "longFixtureCases": 2,
+    "restoredBranches": "Two full native games, adds a third at saved transfer wait",
+    "maxTicksPerCase": 600,
+    "plannerEveryTicks": 15,
+    "jsonRestoreAndWorldIdMemoryComparisons": true,
+    "earlyBreak": "Actual target repair completes; exact completion tick absent from test logs"
+  },
+  "limits": [
+    "Historical logs name test/cwd but not exact runtime source commit, concurrent load or CPU; identical test/fixture bytes do not prove identical runtime decisions.",
+    "Historical runs include multiworker suites; one includes duplicate .playtest sources. Durations are not controlled A/B.",
+    "No cache hit/miss/eviction or per-phase timing for this fixture is available in these logs.",
+    "Single-step40350 equivalence/performance cannot be generalized to this full-planner fixture."
+  ],
+  "newExecutionRecommendedFromThisEvidenceAlone": false
+}

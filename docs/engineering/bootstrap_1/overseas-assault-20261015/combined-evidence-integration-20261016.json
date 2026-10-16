@@ -1,0 +1,83 @@
+{
+  "atUTC": "2026-10-16T02:15:00.423112+00:00",
+  "productionHead": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "oldEntries": 59,
+  "newEntries": 67,
+  "old59EachValueExact": true,
+  "intentionalMetadataFieldsChanged": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "archives": [
+    {
+      "file": "bootstrap-native-primitives-evidence.tar.gz",
+      "bytes": 6687114,
+      "sha256": "eb156369ea8bd73b061815b811540be80e15a49d26bf6174b8669f4b5a40f5b4",
+      "alreadyCommittedSparseNotRestored": true
+    },
+    {
+      "file": "bootstrap-native-primitives-v2-evidence.tar.gz",
+      "bytes": 4387986,
+      "sha256": "f7f23e132d711dd14a124fd87407514b88a6d486a2225b7798fd9508820c1f4e",
+      "alreadyCommittedSparseNotRestored": true
+    },
+    {
+      "file": "bootstrap-summoner-v5-v7-holdout-0f5bf-193200-evidence.tar.gz",
+      "bytes": 70402379,
+      "sha256": "989d5ccaa1e39270c1252c62eafada6143ce08facddb5559606200bd01fb024c",
+      "originalEqualsRootCopy": true
+    },
+    {
+      "file": "colony-bounty-feasibility-20261016-evidence.tar.gz",
+      "bytes": 1113317,
+      "sha256": "b931c0000ae7e8e183d7da0674529414fcbec09eaed43b664afbd916a4efb585",
+      "originalEqualsRootCopy": true
+    },
+    {
+      "file": "bootstrap-deck-casualty-d251-focused-and-oom40350-evidence.tar.gz",
+      "bytes": 16996667,
+      "sha256": "3e87e0b1b3267db1516f69a3a5eb0a13bafeeaa6f34be829ac7ba9359609668d",
+      "originalEqualsRootCopy": true
+    },
+    {
+      "file": "bootstrap-deck-casualty-a269-natural41255-evidence.tar.gz",
+      "bytes": 11003089,
+      "sha256": "e2c46a95ec692b0ccf34f5a3eacfab233004aad0b2d22bb3a84b9abf3884f5de",
+      "originalEqualsRootCopy": true
+    },
+    {
+      "file": "bootstrap-care-native-filter-evidence.tar.gz",
+      "bytes": 28752166,
+      "sha256": "78c74bee9021a9e9b36d89309632066575076a01426ed1e72c6981d8cd3023e0",
+      "originalEqualsRootCopy": true
+    },
+    {
+      "file": "bootstrap-solid-memo-bounded600d-evidence.tar.gz",
+      "bytes": 6789108,
+      "sha256": "ad1732d4ee7825ced003e76d262187e96f664c99d8a17bafb6cbb703da6f7788",
+      "originalEqualsRootCopy": true
+    }
+  ],
+  "sourceRecord": "combined-evidence-root-validation-20261016/FINAL-DELIVERY.json",
+  "scope": "Root independently verified final proposal SHA/bytes, old59 values, exact metadata changes, original versus copied/previously committed archive SHA/bytes. Independent reviewer streamed every1848 payload earlier; root does not claim a second payload decompression.",
+  "unrecoveredOriginalWorkspaceGap": true,
+  "rootPostProposalMetadataUpdate": {
+    "atUTC": "2026-10-16T02:26:49.056427+00:00",
+    "reason": "New actuale566 ordinary0 completed after final external proposal declaration. Root updated productionDelta/productionValidation only to reflect actual result; pending archive is not counted among67 packages.",
+    "old59EntriesStillValueExact": true,
+    "ordinary0": {
+      "head": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+      "inputTick": 0,
+      "naturalWinner": "p0",
+      "winTick": 43714,
+      "enemyUnits": 0,
+      "enemyBuildings": 0,
+      "knownDevelopedSeed": true,
+      "terminalWindowFull3AIExact": true,
+      "completeLedgerArchivePending": true
+    },
+    "indexSHA256AfterRootMetadataUpdate": "2ddbe9c578dbe724329226d6d8814d0e2c3fd178af3d26dc5a720caf20070612",
+    "old59EntriesStillRawValueTextExact": true
+  }
+}

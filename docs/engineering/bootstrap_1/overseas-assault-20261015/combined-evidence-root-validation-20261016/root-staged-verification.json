@@ -1,0 +1,31 @@
+{
+  "old59EntriesValueAndRawObjectTextExact": true,
+  "stagedArchiveVerification": [
+    {
+      "file": "bootstrap-summoner-v5-v7-holdout-0f5bf-193200-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    },
+    {
+      "file": "colony-bounty-feasibility-20261016-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    },
+    {
+      "file": "bootstrap-deck-casualty-d251-focused-and-oom40350-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    },
+    {
+      "file": "bootstrap-deck-casualty-a269-natural41255-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    },
+    {
+      "file": "bootstrap-care-native-filter-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    },
+    {
+      "file": "bootstrap-solid-memo-bounded600d-evidence.tar.gz",
+      "stagedEqualsOriginal": true
+    }
+  ],
+  "stagedDocuments": 21,
+  "sourceUnchangedFromE566": true
+}

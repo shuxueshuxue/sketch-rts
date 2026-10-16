@@ -43,7 +43,22 @@
     "observedSlowCases": {
       "actual39600ServiceCrossingMs": 88495,
       "realBallistaDeckCrossingMs": 75702,
-      "classification": "Actual test durations, previous comparable log investigation pending; no generalized performance claim."
+      "classification": "Actual test durations, previous comparable log investigation pending; no generalized performance claim.",
+      "existingReadOnlyTimingReview": {
+        "file": "deck-recovery-root-validation-20261016/service-deck-yield-existing-timing-review-20261016.json",
+        "sha256": "8f1b3940a3b44f5b70084a2f11e6f9446a5d4abc544c9bc7b1cee02b9b6a6002",
+        "sameFixtureHistoricalSeconds": [
+          50.352,
+          54.217,
+          57.911,
+          98.264,
+          110.997,
+          115.673,
+          129.816
+        ],
+        "fixtureBytesUnchanged": true,
+        "conclusion": "Current88.495seconds inside historical range. Historical run-source/load/cache stats incomplete; no evidence of a new FIFO128 regression, no general performance inference or extra run."
+      }
     }
   },
   "completeGameEvidence": {

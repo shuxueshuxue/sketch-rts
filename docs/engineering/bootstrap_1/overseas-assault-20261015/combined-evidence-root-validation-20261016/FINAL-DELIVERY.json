@@ -1,0 +1,64 @@
+{
+  "classification": "FINAL external67proposal; no root writes/stage/commit, archive copies/extraction, native or tests. Do not apply retained interim63/prepared65 files.",
+  "productionHead": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "finalSourceProvided": true,
+  "oldDocsBase": "5968fb787120ff854cae41a900f2bf6f1b76fbd0",
+  "oldPackages": 59,
+  "newPackages": 67,
+  "old59EachValueAndRawPackageTextExact": true,
+  "intentionalNonpackageMetadataUpdates": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "allOtherMetadataUnchanged": true,
+  "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "old0f44441AttributionUnchanged": true,
+  "newCombinedOrdinary0AtDeclaration": "not-started",
+  "archivesVerified": 8,
+  "archiveBytes": 146131826,
+  "payloadsSHAReadbackVerified": 1848,
+  "archiveRegularsIncluding8Indexes": 1856,
+  "payloadsWithOriginallyDeclaredBytesVerified": 1457,
+  "hashOnlyPayloadsWithActualBytesMatchingTarHeaders": 391,
+  "allExactCoverageAndGzipEOF": true,
+  "native2AlreadyCommittedGitBlobsEqual": true,
+  "rootCopyPlan": "Only six new packages need copying; both native packages already committed19ef and compared via Git blob without sparse restoration.",
+  "files": {
+    "bootstrap-complete-games-20261015-index.67.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/bootstrap-complete-games-20261015-index.67.candidate.json",
+      "bytes": 32747,
+      "sha256": "cc9302563eba7a045cb2a1bbebd8ff2e74387977917b6665f90b5bb301666016"
+    },
+    "README-append.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/README-append.candidate.zh.md",
+      "bytes": 2495,
+      "sha256": "ee599c7b30a4ae13a753de2f5276a0c624dd5bf0b55453c5cbeb17d95dc58823"
+    },
+    "next-evidence-index-20261016.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/next-evidence-index-20261016.json",
+      "bytes": 8760,
+      "sha256": "fd6d7fbd71d671389203c17493674b405b0bfd0b9dc78348fa352ad304b0f518"
+    },
+    "archive-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/archive-verification.json",
+      "bytes": 383615,
+      "sha256": "353d4bc202f91ff45ddce65233cb54bb0d8f69c942eea3a4e59b4168826d5928"
+    },
+    "verify-and-prepare.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/verify-and-prepare.py",
+      "bytes": 18255,
+      "sha256": "1c7c2e3648fce79403e1ce051f8f32234fd680326f011ebbb98720ade552c224"
+    },
+    "finalize-production-metadata.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index-20261016/finalize-production-metadata.py",
+      "bytes": 5669,
+      "sha256": "59343a825cbf8d1d2aef40077f24b4365017f3fd69a6c6837539eb192076943f"
+    }
+  },
+  "scriptUsage": [
+    "python /workspace/.playtest/root-next-evidence-index-20261016/verify-and-prepare.py",
+    "python /workspace/.playtest/root-next-evidence-index-20261016/finalize-production-metadata.py"
+  ],
+  "constraints": "0fholdout193200 explicit observation stop/winnernull, care10200..43714 and deckhybrid41255 changed-code continuations, cache not ordinary0; no bootstrap acceptance; original uncommitted recovery gap retained."
+}

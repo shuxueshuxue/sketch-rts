@@ -1030,7 +1030,7 @@
   ],
   "scope": "Filter estimated building arrival followed by native active pursue before next15tick thought. Patient-only static projection, no future safety/heal/movement guarantee; original damage/room/triage/owner logic preserved. Native source delta consists only of3 parameter type narrowings, transpiledJS byte-identical.",
   "limits": [
-    "Both full tails begin from the same complete10200 original world/id/all3mem, skipping7905 earlier effects. Not ordinary0/unseen or a one-patient causal claim.",
+    "Both full tails begin from the same complete10200 original archer world/id/all3mem and omit that archer0..10200 prior segment.7905/1079+1322 is a different Ember summoner case, not an earlier segment of this archer match. No ordinary0/unseen or one-patient causal claim belongs to the continuation pair.",
     "7905 actual1079 survives in both sources18HP; another1322 goal also changes.",
     "16245 new31 full frames compared against17 available original checkpoints,17/17 equal;10425 has17/17; full57/57 candidate and28/28 baseline old checkpoint equality is not every tick.",
     "Candidate temporary17400 state has fewer troops/healers and one more loss than baseline; no claim every interval improves.",
@@ -1041,5 +1041,12 @@
     "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
     "manifestUnchanged": true
   },
-  "unrecoveredOriginalWorkspaceGap": true
+  "unrecoveredOriginalWorkspaceGap": true,
+  "crossCaseAttributionErratum": {
+    "archer": "pineshade / bootstrap_1-unseen-archer-v8-v8-20261015-01 / Grove v9_archer",
+    "separate7905Summoner": "greystonePass / resume-20261015-knight-expansion-b / Ember v9_summoner",
+    "correction": "The earlier phrase skipping7905 effects must not be read as one match lineage. Summoner1322 early effect remains separate from archer complete-game evidence. Original sealed archives/reviews remain unchanged.",
+    "record": "care-native-filter-root-validation-20261016/bootstrap-care-native-filter-case-attribution-errata-20261016.json",
+    "sha256": "740b406082d7effc95872e50bb5ba59916ea86fbebd2d5a61d2b5db4e7bc9be6"
+  }
 }
