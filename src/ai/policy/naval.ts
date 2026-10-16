@@ -14,6 +14,7 @@ import {navalServices} from './naval-services';
 import {fleetStations} from './fleet-formation';
 import { fleetAttackCommand, fleetTarget } from './fleet-engagement';
 import { combatHull } from '../../shared/ship-defense';
+import { shipBodyClearAtPose } from '../../shared/ship-collisions';
 import { isInCabin } from '../../shared/ship-cabin';
 import { isTransportKind } from '../../shared/transport-role';
 import { clearTransferLanes, pendingDeckBoarding } from './transfer-lanes';
@@ -26,7 +27,7 @@ import type { NavalPlanMemory } from "../memory";
 import { bodyMass } from "../../shared/physical-body";
 import { boardUnit } from "../../shared/decks";
 import { isBuildPlacementClear } from "../../shared/build-placement";
-import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
+import { BUILDING_DEFS, DOCK_REPAIR, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
 import { BOARDING_GAP, canReach, carries, boardingBerth, currentBerthLandings } from "../../shared/naval";
 import { purchasePlacement } from "../../shared/purchase";
 import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
@@ -391,6 +392,30 @@ export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, option
     const reserve = want && !navalReservePurchase(want.id) ? navalBudgetReserve(snapshot, owner, options) : 0;
     return want && playerState(snapshot, owner).gold - reserve >= want.cost ? want.issue(new Set()) : undefined;
 }
+/** The existing naval owner keeps a wounded hull through an actual dock
+ * approach and paid recovery. Waiting with no gold is not a repair receipt. */
+export function navalDockRepair(snapshot: GameSnapshot, ship: Unit): GameCommand[] | undefined {
+    if (!shipProfile(ship) || ship.hp >= ship.maxHp * HURT) return;
+    const docks = buildings(snapshot, ship.owner).filter(dock => dock.kind === 'shipyard' && dock.complete
+        && sameGround(snapshot.map, ship, walkableGoal(snapshot.map, dock.x, dock.y, 'sea'), 'sea'));
+    if (docks.some(dock => distance(ship, dock) < DOCK_REPAIR.range))
+        return ship.order.type === 'hold' ? [] : [{ type: 'holdPosition', unitIds: [ship.id] }];
+    const bodies = [...snapshot.units, ...snapshot.buildings, ...snapshot.obstacles ?? []];
+    const goals = docks.flatMap(dock => {
+        const gap = distance(ship, dock), radius = DOCK_REPAIR.range - MOVE_ORDER_ARRIVAL_RANGE * 2;
+        const approach = { x: dock.x + (ship.x - dock.x) * radius / gap,
+            y: dock.y + (ship.y - dock.y) * radius / gap };
+        const pose = nearestShipPose(snapshot.map, ship, approach);
+        return pose && distance(pose, dock) + MOVE_ORDER_ARRIVAL_RANGE < DOCK_REPAIR.range
+            && shipBodyClearAtPose(snapshot.map, ship, pose, bodies) ? [pose] : [];
+    });
+    const goal = nearestByRoute(snapshot.map, goals, ship, 'sea');
+    if (!goal) return;
+    const order = ship.order;
+    return order.type === 'move' && order.avoidCombat && distance(order, goal) <= MOVE_ORDER_ARRIVAL_RANGE ? []
+        : [{ type: 'move', unitIds: [ship.id], x: goal.x, y: goal.y, avoidCombat: true }];
+}
+
 /** Fleet combat and ferry ownership are independent of the map generator. */
 export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
     return planNavalTacticsWithAssignments(snapshot, owner, options, {
@@ -550,6 +575,8 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
             continue;
         }
+        const repair = navalDockRepair(snapshot, ship);
+        if (repair !== undefined) { commands.push(...repair); continue; }
         if (ship.hp < ship.maxHp * HURT && home && distance(ship, home) > 250) {
             if (needsMove(ship, home)) commands.push({ type: 'move', unitIds: [ship.id], ...home, avoidCombat:true });
             continue;
