@@ -1,0 +1,73 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/ai/bootstrap_1/mine-defense.test.ts (19 tests) 6888ms
+   ✓ bootstrap_1 independent mine defense > protects the working mine through the full bootstrap stack before fighting at a forward outpost 5803ms
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 7034ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 428ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1154ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 2778ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 369ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 561ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 323ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 1169ms
+ ✓ src/ai/bootstrap_1/mounted-field-retreat.test.ts (10 tests) 1797ms
+   ✓ field cavalry retreat to actual support by an admitted road > selects the shortest admitted actual support road at actual15285 with unchanged world and repeat-query memory idempotence 424ms
+   ✓ field cavalry retreat to actual support by an admitted road > keeps field ownership and emits the admitted waypoint queue only after the original micro chose escape 481ms
+ ✓ src/ai/bootstrap_1/mounted-global-field.test.ts (36 tests) 3425ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='remote') 481ms
+ ✓ src/ai/bootstrap_1/mounted-field-recruitment.test.ts (24 tests) 1861ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='exposed') 318ms
+ ✓ src/ai/bootstrap_1/mounted-field.test.ts (18 tests) 11602ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 749ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 557ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 690ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 438ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 843ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 899ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 483ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 653ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 670ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 473ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 978ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 607ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 588ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 476ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 573ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 470ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 874ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 581ms
+ ✓ src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 2535ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 592ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 390ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 393ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 336ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 346ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 477ms
+ ✓ src/ai/bootstrap_1/threat-roads.test.ts (12 tests) 559ms
+ ✓ src/ai/bootstrap_1/mounted-field-snapshot.test.ts (1 test) 990ms
+   ✓ executes the admitted mounted road in the real pineshade crash frame 989ms
+
+ Test Files  9 passed (9)
+      Tests  137 passed (137)
+   Start at  05:18:44
+   Duration  47.35s (transform 2.51s, setup 0ms, collect 7.94s, tests 36.69s, environment 2ms, prepare 1.02s)
+

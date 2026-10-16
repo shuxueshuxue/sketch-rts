@@ -1,0 +1,27 @@
+{
+  "utc": "2026-10-16T05:22:23.008212+00:00",
+  "classification": "Root working source integration equals fixed844 candidate selected1467 source files byte for byte. Only4production +1newtest+2actualfixtures delta relativeade; rootrelated137/9files andtsc exit0. Whole-match score belongs to actual844 changed-code pair, no new rootordinary0 score claimed.",
+  "base": "ade412414d9232206f39e20f0182f0086605433c",
+  "candidate": "84474d599f1886ca0ff32b3edf4897fcdbce9e21",
+  "rootDocsHeadBeforeCommit": "517b79082b22d9f2947d041d20cbfd363c98daf3",
+  "selectedRootSourceFilesSHA256Exact844": 1467,
+  "patchSHA256": "fa8e9a2074811a5bc7660909dc0cf6fe74eb561df619077e1765d5ea71983982",
+  "tests": {
+    "sourceOnlyFiles": 9,
+    "passed": 137,
+    "exit": 0,
+    "log": "root-related-scoped-tests.log",
+    "tscExit": 0,
+    "tscLog": "root-tsc.log",
+    "initialWrongScopeRun": "Retained separate root-related-tests.log interrupted exit130; not candidate failure/count. Corrected --dir src/ai/bootstrap_1."
+  },
+  "productionScope": [
+    "mounted-field.ts",
+    "mounted-micro.ts exportonly",
+    "mine-defense.ts exportonly",
+    "threat-roads.ts sameformulaextracted"
+  ],
+  "budgetHypothesisNotIntegrated": true,
+  "mainUnchanged": true,
+  "originalUncommittedGapUnrecovered": true
+}

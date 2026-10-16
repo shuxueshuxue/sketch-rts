@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-16T05:02:15.400506+00:00",
+  "archive": "/workspace/.playtest/bootstrap-coastal-objectives-af010be6-first-evidence.tar.gz",
+  "bytes": 14111983,
+  "sha256": "f3bfcdb53a1bb1ff8b82022904d21f5e818b978afd5d3eb8aba864b48c6b3070",
+  "payloadsAllSHA256BytesVerified": 154,
+  "regularFiles": 155,
+  "indexSHA256": "b9d7583b735991da81dc2646a778e451ee94cd84f9d20e40efd2f9c4c9c07c5b",
+  "coverageExact": true,
+  "classification": "CLOSED first actualaf010be6 coastal225600\u2192226414; native25hits destroyoneenemybuilding, no win/capitalrecovery claim. First/branch externalpuretrace isolated namespaces; no active natural continuation output is included. Original uncommitted-work recovery gap retained.",
+  "rootSourceUnchanged": true,
+  "noNewSimulationTestsOrQuery": true
+}

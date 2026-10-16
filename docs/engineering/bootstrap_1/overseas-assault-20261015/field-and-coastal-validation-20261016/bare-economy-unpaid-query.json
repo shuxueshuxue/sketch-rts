@@ -1,0 +1,95 @@
+{
+  "classification": "Targeted one-economy-plan and native construction replay from actual32940. Existing native orders continue but no later AI planning/opponent scripts: not a normal3AI complete match or score. Sourceade frozen rules2 unchanged; no world/resource/HP edits.",
+  "source": "ade412414d9232206f39e20f0182f0086605433c",
+  "input": "/workspace/sketch-rts-unpaid-hall-reserve-control/src/ai/bootstrap_1/fixtures/naval-saving-hall-32940.json.gz",
+  "inputSHA256": "a6d4741ad9145c980e41305b718826b05c1bec43d0e494a3b67c98c32db38f95",
+  "fullWorldIdRestored": true,
+  "originalInputUnchanged": true,
+  "start": 32940,
+  "end": 34140,
+  "commands": [
+    {
+      "type": "train",
+      "buildingId": "building-p0-archeryRange-1082",
+      "unitKind": "archer"
+    },
+    {
+      "type": "build",
+      "unitId": "unit-p0-worker-3",
+      "buildingKind": "townHall",
+      "x": 8208,
+      "y": 7120
+    }
+  ],
+  "initialGold": 568.51,
+  "reserveBefore": 400,
+  "afterIssue": {
+    "gold": 453.51,
+    "builderOrder": {
+      "type": "build",
+      "buildingKind": "townHall",
+      "x": 8208,
+      "y": 7120,
+      "progressTick": 32940,
+      "progressX": 8732,
+      "progressY": 7004
+    },
+    "reserve": 0,
+    "hallExists": false
+  },
+  "nextGoals": [
+    {
+      "id": "farm",
+      "cost": 120,
+      "save": true
+    },
+    {
+      "id": "engineering:ballista",
+      "cost": 300,
+      "save": true
+    },
+    {
+      "id": "naval:islandHall",
+      "cost": 400,
+      "save": true
+    },
+    {
+      "id": "unit:archer",
+      "cost": 115,
+      "save": false
+    }
+  ],
+  "founded": {
+    "tick": 33307,
+    "hp": 90,
+    "complete": false,
+    "goldBefore": 539.82,
+    "goldAfter": 139.82,
+    "builderOrder": {
+      "type": "repair",
+      "buildingId": "building-p0-townHall-2256"
+    },
+    "reserve": 0
+  },
+  "finishedHall": {
+    "id": "building-p0-townHall-2256",
+    "owner": "p0",
+    "kind": "townHall",
+    "x": 8208,
+    "y": 7120,
+    "hp": 900,
+    "maxHp": 900,
+    "radius": 48,
+    "complete": true,
+    "buildProgress": 560,
+    "buildTime": 560,
+    "attackDamage": 0,
+    "attackRange": 0,
+    "attackCooldown": 1,
+    "cooldown": 0,
+    "rallyX": 8298,
+    "rallyY": 7180,
+    "queue": [],
+    "researchQueue": []
+  }
+}

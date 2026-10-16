@@ -1,0 +1,315 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/ai/bootstrap_1/mine-defense.test.ts (19 tests) 17131ms
+   ✓ bootstrap_1 independent mine defense > lets the grove guard march past an exhausted mine to the next front 376ms
+   ✓ bootstrap_1 independent mine defense > assigns a grove detachment to a mining perimeter tower without recalling the distant attack 393ms
+   ✓ bootstrap_1 independent mine defense > protects the working mine through the full bootstrap stack before fighting at a forward outpost 14939ms
+ ❯ .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/mine-defense.test.ts (0 test)
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mine-defense.test.ts (19 tests) 2950ms
+   ✓ bootstrap_1 independent mine defense > assigns a grove detachment to a mining perimeter tower without recalling the distant attack 329ms
+   ✓ bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost 809ms
+   ✓ bootstrap_1 independent mine defense > lets the grove host use real summons for the near raid without recalling the distant attack 466ms
+   ✓ bootstrap_1 independent mine defense > lets the ember host use real summons for the near raid without recalling the distant attack 354ms
+ ❯ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts (19 tests | 1 failed) 1980ms
+   ✓ bootstrap_1 independent mine defense > assigns a ember detachment to a mining perimeter tower without recalling the distant attack 318ms
+   × bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost 506ms
+     → expected [ { id: 'miner-0', …(41) } ] to have a length of 5 but got 1
+ ❯ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts (19 tests | 1 failed) 2414ms
+   × bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost 964ms
+     → expected [ { id: 'miner-0', …(41) } ] to have a length of 5 but got 1
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 7827ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 343ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1012ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 3048ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 444ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 943ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 364ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 1376ms
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 7894ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 411ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1276ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 2995ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 435ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 628ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 376ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 1438ms
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 7787ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 355ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1184ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 2868ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 424ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 607ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 343ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 1672ms
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 7828ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 302ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1271ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 2801ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 370ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 795ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 361ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 1610ms
+ ✓ src/ai/bootstrap_1/mounted-field-retreat.test.ts (10 tests) 1788ms
+   ✓ field cavalry retreat to actual support by an admitted road > selects the shortest admitted actual support road at actual15285 with unchanged world and repeat-query memory idempotence 380ms
+   ✓ field cavalry retreat to actual support by an admitted road > keeps field ownership and emits the admitted waypoint queue only after the original micro chose escape 356ms
+   ✓ field cavalry retreat to actual support by an admitted road > does not replace the original micro when enemies are not actually pursuing this rider 316ms
+ ✓ src/ai/bootstrap_1/mounted-global-field.test.ts (36 tests) 3405ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='remote') 380ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-global-field.test.ts (36 tests) 3755ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='remote') 403ms
+   ✓ 'v9_summoner' buys one field scout only for exposed melee (mirror=true setup='detour') 302ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-global-field.test.ts (36 tests) 4061ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='remote') 543ms
+   ✓ 'v9_summoner' buys one field scout only for exposed melee (mirror=true setup='detour') 304ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-global-field.test.ts (36 tests) 3654ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='remote') 402ms
+ ✓ src/ai/bootstrap_1/mounted-field-recruitment.test.ts (24 tests) 1840ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='exposed') 332ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-field-recruitment.test.ts (24 tests) 2015ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-field-recruitment.test.ts (24 tests) 1967ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='exposed') 324ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-field-recruitment.test.ts (24 tests) 1890ms
+   ✓ 'v9_archer' buys one field scout only for exposed melee (mirror=false setup='exposed') 324ms
+ ✓ src/ai/bootstrap_1/mounted-field.test.ts (18 tests) 10378ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 927ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 644ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 567ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 381ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 652ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 717ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 517ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 481ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 482ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 359ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 611ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 708ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 470ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 465ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 504ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 431ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 654ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 805ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-field.test.ts (18 tests) 18285ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 861ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 641ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 620ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 424ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 679ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 713ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 1653ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 1499ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 1962ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 1169ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 2841ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 1720ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 646ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 678ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 697ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 355ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 565ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 560ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-field.test.ts (18 tests) 12246ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 1001ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 737ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 698ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 543ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 916ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 945ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 507ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 588ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 606ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 360ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 699ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 1124ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 626ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 500ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 535ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 370ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 676ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 814ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-field.test.ts (18 tests) 11045ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 1039ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 620ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 586ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 413ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 757ms
+   ✓ 'v9_archer' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 853ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 633ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 487ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 795ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 386ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 711ms
+   ✓ 'v9_summoner' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 609ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=false) 527ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=false mirror=true) 472ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=false) 568ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'footman' pursuers without injury (speed=true mirror=true) 364ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=false) 625ms
+   ✓ 'v9_knight' uses two paid riders to kill six 'emberRavager' pursuers without injury (speed=true mirror=true) 600ms
+ ✓ src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 3686ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 882ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 531ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 619ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 630ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 532ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 491ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 3122ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 848ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 435ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 592ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 372ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 516ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 359ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 2431ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 632ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 391ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 411ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 331ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 343ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 323ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-fleet-ownership.test.ts (6 tests) 2505ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=false) 604ms
+   ✓ 'v9_archer' keeps a coast battery out of a mounted clearing mission (mirror=true) 405ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=false) 439ms
+   ✓ 'v9_summoner' keeps a coast battery out of a mounted clearing mission (mirror=true) 352ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=false) 362ms
+   ✓ 'v9_knight' keeps a coast battery out of a mounted clearing mission (mirror=true) 342ms
+ ✓ src/ai/bootstrap_1/threat-roads.test.ts (12 tests) 411ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/threat-roads.test.ts (12 tests) 402ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/threat-roads.test.ts (12 tests) 425ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/threat-roads.test.ts (12 tests) 370ms
+ ✓ src/ai/bootstrap_1/mounted-field-snapshot.test.ts (1 test) 346ms
+   ✓ executes the admitted mounted road in the real pineshade crash frame 345ms
+ ✓ .playtest/carrier-threat-source/src/ai/bootstrap_1/mounted-field-snapshot.test.ts (1 test) 372ms
+   ✓ executes the admitted mounted road in the real pineshade crash frame 372ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mounted-field-snapshot.test.ts (1 test) 332ms
+   ✓ executes the admitted mounted road in the real pineshade crash frame 331ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mounted-field-snapshot.test.ts (1 test) 371ms
+   ✓ executes the admitted mounted road in the real pineshade crash frame 371ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/mine-defense.test.ts [ .playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/mine-defense.test.ts ]
+Error: Failed to load url ../../sdk/scene (resolved id: ../../sdk/scene) in /workspace/sketch-rts-bootstrap-resume/.playtest/overseas-assault-20261015/root-v11-integration-overlay-captured/src/ai/bootstrap_1/mine-defense.test.ts. Does the file exist?
+ ❯ loadAndTransform ../sketch-rts/node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts > bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost
+AssertionError: expected [ { id: 'miner-0', …(41) } ] to have a length of 5 but got 1
+
+- Expected
++ Received
+
+- 5
++ 1
+
+ ❯ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts:171:74
+    169|     expect(control.units.filter(unit => unit.id.startsWith('miner-')))…
+    170|     expect(candidate.buildings.find(building => building.id === 'mine-…
+    171|     expect(candidate.units.filter(unit => unit.id.startsWith('miner-')…
+       |                                                                          ^
+    172|     expect(candidate.players.us!.gold).toBeGreaterThan(control.players…
+    173|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts > bootstrap_1 independent mine defense > protects the working mine before fighting a larger group at a forward outpost
+AssertionError: expected [ { id: 'miner-0', …(41) } ] to have a length of 5 but got 1
+
+- Expected
++ Received
+
+- 5
++ 1
+
+ ❯ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/ai/bootstrap_1/mine-defense.test.ts:171:74
+    169|     expect(control.units.filter(unit => unit.id.startsWith('miner-')))…
+    170|     expect(candidate.buildings.find(building => building.id === 'mine-…
+    171|     expect(candidate.units.filter(unit => unit.id.startsWith('miner-')…
+       |                                                                          ^
+    172|     expect(candidate.players.us!.gold).toBeGreaterThan(control.players…
+    173|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  3 failed | 31 passed (34)
+      Tests  2 failed | 516 passed (518)
+   Start at  05:17:06
+   Duration  200.47s (transform 23.32s, setup 0ms, collect 43.09s, tests 146.91s, environment 6ms, prepare 2.08s)
+

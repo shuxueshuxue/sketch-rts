@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-16T05:30:27.295235+00:00",
+  "classification": "Root stream hash/bytes/coverage verification only; no new query/native/coldclosure. Fixedaf suffix diagnosed observationstop227251, not natural win. Active1a files excluded.",
+  "archive": "/workspace/.playtest/coastal-af010be6-natural-suffix-evidence-20261016.tar.gz",
+  "bytes": 7558835,
+  "sha256": "60ce541c53fa0455af9ab45da7bd45f63a927703770e39687e5807e249a882b2",
+  "indexPath": "INDEX.json",
+  "indexSHA256": "33b583a5e38a2faa6227620ac417da38747ea62e8f7d99d66680f73ad2c92533",
+  "allPayloadSHA256BytesVerified": 109,
+  "regularFileMembers": 110,
+  "exactCoverage": true
+}

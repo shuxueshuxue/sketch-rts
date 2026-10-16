@@ -1,0 +1,180 @@
+{
+  "classification": "Read-only source-flow audit and existing archived evidence. No source/control edits, tests, application queries, Game/native replay or new instrumentation. New external deliverables only.",
+  "base": "ade412414d9232206f39e20f0182f0086605433c",
+  "sourceControl": "/workspace/sketch-rts-unpaid-hall-reserve-control",
+  "observedWorkingTreeStatus": [],
+  "sourceIdentityNote": "Root was concurrently testing a negative naval reserve hypothesis. All source readset bytes in this report are git-show ade committed bytes, never labelled dirty current source as clean.",
+  "conclusion": "Do not integrate a pending-townHall -> 400 navalBudgetReserve change on this evidence. Normal bootstrap already removes all pending build costs in script-runner before economic planning. A raw direct planBootstrapEconomy call bypasses that protocol and cannot establish the supposed normal full-planner bug.",
+  "normalCallChain": [
+    {
+      "path": "scripts/bootstrap_1-planner.ts",
+      "lines": "59-70",
+      "meaning": "Non-frozen bootstrap chooses live planAiOwnerCommandEntries; frozen v5/v7/v8 remain historical modules."
+    },
+    {
+      "path": "src/ai/planner-context.ts",
+      "lines": "61-69",
+      "meaning": "All three isBootstrapVersion variants choose bootstrapScripts and call planBootstrapScriptEntries."
+    },
+    {
+      "path": "src/ai/bootstrap_1/policy.ts",
+      "lines": "117-120,148-155",
+      "meaning": "Replaces family v6Economy with bootstrapEconomy and retains shared planAiCommandEntriesFromScripts wrapper."
+    },
+    {
+      "path": "src/ai/policy/core.ts",
+      "lines": "375-379",
+      "meaning": "Delegates to runAiCommandEntriesFromScripts."
+    },
+    {
+      "path": "src/ai/policy/script-runner.ts",
+      "lines": "30-49",
+      "meaning": "Sums BUILDING_DEFS costs of every owned unit with build order, subtracts once from economySnapshot, then budgets later economy commands and spent tracking."
+    },
+    {
+      "path": "src/ai/bootstrap_1/economy.ts",
+      "lines": "28-32,201-257",
+      "meaning": "bootstrapEconomy is v6Economy/economy phase; starts gold from passed economySnapshot, not raw original gold."
+    }
+  ],
+  "navalPurchaseFlow": {
+    "economicPurchase": "naval.ts181-184 creates naval:gun buyShipEquipment; bootstrap collectV6Goals/rankBootstrapGoals/planBootstrapEconomy or navalEconomy391-395 issue through economy budget. Other train/research purchases are also economy scripts.",
+    "rawTacticalOutfitting": "naval tactics423/outfitting1187-1234 may create or maintain a job using raw original gold. outfitCommands1235-1263 can only move, pickupItem, transferItem, board; absent item only move. It cannot buy a gun. Job selection is not purchase.",
+    "existingContract": "script-runner.test.ts258-281 keeps money for a walking builder without changing shared snapshot; inspected only, not rerun.",
+    "doubleReserveRisk": "If navalBudgetReserve returns 400 while pendingCost already subtracted the same hall400, planBootstrapEconomy and non-reserved naval purchase gates may protect that hall twice; raw helper test red-to-green would not validate normal full planner."
+  },
+  "nativePaymentSemantics": {
+    "path": "src/shared/sim.ts",
+    "lines": "2048-2080",
+    "meaning": "Walking build has not paid; updateBuildOrder waits for proximity/placement/gold, then spends cost, creates foundation, changes builder to repair. Runner shadow pendingCost protects this unpaid liability without claiming already-paid."
+  },
+  "targetedOriginalQuery": {
+    "reference": {
+      "path": "/workspace/.playtest/bootstrap-unpaid-hall-reserve-ade-20261016/ade-original-unpaid-query.json",
+      "bytes": 2265,
+      "sha256": "05eda0ec8a3c95b03fb6ad7bc13089fb53ffefbf9e09cf094a8a667acd88324b"
+    },
+    "actual": {
+      "classification": "Targeted one-economy-plan and native construction replay from actual32940. Existing native orders continue but no later AI planning/opponent scripts: not a normal3AI complete match or score. Sourceade frozen rules2 unchanged; no world/resource/HP edits.",
+      "initialGold": 568.51,
+      "reserveBefore": 400,
+      "afterIssue": {
+        "gold": 453.51,
+        "builderOrder": {
+          "type": "build",
+          "buildingKind": "townHall",
+          "x": 8208,
+          "y": 7120,
+          "progressTick": 32940,
+          "progressX": 8732,
+          "progressY": 7004
+        },
+        "reserve": 0,
+        "hallExists": false
+      },
+      "nextGoals": [
+        {
+          "id": "farm",
+          "cost": 120,
+          "save": true
+        },
+        {
+          "id": "engineering:ballista",
+          "cost": 300,
+          "save": true
+        },
+        {
+          "id": "naval:islandHall",
+          "cost": 400,
+          "save": true
+        },
+        {
+          "id": "unit:archer",
+          "cost": 115,
+          "save": false
+        }
+      ],
+      "founded": {
+        "tick": 33307,
+        "hp": 90,
+        "complete": false,
+        "goldBefore": 539.82,
+        "goldAfter": 139.82,
+        "builderOrder": {
+          "type": "repair",
+          "buildingId": "building-p0-townHall-2256"
+        },
+        "reserve": 0
+      }
+    },
+    "limit": "Existing targeted one direct economy call plus native construction replay; no later AI planning/opponent scripts. Shows deferred payment and local helper0, not actual repeated normal-planner capital starvation. Also naval:islandHall independently kept400 in its ranked goals."
+  },
+  "ordinaryExistingWindow": {
+    "file": "ORDINARY-EXISTING-WINDOW.json",
+    "summary": "Normal e566 p0 townHall build issued31905; full32400 save retains unpaid order with gold517.68 and no target hall foundation. Runner-derived economic gold117.68. First actual foundation32682. No recorded p0 train/research/hire/buy/buyShipEquipment between build and foundation; next worker train32685. No observed starvation in this narrow window."
+  },
+  "scopeLimits": [
+    "Source-flow protects ordinary planned up-front economic purchases, not a universal proof against every asynchronous repair expense or every tactical order. No independent repair-capital issue was established here.",
+    "Did not broadly rescan old193200..238516 archives after parent narrowed task to source closure. No claim that no latent capital bug can exist anywhere.",
+    "No normal full-P0 query was rerun by reviewer. Source call-chain and archived live bytes are the proof provided.",
+    "Existing targeted query raw result and all archived inputs remain unchanged. No reduction to opponent rules/resources/population/maps or seeds."
+  ],
+  "blockers": [],
+  "recommendation": "Keep original helper behavior under normal runner contract; preserve raw direct-call hypothesis/test patch as negative diagnostic if desired, restore independent budget control to ade, do not integrate an unproven double-reserve fix. Future budget assertions should exercise public full planner/runner contract or explicitly construct its prepaid shadow.",
+  "readset": [
+    {
+      "path": "scripts/bootstrap_1-planner.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 4207,
+      "sha256": "56097e902c77caa450176ba3ce4f363f7ae1767afd2c5bfa8cb7b964f875988d"
+    },
+    {
+      "path": "src/ai/planner-context.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 6039,
+      "sha256": "fe32aff83a2775fcd35d6ef27b00783d91e46d217001428f642afb6fe5c3892e"
+    },
+    {
+      "path": "src/ai/bootstrap_1/policy.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 10420,
+      "sha256": "a0c4f165278ab6e5f21c224e7932e91420c5eb69fc9d86b90f100de956ecda3d"
+    },
+    {
+      "path": "src/ai/policy/core.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 301701,
+      "sha256": "1e26e8e5857e68c7dad1eb4877edc97168de5ce933e7bafbe36068b1504775ea"
+    },
+    {
+      "path": "src/ai/policy/script-runner.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 10644,
+      "sha256": "5623d2ca040edefa5a4e4259251589b2a077628a14a4c7509d4f5ed3f768e896"
+    },
+    {
+      "path": "src/ai/bootstrap_1/economy.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 16512,
+      "sha256": "4d5417d2d7e8bb8e9904bf6c9252dbd8051e56f4742a582309a14517a8a5dc80"
+    },
+    {
+      "path": "src/ai/policy/naval.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 121775,
+      "sha256": "87c06818f41da1e69d48511aae3b2acd9b84ef2291723734c88178d6c9ad3ea9"
+    },
+    {
+      "path": "src/shared/sim.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 271190,
+      "sha256": "3583c4b712694c32492ede779af095d357c282bab43073b6bac696194aeb8504"
+    },
+    {
+      "path": "src/ai/policy/script-runner.test.ts",
+      "revision": "ade412414d9232206f39e20f0182f0086605433c",
+      "bytes": 16092,
+      "sha256": "d139ad8df3561876f1579b3847422b5d1eb52205aa9a304e44d9470edbdb641d"
+    }
+  ]
+}

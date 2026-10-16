@@ -1,0 +1,28 @@
+{
+  "utc": "2026-10-16T04:59:50.956885+00:00",
+  "classification": "Root independent source/capsule/raw actual native hit and full-snapshot review; no simulation/query/tests. First enemy building destruction only, changed-code continuation not ordinary0 or win.",
+  "head": "af010be642b8e2dc5c1054d0cc17131957764e05",
+  "currentSourcesAndCapsulePayloadsSHA256Verified": 1470,
+  "capsuleSHA256": "8811eec4395d6c98101a30012e1838521966e9bf2a46fc4911b465ee16dc3fba",
+  "start": 225600,
+  "end": 226414,
+  "inputSHA256": "3f62483393e83a4dd4a7e910b713bf87bef4bea37d70a7e72bfd8702848dfcd4",
+  "finalSHA256": "879ca9606423c7c4d3af4551408003f5d13fc35683c3a0b17e4e765b908d2500",
+  "actualHitCount": 25,
+  "target": "building-p2-cinderSpire-1597",
+  "allHitsContiguous20Damage500To0": true,
+  "startingLivePermanentP0UnitsAllStillLive": 80,
+  "allStartingP0HullsHPPiecesUnchanged": [
+    "unit-p0-warship-4058",
+    "unit-p0-carrier-25442",
+    "unit-p0-warship-31227",
+    "unit-p0-warship-33582",
+    "unit-p0-warship-34722",
+    "unit-p0-bombardShip-50739",
+    "unit-p0-cutter-140825"
+  ],
+  "sourceClean": true,
+  "noNaturalTerminalOrAcceptanceClaim": true,
+  "originalUncommittedGapUnrecovered": true,
+  "firstReviewAttemptErratum": "Initial root verifier incorrectly assumed archive payload at root; actual1470 source/ prefix. Failed before reading source capsule payloads, no result or source writes. This corrected verifier checks every source/payload."
+}

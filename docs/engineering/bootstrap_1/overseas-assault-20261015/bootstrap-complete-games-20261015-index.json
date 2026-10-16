@@ -1,5 +1,5 @@
 {
-  "productionHead": "ade412414d9232206f39e20f0182f0086605433c",
+  "productionHead": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -595,12 +595,171 @@
       "payloadHashesVerified": true,
       "source": "Unmerged mounted cooldown v1f9771345ecd3f930cfd43e0230cf4426bbf52488 and v2 2c489528d7c0479a266e7ceab93a67d375dcedeb each independent ade41241 base; actual input inherited ab0 fullworld, not currentproduction ordinary0",
       "classification": "Complete focused negative, no strategy integration or naturalmatch/acceptance. Ade15000..15410 410tick629trace30hits and15780..15896 116tick171trace19hits reproduce actualab0 saved world/id/3mem/setup. Ade15255..15855 600tick baseline also exact828trace71hits; same-input fixedv2 actual600tick firstactualmountedFieldattack→move15270 retainsaim/first15267arrow→15280hit12, secondarrowearlierbut both only2hits24vs25HP. Bothriders111/125HP, candidatefirstincoming14earlier15814vs15844 andstillisolatednorth; globalp0damage587vs884,enemy281vs500,ownnewpermanentlossboth0,enemynewpermanentloss2vs4;3actualheals155vs146 verified via nativeeffects/HP accounting, not casts/maxHPgrowth. Originalade murloc-red-2 fullclear20525/215hits/0damage vs bothcandidate30123still5foes/387hits/0damage; retained as real regression. v1related35=34pass1fail;v2new8green/originalcampred/tsc0, no weakenedassertions or CD/range/think/opponent change. Sourceade1464capsule/full497frozen184 andbinarycandidatepatches, fullrawprethink/commands/order-aim-effects/projectiles/hits/heals/deaths/independentreview814b8a1/nativeimages and originalquery-overlay/test/runnererrata retained. SDKtrace includestransientnoops, actualeffect not inferred fromlogs alone. Later field-screen-road followup excluded. No newproductionordinary0 or historicalscore changes; originaluncommitted gap retained."
+    },
+    {
+      "file": "bootstrap-coastal-objectives-af010be6-first-evidence.tar.gz",
+      "bytes": 14111983,
+      "sha256": "f3bfcdb53a1bb1ff8b82022904d21f5e818b978afd5d3eb8aba864b48c6b3070",
+      "indexedPayloadFiles": 154,
+      "archiveRegularFiles": 155,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Unmerged fixedaf010be642b8e2dc5c1054d0cc17131957764e05, independentade41241 base; full1470 source/capsule and184 approved frozen rules2 dependencies verified.",
+      "classification": "Actual225600→226414 normal3AI changed-code continuation, strictfullworld/id/3mem restore. Warships34722/33582 deliver25nativehits500HP to destroycinderSpire1597;80initialpermanentownunits remainlive and7hullHP/parts unchanged,gold377.33unchanged,winnernull. Supported observationboundary afterfirstenemybuildingdestroy is not naturalwin or ordinary0. Includes isolated first225615 and leafbranch225615 externalqueries with fullP0entries/postmem closure; directcomplete16points secondlongsegmentfire-reject,detourpartial24points is notproofbudgetexhaustion. Root independentlyverified every154payloadhash/bytes+INDEXcoverage and1470source/capsule. Later226414→227251 diagnosedstop and1a safe-leg experiments are excluded from thisclosedfirstpackage. SDKtrace includestransientnoops; actualhits/world provide effectproof. No threefamily or unseen acceptance; originaluncommittedgap retained."
+    },
+    {
+      "file": "bootstrap-field-screen-retreat-844-natural-pair-evidence-20261016.tar.gz",
+      "bytes": 33003131,
+      "sha256": "5298d3f365989a24d4b81dc9e8c5b09ea59fb9156f5c40e71f43ebeecb812e0d",
+      "indexedPayloadFiles": 830,
+      "archiveRegularFiles": 831,
+      "payloadManifest": "bootstrap-field-screen-roads-ade-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Fixed84474d599f1886ca0ff32b3edf4897fcdbce9e21 overade41241. Rootruntimef5081ad3cc012f7f4a442383f4818ed23281cc37 selected1467 sourcefiles byteequal844; fourproductionfiles plus1test/2actualfixtures only.",
+      "classification": "Full natural3AI matched continuation from sameactual15255 ab0-derivedknownworld, eachown600tickfocus→15855fullworld/id/3mem→naturalterminal. Baselineade44340p1WIN/p0native65loss,2ownlancersremainbut0buildings;84496245p0WIN/p0native57loss,enemyP1/P2strict0units0buildings,own42permanentlive/25buildings/3halls. Actualrider4294 survives15896baselinefatality to37186candidatefatality,level3/13kills635xp,notterminalsurvivor. Focus4hits51HP/noincoming vsbaseline2hits25/14incoming;wholefocusdamage395vs884 andenemydeaths2vs4 preservecost. Allowner nativeunitsLostDelta equals uniqueconfirmeddeathledger;11/13provisional rows subsequentlyconfirmed,notdoublecounted. Source1464/1467 andfull497frozen archive/gitdeps exact,original184approvedmanifest unchanged. Authorfinal39/tsc0,root137/9files+tsc0 separatelyattributed;333sixravagerreds/v2threefootmanreds andearlierfalsearrivalcause retained. No CD/range/camp/think/opponent weakening. This is NOT currentruntime ordinary0, newseed, generalization or three-family acceptance; olde56643714win andab041057loss stayseparate. Root independentlyverifiedall830payloadSHA/bytes,exact831coverage andactualfinal/rawledger. Originaluncommittedgap retained."
+    },
+    {
+      "file": "coastal-af010be6-natural-suffix-evidence-20261016.tar.gz",
+      "bytes": 7558835,
+      "sha256": "60ce541c53fa0455af9ab45da7bd45f63a927703770e39687e5807e249a882b2",
+      "indexedPayloadFiles": 109,
+      "archiveRegularFiles": 110,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Unmerged samefixedaf010be6 natural full3AI continuation from its actual226414 firstbuildingdestruction fullworld/id/3mem.",
+      "classification": "226414→227251 supportedobserverstop after concreteinstalledroute suffix loop diagnosis,winnernull,not naturalterminal/ordinary0.1099rawattempts/2ownhullcollisionnativehits/83events/56P0;377.33gold unchanged.50739 issues45stop+45samemove before progresslost,100kquerypartial safe prefix differsfromactualcomplete45pointnative routewhose13th longsegment entersfire muchlater;226650externalfullP0 branchtrace closesactualentries+allpostP0mem. Independentordinaryintermediateleg query8.48ms5pointcomplete/allsolids/fire clear is geometry only,no installedleg or strategiccompletion. Warships actuallymusterlaunch andsail towardp1;dead oldvoyagememory is not a permanentownerlock. Final227250think104.9s eventuallyselectsnewcompleteintermediatehelm5552,6480/farm7343 beforeonefinalnormalstep; localrepeat is notpermanentunreachability. Rootcapital queryprovescutterintrinsicarmed withnogun buttwoactualguardshorestationsundefined;no claimedbounty/hallfunding. Snapshot/source1470/frozen184/rules2 unchangedprepost; no coldnative terminalreplay yet, explicitgap. Active1a/cabin/newfield sources excluded. Rootall109payloadSHA/bytes+INDEXcoverage verified. Originaluncommittedgap retained."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; complete1462source attribution, all-owner219removal/corpse ledger and terminal514tick full3AI closure are now sealed in complete-e566-ordinary0-evidence.tar.gz. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score. Current runtimeade41241 separately imports only e47 native crew-rendezvous/sailing/ship-navigation departure-route and shared-solid-frame fix plus its test/fixture over exacte566 AI; no078026 macro or a90c/ab0 medical import. Root52tests/8files+tsc0 and actual223200..2256002400tick normal3AI window,160saved full-state checkpoints/final/2430publiccommands equal e47, and only224370..22446090tick coldclosure are verified.39390 crosses receiver224435, normal naval helm cancels board224445; whole-body receiver support does not imply exact native goal completion. No income/attack/win,6gold paid repairs; ade has no complete ordinary0 yet. The earlier e56643714/56loss and0f44441 results remain historical source-attributed.",
+  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; armed-worker defender-only score; frozen planner cwd/retry tool repair; pure exact solid configuration memo; reciprocal rendezvous actual-origin live-hull constraint;19ef shared native land-arrival/automatic-target queries;3ff9 exact solid-memo FIFO128 retention;1e1de native-arrival/pursuit care filter; e566 exposed deck-crew preservation through complete command planning. Rules2 and frozen184 remain unchanged. Final combinatione5663c33 has now actually completed one known-development archer-v8+v8 ordinary0 at43714p0WIN; complete1462source attribution, all-owner219removal/corpse ledger and terminal514tick full3AI closure are now sealed in complete-e566-ordinary0-evidence.tar.gz. Historical0f44441, care10200..43714 and hybriddeck41255 retain their own sources; none is borrowed as the new combined-source ordinary0 score. Current runtimeade41241 separately imports only e47 native crew-rendezvous/sailing/ship-navigation departure-route and shared-solid-frame fix plus its test/fixture over exacte566 AI; no078026 macro or a90c/ab0 medical import. Root52tests/8files+tsc0 and actual223200..2256002400tick normal3AI window,160saved full-state checkpoints/final/2430publiccommands equal e47, and only224370..22446090tick coldclosure are verified.39390 crosses receiver224435, normal naval helm cancels board224445; whole-body receiver support does not imply exact native goal completion. No income/attack/win,6gold paid repairs; ade has no complete ordinary0 yet. The earlier e56643714/56loss and0f44441 results remain historical source-attributed. Current independentresume runtimef5081ad3 now adds only fixed844 field-retreat delta: when originalfieldmicroalreadyescapes an actualpursuer, select an admittedroad toward currentavailablefront, retainoriginalreadyshot/chargeinnerwindow/claims/knownhazard andnativebuilding-arrival scope. Root1467files byteequal844,137/9tests+tsc0. Sameactual15255knownab0-derivedstate matchedcontinuation changesade44340p1WIN/65loss to84496245p0WIN/57loss withenemy0u0b; materiallyslower andnotordinary0/generalization. Newcoastalaf/1a andcabinferry implementations remainindependentunmerged. Pendinghall double-reservehypothesis wasrejected afternormalrunnerprotocolread; no budgetchange.",
   "productionValidation": {
     "currentSource": {
+      "source": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+      "parentRuntimeSource": "ade412414d9232206f39e20f0182f0086605433c",
+      "byteEquivalentCandidate": "84474d599f1886ca0ff32b3edf4897fcdbce9e21",
+      "selectedSourceFilesExact": 1467,
+      "fourProductionFiles": [
+        "src/ai/bootstrap_1/mounted-field.ts",
+        "src/ai/bootstrap_1/mounted-micro.ts",
+        "src/ai/bootstrap_1/mine-defense.ts",
+        "src/ai/bootstrap_1/threat-roads.ts"
+      ],
+      "nativeRendezvousParentUnchanged": true,
+      "rulesVersion": 2,
+      "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+      "rootRegression": {
+        "testsPassed": 137,
+        "testFiles": 9,
+        "typecheckExitCode": 0,
+        "reference": "field-and-coastal-validation-20261016/root-source-integration.json",
+        "scope": "Correctsource-onlyVitest run; initialcaptured.playtestcollections interruptedexit130 retainedandnotcounted. Author39 isdistinctnotadded."
+      },
+      "fullMatchedChangedCodeContinuation": {
+        "archive": "bootstrap-field-screen-retreat-844-natural-pair-evidence-20261016.tar.gz",
+        "sameInputTick": 15255,
+        "inputLineage": "knownarcher-v8+v8 pineshade afterpriorab0 changed-code state; notordinary0/newseed",
+        "baseline": {
+          "source": "ade41241",
+          "winner": "p1",
+          "tick": 44340,
+          "ownNativeLosses": 65,
+          "ownUnitsRemaining": 2,
+          "ownBuildingsRemaining": 0
+        },
+        "candidate": {
+          "source": "84474d59",
+          "winner": "p0",
+          "tick": 96245,
+          "ownNativeLosses": 57,
+          "enemyUnitsRemaining": 0,
+          "enemyBuildingsRemaining": 0,
+          "ownPermanentUnitsRemaining": 42,
+          "ownBuildingsRemaining": 25,
+          "ownHallsRemaining": 3
+        },
+        "ledgerAllOwnersClosed": true,
+        "rootIndependentReference": "field-and-coastal-validation-20261016/root-native-pair-and-archive-review.json"
+      },
+      "ordinary0ForThisSource": {
+        "complete": false,
+        "newGeneralizationClaim": false,
+        "threeFamilyAcceptance": false
+      },
+      "unmergedCandidatesExcluded": [
+        "af010be6coastal",
+        "1a1fa0fcsafeleg",
+        "cabinferry",
+        "a90c/ab0medical",
+        "f977/2c489cooldown",
+        "333/52aefieldroadnegatives",
+        "rejectedunpaidhalldoublereserve"
+      ]
+    },
+    "historicalSources": {
+      "e5663c338f9c544a5e65a66a6ed278d35f74a8f4": {
+        "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+        "validation": {
+          "workerDefense": {
+            "head": "e447a632cb166428f6c6ce7c30a5846527542260",
+            "testsPassed": 67,
+            "typecheckExitCode": 0
+          },
+          "solidMemo": {
+            "head": "1d26ca198424913bb748b1910536952c3c0d224c",
+            "testsPassed": 92,
+            "typecheckExitCode": 0
+          },
+          "repairOrigin": {
+            "head": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+            "testsPassed": 41,
+            "typecheckExitCode": 0,
+            "originTests": 6,
+            "newCapturedCallbackTests": 2
+          },
+          "logs": "current-batch-root-validation/",
+          "newCombinedRootOrdinary0Completed": true,
+          "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+          "nativeBoundedMemo": {
+            "head": "3ff9a747ae7aec4e5e66cc1198ef2baf9d2454b3",
+            "testsPassedAcrossTwoRuns": 24,
+            "testFiles": 4,
+            "separateRunPassedCounts": [
+              22,
+              2
+            ],
+            "typecheckExitCode": 0,
+            "countNote": "Two distinct runs; do not present as one24test run or add other batches into a new independent coverage total.",
+            "integrationRecord": "bounded-memo-integration-20261016.json"
+          },
+          "careNativeFilter": {
+            "head": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
+            "testsPassed": 59,
+            "testFiles": 9,
+            "typecheckExitCode": 0,
+            "integrationRecord": "care-native-filter-integration-20261016.json"
+          },
+          "deckRecovery": {
+            "head": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+            "testsPassed": 70,
+            "testFiles": 7,
+            "typecheckExitCode": 0,
+            "integrationRecord": "deck-recovery-integration-20261016.json"
+          },
+          "currentCombinedSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+          "currentCombinedOrdinary0Status": "Sealed actual fixede566 fresh0 natural43714p0WIN on known developed archer-v8+v8 case; both enemies0u0b, own41u29b/4halls,56permanent losses. Complete all-owner219removal/corpse ledger and only43200..43714 terminal514tick full3AI restore/163commands/27hits closure archived; no new holdout/tactical-superiority/acceptance claim.",
+          "historical0fOrdinary0Attribution": "productionOrdinary0.source remains0f5bf01a;44441win is not transferred to this combined source.",
+          "historicalChangedContinuations": "Care10200..43714 and deck hybrid41255 are not ordinary0 or final combined-source results.",
+          "currentCombinedOrdinary0Archive": "complete-e566-ordinary0-evidence.tar.gz",
+          "currentCombinedOrdinary0SourceFilesExact": 1462,
+          "currentCombinedOrdinary0LedgerAllOwnerExact": true,
+          "currentCombinedOrdinary0Terminal514ClosureExact": true
+        },
+        "scope": "Exact prior e566 validation object retained as historical source evidence; its nested currentCombinedSource/status describe that historical source, not current ade."
+      }
+    },
+    "scoreAttribution": "The two existing top-level ordinary0 records retain their exact sources, text and values. No new ordinary0/full-game score is assigned to ade.",
+    "testCountScope": "Current root52/8, author33/4 and all historical test runs retain separate scopes; no synthetic combined independent test total.",
+    "previousCurrentSourceBeforeFieldRoad": {
       "source": "ade412414d9232206f39e20f0182f0086605433c",
       "AIBaseSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
       "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -725,71 +884,7 @@
           "referenceSHA256": "95ce01bb1548753cf9112ab321b0bb0cdae65fc9f48c41a5c82b0725b6313350"
         }
       }
-    },
-    "historicalSources": {
-      "e5663c338f9c544a5e65a66a6ed278d35f74a8f4": {
-        "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
-        "validation": {
-          "workerDefense": {
-            "head": "e447a632cb166428f6c6ce7c30a5846527542260",
-            "testsPassed": 67,
-            "typecheckExitCode": 0
-          },
-          "solidMemo": {
-            "head": "1d26ca198424913bb748b1910536952c3c0d224c",
-            "testsPassed": 92,
-            "typecheckExitCode": 0
-          },
-          "repairOrigin": {
-            "head": "0f5bf01a05046169d4fb42322376f767b97bcc83",
-            "testsPassed": 41,
-            "typecheckExitCode": 0,
-            "originTests": 6,
-            "newCapturedCallbackTests": 2
-          },
-          "logs": "current-batch-root-validation/",
-          "newCombinedRootOrdinary0Completed": true,
-          "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-          "nativeBoundedMemo": {
-            "head": "3ff9a747ae7aec4e5e66cc1198ef2baf9d2454b3",
-            "testsPassedAcrossTwoRuns": 24,
-            "testFiles": 4,
-            "separateRunPassedCounts": [
-              22,
-              2
-            ],
-            "typecheckExitCode": 0,
-            "countNote": "Two distinct runs; do not present as one24test run or add other batches into a new independent coverage total.",
-            "integrationRecord": "bounded-memo-integration-20261016.json"
-          },
-          "careNativeFilter": {
-            "head": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
-            "testsPassed": 59,
-            "testFiles": 9,
-            "typecheckExitCode": 0,
-            "integrationRecord": "care-native-filter-integration-20261016.json"
-          },
-          "deckRecovery": {
-            "head": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
-            "testsPassed": 70,
-            "testFiles": 7,
-            "typecheckExitCode": 0,
-            "integrationRecord": "deck-recovery-integration-20261016.json"
-          },
-          "currentCombinedSource": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
-          "currentCombinedOrdinary0Status": "Sealed actual fixede566 fresh0 natural43714p0WIN on known developed archer-v8+v8 case; both enemies0u0b, own41u29b/4halls,56permanent losses. Complete all-owner219removal/corpse ledger and only43200..43714 terminal514tick full3AI restore/163commands/27hits closure archived; no new holdout/tactical-superiority/acceptance claim.",
-          "historical0fOrdinary0Attribution": "productionOrdinary0.source remains0f5bf01a;44441win is not transferred to this combined source.",
-          "historicalChangedContinuations": "Care10200..43714 and deck hybrid41255 are not ordinary0 or final combined-source results.",
-          "currentCombinedOrdinary0Archive": "complete-e566-ordinary0-evidence.tar.gz",
-          "currentCombinedOrdinary0SourceFilesExact": 1462,
-          "currentCombinedOrdinary0LedgerAllOwnerExact": true,
-          "currentCombinedOrdinary0Terminal514ClosureExact": true
-        },
-        "scope": "Exact prior e566 validation object retained as historical source evidence; its nested currentCombinedSource/status describe that historical source, not current ade."
-      }
-    },
-    "scoreAttribution": "The two existing top-level ordinary0 records retain their exact sources, text and values. No new ordinary0/full-game score is assigned to ade.",
-    "testCountScope": "Current root52/8, author33/4 and all historical test runs retain separate scopes; no synthetic combined independent test total."
+    }
   },
   "unmergedObservationStatus": {
     "provenance": "Sealed complete source-fixed archives appended2026-10-16; none integrated into production0f5bf.",

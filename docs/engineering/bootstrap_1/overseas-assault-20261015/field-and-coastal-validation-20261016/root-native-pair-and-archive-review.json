@@ -1,0 +1,169 @@
+{
+  "utc": "2026-10-16T05:26:41.737755+00:00",
+  "classification": "Root independent stream archive hash/bytes and actual full final/native-death-ledger audit. No Game/step/query/tests. Each15855 tail follows its own15255→15855 real focused continuation of the same known ab0-derived actual input. Not ordinary0, unseen generalization, three-family acceptance or sourcee566 score.",
+  "archive": "/workspace/.playtest/bootstrap-field-screen-retreat-844-natural-pair-evidence-20261016.tar.gz",
+  "archiveBytes": 33003131,
+  "archiveSHA256": "5298d3f365989a24d4b81dc9e8c5b09ea59fb9156f5c40e71f43ebeecb812e0d",
+  "indexSHA256": "bddc0e6977c2bf806d98b0cc6bff62a945fc5192120f2df376a1be8965fc2288",
+  "allPayloadSHA256BytesVerified": 830,
+  "regularFileMembers": 831,
+  "exactCoverage": true,
+  "firstVerifierErratum": "Initial attempt assumed root INDEX; actual single directory prefix was inspected and corrected before hash assertions. No success claim from that attempt.",
+  "pair": {
+    "ade": {
+      "start": 15855,
+      "end": 44340,
+      "winner": "p1",
+      "inputSHA256": "bb671ca6a3f88ff9572923d36bb626c01be1f7f5d5ed39a40be3803af072f841",
+      "finalSHA256": "f367a99d677df3e170e1990a15b9fd3095da21c0ebd2f6130d5fce1a82dbf340",
+      "fullStateRestoreAndSourceFrozenClosure": true,
+      "nativeCountersEqualUniqueConfirmedLedgerAllOwners": {
+        "p0": {
+          "initialNativeLost": 9,
+          "finalNativeLost": 65,
+          "delta": 56,
+          "confirmedUniqueDeaths": 56
+        },
+        "p1": {
+          "initialNativeLost": 16,
+          "finalNativeLost": 76,
+          "delta": 60,
+          "confirmedUniqueDeaths": 60
+        },
+        "p2": {
+          "initialNativeLost": 16,
+          "finalNativeLost": 40,
+          "delta": 24,
+          "confirmedUniqueDeaths": 24
+        },
+        "player": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "enemy": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "enemy2": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "neutral": {
+          "initialNativeLost": 19,
+          "finalNativeLost": 19,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        }
+      },
+      "provisionalAllLaterConfirmed": 11,
+      "nativeTerminalRows": 151,
+      "liveCounts": {
+        "p0": {
+          "allUnits": 2,
+          "positiveUnits": 2,
+          "allBuildings": 0
+        },
+        "p1": {
+          "allUnits": 15,
+          "positiveUnits": 15,
+          "allBuildings": 18
+        },
+        "p2": {
+          "allUnits": 22,
+          "positiveUnits": 22,
+          "allBuildings": 19
+        }
+      },
+      "riderActualDeathTick": 15896,
+      "riderAtDeathLastPositiveLevel": 0,
+      "riderAtDeathLastPositiveKills": 1,
+      "riderAtDeathLastPositiveXP": 55
+    },
+    "v3": {
+      "start": 15855,
+      "end": 96245,
+      "winner": "p0",
+      "inputSHA256": "2a90f9181ab7fef26b87ab2da1d86557d05f9fc7ffbacde8b1b09ed315bca4d1",
+      "finalSHA256": "0ccabb739770fe63d2568ee2caffd444a3d3cd9ea9a35bc1b9a14f4976e615c3",
+      "fullStateRestoreAndSourceFrozenClosure": true,
+      "nativeCountersEqualUniqueConfirmedLedgerAllOwners": {
+        "p0": {
+          "initialNativeLost": 9,
+          "finalNativeLost": 57,
+          "delta": 48,
+          "confirmedUniqueDeaths": 48
+        },
+        "p1": {
+          "initialNativeLost": 15,
+          "finalNativeLost": 75,
+          "delta": 60,
+          "confirmedUniqueDeaths": 60
+        },
+        "p2": {
+          "initialNativeLost": 15,
+          "finalNativeLost": 69,
+          "delta": 54,
+          "confirmedUniqueDeaths": 54
+        },
+        "player": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "enemy": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "enemy2": {
+          "initialNativeLost": 0,
+          "finalNativeLost": 0,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        },
+        "neutral": {
+          "initialNativeLost": 19,
+          "finalNativeLost": 19,
+          "delta": 0,
+          "confirmedUniqueDeaths": 0
+        }
+      },
+      "provisionalAllLaterConfirmed": 13,
+      "nativeTerminalRows": 175,
+      "liveCounts": {
+        "p0": {
+          "allUnits": 42,
+          "positiveUnits": 42,
+          "allBuildings": 25
+        },
+        "p1": {
+          "allUnits": 0,
+          "positiveUnits": 0,
+          "allBuildings": 0
+        },
+        "p2": {
+          "allUnits": 0,
+          "positiveUnits": 0,
+          "allBuildings": 0
+        }
+      },
+      "riderActualDeathTick": 37186,
+      "riderAtDeathLastPositiveLevel": 3,
+      "riderAtDeathLastPositiveKills": 13,
+      "riderAtDeathLastPositiveXP": 635
+    }
+  },
+  "actualNativeTerminalImageViewed": "native-v3-terminal.png; full map actualsaved96245 client drawWorld, no historicalanimation reconstruction",
+  "sourceEquivalentRootCommit": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "rootSource1467Matches844": true,
+  "budgetNegativeExcluded": true,
+  "originalUncommittedGapUnrecovered": true
+}

@@ -1,0 +1,48 @@
+diff --git a/src/ai/bootstrap_1/naval-saving-budget.test.ts b/src/ai/bootstrap_1/naval-saving-budget.test.ts
+index 4007e656..d6ff00bf 100644
+--- a/src/ai/bootstrap_1/naval-saving-budget.test.ts
++++ b/src/ai/bootstrap_1/naval-saving-budget.test.ts
+@@ -39,3 +39,26 @@ it('keeps the actual colony hall purchasable while an earlier artillery goal sav
+   expect(game.buildings.some(building => building.owner === 'p0' && building.kind === 'townHall'
+     && building.x === 8208 && building.y === 7120 && building.complete)).toBe(true);
+ });
++
++it('keeps an issued colony hall funded until native construction actually pays for its foundation', () => {
++  const saved = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/naval-saving-hall-32940.json.gz', import.meta.url))).toString());
++  const game = createGame('bareDuel'); restoreSnapshotIntoGame(game, saved.snapshot, saved.nextId);
++  const memory = structuredClone(saved.memories.p0);
++  const context = (snapshot: ReturnType<typeof snapshotGame>) => bootstrapPolicyContext(snapshot, 'p0', 'v9_archer', { memory, teams: game.teams });
++  const initial = snapshotGame(game);
++  for (const command of planBootstrapEconomy(initial, 'p0', context(initial))) issuePlayerCommand(game, 'p0', command);
++  const unpaid = snapshotGame(game);
++  expect(unpaid.players.p0!.gold).toBeCloseTo(453.51);
++  expect(unpaid.units.find(unit => unit.id === 'unit-p0-worker-3')!.order).toMatchObject({ type: 'build', buildingKind: 'townHall' });
++  const foundation = () => game.buildings.find(building => building.owner === 'p0' && building.kind === 'townHall'
++    && building.x === 8208 && building.y === 7120);
++  expect(foundation()).toBeUndefined();
++  expect(navalBudgetReserve(unpaid, 'p0', context(unpaid))).toBe(400);
++
++  // Native construction, rather than issuing the order, releases the funds.
++  while (!foundation() && game.tick < saved.tick + 1200) stepGame(game);
++  expect(foundation()).toMatchObject({ complete: false });
++  const paid = snapshotGame(game);
++  expect(paid.units.find(unit => unit.id === 'unit-p0-worker-3')!.order).toMatchObject({ type: 'repair', buildingId: foundation()!.id });
++  expect(navalBudgetReserve(paid, 'p0', context(paid))).toBe(0);
++});
+diff --git a/src/ai/policy/naval.ts b/src/ai/policy/naval.ts
+index b56cc2dc..7c769f8a 100644
+--- a/src/ai/policy/naval.ts
++++ b/src/ai/policy/naval.ts
+@@ -157,9 +157,11 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
+     const settling = Object.values(options.memory?.naval?.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return"
+         && remote.some(mine => mine.id === mission.targetId));
+     const remaining = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((sum, mine) => sum + mine.amount, 0);
++    // A walking builder has issued a plan, but native construction has not
++    // paid yet. Founding charges the gold and changes this order to repair.
+     const pendingHall = units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "townHall");
+     const approachingDepletion = remaining < 2500 && !localExpansionAvailable(snapshot, owner, options);
+-    return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
++    return (settling || approachingDepletion || pendingHall ? BUILDING_DEFS.townHall.cost : 0)
+         + (approachingDepletion && !units(snapshot, owner).some(unit => economicFerry(unit,options)) ? UNIT_DEFS.transport.cost : 0);
+ }
+ // The transport, population prerequisite and hall can use their own reserved

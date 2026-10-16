@@ -1,0 +1,94 @@
+{
+  "utc": "2026-10-16T05:29:38.027938+00:00",
+  "oldIndexSHA256": "45b3b19fd85672d7a0f5df33892492df6693a6ca8e7c870eff388d6482765cb0",
+  "newIndexSHA256": "e256ecc0666eca1693beadcf3a63f6c6e09a9b4559969f23b5a4439f582655cc",
+  "oldPackages": 75,
+  "newPackages": 77,
+  "old75RawPackageTextAndValuesPreserved": true,
+  "unchangedTopMetadataRawPreserved": true,
+  "changedMetadataOnly": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation.currentSource plus previous source history"
+  ],
+  "oldOrdinary0BothRawAndValuesPreserved": true,
+  "productionSource": "f5081ad3cc012f7f4a442383f4818ed23281cc37",
+  "archives": [
+    {
+      "file": "bootstrap-coastal-objectives-af010be6-first-evidence.tar.gz",
+      "bytes": 14111983,
+      "sha256": "f3bfcdb53a1bb1ff8b82022904d21f5e818b978afd5d3eb8aba864b48c6b3070",
+      "indexedPayloadFiles": 154,
+      "archiveRegularFiles": 155,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Unmerged fixedaf010be642b8e2dc5c1054d0cc17131957764e05, independentade41241 base; full1470 source/capsule and184 approved frozen rules2 dependencies verified.",
+      "classification": "Actual225600→226414 normal3AI changed-code continuation, strictfullworld/id/3mem restore. Warships34722/33582 deliver25nativehits500HP to destroycinderSpire1597;80initialpermanentownunits remainlive and7hullHP/parts unchanged,gold377.33unchanged,winnernull. Supported observationboundary afterfirstenemybuildingdestroy is not naturalwin or ordinary0. Includes isolated first225615 and leafbranch225615 externalqueries with fullP0entries/postmem closure; directcomplete16points secondlongsegmentfire-reject,detourpartial24points is notproofbudgetexhaustion. Root independentlyverified every154payloadhash/bytes+INDEXcoverage and1470source/capsule. Later226414→227251 diagnosedstop and1a safe-leg experiments are excluded from thisclosedfirstpackage. SDKtrace includestransientnoops; actualhits/world provide effectproof. No threefamily or unseen acceptance; originaluncommittedgap retained."
+    },
+    {
+      "file": "bootstrap-field-screen-retreat-844-natural-pair-evidence-20261016.tar.gz",
+      "bytes": 33003131,
+      "sha256": "5298d3f365989a24d4b81dc9e8c5b09ea59fb9156f5c40e71f43ebeecb812e0d",
+      "indexedPayloadFiles": 830,
+      "archiveRegularFiles": 831,
+      "payloadManifest": "bootstrap-field-screen-roads-ade-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Fixed84474d599f1886ca0ff32b3edf4897fcdbce9e21 overade41241. Rootruntimef5081ad3cc012f7f4a442383f4818ed23281cc37 selected1467 sourcefiles byteequal844; fourproductionfiles plus1test/2actualfixtures only.",
+      "classification": "Full natural3AI matched continuation from sameactual15255 ab0-derivedknownworld, eachown600tickfocus→15855fullworld/id/3mem→naturalterminal. Baselineade44340p1WIN/p0native65loss,2ownlancersremainbut0buildings;84496245p0WIN/p0native57loss,enemyP1/P2strict0units0buildings,own42permanentlive/25buildings/3halls. Actualrider4294 survives15896baselinefatality to37186candidatefatality,level3/13kills635xp,notterminalsurvivor. Focus4hits51HP/noincoming vsbaseline2hits25/14incoming;wholefocusdamage395vs884 andenemydeaths2vs4 preservecost. Allowner nativeunitsLostDelta equals uniqueconfirmeddeathledger;11/13provisional rows subsequentlyconfirmed,notdoublecounted. Source1464/1467 andfull497frozen archive/gitdeps exact,original184approvedmanifest unchanged. Authorfinal39/tsc0,root137/9files+tsc0 separatelyattributed;333sixravagerreds/v2threefootmanreds andearlierfalsearrivalcause retained. No CD/range/camp/think/opponent weakening. This is NOT currentruntime ordinary0, newseed, generalization or three-family acceptance; olde56643714win andab041057loss stayseparate. Root independentlyverifiedall830payloadSHA/bytes,exact831coverage andactualfinal/rawledger. Originaluncommittedgap retained."
+    }
+  ],
+  "copiedSupportingFiles": [
+    {
+      "file": "root-source-integration.json",
+      "sha256": "dc173a1ebe5a8d3ee572e4b909154abdf179d9420dbedac7112e893455652e7b"
+    },
+    {
+      "file": "root-native-pair-and-archive-review.json",
+      "sha256": "0a63455f6cf97134721b3c57d20d101f27a9de76cef96c0c51e037d95339773f"
+    },
+    {
+      "file": "root-137-related-tests.log",
+      "sha256": "3a178e0a728c88321d510f61d44354cddf8b67729520f234b52fa657c8d89b5a"
+    },
+    {
+      "file": "root-tsc.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "first-test-scope-erratum.json",
+      "sha256": "dbb13142e12a5dae3934fc2f8bb4023550c55fe09c70b866c582cfa1448c63b9"
+    },
+    {
+      "file": "first-wrong-scope-tests.log",
+      "sha256": "0d9162c995c2307f0cfeeac4cde3a29facd9c93ea46b7388f30e71499b143560"
+    },
+    {
+      "file": "coastal-first-root-review.json",
+      "sha256": "494a25c4a3ec0eb9beaf41db08c0ac05aaab6332659de6e3687cc1fa101ddc00"
+    },
+    {
+      "file": "coastal-first-archive-review.json",
+      "sha256": "99139616d06c6553288dcecbadafedd3366663f9f62d9c819e249074c53774c3"
+    },
+    {
+      "file": "actual-226650-capital-prospects.json",
+      "sha256": "538bbfb159bf9a6e1b59995196b30fd9dd14e0ae192ca140df657e3649643330"
+    },
+    {
+      "file": "unpaid-hall-normal-runner-review.json",
+      "sha256": "ba7b89842264f5b148804b3ffe6626f59f59a448ca8233b75f5b10cd33aee040"
+    },
+    {
+      "file": "rejected-double-reserve-hypothesis.json",
+      "sha256": "c879871eb20bd929df755afe7952a4c3e37e4bec95a8c852b8caa3f09a2df421"
+    },
+    {
+      "file": "rejected-double-reserve.patch",
+      "sha256": "f00d082eba68cfec9ca1a2641a124c92ebca6afdd7bd1cb669dbdfc78dd1e169"
+    },
+    {
+      "file": "bare-economy-unpaid-query.json",
+      "sha256": "05eda0ec8a3c95b03fb6ad7bc13089fb53ffefbf9e09cf094a8a667acd88324b"
+    }
+  ]
+}

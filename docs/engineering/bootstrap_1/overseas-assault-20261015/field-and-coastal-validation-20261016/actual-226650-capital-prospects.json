@@ -1,0 +1,81 @@
+{
+  "classification": "Root readonly actual226650 capital and cutter capability query. No Game/step/issue/fullP0/voyage query; static station/sea road is not actual arrival, native voyage proof, bounty earned, income, hall or win.",
+  "head": "af010be642b8e2dc5c1054d0cc17131957764e05",
+  "input": "/workspace/.playtest/coastal-objectives-ade-20261016/downstream-blockage-readonly/frames/226650-before-p0.json.gz",
+  "inputSHA256": "32b23f444a0e9a5aaaac634615c8221fa7c9e611b7512f3073869d3e56a2f8ff",
+  "sourcePre": {
+    "files": 1470,
+    "changed": []
+  },
+  "sourcePost": {
+    "files": 1470,
+    "changed": []
+  },
+  "inputWorldId3MemUnchanged": true,
+  "tick": 226650,
+  "gold": 377.33,
+  "hallCost": 400,
+  "hasMineIncomePredicate": false,
+  "cutter": {
+    "id": "unit-p0-cutter-140825",
+    "kind": "cutter",
+    "x": 4557.7416081506235,
+    "y": 6494.229836001596,
+    "hp": 110,
+    "capability": {
+      "armed": true,
+      "range": 264,
+      "dps": 7.6923076923076925
+    },
+    "intrinsicAttack": true,
+    "installedWeapons": [],
+    "order": {
+      "type": "move",
+      "x": 5667.682466732791,
+      "y": 8786.67300734841
+    }
+  },
+  "rows": [
+    {
+      "mine": {
+        "id": "gold-satellite-2",
+        "x": 2984.9755870265476,
+        "y": 5986.075490940232,
+        "amount": 7500
+      },
+      "netGold": 1702.5,
+      "eligible": true,
+      "allyClaim": false,
+      "anyHallNear": false,
+      "hallSite": {
+        "x": 2992,
+        "y": 5776
+      },
+      "capitalGates": true,
+      "guards": [
+        {
+          "id": "satellite-guard-2-0",
+          "kind": "murlocHunter",
+          "hp": 7,
+          "pose": {
+            "x": 3118.9090832190914,
+            "y": 6092.197910216403
+          },
+          "bounty": 45,
+          "cutterDistance": 1493.944009711006
+        },
+        {
+          "id": "satellite-guard-2-1",
+          "kind": "murlocHunter",
+          "hp": 20,
+          "pose": {
+            "x": 3040.089087445244,
+            "y": 6136.917781012144
+          },
+          "bounty": 45,
+          "cutterDistance": 1559.14754858037
+        }
+      ]
+    }
+  ]
+}

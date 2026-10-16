@@ -1,0 +1,7 @@
+{
+  "utc": "2026-10-16T05:19:22.755365+00:00",
+  "reason": "Initial Vitest positional filters also collected old .playtest captured source trees. Original log retained. Supported write_stdin Ctrl-C ended only session50916 with exit130; no gameplay process stopped. Correct source-only rerun session53943 uses --dir src/ai/bootstrap_1.",
+  "originalLog": "root-related-tests.log",
+  "initialProcessCheck": "Readlink /proc/cwd unavailable; no escalation or repeat. Used supported running tool session instead.",
+  "noFirstRunCountOrGreenClaim": true
+}

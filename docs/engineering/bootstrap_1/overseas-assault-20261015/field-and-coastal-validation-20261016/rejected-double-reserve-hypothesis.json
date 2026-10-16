@@ -1,0 +1,20 @@
+{
+  "utc": "2026-10-16T05:19:22.755365+00:00",
+  "classification": "REJECTED root hypothesis: no production fix accepted. Bare direct economy/helper call bypassed normal script-runner shadow reservation. Adding400 again would double reserve. Original red and changed3green only describe the invalid bare-call contract, not an actual baseline policy bug or improvement.",
+  "base": "ade412414d9232206f39e20f0182f0086605433c",
+  "patch": "rejected-double-reserve.patch",
+  "patchSHA256": "f00d082eba68cfec9ca1a2641a124c92ebca6afdd7bd1cb669dbdfc78dd1e169",
+  "isolatedControlRestoredClean": true,
+  "rootProductionBudgetUnchanged": true,
+  "sourceFacts": [
+    "Native build order remains unpaid until foundation, then changes to repair.",
+    "Normal bootstrap3families route through policy/script-runner.ts, which subtracts every own build order cost from economySnapshot before economic scripts.",
+    "naval tactics outfitCommands onlyselectjob/move/pickup/transfer/board, never buy equipment. Gun purchase is an economy want and sees adjusted budget."
+  ],
+  "negativeEvidence": "ade-original-unpaid-query.json is one raw direct economy plan/native construction replay, not normal3AI; source unchanged. It cannot prove usable normal budget.",
+  "tests": {
+    "originalNewAssertion": "red expected400 received0; protocol-invalid direct raw entry",
+    "modifiedIsolatedCandidate": "3/3green44.56s; not meaningful production bugfix evidence"
+  },
+  "next": "Preserve diagnostic/patch/erratum, do not integrate. Reviewer is closing sourceflow report. No more archive sweep/native required."
+}
