@@ -12,6 +12,7 @@ import { SUMMONING_UNIT_KINDS } from '../policy/versions';
 import { summonHost } from './summon-host';
 import { v6AssaultStagePoint } from '../policy/v6/general';
 import { groundScreenMoves } from './ground-screen-goal';
+import { casterScreenOutsideFixedFire } from './caster-fixed-fire';
 
 function advancingScreen(front: Unit[], center: Point, target: Point) {
   const toward = { x: target.x - center.x, y: target.y - center.y };
@@ -83,7 +84,7 @@ function planSummonerFormation(snapshot: GameSnapshot, owner: PlayerId, options:
 export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const commands = planSummonerFormation(snapshot, owner, options);
   const released = medicalRecoveryReleasedUnitIds(snapshot, owner, options);
-  return groundScreenMoves(snapshot, owner, options,
+  return casterScreenOutsideFixedFire(snapshot, owner, options, groundScreenMoves(snapshot, owner, options,
     releaseMedicalBackline(snapshot, owner, options, readV6Intel(snapshot, owner, options).home,
-      units(snapshot, owner).filter(unit => released.has(unit.id)), commands));
+      units(snapshot, owner).filter(unit => released.has(unit.id)), commands)), released);
 }

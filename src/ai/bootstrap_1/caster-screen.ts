@@ -14,6 +14,7 @@ import { recoveryArrivalFilter } from './recovery-arrival';
 import { medicalEscapeRoadAllows, medicalRoadIsSafe } from './medical-task-safety';
 import { mountedEscape, mountedMicro, mountedTargetOrder, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 import { groundScreenMoves } from './ground-screen-goal';
+import { casterScreenOutsideFixedFire } from './caster-fixed-fire';
 
 /** A ranged caster can outmaneuver slower melee pursuers while its screen is absent. */
 export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -34,9 +35,10 @@ export function planBootstrapCasterScreen(snapshot: GameSnapshot, owner: PlayerI
   const commands = planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front,
     units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), casterMeleeMicro(snapshot, owner, options));
   const released = medicalRecoveryReleasedUnitIds(snapshot, owner, options);
-  return groundScreenMoves(snapshot, owner, options, released.size === 0 ? commands
+  return casterScreenOutsideFixedFire(snapshot, owner, options,
+    groundScreenMoves(snapshot, owner, options, released.size === 0 ? commands
     : releaseMedicalBackline(snapshot, owner, options, home,
-      units(snapshot, owner).filter(unit => released.has(unit.id)), commands));
+      units(snapshot, owner).filter(unit => released.has(unit.id)), commands)), released);
 }
 
 /** The current mainland/naval backline owner replaces rejected medical work. */
