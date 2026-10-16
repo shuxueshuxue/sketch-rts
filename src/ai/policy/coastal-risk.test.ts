@@ -6,6 +6,7 @@ import { coastalRefuge, outmatchingCoast } from './coastal-risk';
 import { headingDifference, hullFits } from '../../shared/ship-navigation';
 import { planNavalTactics } from './naval';
 import { createBuilding } from '../../shared/map';
+import { boardUnit, syncDecks } from '../../shared/decks';
 
 function shore() {
   const game=createGame('bareDuel',{aiPlayers:[]});
@@ -50,8 +51,11 @@ describe('fleet coastal risk',()=>{
   });
   it('finishes the saved escape before reacquiring targets or returning a damaged hull to port',()=>{
     const {game,ship,context,memory}=shore();
+    const defender=game.spawnUnit('player','footman',ship.x,ship.y);
+    expect(boardUnit(ship,defender,game.units)).toBe(true);syncDecks(game.units);
     game.buildings.push(createBuilding('yard','player','shipyard',800,2700,true));
     const initial=planNavalTactics(snapshotGame(game),'player',context());
+    expect(initial).toContainEqual({type:'holdPosition',unitIds:[defender.id]});
     for(const command of initial)issuePlayerCommand(game,'player',command);
     const retreat=memory.naval!.coastalRetreat![ship.id]!;
     expect(retreat).toBeDefined();
@@ -67,6 +71,7 @@ describe('fleet coastal risk',()=>{
     const before=ship.hp;
     for(let i=0;i<600;i++)stepGame(game);
     expect(ship.hp).toBe(before);
+    expect(defender.deck?.shipId).toBe(ship.id);
   });
   it('chooses a side exit instead of a full turn back through the coastal firing zone',()=>{
     const {game,ship,context}=shore();ship.sailing!.heading=Math.PI;

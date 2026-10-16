@@ -1,0 +1,88 @@
+[
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "naval",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-priest-3174"
+      ],
+      "x": 6915.086820337932,
+      "y": 2613.6150894665943,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-10111",
+      "ability": "summon",
+      "x": 7186.648357093228,
+      "y": 6642.724700411413
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-31259",
+      "ability": "summon",
+      "x": 6516.650521585375,
+      "y": 2846.43883823426
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-39390",
+      "ability": "summon",
+      "x": 6525.091325060794,
+      "y": 2854.827477567933
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-40241",
+      "ability": "summon",
+      "x": 6572.470214789351,
+      "y": 2764.9602485050264
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-41089",
+      "ability": "summon",
+      "x": 6572.470214789351,
+      "y": 2764.9602485050264
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-summoner-44159",
+      "ability": "summon",
+      "x": 6572.470214789351,
+      "y": 2764.9602485050264
+    }
+  }
+]

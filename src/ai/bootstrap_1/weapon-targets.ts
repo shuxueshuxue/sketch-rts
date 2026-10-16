@@ -1,3 +1,4 @@
+import { preserveFerryBoardingFloor } from './ferry-summon-floor';
 import { strikePoint } from '../../shared/combat-geometry';
 import { shipWeaponPose } from '../../shared/ship-geometry';
 import { ABILITY_DEFS, unitMover } from '../../shared/catalog';
@@ -28,8 +29,9 @@ const scoreWeaponTarget: WeaponTargetScore = (snapshot, caster, def, targets, ta
 export const planBootstrapAbilities: typeof import('../policy/spell-tactics').planAbilityCommands = (snapshot, owner, options) => {
   const recovering = medicalRecoveryCastingUnitIds(snapshot, owner, options);
   // Immediate heals execute during command issue; recovery's allocated spell must be the only heal from this caster.
-  return planAbilityCommandsWithWeaponScore(snapshot, owner, options, scoreWeaponTarget).filter(command =>
+  const commands = planAbilityCommandsWithWeaponScore(snapshot, owner, options, scoreWeaponTarget).filter(command =>
     command.type !== 'cast' || ABILITY_DEFS[command.ability].behavior !== 'heal' || !recovering.has(command.unitId));
+  return preserveFerryBoardingFloor(snapshot, owner, options, commands);
 };
 
 export const bootstrapAbilities: AiScript = { id: 'abilities', phase: 'tactics', run: planBootstrapAbilities };

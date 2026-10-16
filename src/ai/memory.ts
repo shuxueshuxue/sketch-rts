@@ -56,7 +56,7 @@ export type NavalPlanMemory = {
   medicalRendezvous?: Record<string, { healerId: string; order: { type: 'move'; x: number; y: number; avoidCombat?: boolean } | { type: 'follow'; targetId: string } }>;
   deckRecovery?: Record<string, { shipId: string; point: {x:number;y:number}; hold: {x:number;y:number}; foeIds: string[] }>;
   combat?: Record<string, { targetId: string; commandTargetId?: string }>;
-  coastalRetreat?: Record<string, { x: number; y: number; astern?: true }>;
+  coastalRetreat?: Record<string, { x: number; y: number; astern?: true; boarding?: true; pursuit?: true }>;
   coastalVoyages?: Record<string, { targetId: string; goal: {x:number;y:number}; waypoint: {x:number;y:number}; proof: "complete" | "prefix" }>;
   muster?:{at:{x:number;y:number};goal:{x:number;y:number};leader:string;sinceTick:number;launched:boolean;heading?:number};
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};

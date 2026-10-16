@@ -1,5 +1,6 @@
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, unitRules } from "../../shared/catalog";
 import { aimingProfile } from "../../shared/aiming";
+import { checkCommandLegality } from "../../shared/sim/command-validation";
 import { isShipKind } from "../../shared/ship-geometry";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
@@ -62,10 +63,11 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     if (rawScriptCommands.length === 0) continue;
     // Boarding excludes unrelated tactics. Its owning assignment can still
     // steer a physical approach or make room before resuming the crossing.
+    const unavailableBoarders = boardingUnitIds.filter(id => claims.get(id) !== script.id);
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, new Set([...movedUnitIds,
-        ...boardingUnitIds.filter(id=>claims.get(id)!==script.id)]), (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+        ...unavailableBoarders]), (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1, snapshot, owner, unavailableBoarders);
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
@@ -123,7 +125,18 @@ function asCommands(result: GameCommand | GameCommand[] | undefined): GameComman
   return Array.isArray(result) ? result : [result];
 }
 
-function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: (command: Extract<GameCommand, { type: "attackMove" }>) => number): GameCommand[] {
+/** A legal ready in-range heal executes during public command issue and leaves
+ * its physical assignment intact. Other spells keep their original ownership;
+ * queued and walk-to-heal commands also need the caster's movement slot. */
+function immediateHealingCast(snapshot: GameSnapshot, owner: PlayerId, command: Extract<GameCommand, { type: "cast" }>): boolean {
+  if (command.ability !== "heal" || command.queued || checkCommandLegality(snapshot, owner, command)) return false;
+  const caster = snapshot.units.find(unit => unit.id === command.unitId);
+  const target = snapshot.units.find(unit => unit.id === command.targetId);
+  return !!caster && !!target && target.hp > 0
+    && Math.hypot(caster.x - target.x, caster.y - target.y) <= ABILITY_DEFS.heal.range;
+}
+
+function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: (command: Extract<GameCommand, { type: "attackMove" }>) => number, snapshot: GameSnapshot, owner: PlayerId, unavailableBoarders: readonly string[]): GameCommand[] {
   const filtered: GameCommand[] = [];
   for (const command of commands) {
     if (command.type === "attack") {
@@ -139,7 +152,8 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
     } else if (command.type === "cast") {
-      if (!movedUnitIds.has(command.unitId)) filtered.push(command);
+      if (!movedUnitIds.has(command.unitId) || !unavailableBoarders.includes(command.unitId)
+        && immediateHealingCast(snapshot, owner, command)) filtered.push(command);
     } else {
       filtered.push(command);
     }

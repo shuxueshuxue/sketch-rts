@@ -13,12 +13,13 @@ import { pendingDeckBoarding } from '../policy/transfer-lanes';
 import { navalServices } from '../policy/naval-services';
 import { isEnemyOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
-import type { AiPolicyContext } from '../policy/types';
+import type { AiCommandEntry, AiPolicyContext } from '../policy/types';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { NavalPlanMemory } from '../memory';
 import { THINK_TICKS } from './mounted-micro';
 import { unitAbilities } from '../../shared/unit-abilities';
-import { ABILITY_DEFS, SLOW_PACE } from '../../shared/catalog';
+import { ABILITY_DEFS, SLOW_PACE, unitMover } from '../../shared/catalog';
+import { checkCommandLegality } from '../../shared/sim/command-validation';
 import { autocastEnabled } from '../../shared/autocast';
 import { weaponRules } from '../../shared/equipment';
 import { isStaggered } from '../../shared/push';
@@ -60,10 +61,42 @@ function ownPost(unit: Unit, post: Post) {
       && unit.orderQueue?.length === 1 && hold(unit.orderQueue[0]!);
 }
 
+function enablesCrewCharge(command: GameCommand, unit: Unit): boolean {
+  return command.type === 'setAutocast' && command.enabled
+    && ABILITY_DEFS[command.ability].behavior === 'charge' && command.unitIds.includes(unit.id);
+}
+
+/** A later accepted charge assignment keeps the same priority as deck casualty
+ * recovery. Naval's only nonqueued holds on land crew already aboard combat
+ * hulls are its coastal withdrawal holds. Hull holds, transfer queues and land
+ * recovery posts have separate owners and remain unchanged. */
+export function preserveLateCrewCharge(snapshot: GameSnapshot, owner: PlayerId, entries: AiCommandEntry[]): AiCommandEntry[] {
+  const switches = entries.flatMap(({ command }, index) => command.type === 'setAutocast' && command.enabled
+    && ABILITY_DEFS[command.ability].behavior === 'charge' && !checkCommandLegality(snapshot, owner, command)
+    ? [{ command, index }] : []);
+  if (!switches.length) return entries;
+  const units = new Map(snapshot.units.map(unit => [unit.id, unit]));
+  let changed = false;
+  const result = entries.flatMap((entry, index): AiCommandEntry[] => {
+    const command = entry.command;
+    if (entry.scriptId !== 'naval' || command.type !== 'holdPosition' || command.queued) return [entry];
+    const unitIds = command.unitIds.filter(id => {
+      const unit = units.get(id), ship = unit?.deck && units.get(unit.deck.shipId);
+      return !unit || unit.owner !== owner || unitMover(unit.kind) !== 'land' || !ship || !combatHull(ship)
+        || !switches.some(next => next.index > index && unitAbilities(unit).includes(next.command.ability)
+          && enablesCrewCharge(next.command, unit));
+    });
+    if (unitIds.length === command.unitIds.length) return [entry];
+    changed = true;
+    return unitIds.length ? [{ ...entry, command: { ...command, unitIds } }] : [];
+  });
+  return changed ? result : entries;
+}
+
 /** Only order-changing commands preempt this task; equipment/autocast settings do not move a crew member. */
 function plannedTask(commands: readonly GameCommand[], unit: Unit, ship: Unit) {
   return commands.some(command => {
-    if (command.type === 'setAutocast') return command.enabled && ABILITY_DEFS[command.ability].behavior === 'charge' && command.unitIds.includes(unit.id);
+    if (command.type === 'setAutocast') return enablesCrewCharge(command, unit);
     if (command.type === 'setStance' || command.type === 'learnVeteranSkill') return false;
     if ('unitId' in command && command.unitId === unit.id) return true;
     if ('unitIds' in command && command.unitIds.includes(unit.id)) return true;

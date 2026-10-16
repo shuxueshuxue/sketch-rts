@@ -1,10 +1,11 @@
 import {mineProspect} from '../../shared/mining-prospect';
 import {shipMotionLimits} from '../../shared/ship-motion';
-import {coastalVoyagePrefixSafe} from './coastal-voyage';
-import { coastalBatteryWaypoint, coastalBombardment } from './coastal-bombardment';
+import {coastalFireDisks, coastalFireSegmentClear, coastalVoyagePrefixSafe} from './coastal-voyage';
+import { coastalBatteryAttackCommand, coastalBatteryMovePending, coastalBatteryWaypoint, coastalBombardment } from './coastal-bombardment';
 import { miningHallSite } from "../../shared/mining-site";
 import { automaticShoreTargetReachable, shoreFiringStation } from '../../shared/shore-fire';
-import { coastalAsternPassageClear, coastalAsternStep, coastalRefuge, outmatchingCoast } from './coastal-risk';
+import { coastalAsternPassageClear, coastalAsternStep, coastalRefuge, coastalWithdrawalPassage, coastalWithdrawalPrefixSafe, outmatchingCoast } from './coastal-risk';
+import { coastalOffshoreRefuge, coastalWithdrawalArrived, coastalWithdrawalCrewCommands, outmatchingBoarders, outmatchingCoastalPursuers } from './coastal-boarding';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute, routeArrivals, routeTravelTicks } from '../../shared/route-selection';
@@ -480,21 +481,29 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
     const stations=fleetStations(snapshot,fighters.filter(ship=>!escorts.has(ship.id)&&!bombardments.has(ship.id)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
     for (const ship of fighters) {
         const foes = foesForCombat();
+        let releasedWithdrawalRoad=false;
         const withdrawal=navalMemory(options).coastalRetreat?.[ship.id];
         if (withdrawal) {
+            const unsafeRoad=!withdrawal.astern && !!ship.sailing?.route?.points.length
+                && !coastalWithdrawalPrefixSafe(snapshot,ship,ship.sailing.route,options);
             // Finish leaving the firing zone before another coastal target or
             // the repair trip can replace the escape maneuver. This intent is
             // saved with policy memory, so restoring a match keeps the order.
             const continuing=withdrawal.astern
                 ? distance(ship,withdrawal)>MOVE_ORDER_ARRIVAL_RANGE && coastalAsternPassageClear(snapshot,ship,withdrawal,options)
-                : distance(ship,withdrawal)>70 && !outmatchingCoast(snapshot,owner,ship,withdrawal,options).length;
+                : (withdrawal.boarding || withdrawal.pursuit ? !coastalWithdrawalArrived(ship,withdrawal) : distance(ship,withdrawal)>70)
+                    && !outmatchingCoast(snapshot,owner,ship,withdrawal,options).length && !unsafeRoad;
             if (continuing) {
+                commands.push(...coastalWithdrawalCrewCommands(snapshot,ship));
                 const sameMove=ship.order.type==='move' && distance(ship.order,withdrawal)<1e-5
                     && !!ship.order.avoidCombat===!withdrawal.astern;
                 if (!sameMove) commands.push({type:'move',unitIds:[ship.id],x:withdrawal.x,y:withdrawal.y,...(withdrawal.astern?{}:{avoidCombat:true})});
                 continue;
             }
             delete navalMemory(options).coastalRetreat![ship.id];
+            // A safe old endpoint does not authorize a replacement native
+            // road through the enemy. Release that road before choosing again.
+            if (unsafeRoad) { commands.push({type:'stop',unitIds:[ship.id]}); releasedWithdrawalRoad=true; }
         }
         const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === ship.id);
         const aboard = shipPassengers(snapshot.units, ship);
@@ -558,20 +567,49 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
         const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));
         const candidates = attackers.length ? attackers : threats.length ? threats : !gathering && (!boat || station && distance(ship,station)<250) ? targets.filter(target=>!boat || station && distance(target,station)<450) : [];
-        const bombardment=!candidates.length ? bombardments.get(ship.id) : undefined;
+        const batteryPlan=bombardments.get(ship.id);
+        const bombardment=!candidates.length ? batteryPlan : undefined;
         const target = fleetTarget(ship, bombardment ? [bombardment.target] : candidates, navalMemory(options));
-        const attackStation=bombardment ?? (target && (!('order' in target) || unitMover(target.kind)==='land') ? shoreFiringStation(snapshot,ship,target) : undefined);
+        // A station may become locally fireable before its ordinary move
+        // finishes. Keep only the same selected target's published leg;
+        // another engagement still replaces the battery task normally.
+        const pendingBattery=target && batteryPlan?.target.id===target.id && coastalBatteryMovePending(ship,batteryPlan,options)
+            ? batteryPlan : undefined;
+        const approach=pendingBattery ?? bombardment;
+        const attackStation=approach ?? (target && (!('order' in target) || unitMover(target.kind)==='land') ? shoreFiringStation(snapshot,ship,target) : undefined);
         const destination=attackStation ?? station;
         const immediateCoast=outmatchingCoast(snapshot,owner,ship,ship,options);
         const destinationCoast=immediateCoast.length ? immediateCoast : destination ? outmatchingCoast(snapshot,owner,ship,destination,options) : [];
+        const here={x:ship.x,y:ship.y,heading:ship.sailing!.heading};
+        // A public attack on this hull or its exposed crew already supplies
+        // pursuit intent. Waiting for the proximity warning can leave less
+        // time than the hull needs to turn away. Boarding retains its warning;
+        // both reasons keep the same odds, ordinary road and native arrival.
+        // A close-coast escape without either saved reason keeps its priority.
+        const earlyWithdrawal=!immediateCoast.length || withdrawal?.boarding || withdrawal?.pursuit;
+        const boarders=earlyWithdrawal && !coastalFireSegmentClear(here,here,coastalFireDisks(snapshot,ship,options))
+            ? outmatchingBoarders(snapshot,ship,options) : [];
+        const pursuers=earlyWithdrawal && !boarders.length ? outmatchingCoastalPursuers(snapshot,ship,options) : [];
+        if (boarders.length || pursuers.length) {
+            const refuge=coastalOffshoreRefuge(snapshot,ship,boarders.length ? boarders : pursuers,options);
+            commands.push(...coastalWithdrawalCrewCommands(snapshot,ship));
+            if (refuge) {
+                (navalMemory(options).coastalRetreat ??= {})[ship.id]={x:refuge.x,y:refuge.y,
+                    ...(boarders.length ? {boarding:true as const} : {pursuit:true as const})};
+                commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,avoidCombat:true});
+            } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
+            continue;
+        }
         if (destinationCoast.length) {
             if (immediateCoast.length) {
                 const astern=coastalAsternStep(snapshot,ship,immediateCoast,options);
-                const refuge=astern ?? coastalRefuge(snapshot,ship,immediateCoast);
+                const refuge=astern ?? coastalRefuge(snapshot,ship,immediateCoast,
+                    goal=>!!coastalWithdrawalPassage(snapshot,ship,goal,options));
                 if (refuge) {
                     (navalMemory(options).coastalRetreat ??= {})[ship.id]={x:refuge.x,y:refuge.y,...(astern?{astern:true as const}:{})};
-                    if (astern || needsMove(ship,refuge)) commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,...(astern?{}:{avoidCombat:true})});
-                }
+                    commands.push(...coastalWithdrawalCrewCommands(snapshot,ship));
+                    if (astern || releasedWithdrawalRoad || needsMove(ship,refuge)) commands.push({type:'move',unitIds:[ship.id],x:refuge.x,y:refuge.y,...(astern?{}:{avoidCombat:true})});
+                } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
             } else if (ship.order.type!=='hold') commands.push({type:'holdPosition',unitIds:[ship.id]});
             continue;
         }
@@ -584,8 +622,8 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         // The planner chooses the engagement area; mechanical attack-move
         // chooses and revises threats between planning frames. A player's
         // explicit attack command continues to retain its chosen target.
-        if (bombardment && distance(ship,bombardment)>70) {
-            const waypoint=coastalBatteryWaypoint(snapshot,ship,bombardment,options);
+        if (approach && (pendingBattery || distance(ship,approach)>70)) {
+            const waypoint=coastalBatteryWaypoint(snapshot,ship,approach,options);
             if(waypoint){
                 const unsafe=!!ship.sailing?.route?.points.length && !coastalVoyagePrefixSafe(snapshot,ship,ship.sailing.route,options);
                 if(unsafe)commands.push({type:'stop',unitIds:[ship.id]});
@@ -594,7 +632,9 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             else if(ship.order.type!=='hold')commands.push({type:'holdPosition',unitIds:[ship.id]});
         }
         else if (target) {
-            const command = fleetAttackCommand(ship, target, navalMemory(options));
+            const command = batteryPlan?.target.id===target.id && !('order' in target)
+                ? coastalBatteryAttackCommand(ship,target,navalMemory(options))
+                : fleetAttackCommand(ship, target, navalMemory(options));
             if (command) commands.push(command);
         }
         else if (!target) {
@@ -741,19 +781,20 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             delete mission.progress;
         }
     }
-    const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
+    const passengers=shipPassengers(snapshot.units,boat), aboardIds=passengers.map(unit=>unit.id).join('|'), progress=mission.progress;
+    const permanentCargoKey=passengers.filter(unit=>unit.expiresTick===undefined).map(unit=>unit.id).join('|');
     // A precise berth turn moves the hull while its center stays still. Measure
     // the bow's angular travel against the same distance gate as translation.
-    if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32
+    if(!progress || progress.phase!==mission.phase || progress.crew!==permanentCargoKey || distance(boat,progress)>32
         || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:permanentCargoKey};
     else if(snapshot.tick-progress.tick>seconds(40) && !(mission.purpose==='assault'
         && (mission.phase==='sailing' || mission.phase==='loading' && aboardIds.length>0)
         && Object.entries(ferries).some(([id,other])=>id!==boat.id && other.purpose==='assault' && other.phase===mission.phase
             && other.targetId===mission.targetId && other.progress && snapshot.tick-other.progress.tick<=seconds(40)))){
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
         if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:aboardIds};
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:permanentCargoKey};
         return cancelFerry(snapshot,boat,mission,options);
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
@@ -1400,9 +1441,21 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
             return crew.some(permanentCombat) || loading ? [mission.targetGround] : [];
         });
         const committedIsland=(target:Building)=>committed.some(ground=>sameGround(map,ground,target));
+        // A nearer defended island must not hide another island the present
+        // army meets the existing force estimate. Keep an invasion's island first;
+        // when none is ready, retain the ordinary distance-ranked objective.
+        const readiness:Array<{ground:Point;ready:boolean}>=[];
+        const readyIsland=(target:Building)=>{
+            const known=readiness.find(entry=>sameGround(map,entry.ground,target));
+            if(known)return known.ready;
+            const ready=assaultExpedition(snapshot,owner,options,target).ready;
+            readiness.push({ground:target,ready});
+            return ready;
+        };
         let assault: AssaultPlan | undefined;
         if (targets.length > 0) {
-            for (const target of targets.sort((a, b) => Number(committedIsland(b))-Number(committedIsland(a)) || distance(a, home) - distance(b, home))) {
+            for (const target of targets.sort((a, b) => Number(committedIsland(b))-Number(committedIsland(a))
+                || Number(readyIsland(b))-Number(readyIsland(a)) || distance(a, home) - distance(b, home))) {
                 const landing = walkableGoal(map, target.x, target.y, "sea");
                 if (!isWalkable(map, landing.x, landing.y, "sea"))
                     continue;

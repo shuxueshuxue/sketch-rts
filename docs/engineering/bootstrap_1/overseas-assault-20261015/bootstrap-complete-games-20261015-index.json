@@ -1047,6 +1047,18 @@
       "payloadHashesVerified": true,
       "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
       "classification": "True ordinary0, first-use generatedpineshade v9_knight Grove side0 vs normal frozenv5 Ember. NaturalP0win21351, enemy0units0buildings; own49permanent/5fullhalls/15permanentdeaths. Complete97terminal plus1cleanup-not-death and111counter checks. source1517/frozen497/manifest184/rules2 prepost exact, actualexit0. Full170raw/all2mem/world/id/setup/drivers plus nested1517+497, actualroot-viewed13800PNG. Selectedsource/offline-save recovery, not complete Git object repository; exact Gitarchive stderr retained. Seed nowdeveloped; no threefamily/fullmap/sixpair acceptance."
+    },
+    {
+      "file": "bootstrap-coastal-ready-island-5b5-source1557-focus6000-20261016-evidence.tar.gz",
+      "bytes": 26408252,
+      "sha256": "c52b8b7850ab6b982744a1b9edf665f7876b6dadac6e44cef1683c2f569995e5",
+      "indexedPayloadFiles": 619,
+      "archiveRegularFiles": 621,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "18e016a4a0b9c88a69f9742f3de57023c91bbf019bdf0dbd2881bf86e4841a20",
+      "payloadHashesVerified": true,
+      "source": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+      "classification": "Fullselected1557/frozen497184R2 complete source, actual232unique plus noEmit0 and initialconfig0case failed startup retained. Changed-code329400→3354006000 normal3AI actualexit0; no4268boarding/no trooplanding/no winner, all10sameHPstillcarrierreturn, stats/resources/buildings/wallet unchanged.45gzipmembers8276rows closed CRC/SHA exact. Earlier329115 restore notexecuted. Active separatefirstuseordinary0 notincluded. Not completeGitDB/acceptance; originaluncommittedgap retained."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1598,49 +1610,47 @@
     "threeFamilyAcceptance": false
   },
   "currentRuntimeOrdinary0": {
-    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
-    "selectedFiles": 1517,
-    "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+    "source": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+    "selectedFiles": 1557,
+    "status": "in_progress_at_this_evidence_checkpoint",
+    "asOfUTC": "2026-10-16T18:19:03.685794+00:00",
     "ordinary0": true,
-    "family": "v9_knight",
+    "family": "v9_summoner",
     "race": "grove",
-    "side": 0,
-    "factory": "pineshade",
-    "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
-    "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+    "factory": "twoShores",
+    "mapScope": "Official map-family unseen generated variant at factory; not fixed named-layout score",
+    "seed": "bootstrap_1-first-use-summoner-v7-v8-twoShores-20261016-1630z-a",
     "seedFirstUseUnseenAtFactory": true,
     "seedNowDeveloped": true,
     "opponents": [
-      "normal frozenv5 Ember"
+      "normal frozenv7 Ember",
+      "normal frozenv8 Grove"
     ],
     "startingEach": {
       "gold": 500,
       "workers": 3,
+      "supplyUsed": 3,
       "supplyCap": 8,
+      "halls": 1,
       "memory": null
     },
     "activeOwnerMemories": [
       "p0",
-      "p1"
+      "p1",
+      "p2"
     ],
     "startTick": 0,
-    "endTick": 21351,
-    "winner": "p0",
-    "naturalComplete": true,
-    "actualProcessExitCode": 0,
-    "enemyUnits": 0,
-    "enemyBuildings": 0,
-    "ownPermanentSurvivors": 49,
-    "ownFullHalls": 5,
-    "ownPermanentDeaths": 15,
-    "ownNeutralDeaths": 3,
-    "allOwnerTerminalDeaths": 97,
-    "separateDelayedCleanupUpdates": 1,
-    "counterChecksExact": 111,
-    "source1517Frozen497184Exact": true,
+    "lastObservedCheckpointTick": 58800,
+    "endTick": null,
+    "winner": null,
+    "naturalComplete": false,
+    "actualPID": 522654,
+    "actualProcessExitCode": null,
     "rulesVersion": 2,
-    "completeAcceptance": false,
-    "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
+    "source1557Frozen497184PreExact": true,
+    "postGameValidationPending": true,
+    "rawNotIncludedInArchive116": true,
+    "completeAcceptance": false
   },
   "previousRuntimeBeforeLiveManeuver": {
     "source": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
@@ -1675,67 +1685,89 @@
     "originalUncommittedRecoveryGapRetained": true
   },
   "activeRuntime": {
-    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
-    "parentRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
-    "componentCandidate": "86143dafab28180e5ff055639dd4f5561f96081d",
-    "selectedSourceConfigTestManifestFiles": 1517,
+    "source": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+    "selectedSourceConfigTestManifestFiles": 1557,
+    "rootBranch": "codex/bootstrap-1-resume-20261015",
+    "parentRuntimeSource": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "integrationScope": "51 runtime paths:40added11modified. Every1557 stagedGit blob/mode and liveSHA equals exacttested5b5. Existing shared simulation code unchanged; added pure fire geometry is used byAI. No main rules3/4 import.",
     "rulesVersion": 2,
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "frozenManifestFiles": 184,
+    "frozenFullSourceFiles": 497,
     "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
-    "integrationScope": "Only86143 14-file delta, allother1503root source files retained, whole641medical/d93/native preserved. Every1517Git/live file equals actually combined-tested source.",
     "rootValidation": {
-      "actualDistinctCases": 40,
+      "actualTestSourceHead": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+      "sourceCapSHA256": "04a05d4e0a9cfaede3d5b7ba07a666ea6a5992ebfa642dff3774df75b072c5bc",
+      "actualDistinctCases": 232,
+      "pureCases": 56,
+      "nativeRelatedCases": 176,
       "tsc1024Exit": 0,
-      "selectedSource1517PrePostExact": true
+      "root1557GitBlobModeAndLiveSHAExactToTestedSource": true,
+      "firstExternalConfigFailureZeroCasesRetained": true
+    },
+    "evidenceArchive": "bootstrap-coastal-ready-island-5b5-source1557-focus6000-20261016-evidence.tar.gz",
+    "focus6000": {
+      "ordinary0": false,
+      "source": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+      "startTick": 329400,
+      "endTick": 335400,
+      "actualProcessExitCode": 0,
+      "declaredFocusedWindow": true,
+      "naturalComplete": false,
+      "winner": null,
+      "requestedUnit4268Boarded": false,
+      "originalTenSameHPStillAboardReturningCarrier": true,
+      "matchStatsResourcesBuildingsWalletUnchanged": true,
+      "fullWorldNextIdAll3MemExecutionConfigPreserved": true,
+      "nextAllOwnerColdThink": 335400,
+      "closedGzipMembers": 45,
+      "closedRows": 8276
     },
     "ordinary0": {
-      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
-      "selectedFiles": 1517,
-      "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+      "source": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+      "selectedFiles": 1557,
+      "status": "in_progress_at_this_evidence_checkpoint",
+      "asOfUTC": "2026-10-16T18:19:03.685794+00:00",
       "ordinary0": true,
-      "family": "v9_knight",
+      "family": "v9_summoner",
       "race": "grove",
-      "side": 0,
-      "factory": "pineshade",
-      "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
-      "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+      "factory": "twoShores",
+      "mapScope": "Official map-family unseen generated variant at factory; not fixed named-layout score",
+      "seed": "bootstrap_1-first-use-summoner-v7-v8-twoShores-20261016-1630z-a",
       "seedFirstUseUnseenAtFactory": true,
       "seedNowDeveloped": true,
       "opponents": [
-        "normal frozenv5 Ember"
+        "normal frozenv7 Ember",
+        "normal frozenv8 Grove"
       ],
       "startingEach": {
         "gold": 500,
         "workers": 3,
+        "supplyUsed": 3,
         "supplyCap": 8,
+        "halls": 1,
         "memory": null
       },
       "activeOwnerMemories": [
         "p0",
-        "p1"
+        "p1",
+        "p2"
       ],
       "startTick": 0,
-      "endTick": 21351,
-      "winner": "p0",
-      "naturalComplete": true,
-      "actualProcessExitCode": 0,
-      "enemyUnits": 0,
-      "enemyBuildings": 0,
-      "ownPermanentSurvivors": 49,
-      "ownFullHalls": 5,
-      "ownPermanentDeaths": 15,
-      "ownNeutralDeaths": 3,
-      "allOwnerTerminalDeaths": 97,
-      "separateDelayedCleanupUpdates": 1,
-      "counterChecksExact": 111,
-      "source1517Frozen497184Exact": true,
+      "lastObservedCheckpointTick": 58800,
+      "endTick": null,
+      "winner": null,
+      "naturalComplete": false,
+      "actualPID": 522654,
+      "actualProcessExitCode": null,
       "rulesVersion": 2,
-      "completeAcceptance": false,
-      "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
+      "source1557Frozen497184PreExact": true,
+      "postGameValidationPending": true,
+      "rawNotIncludedInArchive116": true,
+      "completeAcceptance": false
     },
     "bootstrapComplete": false,
-    "ordinary0AtIndex114": {
-      "status": "Not yet run on this new combined source. The prior knownseed48225 win belongs to046; current officialbrokenSea summoner also stays fixed046."
-    }
+    "originalContainerUncommittedGapUnrecovered": true
   },
   "previousRuntimeBeforeDock": {
     "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
@@ -2224,6 +2256,126 @@
     },
     "unmergedCandidate": "a53fa0ff5cd5979c55e09a25d18ead200fc53392 source1553 virtual integration only; no newsource ordinary0/tests/tsc claim",
     "uncompletedSixCeTail": "6ce source1486 256200→285600 supportedmemoryCP actualexit0, two paid newhalls/newore but12newperm+3temporary deaths, enemy2hall still900; not ordinary0 or win",
+    "originalContainerUncommittedGapUnrecovered": true,
+    "bootstrapComplete": false
+  },
+  "previousRuntimeBeforeCoastalReadyIsland": {
+    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "parentRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+    "componentCandidate": "86143dafab28180e5ff055639dd4f5561f96081d",
+    "selectedSourceConfigTestManifestFiles": 1517,
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "integrationScope": "Only86143 14-file delta, allother1503root source files retained, whole641medical/d93/native preserved. Every1517Git/live file equals actually combined-tested source.",
+    "rootValidation": {
+      "actualDistinctCases": 40,
+      "tsc1024Exit": 0,
+      "selectedSource1517PrePostExact": true
+    },
+    "ordinary0": {
+      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+      "selectedFiles": 1517,
+      "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+      "ordinary0": true,
+      "family": "v9_knight",
+      "race": "grove",
+      "side": 0,
+      "factory": "pineshade",
+      "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
+      "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+      "seedFirstUseUnseenAtFactory": true,
+      "seedNowDeveloped": true,
+      "opponents": [
+        "normal frozenv5 Ember"
+      ],
+      "startingEach": {
+        "gold": 500,
+        "workers": 3,
+        "supplyCap": 8,
+        "memory": null
+      },
+      "activeOwnerMemories": [
+        "p0",
+        "p1"
+      ],
+      "startTick": 0,
+      "endTick": 21351,
+      "winner": "p0",
+      "naturalComplete": true,
+      "actualProcessExitCode": 0,
+      "enemyUnits": 0,
+      "enemyBuildings": 0,
+      "ownPermanentSurvivors": 49,
+      "ownFullHalls": 5,
+      "ownPermanentDeaths": 15,
+      "ownNeutralDeaths": 3,
+      "allOwnerTerminalDeaths": 97,
+      "separateDelayedCleanupUpdates": 1,
+      "counterChecksExact": 111,
+      "source1517Frozen497184Exact": true,
+      "rulesVersion": 2,
+      "completeAcceptance": false,
+      "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
+    },
+    "bootstrapComplete": false,
+    "ordinary0AtIndex114": {
+      "status": "Not yet run on this new combined source. The prior knownseed48225 win belongs to046; current officialbrokenSea summoner also stays fixed046."
+    }
+  },
+  "previousIndexedRuntimeOrdinary0BeforeCoastalReadyIsland": {
+    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "selectedFiles": 1517,
+    "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+    "ordinary0": true,
+    "family": "v9_knight",
+    "race": "grove",
+    "side": 0,
+    "factory": "pineshade",
+    "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
+    "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+    "seedFirstUseUnseenAtFactory": true,
+    "seedNowDeveloped": true,
+    "opponents": [
+      "normal frozenv5 Ember"
+    ],
+    "startingEach": {
+      "gold": 500,
+      "workers": 3,
+      "supplyCap": 8,
+      "memory": null
+    },
+    "activeOwnerMemories": [
+      "p0",
+      "p1"
+    ],
+    "startTick": 0,
+    "endTick": 21351,
+    "winner": "p0",
+    "naturalComplete": true,
+    "actualProcessExitCode": 0,
+    "enemyUnits": 0,
+    "enemyBuildings": 0,
+    "ownPermanentSurvivors": 49,
+    "ownFullHalls": 5,
+    "ownPermanentDeaths": 15,
+    "ownNeutralDeaths": 3,
+    "allOwnerTerminalDeaths": 97,
+    "separateDelayedCleanupUpdates": 1,
+    "counterChecksExact": 111,
+    "source1517Frozen497184Exact": true,
+    "rulesVersion": 2,
+    "completeAcceptance": false,
+    "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
+  },
+  "latestEvidenceCheckpoint116": {
+    "atUTC": "2026-10-16T18:19:03.685794+00:00",
+    "packages": 116,
+    "first115PackagesPreservedExactly": true,
+    "runtimeSource": "5b5aead30978f7a13601b3ae6be848f70a3b1493",
+    "rootSelected1557EquivalentToValidated": true,
+    "actual232AndTsc0": true,
+    "focus6000DidNotRestoreAssaultOrWin": true,
+    "ordinary0InProgressSeparateNotPackaged": true,
     "originalContainerUncommittedGapUnrecovered": true,
     "bootstrapComplete": false
   }
