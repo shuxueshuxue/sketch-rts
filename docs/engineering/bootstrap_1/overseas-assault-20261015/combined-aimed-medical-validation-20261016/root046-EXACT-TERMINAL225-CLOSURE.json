@@ -1,0 +1,145 @@
+{
+  "classification": "Same046source terminal225strictcoldclosure only; original48225P0win/46loss remainsoneordinary0. Everyrawobject comparedstreaming, perownerplanincludesall3postmem, metadataoutside4finalstatefields excludedexplicitly.",
+  "start": 48000,
+  "end": 48225,
+  "checkedAtUTC": "2026-10-16T14:03:28.487050+00:00",
+  "streams": {
+    "commands": {
+      "originalRows": 97,
+      "replayRows": 97,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "c9e9f3f1b7111057054250a0f01453bfe57ee929304d46f09cc4d5af781de735",
+      "replaySHA256": "c9e9f3f1b7111057054250a0f01453bfe57ee929304d46f09cc4d5af781de735"
+    },
+    "plans": {
+      "originalRows": 45,
+      "replayRows": 45,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "2cb47a417c6f7d03ad70f8266afda487bb4b10f79337d412ce0b436cad3a8b97",
+      "replaySHA256": "2cb47a417c6f7d03ad70f8266afda487bb4b10f79337d412ce0b436cad3a8b97"
+    },
+    "native-hits": {
+      "originalRows": 18,
+      "replayRows": 18,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "4b205add7a866db81a48605192f8cb01a28ddbc1bef7ac2c8042635bba69ed0c",
+      "replaySHA256": "4b205add7a866db81a48605192f8cb01a28ddbc1bef7ac2c8042635bba69ed0c"
+    },
+    "native-events": {
+      "originalRows": 4,
+      "replayRows": 4,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "29515377e256777fc543f87231749709762c2d2126d49f99272810f9aeff2297",
+      "replaySHA256": "29515377e256777fc543f87231749709762c2d2126d49f99272810f9aeff2297"
+    },
+    "native-deaths": {
+      "originalRows": 0,
+      "replayRows": 0,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replaySHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ship-losses": {
+      "originalRows": 0,
+      "replayRows": 0,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replaySHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "corpse-events": {
+      "originalRows": 0,
+      "replayRows": 0,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replaySHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "health-transitions": {
+      "originalRows": 0,
+      "replayRows": 0,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replaySHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "healing-effects": {
+      "originalRows": 0,
+      "replayRows": 0,
+      "differentObjects": 0,
+      "firstDifference": null,
+      "originalSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replaySHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "completeFinalStateChecks": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true
+  },
+  "firstFinalDifference": null,
+  "allExact": true,
+  "report": {
+    "classification": "Strictsame046 normal3AI terminal225cold fromoriginal48000afterstep-beforeP0 toactualnatural48225P0winner. Notnewordinary0 or newAIscore; nohumanorders/extraplanner/nochangedfrequency. Localobservercounters begin48000; nativeGamestats retainedfullinput.",
+    "start": 48000,
+    "end": 48225,
+    "winner": "p0",
+    "naturalComplete": true,
+    "commandCount": 97,
+    "planCount": 45,
+    "hitCount": 18,
+    "sourcePre": {
+      "head": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "files": 1507,
+      "changed": [],
+      "status": ""
+    },
+    "sourcePost": {
+      "head": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "files": 1507,
+      "changed": [],
+      "status": ""
+    },
+    "frozenPre": {
+      "fullFiles": 497,
+      "manifestFiles": 184,
+      "rulesVersion": 2,
+      "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+      "changed": []
+    },
+    "frozenPost": {
+      "fullFiles": 497,
+      "manifestFiles": 184,
+      "rulesVersion": 2,
+      "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+      "changed": []
+    },
+    "restored": {
+      "world": true,
+      "nextId": true,
+      "all3mem": true,
+      "setup": true
+    },
+    "inputUnchanged": true,
+    "finalSHA256": "98ae9b3d009b5944b4099a0ecf22ada0f2af9ea29cde7ee0282764ece8008239",
+    "nativeUnitsLost": {
+      "p0": 46,
+      "p1": 641,
+      "p2": 19,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 17
+    },
+    "elapsedMs": 1401.437,
+    "cpuMs": 1860.124
+  },
+  "originalFinalSHA256": "c8a97db9751d562e1b16a3ddea7d360f27258a44c4a8593abc428834bb9062af",
+  "replayFinalSHA256": "98ae9b3d009b5944b4099a0ecf22ada0f2af9ea29cde7ee0282764ece8008239"
+}

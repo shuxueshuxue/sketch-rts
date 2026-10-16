@@ -1,0 +1,21 @@
+{
+  "atUTC": "2026-10-16T14:15:38.790214+00:00",
+  "archive": "/workspace/.playtest/bootstrap-root046-knownseed-full-win-20261016-evidence.tar.gz",
+  "bytes": 18485843,
+  "sha256": "1f89f70a3752d9c549bd4b9c32e2078ca31205489c6ad5eb5298c2692c7ed04b",
+  "payloadFiles": 324,
+  "regularFiles": 325,
+  "payloadBytes": 20060515,
+  "indexPath": "INDEX.json",
+  "indexSHA256": "bf7d01c8f3b5bf2af68c4d80d1dc5b466c14af1d50ffbd03a573014cfb59d5de",
+  "allPayloadHashesSizesCoverageAndGzipCRCExact": true,
+  "originalClosedFilesUnchanged": true,
+  "allRawSourcesKept": true,
+  "ordinary0": {
+    "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+    "winner": "p0",
+    "tick": 48225,
+    "permanentOwnLosses": 46,
+    "knownSeedNotNewUnseen": true
+  }
+}

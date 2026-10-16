@@ -1,0 +1,22 @@
+{
+  "atUTC": "2026-10-16T14:00:08.083700+00:00",
+  "observer": "root personally viewed via view_image",
+  "images": [
+    {
+      "path": "/workspace/.playtest/root-046-early-continuation-readonly-20261016/actual046-35400-native-main-battle.png",
+      "bytes": 1677369,
+      "sha256": "2e706f212d8164e829624416dffb601a5c5455064423777e3df607b9067747ad"
+    },
+    {
+      "path": "/workspace/.playtest/coastal-pursuit-intent-20261016/native-escape-and-first-kill/235335-native-complete-offshore.png",
+      "bytes": 1651075,
+      "sha256": "de5b10f2b859747782bc3f689f76d381ff79b2042dbc98c90c7658bb0bbb78ab"
+    },
+    {
+      "path": "/workspace/.playtest/coastal-pursuit-intent-20261016/native-escape-and-first-kill/246426-native-first-farm-kill.png",
+      "bytes": 2040148,
+      "sha256": "08f98d3aa6d02db26d3dabd5e3cd5e711ae6e0607c53975060e3ef9204f04438"
+    }
+  ],
+  "scope": "Actualnative drawWorld savedstates, not syntheticdiagram or newGame. 04635400 shows groundforce concentratedrightoftreebelt withopponentswest; actualnativehits separatelydetermine owners anddamage. 2320235335 showsoriginalcrew aboard boat offshore from enemybase,246426laterboat alongsouthwestcoast; damageandfarm1364removal derivefullraw ratherthanscreenshot. Doesnotprove laterwin/miningincome/newholdout."
+}

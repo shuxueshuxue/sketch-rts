@@ -1,0 +1,27 @@
+{
+  "classification": "Actual completed seal/readback. Every regular member byte-equal; no original raw/source/PREPARED overwritten. Scope limits retained in reports.",
+  "archive": "/workspace/.playtest/root-046-followup-20261016-evidence.tar.gz",
+  "bytes": 3471807,
+  "sha256": "f8cb3ea2c22e318cf21b4f5eae03fd58d86b67f9a0435cfb3e978a69723cd1b6",
+  "regularPayloadsIncluding3GroupIndexes": 106,
+  "regularMembersIncludingMasterINDEX": 107,
+  "masterINDEXSHA256": "98ccfaa904f6b873bd951b0793c551d1a79279fbc9d4543c52920d8cbd747c7e",
+  "groups": {
+    "early": {
+      "payloads": 28,
+      "INDEXSHA256": "d733287dd12e2c42caa180dd534b61f4c2d039af5440d6843a86adb8b235f604"
+    },
+    "terminal225": {
+      "payloads": 70,
+      "INDEXSHA256": "88076546774cf6f18f20ba9d436f88021175c9275aea1a321bf8215104114235"
+    },
+    "official-summoner-review": {
+      "payloads": 5,
+      "INDEXSHA256": "0dad7bc055c0353736f3d02b92d1baae43b14f2c791a1c23addecdaf06bc4dd3"
+    }
+  },
+  "archiveReadbackEveryMemberExact": true,
+  "allSourceFilesUnchangedAfterSeal": true,
+  "sealedAtUTC": "2026-10-16T14:05:17.165982+00:00",
+  "sealScriptSHA256": "2de59c4326db6a215304e8e8256dd4624b7503ab7c7e4b249299d7ba579fddce"
+}

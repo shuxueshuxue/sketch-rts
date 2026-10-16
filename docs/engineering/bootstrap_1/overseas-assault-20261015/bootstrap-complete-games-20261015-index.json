@@ -951,6 +951,30 @@
       "payloadHashesVerified": true,
       "source": "f4a997140f298040fd50490f9990baba35e004ed",
       "classification": "Changed-source217800→349800 supported observationstop negative, not naturaldefeat/ordinary0.14native instants restored butall27originalpermanentlandeddead. Quietscreen macroownership conflict diagnosed; actuallaterbuildingkill andcombat preserved.99unique contracts/tsc0 belongF4, not newc64draft. No generalwin/acceptance."
+    },
+    {
+      "file": "bootstrap-root046-knownseed-full-win-20261016-evidence.tar.gz",
+      "bytes": 18485843,
+      "sha256": "1f89f70a3752d9c549bd4b9c32e2078ca31205489c6ad5eb5298c2692c7ed04b",
+      "indexedPayloadFiles": 324,
+      "archiveRegularFiles": 325,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "bf7d01c8f3b5bf2af68c4d80d1dc5b466c14af1d50ffbd03a573014cfb59d5de",
+      "payloadHashesVerified": true,
+      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "classification": "One genuine current046 knownseed ordinary0,48225P0 naturalWIN/46permanentownloss. Standardr2 normalv7+v8;allfull600world/nextId/3mem/publiccommands/ownerplans/nativehit/event/death/corpse/heal/health/factory/source1507/driver retained. Not newunseen seed orisolatedcomponent success."
+    },
+    {
+      "file": "root-046-followup-20261016-evidence.tar.gz",
+      "bytes": 3471807,
+      "sha256": "f8cb3ea2c22e318cf21b4f5eae03fd58d86b67f9a0435cfb3e978a69723cd1b6",
+      "indexedPayloadFiles": 106,
+      "archiveRegularFiles": 107,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "98ccfaa904f6b873bd951b0793c551d1a79279fbc9d4543c52920d8cbd747c7e",
+      "payloadHashesVerified": true,
+      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "classification": "Root046 early15fullframes0..8400 equal8da, firstmedicaldifference8400 andexact641clinical600suffix. Wholematch46permanent/723deathcorpse/37expiry ledger inclstaletargetcallbackcaveat;3doctors/9veterans loss limits. Native35400visual. Unique48000→48225 terminal225 all97commands/45ownerplans-all3mem/18hits/4events/finalwholeexact. OfficialbrokenSea summoner prepared-driver staticreview only, no newmatch claimed."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1617,14 +1641,24 @@
       "commands": 60297,
       "ownerPlansAll3PostMemories": 9645,
       "runtime1507Frozen497Manifest184Rules2PrePostExact": true,
-      "terminal225ColdStatus": "Prepared butnot run atthis checkpoint; not a secondordinary0.",
+      "terminal225ColdStatus": "Completed actual14:03:08exit0;97commands45ownerplans-all3mem18hits4events/finalworld-id3mem-setupexact. Not secondordinary0.",
       "comparisonOldKnownSeed": {
         "38fNaturalDefeatTick": 82182,
         "38fPermanentOwnLosses": 65,
         "8daNaturalDefeatTick": 37789,
         "8daPermanentOwnLosses": 69
       },
-      "attribution": "Completecombined-source success foronealreadyobservedseed. Not uniquely attributable toonecomponent; no acceptance ornewholdout claim."
+      "attribution": "Completecombined-source success foronealreadyobservedseed. Not uniquely attributable toonecomponent; no acceptance ornewholdout claim.",
+      "terminal225Cold": {
+        "start": 48000,
+        "end": 48225,
+        "steps": 225,
+        "commands": 97,
+        "ownerPlans": 45,
+        "hits": 18,
+        "events": 4,
+        "allRawAndFinalWholeExact": true
+      }
     },
     "currentEvidenceReference": "combined-aimed-medical-knownseed-win-20261016.zh.md",
     "originalUncommittedRecoveryGapRetained": true,
@@ -1927,5 +1961,13 @@
     "oldTopLevelValuesPreservedExceptActiveRuntime": true,
     "rootRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
     "bootstrapComplete": false
+  },
+  "latestEvidenceCheckpoint109": {
+    "atUTC": "2026-10-16T14:17:12.116663+00:00",
+    "packages": 109,
+    "first107PackagesPreservedExactly": true,
+    "rootRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+    "bootstrapComplete": false,
+    "nextOfficialOrdinary0": "Prepared/noGameatthischeckpoint: v9_summonerGrove vsnormalv5Ember+v8Grove, officialbrokenSea/unseenfalse, source046; no knownseedworldequalityclaim."
   }
 }
