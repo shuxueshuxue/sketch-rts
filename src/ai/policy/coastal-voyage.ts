@@ -4,6 +4,7 @@ import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { polygonRadius } from '../../shared/navigation-math';
 import { routeClearsDisks } from '../../shared/route-selection';
 import { shipRouteTraffic } from '../../shared/ship-avoidance';
+import { beginShipCollisionFrame } from '../../shared/ship-collisions';
 import { isInCabin } from '../../shared/ship-cabin';
 import { shipProfile, type Point } from '../../shared/ship-geometry';
 import { headingDifference, hullPassageClear, planVoyageRoute, shipPoseAt, type ShipPose } from '../../shared/ship-navigation';
@@ -112,6 +113,8 @@ export function planCoastalVoyage(snapshot: GameSnapshot, ship: Unit, goal: Poin
   const nativeQuery = (from: ShipPose, destination: Point, speed: number) => {
     const hull = ordinaryHull(ship, from, destination, speed);
     const units = snapshot.units.map(unit => unit.id === ship.id ? hull : unit);
+    // This query owns a new units array: retain the executor's real static solids.
+    beginShipCollisionFrame(units, snapshot.map, [...snapshot.buildings, ...snapshot.obstacles ?? []]);
     const traffic = shipRouteTraffic(snapshot.map, hull, units);
     const route = planVoyageRoute(snapshot.map, hull, destination, traffic, budget);
     return { hull, route };
@@ -139,6 +142,7 @@ export function planCoastalVoyage(snapshot: GameSnapshot, ship: Unit, goal: Poin
   };
   const hull = ordinaryHull(ship, start, goal, ship.sailing.speed);
   const units = snapshot.units.map(unit => unit.id === ship.id ? hull : unit);
+  beginShipCollisionFrame(units, snapshot.map, [...snapshot.buildings, ...snapshot.obstacles ?? []]);
   const traffic = shipRouteTraffic(snapshot.map, hull, units);
   const detour = planVoyageRoute(snapshot.map, hull, goal,
     (from, to) => coastalFireSegmentClear(from, to, disks) && traffic(from, to), budget);

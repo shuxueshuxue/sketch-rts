@@ -1,7 +1,7 @@
 import {mineProspect} from '../../shared/mining-prospect';
 import {shipMotionLimits} from '../../shared/ship-motion';
 import {coastalVoyagePrefixSafe} from './coastal-voyage';
-import { coastalBatteryWaypoint, coastalBombardment } from './coastal-bombardment';
+import { coastalBatteryWaypoint, coastalBombardment, continuingCoastalVoyage } from './coastal-bombardment';
 import { miningHallSite } from "../../shared/mining-site";
 import { automaticShoreTargetReachable, shoreFiringStation } from '../../shared/shore-fire';
 import { coastalAsternPassageClear, coastalAsternStep, coastalRefuge, outmatchingCoast } from './coastal-risk';
@@ -39,6 +39,7 @@ import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import { mineClaimedByAlly } from './mine-claims';
 import { chooseNavalMine } from './naval-mines';
+import { mountedMinePlan } from './mounted-mine-plan';
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
 import { engagementTargets } from "./engagements";
@@ -49,6 +50,11 @@ function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(un
 /** A mining outpost must recover its own construction cost at current upkeep. */
 function mineRepaysHall(snapshot:GameSnapshot,owner:PlayerId,mine:ResourceNode) {
     return mineProspect(snapshot,mine,0,playerState(snapshot,owner).supplyUsed).netGold>=BUILDING_DEFS.townHall.cost;
+}
+/** Existing income-planning predicate: an own worker shares a live mine
+ * component with a completed receiving hall; this does not prove mining. */
+function hasMineIncome(snapshot:GameSnapshot,owner:PlayerId) {
+    return units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(snapshot.map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < GOLD_MINE_RULES.baseRange)));
 }
 /** Optimistic actual sea-road time: loading, turns and adverse wind only add
  * delay. Reject a transfer if existing miners exhaust the destination first. */
@@ -433,7 +439,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
     for (const id of Object.keys(navalMemory(options).combat ?? {})) if (!fighters.some(ship => ship.id === id)) delete navalMemory(options).combat![id];
     for (const id of Object.keys(navalMemory(options).coastalVoyages ?? {})) if (!fighters.some(ship=>ship.id===id)) delete navalMemory(options).coastalVoyages![id];
     for (const id of Object.keys(navalMemory(options).coastalRetreat ?? {})) if (!own.some(ship=>ship.id===id)) delete navalMemory(options).coastalRetreat![id];
-    const escortShips = fighters.filter(unit => unit.kind !== "bombardShip");
+    const escortShips = fighters.filter(unit => unit.kind !== "bombardShip" && !continuingCoastalVoyage(snapshot,unit,options));
     const escorts = new Map<string, Unit>();
     // Assign each gun to the least protected nearby loaded ferry instead of sending the whole fleet after a coastal farm.
     for (const ship of escortShips) {
@@ -441,18 +447,11 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             .sort((a,b) => [...escorts.values()].filter(boat => boat.id === a.id).length - [...escorts.values()].filter(boat => boat.id === b.id).length || distance(ship,a)-distance(ship,b))[0];
         if (boat) escorts.set(ship.id, boat);
     }
-    // A battery with a safe coastal firing objective keeps its voyage when
-    // the escort fleet assembles again; joining that muster would erase the
-    // objective before the battery ever reached the enemy coast.
-    const bombardments=new Map(fighters.filter(ship=>ship.kind==='bombardShip' && ship.hp>=ship.maxHp*HURT)
-        .flatMap(ship=>{
-            const plan=coastalBombardment(snapshot,ship,snapshot.buildings.filter(building=>isOpponentOwner(snapshot,owner,building.owner,options)
-                && targetAvailable(building)),options);
-            return plan ? [[ship.id,plan] as const] : [];
-        }));
+    // Resolve existing withdrawal, boarding and local combat ownership before
+    // an expensive new far-coast search. Trial results (including failures)
+    // belong only to this planner call and are reused by muster and publication.
+    const available:Unit[]=[];
     const assigned = new Set<string>();
-    const fleetGoal=assault?offshore(snapshot,assault.landing,assault.target):plan?offshore(snapshot,plan.landing,plan.mine):raidPlan(snapshot,owner,options)?.water;
-    const stations=fleetStations(snapshot,fighters.filter(ship=>!escorts.has(ship.id)&&!bombardments.has(ship.id)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
     for (const ship of fighters) {
         const foes = foesForCombat();
         const withdrawal=navalMemory(options).coastalRetreat?.[ship.id];
@@ -491,7 +490,57 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             if (recruits.length) { commands.push({ type: "board", unitIds: recruits.map(unit=>unit.id), transportId: ship.id }); continue; }
         }
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
-        const bombardmentIntent=bombardments.has(ship.id);
+        available.push(ship);
+    }
+    const immediateCoasts=new Map(available.map(ship=>[ship.id,outmatchingCoast(snapshot,owner,ship,ship,options)]));
+    const priorityEngagement=new Set(available.filter(ship=>foesForCombat().some(target=>{
+        if(!targetAvailable(target) || distance(ship,target)>=Math.max(900,combatCapability(snapshot,ship).range+150)
+            || !canReach(snapshot.map,ship,target,snapshot.units,combatCapability(snapshot,ship).range)
+            || ship.kind!=='bombardShip' && covered(target,enemyTowers(snapshot,owner,options)))return false;
+        const attackedId='order' in target && 'targetId' in target.order ? target.order.targetId : undefined;
+        const attackingUs='order' in target && (target.order.type==='attack' || target.order.type==='attackMove')
+            && own.some(unit=>unit.id===attackedId);
+        const landing='order' in target && target.order.type==='unload' ? target.order : undefined;
+        const seaThreat='order' in target && unitMover(target.kind)==='sea'
+            && (combatCapability(snapshot,target).armed || landing
+                && shipPassengers(snapshot.units,target).some(unit=>combatCapability(snapshot,unit).armed)
+                && buildings(snapshot,owner).some(hall=>hall.kind==='townHall' && sameGround(snapshot.map,hall,landing)));
+        const engaged='order' in target && (ship.order.type==='attack' || ship.order.type==='attackMove') && ship.order.targetId===target.id;
+        if(seaThreat || attackingUs || engaged)return true;
+        const firing=isOpponentOwner(snapshot,owner,target.owner,options) && shoreFiringStation(snapshot,ship,target);
+        return !!firing && distance(ship,firing)<1e-5;
+    })).map(ship=>ship.id));
+    let guards:Unit[]|undefined;
+    const guardsForCapital=()=>{
+        if(guards)return guards;
+        // A viable unclaimed mine can be cleared before its hall is funded;
+        // purchases and settlement still retain their original budget gates.
+        const clearing=mountedMinePlan(snapshot,options.memory);
+        const prospects=!hasMineIncome(snapshot,owner) && playerState(snapshot,owner).gold<BUILDING_DEFS.townHall.cost
+            ? snapshot.resources.filter(mine=>mine.amount>0 && eligible(mine) && mineRepaysHall(snapshot,owner,mine)
+                && !mineClaimedByAlly(snapshot,owner,mine,options)
+                && !snapshot.buildings.some(hall=>hall.kind==='townHall' && distance(hall,mine)<GOLD_MINE_RULES.baseRange)
+                && !!miningHallSite(snapshot,mine)) : [];
+        return guards=[...new Map(prospects.flatMap(mine=>clearing.guards(mine)).filter(guard=>guard.hp>0
+            && targetAvailable(guard)).map(guard=>[guard.id,guard])).values()];
+    };
+    const coastalTargets=snapshot.buildings.filter(building=>isOpponentOwner(snapshot,owner,building.owner,options) && targetAvailable(building));
+    const bombardments=new Map<string,ReturnType<typeof coastalBombardment>>();
+    const bombardmentFor=(ship:Unit)=>{
+        if(bombardments.has(ship.id))return bombardments.get(ship.id);
+        const chosen=!escorts.has(ship.id) && !priorityEngagement.has(ship.id) && !immediateCoasts.get(ship.id)!.length && ship.hp>=ship.maxHp*HURT
+            && installedWeapons(snapshot,ship).some(item=>(item.durability ?? 1)>0)
+            ? coastalBombardment(snapshot,ship,coastalTargets,options)
+                ?? coastalBombardment(snapshot,ship,guardsForCapital(),options) : undefined;
+        bombardments.set(ship.id,chosen);
+        return chosen;
+    };
+    const fleetGoal=assault?offshore(snapshot,assault.landing,assault.target):plan?offshore(snapshot,plan.landing,plan.mine):raidPlan(snapshot,owner,options)?.water;
+    const stations=fleetStations(snapshot,available.filter(ship=>!escorts.has(ship.id)&&!priorityEngagement.has(ship.id)&&!immediateCoasts.get(ship.id)!.length&&!bombardmentFor(ship)&&ship.hp>=ship.maxHp*HURT),fleetGoal,navalMemory(options));
+    for(const ship of available){
+        const foes=foesForCombat();
+        const bombardmentPlan=bombardmentFor(ship);
+        const bombardmentIntent=!!bombardmentPlan || priorityEngagement.has(ship.id);
         const onShore=(target:Unit|Building)=>!('order' in target)
             || unitMover(target.kind)==='land' && !target.deck && !isInCabin(target);
         const localShots=new Set<string>();
@@ -514,14 +563,15 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
             const attackedId='order' in target && 'targetId' in target.order ? target.order.targetId : undefined;
             const attackingUs='order' in target && (target.order.type==='attack' || target.order.type==='attackMove')
                 && own.some(unit=>unit.id===attackedId);
+            const engaged='order' in target && (ship.order.type==='attack' || ship.order.type==='attackMove') && ship.order.targetId===target.id;
             const landing='order' in target && target.order.type==='unload' ? target.order : undefined;
             const seaThreat='order' in target && unitMover(target.kind)==='sea'
                 && (combatCapability(snapshot,target).armed || landing
                     && shipPassengers(snapshot.units,target).some(unit=>combatCapability(snapshot,unit).armed)
                     && buildings(snapshot,owner).some(hall=>hall.kind==='townHall' && sameGround(snapshot.map,hall,landing)));
             return targetAvailable(target)
-                && (!bombardmentIntent || isOpponentOwner(snapshot,owner,target.owner,options) || own.some(unit=>unit.id===attackedId))
-                && (!bombardmentIntent || seaThreat || attackingUs || localShots.has(target.id))
+                && (!bombardmentIntent || isOpponentOwner(snapshot,owner,target.owner,options) || bombardmentPlan?.target.id===target.id || engaged || own.some(unit=>unit.id===attackedId))
+                && (!bombardmentIntent || seaThreat || attackingUs || engaged || localShots.has(target.id))
                 && (ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options)));
         })
             .sort((a, b) => (ship.kind === "bombardShip" ? Number("order" in a) - Number("order" in b) : Number(!("order" in a)) - Number(!("order" in b))) || distance(a, ship) - distance(b, ship));
@@ -533,11 +583,11 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
         const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));
         const candidates = attackers.length ? attackers : threats.length ? threats : !gathering && (!boat || station && distance(ship,station)<250) ? targets.filter(target=>!boat || station && distance(target,station)<450) : [];
-        const bombardment=!candidates.length ? bombardments.get(ship.id) : undefined;
+        const bombardment=!candidates.length ? bombardmentPlan : undefined;
         const target = fleetTarget(ship, bombardment ? [bombardment.target] : candidates, navalMemory(options));
         const attackStation=bombardment ?? (target && (!('order' in target) || unitMover(target.kind)==='land') ? shoreFiringStation(snapshot,ship,target) : undefined);
         const destination=attackStation ?? station;
-        const immediateCoast=outmatchingCoast(snapshot,owner,ship,ship,options);
+        const immediateCoast=immediateCoasts.get(ship.id)!;
         const destinationCoast=immediateCoast.length ? immediateCoast : destination ? outmatchingCoast(snapshot,owner,ship,destination,options) : [];
         if (destinationCoast.length) {
             if (immediateCoast.length) {
@@ -1274,7 +1324,7 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const localGold = snapshot.resources.filter(mine => mine.amount > 0 && ownedHalls.some(hall => sameGround(map, hall, mine) && distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((n, mine) => n + mine.amount, 0);
     // Population gates a new expedition; casualties do not cancel a colony already loading or sailing.
     if (!settling && ownedHalls.length < 2 && localGold > 1800 && playerState(snapshot, owner).supplyUsed < 20) return undefined;
-    const income = units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < GOLD_MINE_RULES.baseRange)));
+    const income = hasMineIncome(snapshot,owner);
     if (!income && playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost)
         return undefined;
     let known = memory.island;
