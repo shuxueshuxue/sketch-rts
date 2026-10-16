@@ -8,7 +8,7 @@ const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0,c
 vi.mock('three',async importOriginal=>{
   const actual=await importOriginal<typeof import('three')>();
   return{...actual,WebGLRenderer:class{
-    shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};toneMapping=0;toneMappingExposure=1;
+    shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};extensions={has:()=>true};toneMapping=0;toneMappingExposure=1;
     setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
     initTexture(){}copyTextureToTexture(){}getRenderTarget(){return null;}getActiveCubeFace(){return 0;}getActiveMipmapLevel(){return 0;}setRenderTarget(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}

@@ -219,7 +219,8 @@ export class World3DLayer {
     const culled:THREE.Object3D[]=[];
     this.scene.traverse(object=>{if(object.frustumCulled){object.frustumCulled=false;culled.push(object);}});
     try{
-      await renderer.compileAsync(this.scene,this.camera);
+      // Without the extension three warns and compiles in place; the draw below compiles everything then.
+      if(renderer.extensions.has('KHR_parallel_shader_compile'))await renderer.compileAsync(this.scene,this.camera);
       if(!this.disposed&&!this.contextLost){
         renderer.render(this.scene,this.camera);
         // The GPU process links a program and builds its pipeline state only when its first draw runs there; reading a
