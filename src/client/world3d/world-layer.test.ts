@@ -45,7 +45,8 @@ function setup(){
   const {game,ship}=createShipWebglScene();
   const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{mercenaryStock:()=>'',unitKind:()=>''}};
   const canvas=new EventTarget() as HTMLCanvasElement;
-  return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext)};
+  // Every card a frame needs is painted in that frame: what these tests read must not depend on the machine's speed.
+  return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext,Infinity)};
 }
 function paintedMeshes(){return gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object instanceof InstancedMesh&&object.visible) as InstancedMesh[];}
 function paintedBinding(mesh:InstancedMesh,index:number){
@@ -433,9 +434,6 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(const kind of Object.keys(UNIT_DEFS) as (keyof typeof UNIT_DEFS)[])if(!isShipKind(kind))game.spawnUnit('player',kind,600,600);
     frame.snapshot=snapshotGame(game);frame.view={...frame.view,zoom:.6};await layer.prepare(frame.snapshot,'home');layer.draw(frame);
-    // A frame paints only a few new cards (see CARD_RASTER_BUDGET_MS); the rest arrive over the next frames.
-    const drawn=()=>paintedMeshes().reduce((sum,card)=>sum+card.count,0);
-    for(let i=0;i<200&&drawn()<game.units.length;i++)layer.draw(frame);
     expect(layer.positions.size).toBe(game.units.length);
     for(const unit of game.units){const at=layer.positions.get(unit.id)!;expect(Number.isFinite(at.bodyY)).toBe(true);expect(at.topY).toBeLessThan(at.bodyY);}
     const cards=paintedMeshes();
@@ -446,8 +444,6 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     for(let i=0;i<2000;i++)game.spawnUnit('player','footman',400+(i%50)*14,400+Math.floor(i/50)*12);
     frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');
     const begin=performance.now();layer.draw(frame);const duration=performance.now()-begin;
-    // A frame paints only a few new cards (see CARD_RASTER_BUDGET_MS); the rest arrive over the next frames.
-    for(let i=0;i<200&&paintedMeshes().reduce((sum,card)=>sum+card.count,0)<2000;i++)layer.draw(frame);
     const actors=gpu.scene!.getObjectsByProperty('isInstancedMesh',true) as InstancedMesh[];
     const painted=actors.filter(actor=>actor.name==='PaintedCards'&&actor.visible);
     expect(painted.reduce((sum,actor)=>sum+actor.count,0)).toBe(2000);
@@ -478,7 +474,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect((layer as unknown as {transforms:unknown[]}).transforms).toHaveLength(0);
     expect((layer as unknown as {renderer:unknown}).renderer).toBeUndefined();
     layer.draw(frame);expect(scene.children).toHaveLength(0);expect(layer.pick({x:600,y:450})).toBeUndefined();
-    const second=World3DLayer.create(new EventTarget() as HTMLCanvasElement,{} as WebGL2RenderingContext);
+    const second=World3DLayer.create(new EventTarget() as HTMLCanvasElement,{} as WebGL2RenderingContext,Infinity);
     await second.prepare(frame.snapshot,'home');second.draw(frame);expect(second.positions.size).toBeGreaterThan(0);second.dispose();
     source.traverse(object=>{if(object instanceof Mesh){object.geometry.removeEventListener('dispose',sharedDispose);for(const material of Array.isArray(object.material)?object.material:[object.material])material.removeEventListener('dispose',sharedDispose);}});
   });
