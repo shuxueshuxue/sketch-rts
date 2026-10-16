@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { RULES_VERSION } from "../src/shared/rules-version.ts";
 import { roomUiFlowCode } from "./room-ui-flow.mjs";
 
 const port = Number(process.env.ROOM_SYNC_PORT ?? 5186);
@@ -90,6 +91,9 @@ async page => {
   const durableMismatchThreshold = 4;
   const consoleIssues = [];
   page.on("console", (message) => {
+    // A GPU-backed browser logs its driver's performance notes ("GL Driver Message ... Performance ...: GPU stall due
+    // to ReadPixels"); they say nothing about room sync.
+    if (/GL Driver Message \(.*Performance/.test(message.text())) return;
     if (message.type() === "warning" || message.type() === "error") consoleIssues.push({ type: message.type(), text: message.text() });
   });
 
@@ -119,6 +123,8 @@ async page => {
         reject(new Error("Auxiliary command websocket failed"));
       }, { once: true });
     });
+    // The room accepts game messages only from a socket that joined with the current rules version.
+    socket.send(JSON.stringify({ type: "join", rulesVersion: ${RULES_VERSION}, roomId, playerId: "player" }));
     let clientSeq = 0;
     let epoch = 0;
     window.__sketchRtsRoomSyncCommandErrors = [];
