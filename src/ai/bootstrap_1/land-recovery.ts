@@ -14,7 +14,8 @@ import type { AiPolicyContext } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { postRecoveryAssignments } from './front-recovery';
-import { clearOfBuildingArrival, mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { recoveryArrivalFilter } from './recovery-arrival';
 
 function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
   return foes.filter(foe => sameGround(snapshot.map, patient, foe)
@@ -68,16 +69,17 @@ export function patientRendezvousCommands(snapshot: GameSnapshot,
   return recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
     const threats = patientThreats(snapshot, patient, foes);
     if (threats.length) {
+      const arrivalAllows = recoveryArrivalFilter(snapshot, patient, THINK_TICKS);
       const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal')!;
-      if (distance(patient, healer) <= ABILITY_DEFS[ability].range) return mountedEscape(snapshot, patient, threats, 0, healer, true);
+      if (distance(patient, healer) <= ABILITY_DEFS[ability].range) return mountedEscape(snapshot, patient, threats, 0, healer, true, arrivalAllows);
       // Transit follows the actual care road; a short endpoint leaves the front's objective intact after healing.
       const road = groundSteeringRoute(snapshot.map, patient, healer);
       const prefix = routePrefix(patient, road.slice(1), patient.speed * THINK_TICKS / SIM_TICKS_PER_SECOND + MOVE_ORDER_ARRIVAL_RANGE);
       const point = prefix[prefix.length - 1]!;
       const blockers = foes.filter((foe): foe is Unit => 'order' in foe && !foe.deck && unitMover(foe.kind) === 'land')
         .map(foe => ({ x: foe.x, y: foe.y, radius: foe.radius + (foe.attackRange <= 100 ? foe.attackRange : 0) }));
-      if (!capsuleClearsBodies(patient, point, patient.radius, blockers) || !clearOfBuildingArrival(snapshot, patient, point))
-        return mountedEscape(snapshot, patient, threats, 0, healer, true);
+      if (!capsuleClearsBodies(patient, point, patient.radius, blockers) || !arrivalAllows(point))
+        return mountedEscape(snapshot, patient, threats, 0, healer, true, arrivalAllows);
       return { type: 'move', unitIds: [patient.id], x: point.x, y: point.y, avoidCombat: true };
     }
     return { type: 'follow', unitIds: [patient.id], targetId: healer.id };

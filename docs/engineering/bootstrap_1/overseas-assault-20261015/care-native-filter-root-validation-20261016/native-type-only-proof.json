@@ -1,0 +1,6 @@
+{
+  "classification": "Type-only native signature narrowing proof; same esbuild transform, no game execution",
+  "nativeJsByteEqual": true,
+  "baselineSHA256": "0130245f39431c32a5daf14dd8142641ca28d0134a3a1413a92a9890275d7296",
+  "candidateSHA256": "0130245f39431c32a5daf14dd8142641ca28d0134a3a1413a92a9890275d7296"
+}

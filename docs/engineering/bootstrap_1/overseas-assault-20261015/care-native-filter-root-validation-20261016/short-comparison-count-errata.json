@@ -1,0 +1,12 @@
+{
+  "classification": "Independent review correction of comparison-count wording; raw logs and complete frames preserved",
+  "case": "16245",
+  "newSavedEveryTickCompleteFramesPerSide": 31,
+  "original5fAvailableComparisonCheckpoints": 17,
+  "candidateWorldIdAll3MemoryMatchesAtAllAvailableOriginalCheckpoints": true,
+  "correctedClaim": "31 new complete every-tick frames were saved; 17 available historical original checkpoints were compared and all matched. The intermediate14 original ticks were not available for historical comparison.",
+  "notAffected": ["actual native pursuit trace", "candidate49HP versus baseline35HP at16275", "same10200 full-tail candidate57/57 and baseline28/28 historical sample comparisons"],
+  "priorOverclaim": "Earlier commentary/summary called all31 short-window checkpoints exact against original5f. That comparison-count statement was too broad.",
+  "sourceChanged": false,
+  "newExecutionRequired": false
+}

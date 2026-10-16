@@ -1,0 +1,300 @@
+{
+  "classification": "Actual full3AI short pair on each fixed current source; original-state inputs unchanged; no ordinary0",
+  "cases": [
+    {
+      "case": "7905",
+      "sides": {
+        "baseline": {
+          "end": 7921,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": false,
+          "nativeArrivals": [],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-emberRavager-1079",
+            "owner": "p0",
+            "kind": "emberRavager",
+            "x": 2929.6803916399267,
+            "y": 3440.5270343701554,
+            "homeX": 3638,
+            "homeY": 3822,
+            "hp": 18,
+            "maxHp": 118,
+            "speed": 76,
+            "attackDamage": 20,
+            "attackRange": 52,
+            "attackCooldown": 25,
+            "cooldown": 0,
+            "radius": 18,
+            "carryingGold": 0,
+            "kills": 0,
+            "xp": 0,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "move",
+              "x": 2993.4101147364563,
+              "y": 3424.1513696801444,
+              "avoidCombat": true
+            },
+            "orderQueue": [],
+            "arrivedAt": {
+              "x": 1809.2088880225544,
+              "y": 3088.3036701708074
+            },
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 18
+          },
+          "p0Loss": 3,
+          "allHits": 0,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-7905-baseline.frames/7921.json.gz"
+        },
+        "candidate": {
+          "end": 7921,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": false,
+          "nativeArrivals": [],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-emberRavager-1079",
+            "owner": "p0",
+            "kind": "emberRavager",
+            "x": 2929.6803916399267,
+            "y": 3440.5270343701554,
+            "homeX": 3638,
+            "homeY": 3822,
+            "hp": 18,
+            "maxHp": 118,
+            "speed": 76,
+            "attackDamage": 20,
+            "attackRange": 52,
+            "attackCooldown": 25,
+            "cooldown": 0,
+            "radius": 18,
+            "carryingGold": 0,
+            "kills": 0,
+            "xp": 0,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "move",
+              "x": 2993.4101147364563,
+              "y": 3424.1513696801444,
+              "avoidCombat": true
+            },
+            "orderQueue": [],
+            "arrivedAt": {
+              "x": 1809.2088880225544,
+              "y": 3088.3036701708074
+            },
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 18
+          },
+          "p0Loss": 3,
+          "allHits": 0,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-7905-candidate.frames/7921.json.gz"
+        }
+      }
+    },
+    {
+      "case": "10425",
+      "sides": {
+        "baseline": {
+          "end": 10441,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": false,
+          "nativeArrivals": [],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-footman-1072",
+            "owner": "p0",
+            "kind": "footman",
+            "x": 1778.9153629207578,
+            "y": 3827.5086608875667,
+            "homeX": 1014,
+            "homeY": 3726,
+            "hp": 99,
+            "maxHp": 145,
+            "speed": 68.2,
+            "attackDamage": 16,
+            "attackRange": 55,
+            "attackCooldown": 22,
+            "cooldown": 22,
+            "radius": 18,
+            "carryingGold": 0,
+            "kills": 1,
+            "xp": 25,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "attackMove",
+              "x": 2062.0183527181457,
+              "y": 3810.57958216234,
+              "targetId": "unit-p1-emberRavager-1353"
+            },
+            "orderQueue": [],
+            "arrivedAt": {
+              "x": 1823.6107287265238,
+              "y": 3486.914777641885
+            },
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 18
+          },
+          "p0Loss": 0,
+          "allHits": 2,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-10425-baseline.frames/10441.json.gz"
+        },
+        "candidate": {
+          "end": 10441,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": true,
+          "nativeArrivals": [],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-footman-1072",
+            "owner": "p0",
+            "kind": "footman",
+            "x": 1767.3379213862847,
+            "y": 3817.5885256048236,
+            "homeX": 1014,
+            "homeY": 3726,
+            "hp": 99,
+            "maxHp": 145,
+            "speed": 68.2,
+            "attackDamage": 16,
+            "attackRange": 55,
+            "attackCooldown": 22,
+            "cooldown": 22,
+            "radius": 18,
+            "carryingGold": 0,
+            "kills": 1,
+            "xp": 25,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "attackMove",
+              "x": 2062.0645618670583,
+              "y": 3810.483488293764,
+              "targetId": "unit-p1-emberRavager-1353"
+            },
+            "orderQueue": [],
+            "arrivedAt": {
+              "x": 1823.6107287265238,
+              "y": 3486.914777641885
+            },
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 18
+          },
+          "p0Loss": 0,
+          "allHits": 3,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-10425-candidate.frames/10441.json.gz"
+        }
+      }
+    },
+    {
+      "case": "16245",
+      "sides": {
+        "baseline": {
+          "end": 16275,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": false,
+          "nativeArrivals": [],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-horseArcher-4294",
+            "owner": "p0",
+            "kind": "horseArcher",
+            "x": 1673.4193814365742,
+            "y": 4050.3530218794435,
+            "homeX": 717,
+            "homeY": 3799,
+            "hp": 35,
+            "maxHp": 125,
+            "speed": 99,
+            "attackDamage": 13,
+            "attackRange": 330,
+            "attackCooldown": 30,
+            "cooldown": 0,
+            "radius": 19,
+            "carryingGold": 0,
+            "kills": 1,
+            "xp": 55,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "move",
+              "x": 1623.5129126474178,
+              "y": 4047.7958558080336,
+              "avoidCombat": true
+            },
+            "orderQueue": [],
+            "pushX": 114.82161770278685,
+            "pushY": 105.34534385170745,
+            "arrivedAt": {
+              "x": 1157.5190524250172,
+              "y": 2614.89150368864
+            },
+            "facing": -1.2005134706147038,
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 19
+          },
+          "p0Loss": 18,
+          "allHits": 18,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-16245-baseline.frames/16275.json.gz"
+        },
+        "candidate": {
+          "end": 16275,
+          "sourceSimUnchanged": true,
+          "actualOldFullWorldIdAll3memExact": true,
+          "nativeArrivals": [
+            16246,
+            16275
+          ],
+          "nativeAttackPursuitCalls": [],
+          "mainPatient": {
+            "id": "unit-p0-horseArcher-4294",
+            "owner": "p0",
+            "kind": "horseArcher",
+            "x": 1572.6241314964743,
+            "y": 3831.2906549591803,
+            "homeX": 717,
+            "homeY": 3799,
+            "hp": 49,
+            "maxHp": 125,
+            "speed": 99,
+            "attackDamage": 13,
+            "attackRange": 330,
+            "attackCooldown": 30,
+            "cooldown": 5,
+            "radius": 19,
+            "carryingGold": 0,
+            "kills": 1,
+            "xp": 55,
+            "level": 0,
+            "effects": [],
+            "order": {
+              "type": "idle"
+            },
+            "orderQueue": [],
+            "arrivedAt": {
+              "x": 1572.484401747877,
+              "y": 3826.3502488402037
+            },
+            "facing": 2.4647079443823863,
+            "hands": {},
+            "gearMass": 0,
+            "bodyRadius": 19
+          },
+          "p0Loss": 18,
+          "allHits": 18,
+          "endCompleteFrame": "/workspace/.playtest/bootstrap-care-native-filter-20261016/short-16245-candidate.frames/16275.json.gz"
+        }
+      }
+    }
+  ]
+}

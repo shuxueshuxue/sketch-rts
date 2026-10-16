@@ -1,0 +1,37 @@
+{
+  "classification": "Exact complete10200 input provenance for two changed-code full tails, not a new ordinary0",
+  "input": "/tmp/bootstrap-land-army-evidence-20261015/production-root3bdb-archer-native10200.frames/10200.json",
+  "inputSHA256": "0edd829ee09f6fcfd12dbfec087e86c090a2e19ba227b921c1816a1149a0e4e1",
+  "comparisons": {
+    "3bdb": {
+      "world": true,
+      "nextId": true,
+      "all3mem": {
+        "p0": true,
+        "p1": true,
+        "p2": true
+      },
+      "setup": true,
+      "originalResult": {
+        "tick": 26107,
+        "winner": "p1",
+        "completed": true
+      }
+    },
+    "5f": {
+      "world": true,
+      "nextId": true,
+      "all3mem": {
+        "p0": true,
+        "p1": true,
+        "p2": true
+      },
+      "setup": true,
+      "originalResult": {
+        "tick": 43714,
+        "winner": "p0",
+        "completed": true
+      }
+    }
+  }
+}

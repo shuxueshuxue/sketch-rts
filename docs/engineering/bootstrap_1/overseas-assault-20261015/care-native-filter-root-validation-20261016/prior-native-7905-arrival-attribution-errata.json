@@ -1,0 +1,24 @@
+{
+  "classification": "Independent attribution erratum; earlier sealed evidence/archive and hashes unchanged",
+  "supersedes": "The earlier proposal/notes that described7905 early arrival solely as restsAgainstGoalBody circle contact",
+  "actual": {
+    "tick": 7912,
+    "nativePrePhysicsStop": {
+      "x": 2926.281482476079,
+      "y": 3502.3890781915525
+    },
+    "bodyId": "building-p0-defenseTower-2014",
+    "bodyRadius": 30,
+    "patientRadius": 18,
+    "circleGap": 51.75883070529177,
+    "circleContactLimit": 50,
+    "circleContactFalse": true,
+    "arrivalReason": "native walkEnded first terrain disjunct: within5 of walkDestination(2928,3504)"
+  },
+  "preservedFacts": [
+    "7913 acquires target86.030122 away with own range52",
+    "7914 first actual pursuit move",
+    "7921 original death unchanged"
+  ],
+  "nativePrimitiveFix": "Share actual walkDestination as well as circle-contact geometry; no runtime order/selection changes"
+}

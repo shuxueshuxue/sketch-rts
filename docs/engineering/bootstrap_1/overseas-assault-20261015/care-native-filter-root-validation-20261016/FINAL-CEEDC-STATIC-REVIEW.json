@@ -1,0 +1,286 @@
+{
+  "classification": "Independent static review of fixed final ceedc code and read-only existing actual evidence. No game, native query, planner query, tests, source edits or driver edits by reviewer.",
+  "source": {
+    "head": "ceedc2f13a0dd2986db3a26089855dd1866660f1",
+    "base": "9119feec0dd4b4933d5f8940b80df98abba80259",
+    "clean": true,
+    "changedFiles": [
+      {
+        "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-10425.json.gz",
+        "bytes": 16464,
+        "sha256": "ebe1ca747cf375dea393795f7de921b0da37dc8b3be1b4b84206ddc972408fe8",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-16245.json.gz",
+        "bytes": 20555,
+        "sha256": "64a91d130061886727b053fe34f31e72e4fff3788d26df64769b5ed56972db3e",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-7905.json.gz",
+        "bytes": 12528,
+        "sha256": "bd25abdb5abc4df4295488da91e5b676184adb6850a308fc05f276b9259faa61",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/land-recovery.ts",
+        "bytes": 9095,
+        "sha256": "cfa7e7215233f7eb706023577c14f938557f0e9ca0841360753c4d391577064d",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/mounted-micro.ts",
+        "bytes": 12410,
+        "sha256": "30a9bf61961e3082bc9df87a06bc51edb56d12e6de98d12e2e78db410a96366e",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/recovery-arrival.test.ts",
+        "bytes": 1902,
+        "sha256": "da184e6a78baf23dc69b9960fab1095205acbb56f06cab2604efed9772d6375f",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/ai/bootstrap_1/recovery-arrival.ts",
+        "bytes": 2508,
+        "sha256": "0be804f13082643f72deb14247fdd1a9c281fe2def2f4f605db197bfdd7ed480",
+        "liveExactlyHead": true
+      },
+      {
+        "path": "src/shared/sim.ts",
+        "bytes": 271190,
+        "sha256": "3583c4b712694c32492ede779af095d357c282bab43073b6bac696194aeb8504",
+        "liveExactlyHead": true
+      }
+    ],
+    "delta": "8 files,80 insertions,15 deletions; includes three complete fixture gzip files."
+  },
+  "nativeTypeNarrowing": {
+    "candidateSimAfterReversingOnlyThreeParameterTypesExactlyBase": true,
+    "authorTranspiledProof": {
+      "classification": "Type-only native signature narrowing proof; same esbuild transform, no game execution",
+      "nativeJsByteEqual": true,
+      "baselineSHA256": "0130245f39431c32a5daf14dd8142641ca28d0134a3a1413a92a9890275d7296",
+      "candidateSHA256": "0130245f39431c32a5daf14dd8142641ca28d0134a3a1413a92a9890275d7296"
+    },
+    "reviewLimit": "Reviewer verified textual type-only normalization; did not run transpiler or native sim. Author JS-byte proof was read, not rerun."
+  },
+  "findings": [],
+  "contractReview": [
+    {
+      "area": "Lazy construction and canonical map",
+      "assessment": "Pass within current native snapshot contract.",
+      "evidence": "No query frame until a building-overlapping goal has an estimated arrival early enough for both follow-up branches. buildingMoveArrival initially reads the supplied map overlay; restored/native planner snapshots already carry it. createNativeQueryFrame then independently builds canonical native team indexes/entity map/building overlay without writing original snapshot."
+    },
+    {
+      "area": "Projected identity",
+      "assessment": "Pass.",
+      "evidence": "Exactly one posed patient object replaces that ID in frame.units and frame.entityById; native intent receives that same object. Native targetPriorityScore resolves an enemy current victim through entityById, so victim===attacker preserves self-threat rather than degrading to ally-threat. Per-goal x/y/CD/order are reset from the unchanged patient/arrival, not accumulated from a previous query."
+    },
+    {
+      "area": "Spatial bucket reuse",
+      "assessment": "Pass for this current idle/automatic-attack intent call path; not a claim that all projected-frame spatial queries are generally rebuilt.",
+      "evidence": "Canonical enemy team buckets retain unchanged enemy objects and observed x-then-y/bucket order. The only moved object is friendly to itself, and forEachNearbyEnemyUnit excludes its own team index. Native attack-intent branch reads enemy buckets, units and entity lookup; canReach and naval crew resolution use the replaced units array. The stale own-team patient entry in canonical unitSpatial is not queried as an enemy on this call path."
+    },
+    {
+      "area": "Arrival and branch clocks",
+      "assessment": "Pass for the declared static normal-movement estimate.",
+      "evidence": "Native move branch advances and continues on arrival at movement tick m, so idle acquisition first runs m+1 and attack pursuit first runs m+2. The SDK next normal15tick planner comes after native tick15. Filtering only m+2<=15 therefore matches the intended interval. Native unit clocks decrement before branches; posed cooldown=max(0,original-m-1) for acquisition and original-m-2 for attack matches that order."
+    },
+    {
+      "area": "Own attack reach and native reconsideration",
+      "assessment": "Pass.",
+      "evidence": "The filter asks nativeAutomaticAttackIntent for idle acquisition, then an actual automatic attack/leash order. The native branch applies current reach, target replacement, cooldown-dependent reconsideration, dead zone and targetGap versus patient own attackRange. An in-range horseArcher330 engage is not rejected as pursue; no foe range is substituted for its own attack range."
+    },
+    {
+      "area": "Existing recovery scoring and ownership",
+      "assessment": "Preserved outside the intended goal-acceptance change.",
+      "evidence": "land-recovery hunks only replace clearOfBuildingArrival with one per-patient arrival callback shared by road prefix and mountedEscape fallback. mounted-micro retains room/damage/body/exit/destination scoring and comparator; avoidCombat=false retains no new arrival query. Same stay-here bypass remains. No assignments,35% triage,claims,memory,new owner,command kind or script priority changes appear in the diff."
+    }
+  ],
+  "fixtures": [
+    {
+      "tick": 7905,
+      "patientId": "unit-p0-emberRavager-1079",
+      "kind": "emberRavager",
+      "hp": 18,
+      "ownAttackRange": 52,
+      "cooldown": 0,
+      "teams": {
+        "p0": "a",
+        "p1": "b",
+        "p2": "b"
+      },
+      "memoryOwners": [
+        "p0",
+        "p1",
+        "p2"
+      ],
+      "queryGoal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-emberRavager-1079"
+        ],
+        "x": 2956.3323572393538,
+        "y": 3519.0225181428536,
+        "avoidCombat": true
+      },
+      "sha256": "bd25abdb5abc4df4295488da91e5b676184adb6850a308fc05f276b9259faa61"
+    },
+    {
+      "tick": 10425,
+      "patientId": "unit-p0-footman-1072",
+      "kind": "footman",
+      "hp": 99,
+      "ownAttackRange": 55,
+      "cooldown": 0,
+      "teams": {
+        "p0": "a",
+        "p1": "b",
+        "p2": "b"
+      },
+      "memoryOwners": [
+        "p0",
+        "p1",
+        "p2"
+      ],
+      "queryGoal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-footman-1072"
+        ],
+        "x": 1714.9452825897258,
+        "y": 3818.651649597255,
+        "avoidCombat": true
+      },
+      "sha256": "ebe1ca747cf375dea393795f7de921b0da37dc8b3be1b4b84206ddc972408fe8"
+    },
+    {
+      "tick": 16245,
+      "patientId": "unit-p0-horseArcher-4294",
+      "kind": "horseArcher",
+      "hp": 97,
+      "ownAttackRange": 330,
+      "cooldown": 0,
+      "teams": {
+        "p0": "a",
+        "p1": "b",
+        "p2": "b"
+      },
+      "memoryOwners": [
+        "p0",
+        "p1",
+        "p2"
+      ],
+      "queryGoal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-horseArcher-4294"
+        ],
+        "x": 1569.0706993622325,
+        "y": 3851.5378656243647,
+        "avoidCombat": true
+      },
+      "sha256": "64a91d130061886727b053fe34f31e72e4fff3788d26df64769b5ed56972db3e"
+    }
+  ],
+  "existingReadOnlyQueryEvidence": [
+    {
+      "name": "7905",
+      "id": "unit-p0-emberRavager-1079",
+      "goal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-emberRavager-1079"
+        ],
+        "x": 2956.3323572393538,
+        "y": 3519.0225181428536,
+        "avoidCombat": true
+      },
+      "allows": false,
+      "expected": false,
+      "repeatEqual": true,
+      "inputUnchanged": true
+    },
+    {
+      "name": "10425",
+      "id": "unit-p0-footman-1072",
+      "goal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-footman-1072"
+        ],
+        "x": 1714.9452825897258,
+        "y": 3818.651649597255,
+        "avoidCombat": true
+      },
+      "allows": true,
+      "expected": true,
+      "repeatEqual": true,
+      "inputUnchanged": true
+    },
+    {
+      "name": "16245",
+      "id": "unit-p0-horseArcher-4294",
+      "goal": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-horseArcher-4294"
+        ],
+        "x": 1569.0706993622325,
+        "y": 3851.5378656243647,
+        "avoidCombat": true
+      },
+      "allows": true,
+      "expected": true,
+      "repeatEqual": true,
+      "inputUnchanged": true
+    }
+  ],
+  "evidenceAttribution": {
+    "fullTails": [
+      {
+        "file": "/workspace/.playtest/bootstrap-care-native-filter-20261016/full10200-baseline.json",
+        "sha256": "d2f6e3577eb170753d816726fa24a55ddd6959b7594a682be40f25a005d3eda0",
+        "sourceHead": "9119feec0dd4b4933d5f8940b80df98abba80259",
+        "inputTick": 10200,
+        "classification": "Same complete10200 original state continued under fixed current source; full3AI natural game tail, not ordinary0. No rank inspection queries, native observer or artificial orders. Source/normal frozen opponents/rules2 preserved.",
+        "result": {
+          "tick": 26107,
+          "winner": "p1",
+          "completed": true
+        }
+      },
+      {
+        "file": "/workspace/.playtest/bootstrap-care-native-filter-20261016/full10200-candidate.json",
+        "sha256": "b1aa84954b4add965f0efdeed0af81ea4c3bff5c322c83a36aa3cf99eca4952f",
+        "sourceHead": "ceedc2f13a0dd2986db3a26089855dd1866660f1",
+        "inputTick": 10200,
+        "classification": "Same complete10200 original state continued under fixed current source; full3AI natural game tail, not ordinary0. No rank inspection queries, native observer or artificial orders. Source/normal frozen opponents/rules2 preserved.",
+        "result": {
+          "tick": 43714,
+          "winner": "p0",
+          "completed": true
+        }
+      }
+    ],
+    "actual7905NonPatientChange": {
+      "patient1079SameCommand": true,
+      "allThreeMemoriesEqual": true,
+      "p1EntriesEqual": true,
+      "p2EntriesEqual": true,
+      "p0NonPatientEntriesEqual": false,
+      "meaning": "Another patient1322 also changes goal. Current baseline and candidate1079 both survive7921 with18HP; do not claim newly saved1079 versus the historical183 death."
+    },
+    "full10200Limit": "These two actual independent natural tails start from the same complete10200 save and skip7905 early changes. 26107p1WIN versus43714p0WIN is a developed changed-code continuation pair, not a new ordinary0 or unseen/generalization result; whole-game divergence is not isolated to one patient or one7damage event.",
+    "readmeScope": "README explicitly preserves these attribution limits, enemies0units/0buildings at candidate terminal, and complete three-route/official+unseen final requirements remain unmet."
+  },
+  "nonBlockingLimits": [
+    "This is a filter for estimated early arrival followed by native active pursue. None/acquire/engage/backOut/return/unsupported or allowed does not mean safe, healed, currently firing or guaranteed to survive.",
+    "Only patient pose/order/CD are projected. Other bodies, enemy buckets, current projectiles/HP/effects and target orders remain observed; no future movement, pending damage resolution, help calls, autocasts, queued macro decisions, push/separation or future status changes are predicted.",
+    "The static buildingMoveArrival estimate omits crowd/hull interference and requires native/restored building overlay. It should not be described as proof of actual future arrival or complete future target behavior.",
+    "The same-code/native short-pair and natural-tail evidence is author execution. This reviewer inspected stored results/provenance and fixed source; no duplicate long tests or games were run."
+  ],
+  "conclusion": "No concrete production blocker found in final ceedc relative to9119 within the requested native contract and ownership scope. Ordinary0 integration and broader three-route/full-match acceptance remain separate work."
+}

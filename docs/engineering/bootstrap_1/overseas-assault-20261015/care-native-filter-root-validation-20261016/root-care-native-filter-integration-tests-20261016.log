@@ -1,0 +1,53 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage
+{"tick":3062,"damage":0,"hits":[],"arrows":33,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage
+{"tick":13220,"damage":0,"hits":[],"arrows":172,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage
+{"tick":14235,"damage":0,"hits":[],"arrows":92,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage
+{"tick":20525,"damage":0,"hits":[],"arrows":215,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage
+{"tick":14070,"damage":0,"hits":[],"arrows":94,"remaining":[]}
+
+stdout | src/ai/bootstrap_1/mounted-micro.test.ts > mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers
+{"tick":3602,"damage":0,"hits":[],"riders":3,"foes":[]}
+
+ ✓ src/ai/bootstrap_1/mounted-micro.test.ts (11 tests) 18066ms
+   ✓ mounted micro through ordinary SDK commands > takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step 1073ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary ogreMage mining camp with one unupgraded rider and no damage 1582ms
+   ✓ mounted micro through ordinary SDK commands > clears the original Grand Estuary graniteGolem mining camp with one unupgraded rider and no damage 6695ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears spider-red-1 without damage 772ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears murloc-red-2 without damage 1127ms
+   ✓ mounted micro through ordinary SDK commands > pays for range and speed research with ordinary mining and clears dragon-red-1 without damage 776ms
+   ✓ mounted micro through ordinary SDK commands > keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers 5596ms
+ ✓ src/shared/sim/native-query.test.ts (12 tests) 322ms
+ ✓ src/ai/bootstrap_1/assault-care-ownership.test.ts (9 tests) 13584ms
+   ✓ v9_archer does not recruit a mainland critical-care patient into a new assault 1556ms
+   ✓ v9_summoner does not recruit a mainland critical-care patient into a new assault 2780ms
+   ✓ v9_knight does not recruit a mainland critical-care patient into a new assault 2759ms
+   ✓ v9_archer keeps the existing healer with its mainland critical-care patient 1259ms
+   ✓ v9_summoner keeps the existing healer with its mainland critical-care patient 1511ms
+   ✓ v9_knight keeps the existing healer with its mainland critical-care patient 1024ms
+   ✓ keeps an already requested boarding task when its passenger becomes critical 1289ms
+   ✓ does not send a new assault pickup to an island containing only a care patient and necessary healer 362ms
+   ✓ allows an existing evacuation mission to take a critical survivor and its healer 1044ms
+ ✓ src/shared/sim/building-move-arrival.test.ts (6 tests) 384ms
+ ✓ src/ai/bootstrap_1/recovery-building-arrival.test.ts (2 tests) 591ms
+   ✓ keeps production recovery moving through the tower approach until the next think 354ms
+ ✓ src/ai/bootstrap_1/mobile-care.test.ts (6 tests) 846ms
+ ✓ src/ai/bootstrap_1/care-road-progress.test.ts (6 tests) 561ms
+ ✓ src/ai/bootstrap_1/recovery-move-continuity.test.ts (4 tests) 238ms
+ ✓ src/ai/bootstrap_1/recovery-arrival.test.ts (3 tests) 126ms
+
+ Test Files  9 passed (9)
+      Tests  59 passed (59)
+   Start at  01:59:54
+   Duration  50.06s (transform 2.45s, setup 0ms, collect 10.31s, tests 34.72s, environment 2ms, prepare 1.76s)
+

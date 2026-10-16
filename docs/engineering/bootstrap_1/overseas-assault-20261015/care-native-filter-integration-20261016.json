@@ -1,0 +1,1045 @@
+{
+  "rootBasis": "3ff9a747ae7aec4e5e66cc1198ef2baf9d2454b3",
+  "candidateHead": "ceedc2f13a0dd2986db3a26089855dd1866660f1",
+  "source": [
+    {
+      "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-10425.json.gz",
+      "bytes": 16464,
+      "sha256": "ebe1ca747cf375dea393795f7de921b0da37dc8b3be1b4b84206ddc972408fe8",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-16245.json.gz",
+      "bytes": 20555,
+      "sha256": "64a91d130061886727b053fe34f31e72e4fff3788d26df64769b5ed56972db3e",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/fixtures/recovery-native-arrival-7905.json.gz",
+      "bytes": 12528,
+      "sha256": "bd25abdb5abc4df4295488da91e5b676184adb6850a308fc05f276b9259faa61",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/land-recovery.ts",
+      "bytes": 9095,
+      "sha256": "cfa7e7215233f7eb706023577c14f938557f0e9ca0841360753c4d391577064d",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/mounted-micro.ts",
+      "bytes": 12410,
+      "sha256": "30a9bf61961e3082bc9df87a06bc51edb56d12e6de98d12e2e78db410a96366e",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/recovery-arrival.test.ts",
+      "bytes": 1902,
+      "sha256": "da184e6a78baf23dc69b9960fab1095205acbb56f06cab2604efed9772d6375f",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/recovery-arrival.ts",
+      "bytes": 2508,
+      "sha256": "0be804f13082643f72deb14247fdd1a9c281fe2def2f4f605db197bfdd7ed480",
+      "equalToFixedCeedc": true
+    },
+    {
+      "path": "src/shared/sim.ts",
+      "bytes": 271190,
+      "sha256": "3583c4b712694c32492ede779af095d357c282bab43073b6bac696194aeb8504",
+      "equalToFixedCeedc": true
+    }
+  ],
+  "validation": {
+    "rootTests": 59,
+    "rootFiles": 9,
+    "singleWorker": true,
+    "tscExitCode": 0
+  },
+  "completeTails": [
+    {
+      "head": "9119feec0dd4b4933d5f8940b80df98abba80259",
+      "inputTick": 10200,
+      "setup": {
+        "map": "pineshade",
+        "seed": "bootstrap_1-unseen-archer-v8-v8-20261015-01",
+        "unseen": true,
+        "side": 1,
+        "agents": {
+          "p0": {
+            "version": "v9_archer",
+            "versionLabel": "v9_archer",
+            "race": "grove",
+            "controller": "external-agent",
+            "team": "a"
+          },
+          "p1": {
+            "version": "v8",
+            "versionLabel": "v8",
+            "race": "ember",
+            "controller": "external-agent",
+            "team": "b"
+          },
+          "p2": {
+            "version": "v8",
+            "versionLabel": "v8",
+            "race": "grove",
+            "controller": "external-agent",
+            "team": "b"
+          }
+        },
+        "thinkInterval": 15,
+        "rulesVersion": 2,
+        "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+      },
+      "result": {
+        "tick": 26107,
+        "winner": "p1",
+        "completed": true
+      },
+      "savedFullStateSamples": 28,
+      "final": {
+        "tick": 26107,
+        "players": {
+          "p0": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {},
+              "mounted": [],
+              "naval": {
+                "ferries": {},
+                "raid": {
+                  "tick": 25110
+                }
+              },
+              "v6": {
+                "casualties": {
+                  "count": 158,
+                  "lastChangeTick": 24765
+                },
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "grove-archer-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:grove-archer-line": 1,
+                  "phase:2": 1,
+                  "general:clearExpansion": 1,
+                  "expand": 3,
+                  "creep:cleared": 3,
+                  "well": 1,
+                  "general:creep": 4,
+                  "tower:outpost": 1,
+                  "general:attack:expansion": 4,
+                  "general:retreat:incoming": 1,
+                  "phase:3": 1,
+                  "general:guard": 11,
+                  "tower:underFire": 4,
+                  "tower:ahead": 1
+                },
+                "phase": 2,
+                "goalAges": {
+                  "farm:tier": {
+                    "since": 23160,
+                    "seen": 26100
+                  },
+                  "build:barracks": {
+                    "since": 24705,
+                    "seen": 26100
+                  },
+                  "farm": {
+                    "since": 24945,
+                    "seen": 26100
+                  },
+                  "build:archeryRange": {
+                    "since": 25170,
+                    "seen": 26100
+                  },
+                  "build:stables": {
+                    "since": 25740,
+                    "seen": 26100
+                  }
+                },
+                "general": {
+                  "mode": "hold",
+                  "target": {
+                    "x": 1069.7258300203048,
+                    "y": 3952
+                  },
+                  "holdingSince": 24060
+                },
+                "retreatedAt": 9135
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p2",
+                "focusTargetId": "unit-p2-knight-2670",
+                "focusTargetSinceTick": 21645,
+                "focusTargetUpdatedTick": 21645
+              }
+            },
+            "gold": 15.07,
+            "supply": 0,
+            "cap": 0,
+            "upgrades": {
+              "weaponTraining": 3,
+              "reinforcedPlating": 1,
+              "buildingDurability": 0,
+              "speedTraining": 1,
+              "rangeTraining": 2,
+              "leadership": 0
+            },
+            "units": 0,
+            "permanentUnits": 0,
+            "workers": 0,
+            "healers": [],
+            "bases": [],
+            "buildings": 0,
+            "unitsLost": 71,
+            "goldSpent": 13201
+          },
+          "p1": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {
+                "unit-p1-worker-1050": {
+                  "kind": "build",
+                  "targetId": "build:farm:3792:816",
+                  "x": 3792,
+                  "y": 816,
+                  "sinceTick": 26100,
+                  "expiresTick": 27000
+                }
+              },
+              "naval": {
+                "raid": {
+                  "tick": 25920
+                }
+              },
+              "v6": {
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "ember-ravager-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:ember-ravager-line": 1,
+                  "general:attack:beaten": 2,
+                  "general:retreat:worn": 1,
+                  "general:clearExpansion": 2,
+                  "creep:cleared": 2,
+                  "general:attack:rising": 3,
+                  "general:retreat:quick": 2,
+                  "expand": 3,
+                  "phase:2": 1,
+                  "general:attack:idleArmy": 1,
+                  "tower:underFire": 2,
+                  "tower:main": 1,
+                  "general:attack:expansion": 4,
+                  "tower:ahead": 1,
+                  "general:retreat:incoming": 1,
+                  "phase:3": 1,
+                  "general:retreat": 3,
+                  "general:quick:done": 1,
+                  "general:attack:stronger": 2,
+                  "general:pulse": 2,
+                  "general:attack:armyAway": 1,
+                  "tower:outpost": 1
+                },
+                "phase": 2,
+                "goalAges": {
+                  "build:ashenHall": {
+                    "since": 25035,
+                    "seen": 26100
+                  },
+                  "bases:3": {
+                    "since": 25455,
+                    "seen": 26100
+                  },
+                  "bases:4": {
+                    "since": 25455,
+                    "seen": 26100
+                  },
+                  "unit:emberRavager": {
+                    "since": 25860,
+                    "seen": 26100
+                  },
+                  "engineering:siegeRam": {
+                    "since": 26025,
+                    "seen": 26100
+                  }
+                },
+                "casualties": {
+                  "count": 158,
+                  "lastChangeTick": 24765
+                },
+                "general": {
+                  "mode": "attack",
+                  "target": {
+                    "x": 720,
+                    "y": 3568
+                  },
+                  "targetHallId": "building-p0-sanctum-2137",
+                  "group": [
+                    "unit-p1-priest-3803",
+                    "unit-p1-priest-4549",
+                    "unit-p1-priest-5408",
+                    "unit-p1-ashHexer-6426",
+                    "unit-p1-ashHexer-13789",
+                    "unit-p1-catapult-14267",
+                    "unit-p1-ashHexer-14818",
+                    "unit-p1-catapult-16476",
+                    "unit-p1-ashWarden-17381",
+                    "unit-p1-cinderRunner-17911",
+                    "unit-p1-emberRavager-17968",
+                    "unit-p1-emberRavager-19180",
+                    "unit-p1-emberRavager-21717",
+                    "unit-p1-emberRavager-21981",
+                    "unit-p1-emberRavager-21982",
+                    "unit-p1-emberRavager-22926",
+                    "unit-p1-emberRavager-22927",
+                    "unit-p1-ashWarden-23062",
+                    "unit-p1-siegeRam-23442",
+                    "unit-p1-emberRavager-23860"
+                  ],
+                  "groupStart": 28.39999999999999,
+                  "enemyGaps": {},
+                  "enemyCenters": {}
+                },
+                "retreatedAt": 25455
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p0",
+                "focusTargetId": "unit-p0-priest-21655",
+                "focusTargetSinceTick": 24180,
+                "focusTargetUpdatedTick": 24435
+              }
+            },
+            "gold": 337.06,
+            "supply": 56,
+            "cap": 66,
+            "upgrades": {
+              "weaponTraining": 0,
+              "reinforcedPlating": 1,
+              "buildingDurability": 0,
+              "speedTraining": 0,
+              "rangeTraining": 0,
+              "leadership": 0
+            },
+            "units": 31,
+            "permanentUnits": 31,
+            "workers": 11,
+            "healers": [
+              {
+                "id": "unit-p1-priest-3803",
+                "x": 3694.5072159856454,
+                "y": 842.857268093305,
+                "hp": 103,
+                "order": {
+                  "type": "idle"
+                }
+              },
+              {
+                "id": "unit-p1-priest-4549",
+                "x": 3724.611771300873,
+                "y": 848.3751439021291,
+                "hp": 103,
+                "order": {
+                  "type": "idle"
+                }
+              },
+              {
+                "id": "unit-p1-priest-5408",
+                "x": 3712.28733925891,
+                "y": 923.4212317531021,
+                "hp": 103,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "bases": [
+              {
+                "id": "building-p1-townhall",
+                "x": 3792,
+                "y": 816,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p1-townHall-1684",
+                "x": 3600,
+                "y": 2864,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p1-townHall-21547",
+                "x": 1328,
+                "y": 2032,
+                "hp": 900,
+                "complete": true
+              }
+            ],
+            "buildings": 19,
+            "unitsLost": 38,
+            "goldSpent": 11500
+          },
+          "p2": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {
+                "unit-p2-worker-13514": {
+                  "kind": "build",
+                  "targetId": "build:farm:3888:656",
+                  "x": 3888,
+                  "y": 656,
+                  "sinceTick": 26100,
+                  "expiresTick": 27000
+                }
+              },
+              "naval": {
+                "raid": {
+                  "tick": 25920
+                }
+              },
+              "v6": {
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "grove-cavalry-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:grove-cavalry-line": 1,
+                  "general:attack:beaten": 3,
+                  "general:retreat:worn": 3,
+                  "general:clearExpansion": 1,
+                  "creep:cleared": 2,
+                  "expand": 3,
+                  "phase:2": 1,
+                  "tower:outpost": 1,
+                  "tower:main": 1,
+                  "general:creep": 1,
+                  "general:attack:expansion": 9,
+                  "phase:3": 1,
+                  "general:retreat": 3,
+                  "general:attack:rising": 1,
+                  "general:retreat:quick": 1,
+                  "general:attack:stronger": 4,
+                  "raid:openLine": 3,
+                  "raid:abort:gone": 1,
+                  "phase:4": 1,
+                  "tower:underFire": 4,
+                  "raid:abort:tower": 1,
+                  "general:pulse": 2
+                },
+                "phase": 3,
+                "goalAges": {
+                  "engineering:ballista": {
+                    "since": 24765,
+                    "seen": 26100
+                  },
+                  "bases:3": {
+                    "since": 25455,
+                    "seen": 26100
+                  },
+                  "bases:4": {
+                    "since": 25455,
+                    "seen": 26100
+                  },
+                  "unit:knight": {
+                    "since": 26025,
+                    "seen": 26100
+                  }
+                },
+                "casualties": {
+                  "count": 158,
+                  "lastChangeTick": 24765
+                },
+                "general": {
+                  "mode": "attack",
+                  "target": {
+                    "x": 720,
+                    "y": 3568
+                  },
+                  "targetHallId": "building-p0-sanctum-2137",
+                  "group": [
+                    "unit-p2-priest-1701",
+                    "unit-p2-priest-1767",
+                    "unit-p2-witch-1974",
+                    "unit-p2-priest-3668",
+                    "unit-p2-witch-5281",
+                    "unit-p2-raider-6493",
+                    "unit-p2-raider-8485",
+                    "unit-p2-knight-13399",
+                    "unit-p2-priest-15060",
+                    "unit-p2-ballista-18462",
+                    "unit-p2-witch-18897",
+                    "unit-p2-golem-20515",
+                    "unit-p2-knight-20908",
+                    "unit-p2-knight-21813",
+                    "unit-p2-witch-22191",
+                    "unit-p2-ballista-22272",
+                    "unit-p2-golem-23047"
+                  ],
+                  "groupStart": 27.939987245570205,
+                  "enemyGaps": {},
+                  "enemyCenters": {}
+                },
+                "retreatedAt": 25455,
+                "raidCooldownUntil": 23715
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p0",
+                "focusTargetId": "unit-p0-priest-21655",
+                "focusTargetSinceTick": 24330,
+                "focusTargetUpdatedTick": 24435
+              }
+            },
+            "gold": 140.65,
+            "supply": 60,
+            "cap": 72,
+            "upgrades": {
+              "weaponTraining": 2,
+              "reinforcedPlating": 2,
+              "buildingDurability": 0,
+              "speedTraining": 0,
+              "rangeTraining": 0,
+              "leadership": 0
+            },
+            "units": 31,
+            "permanentUnits": 31,
+            "workers": 14,
+            "healers": [
+              {
+                "id": "unit-p2-priest-1701",
+                "x": 3859.2344646286947,
+                "y": 769.2394785901514,
+                "hp": 130,
+                "order": {
+                  "type": "move",
+                  "x": 3888,
+                  "y": 656
+                }
+              },
+              {
+                "id": "unit-p2-priest-1767",
+                "x": 3919.9465831886373,
+                "y": 704.0000728802082,
+                "hp": 117,
+                "order": {
+                  "type": "idle"
+                }
+              },
+              {
+                "id": "unit-p2-priest-3668",
+                "x": 3839.998760736978,
+                "y": 643.5867001219507,
+                "hp": 117,
+                "order": {
+                  "type": "idle"
+                }
+              },
+              {
+                "id": "unit-p2-priest-15060",
+                "x": 3828.563160374594,
+                "y": 682.3228561091386,
+                "hp": 117,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "bases": [
+              {
+                "id": "building-p2-townhall",
+                "x": 3888,
+                "y": 656,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p2-townHall-1344",
+                "x": 3088,
+                "y": 720,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p2-townHall-13209",
+                "x": 2480,
+                "y": 2448,
+                "hp": 900,
+                "complete": true
+              }
+            ],
+            "buildings": 22,
+            "unitsLost": 30,
+            "goldSpent": 12810
+          }
+        }
+      }
+    },
+    {
+      "head": "ceedc2f13a0dd2986db3a26089855dd1866660f1",
+      "inputTick": 10200,
+      "setup": {
+        "map": "pineshade",
+        "seed": "bootstrap_1-unseen-archer-v8-v8-20261015-01",
+        "unseen": true,
+        "side": 1,
+        "agents": {
+          "p0": {
+            "version": "v9_archer",
+            "versionLabel": "v9_archer",
+            "race": "grove",
+            "controller": "external-agent",
+            "team": "a"
+          },
+          "p1": {
+            "version": "v8",
+            "versionLabel": "v8",
+            "race": "ember",
+            "controller": "external-agent",
+            "team": "b"
+          },
+          "p2": {
+            "version": "v8",
+            "versionLabel": "v8",
+            "race": "grove",
+            "controller": "external-agent",
+            "team": "b"
+          }
+        },
+        "thinkInterval": 15,
+        "rulesVersion": 2,
+        "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+      },
+      "result": {
+        "tick": 43714,
+        "winner": "p0",
+        "completed": true
+      },
+      "savedFullStateSamples": 57,
+      "final": {
+        "tick": 43714,
+        "players": {
+          "p0": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {},
+              "mounted": [],
+              "naval": {
+                "ferries": {},
+                "raid": {
+                  "tick": 43335
+                }
+              },
+              "v6": {
+                "casualties": {
+                  "count": 219,
+                  "lastChangeTick": 41655
+                },
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "grove-archer-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:grove-archer-line": 1,
+                  "phase:2": 1,
+                  "general:clearExpansion": 2,
+                  "expand": 5,
+                  "creep:cleared": 4,
+                  "well": 1,
+                  "general:creep": 3,
+                  "tower:outpost": 2,
+                  "general:attack:expansion": 10,
+                  "general:retreat:incoming": 2,
+                  "phase:3": 1,
+                  "general:guard": 6,
+                  "tower:underFire": 13,
+                  "phase:4": 1,
+                  "tower:ahead": 1,
+                  "general:retreat": 3,
+                  "general:attack:stronger": 1,
+                  "general:pulse": 1,
+                  "closeout": 1,
+                  "general:attack:beaten": 2
+                },
+                "phase": 3,
+                "goalAges": {
+                  "engineering:ballista": {
+                    "since": 42240,
+                    "seen": 43710
+                  },
+                  "farm": {
+                    "since": 43050,
+                    "seen": 43710
+                  },
+                  "unit:archer": {
+                    "since": 43665,
+                    "seen": 43710
+                  }
+                },
+                "general": {
+                  "mode": "attack",
+                  "target": {
+                    "x": 4368,
+                    "y": 1392
+                  },
+                  "targetHallId": "building-p1-cinderSpire-2501",
+                  "group": [
+                    "unit-p0-archer-9506",
+                    "unit-p0-lancer-12816",
+                    "unit-p0-horseArcher-15782",
+                    "unit-p0-priest-17278",
+                    "unit-p0-priest-17803",
+                    "unit-p0-archer-21347",
+                    "unit-p0-horseArcher-24262",
+                    "unit-p0-archer-25286",
+                    "unit-p0-horseArcher-27308",
+                    "unit-p0-lancer-28433",
+                    "unit-p0-ballista-36768",
+                    "unit-p0-ballista-38417",
+                    "unit-p0-ballista-39812",
+                    "unit-p0-ballista-40919",
+                    "unit-p0-archer-41196",
+                    "unit-p0-ballista-42984",
+                    "unit-p0-lancer-43284",
+                    "unit-p0-archer-43734",
+                    "unit-p0-archer-44593",
+                    "unit-p0-lancer-46075",
+                    "unit-p0-archer-46700",
+                    "unit-p0-archer-47400"
+                  ],
+                  "groupStart": 40.271072062371246,
+                  "enemyGaps": {},
+                  "enemyCenters": {}
+                },
+                "retreatedAt": 42330,
+                "closeout": {
+                  "unitIds": [
+                    "unit-p0-archer-16237",
+                    "unit-p0-archer-16884",
+                    "unit-p0-archer-29811",
+                    "unit-p0-archer-31836",
+                    "unit-p0-archer-38691",
+                    "unit-p0-archer-39969"
+                  ],
+                  "targetId": "building-p1-cinderSpire-2501",
+                  "sinceTick": 40275
+                }
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p2",
+                "focusTargetId": "unit-p2-witch-1974",
+                "focusTargetSinceTick": 40575,
+                "focusTargetUpdatedTick": 40620
+              }
+            },
+            "gold": 11.2,
+            "supply": 78,
+            "cap": 86,
+            "upgrades": {
+              "weaponTraining": 3,
+              "reinforcedPlating": 3,
+              "buildingDurability": 0,
+              "speedTraining": 1,
+              "rangeTraining": 2,
+              "leadership": 0
+            },
+            "units": 41,
+            "permanentUnits": 41,
+            "workers": 11,
+            "healers": [
+              {
+                "id": "unit-p0-priest-17278",
+                "x": 3598.3795844545466,
+                "y": 1934.71092463178,
+                "hp": 131,
+                "order": {
+                  "type": "move",
+                  "x": 3612.7283258771695,
+                  "y": 1933.8415640866376
+                }
+              },
+              {
+                "id": "unit-p0-priest-17803",
+                "x": 3533.2756973676783,
+                "y": 1945.3390746077828,
+                "hp": 115,
+                "order": {
+                  "type": "move",
+                  "x": 3620.7190707720574,
+                  "y": 1967.9273533186729
+                }
+              },
+              {
+                "id": "unit-p0-fieldMedic-32195",
+                "x": 1721.6074041280738,
+                "y": 3478.247256033183,
+                "hp": 100,
+                "order": {
+                  "type": "move",
+                  "x": 816,
+                  "y": 3792
+                }
+              },
+              {
+                "id": "unit-p0-fieldMedic-35107",
+                "x": 1948.2033617726133,
+                "y": 3000.5607466869897,
+                "hp": 96,
+                "order": {
+                  "type": "move",
+                  "x": 816,
+                  "y": 3792
+                }
+              }
+            ],
+            "bases": [
+              {
+                "id": "building-p0-townhall",
+                "x": 816,
+                "y": 3792,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p0-townHall-1639",
+                "x": 1520,
+                "y": 3888,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p0-townHall-13987",
+                "x": 1008,
+                "y": 1744,
+                "hp": 900,
+                "complete": true
+              },
+              {
+                "id": "building-p0-townHall-34599",
+                "x": 2128,
+                "y": 2160,
+                "hp": 900,
+                "complete": true
+              }
+            ],
+            "buildings": 29,
+            "unitsLost": 56,
+            "goldSpent": 19657
+          },
+          "p1": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {},
+              "naval": {
+                "raid": {
+                  "tick": 40500
+                }
+              },
+              "v6": {
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "ember-ravager-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:ember-ravager-line": 1,
+                  "general:attack:beaten": 1,
+                  "general:retreat:worn": 2,
+                  "general:clearExpansion": 2,
+                  "creep:cleared": 2,
+                  "general:attack:rising": 2,
+                  "general:retreat:quick": 2,
+                  "expand": 2,
+                  "phase:2": 1,
+                  "general:attack:idleArmy": 1,
+                  "tower:underFire": 3,
+                  "tower:main": 1,
+                  "general:attack:expansion": 9,
+                  "tower:ahead": 1,
+                  "general:retreat:incoming": 5,
+                  "phase:3": 1,
+                  "general:retreat": 2,
+                  "general:attack:stronger": 2,
+                  "general:pulse": 3,
+                  "general:attack:armyAway": 1
+                },
+                "phase": 2,
+                "goalAges": {
+                  "farm:tier": {
+                    "since": 26730,
+                    "seen": 43710
+                  },
+                  "build:emberForge": {
+                    "since": 40710,
+                    "seen": 43710
+                  },
+                  "farm": {
+                    "since": 42330,
+                    "seen": 43710
+                  }
+                },
+                "casualties": {
+                  "count": 219,
+                  "lastChangeTick": 41655
+                },
+                "general": {
+                  "mode": "guard",
+                  "target": {
+                    "x": 3738.644138946282,
+                    "y": 1008.7515294134299
+                  }
+                },
+                "retreatedAt": 28305
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p0",
+                "focusTargetId": "unit-p0-lancer-30815",
+                "focusTargetSinceTick": 38700,
+                "focusTargetUpdatedTick": 38715
+              }
+            },
+            "gold": 24.97,
+            "supply": 0,
+            "cap": 0,
+            "upgrades": {
+              "weaponTraining": 0,
+              "reinforcedPlating": 1,
+              "buildingDurability": 0,
+              "speedTraining": 0,
+              "rangeTraining": 0,
+              "leadership": 0
+            },
+            "units": 0,
+            "permanentUnits": 0,
+            "workers": 0,
+            "healers": [],
+            "bases": [],
+            "buildings": 0,
+            "unitsLost": 76,
+            "goldSpent": 11944
+          },
+          "p2": {
+            "policy": {
+              "jobs": [],
+              "unitClaims": {},
+              "naval": {
+                "raid": {
+                  "tick": 40905
+                }
+              },
+              "v6": {
+                "doctrine": {
+                  "profileId": "steady",
+                  "strategyId": "grove-cavalry-line",
+                  "decidedTick": 0
+                },
+                "plays": {
+                  "profile:steady": 1,
+                  "strategy:grove-cavalry-line": 1,
+                  "general:attack:beaten": 1,
+                  "general:retreat:worn": 3,
+                  "general:clearExpansion": 1,
+                  "creep:cleared": 2,
+                  "expand": 2,
+                  "phase:2": 1,
+                  "tower:outpost": 1,
+                  "tower:main": 1,
+                  "general:creep": 1,
+                  "general:attack:expansion": 9,
+                  "phase:3": 1,
+                  "general:retreat": 3,
+                  "general:attack:rising": 2,
+                  "general:quick:done": 1,
+                  "raid:openLine": 2,
+                  "phase:4": 1,
+                  "tower:underFire": 8,
+                  "general:retreat:quick": 1,
+                  "raid:abort:tower": 1
+                },
+                "phase": 3,
+                "goalAges": {
+                  "farm:tier": {
+                    "since": 37305,
+                    "seen": 43710
+                  },
+                  "build:barracks": {
+                    "since": 39420,
+                    "seen": 43710
+                  },
+                  "farm": {
+                    "since": 42420,
+                    "seen": 43710
+                  }
+                },
+                "casualties": {
+                  "count": 219,
+                  "lastChangeTick": 41655
+                },
+                "general": {
+                  "mode": "defend",
+                  "target": {
+                    "x": 1964.06244060906,
+                    "y": 3064.7026868495655
+                  }
+                },
+                "retreatedAt": 25470,
+                "raidCooldownUntil": 24000
+              },
+              "strategicPlan": {
+                "focusTargetOwner": "p0",
+                "focusTargetId": "unit-p0-lancer-28110",
+                "focusTargetSinceTick": 40350,
+                "focusTargetUpdatedTick": 40410
+              }
+            },
+            "gold": 13.48,
+            "supply": 0,
+            "cap": 0,
+            "upgrades": {
+              "weaponTraining": 2,
+              "reinforcedPlating": 2,
+              "buildingDurability": 0,
+              "speedTraining": 0,
+              "rangeTraining": 0,
+              "leadership": 0
+            },
+            "units": 0,
+            "permanentUnits": 0,
+            "workers": 0,
+            "healers": [],
+            "bases": [],
+            "buildings": 0,
+            "unitsLost": 68,
+            "goldSpent": 14247
+          }
+        }
+      }
+    }
+  ],
+  "scope": "Filter estimated building arrival followed by native active pursue before next15tick thought. Patient-only static projection, no future safety/heal/movement guarantee; original damage/room/triage/owner logic preserved. Native source delta consists only of3 parameter type narrowings, transpiledJS byte-identical.",
+  "limits": [
+    "Both full tails begin from the same complete10200 original world/id/all3mem, skipping7905 earlier effects. Not ordinary0/unseen or a one-patient causal claim.",
+    "7905 actual1079 survives in both sources18HP; another1322 goal also changes.",
+    "16245 new31 full frames compared against17 available original checkpoints,17/17 equal;10425 has17/17; full57/57 candidate and28/28 baseline old checkpoint equality is not every tick.",
+    "Candidate temporary17400 state has fewer troops/healers and one more loss than baseline; no claim every interval improves.",
+    "Root integrated cache+care source has not yet run ordinary0. Old score source attribution remains."
+  ],
+  "frozen": {
+    "rulesVersion": 2,
+    "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "manifestUnchanged": true
+  },
+  "unrecoveredOriginalWorkspaceGap": true
+}

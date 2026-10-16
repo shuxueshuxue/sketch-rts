@@ -14,15 +14,10 @@ import { LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TA
 import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 import { hostileDamageDisks } from './damage-footprints';
+import { recoveryArrivalFilter } from './recovery-arrival';
 
 type Threat = Unit | Building;
 export const THINK_TICKS = 15;
-
-/** A goal in this envelope makes native walking finish early against the building. */
-export function clearOfBuildingArrival(snapshot: GameSnapshot, unit: Pick<Unit, 'radius'>, goal: Point) {
-  return snapshot.buildings.every(building => distance(goal, building)
-    >= building.radius + unit.radius + MOVE_ORDER_ARRIVAL_RANGE);
-}
 
 /** Break healing support before shooting the troops it can keep alive. */
 export function mountedTargetOrder(a: Unit, b: Unit) {
@@ -118,7 +113,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     ? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 } : undefined, false);
 }
 
-export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined, avoidCombat: boolean): GameCommand {
+export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined, avoidCombat: boolean, arrivalAllows = avoidCombat ? recoveryArrivalFilter(snapshot, rider, THINK_TICKS) : undefined): GameCommand {
   const horizon = THINK_TICKS + rider.cooldown;
   const threats = foes.map(foe => ({ foe, range: mountedThreatReach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
   const hazards = hostileDamageDisks(snapshot, rider, foes, horizon);
@@ -160,7 +155,7 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
       distance: destination ? distance(point, destination) : 0 };
   }).filter(({ goal }) => goal.x >= 0 && goal.y >= 0 && goal.x < snapshot.map.width && goal.y < snapshot.map.height
     && isWalkable(snapshot.map, goal.x, goal.y) && segmentWalkable(snapshot.map, rider, goal)
-    && (!avoidCombat || goal === rider || clearOfBuildingArrival(snapshot, rider, goal))
+    && (!avoidCombat || goal === rider || arrivalAllows!(goal))
     && (goal === rider || constrainGroundShipStep(snapshot.map, rider, rider, goal, snapshot.units) === goal));
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
     || (a.room <= 0 ? Number(b.point !== rider) - Number(a.point !== rider) : 0)

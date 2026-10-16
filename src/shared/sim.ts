@@ -4147,7 +4147,7 @@ function restsAgainstGoalBody(game: NativeQueryFrame, unit: Unit, goal: { x: num
   return goalBuildingContact(game, unit, goal, within) !== undefined;
 }
 
-function goalBuildingContact(game: NativeQueryFrame, unit: Pick<Unit, "x" | "y" | "radius">, goal: { x: number; y: number }, within: number) {
+function goalBuildingContact(game: Pick<NativeQueryFrame, "map" | "buildings" | "buildingSpatial">, unit: Pick<Unit, "x" | "y" | "radius">, goal: { x: number; y: number }, within: number) {
   // Only a unit within a building's reach of its goal can be pressed against one that covers it.
   if (distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + within + 2) return undefined;
   let resting: Building | undefined;
@@ -4180,7 +4180,7 @@ export type BuildingMoveArrival = {
  * status changes, push/separation or other bodies' movement is forecast.
  * The returned point is a geometric estimate, not a safety/healing guarantee.
  */
-export function buildingMoveArrival(game: NativeQueryFrame, unit: Unit, goal: { x: number; y: number }, ticks: number, within = MOVE_ORDER_ARRIVAL_RANGE): BuildingMoveArrival | undefined {
+export function buildingMoveArrival(game: Pick<NativeQueryFrame, "map" | "buildings" | "buildingSpatial">, unit: Unit, goal: { x: number; y: number }, ticks: number, within = MOVE_ORDER_ARRIVAL_RANGE): BuildingMoveArrival | undefined {
   if (!game.map.terrain || unitMover(unit.kind) !== "land" || unit.deck || isInCabin(unit)) return undefined;
   const mover = unitMover(unit.kind), map = game.map;
   const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
@@ -4634,7 +4634,7 @@ function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: num
   return undefined;
 }
 
-function forEachNearbyBuilding(game: NativeQueryFrame, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
+function forEachNearbyBuilding(game: Pick<NativeQueryFrame, "buildings" | "buildingSpatial">, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
   forEachNearbyEntity(game.buildingSpatial, game.buildings, point, range, visit);
 }
 
