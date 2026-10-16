@@ -1,0 +1,21 @@
+{
+  "archive": "/workspace/.playtest/bootstrap-mounted-cooldown-negative-evidence-20261016.tar.gz",
+  "bytes": 17444921,
+  "sha256": "c4664c26fde284a1bbc2b206948b9333d4fae7bd90153160fc059702996cd94c",
+  "index": "/workspace/.playtest/bootstrap-mounted-cooldown-negative-index-20261016.json",
+  "indexSHA256": "e8a4248f4ef0dd44fe7c622c557d7ba4e30d1096c782ee78eaf797bb6baf4b9f",
+  "payloadFiles": 307,
+  "payloadBytes": 42907416,
+  "members": 308,
+  "readbackAllPayloadExact": true,
+  "originalPayloadUnchanged": true,
+  "scope": "Closed unmergedCDv1/v2 negative plus immutableactual4294/2255 diagnostics. No field-screen-road followup included. Notordinary0 or milestone.",
+  "sources": {
+    "ade": "ade412414d9232206f39e20f0182f0086605433c",
+    "v1": "f9771345ecd3f930cfd43e0230cf4426bbf52488",
+    "v2": "2c489528d7c0479a266e7ceab93a67d375dcedeb"
+  },
+  "notMerged": true,
+  "ordinary0": false,
+  "naturalTerminal": false
+}

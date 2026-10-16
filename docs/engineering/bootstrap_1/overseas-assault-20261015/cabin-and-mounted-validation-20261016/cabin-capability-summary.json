@@ -1,0 +1,359 @@
+{
+  "atUTC": "2026-10-16T04:22:15.792951+00:00",
+  "source": "ade412414d9232206f39e20f0182f0086605433c",
+  "classification": "Legal public human-style capability diagnostics with unchanged full3AI from a prior changed-code saved world, not autonomous policy, ordinary0 or win.",
+  "branches": [
+    {
+      "branch": "native-cabin-metadata-retry-194400-195000",
+      "start": 194400,
+      "end": 195000,
+      "rawFrameEntries": 708,
+      "nativeHits": 0,
+      "nativeLedgerEvents": 74,
+      "p0Thinks": 40,
+      "actualCabinTransitions": [
+        {
+          "tick": 194401,
+          "id": "unit-p0-summoner-40241",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        }
+      ],
+      "newPermanentNativeTerminalObservations": 0,
+      "actualDisembarks": [
+        {
+          "tick": 194611,
+          "id": "unit-p0-emberRavager-19088",
+          "hp": 157,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-emberRavager-22372",
+          "hp": 118,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-emberRavager-23904",
+          "hp": 236,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-siegeRam-24816",
+          "hp": 420,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-siegeRam-34834",
+          "hp": 420,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-summoner-37753",
+          "hp": 95,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-summoner-38054",
+          "hp": 95,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-siegeRam-39936",
+          "hp": 420,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-summoner-41089",
+          "hp": 95,
+          "commandIndex": null
+        },
+        {
+          "tick": 194611,
+          "id": "unit-p0-summoner-44159",
+          "hp": 95,
+          "commandIndex": null
+        }
+      ],
+      "finalCabinUsage": {
+        "capacity": 21,
+        "used": 2,
+        "free": 19,
+        "overCapacity": 0
+      },
+      "finalCargo": [
+        {
+          "id": "unit-p0-summoner-40241",
+          "hp": 95,
+          "inside": true
+        }
+      ],
+      "source1464AndFrozen184PrePostExact": true,
+      "strictWorldIdAll3MemRestore": true,
+      "reportSHA256": "df91c142efc629c428172c1a495c2a01d728da3b461115c8a795f2777aef73b6"
+    },
+    {
+      "branch": "native-cabin-leave-195000-195030",
+      "start": 195000,
+      "end": 195030,
+      "rawFrameEntries": 28,
+      "nativeHits": 0,
+      "nativeLedgerEvents": 2,
+      "p0Thinks": 2,
+      "actualCabinTransitions": [
+        {
+          "tick": 195000,
+          "id": "unit-p0-summoner-40241",
+          "from": "unit-p0-carrier-25442",
+          "to": null,
+          "commandIndex": 5
+        }
+      ],
+      "newPermanentNativeTerminalObservations": 0,
+      "actualDisembarks": [
+        {
+          "tick": 195016,
+          "id": "unit-p0-summoner-40241",
+          "hp": 95,
+          "commandIndex": null
+        }
+      ],
+      "finalCabinUsage": {
+        "capacity": 21,
+        "used": 0,
+        "free": 21,
+        "overCapacity": 0
+      },
+      "finalCargo": [],
+      "source1464AndFrozen184PrePostExact": true,
+      "strictWorldIdAll3MemRestore": true,
+      "reportSHA256": "4d881f2d9abdecfca15d3e10e42d0e25c015de0df57f825f597e53612f7f20d3"
+    },
+    {
+      "branch": "native-cabin-open-hatch-194400-194610",
+      "start": 194400,
+      "end": 194610,
+      "rawFrameEntries": 246,
+      "nativeHits": 0,
+      "nativeLedgerEvents": 22,
+      "p0Thinks": 14,
+      "actualCabinTransitions": [
+        {
+          "tick": 194403,
+          "id": "unit-p0-summoner-40241",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194418,
+          "id": "unit-p0-summoner-41089",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194432,
+          "id": "unit-p0-emberRavager-22372",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194452,
+          "id": "unit-p0-summoner-37753",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194474,
+          "id": "unit-p0-summoner-44159",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194495,
+          "id": "unit-p0-emberRavager-19088",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194517,
+          "id": "unit-p0-emberRavager-23904",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        },
+        {
+          "tick": 194557,
+          "id": "unit-p0-summoner-38054",
+          "from": null,
+          "to": "unit-p0-carrier-25442",
+          "commandIndex": null
+        }
+      ],
+      "newPermanentNativeTerminalObservations": 0,
+      "actualDisembarks": [
+        {
+          "tick": 194400,
+          "id": "unit-p0-siegeRam-24816",
+          "hp": 420,
+          "commandIndex": 2
+        },
+        {
+          "tick": 194400,
+          "id": "unit-p0-siegeRam-34834",
+          "hp": 420,
+          "commandIndex": 3
+        },
+        {
+          "tick": 194400,
+          "id": "unit-p0-siegeRam-39936",
+          "hp": 420,
+          "commandIndex": 4
+        }
+      ],
+      "finalCabinUsage": {
+        "capacity": 21,
+        "used": 16,
+        "free": 5,
+        "overCapacity": 0
+      },
+      "finalCargo": [
+        {
+          "id": "unit-p0-emberRavager-19088",
+          "hp": 157,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-emberRavager-22372",
+          "hp": 118,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-emberRavager-23904",
+          "hp": 236,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-siegeRam-34834",
+          "hp": 420,
+          "inside": false
+        },
+        {
+          "id": "unit-p0-summoner-37753",
+          "hp": 95,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-summoner-38054",
+          "hp": 95,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-summoner-40241",
+          "hp": 95,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-summoner-41089",
+          "hp": 95,
+          "inside": true
+        },
+        {
+          "id": "unit-p0-summoner-44159",
+          "hp": 95,
+          "inside": true
+        }
+      ],
+      "source1464AndFrozen184PrePostExact": true,
+      "strictWorldIdAll3MemRestore": true,
+      "reportSHA256": "d1abad0681890b5968e867dc0124a13193c6d6fe9a613d1f6ab78ff402b653ca",
+      "effects": {
+        "rows": 246,
+        "transientIllegalBefore": 7,
+        "snapshotChanged": 211,
+        "diagnosticEntries": [
+          {
+            "tick": 194400,
+            "owner": "p0",
+            "scriptId": "diagnostic-public-ram-unload",
+            "command": {
+              "type": "unloadPassenger",
+              "transportId": "unit-p0-carrier-25442",
+              "passengerId": "unit-p0-siegeRam-24816"
+            },
+            "legalityBefore": null,
+            "snapshotChanged": true
+          },
+          {
+            "tick": 194400,
+            "owner": "p0",
+            "scriptId": "diagnostic-public-ram-unload",
+            "command": {
+              "type": "unloadPassenger",
+              "transportId": "unit-p0-carrier-25442",
+              "passengerId": "unit-p0-siegeRam-34834"
+            },
+            "legalityBefore": null,
+            "snapshotChanged": true
+          },
+          {
+            "tick": 194400,
+            "owner": "p0",
+            "scriptId": "diagnostic-public-ram-unload",
+            "command": {
+              "type": "unloadPassenger",
+              "transportId": "unit-p0-carrier-25442",
+              "passengerId": "unit-p0-siegeRam-39936"
+            },
+            "legalityBefore": null,
+            "snapshotChanged": true
+          },
+          {
+            "tick": 194400,
+            "owner": "p0",
+            "scriptId": "diagnostic-public-cabin-entry",
+            "command": {
+              "type": "enterCabin",
+              "unitIds": [
+                "unit-p0-emberRavager-19088",
+                "unit-p0-emberRavager-22372",
+                "unit-p0-emberRavager-23904",
+                "unit-p0-summoner-37753",
+                "unit-p0-summoner-38054",
+                "unit-p0-summoner-40241",
+                "unit-p0-summoner-41089",
+                "unit-p0-summoner-44159"
+              ]
+            },
+            "legalityBefore": null,
+            "snapshotChanged": true
+          }
+        ]
+      }
+    }
+  ],
+  "closure30": {
+    "file": "closure-cabin-194595-194625/proof.json",
+    "allTrue": true,
+    "rawFrameEntries": 33,
+    "nativeHits": 0,
+    "nativeEvents": 16,
+    "actualPrethink": 2,
+    "boundary": "original loading timeout194610 then10opencrew disembark194611; no additional public commands. Input retains earlier manual entry."
+  },
+  "rawTraceSemantics": "SDK onCommand runs afterApply even when frame issue skips transient-invalid intent. A trace row is not proof an action had an effect. Live unit order/aim/pose/projectile/hit/deck/cabin transition carries physical proof; open-hatch branch additionally records before-legality and before/after snapshot change.",
+  "originalUncommittedGapUnrecovered": true
+}

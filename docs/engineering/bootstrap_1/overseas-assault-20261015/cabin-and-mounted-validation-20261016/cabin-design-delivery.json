@@ -1,0 +1,60 @@
+{
+  "classification": "Read-only cabin-ferry design delivery; implementation not performed, no native/planner/test execution",
+  "runtimeSource": "ade412414d9232206f39e20f0182f0086605433c",
+  "files": [
+    {
+      "path": "/workspace/.playtest/cabin-ferry-stage-design-ade-20261016/DESIGN.zh.md",
+      "bytes": 21272,
+      "sha256": "462bdf2e1163ab4d01c92e2f1deec2effb517c2d4bcf2a7ec025bd5042621d36"
+    },
+    {
+      "path": "/workspace/.playtest/cabin-ferry-stage-design-ade-20261016/evidence-and-source-audit.json",
+      "bytes": 36605,
+      "sha256": "21d2db2954b78e601af3ab5c6e6a0a1c72ab107470097bb79ddfbcee1e37dfcc"
+    },
+    {
+      "path": "/workspace/.playtest/cabin-ferry-stage-design-ade-20261016/audit-existing-records.py",
+      "bytes": 8656,
+      "sha256": "d176f1bc54eb3ef284d445754d2eb0b90c198af5268efb4c02e7b427c9553ee4"
+    }
+  ],
+  "allSelectedSealedEvidenceUnchangedAfterRead": true,
+  "all26ReadSourceFilesRemainExactAde": true,
+  "nextImplementationContract": {
+    "sharedInterface": "src/ai/policy/naval.ts NavalAssignments.assaultCargo?: \"cabin\"; default callers unchanged",
+    "bootstrapOptIn": "src/ai/bootstrap_1/expedition-recovery.ts planBootstrapNaval assignment object",
+    "rosterConsumers": [
+      "initial assault source selection",
+      "same-shore soldiers at naval.ts844",
+      "cross-island pickups at naval.ts919"
+    ],
+    "notGlobalTroopAvailable": "naval.ts590 also consumes it for landed combat",
+    "state": "same ferry memory, finite cabinLoad stage; existing crewIds retain actual per-hull staging assignment",
+    "publisher": "bootstrap_1/policy.ts planBootstrapScriptEntries wrap non-naval script.run before shared runner command bookkeeping, active cohort/hull only",
+    "projection": "one shared pure sequential leave/landing helper returns matching planned command order and actual shadow bodies; all current gates preserved",
+    "integration": "new independent ade-base candidate only; preserve fa af active source and later merge shared naval by hunks, no full-file overwrite"
+  },
+  "established": {
+    "selected28Mass": 5057,
+    "selectedAcrossCurrentShipAndGroundGroups": [
+      8,
+      1,
+      4,
+      2,
+      13
+    ],
+    "currentPlusSelectedUnionMass": 11657,
+    "shipCapacity": 9060.480000000001,
+    "threeCurrentRamsNotInArchivedSelected28": true,
+    "sameFrameLeaveThenPortraitSupportedBySource": true,
+    "newMultiPassengerSameFrameSequenceActuallyRun": false
+  },
+  "remainingEvidenceGaps": [
+    "No archived per-unit land route/shore ETA for all28; no fresh query run",
+    "No autonomous cabin stage implementation, complete-crew packing/deployment or full-game result",
+    "Capability probes remain changed-save manual-public-command diagnostics, not ordinary0 or acceptance",
+    "Original broken-container uncommitted edits remain unrecovered"
+  ],
+  "noRootSourceSealedDirectoryOrActiveControlWrites": true,
+  "noNewLargeEvidenceCopiesOrArchives": true
+}

@@ -1,0 +1,14 @@
+{
+  "file": "bootstrap-cabin-capability-ade-20261016-evidence.tar.gz",
+  "bytes": 11355683,
+  "sha256": "517e4f8f2f20568f285ed16f964c33ed2f48a5b976b8a23178c741dd61b799c9",
+  "payloadFiles": 178,
+  "archiveRegularFiles": 179,
+  "payloadManifest": "INDEX.json",
+  "indexSHA256": "582ca8c40173f0d5cc3927c987821433053d110524c54ef4104e97cdfce48310",
+  "allPayloadHashesBytesAndCoverageVerified": true,
+  "sealedDir": "/workspace/.playtest/cabin-load-capability-ade-20261016",
+  "doNotWriteSealedDir": true,
+  "noProductionAIChangeOrScore": true,
+  "originalUncommittedGapUnrecovered": true
+}

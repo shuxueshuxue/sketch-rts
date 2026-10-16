@@ -1,0 +1,23 @@
+{
+  "atUTC": "2026-10-16T04:46:05.095615+00:00",
+  "kind": "Root docs-only preservation, no source/native/tests/score",
+  "headBefore": "b9c076b6232de7b08f12644334d399e4614d4b86",
+  "runtimeSource": "ade412414d9232206f39e20f0182f0086605433c",
+  "old73PackagesRawTextAndValuesPreserved": true,
+  "allMetadataIncludingHistoricalOrdinary0ValueUnchanged": true,
+  "archiveCopiesExact": [
+    {
+      "file": "bootstrap-cabin-capability-ade-20261016-evidence.tar.gz",
+      "bytes": 11355683,
+      "sha256": "517e4f8f2f20568f285ed16f964c33ed2f48a5b976b8a23178c741dd61b799c9"
+    },
+    {
+      "file": "bootstrap-mounted-cooldown-negative-evidence-20261016.tar.gz",
+      "bytes": 17444921,
+      "sha256": "c4664c26fde284a1bbc2b206948b9333d4fae7bd90153160fc059702996cd94c"
+    }
+  ],
+  "indexSHA256": "45b3b19fd85672d7a0f5df33892492df6693a6ca8e7c870eff388d6482765cb0",
+  "sourceChanges": [],
+  "originalUncommittedGapUnrecovered": true
+}
