@@ -1,9 +1,10 @@
 import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
-import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
+import type { BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
-import type { AiPolicyContext } from '../policy/types';
+import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
+import { combatDeckRecovery } from './deck-recovery';
 import { V6_STRATEGIES, v7Phases, type V6Strategy, type V6Want } from '../policy/v6/doctrine';
 import { V8_STRATEGIES } from '../policy/v8/doctrine';
 import { ARCHER_DOCTRINES } from './archer-doctrine';
@@ -123,7 +124,19 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
 }
 
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
-  return planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options));
+  return planBootstrapScriptEntries(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options));
+}
+
+/** Local deck micro sees every accepted task, including later items and abilities. */
+export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext): AiCommandEntry[] {
+  const entries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, options);
+  if (!scripts.some(script => script.id === AI_SCRIPT_LIBRARY.naval.id)) return entries;
+  const planned = entries.map(entry => entry.command);
+  const final = combatDeckRecovery(snapshot, owner, options, planned);
+  if (final === planned) return entries;
+  const byCommand = new Map<GameCommand, AiCommandEntry[]>();
+  for (const entry of entries) byCommand.set(entry.command, [...(byCommand.get(entry.command) ?? []), entry]);
+  return final.map(command => byCommand.get(command)?.shift() ?? { scriptId: AI_SCRIPT_LIBRARY.naval.id, command });
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {

@@ -1,0 +1,99 @@
+{
+  "rootBasis": "1e1de67c109d5e38c50b1ea728dabedaeedc52c1",
+  "candidateHead": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+  "source": [
+    {
+      "path": "src/ai/bootstrap_1/deck-recovery.test.ts",
+      "sha256": "cf1ad47537427d7e8641d44f8e0fe8c61c005bf30d43a69186f6653498630ec2",
+      "bytes": 10965,
+      "equalToFixedD251": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/deck-recovery.ts",
+      "sha256": "853f21fc4d813844db768b717a2c444d5dc5019d3a6a67be5be8575187a3f124",
+      "bytes": 11802,
+      "equalToFixedD251": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/expedition-recovery.ts",
+      "sha256": "6621b89fb79593ec8906ec6dbfeab552a3617134e96b1f13bf82011bad6c3e12",
+      "bytes": 7325,
+      "equalToFixedD251": true
+    },
+    {
+      "path": "src/ai/bootstrap_1/policy.ts",
+      "sha256": "a0c4f165278ab6e5f21c224e7932e91420c5eb69fc9d86b90f100de956ecda3d",
+      "bytes": 10420,
+      "equalToFixedD251": true
+    },
+    {
+      "path": "src/ai/planner-context.ts",
+      "sha256": "fe32aff83a2775fcd35d6ef27b00783d91e46d217001428f642afb6fe5c3892e",
+      "bytes": 6039,
+      "equalToFixedD251": true
+    }
+  ],
+  "scope": "Combat deck crew lethal aimed-volley retreat behind an actual surviving front. Finish after all accepted bootstrap script entries so later casting/items/other tasks remain authoritative. No changes to native simulation or frozen opponents.",
+  "validation": {
+    "rootTests": 70,
+    "rootFiles": 7,
+    "singleWorker": true,
+    "tscExitCode": 0,
+    "scope": "Combined bounded-cache+care+deck source. No ordinary0 score assigned by these tests.",
+    "observedSlowCases": {
+      "actual39600ServiceCrossingMs": 88495,
+      "realBallistaDeckCrossingMs": 75702,
+      "classification": "Actual test durations, previous comparable log investigation pending; no generalized performance claim."
+    }
+  },
+  "completeGameEvidence": {
+    "originalOrdinary0Segment": {
+      "head": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+      "from": 0,
+      "to": 35460
+    },
+    "changedStrategySegment": {
+      "head": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+      "from": 35460,
+      "to": 40350
+    },
+    "changedPureRuntimeSegment": {
+      "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b",
+      "fromPostCommands": 40350,
+      "to": 41255
+    },
+    "terminal": {
+      "tick": 41255,
+      "winner": "p0",
+      "enemyUnits": 0,
+      "enemyBuildings": 0,
+      "nativeOwnUnitsLost": 0,
+      "original13Alive": 13,
+      "original13OnEnemyIsland": 8,
+      "original13StillAboard": 5,
+      "saved2245Hp": 27,
+      "saved2245Xp": 0
+    },
+    "closure": {
+      "inputAnd40351WorldNextIdBothMemoriesExact": true,
+      "terminal40800ReplayWorldNextIdBothMemoriesExact": true,
+      "terminalCommands": 29,
+      "terminalHits": 114,
+      "allNewStrategyCommands": 588,
+      "allNewStrategyHits": 297
+    },
+    "qualification": "Changed-code mixed continuation, not new ordinary0 or final acceptance. Old0f44441/1loss retains its own source.3186ticks difference is observational across divergent decisions, not single-hunk causal timing."
+  },
+  "limits": [
+    "Lethal-volley estimate covers current normal non-hull weapons and known projectiles, not every ability/retarget/splash/source multiplier or future movement.",
+    "Local camp clear42ticks slower; front knight takes30extraHP damage and hull2.6034extraHP damage while preserving raider.",
+    "Surviving raider remains27HP on deck with no XP/output; healing, veteran development and full13deployment remain unfinished.",
+    "Three route families/all normal singles+pairs/official maps+genuinely new seeds remain unaccepted."
+  ],
+  "frozen": {
+    "rulesVersion": 2,
+    "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "manifestUnchanged": true
+  },
+  "unrecoveredOriginalWorkspaceGap": true
+}

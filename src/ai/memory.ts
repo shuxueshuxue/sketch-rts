@@ -53,6 +53,7 @@ export type V6PolicyMemory = {
 // The naval script's plans (see @@@ai-naval), each with the tick it was looked for: the island's mine and the water a ship
 // lands at, the assault's target and its water, the raid's water.
 export type NavalPlanMemory = {
+  deckRecovery?: Record<string, { shipId: string; point: {x:number;y:number}; hold: {x:number;y:number}; foeIds: string[] }>;
   combat?: Record<string, { targetId: string; commandTargetId?: string }>;
   coastalRetreat?: Record<string, { x: number; y: number; astern?: true }>;
   coastalVoyages?: Record<string, { targetId: string; goal: {x:number;y:number}; waypoint: {x:number;y:number}; proof: "complete" | "prefix" }>;

@@ -1,0 +1,9 @@
+{
+  "commands": true,
+  "hits": true,
+  "expectedCommands": 18,
+  "actualCommands": 18,
+  "expectedHits": 2,
+  "actualHits": 2,
+  "bounds": "All40305..40350 public commands inclusive; nativehits exclude initial40305 boundary and include40350. Phase-only diagnostic40305 exact full restore source d251 did not alter command/native order; its40350postcommand fullinput is actual source for newa269."
+}

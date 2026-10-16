@@ -1,0 +1,399 @@
+{
+  "classification": "Complete natural enemy elimination for a changed-code stitched continuation, never ordinary0/final bootstrap acceptance. Original ordinary0f prefix→35460; d251 deck strategy35460→40350 (OOM failedprocesses kept); a269 d251+native FIFO128 source40350→41255. Runtime source switch is explicit although AI policy is unchanged at40350. All command/hit streams deduplicated and originals retained.",
+  "winner": "p0",
+  "terminalTick": 41255,
+  "enemyRemaining": {
+    "units": [],
+    "buildings": []
+  },
+  "ownFinal": {
+    "units": 55,
+    "buildings": 27,
+    "halls": [
+      {
+        "id": "building-p0-townhall",
+        "hp": 900,
+        "x": 8496,
+        "y": 3632
+      },
+      {
+        "id": "building-p0-townHall-1583",
+        "hp": 900,
+        "x": 5648,
+        "y": 1264
+      },
+      {
+        "id": "building-p0-townHall-1789",
+        "hp": 900,
+        "x": 2288,
+        "y": 2736
+      },
+      {
+        "id": "building-p0-townHall-4366",
+        "hp": 900,
+        "x": 8208,
+        "y": 7120
+      }
+    ]
+  },
+  "lossCrossChecks": {
+    "stats": 0,
+    "focusedMissing": [],
+    "focusedFriendlyFatal": [],
+    "allCandidateFriendlyFatal": [],
+    "post36000FriendlyRemoval": [],
+    "post36000ShipLosses": [],
+    "scope": "Cumulative native unitsLost includes all earlier prefix. Original ordinary0f sealed soleloss only occurs35616, afterstrategy35460switch. Not inferred from an empty removal array alone; fatal hit/stats/fullstate and focused whole-frame presence crosschecked."
+  },
+  "victim2245": {
+    "id": "unit-p0-raider-2245",
+    "hp": 27,
+    "maxHp": 167,
+    "deck": {
+      "shipId": "unit-p0-warship-1962",
+      "x": -26.59046111503678,
+      "y": 16.505962313055395
+    },
+    "order": {
+      "type": "idle"
+    },
+    "kills": 0,
+    "xp": 0,
+    "level": 0,
+    "limitation": "Survived on aftdeck at27HP; no damage or veteran gain. This is casualty preservation, not demonstrated combat contribution or completed naval healing."
+  },
+  "original13": {
+    "alive": 13,
+    "dead": 0,
+    "onEnemyIsland": 8,
+    "aboard": 5,
+    "manifest": [
+      {
+        "id": "unit-p0-knight-2403",
+        "kind": "knight",
+        "alive": true,
+        "hp": 319,
+        "maxHp": 319,
+        "deck": {
+          "shipId": "unit-p0-transport-1046",
+          "x": -33.44000000000001,
+          "y": -22.800000000000004
+        },
+        "x": 6292.748037744073,
+        "y": 4038.800000000001,
+        "onEnemyIsland": false
+      },
+      {
+        "id": "unit-p0-raider-2966",
+        "kind": "raider",
+        "alive": true,
+        "hp": 167,
+        "maxHp": 167,
+        "deck": {
+          "shipId": "unit-p0-transport-1046",
+          "x": 26.559999999999988,
+          "y": -22.800000000000004
+        },
+        "x": 6232.748037744073,
+        "y": 4038.800000000001,
+        "onEnemyIsland": false
+      },
+      {
+        "id": "unit-p0-raider-3462",
+        "kind": "raider",
+        "alive": true,
+        "hp": 167,
+        "maxHp": 167,
+        "deck": {
+          "shipId": "unit-p0-transport-1046",
+          "x": -1.440000000000012,
+          "y": 3.1999999999999957
+        },
+        "x": 6260.748037744073,
+        "y": 4012.800000000001,
+        "onEnemyIsland": false
+      },
+      {
+        "id": "unit-p0-raider-4271",
+        "kind": "raider",
+        "alive": true,
+        "hp": 167,
+        "maxHp": 167,
+        "deck": {
+          "shipId": "unit-p0-transport-1046",
+          "x": 30.559999999999988,
+          "y": 23.199999999999996
+        },
+        "x": 6228.748037744073,
+        "y": 3992.800000000001,
+        "onEnemyIsland": false
+      },
+      {
+        "id": "unit-p0-raider-4272",
+        "kind": "raider",
+        "alive": true,
+        "hp": 167,
+        "maxHp": 167,
+        "deck": {
+          "shipId": "unit-p0-transport-1046",
+          "x": -37.44000000000001,
+          "y": 19.199999999999996
+        },
+        "x": 6296.748037744073,
+        "y": 3996.800000000001,
+        "onEnemyIsland": false
+      },
+      {
+        "id": "unit-p0-priest-1786",
+        "kind": "priest",
+        "alive": true,
+        "hp": 131,
+        "maxHp": 131,
+        "deck": null,
+        "x": 1813.9778555079088,
+        "y": 6676.378466109309,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-raider-2428",
+        "kind": "raider",
+        "alive": true,
+        "hp": 167,
+        "maxHp": 167,
+        "deck": null,
+        "x": 1741.2894600957675,
+        "y": 6722.97022768657,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-priest-2507",
+        "kind": "priest",
+        "alive": true,
+        "hp": 131,
+        "maxHp": 131,
+        "deck": null,
+        "x": 1788.053098765779,
+        "y": 6657.619343503948,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-witch-2593",
+        "kind": "witch",
+        "alive": true,
+        "hp": 133,
+        "maxHp": 133,
+        "deck": null,
+        "x": 1834.5473153956439,
+        "y": 6617.839175473271,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-knight-2770",
+        "kind": "knight",
+        "alive": true,
+        "hp": 319,
+        "maxHp": 319,
+        "deck": null,
+        "x": 1757.5537337904805,
+        "y": 6680.2862518971,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-knight-3122",
+        "kind": "knight",
+        "alive": true,
+        "hp": 319,
+        "maxHp": 319,
+        "deck": null,
+        "x": 1702.1689335864583,
+        "y": 6714.628500908832,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-priest-3511",
+        "kind": "priest",
+        "alive": true,
+        "hp": 131,
+        "maxHp": 131,
+        "deck": null,
+        "x": 1799.8329336892227,
+        "y": 6624.393284148786,
+        "onEnemyIsland": true
+      },
+      {
+        "id": "unit-p0-knight-3874",
+        "kind": "knight",
+        "alive": true,
+        "hp": 298.7250901696563,
+        "maxHp": 319,
+        "deck": null,
+        "x": 1781.2543219116762,
+        "y": 6721.532237139993,
+        "onEnemyIsland": true
+      }
+    ],
+    "limitation": "Five transport1046 crew still aboard at win. Do not state the entire13 landed or transport readiness solved."
+  },
+  "fullCandidateStreams": {
+    "commands": 588,
+    "hits": 297,
+    "commandSourceRanges": [
+      {
+        "source": "d251",
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-focused-35460-36000/commands.json",
+        "start": 35460,
+        "endExclusive": 36000,
+        "count": 135
+      },
+      {
+        "source": "d251",
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-36000-natural/commands.jsonl",
+        "start": 36000,
+        "endInclusive": 40350,
+        "count": 354
+      },
+      {
+        "source": "a269",
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/native-40350-natural/commands.jsonl",
+        "startExclusive": 40350,
+        "endInclusive": 41255,
+        "count": 99
+      }
+    ],
+    "nativeHitsScope": "Focused nativehits35461..36000 +d25136001..40350 +a26940351..41255; no40305resume duplicates."
+  },
+  "firstNative40351Closure": {
+    "world": true,
+    "nextId": true,
+    "bothMem": true,
+    "tick": 40351
+  },
+  "terminalClosure": {
+    "pid": 281179,
+    "restore": {
+      "world": true,
+      "nextId": true,
+      "bothMem": true
+    },
+    "checks": {
+      "world": true,
+      "nextId": true,
+      "bothMem": true,
+      "commands": true,
+      "hits": true
+    },
+    "tick": 41255,
+    "winner": "p0",
+    "commands": 29,
+    "expectedCommands": 29,
+    "hits": 114,
+    "expectedHits": 114,
+    "sourcePost": {
+      "files": 1454,
+      "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b",
+      "bad": []
+    },
+    "frozenPost": {
+      "files": 184,
+      "bad": [],
+      "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+    },
+    "resources": {
+      "memory": {
+        "rss": 572944384,
+        "heapTotal": 312590336,
+        "heapUsed": 219190896,
+        "external": 176382311,
+        "arrayBuffers": 171745460
+      },
+      "usage": {
+        "userCPUTime": 12344219,
+        "systemCPUTime": 927082,
+        "maxRSS": 559644,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 178174,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 144,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 7369,
+        "involuntaryContextSwitches": 496
+      }
+    }
+  },
+  "comparativeScope": {
+    "oldOrdinary0fWinnerTick": 44441,
+    "newHybridWinnerTick": 41255,
+    "oldOrdinary0fLoss": 1,
+    "newHybridLoss": 0,
+    "deltaTick": -3186,
+    "qualification": "Timing/loss observations apply to each exact source history; this is not a single-hunk timing causal estimate and not a true0 newcandidate result. Opponent remains normal frozenv5/rules2. The localcamp traded42ticks/slower clear, knight30HP andhull2.6034HP additional damage forraider preservation."
+  },
+  "sourcePre": {
+    "exact": true,
+    "files": 1454,
+    "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b"
+  },
+  "sourcePost": {
+    "exact": true,
+    "files": 1454,
+    "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b"
+  },
+  "frozenPre": {
+    "exact": true,
+    "files": 184,
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+  },
+  "frozenPost": {
+    "exact": true,
+    "files": 184,
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+  },
+  "resources": {
+    "memory": {
+      "rss": 686538752,
+      "heapTotal": 335675392,
+      "heapUsed": 230007112,
+      "external": 217844131,
+      "arrayBuffers": 213208707
+    },
+    "usage": {
+      "userCPUTime": 43919707,
+      "systemCPUTime": 3348615,
+      "maxRSS": 684728,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 280727,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 3328,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 14006,
+      "involuntaryContextSwitches": 4979
+    }
+  },
+  "remainingScope": [
+    "Three route families, all v5/v7/v8 singles and sixpairs/officialmaps/unseen normalresourcefullmatch acceptance remain unfinished.",
+    "Exact original container uncommitted bytes were never recovered; gap retained.",
+    "No tests/localwin/productionpatchcount substitutes for full three-route acceptance."
+  ],
+  "support": {
+    "driver": "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/run-natural.mts",
+    "driverSHA256": "5a0f9edb0f8f0a5e72271df4cd0cb6aa41e949fd27cb414f5a1da8f53c8ab530",
+    "source": "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/source.json",
+    "naturalResult": "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/native-40350-natural/result.json",
+    "visuals": [
+      "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/native-enemy-base-40800.png",
+      "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/native-enemy-base-41255.png"
+    ]
+  }
+}

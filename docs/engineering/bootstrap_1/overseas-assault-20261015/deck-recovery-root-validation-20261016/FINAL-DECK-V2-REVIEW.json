@@ -1,0 +1,622 @@
+{
+  "classification": "Independent read-only review of the final fixed deck casualty candidate. No native/planner/game/test process launched by reviewer; only source/test/log/fixture reads and ordinary file hashes. V1 known defects are not incorrectly attributed to final V2.",
+  "base": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "reviewedHead": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+  "worktree": "/workspace/sketch-rts-deck-casualty-v2-control",
+  "statusAtReview": "",
+  "changedFiles": [
+    "src/ai/bootstrap_1/deck-recovery.test.ts",
+    "src/ai/bootstrap_1/deck-recovery.ts",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35460.json.gz",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35520.json.gz",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35580.json.gz",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35595.json.gz",
+    "src/ai/bootstrap_1/fixtures/deck-landing-0f5bf-43725.json.gz",
+    "src/ai/bootstrap_1/policy.ts",
+    "src/ai/memory.ts",
+    "src/ai/planner-context.ts"
+  ],
+  "allChangedFilesMatchGitHead": {
+    "src/ai/bootstrap_1/deck-recovery.test.ts": true,
+    "src/ai/bootstrap_1/deck-recovery.ts": true,
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35460.json.gz": true,
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35520.json.gz": true,
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35580.json.gz": true,
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35595.json.gz": true,
+    "src/ai/bootstrap_1/fixtures/deck-landing-0f5bf-43725.json.gz": true,
+    "src/ai/bootstrap_1/policy.ts": true,
+    "src/ai/memory.ts": true,
+    "src/ai/planner-context.ts": true
+  },
+  "reviewedFileSHA256": {
+    "src/ai/bootstrap_1/deck-recovery.test.ts": "cf1ad47537427d7e8641d44f8e0fe8c61c005bf30d43a69186f6653498630ec2",
+    "src/ai/bootstrap_1/deck-recovery.ts": "853f21fc4d813844db768b717a2c444d5dc5019d3a6a67be5be8575187a3f124",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35460.json.gz": "20fb98a2f88f7782854f1fdb09d9c0d8d20465b1bea961dc73914940b26f4014",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35520.json.gz": "414e111caabf0d06f4963da9a55c522411c5150a48df4ee4250897057c134b95",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35580.json.gz": "d73a87cdc142a3251dc64f6d3b38a7ec11845ad47afed32d390ae1119569fb74",
+    "src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35595.json.gz": "ff3bf9a804fb49a8da5e60d2adc1ec16d9a5cd8c8d02210413f1d54369681801",
+    "src/ai/bootstrap_1/fixtures/deck-landing-0f5bf-43725.json.gz": "8ac77a889909e4ba95435f88b446cbfd0890079c8b02d170400997e0082a1799",
+    "src/ai/bootstrap_1/policy.ts": "a0c4f165278ab6e5f21c224e7932e91420c5eb69fc9d86b90f100de956ecda3d",
+    "src/ai/memory.ts": "f7710189d59ead8ad40d7f301cd17d9624534494ae70785591b86b94fba6318b",
+    "src/ai/planner-context.ts": "fe32aff83a2775fcd35d6ef27b00783d91e46d217001428f642afb6fe5c3892e"
+  },
+  "engineAndPolicyReferenceSHA256": {
+    "src/shared/sim.ts": "fb0973ed8f4696764d428a04c3136763aae083be7c6b433532355b79203fb1a8",
+    "src/shared/decks.ts": "7f0bfdb699633c79d521f7f49cfebd4aed5748ed0a6877c41fa7510e4a03006d",
+    "src/shared/ship-motion.ts": "b70eb677d8dcdddc6cd35459698f75c2e0d134ad9d6d653c3ecbfa23633ec7c3",
+    "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+    "src/shared/damage-types.ts": "74ab4ddc972cd30d055e4256e0ca097b247b7df695af484469155958116fed09",
+    "src/shared/combat-capabilities.ts": "18229c99f1bb6b3b4bbc5a31680008edd1b6d2a214bf7b02210e3947c24b6095",
+    "src/shared/veteran-runtime.ts": "f846be63893faaa0776082d1347944d66d70fc4788123858a0f15d2160117eb7",
+    "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+    "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+    "src/ai/policy/script-runner.ts": "5623d2ca040edefa5a4e4259251589b2a077628a14a4c7509d4f5ed3f768e896",
+    "src/ai/policy/naval.ts": "87c06818f41da1e69d48511aae3b2acd9b84ef2291723734c88178d6c9ad3ea9",
+    "src/ai/policy/fleet-engagement.ts": "2cccb5e9a36df0827ee758d096cf1ff0d94490faa824df645c009720d1a2ff0e"
+  },
+  "patch": {
+    "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/candidate-from-0f5bf.patch",
+    "sha256": "c6a9750c078bbea45ccd256976f478c42878a011412ab057a055dbea99900a50",
+    "scope": "Complete root0f→V2 binary patch including all five real fixtures; not only8dad→V2 increment."
+  },
+  "blockingConcreteFindings": [],
+  "reviewedContracts": [
+    {
+      "topic": "One postprocessing pass over accepted ordinary script tasks",
+      "files": [
+        "src/ai/bootstrap_1/policy.ts:126",
+        "src/ai/planner-context.ts:69"
+      ],
+      "finding": "Both BootstrapCommands and public owner-planner use planBootstrapScriptEntries. The V1 naval-only hook is removed. All accepted ordinary script commands, including later items/abilities, are checked before deck selection. No-naval script request returns original entries. Original command object identities/order/scriptId are preserved by an identity-keyed FIFO map; new stop/move/queuedhold entries are tagged naval. The later wrapper can still prepend nonmoving veteran-learn commands; it is not accurate to call these unconditionally all commands of the outermost planner."
+    },
+    {
+      "topic": "Existing tasks and finite native order provenance",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:53",
+        "src/ai/bootstrap_1/deck-recovery.ts:64",
+        "src/ai/bootstrap_1/deck-recovery.ts:98"
+      ],
+      "finding": "A post recognizes only its exact own deck move plus sole queued hold, the corresponding idle-with-pendinghold boundary, or matching hold alone. A changed order/queue drops memory without stop. Own posture is stopped before a new accepted order, transfer/installer, unload or enabled-charge assignment; ferries, outfitting, services, cabins/gangways, mounted owners and existing queues are excluded. Memory is a plain optional JSON record, without TTL/new compatibility state."
+    },
+    {
+      "topic": "Release after engagement",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:100"
+      ],
+      "finding": "V2 no longer requires every original aimed foe to die. A post is retained only while an original foe participates in the same hull planner target or attacks its hull/own deck crew. No engagement or unavailable hull/patient emits stop before the original accepted tasks. This is a current planner-engagement definition, not a proximity or future safe-return guarantee."
+    },
+    {
+      "topic": "First hull and deck geometry match native semantics",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:130",
+        "src/shared/sim.ts:1493",
+        "src/shared/sim.ts:543"
+      ],
+      "finding": "The first supporting hull check uses the same snapshot find order, local/world conversion, zero-radius circleInPolygon hull test as native deckPointOrder. A different first hull rejects the candidate. The endpoint must also pass actual deckPlacement, deckWalkPathExists and straight swept capsule checks against current fittings/crew. Native hold does not walk back toward its stored world anchor: that coordinate can serve as the queued-order provenance value. Geometry proves only the present straight walk, not future crew/hull motions."
+    },
+    {
+      "topic": "Cooldown, pace and damage counting",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:41",
+        "src/ai/bootstrap_1/deck-recovery.ts:47",
+        "src/ai/bootstrap_1/deck-recovery.ts:123",
+        "src/shared/sim.ts:1370",
+        "src/shared/sim.ts:2730"
+      ],
+      "finding": "Saved cooldown is decremented before native shooting; V2 first=max(1,cooldown), inclusive final-tick formula and live veteran/temporary attack-speed period match that clock convention. Derived Unit.speed is scaled with shared SLOW_PACE, and currently root/stun/staggered patients are not newly selected. Future ordinary volley selection requires non-hull attacker, actual current range, native minimum range, canReach and an existing aimed attack. Mounted/ship future volleys are excluded rather than incorrectly using the hull cooldown."
+    },
+    {
+      "topic": "Already flying shots are separate from future reloads",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:153",
+        "src/shared/sim.ts:3029"
+      ],
+      "finding": "Actual targeted projectiles arriving within the window are counted separately with their saved damageProfile or the native sourceKind/defenseTower fallback, and armorAlreadyApplied is respected. The future volley starts on the next native eligible attack clock, so the already launched shot is not counted again merely because it is still flying. Aim delay, future movement and future status/armor changes are not a cloned execution."
+    },
+    {
+      "topic": "Existing front must survive its modeled additional burden",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts:164"
+      ],
+      "finding": "A front is actual same-deck available automatic-attacking crew, with no queue or conflicting owner and lifetime beyond the estimated walk window. It must be closer to every aimed foe than the retreat endpoint, and HP must exceed transferred modeled volley plus its own flying damage and other current aimed ordinary attackers. This prevents the previously noted known-load/expiry countercases and prevents two patients already lethal under the same model from simply using each other as a front. It remains an estimate against current non-hull basic fire, not a front survival guarantee."
+    },
+    {
+      "topic": "No hardcoded actor, map or arbitrary timeout",
+      "files": [
+        "src/ai/bootstrap_1/deck-recovery.ts"
+      ],
+      "finding": "Production logic contains no fixture IDs/map/seed/tick checks. It uses the actual hull profile, current weapon and unit statistics, shared15think cadence and geometric rear endpoint, and does not require an invented timeout. The only prototype IDs occur in tests."
+    }
+  ],
+  "knownNonblockingModelLimits": [
+    {
+      "scope": "Target/source damage adjustments",
+      "evidence": "sim.ts2813 outgoingDamageMultiplier and3258 attackDamageAgainstTarget",
+      "finding": "Future volley currently passes foe.attackDamage into resolveUnitDamage. The common resolver handles target protection, not casterSlayer(ordinary ashChieftain22→caster33), scorch bonus(ravager+7/runner+5), or source curse/brace/transport-deck output reductions. Consequently this is not exact full native damage; some adjustments raise and others lower it. Actual35595 three dragons and patient have none of these conditions."
+    },
+    {
+      "scope": "Only normal unit future fire is modeled",
+      "finding": "Ship/mounted batteries, towers, skills, splash, new targets and new movement are not a future volley forecast. Existing flying shots may originate from any source, but entry still requires at least one aimed non-hull ordinary attacker. Do not call this universal deck danger detection or proof of no damage transfer."
+    },
+    {
+      "scope": "Planner commitment may continue while withdrawing",
+      "evidence": "policy/naval.ts458 continuing coastalRetreat returns before fleetTarget clears/updates oldcombat; fleet-engagement.ts clears when normal target selection resumes",
+      "finding": "The post engagement predicate can remain true during an existing withdrawal because a planner target is still committed. That is conservative retention of its own posture, not proof a distant engagement remains in weapon contact. A new accepted order still preempts it."
+    },
+    {
+      "scope": "Current protection and physical path",
+      "finding": "Protection duration, future body/heading changes, targeting and collision outcomes are not integrated forward. The walk window is a current straight-path estimate plus15ticks, not a guarantee that native movement will finish on that tick."
+    }
+  ],
+  "testsRead": {
+    "reported24PassedLog": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/tests-preflight.log",
+    "logSHA256": "e54beaed30cab09c3e350c2261e281c0e862c49bb07fc2f2c9463ff3edf31496",
+    "tscLog": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/tsc-preflight.log",
+    "tscLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old16CasesPreservedExactlyAfterTheirStart": true,
+    "new8": "Three native cooldown endpoint cases; shared slow/root case; controlled front expiry/pending-fire rejection; engagement-end own-post release; full-pipeline late charge switch; nonnaval request no-op. The two countercases are explicitly controlled fixture variations, not historical match observations.",
+    "reviewerExecuted": false,
+    "coverageLimit": "Queued move/hold native provenance is checked immediately after issuing commands; the forthcoming complete540tick pipeline is still needed to assess actual walk/hold/release and fight effect."
+  },
+  "realFixtureFacts": [
+    {
+      "tick": 35460,
+      "path": "/workspace/sketch-rts-deck-casualty-v2-control/src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35460.json.gz",
+      "sha256": "20fb98a2f88f7782854f1fdb09d9c0d8d20465b1bea961dc73914940b26f4014",
+      "patientAndFront": [
+        {
+          "id": "unit-p0-knight-2183",
+          "kind": "knight",
+          "hp": 319,
+          "maxHp": 319,
+          "speed": 72,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "idle"
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": -24.200000000000003,
+            "y": -17.520000000000003
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        },
+        {
+          "id": "unit-p0-raider-2245",
+          "kind": "raider",
+          "hp": 167,
+          "maxHp": 167,
+          "speed": 82,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "idle"
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": -8.200000000000003,
+            "y": 20.479999999999997
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        }
+      ],
+      "aimedAtPatient": [],
+      "pendingAgainstPatientOrFront": []
+    },
+    {
+      "tick": 35520,
+      "path": "/workspace/sketch-rts-deck-casualty-v2-control/src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35520.json.gz",
+      "sha256": "414e111caabf0d06f4963da9a55c522411c5150a48df4ee4250897057c134b95",
+      "patientAndFront": [
+        {
+          "id": "unit-p0-knight-2183",
+          "kind": "knight",
+          "hp": 319,
+          "maxHp": 319,
+          "speed": 72,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5269.286889277262,
+            "leashY": 6175.280293771854
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": -22.51470474295909,
+            "y": -19.075464501244383
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        },
+        {
+          "id": "unit-p0-raider-2245",
+          "kind": "raider",
+          "hp": 167,
+          "maxHp": 167,
+          "speed": 82,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5287.752971859543,
+            "leashY": 6138.415625130127
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": 9.565106997989078,
+            "y": 14.404356086028889
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        }
+      ],
+      "aimedAtPatient": [
+        {
+          "id": "guard-2-0",
+          "kind": "redDragon",
+          "hp": 542,
+          "attackDamage": 42,
+          "attackRange": 176,
+          "attackCooldown": 40,
+          "cooldown": 36,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-1",
+          "kind": "dragonWhelp",
+          "hp": 150,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-2",
+          "kind": "dragonWhelp",
+          "hp": 158,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        }
+      ],
+      "pendingAgainstPatientOrFront": [
+        {
+          "attackKind": "fire",
+          "damageProfile": {
+            "school": "magic",
+            "delivery": "ranged",
+            "element": "fire",
+            "origin": "unit"
+          },
+          "id": "projectile-5427",
+          "owner": "neutral",
+          "attackerId": "guard-2-0",
+          "targetId": "unit-p0-raider-2245",
+          "fromX": 5214.796057889285,
+          "fromY": 5966.711288640252,
+          "toX": 5267.063438745628,
+          "toY": 6130.49604546835,
+          "damage": 42,
+          "remaining": 6,
+          "duration": 10,
+          "sourceKind": "redDragon",
+          "hullDamageShare": 0.1
+        }
+      ]
+    },
+    {
+      "tick": 35580,
+      "path": "/workspace/sketch-rts-deck-casualty-v2-control/src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35580.json.gz",
+      "sha256": "d73a87cdc142a3251dc64f6d3b38a7ec11845ad47afed32d390ae1119569fb74",
+      "patientAndFront": [
+        {
+          "id": "unit-p0-knight-2183",
+          "kind": "knight",
+          "hp": 313,
+          "maxHp": 319,
+          "speed": 72,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5269.286889277262,
+            "leashY": 6175.280293771854
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": -1.2142585532494863,
+            "y": -24.51989999999998
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        },
+        {
+          "id": "unit-p0-raider-2245",
+          "kind": "raider",
+          "hp": 91,
+          "maxHp": 167,
+          "speed": 82,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5287.752971859543,
+            "leashY": 6138.415625130127
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": 14.404206113880663,
+            "y": 17.16721777830453
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        }
+      ],
+      "aimedAtPatient": [
+        {
+          "id": "guard-2-0",
+          "kind": "redDragon",
+          "hp": 542,
+          "attackDamage": 42,
+          "attackRange": 176,
+          "attackCooldown": 40,
+          "cooldown": 26,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-1",
+          "kind": "dragonWhelp",
+          "hp": 121,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 29,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-2",
+          "kind": "dragonWhelp",
+          "hp": 137,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 3,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        }
+      ],
+      "pendingAgainstPatientOrFront": [
+        {
+          "attackKind": "fire",
+          "damageProfile": {
+            "school": "magic",
+            "delivery": "ranged",
+            "element": "fire",
+            "origin": "unit"
+          },
+          "id": "projectile-5463",
+          "owner": "neutral",
+          "attackerId": "guard-2-1",
+          "targetId": "unit-p0-raider-2245",
+          "fromX": 5195.985987506241,
+          "fromY": 6036.814128284902,
+          "toX": 5270.96112821016,
+          "toY": 6123.471082893282,
+          "damage": 17,
+          "remaining": 4,
+          "duration": 7,
+          "sourceKind": "dragonWhelp",
+          "hullDamageShare": 0.1
+        }
+      ]
+    },
+    {
+      "tick": 35595,
+      "path": "/workspace/sketch-rts-deck-casualty-v2-control/src/ai/bootstrap_1/fixtures/deck-camp-0f5bf-35595.json.gz",
+      "sha256": "ff3bf9a804fb49a8da5e60d2adc1ec16d9a5cd8c8d02210413f1d54369681801",
+      "patientAndFront": [
+        {
+          "id": "unit-p0-knight-2183",
+          "kind": "knight",
+          "hp": 313,
+          "maxHp": 319,
+          "speed": 72,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5269.286889277262,
+            "leashY": 6175.280293771854
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": -1.2142585532494863,
+            "y": -24.51989999999998
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        },
+        {
+          "id": "unit-p0-raider-2245",
+          "kind": "raider",
+          "hp": 57,
+          "maxHp": 167,
+          "speed": 82,
+          "attackRange": 72,
+          "cooldown": 0,
+          "order": {
+            "type": "attack",
+            "targetId": "guard-2-0",
+            "leashX": 5287.752971859543,
+            "leashY": 6138.415625130127
+          },
+          "orderQueue": [],
+          "deck": {
+            "shipId": "unit-p0-warship-1962",
+            "x": 14.404206113880663,
+            "y": 17.16721777830453
+          },
+          "effects": [],
+          "autocast": {
+            "charge": false
+          },
+          "veteranSkill": null
+        }
+      ],
+      "aimedAtPatient": [
+        {
+          "id": "guard-2-0",
+          "kind": "redDragon",
+          "hp": 522,
+          "attackDamage": 42,
+          "attackRange": 176,
+          "attackCooldown": 40,
+          "cooldown": 11,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-1",
+          "kind": "dragonWhelp",
+          "hp": 92,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 14,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        },
+        {
+          "id": "guard-2-2",
+          "kind": "dragonWhelp",
+          "hp": 116,
+          "attackDamage": 17,
+          "attackRange": 144,
+          "attackCooldown": 32,
+          "cooldown": 20,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-p0-raider-2245",
+            "leashX": 5110.890037230294,
+            "leashY": 5826.32948386523
+          },
+          "effects": [],
+          "stance": null,
+          "deck": null
+        }
+      ],
+      "pendingAgainstPatientOrFront": []
+    }
+  ],
+  "validationAndAcceptance": "No changed-code native comparison or whole-game benefit is claimed by this static review. Parent owns resource-coordinated540tick full normal pipeline validation. V1 unfixed exploratory artifacts and source remain separate. Rules2, frozen opponents and native simulation are unchanged by the10-file V2 patch.",
+  "otherTaskDeliverable": {
+    "lateHoldoutReview": "/workspace/.playtest/holdout-late-assault-independent-review/FINAL-LATE-ASSAULT-REVIEW.json",
+    "sha256": "7a07d01b7f8ac96a80e3e61b4d0b38dcc2e80f3a754f84f4b6429515a4aaa0e4",
+    "boundary": "Two secondary islands cleared with actual landing/fire evidence; original0f5bf process interrupted at79800 rather than a natural result. Both enemy main halls remained900HP."
+  },
+  "remainingBlockers": [
+    "No permission blocker for this review. Native540tick and eventual complete match/further generalization evidence are pending under parent coordination; this review is not acceptance.",
+    "Original broken-container uncommitted-source recovery gap remains explicitly unchanged."
+  ]
+}

@@ -1,0 +1,522 @@
+{
+  "classification": "Observed actual fixed d251 35460\u219236000 vs same original baseline native window; not a full-game or ordinary0 victory",
+  "crewAndHullHP": [
+    {
+      "id": "unit-p0-bombardShip-2135",
+      "kind": "bombardShip",
+      "baselineHP": 502,
+      "candidateHP": 502,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-carrier-2339",
+      "kind": "carrier",
+      "baselineHP": 696,
+      "candidateHP": 696,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-cutter-1131",
+      "kind": "cutter",
+      "baselineHP": 142.25010718330503,
+      "candidateHP": 142.25010718330503,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-knight-2183",
+      "kind": "knight",
+      "baselineHP": 145,
+      "candidateHP": 115,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1962",
+        "x": 9.077991692251263,
+        "y": 22.491599218759188
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1962",
+        "x": 7.491474387559773,
+        "y": -12.155872650847364
+      }
+    },
+    {
+      "id": "unit-p0-lancer-1181",
+      "kind": "lancer",
+      "baselineHP": 189,
+      "candidateHP": 189,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1064",
+        "x": -30.200000000000003,
+        "y": 18.479999999999997
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1064",
+        "x": -30.200000000000003,
+        "y": 18.479999999999997
+      }
+    },
+    {
+      "id": "unit-p0-lancer-1209",
+      "kind": "lancer",
+      "baselineHP": 189,
+      "candidateHP": 189,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": -30.200000000000003,
+        "y": -21.520000000000003
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": -30.200000000000003,
+        "y": -21.520000000000003
+      }
+    },
+    {
+      "id": "unit-p0-lancer-1235",
+      "kind": "lancer",
+      "baselineHP": 189,
+      "candidateHP": 189,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1064",
+        "x": -30.200000000000003,
+        "y": -21.520000000000003
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1064",
+        "x": -30.200000000000003,
+        "y": -21.520000000000003
+      }
+    },
+    {
+      "id": "unit-p0-lancer-1294",
+      "kind": "lancer",
+      "baselineHP": 189,
+      "candidateHP": 189,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": -30.200000000000003,
+        "y": 18.479999999999997
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": -30.200000000000003,
+        "y": 18.479999999999997
+      }
+    },
+    {
+      "id": "unit-p0-raider-2245",
+      "kind": "raider",
+      "baselineHP": null,
+      "candidateHP": 27,
+      "baselineDeck": null,
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1962",
+        "x": -26.59046111503678,
+        "y": 16.505962313055395
+      }
+    },
+    {
+      "id": "unit-p0-transport-1046",
+      "kind": "transport",
+      "baselineHP": 392,
+      "candidateHP": 392,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-warship-1064",
+      "kind": "warship",
+      "baselineHP": 464,
+      "candidateHP": 464,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-warship-1104",
+      "kind": "warship",
+      "baselineHP": 464,
+      "candidateHP": 464,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-warship-1962",
+      "kind": "warship",
+      "baselineHP": 387.94434016447735,
+      "candidateHP": 385.34092080919595,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-worker-1008",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      }
+    },
+    {
+      "id": "unit-p0-worker-1563",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -13.440000000000012,
+        "y": -28.800000000000004
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -13.440000000000012,
+        "y": -28.800000000000004
+      }
+    },
+    {
+      "id": "unit-p0-worker-1586",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": 3.799999999999997,
+        "y": -23.520000000000003
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-warship-1104",
+        "x": 3.799999999999997,
+        "y": -23.520000000000003
+      }
+    },
+    {
+      "id": "unit-p0-worker-1636",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -21.440000000000012,
+        "y": 29.199999999999996
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -21.440000000000012,
+        "y": 29.199999999999996
+      }
+    },
+    {
+      "id": "unit-p0-worker-1661",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      }
+    },
+    {
+      "id": "unit-p0-worker-1676",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 14.559999999999988,
+        "y": 27.199999999999996
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 14.559999999999988,
+        "y": 27.199999999999996
+      }
+    },
+    {
+      "id": "unit-p0-worker-1806",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 32.55999999999999,
+        "y": 1.1999999999999957
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 32.55999999999999,
+        "y": 1.1999999999999957
+      }
+    },
+    {
+      "id": "unit-p0-worker-1807",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 18.559999999999988,
+        "y": -26.800000000000004
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": 18.559999999999988,
+        "y": -26.800000000000004
+      }
+    },
+    {
+      "id": "unit-p0-worker-2",
+      "kind": "worker",
+      "baselineHP": 70,
+      "candidateHP": 70,
+      "baselineDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -3.440000000000012,
+        "y": 1.1999999999999957
+      },
+      "candidateDeck": {
+        "shipId": "unit-p0-transport-1046",
+        "x": -3.440000000000012,
+        "y": 1.1999999999999957
+      }
+    }
+  ],
+  "lastCampDeath": {
+    "baseline": 35877,
+    "candidate": 35919
+  },
+  "victimMinHP": 27,
+  "victimPresentEveryStep": true,
+  "postFirstTick": 35596,
+  "postLastTick": 35925,
+  "actualVictimCommands": [
+    {
+      "tick": 35595,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "naval",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-raider-2245"
+        ],
+        "x": 5296.951567850452,
+        "y": 6158.20818788375
+      }
+    },
+    {
+      "tick": 35595,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "naval",
+      "command": {
+        "type": "holdPosition",
+        "unitIds": [
+          "unit-p0-raider-2245"
+        ],
+        "queued": true
+      }
+    },
+    {
+      "tick": 35925,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "naval",
+      "command": {
+        "type": "stop",
+        "unitIds": [
+          "unit-p0-raider-2245"
+        ]
+      }
+    }
+  ],
+  "victimHits": [
+    {
+      "tick": 35526,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 42,
+      "before": 167,
+      "after": 125
+    },
+    {
+      "tick": 35552,
+      "phase": "native-step",
+      "sourceId": "guard-2-1",
+      "sourceKind": "dragonWhelp",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 17,
+      "before": 167,
+      "after": 150
+    },
+    {
+      "tick": 35559,
+      "phase": "native-step",
+      "sourceId": "guard-2-2",
+      "sourceKind": "dragonWhelp",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 17,
+      "before": 150,
+      "after": 133
+    },
+    {
+      "tick": 35576,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 42,
+      "before": 133,
+      "after": 91
+    },
+    {
+      "tick": 35584,
+      "phase": "native-step",
+      "sourceId": "guard-2-1",
+      "sourceKind": "dragonWhelp",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 17,
+      "before": 91,
+      "after": 74
+    },
+    {
+      "tick": 35591,
+      "phase": "native-step",
+      "sourceId": "guard-2-2",
+      "sourceKind": "dragonWhelp",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 17,
+      "before": 74,
+      "after": 57
+    },
+    {
+      "tick": 35673,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 6,
+      "before": 57,
+      "after": 51
+    },
+    {
+      "tick": 35767,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 6,
+      "before": 51,
+      "after": 45
+    },
+    {
+      "tick": 35807,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 6,
+      "before": 45,
+      "after": 39
+    },
+    {
+      "tick": 35847,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 6,
+      "before": 39,
+      "after": 33
+    },
+    {
+      "tick": 35887,
+      "phase": "native-step",
+      "sourceId": "guard-2-0",
+      "sourceKind": "redDragon",
+      "sourceOwner": "neutral",
+      "targetId": "unit-p0-raider-2245",
+      "targetKind": "raider",
+      "targetOwner": "p0",
+      "targetExpiresTick": null,
+      "damage": 6,
+      "before": 33,
+      "after": 27
+    }
+  ],
+  "otherFriendlyFatal": [],
+  "newProductionIDsMayShift": [
+    {
+      "id": "unit-p0-carrier-5661",
+      "kind": "carrier",
+      "baselineHP": null,
+      "candidateHP": 696,
+      "baselineDeck": null,
+      "candidateDeck": null
+    },
+    {
+      "id": "unit-p0-carrier-5671",
+      "kind": "carrier",
+      "baselineHP": 696,
+      "candidateHP": null,
+      "baselineDeck": null,
+      "candidateDeck": null
+    }
+  ],
+  "remainingCampProjectiles": []
+}

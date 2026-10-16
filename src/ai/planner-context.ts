@@ -2,7 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
-import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
+import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion, planBootstrapScriptEntries } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
 import { setBuildingBodies } from "../shared/terrain";
 
@@ -66,7 +66,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
       ...(disabledBehaviors ? { disabledBehaviors } : {}),
       memory,
     });
-    return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
+    return withVeteranSkills(planBootstrapScriptEntries(snapshot, owner, scripts, context).map(entry => ({
       playerId: owner,
       ...(request.source !== undefined ? { source: request.source } : {}),
       scriptId: entry.scriptId,

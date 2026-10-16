@@ -1,0 +1,32 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/ai/bootstrap_1/deck-recovery.test.ts (24 tests) 2641ms
+   ✓ combat deck casualty recovery > releases its own native posture when the actual engagement ends even though camp bodies remain alive 829ms
+   ✓ combat deck casualty recovery > honors a legitimate late ability switch in the full real 35595 owner pipeline 823ms
+   ✓ combat deck casualty recovery > recognizes its own native queued move and releases before a new unload or after landing 352ms
+ ✓ src/ai/bootstrap_1/service-deck-yield.test.ts (4 tests) 94612ms
+   ✓ completes the real service crossing and repair from 'actual ordinary 39600' using public orders and JSON restoration 88495ms
+   ✓ completes the real service crossing and repair from 'yaw-only diagnostic 41400 with an unr…' using public orders and JSON restoration 5535ms
+   ✓ does not reuse a saved priest yield whose actual live deck path is blocked 579ms
+ ✓ src/ai/bootstrap_1/assault-care-ownership.test.ts (9 tests) 7966ms
+   ✓ v9_archer does not recruit a mainland critical-care patient into a new assault 1497ms
+   ✓ v9_summoner does not recruit a mainland critical-care patient into a new assault 1218ms
+   ✓ v9_knight does not recruit a mainland critical-care patient into a new assault 1030ms
+   ✓ v9_archer keeps the existing healer with its mainland critical-care patient 801ms
+   ✓ v9_summoner keeps the existing healer with its mainland critical-care patient 785ms
+   ✓ v9_knight keeps the existing healer with its mainland critical-care patient 781ms
+   ✓ keeps an already requested boarding task when its passenger becomes critical 902ms
+   ✓ allows an existing evacuation mission to take a critical survivor and its healer 661ms
+ ✓ src/ai/bootstrap_1/deck-transfer-snapshot.test.ts (3 tests) 76723ms
+   ✓ clears the idle archer blocking the real ballista deck crossing 75702ms
+   ✓ preserves the yielding queue and both hull reservations through the complete planner 1014ms
+ ✓ src/ai/bootstrap_1/recovery-cast-cover.test.ts (12 tests) 1182ms
+ ✓ src/ai/bootstrap_1/mobile-care.test.ts (6 tests) 612ms
+ ✓ src/ai/bootstrap_1/expedition-recovery.test.ts (12 tests) 1319ms
+
+ Test Files  7 passed (7)
+      Tests  70 passed (70)
+   Start at  02:02:23
+   Duration  195.60s (transform 4.14s, setup 0ms, collect 8.35s, tests 185.06s, environment 1ms, prepare 515ms)
+
