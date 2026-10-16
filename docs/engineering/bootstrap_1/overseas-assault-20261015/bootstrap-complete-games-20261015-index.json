@@ -1,5 +1,5 @@
 {
-  "productionHead": "36ae50c6",
+  "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -195,8 +195,119 @@
       "file": "knight-recovery-crosswater-6f80-evidence.tar.gz",
       "bytes": 12002370,
       "sha256": "ebb4f5955f92c361ab7360ff3a2b723839097b9068eab0fc5ce390003a283c44"
+    },
+    {
+      "file": "bootstrap-assault-worker-defense-63b6-ordinary0-51137-evidence.tar.gz",
+      "bytes": 36417984,
+      "sha256": "57f1f8a688122963f07f8362098537b76f614fee56f37c4ae834a165613ca3d0",
+      "indexedPayloadFiles": 195,
+      "archiveRegularFiles": 196,
+      "payloadManifest": "bootstrap-assault-worker-defense-20261015/payload-manifest.json",
+      "payloadHashesVerified": true,
+      "source": "63b6d49264358d8c3efeb0801ea10b314fb10758",
+      "classification": "True standard0 v9_summoner Ember side1 vs normal frozenv8 Grove on known developed generatedladder seed; natural51137p0win,5enemyremaining. Independent result, not currentrootordinary0."
+    },
+    {
+      "file": "bootstrap-frozen-loader-a974b906-evidence.tar.gz",
+      "bytes": 91318,
+      "sha256": "b22613307cae0f5fdd94fdc51784d385c89c16909bc464d41ad34942498f36e7",
+      "indexedPayloadFiles": 17,
+      "archiveRegularFiles": 18,
+      "payloadManifest": "bootstrap-frozen-loader-20261015/payload-manifest.json",
+      "payloadHashesVerified": true,
+      "source": "a974b906da06d9488333002c43a635e46eeeac08",
+      "classification": "Tool-only externalcwd/cache-failure retry fix; no gameplay. Integrated production4d373f8c."
+    },
+    {
+      "file": "bootstrap-solid-sweep-config-performance-evidence.tar.gz",
+      "bytes": 20738479,
+      "sha256": "a836341e452e8911ba043d4a0764f79c33e1d57d546ab32c7a24c67a1ba20d53",
+      "indexedPayloadFiles": 69,
+      "archiveRegularFiles": 70,
+      "payloadManifest": "bootstrap-solid-sweep-memo-20261015/INDEX.sha256",
+      "payloadHashesVerified": true,
+      "source": "5cd3d2d67bb2fa102bb69ff25ebce112d1f10454",
+      "classification": "Only pure Minkowski configuration memo relative63b6; exact query/callback600tick equivalence and finite CPU pairs, not newordinary0 or inherited63b6win. Integrated production1d26ca19."
+    },
+    {
+      "file": "bootstrap-knight-repair-origin-v1-evidence.tar.gz",
+      "bytes": 10328079,
+      "sha256": "5cc4eb9a6600514147072429505226abd9390517ac791fdc305d2aacf19ad30a",
+      "indexedPayloadFiles": 179,
+      "archiveRegularFiles": 180,
+      "payloadManifest": "payload-index.json",
+      "payloadHashesVerified": true,
+      "source": "6f80a9365e591cbfba9148260806cd4f9033788e + exact V2 loading/transfer + one origin hunk",
+      "classification": "Changed-history originalV2 complete68400\u219281077naturalp0win; not ordinary0. One additional permanent friendly loss versus shared-startV2; repairedworker transfer true69651. Integrated native delta in0f5bf01a; standalone outcome is not newrootordinary0."
+    },
+    {
+      "file": "bootstrap-knight-repair-origin-boundary-supplement.tar.gz",
+      "bytes": 3550,
+      "sha256": "79e7713e3902198e984b53d61ce06ac357d2374ff73ea60d3e25994f3b792122",
+      "indexedPayloadFiles": 3,
+      "archiveRegularFiles": 4,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Same immutable origin candidate and fixed originalV2; source unchanged",
+      "classification": "Read-only captured native68400 callback vector verification after mainpackage sealing; no simulation. Pins roundedXY9.09e-13 and changedheading translation/rotation rejection; root additionally persists2tests."
+    },
+    {
+      "file": "bootstrap-macro-income-force-evidence.tar.gz",
+      "bytes": 17366015,
+      "sha256": "13cd70b48e666db1559117b97a2a4576ef5cc220ea90cd63fa062d0bcc889c8d",
+      "indexedPayloadFiles": 270,
+      "archiveRegularFiles": 271,
+      "payloadManifest": "macro-closed-index.json",
+      "payloadHashesVerified": true,
+      "source": [
+        "5f657b38",
+        "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+        "9ba65d0"
+      ],
+      "classification": "Read-only actualarcher ordinary0 macrocomparisons and exact600tick diagnosticwindows. No production candidate, newordinary0 or isolatedvictory causation."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
-  "productionDelta": "Equivalent landingSpot distance reuse, real-ferry loading escort and occupied-deck yielding, actual mining destination accounting and native worker boarding-road safety. Other candidates remain isolated."
+  "productionDelta": "On unchanged strategyBaseline3bdb: equivalent landingSpot distance reuse; real-ferry loading escort and occupied-deck yielding; actual mining destination accounting and native worker boarding-road safety; e447 armed worker defender-only score;4d373 frozen planner cwd/retry tool repair;1d26 exact pure solid configuration memo;0f5bf reciprocal rendezvous actual-origin live-hull planning constraint. Other care/capital candidates remain isolated. No new combined-root ordinary0 result yet.",
+  "productionValidation": {
+    "workerDefense": {
+      "head": "e447a632cb166428f6c6ce7c30a5846527542260",
+      "testsPassed": 67,
+      "typecheckExitCode": 0
+    },
+    "solidMemo": {
+      "head": "1d26ca198424913bb748b1910536952c3c0d224c",
+      "testsPassed": 92,
+      "typecheckExitCode": 0
+    },
+    "repairOrigin": {
+      "head": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+      "testsPassed": 41,
+      "typecheckExitCode": 0,
+      "originTests": 6,
+      "newCapturedCallbackTests": 2
+    },
+    "logs": "current-batch-root-validation/",
+    "newCombinedRootOrdinary0Completed": false,
+    "strategyBaselineUnchanged": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71"
+  },
+  "unmergedObservationStatus": {
+    "provenance": "Parent reports during this documentation batch; incomplete ongoing observations, not new sealed full-match results.",
+    "unifiedCare": {
+      "observationTick": 144000,
+      "enemyBuildingsRemaining": 15,
+      "integrated": false,
+      "completeResultClaim": false
+    },
+    "capital8041": {
+      "observationTick": 76800,
+      "enemyBuildingsRemaining": 14,
+      "intervalPermanentLosses": 8,
+      "wholePermanentLosses": 9,
+      "comparisonOldE7WholePermanentLosses": 6,
+      "integrated": false,
+      "recommended": false,
+      "naturalContinuationPending": true
+    }
+  }
 }

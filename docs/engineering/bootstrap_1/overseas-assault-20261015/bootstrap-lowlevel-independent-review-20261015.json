@@ -1,0 +1,78 @@
+{
+  "classification": "Independent read-only static and archived-evidence review; no source edits, simulations, tests or profiles run.",
+  "reviewedAtUtc": "2026-10-15T23:46:39.466320+00:00",
+  "blockingFindings": [],
+  "origin": {
+    "sourceRoot": "/workspace/sketch-rts-repair-origin-control",
+    "recordedBase": "6f80a9365e591cbfba9148260806cd4f9033788e + exactV2 loading/transfer",
+    "patch": "/workspace/.playtest/bootstrap-knight-repair-origin-20261015/origin-only.patch",
+    "patchSHA256": "5df582da3f5f26a6434dc2cf72a92092f5cc78fab6de99541c1f18e727a66c2f",
+    "patchEqualsCurrentSourceDiff": true,
+    "reasoning": [
+      "new callback = original planned && (from is farther than1e-7 from captured actualXY || original live). For any same query it cannot admit a route edge rejected by previous reservation logic.",
+      "Live check deliberately ignores heading in origin membership, so in-place search orientations and synthetic already-rotated headings at actualXY remain constrained. Recorded candidate cutter calls include8 XY-drift samples perfixture; exactXY/originalheading conditions would omit them.",
+      "New hasTraffic uses planned OR live, preventing empty-traffic shortcut from skipping an added current-hull constraint.",
+      "Future reservation list/qualification/padding unchanged. shipTraffic recursively checks a complete pivot/curvature sweep when its outer edge starts at origin. Future edges away from origin retain original planned semantics.",
+      "Actual ship-motion still calls default sweepShipCollision for yaw and surge with actualunits, never reservation proxy. Only planning clearance is tightened."
+    ],
+    "observedEvidence": {
+      "actualFixtures": [
+        68400,
+        85866
+      ],
+      "hullsPerFixture": 2,
+      "newNativeOriginTests": 4,
+      "candidateFirstEdgeNativeCollisionAbsent": true,
+      "priorCoastFailures": "Both oldV2 andcandidate identical314.97705695148625 vs320 sourceHP; assertions retained.",
+      "wholeMatchClassification": "Changed-history68400 input\u219281077naturalwin, not ordinary0/generalization; one extra permanentloss vsV2, source supports repair crossing but infantryvictory causation is not isolated."
+    },
+    "evidenceLimits": [
+      "Four new tests assert returned real routes and their native first-edge safety; the recorded callback log supports tinyXY drift and changedheading, but the precise1e-7 boundary is not directly pinned in a component test. Source algebra establishes only additional constraints, not universal future-path physical safety.",
+      "Original reservation allows future berth paths by design; this patch does not make all later planned edges clear of frozen current partner. Final native executor remains the physical guarantee."
+    ]
+  },
+  "memo": {
+    "sourceRoot": "/workspace/sketch-rts-solid-sweep-memo-control",
+    "head": "5cd3d2d67bb2fa102bb69ff25ebce112d1f10454",
+    "sourceClean": true,
+    "patch": "/workspace/.playtest/bootstrap-solid-sweep-memo-20261015/final-vs63b6.patch",
+    "patchSHA256": "9d6dee96c2bec6ddcf6d91658125e6865de3e8419e48314b549379ae7e170632",
+    "patchEqualsFullDiffVs63b6": true,
+    "staleControlNotReviewedAsCandidate": "/workspace/sketch-rts-solid-sweep-perf-control is fad617 last-entry negativecontrol.",
+    "reasoning": [
+      "Each body is keyed by objectreference; complete current a polygon is recomputed and Object.is compared with saved coordinatecopy before any byHull reuse. Body movement, size/profile or map-derived solidoutline changes invalidate the bodycache.",
+      "b has full orderedcoordinatevaluecopy; stringkey includeslength and explicit-0, and every hit still checks allcoordinates withObject.is. A hypotheticalstringcollision can cause at most cachemiss/overwrite, not a false reuse.",
+      "NaN/Infinity inputs receive no new normalization/throw policy. Misses call original minkowskiSum; failed sums are never inserted. Signedzero remains distinct and fullObject.is comparison preserves exact inputs.",
+      "minkowskiSum results are fresh arrays/points from original operation and retained internally only. segmentContact/polygonPlanes/supportpoint consume coordinates without mutating/exposing the cached configuration. Existing WeakMap plane metadata is valid for this immutable result.",
+      "Only shipSolidTraffic supplies memo sum; physical sweepShipCollision and terrainContact keep default originalminkowskiSum. Other contact math/loop ordering unchanged.",
+      "Caches are lexical to one trafficview; no module/global ownership, seed, game or policy cache introduced. Current productioncallers construct views per nativeplanning/maneuver call; no retainedcross-match callback found."
+    ],
+    "observedEvidence": {
+      "everyActualHitRecomputedOriginalObjectIs": 176341,
+      "misses": 3396,
+      "bodyCacheInitializationsOrChanges": 20,
+      "metricsCaveat": "20 invalidations includes first creation, not proof of20actual movingbody invalidations. Three persisted component tests separately cover position/radius/deck/death/heading changes.",
+      "callbackQueriesEqual": 216704,
+      "fullNativeContactBankSamples": 65,
+      "600TickSameSource": {
+        "world": true,
+        "nextId": true,
+        "allMemories": true,
+        "allCommands": true,
+        "allHits": true
+      },
+      "600TickCounts": {
+        "commands": 83,
+        "expectedCommands": 83,
+        "hits": 0,
+        "expectedHits": 0
+      },
+      "sourceFilesBeforeAfter": 1575
+    },
+    "evidenceLimits": [
+      "600tick18600\u219219200 window has0nativehits on bothsides, so it proves recordedworld/commands equivalence but does not itself test nonzero actual impact consequences;65 deterministic fullcontact samples and unchanged physical default provide separate support.",
+      "byHull has no explicitentry/point capacity cap. It is released with its trafficclosure, and existingcallers do not retain it acrossgames; availableproof is one highrepeat realquery, not a bound on peakmemory for arbitrarily long-lived externalcallbacks or unique-heading workloads. No demonstrated geometry mismatch or current production leak found."
+    ]
+  },
+  "scope": "No claim based ononewinner orCPU. No newordinary0/fullmatrix requested orrun. Root/main and fixedcontrols remain unedited."
+}

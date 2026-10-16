@@ -1,0 +1,19 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/ship-course-avoidance.test.ts (29 tests) 430ms
+ ✓ src/shared/ship-collisions.test.ts (17 tests) 530ms
+ ✓ src/shared/ship-geometry.test.ts (32 tests) 919ms
+ ✓ src/shared/ship-solid-traffic.test.ts (3 tests) 57ms
+ ✓ src/shared/ship-physical-integration.test.ts (11 tests) 625ms
+
+ Test Files  5 passed (5)
+      Tests  92 passed (92)
+   Start at  23:54:07
+   Duration  8.51s (transform 4.42s, setup 0ms, collect 15.97s, tests 2.56s, environment 1ms, prepare 1.25s)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

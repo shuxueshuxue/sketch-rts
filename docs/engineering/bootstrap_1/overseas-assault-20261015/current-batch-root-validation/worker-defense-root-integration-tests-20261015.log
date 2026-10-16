@@ -1,0 +1,61 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/ai/policy/naval-cover.test.ts (12 tests) 1033ms
+   ✓ actual convoy cover > lands its living passengers back at the departure coast after losing cover 425ms
+ ✓ src/ai/bootstrap_1/assault-beach.test.ts (9 tests) 4227ms
+   ✓ native assault deployment shore > does not admit v9_archer's real convoy after counting its worker defender 674ms
+   ✓ native assault deployment shore > does not admit v9_summoner's real convoy after counting its worker defender 356ms
+   ✓ keeps the 89145 native shore geometry when a clear beach approach has already been assigned 638ms
+   ✓ uses public immediate portrait unloads so the two stopped actual hulls deploy together before their helm turns 2097ms
+ ✓ src/ai/bootstrap_1/assault-worker-defense.test.ts (6 tests) 452ms
+ ✓ src/ai/bootstrap_1/ferry-preparation.test.ts (14 tests) 15574ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 3396ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=true) 830ms
+   ✓ 'v9_archer' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 1991ms
+   ✓ 'v9_archer' sends the reachable idle 'ember' settlers while its ferry sails (mirror=true) 934ms
+   ✓ 'v9_summoner' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 925ms
+   ✓ 'v9_summoner' sends the reachable idle 'grove' settlers while its ferry sails (mirror=true) 708ms
+   ✓ 'v9_summoner' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 861ms
+   ✓ 'v9_summoner' sends the reachable idle 'ember' settlers while its ferry sails (mirror=true) 699ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 711ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=true) 566ms
+   ✓ 'v9_knight' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 1947ms
+   ✓ 'v9_knight' sends the reachable idle 'ember' settlers while its ferry sails (mirror=true) 1514ms
+   ✓ does not recruit extra settlers when both engineers are already transferring 404ms
+ ✓ src/ai/bootstrap_1/worker-boarding.test.ts (7 tests) 10248ms
+   ✓ does not send real miner 134175 to the far hull’s dangerous native shore 3641ms
+   ✓ does not send real miner 134595 to the far hull’s dangerous native shore 1445ms
+   ✓ releases the existing unsafe shore worker at real frame 134160 within its naval owner 1738ms
+   ✓ releases the existing unsafe shore worker at real frame 134580 within its naval owner 540ms
+   ✓ releases the existing unsafe shore worker at real frame 135000 within its naval owner 477ms
+   ✓ preserves the actual deck worker and does not alter its native mission 890ms
+   ✓ admits the native safe shore after a counterfactual close hull pose, without a coarse-source contact gate 1510ms
+ ✓ src/ai/policy/transfer-worker-boarding.test.ts (1 test) 3452ms
+   ✓ clears the occupied receiving floor before the real queued worker crosses 3451ms
+ ✓ src/ai/bootstrap_1/assault-reinforcement.test.ts (18 tests) 43121ms
+   ✓ v9_archer sends the real empty assault ferry to a remaining army instead of its abandoned shore 2825ms
+   ✓ v9_summoner sends the real empty assault ferry to a remaining army instead of its abandoned shore 8165ms
+   ✓ v9_knight sends the real empty assault ferry to a remaining army instead of its abandoned shore 1482ms
+   ✓ does not assemble the saved convoy over its returning restriction 345ms
+   ✓ does not assemble the saved convoy over its insufficient restriction 1186ms
+   ✓ does not assemble the saved convoy over its stationary restriction 308ms
+   ✓ v9_archer keeps the already loaded convoy waiting while the empty companion changes source 5510ms
+   ✓ v9_summoner keeps the already loaded convoy waiting while the empty companion changes source 4286ms
+   ✓ v9_knight keeps the already loaded convoy waiting while the empty companion changes source 4722ms
+   ✓ keeps the requested rendezvous when a real reinforcement is already boarding 1690ms
+   ✓ keeps loading actual local soldiers before looking for another island 1783ms
+   ✓ does not gather the defenders of an explicitly incoming landing even while the ship is distant 2425ms
+   ✓ does not refresh a genuinely unchanged hull and crew by changing source or planning again 2895ms
+   ✓ cancels a genuinely stationary convoy even when its empty companion could change source 4489ms
+
+ Test Files  7 passed (7)
+      Tests  67 passed (67)
+   Start at  23:36:36
+   Duration  51.88s (transform 8.01s, setup 0ms, collect 34.15s, tests 78.11s, environment 4ms, prepare 2.18s)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

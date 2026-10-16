@@ -1,0 +1,125 @@
+{
+  "classification": "Documentation-only six new archive copies (five primary packages plus one boundary supplement). Existing39 index entries preserved; no old sparse archives restored, no source/script writes, no commit/push or simulations by this integrator.",
+  "atUtc": "2026-10-15T23:58:33.547477+00:00",
+  "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "packages": [
+    {
+      "file": "bootstrap-assault-worker-defense-63b6-ordinary0-51137-evidence.tar.gz",
+      "bytes": 36417984,
+      "sha256": "57f1f8a688122963f07f8362098537b76f614fee56f37c4ae834a165613ca3d0",
+      "indexedPayloadFiles": 195,
+      "archiveRegularFiles": 196,
+      "payloadManifest": "bootstrap-assault-worker-defense-20261015/payload-manifest.json",
+      "payloadHashesVerified": true,
+      "source": "63b6d49264358d8c3efeb0801ea10b314fb10758",
+      "classification": "True standard0 v9_summoner Ember side1 vs normal frozenv8 Grove on known developed generatedladder seed; natural51137p0win,5enemyremaining. Independent result, not currentrootordinary0."
+    },
+    {
+      "file": "bootstrap-frozen-loader-a974b906-evidence.tar.gz",
+      "bytes": 91318,
+      "sha256": "b22613307cae0f5fdd94fdc51784d385c89c16909bc464d41ad34942498f36e7",
+      "indexedPayloadFiles": 17,
+      "archiveRegularFiles": 18,
+      "payloadManifest": "bootstrap-frozen-loader-20261015/payload-manifest.json",
+      "payloadHashesVerified": true,
+      "source": "a974b906da06d9488333002c43a635e46eeeac08",
+      "classification": "Tool-only externalcwd/cache-failure retry fix; no gameplay. Integrated production4d373f8c."
+    },
+    {
+      "file": "bootstrap-solid-sweep-config-performance-evidence.tar.gz",
+      "bytes": 20738479,
+      "sha256": "a836341e452e8911ba043d4a0764f79c33e1d57d546ab32c7a24c67a1ba20d53",
+      "indexedPayloadFiles": 69,
+      "archiveRegularFiles": 70,
+      "payloadManifest": "bootstrap-solid-sweep-memo-20261015/INDEX.sha256",
+      "payloadHashesVerified": true,
+      "source": "5cd3d2d67bb2fa102bb69ff25ebce112d1f10454",
+      "classification": "Only pure Minkowski configuration memo relative63b6; exact query/callback600tick equivalence and finite CPU pairs, not newordinary0 or inherited63b6win. Integrated production1d26ca19."
+    },
+    {
+      "file": "bootstrap-knight-repair-origin-v1-evidence.tar.gz",
+      "bytes": 10328079,
+      "sha256": "5cc4eb9a6600514147072429505226abd9390517ac791fdc305d2aacf19ad30a",
+      "indexedPayloadFiles": 179,
+      "archiveRegularFiles": 180,
+      "payloadManifest": "payload-index.json",
+      "payloadHashesVerified": true,
+      "source": "6f80a9365e591cbfba9148260806cd4f9033788e + exact V2 loading/transfer + one origin hunk",
+      "classification": "Changed-history originalV2 complete68400\u219281077naturalp0win; not ordinary0. One additional permanent friendly loss versus shared-startV2; repairedworker transfer true69651. Integrated native delta in0f5bf01a; standalone outcome is not newrootordinary0."
+    },
+    {
+      "file": "bootstrap-knight-repair-origin-boundary-supplement.tar.gz",
+      "bytes": 3550,
+      "sha256": "79e7713e3902198e984b53d61ce06ac357d2374ff73ea60d3e25994f3b792122",
+      "indexedPayloadFiles": 3,
+      "archiveRegularFiles": 4,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Same immutable origin candidate and fixed originalV2; source unchanged",
+      "classification": "Read-only captured native68400 callback vector verification after mainpackage sealing; no simulation. Pins roundedXY9.09e-13 and changedheading translation/rotation rejection; root additionally persists2tests."
+    },
+    {
+      "file": "bootstrap-macro-income-force-evidence.tar.gz",
+      "bytes": 17366015,
+      "sha256": "13cd70b48e666db1559117b97a2a4576ef5cc220ea90cd63fa062d0bcc889c8d",
+      "indexedPayloadFiles": 270,
+      "archiveRegularFiles": 271,
+      "payloadManifest": "macro-closed-index.json",
+      "payloadHashesVerified": true,
+      "source": [
+        "5f657b38",
+        "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+        "9ba65d0"
+      ],
+      "classification": "Read-only actualarcher ordinary0 macrocomparisons and exact600tick diagnosticwindows. No production candidate, newordinary0 or isolatedvictory causation."
+    }
+  ],
+  "newCopiedArchiveBytes": 84945425,
+  "indexPackages": 45,
+  "originalIndexSHA256": "2a9c9283533faf4b14aabc5c388f5f2d7d1fbe85f356632f6c453ecd861c3396",
+  "recoveryRecord": {
+    "file": "root-extra-pushed-archives-sparse-recovery-20261015.json",
+    "original": "/workspace/sketch-rts-bootstrap-resume/.playtest/root-extra-pushed-archives-sparse-recovery-20261015.json",
+    "sha256": "64b1b93770f5dff2c15a5912a8416b48fe775bf2b8d1b0caf82ce064a6343fa6",
+    "classification": "Original operation record copied unchanged; remote/sparse operation not rerun."
+  },
+  "independentReview": {
+    "file": "bootstrap-lowlevel-independent-review-20261015.json",
+    "sha256": "ab06dd24f9520294ef81c87f4edce38787f4ee0fcaf0f46c20f126ebd3ccbf32",
+    "note": "Immutable prior review remains historical; captured-vector supplement and2root tests now pin actual roundedXY/changedheading examples, not a new simulation."
+  },
+  "rootIntegrationLogCopies": {
+    "worker-defense-root-integration-tests-20261015.log": {
+      "original": "/workspace/sketch-rts-bootstrap-resume/.playtest/worker-defense-root-integration-tests-20261015.log",
+      "bytes": 4995,
+      "sha256": "de0cafa04bc435c3094f4efd7957acd66fa8682e45d79a015b680cd568382020"
+    },
+    "worker-defense-root-integration-tsc-20261015.log": {
+      "original": "/workspace/sketch-rts-bootstrap-resume/.playtest/worker-defense-root-integration-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    "root-solid-cache-tests-20261015.log": {
+      "original": "/workspace/.playtest/root-solid-cache-tests-20261015.log",
+      "bytes": 749,
+      "sha256": "dcdebabde4d793bb8a7639085076601f85bfa80ebc697173c2d1a62fb48c5f61"
+    },
+    "root-solid-cache-tsc-20261015.log": {
+      "original": "/workspace/.playtest/root-solid-cache-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    "root-repair-origin-integration-tests-20261015.log": {
+      "original": "/workspace/.playtest/root-repair-origin-integration-tests-20261015.log",
+      "bytes": 1080,
+      "sha256": "16fd92ce8914d98965aee2063379630cc04b4dc2ccf63a6ba42a17c2e0d9d99d"
+    },
+    "root-repair-origin-integration-tsc-20261015.log": {
+      "original": "/workspace/.playtest/root-repair-origin-integration-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    }
+  },
+  "knownIntegrityGaps": []
+}

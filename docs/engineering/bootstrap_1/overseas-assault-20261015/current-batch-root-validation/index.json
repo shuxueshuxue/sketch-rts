@@ -1,0 +1,36 @@
+{
+  "classification": "Copies of completed root integration checks only; no new tests run by documentation integrator. npm update notices and original output retained.",
+  "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "files": {
+    "worker-defense-root-integration-tests-20261015.log": {
+      "original": "/workspace/sketch-rts-bootstrap-resume/.playtest/worker-defense-root-integration-tests-20261015.log",
+      "bytes": 4995,
+      "sha256": "de0cafa04bc435c3094f4efd7957acd66fa8682e45d79a015b680cd568382020"
+    },
+    "worker-defense-root-integration-tsc-20261015.log": {
+      "original": "/workspace/sketch-rts-bootstrap-resume/.playtest/worker-defense-root-integration-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    "root-solid-cache-tests-20261015.log": {
+      "original": "/workspace/.playtest/root-solid-cache-tests-20261015.log",
+      "bytes": 749,
+      "sha256": "dcdebabde4d793bb8a7639085076601f85bfa80ebc697173c2d1a62fb48c5f61"
+    },
+    "root-solid-cache-tsc-20261015.log": {
+      "original": "/workspace/.playtest/root-solid-cache-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    "root-repair-origin-integration-tests-20261015.log": {
+      "original": "/workspace/.playtest/root-repair-origin-integration-tests-20261015.log",
+      "bytes": 1080,
+      "sha256": "16fd92ce8914d98965aee2063379630cc04b4dc2ccf63a6ba42a17c2e0d9d99d"
+    },
+    "root-repair-origin-integration-tsc-20261015.log": {
+      "original": "/workspace/.playtest/root-repair-origin-integration-tsc-20261015.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    }
+  }
+}

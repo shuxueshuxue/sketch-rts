@@ -1,6 +1,6 @@
 # 2026-10-15 后续完整比赛与反证
 
-独立承接分支当前生产源码到 `36ae50c6`：在 `3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71` 上加入等价 landingSpot 查询优化、实际装载船护航/甲板让路、工人真实目的地记账与登船道路安全。护理、武装工人防守评分及航路首边候选仍独立，未借用其成绩。本记录保存完整比赛及未合候选。规则2、历史冻结修订 d1ae110f、184项 manifest `0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774` 均不变。完整包文件名、字节数和SHA256见同目录 `bootstrap-complete-games-20261015-index.json`。
+独立承接分支当前生产源码为 `0f5bf01a05046169d4fb42322376f767b97bcc83`；`strategyBaseline` 仍是 `3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71`。此前36ae的等价查询、装载护航/甲板让路、真实矿业目的地与登船道路安全保留；本批另整合e447静态武装工人岸防评分、4d373冻结planner加载工具、1d26纯几何缓存和0f5bf实际原点船壳约束。新root尚无完成的普通0，独立候选的胜局不移记为当前组合成绩。规则2、冻结修订d1ae110f的184项及manifest `0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774` 不变。完整包名、字节、SHA256和payload口径见同目录 `bootstrap-complete-games-20261015-index.json`。
 
 ## 新整合源码的真实普通0与续局分列
 
@@ -48,7 +48,7 @@
 
 `bootstrap-first-wave-threat-metrics-20261015-evidence.tar.gz` 保存12285/12390首波的四份精确pre-p0完整档及同源重放闭合。原生worker不会idle自动索敌或help-call反击；实际是冻结对手正常workerDefense在12375显式派五工攻击，p0最早12390可见，实际首击12473。当前15tick伤害为0不代表随后无岸防。landed微操还有两个独立过滤层：外层hostileCombatUnits不含worker，focus scope再次用enemyCombatUnits；caster screen自行取另一份hostile查询，不能只改外层就声称全链修好。
 
-`bootstrap-worker-defense-score-only-20261015-evidence.tar.gz` 仅算术：若仅对既有armed防守者名单按原footman归一化身体×真实武器评分，五工各0.441852，required由1变3.092965；原三ravager总2.838407，全场也仅这三名永久陆兵，同体质需四名。没有加入当时尚未付费的新兵或四名敌甲板长枪，没有将海军直接加到永久陆兵契约。该评估尚未实现或跑局；采购、初派、集结、出航、换岸和rider-crossing需共享同一required，不能只改最后landing gate造成不一致。
+`bootstrap-worker-defense-score-only-20261015-evidence.tar.gz` 仅算术：若仅对既有armed防守者名单按原footman归一化身体×真实武器评分，五工各0.441852，required由1变3.092965；原三ravager总2.838407，全场也仅这三名永久陆兵，同体质需四名。没有加入当时尚未付费的新兵或四名敌甲板长枪，没有将海军直接加到永久陆兵契约。该算术包封存时尚未实现或跑局；后续独立63b6及生产e447见下文。采购、初派、集结、出航、换岸和rider-crossing继续共享同一required，没有只改最后landing gate。
 
 `knight-loading-escort-v1-evidence.tar.gz` 只把loading时护航station从远敌岸改成当前运输船。真实50400..51600护航1935确跟近且无伤，但继续同源到62400仍无人登陆敌岛；原17人最终七在另一中立岛、六在甲板、四死，敌14楼/厅900。58035两船incoming21.06924低于required21.18227而正确撤回，非单纯cohesion取消。十份600tick周期档逐值可恢复，三份死亡事件57775/57911/58226因原生cached sailing.load/balance尚旧、restore重算而不逐值等同；原失败未隐藏，不用这些事件档作exact起点。57600→58200同源全世界/nextId/双方mem闭合后才归因撤回。
 
@@ -94,10 +94,35 @@ root再验证69姿态全等且输入未变；四文件38项原生回归、tsc/vi
 
 `bootstrap-reinforcement-rally-v1-negative-evidence.tar.gz` 是69600→70800窄援军否决：3780实际前进486px，但提前变sailing让远船进入旧incomingPower，原前锋多等，死亡从原五crew升为七crew加空运输船本体；不合、不降低原1.4/450海路门槛。测试文件名碰撞仅在独立control发生，后恢复原18例并另命名新6例，24通过；旧nearby场景在原e7同值失败，原日志保留。没有把测试或船前进距离当净收益。
 
-后续继续沿完整证据推进：召唤师武装worker防守评分已独立从普通0赢51137，较原慢17449但原首波五ID均存活、永久损失六；终局尚五敌lancer，完整归档待封，未合。弓手败局主矿枯竭后八工闲置、6000矿无第三厅，邻近消费却为200科技/300弩炮；骑士原资本阈值也错过税后可兑现资金不足。两条路线正共同核查实际经济消费链与可复用资本指标，尚未把假设写成已修。真实召唤师18600 full-planner暖查询约6秒已定位重复Minkowski几何，纯等价优化独立验证，不改正在评分的固定源，不以CPU检查代替比赛。
+后续沿完整证据继续推进：63b6独立普通0、纯Minkowski配置缓存、真实维修原点约束与弓手宏观诊断均已分别封存，本批生产与比赛归属详见下节。经济接续和军队部署仍未完成；没有把局部修复、CPU检查或查询可行写成最终验收。
 
 上述失败与混合结果用于下一轮实战因果，不作为里程碑完成。三条风格路线、全部v5/v7/v8单敌及六种配对、官方图与未见生成种子的最终完整对局及泛化要求仍未满足。不改main，不回灌另行合并的新规则船只平衡或规则3/4性能工作。原故障容器未提交修改的恢复缺口继续保留。
 
 为保留后续完整对局的磁盘空间，另用支持的sparse-checkout排除已确认tracked且未改的重复材料：root中已成功推远端的109个归档副本，以及已结束b0/25cce控制树的art/review文档副本。Git对象、远端及独立原始包均保留；所有1408／1390／1391项运行源/数据与冻结manifest前后无变化，没有修改任何活动比赛树。原tracking-ref缺失检查在变更前即停止，改用成功的ls-remote精确确认后才排除。命令模式、准确路径/HEAD/释放量在两个 `*-sparse-recovery-20261015.json` 记录，不与先前发生的误操作事故混为一谈。
 
 后续/tmp再次用满，root只对三个已结束controls用支持的sparse reapply排除未修改tracked art/review副本，非文档1565项等源码前后SHA及原dirty状态均保持；`ended-controls-extra-document-sparse-recovery-20261015.json` 保存准确路径。第一次脚本在下一棵dirty树的保护检查停下前，第一棵已成功释放，其部分完成事实也单列。没有删除活动比赛或原始证据；新恢复游戏及大输出转到/workspace。
+
+
+## 本批封存与生产归属：63b6、加载工具、纯缓存及维修首边
+
+静态岸防评分已以 `e447a632` 整合；它只修复 `assaultExpedition` 既有armed敌军名单中worker被全局军队强度归零的断裂。按原footman归一化身体×实际DPS及原HP比例计算其所在目标陆地的防守，己方worker军队/经济强度仍0，原1.4、非worker评分、甲板和其他岛排除均不变，六个既有消费者共用。真实12390完整输入中原三ravager为2.8384065、required变3.0929646；未预知新兵队列或把四敌甲板长枪算岸军。root整合67项及tsc通过；旧nearby纯footman案例在干净基线与候选同样失败的记录保留，历史不足兵力的beach断言改为如实拒绝，89145几何仅明确的组件接线。
+
+`bootstrap-assault-worker-defense-63b6-ordinary0-51137-evidence.tar.gz` 是固定 `63b6d492` 自真正标准0至51137自然p0胜：v9_summoner Ember side1对正常冻结v8 Grove，已开发同生成种子，factory sapphire/实际ladder，500金/3人口/8上限，完整0世界/nextId/双方null memory与原3bdb相同。原首波五ID终局均存活，但三ravager仍负伤，后期先攻敌殖民岛、50776 post-step才观测到新ram/summoner/priests登陆原敌主岛。12211是中立/未来己方殖民卸兵，不是敌岛首波成功。终局敌仍五lancer/0楼；永久损失6、临时30，共36原生unitsLost，对原3bdb永久10/临时16/总26；胜利晚17449tick，不能单称全局提升。87份周期完整checkpoint、原生命中/命令、1574源与184冻结前后不变、51000→51137五项完整重放闭合，均归63b6独立源，不归e447或当前root的新普通0。包36,417,984B，195索引payload加manifest共196文件，SHA256 `57f1f8a688122963f07f8362098537b76f614fee56f37c4ae834a165613ca3d0`。
+
+`bootstrap-frozen-loader-a974b906-evidence.tar.gz` 只修工具，已整合到 `4d373f8c`：git archive按脚本自身import.meta定位仓库，解包成功才发布root；失败清理不掩盖原错，并清除失败modules Promise，使公开createPlanner可重试，成功/并发缓存保留。独立子进程验证外部非Git cwd、archive/tar/cleanup及真实esbuild失败后重试；原工具外部cwd失败，新工具成功，497解包文件、184manifest哈希及五个导出函数内容逐值相同。planner25项通过；rules首次并行冷导入两项超5秒，原log保留，单独30秒上限4项通过；tsc通过。此包无新游戏、冻结战术或思考频率变化。包91,318B，17索引payload加manifest共18文件，SHA256 `b22613307cae0f5fdd94fdc51784d385c89c16909bc464d41ad34942498f36e7`。
+
+`bootstrap-solid-sweep-config-performance-evidence.tar.gz` 是独立 `5cd3d2d6` 相对63b6的纯配置多项缓存，已以 `1d26ca19` 整合；不能只取其父fad617之后的单commit，也不借63b6胜局归缓存。每个交通closure内按Body当前完整a坐标及完整b坐标逐点Object.is确认，输入值复制，-0单列，字符串仅索引；body变化即失效。只复用纯Minkowski结果，实际physical sweep默认路径不变。外部instrumentation对176341次命中全部重新计算原函数并逐坐标比较，无差异；3396miss，20计数含初建，不能称20次真实移动失效。实际216704回调完整参数/结果/顺序、15点route及65完整contact样本同值。正常双方AI18600→19200完整world/id/bothmem/83命令/0hits同值；零命中窗不单作实际伤害证明。65候选检查和root92项/tsc通过。
+
+两组有限交替full-planner CPU为9403.376→4913.848ms、19514.358→6143.000ms；后一基线高离群保留，合计61.76%仅属这份18600输入，不外推整局速度或策略能力。缓存随closure释放；对任意长期外部callback/持续唯一heading的峰值内存没有上界证明。原包README仍准确记载当时旧loader的cwd要求，后来工具修复不覆盖旧封包。包20,738,479B，69索引payload加INDEX共70文件（原口头70payload含INDEX），SHA256 `a836341e452e8911ba043d4a0764f79c33e1d57d546ab32c7a24c67a1ba20d53`。
+
+`bootstrap-knight-repair-origin-v1-evidence.tar.gz` 从原V2改变历史的68400完整输入换码，经69600同源恢复，81077自然p0胜；不是原普通0的68400，更不是当前root普通0。只在原未来伙伴预留之外，对起点距真实原点XY≤1e-7的边额外AND live shipTraffic；不比较heading以覆盖实际原点虚拟旋转。新判定只收紧原计划，未来预留及实际yaw/surge碰撞仍严格。worker1851于69651真实跨舰，70800目标1935已464满血且两舰释放任务；之后旧原点堵塞确已解除。共同68400以后新1永久损失对旧0，胜利比V2早4789tick，终敌余一worker/0楼；原首波17人早已全死，不被此修复复活。94完整frame可逐值恢复，80400→81077世界/id/bothmem/38命令/200hits闭合。候选58项通过，另两旧coast同值刮伤失败保留。包10,328,079B，179索引payload加INDEX共180文件，SHA256 `5cc4eb9a6600514147072429505226abd9390517ac791fdc305d2aacf19ad30a`。
+
+另封 `bootstrap-knight-repair-origin-boundary-supplement.tar.gz`，3,550B，3索引payload加INDEX共4文件，SHA256 `79e7713e3902198e984b53d61ce06ac357d2374ff73ea60d3e25994f3b792122`。它只把68400原生搜索已捕获的两条from/to直接交旧/新函数查询，不新增sim或改已封源：XY误差9.0949e-13，heading差0.63976/1.42516，一条平移一条原地旋转；旧预留true而live false，新false。按精确XY或原heading认原点的mutant均错放。`0f5bf01a` 整合原首边patch并另持久化这两条真实回调回归，root41项/tsc通过。独立审查原文 `bootstrap-lowlevel-independent-review-20261015.json` 保持封存时内容；新增直接向量证据不伪装成旧时已有测试。
+
+## 宏观负例与仍在跑的独立组合
+
+`bootstrap-macro-income-force-evidence.tar.gz` 是只读战略诊断，来源为旧5f真正43714胜、生产3bdb真正26107败、医疗9ba真正24840败的同开发弓手双v8案例，未新增候选或普通0。三段600tick实际重放全world/id/三方memory闭合，15个精确经济检查点的公开命令列表同值。3bdb18495主矿117tick将尽，当前15工到原生施工域的普通步行下界最短664tick；科技200先支出。19410矿区实际800路威胁8.543超过半军6.963，400建厅goal依法取消，随后实买300弩炮。它有比旧胜局更多永久兵，却八工闲置、无第三收入；骑手与主军/就绪医师被树林和实际路程隔开。不得把工人数、先造厅、七伤或单项优先级当唯一胜负因，也不据此降低既有威胁阈值。包17,366,015B，270索引payload加自索引共271文件（原口头271payload含索引），SHA256 `13cd70b48e666db1559117b97a2a4576ef5cc220ea90cd63fa062d0bcc889c8d`。
+
+此宏观包不含unified-care或资本8041局。root在本批文档整理时报告：unified-care同源到144000仍15敌楼，未合且无完整胜局结论；资本8041到76800仍14敌楼、本窗八永久死亡、累计九已超过旧e7整局六，因此不建议合入，仍保留原源继续至自然结局。这些是带观察上限的独立进行中状态，不归新root或宏观诊断包。当前 `0f5bf01a` 将由另一固定树跑同seed官方knight-v5真正普通0，尚无结果；不能拿本节局测、旧源胜局或81077换码结果替代。
+
+本批root67/92/41项和各tsc原始日志另复制至 `current-batch-root-validation/`，该目录index记录来源及逐SHA，文档整合者未重跑检查。本批只复制五个主包与一个边界补包共84,945,425字节，所有归档payload逐SHA复核；索引从39增至45且原39项、strategyBaseline不变。`current-batch-evidence-integration-20261015.json` 保存准确口径。补入的 `root-extra-pushed-archives-sparse-recovery-20261015.json` 是原16份已推远端/未改tracked归档稀疏移出记录的逐字节复制，记录释放162,648,809B、1585非文档项零变化；本次不重做其操作、不恢复旧稀疏tar、不删其他人文件。原故障容器未提交修改的恢复缺口，以及三路线/全部对手配对/官方图/未见种子完整泛化验收未完成的边界继续保留。

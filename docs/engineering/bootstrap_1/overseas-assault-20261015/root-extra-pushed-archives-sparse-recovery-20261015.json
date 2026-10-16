@@ -1,0 +1,93 @@
+{
+  "at": 1792107694.0118437,
+  "root": "/workspace/sketch-rts-bootstrap-resume",
+  "head": "e447a632cb166428f6c6ce7c30a5846527542260",
+  "successfulRemoteArchiveCommit": "e5770386e0f07e094e557c3471562c7f76398ba9",
+  "archiveCopies": [
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-caster-coast-scope-20261015-evidence.tar.gz",
+      "bytes": 15543229,
+      "sha256": "3f44d7a4d56585ab04d4eeaa8ba9695adfe1fd234e966b99b3c579d3853ab8a5"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-escort-transfer-root-integration-evidence.tar.gz",
+      "bytes": 3345672,
+      "sha256": "f2ed0253dbdc9115bceac3a60522e0b5d47eb3f7e3fc2f566018d8aaef2245cf"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-knight-e7-ordinary0-87735-evidence.tar.gz",
+      "bytes": 9336930,
+      "sha256": "05de4d2a3ff10de11aca2dae64a5c840e19d652e4d4237f755c975c3285b1b1d"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-landing-gap-query-evidence.tar.gz",
+      "bytes": 3439733,
+      "sha256": "7490a9ae096eaddc6f19670b8b1ae058ea3ec4cb9d552e4d4d178346d860a41b"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-landing-gap-root-integration-evidence.tar.gz",
+      "bytes": 141732,
+      "sha256": "8486970af3a9ac7232a3878d990160b8c92d4af3b1768a7344da83a2ae0bb65d"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-medical-arrival-hold9ba-evidence.tar.gz",
+      "bytes": 25017084,
+      "sha256": "986e39f6e1f7195e9c536b69bf1b7af09c0a9ba58b9fbd9d07c60794c1c55af9"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-medical-arrival-three-boundaries-evidence.tar.gz",
+      "bytes": 6697604,
+      "sha256": "62e4837811068754b14558e8441d755a062aeebb9c6daa5784bae201cf812382"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-production-arrival-horizon4a52-evidence.tar.gz",
+      "bytes": 6031487,
+      "sha256": "5cfda074b7c95804024b9c66b175971889d5aec35fbb39ce4281bbb40778b5be"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-production3bdb-archer-first-boundary-evidence.tar.gz",
+      "bytes": 6065238,
+      "sha256": "f7f97f5b3caca259dc87c5530cb573b4f3f1bc456849206127b226e139a82b34"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-reinforcement-rally-v1-negative-evidence.tar.gz",
+      "bytes": 2407446,
+      "sha256": "baec44bdbee8a93f68c10373fdfcb43628ec9e4cf5fed35fe6bf02a3a30ebbaf"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-workforce-safety-root-complete-evidence.tar.gz",
+      "bytes": 572169,
+      "sha256": "82b780fedb78069dcc49da45cd6ba7f0e38cabad6a17ab31c6a908e583d7137c"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/knight-escort-transfer-v2-evidence.tar.gz",
+      "bytes": 14189015,
+      "sha256": "029b2eac82374eadc6f2ca57fab2a5a8561b2a2f228cd7607e1c6d0c8e5ef40d"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/knight-recovery-crosswater-6f80-evidence.tar.gz",
+      "bytes": 12002370,
+      "sha256": "ebb4f5955f92c361ab7360ff3a2b723839097b9068eab0fc5ce390003a283c44"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/knight-recovery-waypoint-6f80-win-evidence.tar.gz",
+      "bytes": 15363231,
+      "sha256": "4888e582368bfc164af2c141caa853e62796bda94341ab942dc6330704477654"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/knight-transfer-v2-original50400-complete-evidence.tar.gz",
+      "bytes": 14867447,
+      "sha256": "768c86260addb7f0cdb9208dc50880b3ef739296de590c2d32000d19ce08ec92"
+    },
+    {
+      "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/worker-threat-37ae-ordinary0-closure-evidence.tar.gz",
+      "bytes": 27628422,
+      "sha256": "1ea753f64bbec51eca7911fb44762e30de30c68ba895900900d0c9450e4b5cc2"
+    }
+  ],
+  "archiveBytesReleased": 162648809,
+  "nonDocFiles": 1585,
+  "sourceChanges": [],
+  "sourceStatus": "",
+  "command": "git -C absolute-root sparse-checkout reapply; existing supported pattern excludes all overseas archive copies; original packages and remote/Git objects preserved"
+}

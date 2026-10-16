@@ -569,3 +569,14 @@ root组合验证分列：部署广泛批次213/214，通过项包括3条历史�
 本次root整合最终26项目标/整队/身体到达回归及独立38项护理微操通过；原beach10项与courier4项在整合中通过，最后`npm run build`（tsc+vite）exit0。既有附近集结测试在干净25cce也失败的事实保留，未以本轮局测声称全套通过。新6项强负对照小包 `bootstrap-retarget-deployment-integration-regression-evidence.tar.gz` 106,552B /20payload，SHA256 `29d78b706c49b33e8b54aa2c30aef76d138942876167eca0c6a51ae4bee8fde7`；最终root源码快照/日志包 `root-retarget-care-integration-validation.tar.gz` 115020B，SHA256 `c7f694069e6a83608e2b51bd99d1053c796cc6fe3b7964cfe30cab315ac68c29`。提交后继续独立完整对局验证新整组版本，不将局测或归档算最终验收。
 
 后续两项3bdb独立验证及骑士6f80官方普通0均已自然结束。准确的完整比赛、首波失败、永久/临时死亡与残余敌人边界，以及未合正负候选，统一记录于 [后续完整比赛与反证](complete-games-and-counterexamples.zh.md)；包字节数与SHA见 [索引](bootstrap-complete-games-20261015-index.json)。上文“仍在运行”属于先前记录，不能代表当前运行状态。继续护航、实际岸防、危险候船与骑射任务归属实战诊断，没有将此归档视为验收完成。
+
+
+## 当前整合0f5bf与本批完整证据的归属
+
+当前生产 `0f5bf01a05046169d4fb42322376f767b97bcc83` 保留3bdb策略基线及36ae既有改进，再只整合e447静态武装worker岸防、4d373冻结加载工具、1d26纯配置缓存、0f5bf维修原点live hull约束。尚无完成的新root普通0；拟启动的同seed官方骑士v5局要另归固定源。三路线验收尚未完成，原容器未提交恢复缺口不变。
+
+本批五主包加原点边界补包已封存并逐payload核SHA，详见 [完整比赛与反证](complete-games-and-counterexamples.zh.md) 本批新增两节及 [索引](bootstrap-complete-games-20261015-index.json)：63b6真正普通0在51137胜但比3bdb晚17449、敌仍五lancer；缓存只承接18600查询/600tick等价和有限CPU测量，不借该胜局；维修81077属于原V2的68400换码续局，多一己方永久损失，不是普通0；macro包只是5f/3bdb/9ba弓手旧局经济与部队部署诊断。payload口径同时列索引数和含INDEX总文件数，不覆盖已封原包。
+
+root已完成67项静态worker、92项纯缓存、41项维修首边检查及各tsc；原始日志在 `current-batch-root-validation/`。补件直接核旧/新函数对真实原点9e-13误差/不同heading的两个captured callback，root另新增两项持久回归，无新增sim。unified-care到144000仍15敌建筑，资本8041到76800仍14敌建筑且累计九永久损失，均未合，后者保持原源继续自然结局。没有把观察上限当比赛结束，或把局部修复视为里程碑。
+
+本次仅增加84,945,425B新归档副本。`root-extra-pushed-archives-sparse-recovery-20261015.json` 原样补录既有16已推送归档稀疏移出的事实；没有恢复旧稀疏tar或修改比赛源码。准确包SHA/大小/payload、原记录来源及独立审查在索引和 `current-batch-evidence-integration-20261015.json`。
