@@ -1,0 +1,13 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/ship-collisions.test.ts (17 tests) 386ms
+ ✓ src/shared/ship-solid-traffic-bounded.test.ts (2 tests) 3551ms
+   ✓ bounded exact solid traffic memo > completes the real 40350 native step with the complete uncached world and id result 3434ms
+ ✓ src/shared/ship-solid-traffic.test.ts (3 tests) 22ms
+
+ Test Files  3 passed (3)
+      Tests  22 passed (22)
+   Start at  01:47:38
+   Duration  9.29s (transform 2.67s, setup 0ms, collect 3.98s, tests 3.96s, environment 1ms, prepare 302ms)
+

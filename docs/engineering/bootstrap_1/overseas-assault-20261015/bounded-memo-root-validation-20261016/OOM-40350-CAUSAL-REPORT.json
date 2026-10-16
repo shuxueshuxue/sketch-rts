@@ -1,0 +1,277 @@
+{
+  "classification": "Causal runtime diagnosis only; original d251 changed-code continuation has no winner. Runtime source d251 unchanged; one-step diagnostic control is not ordinary0/baseline/full game or final bootstrap acceptance.",
+  "sourceHead": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "sourceArchiveSHA256": "2e3b6d5d3ea50ede433f5e05d73390f73d9ed8ecc7a1be0347e035294ad1fead",
+  "postflight": {
+    "sourceFiles": 1450,
+    "mismatches": [],
+    "gitStatus": ""
+  },
+  "chain": [
+    "original0f ordinary0 until35460",
+    "d251 changed-code nativebothAI35460\u219236000 permanentloss0 three dragons killed;42tick slower tank30HP lower/hull2.6034 lower",
+    "d251 natural36000\u219240350 process512MiB OOM;latest prethink40305 fullsaved",
+    "d251 exact40305 replay1024MiB OOM atsame40350;15commands/2hits and8unload states overlap all exact",
+    "d251 phase diagnostic40305 p0/p1 planners return heap123MB;then native step-enter40350 OOM",
+    "external single-step40350 diagnostic reproduces carrier5838 returnmove\u219240351 ship planning entrance OOM",
+    "external disabled-memo single-step completes40351",
+    "external bounded128 single-step completes40351 exactsamecontacts/internalgraphs/world/id/bothmem"
+  ],
+  "failures": [
+    {
+      "pid": 273504,
+      "heapMiB": 512,
+      "kind": "naturalcontinuation",
+      "exit": 134
+    },
+    {
+      "pid": 274594,
+      "heapMiB": 1024,
+      "kind": "same-source40305resume",
+      "exit": 134
+    },
+    {
+      "pid": 275642,
+      "heapMiB": 512,
+      "kind": "phase-onlydiagnostic",
+      "exit": 134
+    },
+    {
+      "pid": 276992,
+      "heapMiB": 512,
+      "kind": "externalnativephase/parent-repeatdiagnostic",
+      "exit": 134
+    },
+    {
+      "pid": 277430,
+      "heapMiB": 512,
+      "kind": "externalcacheallocationdiagnostic",
+      "exit": 134
+    }
+  ],
+  "mechanism": {
+    "where": "shipSolidTraffic bodySweep exact byHull memo in src/shared/ship-collisions.ts",
+    "holder": "trafficViews WeakMap stores shipRouteTraffic closure for live VoyageJob across reference-search entrance slices. Each per-Body byHull map retains exact input b, Minkowski result and downstream polygon planes through polygon identity.",
+    "actualSmallSearchAtHighRetention": {
+      "phase": "entrance",
+      "cursor": 16,
+      "nodes": 16,
+      "frontier": 16,
+      "entranceCells": 2,
+      "prefixes": 16,
+      "trafficFits": 16
+    },
+    "actualLowerBoundCacheEntriesPerBody": 4096,
+    "actualBodies": [
+      "unit-p0-knight-2770",
+      "unit-p0-knight-3122",
+      "unit-p0-knight-3874",
+      "unit-p0-priest-1786",
+      "unit-p0-priest-2507",
+      "unit-p0-priest-3511",
+      "unit-p0-raider-2428",
+      "unit-p0-witch-2593"
+    ],
+    "groundRouteAndParentCycle": "not entered/tripped in failing native path; do not attribute OOM to absent guards or p0care",
+    "notClaimed": "Not necessarily an infinite native control loop: finite exact rotation/curve samples create excessive retained memo entries within a single native step.",
+    "heapSamples": [
+      {
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-step-allocation-40350/heap-sample-1.json",
+        "retainedSampleBytes": 20671352,
+        "topFunctions": [
+          [
+            "minkowskiSum",
+            4725736
+          ],
+          [
+            "appendSupportingPlane",
+            4367032
+          ],
+          [
+            "(anonymous)",
+            2362008
+          ],
+          [
+            "Int32Array",
+            1411216
+          ],
+          [
+            "linkSector",
+            1148320
+          ],
+          [
+            "compileSourceTextModule",
+            1074232
+          ],
+          [
+            "join",
+            893144
+          ],
+          [
+            "convexHull",
+            661824
+          ],
+          [
+            "map",
+            525264
+          ],
+          [
+            "close",
+            525032
+          ]
+        ]
+      },
+      {
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-step-allocation-40350/heap-sample-2.json",
+        "retainedSampleBytes": 78409704,
+        "topFunctions": [
+          [
+            "minkowskiSum",
+            28149184
+          ],
+          [
+            "appendSupportingPlane",
+            25163056
+          ],
+          [
+            "(anonymous)",
+            9382840
+          ],
+          [
+            "join",
+            4032952
+          ],
+          [
+            "Int32Array",
+            1411216
+          ],
+          [
+            "map",
+            1312960
+          ],
+          [
+            "linkSector",
+            1148320
+          ],
+          [
+            "compileSourceTextModule",
+            1074232
+          ],
+          [
+            "get",
+            860000
+          ],
+          [
+            "set",
+            671320
+          ]
+        ]
+      },
+      {
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-step-allocation-40350/heap-sample-3.json",
+        "retainedSampleBytes": 315759800,
+        "topFunctions": [
+          [
+            "minkowskiSum",
+            128585296
+          ],
+          [
+            "appendSupportingPlane",
+            109542976
+          ],
+          [
+            "(anonymous)",
+            32182816
+          ],
+          [
+            "join",
+            18511984
+          ],
+          [
+            "copyPolygon",
+            9841656
+          ],
+          [
+            "set",
+            2439728
+          ],
+          [
+            "clipToConvex",
+            2133080
+          ],
+          [
+            "map",
+            1772504
+          ],
+          [
+            "Int32Array",
+            1411216
+          ],
+          [
+            "linkSector",
+            1148320
+          ]
+        ]
+      },
+      {
+        "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-step-allocation-40350/heap-sample-4.json",
+        "retainedSampleBytes": 315199872,
+        "topFunctions": [
+          [
+            "minkowskiSum",
+            128452720
+          ],
+          [
+            "appendSupportingPlane",
+            109444504
+          ],
+          [
+            "(anonymous)",
+            32084416
+          ],
+          [
+            "join",
+            18511984
+          ],
+          [
+            "copyPolygon",
+            9841656
+          ],
+          [
+            "set",
+            2406544
+          ],
+          [
+            "clipToConvex",
+            2133080
+          ],
+          [
+            "map",
+            1772504
+          ],
+          [
+            "Int32Array",
+            1411216
+          ],
+          [
+            "linkSector",
+            1148320
+          ]
+        ]
+      }
+    ]
+  },
+  "controlComparison": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-cache-40350-comparison.json",
+  "minimalCandidatePatch": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/bounded-exact-memo-only.patch",
+  "candidateSemantics": "FIFO128 only evicts derived exact memo; key/equality and old a-outline invalidation preserved; cachemiss invokes identical original Minkowski sum. No altered collision/shape/route/coordinates/search budget/rule/opponent.128 is implementation memory budget, not RTS tactical threshold.",
+  "limits": [
+    "No old infinite-cache successful end state exists to compare (all attempts OOM). Full native disabled vs bounded controls are exact at all1172contactreturns/all5savedderivedjob/searchgraphs/fullworld/id/bothmem.",
+    "Per-run diagnostic timings/RSS are observations, not controlled performance benchmark or borrowed1d26performance claim.",
+    "Phase driver raw classification text accidentally refers to1024 naturalresume although actualexecArgv512 and maxTicks40380; original raw preserved, this report corrects provenance.",
+    "Future allgame continuation must use a newly fixed bounded-memo source; d251 naturalgame remains unfinished, no hotpatch of fixedsource.",
+    "Original container uncommitted recovery gap remains; no claim those bytes recovered."
+  ]
+}

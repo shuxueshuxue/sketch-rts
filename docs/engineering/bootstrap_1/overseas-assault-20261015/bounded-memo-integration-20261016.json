@@ -1,0 +1,79 @@
+{
+  "rootBasis": "5968fb787120ff854cae41a900f2bf6f1b76fbd0",
+  "sourceEquivalentTo": "600d67cb049f11f7a94f22735d8a2d50757ef4b2",
+  "scope": "Pure exact geometry memo retention limit; no AI/rule/balance change. FIFO eviction recomputes exact geometry, without limiting search or approximating contacts.",
+  "source": [
+    {
+      "path": "src/shared/fixtures/solid-traffic40350/README.md",
+      "bytes": 826,
+      "sha256": "7bf1d9c82427c9c60cd2b8aa948de900c126dbff9fc00b725ef6a2cc9d57a36e",
+      "equalToFixed600d": true
+    },
+    {
+      "path": "src/shared/fixtures/solid-traffic40350/pre-step.json.gz",
+      "bytes": 19105,
+      "sha256": "9f8c617b371c0b14dc7847e69f97181b509bac717a561367cb7780284dca5dfb",
+      "equalToFixed600d": true
+    },
+    {
+      "path": "src/shared/fixtures/solid-traffic40350/uncached-after-step.json.gz",
+      "bytes": 19855,
+      "sha256": "922992d890fd87a80b5c097d69b97af07ca8e737c2151ba244eef2995b6743da",
+      "equalToFixed600d": true
+    },
+    {
+      "path": "src/shared/ship-collisions.ts",
+      "bytes": 23767,
+      "sha256": "2720750b5b3febec87480ced520cd8fc8b4d2bc9730cf51ca50f4e4665e9a4bb",
+      "equalToFixed600d": true
+    },
+    {
+      "path": "src/shared/ship-solid-traffic-bounded.test.ts",
+      "bytes": 2848,
+      "sha256": "c3177df4b13b8e571245de58e230bc03c828262da1f5dfc9fff756a9b0d07261",
+      "equalToFixed600d": true
+    }
+  ],
+  "validation": {
+    "rootTests": 24,
+    "testFiles": 4,
+    "runs": [
+      {
+        "tests": 22,
+        "files": 3
+      },
+      {
+        "tests": 2,
+        "files": 1
+      }
+    ],
+    "singleWorker": true,
+    "tscExitCode": 0,
+    "realNativeStep": {
+      "inputTick": 40350,
+      "outputTick": 40351,
+      "fullWorldAndNextIdEqualToUncachedControl": true
+    },
+    "externalCausal": {
+      "contacts": 1172,
+      "internalJobCaptures": 5,
+      "fullWorldNextIdBothMemoriesEqual": true,
+      "performanceScope": "One diagnostic step only; no general benchmark claim."
+    }
+  },
+  "frozen": {
+    "rulesVersion": 2,
+    "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "files": 184,
+    "allArchivedBlobHashesEqual": true
+  },
+  "scoreAttribution": "No match result belongs to this standalone integration. a26940350→41255 is a changed-runtime segment following d251 changed-strategy35460→40350 and original0f ordinary0→35460; not ordinary0. Original0f44441 remains original source.",
+  "unrecoveredOriginalWorkspaceGap": true,
+  "independentFinalReview": {
+    "file": "bounded-memo-root-validation-20261016/final-static-review.json",
+    "sha256": "2f3b14f3114e947e8866e7085021760fe6cc4a72513952eaa8345329e40b34b3",
+    "blockers": [],
+    "scope": "Fixed600d and completed a269 driver static review; reviewer did not run tests/native."
+  }
+}

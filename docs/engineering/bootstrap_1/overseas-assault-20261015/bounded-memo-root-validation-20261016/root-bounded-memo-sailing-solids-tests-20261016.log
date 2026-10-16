@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/sailing-solids.test.ts (2 tests) 792ms
+   ✓ sails around its shipyard instead of repeatedly turning into it (mirror=false) 535ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  01:53:30
+   Duration  3.70s (transform 1.77s, setup 0ms, collect 2.46s, tests 792ms, environment 0ms, prepare 69ms)
+

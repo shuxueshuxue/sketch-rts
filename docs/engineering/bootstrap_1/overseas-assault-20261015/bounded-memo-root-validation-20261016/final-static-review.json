@@ -1,0 +1,84 @@
+{
+  "classification": "Final independent static review; no tests, tsc, game/native step or source modification performed by reviewer; sealed P2/P3 only read",
+  "nativePatch": {
+    "base": "19ef6d0dbc1f9775475810db5a2fd0b663effb75",
+    "head": "600d67cb049f11f7a94f22735d8a2d50757ef4b2",
+    "shipCollisionsSha256": "2720750b5b3febec87480ced520cd8fc8b4d2bc9730cf51ca50f4e4665e9a4bb",
+    "completeGitDiffSha256": "2780631e5ed0071b7daf78de1fad035a5e64f089039f132bc84c6017fcb9754b",
+    "files": [
+      "src/shared/fixtures/solid-traffic40350/README.md",
+      "src/shared/fixtures/solid-traffic40350/pre-step.json.gz",
+      "src/shared/fixtures/solid-traffic40350/uncached-after-step.json.gz",
+      "src/shared/ship-collisions.ts",
+      "src/shared/ship-solid-traffic-bounded.test.ts"
+    ],
+    "productionChange": "One explanatory comment plus exact byHull FIFO128 eviction before the existing insertion; no algorithm/shape checks removed"
+  },
+  "nativeVerdict": "No static blocker. Exact key including -0, both samePolygon checks, original minkowskiSum on misses, value copies and original collision/path search remain intact. FIFO changes only retention and recomputation of derived geometry; it does not cap routes, change reachability or add fallback behavior.",
+  "testReview": [
+    "Shape-eviction test establishes initial miss then hit, drives160 distinct headings past capacity128, and checks that the evicted request recomputes exactly once with identical input vertices, output vertices and collision boolean before becoming a hit again.",
+    "Real fixture test restores complete40350 post-command world and nextId, executes one native step and compares complete40351 world and nextId with the independently uncached exact geometry result. It does not run AI or claim a completed match.",
+    "Fixture README distinguishes original0f prefix, changed d251 policy continuation and focused native control; it attributes1172 contact returns and5 internal job/search saves to external disabled-versus-bounded controls.",
+    "Author-reported24 relevant passing tests are not rerun here; prior independent control equality and root validation remain separately attributed."
+  ],
+  "driver": {
+    "path": "/workspace/.playtest/bootstrap-deck-casualty-v3-20261016/run-natural.mts",
+    "sha256": "5a0f9edb0f8f0a5e72271df4cd0cb6aa41e949fd27cb414f5a1da8f53c8ab530",
+    "runtimeHead": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b",
+    "verdict": "No double-think or command phase blocker found",
+    "phaseProof": [
+      "Restores exact step-enter40350 input after both owners already planned/issued; asserts full world,nextId and both owner memories unchanged.",
+      "Calls stepGame exactly once before runAiGameLoop; compares40351 complete world,nextId,both memories against uncached diagnostic and asserts tick40351.",
+      "runAiGameLoop starts from40351. Its SDK loop thinks only when game.tick%15===0, so the next scheduled think is40365; first logged public command is40365, not40350.",
+      "Uses the ordinary native planner and memory provider for both owners, unchanged setup/frozen v5 and rules2; hooks only read/save logs and observe hits. No command filtering or manual world/resource/order edits appear.",
+      "Creates a new destination and refuses overwrites. Source1454 and frozen184 checks run before/after; source/frozen results are exact in the existing final output."
+    ],
+    "existingFirstStepClosure": {
+      "world": true,
+      "nextId": true,
+      "bothMem": true,
+      "tick": 40351
+    },
+    "firstLoggedCommand": {
+      "tick": 40365,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "naval"
+    },
+    "existingTerminal": {
+      "startedAtTick": 40350,
+      "end": 41255,
+      "finished": true,
+      "completed": true,
+      "winner": "p0",
+      "commandCount": 99,
+      "hitCount": 187,
+      "sourcePre": {
+        "exact": true,
+        "files": 1454,
+        "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b"
+      },
+      "sourcePost": {
+        "exact": true,
+        "files": 1454,
+        "head": "a2690ff8f6ce3033cc2929cb0c1f5212947e1d8b"
+      },
+      "frozenPost": {
+        "exact": true,
+        "files": 184,
+        "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+      }
+    }
+  },
+  "limits": [
+    "This reviewer launched no execution. Driver terminal41255/p0 is an existing changed-code continuation result, not ordinary0 or a newly independent generalization test.",
+    "Do not describe all13 original crew as landed: deployment evidence attributes8 ashore and5 still on transport1046 deck. Zero loss is not by itself strategic or bootstrap acceptance.",
+    "The memo control fixes retained exact geometry; it is not evidence of a parent-chain cycle. Original512/1024MiB OOM provenance remains preserved.",
+    "No AI consumer integration or rule/frozen opponent change is part of600d. Complete bootstrap family/opponent/map/seed requirements remain outstanding."
+  ],
+  "blockers": [],
+  "changesMade": [
+    "This independent final-static-review.json only"
+  ],
+  "sealedDirectoriesModified": false
+}

@@ -1,0 +1,121 @@
+{
+  "classification": "External native single-step exact-memo causal diagnostic; disabled and bounded128 both start original d251 post-command40350 complete input, no AI and no world/command/opponent edits. Not completed continuation or acceptance.",
+  "checks": {
+    "contacts.jsonl": {
+      "byteEqual": true,
+      "lines": 1172,
+      "sha256": "82233705c800368a6377f70fd031e629c89c4133547196fa55c85d06da46e876"
+    },
+    "internal-jobs.jsonl": {
+      "byteEqual": true,
+      "lines": 5,
+      "sha256": "7d77d3cd9bc8a03bcfa6ccc1e0b648ae7772287f372dd5a951758f96e60a15b0"
+    },
+    "fullState": {
+      "world": true,
+      "nextId": true,
+      "bothMem": true,
+      "tick": true
+    }
+  },
+  "disabled": {
+    "pid": 277603,
+    "mode": "disabled",
+    "classification": "External diagnostic one native step only, not scored continuation.",
+    "tick": 40351,
+    "error": null,
+    "elapsedMs": 3733.1321740000003,
+    "restore": {
+      "world": true,
+      "nextId": true
+    },
+    "contacts": 1172,
+    "contactsSHA256": "82233705c800368a6377f70fd031e629c89c4133547196fa55c85d06da46e876",
+    "jobs": 5,
+    "jobsSHA256": "7d77d3cd9bc8a03bcfa6ccc1e0b648ae7772287f372dd5a951758f96e60a15b0",
+    "maxMemoEntries": 0,
+    "worldSHA256": "655f11b9870188a5528fa5215f0b7d92ff69fa32a39101f647d21ca11c060e96",
+    "sourcePost": {
+      "files": 1450,
+      "head": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+      "bad": []
+    },
+    "resources": {
+      "memory": {
+        "rss": 299524096,
+        "heapTotal": 185348096,
+        "heapUsed": 26255960,
+        "external": 50208634,
+        "arrayBuffers": 45955007
+      },
+      "usage": {
+        "userCPUTime": 5331958,
+        "systemCPUTime": 694260,
+        "maxRSS": 292504,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 84363,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 656,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 1690,
+        "involuntaryContextSwitches": 107
+      }
+    }
+  },
+  "bounded128": {
+    "pid": 277663,
+    "mode": "bounded128",
+    "classification": "External diagnostic one native step only, not scored continuation.",
+    "tick": 40351,
+    "error": null,
+    "elapsedMs": 1922.3895209999998,
+    "restore": {
+      "world": true,
+      "nextId": true
+    },
+    "contacts": 1172,
+    "contactsSHA256": "82233705c800368a6377f70fd031e629c89c4133547196fa55c85d06da46e876",
+    "jobs": 5,
+    "jobsSHA256": "7d77d3cd9bc8a03bcfa6ccc1e0b648ae7772287f372dd5a951758f96e60a15b0",
+    "maxMemoEntries": 128,
+    "worldSHA256": "655f11b9870188a5528fa5215f0b7d92ff69fa32a39101f647d21ca11c060e96",
+    "sourcePost": {
+      "files": 1450,
+      "head": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+      "bad": []
+    },
+    "resources": {
+      "memory": {
+        "rss": 345317376,
+        "heapTotal": 213528576,
+        "heapUsed": 131037952,
+        "external": 51038762,
+        "arrayBuffers": 46784479
+      },
+      "usage": {
+        "userCPUTime": 3626513,
+        "systemCPUTime": 233692,
+        "maxRSS": 337224,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 93469,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 656,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 1943,
+        "involuntaryContextSwitches": 91
+      }
+    }
+  }
+}

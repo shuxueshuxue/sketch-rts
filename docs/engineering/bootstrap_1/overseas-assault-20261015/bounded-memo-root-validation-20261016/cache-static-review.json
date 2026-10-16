@@ -1,0 +1,57 @@
+{
+  "classification": "Independent source-only review; native execution owned exclusively by deployment_gate; no fixed source edits, tests or games launched by reviewer",
+  "fixedSource": {
+    "path": "/workspace/sketch-rts-deck-casualty-v2-control",
+    "head": "d25100ed39b1fc985dc0ccc200a6a2271cf6801e",
+    "shipCollisionsSha256": "4bf67c196e6e5c02ec92f35d2625c6deb6a34704dde6f61239bbe621cafc78d5"
+  },
+  "instrumentation": {
+    "path": "/workspace/.playtest/bootstrap-deck-casualty-v2-20261016/native-cache-bounded128-40350/instrumentation.json",
+    "sha256": "4d70d556009bdf98463f17b85755af8908637950eb62ec05166150d415db1e29",
+    "mode": "bounded128",
+    "inputSHA256": "9f8c617b371c0b14dc7847e69f97181b509bac717a561367cb7780284dca5dfb"
+  },
+  "staticResult": "No blocker found for the bounded exact memo change. It limits retained recomputable geometry only; original collision/search semantics and all exact shape checks remain unchanged.",
+  "checks": [
+    "The actual bounded insertion preserves samePolygon(a,cached.a) body-outline invalidation, polygonKey(b) including signed-zero spelling, and samePolygon(b,previous.b) collision defense.",
+    "A hit returns the original cached result without changing insertion order. A miss computes the same minkowskiSum(a,b), evicts the oldest byHull entry only when size>=128, copies b and stores the exact computed result. It is FIFO, not a search-budget or route-length cap.",
+    "Minkowski result polygons are consumed read-only by segmentContact/polygonPlanes. Contacts expose copied numeric facts; no world decision depends on the cached polygon object identity. Removed entries and their private WeakMap plane data can be collected.",
+    "No hull/shore/body collision checks, target qualification, path candidate enumeration, route reachability, control command or order is bypassed. No arbitrary safety fallback or claim of unreachable geometry is introduced.",
+    "If an existing key fails the equality check at capacity, FIFO deletion before overwrite can temporarily leave127 entries; this changes cache utilization only, not the computed geometry.",
+    "The source investigation found bounded entrance structure: at most72 heading states over9 cells, entrances containing at most2 keel candidates with at most3 poses each. The original per-body byHull retention lacked a bound across those connector sweeps.",
+    "Connected-deck and single-deck graph parents point to earlier settled nodes; their parent rank strictly descends under the written Dijkstra rules. The actual observed40351 allocation failed earlier in ship route entrance, before parent reconstruction; it must not be labeled a proven path cycle."
+  ],
+  "externalResultsReadOnly": {
+    "disabled": {
+      "tick": 40351,
+      "error": null,
+      "contacts": 1172,
+      "jobs": 5,
+      "elapsedMs": 3733.1321740000003
+    },
+    "bounded128": {
+      "tick": 40351,
+      "error": null,
+      "contacts": 1172,
+      "jobs": 5,
+      "elapsedMs": 1922.3895209999998,
+      "maxMemoEntries": 128
+    },
+    "contactSequenceSHA256Equal": true,
+    "contactSequenceSHA256": "82233705c800368a6377f70fd031e629c89c4133547196fa55c85d06da46e876",
+    "internalJobSequenceSHA256Equal": true,
+    "internalJobSequenceSHA256": "7d77d3cd9bc8a03bcfa6ccc1e0b648ae7772287f372dd5a951758f96e60a15b0",
+    "fullAfterStateSHA256Equal": true,
+    "fullAfterStateSHA256": "655f11b9870188a5528fa5215f0b7d92ff69fa32a39101f647d21ca11c060e96",
+    "note": "These are existing results read from deployment_gate output, not reviewer-launched runs. Full result state includes snapshot,nextId and unchanged input policy memories."
+  },
+  "limits": [
+    "Original unbounded40350 step OOMed; no completed original step is claimed. Successful evidence is the exact collision recomputation control versus bounded memo control.",
+    "This proves the focused native step and retained-geometry mechanism. It is not a completed match, ordinary0 result, AI improvement, generalized performance benchmark or bootstrap acceptance.",
+    "Runtime/code integration and subsequent validation remain the source owner/root responsibility. This review does not modify the fixed d251 tree."
+  ],
+  "blockers": [],
+  "changesMade": [
+    "This external cache-static-review.json only"
+  ]
+}

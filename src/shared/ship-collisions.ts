@@ -245,6 +245,8 @@ export function shipSolidTraffic(map: GameMap, ship: Unit, units: readonly Unit[
     const key = polygonKey(b), previous = cached.byHull.get(key);
     if (previous && samePolygon(b, previous.b)) return previous.result;
     const result = minkowskiSum(a, b);
+    // Exact curve samples vary continuously; retain only a bounded memo.
+    if (cached.byHull.size >= 128) cached.byHull.delete(cached.byHull.keys().next().value!);
     cached.byHull.set(key, { b: copyPolygon(b), result });
     return result;
   });
