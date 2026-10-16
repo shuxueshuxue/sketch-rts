@@ -8,6 +8,10 @@
 
 固定源码的两份完整公共P0对照中，279885不再新建假撤离任务，原有naval自然请求12人登航母执行assault；281190保留输入里已存在的旧航母任务，同时阻止第二个假撤离任务，运输船自然请求7人执行assault。部分原backline命令因此正常让位。输入世界、nextId、三方输入记忆及对手记忆不变；变化限于相应真实任务和命令。
 
-这些是任务准入和公开命令证据，尚未证明实际上船、登陆、避免死亡或获胜。下一步在同一279885完整输入上，分别以945f与5457做279885→286800的正常三方AI聚焦因果窗口；它不构成完整比赛截止或验收。当前源码尚无完整普通开局结果，规则2、184项冻结manifest、三路线全部对手及地图/种子泛化要求保持原样。原故障容器未提交改动仍未恢复。
+随后在同一279885完整世界、nextId和三方记忆上，945f与5457各实际运行一次正常三方AI，均完成6915 tick至286800。基线空运输船157929于286623被p2 ravager1286最后20伤击杀（18→−2），不是历史D352的286628死因。候选没有永久单位损失，14名不同永久地面单位实际上船，共63次登船、53次下船。两边都没有敌建筑伤害、矿量变化或收入，均无胜者。零损失和恢复登船没有攻下基地。
 
-可查阅[完整公共P0差异](ground-evacuation-validation-20261016/FULL-P0-INTEGRATION.json)、[原版本与root差异](ground-evacuation-validation-20261016/ROOT-VS-D352-P0-DIFFERENCES.json)、[root独立源码核对](ground-evacuation-validation-20261016/ROOT-SOURCE-EQUIVALENCE.json)与[检查记录](ground-evacuation-validation-20261016/REPORT.json)。索引仍100包，旧包原文和所有旧成绩保留；上一运行源码f7的修船组件事实保存在previousRuntimeBeforeGroundEvacuation，未转为17bc比赛成绩。
+候选在281160、282840、284550、286035四次满载后返航，实载13、13、14、13人，没有尚未上船者；原有40秒物理进度规则在810 tick时取消装载。281145原强度叶要求39.1736，而实际载货与已登陆合计10.6217，全体可远征候选28.9603也未达到原门槛。这是现有策略指标，不能据此断言充分微操后实战必败，也不作为降低门槛的依据。继续检查实际兵力利用、经济恢复与跨岛协调。
+
+这两个固定源码的因果窗口仍非完整比赛或普通开局。当前源码尚无完整普通开局结果，规则2、184项冻结manifest、三路线全部对手及地图/种子泛化要求保持原样。原故障容器未提交改动仍未恢复。
+
+可查阅[完整公共P0差异](ground-evacuation-validation-20261016/FULL-P0-INTEGRATION.json)、[正常窗口对照](ground-evacuation-validation-20261016/CAUSAL-6915-COMPARISON.json)、[实际装载生命周期](ground-evacuation-validation-20261016/CANDIDATE-LOADING-LIFECYCLE-TRACE.json)、[原版本与root差异](ground-evacuation-validation-20261016/ROOT-VS-D352-P0-DIFFERENCES.json)、[root独立源码核对](ground-evacuation-validation-20261016/ROOT-SOURCE-EQUIVALENCE.json)与[检查记录](ground-evacuation-validation-20261016/REPORT.json)。第101包封存1063份载荷，root独立逐项验证SHA256、字节数、覆盖和gzip CRC，并查看两张原生实际画面；旧100包原文和所有旧成绩保留。上一运行源码f7的修船组件事实保存在previousRuntimeBeforeGroundEvacuation，未转为17bc比赛成绩。

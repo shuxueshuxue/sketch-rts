@@ -1,0 +1,546 @@
+{
+  "scope": "One existing exported assaultExpedition leaf on an actual native complete281145 preP0 frame. No Game, step, complete P0, road query, modified source or memory backfill. Options contain the exact bootstrap-v9_summoner fields this leaf reads: v2/requestedv7, originalnavalferries and actualteams.",
+  "input": "/tmp/bootstrap-ground-evacuation-945f-20261016/normal-candidate-279885-286800/281145-before-p0.json.gz",
+  "inputSHA256": "3a7e720137fc81d0ab39029e35cff70acf55a1b294c29ae5e266305d660a53be",
+  "sourcePre": {
+    "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "files": 1480,
+    "changed": []
+  },
+  "sourcePost": {
+    "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "files": 1480,
+    "changed": []
+  },
+  "tick": 281145,
+  "mission": {
+    "purpose": "assault",
+    "targetId": "building-p2-farm-1409",
+    "from": {
+      "x": 1898.2133255764954,
+      "y": 5240.78398094729
+    },
+    "to": {
+      "x": 6032,
+      "y": 8016
+    },
+    "phase": "loading",
+    "crewIds": [
+      "unit-p0-emberRavager-1180",
+      "unit-p0-emberRavager-19088",
+      "unit-p0-emberRavager-23904",
+      "unit-p0-emberRavager-22372",
+      "unit-p0-ashHexer-4420",
+      "unit-p0-ashHexer-23349",
+      "unit-p0-ashHexer-4268",
+      "unit-p0-summoner-41089",
+      "unit-p0-summoner-40241",
+      "unit-p0-summoner-8114",
+      "unit-p0-summoner-4085",
+      "unit-p0-summoner-38054",
+      "unit-p0-summoner-44159"
+    ],
+    "sinceTick": 279885,
+    "targetGround": {
+      "x": 6336,
+      "y": 8256
+    },
+    "progress": {
+      "tick": 280350,
+      "x": 2032,
+      "y": 5200.000000000114,
+      "heading": 47.106496771113754,
+      "phase": "loading",
+      "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+    }
+  },
+  "allFerryIds": [
+    "unit-p0-carrier-25442"
+  ],
+  "target": {
+    "id": "building-p2-farm-1409",
+    "owner": "p2",
+    "kind": "farm",
+    "x": 6336,
+    "y": 8256,
+    "hp": 320,
+    "maxHp": 320,
+    "radius": 30,
+    "complete": true,
+    "buildProgress": 140,
+    "buildTime": 140,
+    "attackDamage": 0,
+    "attackRange": 0,
+    "attackCooldown": 1,
+    "cooldown": 0,
+    "rallyX": 6426,
+    "rallyY": 8316,
+    "queue": [],
+    "researchQueue": []
+  },
+  "nativePendingBoarders": [],
+  "required": 39.17359977323862,
+  "readyWithAllExpeditionCandidates": false,
+  "allExpeditionCandidates": [
+    {
+      "id": "unit-p0-emberRavager-23904",
+      "kind": "emberRavager",
+      "hp": 236,
+      "maxHp": 236,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 40.16,
+        "y": -31.960000000000008
+      },
+      "rating": 1.3380376779396785
+    },
+    {
+      "id": "unit-p0-ashHexer-23349",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -49.84,
+        "y": -13.960000000000008
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-ashHexer-4268",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -75.84,
+        "y": 46.03999999999999
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-ashHexer-4420",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -33.84,
+        "y": -45.96000000000001
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-emberRavager-18621",
+      "kind": "emberRavager",
+      "hp": 157,
+      "maxHp": 157,
+      "rating": 1.0913452628561782
+    },
+    {
+      "id": "unit-p0-emberRavager-19088",
+      "kind": "emberRavager",
+      "hp": 157,
+      "maxHp": 157,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -15.840000000000003,
+        "y": 20.039999999999992
+      },
+      "rating": 1.0913452628561782
+    },
+    {
+      "id": "unit-p0-emberRavager-1180",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -69.84,
+        "y": -43.96000000000001
+      },
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-emberRavager-19746",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-emberRavager-21331",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-emberRavager-22372",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 20.159999999999997,
+        "y": 30.039999999999992
+      },
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-summoner-10111",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-10432",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-10947",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-34751",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-37753",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-38054",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 64.16,
+        "y": -3.960000000000008
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-40241",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -15.840000000000003,
+        "y": -15.960000000000008
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-4085",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 6.159999999999997,
+        "y": -43.96000000000001
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-41089",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 56.16,
+        "y": 32.03999999999999
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-44159",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 98.16,
+        "y": -13.960000000000008
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-7246",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-7979",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-8114",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -51.84,
+        "y": 20.039999999999992
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-8581",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-emberRavager-19557",
+      "kind": "emberRavager",
+      "hp": 70,
+      "maxHp": 118,
+      "rating": 0.5612668312609949
+    },
+    {
+      "id": "unit-p0-emberRavager-19660",
+      "kind": "emberRavager",
+      "hp": 37.632161254695774,
+      "maxHp": 118,
+      "rating": 0.3017383414417983
+    },
+    {
+      "id": "unit-p0-siegeRam-12085",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-24816",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-31356",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-34834",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-39936",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-40769",
+      "kind": "siegeRam",
+      "hp": 420,
+      "maxHp": 420,
+      "rating": 1.5600987295607325
+    },
+    {
+      "id": "unit-p0-siegeRam-10513",
+      "kind": "siegeRam",
+      "hp": 89.23472466982344,
+      "maxHp": 420,
+      "rating": 0.33146423950022214
+    }
+  ],
+  "actualCargo": [
+    {
+      "id": "unit-p0-emberRavager-1180",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -69.84,
+        "y": -43.96000000000001
+      },
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-summoner-4085",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 6.159999999999997,
+        "y": -43.96000000000001
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-ashHexer-4268",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -75.84,
+        "y": 46.03999999999999
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-ashHexer-4420",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -33.84,
+        "y": -45.96000000000001
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-summoner-8114",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -51.84,
+        "y": 20.039999999999992
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-emberRavager-19088",
+      "kind": "emberRavager",
+      "hp": 157,
+      "maxHp": 157,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -15.840000000000003,
+        "y": 20.039999999999992
+      },
+      "rating": 1.0913452628561782
+    },
+    {
+      "id": "unit-p0-emberRavager-22372",
+      "kind": "emberRavager",
+      "hp": 118,
+      "maxHp": 118,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 20.159999999999997,
+        "y": 30.039999999999992
+      },
+      "rating": 0.9461355155542485
+    },
+    {
+      "id": "unit-p0-ashHexer-23349",
+      "kind": "ashHexer",
+      "hp": 82,
+      "maxHp": 82,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -49.84,
+        "y": -13.960000000000008
+      },
+      "rating": 0.9
+    },
+    {
+      "id": "unit-p0-emberRavager-23904",
+      "kind": "emberRavager",
+      "hp": 236,
+      "maxHp": 236,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 40.16,
+        "y": -31.960000000000008
+      },
+      "rating": 1.3380376779396785
+    },
+    {
+      "id": "unit-p0-summoner-38054",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 64.16,
+        "y": -3.960000000000008
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-40241",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": -15.840000000000003,
+        "y": -15.960000000000008
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-41089",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 56.16,
+        "y": 32.03999999999999
+      },
+      "rating": 0.6
+    },
+    {
+      "id": "unit-p0-summoner-44159",
+      "kind": "summoner",
+      "hp": 95,
+      "maxHp": 95,
+      "deck": {
+        "shipId": "unit-p0-carrier-25442",
+        "x": 98.16,
+        "y": -13.960000000000008
+      },
+      "rating": 0.6
+    }
+  ],
+  "landed": [],
+  "actualCargoAndLandedRating": 10.621653971904351,
+  "inputUnchanged": true,
+  "snapshotUnchanged": true,
+  "all3memoryUnchanged": true,
+  "limitation": "These are existing planner strength indices, not proof that a fully microed real battle is physically unwinnable or permission to lower thresholds. Other coast/strength gates may also reject. At first return281160, the earlier physical-progress guard fires before these later gates."
+}

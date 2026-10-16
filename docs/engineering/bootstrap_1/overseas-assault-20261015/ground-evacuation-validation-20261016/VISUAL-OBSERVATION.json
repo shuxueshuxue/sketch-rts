@@ -1,0 +1,86 @@
+{
+  "scope": "Three actual persisted normalGame frames independently rendered with fixed5457 native drawWorld, then personally viewed. Not another Game/liveUI/generated illustration.",
+  "frames": [
+    {
+      "scope": "Read-only native drawWorld render of an actual complete persisted Game frame; no new Game, planner, step, manual command or generated illustration.",
+      "tick": 286800,
+      "sourceHead": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "sourcePre": {
+        "files": 1480,
+        "changed": []
+      },
+      "sourcePost": {
+        "files": 1480,
+        "changed": []
+      },
+      "input": "/tmp/bootstrap-ground-evacuation-945f-20261016/normal-candidate-279885-286800/final.json.gz",
+      "inputSHA256": "eea460e8f5242868fdfc6cf2173717b25eafc5aa19dd8198c3df1a6dbcb29a2b",
+      "image": "/tmp/bootstrap-ground-evacuation-945f-20261016/native-renders/candidate-final-home.png",
+      "imageSHA256": "0058cf64e7f043ca981fa3371e1365baec536c35fe8e26458112e9ca2d9aa181",
+      "view": {
+        "x": 1350,
+        "y": 4400,
+        "width": 1300,
+        "height": 1300,
+        "zoom": 1
+      },
+      "inputUnchanged": true
+    },
+    {
+      "scope": "Read-only native drawWorld render of an actual complete persisted Game frame; no new Game, planner, step, manual command or generated illustration.",
+      "tick": 280170,
+      "sourceHead": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "sourcePre": {
+        "files": 1480,
+        "changed": []
+      },
+      "sourcePost": {
+        "files": 1480,
+        "changed": []
+      },
+      "input": "/tmp/bootstrap-ground-evacuation-945f-20261016/normal-candidate-279885-286800/280170-before-p0.json.gz",
+      "inputSHA256": "963507f9446f138dd4b92ef9d2457cf6ca207ab9ad571cdc10147ec2e4a90ca8",
+      "image": "/tmp/bootstrap-ground-evacuation-945f-20261016/native-renders/first-cargo-home.png",
+      "imageSHA256": "8c77b43b7c2d4e9562652813019edac9ac311d5ed42d9ad10491a429a24f2fbd",
+      "view": {
+        "x": 1350,
+        "y": 4400,
+        "width": 1300,
+        "height": 1300,
+        "zoom": 1
+      },
+      "inputUnchanged": true
+    },
+    {
+      "scope": "Read-only native drawWorld render of an actual complete persisted Game frame; no new Game, planner, step, manual command or generated illustration.",
+      "tick": 279885,
+      "sourceHead": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "sourcePre": {
+        "files": 1480,
+        "changed": []
+      },
+      "sourcePost": {
+        "files": 1480,
+        "changed": []
+      },
+      "input": "/tmp/bootstrap-ground-evacuation-945f-20261016/normal-candidate-279885-286800/initial.json.gz",
+      "inputSHA256": "f8a542cf218d3897ffb4d961d5f406672c49bb1e3797912dc0c2b2db4eadb46a",
+      "image": "/tmp/bootstrap-ground-evacuation-945f-20261016/native-renders/initial-home.png",
+      "imageSHA256": "3b0cb61d810da7ec8296f6c27aa1559d0584a3a68af39bd3e1cfd9e1f01ce8da",
+      "view": {
+        "x": 1350,
+        "y": 4400,
+        "width": 1300,
+        "height": 1300,
+        "zoom": 1
+      },
+      "inputUnchanged": true
+    }
+  ],
+  "observed": "Initial army is at the home settlement;280170 many actual actors occupy the carrier deck;286800 the carrier and army remain at the same home-port location. The exact63embark53disembark and14uniquegroundactors come from nativeevents, not visual estimation.",
+  "images": [
+    "native-renders/initial-home.png",
+    "native-renders/first-cargo-home.png",
+    "native-renders/candidate-final-home.png"
+  ]
+}

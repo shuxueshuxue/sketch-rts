@@ -1,6 +1,6 @@
 {
-  "atUTC": "2026-10-16T10:29:24.944179+00:00",
-  "state": "Fixed candidate and focused validation complete; normal three-AI comparison pending coordinated Game slot and parent review.",
+  "atUTC": "2026-10-16T11:06:46.836975+00:00",
+  "state": "Completed narrow qualification fix, focused tests/typecheck, two fixed-source normal3AI6915tick causal windows, original nativevisuals and next-blocker diagnosis. Globalbootstrap_1 remains incomplete.",
   "commit": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
   "branch": "codex/bootstrap-ground-evacuation-20261016",
   "base": "945f963a152bf46cf8560fd70fd25bba724ba33a",
@@ -71,10 +71,73 @@
     "rootDifference": "Root945f includes dock fix absentD352; actual281190 root P0 has one additional31227 dock move. D352 historical death is not a root945f counterfactual."
   },
   "pending": [
-    "Parent static review of fixed5457.",
-    "Prepare/review bound normal driver and run same actual279885 fullworld/id/all3mem with945f baseline and candidate sequentially, ordinary frozenv5+v7, to native result or actual diagnosed obstruction.",
-    "Visual observation and native board/strategic effects; surviving historical deathTick alone is not acceptance."
+    "Further actual strategic/convoy/sea-support/economic response to fullcarrier not meeting existing expedition gates;no sourcechange to this unproven next issue.",
+    "Fullordinarymatches and officialmap/unseenseed coverage of allthree families vsnormalfrozenv5/v7/v8 andsixpairings remainparentbootstrap_1 goals."
   ],
   "originalRecoveryGap": "Original failed container uncommitted changes remain inaccessible/unrecovered.",
-  "acceptance": "No fresh ordinary-opening/full-match/generalization/bootstrap_1 completion claim."
+  "acceptance": "No fresh ordinary-opening/full-match/generalization/bootstrap_1 completion claim.",
+  "rootIntegration": {
+    "commit": "17bc9facfb59e5b540badcf35c4b987ae648072c",
+    "proof": "ROOT-INTEGRATION-EQUIVALENCE-COPY.json",
+    "all1480BytesEqualToCandidate": true
+  },
+  "normalCausalWindows": {
+    "proof": "CAUSAL-6915-COMPARISON.json",
+    "start": 279885,
+    "end": 286800,
+    "ticksEach": 6915,
+    "gamesEach": 1,
+    "sameInitialWorldNextId3memGzipExact": true,
+    "baseline": {
+      "head": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+      "exit": 0,
+      "permanentP0Deaths": 1,
+      "selectedDeath": {
+        "tick": 286623,
+        "id": "unit-p0-transport-157929",
+        "lastHit": "unit-p2-emberRavager-1286,20damage,18to-2"
+      },
+      "actualGroundEmbarks": 0,
+      "enemyBuildingHits": 0,
+      "resourceAmountChanges": 0,
+      "winner": null
+    },
+    "candidate": {
+      "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "exit": 0,
+      "permanentDeathsAllOwners": 0,
+      "actualOwnGroundUniqueEmbarked": 14,
+      "embarkEvents": 63,
+      "disembarkEvents": 53,
+      "enemyBuildingHits": 0,
+      "resourceAmountChanges": 0,
+      "winner": null
+    },
+    "sourceFrozenFirstP0InputChecks": "Source1477baseline/1480candidate, independentfrozen497+184/rules2, exactrestoredworld/id/3mem, firstnormalP0entries+all3postmem/calls1, inputunchanged allpass. AllOOMcounters unchanged43/2.",
+    "limit": "Finite causal window,not completedmatch/freshordinaryopening/generalization/acceptance;0loss and boarding do not prove attack success."
+  },
+  "nextActualBlocker": {
+    "trace": "CANDIDATE-LOADING-LIFECYCLE-TRACE.json",
+    "actual": "Four fullcarrier loading\u2192return transitions at281160/282840/284550/286035 with13/13/14/13cargo,no pendingboarders,progressAge810tick.13-ground-unit loading completed,then the preserved40s physical-progress cancellation unloaded and recreated the mission.",
+    "leaf": "CANDIDATE-281145-ASSAULT-RELEASE-LEAF.json",
+    "existingRequiredIndex": 39.17359977323862,
+    "actualCargoAndLandedIndex": 10.621653971904351,
+    "allExpeditionCandidateIndex": 28.96033205543644,
+    "existingReady": false,
+    "limitations": "No newfullP0/Game/step/road;singleexistingexportedleaf,indexnotproofactualfullymicroedbattleunwinnable. Othercoastgatesmayreject;do not lowerstrength/40stimeoutsorweakenopponents."
+  },
+  "visual": "VISUAL-OBSERVATION.json",
+  "baselineReconstruction": {
+    "candidateCapsule": "fixed-source.tar.gz",
+    "replace": "src/ai/policy/naval.ts with baseline-naval.ts",
+    "removeCandidateOnlyFiles": [
+      "src/ai/bootstrap_1/ground-evacuation.test.ts",
+      "src/ai/bootstrap_1/fixtures/ground-evacuation-279885.json.gz",
+      "src/ai/bootstrap_1/fixtures/ground-evacuation-281190.json.gz"
+    ],
+    "verifyAll1477": "baseline-native-source.json"
+  },
+  "unusedDrafts": [
+    "native-short-window.mts was preparedbutneverexecuted;actualnormaldriver is normal-from-279885.mts boundbybothnormalprelaunchmanifests."
+  ]
 }

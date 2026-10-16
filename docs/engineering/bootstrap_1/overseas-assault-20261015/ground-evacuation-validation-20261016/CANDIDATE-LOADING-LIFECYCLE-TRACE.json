@@ -1,0 +1,1585 @@
+{
+  "scope": "Offline exact nativeworld+all3mem preP0 and actual normalP0 output at each carrier task purpose/phase/sinceTick transition;no newquery/Game.",
+  "ship": "unit-p0-carrier-25442",
+  "transitions": [
+    {
+      "tick": 279885,
+      "stateBefore": null,
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133255764954,
+          "y": 5240.78398094729
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-38054"
+        ],
+        "sinceTick": 279885,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 279885,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "unit-p0-emberRavager-1180",
+              "unit-p0-emberRavager-19088",
+              "unit-p0-emberRavager-23904",
+              "unit-p0-emberRavager-22372",
+              "unit-p0-ashHexer-4420",
+              "unit-p0-ashHexer-23349",
+              "unit-p0-ashHexer-4268",
+              "unit-p0-summoner-41089",
+              "unit-p0-summoner-40241",
+              "unit-p0-summoner-8114",
+              "unit-p0-summoner-4085",
+              "unit-p0-summoner-38054"
+            ],
+            "transportId": "unit-p0-carrier-25442"
+          }
+        }
+      ],
+      "progressAgeBefore": null
+    },
+    {
+      "tick": 281160,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133255764954,
+          "y": 5240.78398094729
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-38054",
+          "unit-p0-summoner-44159"
+        ],
+        "sinceTick": 279885,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 280350,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133255764954,
+          "y": 5240.78398094729
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 279885,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 281160,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 1351,
+          "balance": 0.034853889242041206,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [
+        "unit-p0-emberRavager-1180",
+        "unit-p0-summoner-4085",
+        "unit-p0-ashHexer-4268",
+        "unit-p0-ashHexer-4420",
+        "unit-p0-summoner-8114",
+        "unit-p0-emberRavager-19088",
+        "unit-p0-emberRavager-22372",
+        "unit-p0-ashHexer-23349",
+        "unit-p0-emberRavager-23904",
+        "unit-p0-summoner-38054",
+        "unit-p0-summoner-40241",
+        "unit-p0-summoner-41089",
+        "unit-p0-summoner-44159"
+      ],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "unload",
+            "unitIds": [
+              "unit-p0-carrier-25442"
+            ],
+            "x": 1898.2133255764954,
+            "y": 5240.78398094729,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "progressAgeBefore": 810
+    },
+    {
+      "tick": 281565,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133255764954,
+          "y": 5240.78398094729
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 279885,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 281160,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "stateAfter": null,
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [],
+      "progressAgeBefore": 405
+    },
+    {
+      "tick": 281580,
+      "stateBefore": null,
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133270820539,
+          "y": 5240.783982691556
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-summoner-38054",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-40241"
+        ],
+        "sinceTick": 281580,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 281580,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "unit-p0-emberRavager-1180",
+              "unit-p0-emberRavager-23904",
+              "unit-p0-emberRavager-22372",
+              "unit-p0-emberRavager-19088",
+              "unit-p0-ashHexer-4420",
+              "unit-p0-ashHexer-4268",
+              "unit-p0-summoner-41089",
+              "unit-p0-ashHexer-23349",
+              "unit-p0-summoner-38054",
+              "unit-p0-summoner-4085",
+              "unit-p0-summoner-8114",
+              "unit-p0-summoner-40241"
+            ],
+            "transportId": "unit-p0-carrier-25442"
+          }
+        }
+      ],
+      "progressAgeBefore": null
+    },
+    {
+      "tick": 282840,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133270820539,
+          "y": 5240.783982691556
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-summoner-38054",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-44159"
+        ],
+        "sinceTick": 281580,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 282030,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133270820539,
+          "y": 5240.783982691556
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 281580,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 282840,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 1351,
+          "balance": 0.039296763515393345,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [
+        "unit-p0-emberRavager-1180",
+        "unit-p0-summoner-4085",
+        "unit-p0-ashHexer-4268",
+        "unit-p0-ashHexer-4420",
+        "unit-p0-summoner-8114",
+        "unit-p0-emberRavager-19088",
+        "unit-p0-emberRavager-22372",
+        "unit-p0-ashHexer-23349",
+        "unit-p0-emberRavager-23904",
+        "unit-p0-summoner-38054",
+        "unit-p0-summoner-40241",
+        "unit-p0-summoner-41089",
+        "unit-p0-summoner-44159"
+      ],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "unload",
+            "unitIds": [
+              "unit-p0-carrier-25442"
+            ],
+            "x": 1898.2133270820539,
+            "y": 5240.783982691556,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "progressAgeBefore": 810
+    },
+    {
+      "tick": 283245,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133270820539,
+          "y": 5240.783982691556
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 281580,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 282840,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-38054|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159"
+        }
+      },
+      "stateAfter": null,
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [],
+      "progressAgeBefore": 405
+    },
+    {
+      "tick": 283260,
+      "stateBefore": null,
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133269432509,
+          "y": 5240.783982717353
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-44159",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-40241"
+        ],
+        "sinceTick": 283260,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 283260,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "unit-p0-emberRavager-1180",
+              "unit-p0-emberRavager-23904",
+              "unit-p0-emberRavager-19088",
+              "unit-p0-emberRavager-22372",
+              "unit-p0-ashHexer-23349",
+              "unit-p0-ashHexer-4420",
+              "unit-p0-ashHexer-4268",
+              "unit-p0-summoner-4085",
+              "unit-p0-summoner-41089",
+              "unit-p0-summoner-44159",
+              "unit-p0-summoner-8114",
+              "unit-p0-summoner-40241"
+            ],
+            "transportId": "unit-p0-carrier-25442"
+          }
+        }
+      ],
+      "progressAgeBefore": null
+    },
+    {
+      "tick": 284550,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133269432509,
+          "y": 5240.783982717353
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-44159",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-37753"
+        ],
+        "sinceTick": 283260,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 283740,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-187694"
+        }
+      },
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133269432509,
+          "y": 5240.783982717353
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 283260,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 284550,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-187694"
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 1421,
+          "balance": 0.05764366973869853,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [
+        "unit-p0-emberRavager-1180",
+        "unit-p0-summoner-4085",
+        "unit-p0-ashHexer-4268",
+        "unit-p0-ashHexer-4420",
+        "unit-p0-summoner-8114",
+        "unit-p0-emberRavager-19088",
+        "unit-p0-emberRavager-22372",
+        "unit-p0-ashHexer-23349",
+        "unit-p0-emberRavager-23904",
+        "unit-p0-summoner-37753",
+        "unit-p0-summoner-40241",
+        "unit-p0-summoner-41089",
+        "unit-p0-summoner-44159",
+        "unit-p0-spirit-187694"
+      ],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "unload",
+            "unitIds": [
+              "unit-p0-carrier-25442"
+            ],
+            "x": 1898.2133269432509,
+            "y": 5240.783982717353,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "progressAgeBefore": 810
+    },
+    {
+      "tick": 284955,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133269432509,
+          "y": 5240.783982717353
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 283260,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 284550,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-40241|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-187694"
+        }
+      },
+      "stateAfter": null,
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [],
+      "progressAgeBefore": 405
+    },
+    {
+      "tick": 284970,
+      "stateBefore": null,
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133274496896,
+          "y": 5240.783982516135
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-44159",
+          "unit-p0-summoner-37753"
+        ],
+        "sinceTick": 284970,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 284970,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "unit-p0-emberRavager-1180",
+              "unit-p0-emberRavager-19088",
+              "unit-p0-emberRavager-23904",
+              "unit-p0-emberRavager-22372",
+              "unit-p0-ashHexer-4420",
+              "unit-p0-ashHexer-23349",
+              "unit-p0-ashHexer-4268",
+              "unit-p0-summoner-4085",
+              "unit-p0-summoner-8114",
+              "unit-p0-summoner-41089",
+              "unit-p0-summoner-44159",
+              "unit-p0-summoner-37753"
+            ],
+            "transportId": "unit-p0-carrier-25442"
+          }
+        }
+      ],
+      "progressAgeBefore": null
+    },
+    {
+      "tick": 286035,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133274496896,
+          "y": 5240.783982516135
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-44159",
+          "unit-p0-summoner-37753"
+        ],
+        "sinceTick": 284970,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 285225,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-189166"
+        }
+      },
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133274496896,
+          "y": 5240.783982516135
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 284970,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 286035,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-189166"
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 1319,
+          "balance": 0.029873849237719245,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [
+        "unit-p0-emberRavager-1180",
+        "unit-p0-summoner-4085",
+        "unit-p0-ashHexer-4268",
+        "unit-p0-ashHexer-4420",
+        "unit-p0-summoner-8114",
+        "unit-p0-emberRavager-19088",
+        "unit-p0-emberRavager-22372",
+        "unit-p0-ashHexer-23349",
+        "unit-p0-emberRavager-23904",
+        "unit-p0-summoner-37753",
+        "unit-p0-summoner-41089",
+        "unit-p0-summoner-44159",
+        "unit-p0-spirit-189166"
+      ],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "unload",
+            "unitIds": [
+              "unit-p0-carrier-25442"
+            ],
+            "x": 1898.2133274496896,
+            "y": 5240.783982516135,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "progressAgeBefore": 810
+    },
+    {
+      "tick": 286440,
+      "stateBefore": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133274496896,
+          "y": 5240.783982516135
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "return",
+        "crewIds": [],
+        "sinceTick": 284970,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 286035,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "return",
+          "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-41089|unit-p0-summoner-44159|unit-p0-spirit-189166"
+        }
+      },
+      "stateAfter": null,
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [],
+      "progressAgeBefore": 405
+    },
+    {
+      "tick": 286455,
+      "stateBefore": null,
+      "stateAfter": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.213326411921,
+          "y": 5240.783982275106
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-8114",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-summoner-44159",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-37753"
+        ],
+        "sinceTick": 286455,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 286455,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "nativeBoat": {
+        "id": "unit-p0-carrier-25442",
+        "owner": "p0",
+        "kind": "carrier",
+        "x": 2032,
+        "y": 5200.000000000114,
+        "homeX": 2092.5863500864684,
+        "homeY": 5096,
+        "hp": 480,
+        "maxHp": 480,
+        "speed": 54,
+        "attackDamage": 0,
+        "attackRange": 0,
+        "attackCooldown": 20,
+        "cooldown": 0,
+        "radius": 45.6,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 0,
+        "shipParts": {
+          "rigging": 163,
+          "rudder": 112,
+          "cabin": 192
+        },
+        "fittings": [],
+        "bodyRadius": 45.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 47.106496771113754,
+          "speed": 0,
+          "load": 0,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "yawRate": 0
+        }
+      },
+      "nativeCargoIds": [],
+      "nativePendingBoarders": [],
+      "boatEntries": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "naval",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "unit-p0-emberRavager-1180",
+              "unit-p0-emberRavager-23904",
+              "unit-p0-emberRavager-22372",
+              "unit-p0-emberRavager-19088",
+              "unit-p0-ashHexer-4420",
+              "unit-p0-ashHexer-4268",
+              "unit-p0-summoner-8114",
+              "unit-p0-ashHexer-23349",
+              "unit-p0-summoner-44159",
+              "unit-p0-summoner-4085",
+              "unit-p0-summoner-41089",
+              "unit-p0-summoner-37753"
+            ],
+            "transportId": "unit-p0-carrier-25442"
+          }
+        }
+      ],
+      "progressAgeBefore": null
+    }
+  ]
+}

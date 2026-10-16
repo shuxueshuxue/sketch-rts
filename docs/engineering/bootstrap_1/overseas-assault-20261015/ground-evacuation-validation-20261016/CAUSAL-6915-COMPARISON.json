@@ -1,0 +1,148 @@
+{
+  "initialWorldId3memRawExactAcrossVariants": true,
+  "rows": [
+    {
+      "variant": "baseline",
+      "startTick": 279885,
+      "endTick": 286800,
+      "steps": 6915,
+      "source": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+      "firstP0Exact": true,
+      "initialWorldId3memExactBeforeFirstP0": true,
+      "permanentDeaths": {
+        "p0:transport": 1
+      },
+      "nativeUnitsLostDelta": {
+        "p0": 1,
+        "p1": 0,
+        "p2": 0
+      },
+      "actualOwnGroundEmbarkEvents": 0,
+      "actualOwnGroundUniqueUnits": 0,
+      "actualDisembarkEvents": 0,
+      "hits": 17,
+      "p0EnemyBuildingHits": 0,
+      "resourceAmountChanges": [],
+      "finalFerries": {
+        "unit-p0-carrier-25442": {
+          "purpose": "evacuate",
+          "phase": "loading",
+          "crewIds": [],
+          "sinceTick": 279885,
+          "progress": {
+            "tick": 286740,
+            "x": 5076.7600024199455,
+            "y": 6640.000000000001,
+            "heading": 43.98229715025711,
+            "phase": "loading",
+            "crew": ""
+          }
+        }
+      },
+      "economyDelta": {
+        "p0": {
+          "goldBefore": 151.33,
+          "goldAfter": 141.33,
+          "goldDelta": -10.0,
+          "goldSpentDelta": 10,
+          "walletPlusSpent": 0.0
+        },
+        "p1": {
+          "goldBefore": 53.62,
+          "goldAfter": 53.62,
+          "goldDelta": 0.0,
+          "goldSpentDelta": 0,
+          "walletPlusSpent": 0.0
+        },
+        "p2": {
+          "goldBefore": 0.28,
+          "goldAfter": 0.28,
+          "goldDelta": 0.0,
+          "goldSpentDelta": 0,
+          "walletPlusSpent": 0.0
+        }
+      },
+      "winner": null
+    },
+    {
+      "variant": "candidate",
+      "startTick": 279885,
+      "endTick": 286800,
+      "steps": 6915,
+      "source": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "firstP0Exact": true,
+      "initialWorldId3memExactBeforeFirstP0": true,
+      "permanentDeaths": {},
+      "nativeUnitsLostDelta": {
+        "p0": 0,
+        "p1": 0,
+        "p2": 0
+      },
+      "actualOwnGroundEmbarkEvents": 63,
+      "actualOwnGroundUniqueUnits": 14,
+      "actualDisembarkEvents": 53,
+      "hits": 0,
+      "p0EnemyBuildingHits": 0,
+      "resourceAmountChanges": [],
+      "finalFerries": {
+        "unit-p0-carrier-25442": {
+          "purpose": "assault",
+          "phase": "loading",
+          "crewIds": [
+            "unit-p0-emberRavager-1180",
+            "unit-p0-emberRavager-23904",
+            "unit-p0-emberRavager-22372",
+            "unit-p0-emberRavager-19088",
+            "unit-p0-ashHexer-4420",
+            "unit-p0-ashHexer-4268",
+            "unit-p0-summoner-8114",
+            "unit-p0-ashHexer-23349",
+            "unit-p0-summoner-44159",
+            "unit-p0-summoner-4085",
+            "unit-p0-summoner-41089",
+            "unit-p0-summoner-37753",
+            "unit-p0-summoner-7246"
+          ],
+          "sinceTick": 286455,
+          "progress": {
+            "tick": 286725,
+            "x": 2032,
+            "y": 5200.000000000114,
+            "heading": 47.106496771113754,
+            "phase": "loading",
+            "crew": "unit-p0-emberRavager-1180|unit-p0-summoner-4085|unit-p0-ashHexer-4268|unit-p0-ashHexer-4420|unit-p0-summoner-8114|unit-p0-emberRavager-19088|unit-p0-emberRavager-22372|unit-p0-ashHexer-23349|unit-p0-emberRavager-23904|unit-p0-summoner-37753|unit-p0-summoner-41089|unit-p0-summoner-44159"
+          }
+        }
+      },
+      "economyDelta": {
+        "p0": {
+          "goldBefore": 151.33,
+          "goldAfter": 147.33,
+          "goldDelta": -4.0,
+          "goldSpentDelta": 4,
+          "walletPlusSpent": 0.0
+        },
+        "p1": {
+          "goldBefore": 53.62,
+          "goldAfter": 53.62,
+          "goldDelta": 0.0,
+          "goldSpentDelta": 0,
+          "walletPlusSpent": 0.0
+        },
+        "p2": {
+          "goldBefore": 0.28,
+          "goldAfter": 0.28,
+          "goldDelta": 0.0,
+          "goldSpentDelta": 0,
+          "walletPlusSpent": 0.0
+        }
+      },
+      "winner": null
+    }
+  ],
+  "limitations": [
+    "Sameactual279885fullinput,945fbaseline vsone-line5457candidate, eachone6915tick normal3AI window.",
+    "No completed battle or generalization evidence;zero permanent loss/actualboarding do not imply successful attack.",
+    "Candidate has63embark53disembark events and no enemybuilding hits;loading/return/recreation cycle needs next actual-evidence diagnosis."
+  ]
+}

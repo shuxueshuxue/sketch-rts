@@ -1,0 +1,23 @@
+{
+  "atUTC": "2026-10-16T11:22:11.492662+00:00",
+  "archive": "/tmp/bootstrap-ground-evacuation-945f-20261016.tar.gz",
+  "bytes": 39660885,
+  "sha256": "43fe1ba03fa262ce74a83bf22f8796fe54df407b492936fd0ba22e573344b05f",
+  "indexSha256": "d1bafd74219f535ef7d63ceea622f439299b97a076ad93d7487fbe589e544828",
+  "payloadFiles": 1063,
+  "regularArchiveFiles": 1064,
+  "payloadBytes": 56873432,
+  "eachPayloadBytesSha256Exact": true,
+  "strictUniqueCoverageExact": true,
+  "gzipCRCReadToEOF": true,
+  "sourceEquivalenceReceipt": "ROOT-SOURCE-EQUIVALENCE.json",
+  "scope": "Two fixed-source normal6915tick causal windows from same279885 fullworld/id/all3mem, not a complete match or fresh ordinary-opening or bootstrap acceptance.",
+  "rootNativeVisualInspection": {
+    "atUTC": "2026-10-16T11:23:21.337020+00:00",
+    "images": [
+      "native-renders/first-cargo-home.png",
+      "native-renders/candidate-final-home.png"
+    ],
+    "observation": "Actual native render shows own permanent troops physically on carrier deck beside home dock in both frames; later frame remains at home shore with another small boat offshore. Image alone is not arrival/enemy damage/economy/win evidence."
+  }
+}

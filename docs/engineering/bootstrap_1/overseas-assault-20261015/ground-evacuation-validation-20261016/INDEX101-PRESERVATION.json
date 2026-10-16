@@ -1,0 +1,12 @@
+{
+  "atUTC": "2026-10-16T11:23:21.338962+00:00",
+  "previousPackages": 100,
+  "newPackages": 101,
+  "old100RawPackageTextExact": true,
+  "oldTopLevelFieldsExceptActiveRuntimeAndPackagesUnchanged": true,
+  "beforeSha256": "a89ac496db7c7efe7e3379ab7a354750da01d77c4bf150e4e1a0dd5a8d0e6772",
+  "afterSha256": "c3a6139647209d9bdb8a7b3f63c81de6e28bce8183185cc6bbea913b635b6941",
+  "runtimeSource": "17bc9facfb59e5b540badcf35c4b987ae648072c",
+  "ordinary0": null,
+  "originalRecoveryGapRetained": true
+}
