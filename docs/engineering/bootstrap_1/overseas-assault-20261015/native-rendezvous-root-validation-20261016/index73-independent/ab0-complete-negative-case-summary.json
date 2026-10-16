@@ -1,0 +1,148 @@
+{
+  "classification": "Sealed record consistency plus independent stream/inner source/Git/frozen hashes and corpse/cleanup reconciliation; no native/planner/test reruns.",
+  "candidate": "ab0ffd200725968a9c4887d2d7883cfeec1eaa8f",
+  "base": "a90c0119d7166baad1c9222781baab107deedbcb",
+  "originalReference": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "integrated": false,
+  "ordinary0": false,
+  "localWindow": {
+    "from": 13764,
+    "to": 14101,
+    "releaseTick": 14100,
+    "releaseGap": 174.3649921331567,
+    "leash": 180,
+    "HP": 105,
+    "counts": {
+      "commands": 369,
+      "hits": 36,
+      "plans": 69,
+      "sourceFiles": 1465,
+      "frozenFiles": 497
+    }
+  },
+  "naturalTail": {
+    "from": 14101,
+    "to": 41057,
+    "winner": "p1",
+    "counts": {
+      "commands": 35159,
+      "hits": 2077,
+      "plans": 5391,
+      "sourceFiles": 1465,
+      "frozenFiles": 497
+    },
+    "remaining": {
+      "p0": {
+        "units": 0,
+        "buildings": 0,
+        "gold": 40.87
+      },
+      "p1": {
+        "units": 19,
+        "buildings": 22,
+        "gold": 121.19
+      },
+      "p2": {
+        "units": 23,
+        "buildings": 20,
+        "gold": 112.74
+      }
+    },
+    "nativeLosses": {
+      "p0": 62,
+      "p1": 79,
+      "p2": 39,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 19
+    }
+  },
+  "doctor2255": {
+    "originalActualDeathTick": 13964,
+    "candidateActualDeathTick": 17203,
+    "extensionTicks": 3239,
+    "survivedEnd": false
+  },
+  "independentLedgerChecks": {
+    "initialCorpseCount": 54,
+    "newUniqueTerminalIds": 145,
+    "provisionalHP0CleanupUpdateRows": 12,
+    "rawTerminalStreamRows": 157,
+    "finalCorpses": 199,
+    "initialAndNewDisjoint": true,
+    "allFinalCorpseIdsExact": true,
+    "corpseTicksEqualConfirmedCleanupTicks": true,
+    "finalCorpseOwners": {
+      "neutral": 19,
+      "p2": 39,
+      "p1": 79,
+      "p0": 62
+    }
+  },
+  "rawCountsIndependentlyRead": {
+    "return-evidence/candidate-return-episode": {
+      "commands": 369,
+      "hits": 36,
+      "terminalStreamRows": 1
+    },
+    "return-evidence/candidate-complete-tail": {
+      "commands": 35159,
+      "hits": 2077,
+      "terminalStreamRows": 156
+    }
+  },
+  "validationAsArchived": {
+    "head": "ab0ffd200725968a9c4887d2d7883cfeec1eaa8f",
+    "base": "a90c0119d7166baad1c9222781baab107deedbcb",
+    "productionDelta": "Only src/ai/bootstrap_1/mercenary-control.ts ordinary returngoal+continuity; no current/frozen rules or activepurchasingcourier behavior change.",
+    "validation": [
+      {
+        "command": "vitest run 7 relatedmercenaryfiles --maxWorkers=1 --minWorkers=1",
+        "log": "vitest-first-fixture-missing-overlay.log",
+        "result": "100passed1failed;94existingcases allpassed,6newpassed,1realfixtureload failed380vs388 because restorealone lacksbuildingoverlay."
+      },
+      {
+        "command": "vitest run src/ai/bootstrap_1/mercenary-return-road-goal.test.ts --maxWorkers=1 --minWorkers=1",
+        "log": "vitest-corrected-loader.log",
+        "result": "7/7 passed. Sameproductionbytes; only testloader registersbodies like actualownerplanner; fixed380assert replacedwith relative/mainhall shorterroad contract."
+      },
+      {
+        "command": "tsc --noEmit",
+        "log": "tsc.log",
+        "observedResult": "No diagnostics; toolcompleted0."
+      }
+    ],
+    "uniqueCoveredCases": 101,
+    "existingPassed": 94,
+    "newFinalPassed": 7,
+    "fixtureContextQuery": "overlay-contract-query.json",
+    "initialTestSHA256": "c1d2b546912e73801bb227d563221865a5544751a863d939ffe4ae8f8bd505bf",
+    "finalTestSHA256": "0e4a7fd708a14120a0a0d730427d9507a85878d7511bf0656600711babc2aa86",
+    "fixtureSHA256": "b65fec39a8354eb64000f3470f284a473145e138a9477cc29dbeeb440e09269a",
+    "firstReadOnlyScopeCheckCorrection": "Initialsupplement incorrectly assumedallotherentries identical in all4hypotheticalframes.13860lateswitch addsmove and originalrunner suppresses sameframe selfheal; preserved query-pipeline-pair-scope-note.json gives exactmissingcommand. No raw/native/source changed."
+  },
+  "sampledOldWorldSourceIntent": {
+    "ticks": [
+      14400,
+      15000,
+      15600,
+      16200,
+      16800,
+      17400,
+      18000
+    ],
+    "allEntriesEqual": true,
+    "oldActualStopCount": 1,
+    "scope": "PURE threefixedsource fullp0 plans on IDENTICAL OLD actuale566 completeworld/id/all3mem at eachsample. No Game/steps/orders emitted. Sourceintent isolation only; sampledcheckpoints are NOT proof of intermediateticks, newcandidateworld behavior or globalcausality."
+  },
+  "scopeLimits": [
+    "Local fullHP return/3239tick lifespan gain is followed by complete naturaldefeat; no production acceptance.",
+    "Candidate combines a90stop and returngoal, so loss is not assigned solely to one home sorter.",
+    "A valid static road does not guarantee future survival; no-road intent does not cancel existing native move.",
+    "13800/60/75 queries use OLD actual inputs; late13860 newmove suppresses sameframe heal, preserved scope-note.",
+    "Only source hashes/raw IDs/corpses and saved records verified here, not everytick whole trajectory replay.",
+    "Newhorse4294 raw/native diagnostic excluded; oldsealed read-only summaries remain.",
+    "Currentade has no completeordinary0; historicale566/0f scores and unrecovered originaluncommitted gap retained."
+  ]
+}

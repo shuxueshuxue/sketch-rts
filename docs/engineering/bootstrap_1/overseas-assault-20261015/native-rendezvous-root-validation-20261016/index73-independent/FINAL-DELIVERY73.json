@@ -1,0 +1,103 @@
+{
+  "createdAtUtc": "2026-10-16T03:58:59.460786+00:00",
+  "rootHeadObservedBefore": "ade412414d9232206f39e20f0182f0086605433c",
+  "rootHeadObservedAfter": "ade412414d9232206f39e20f0182f0086605433c",
+  "baseExternalIndex72SHA256": "69831e28d7fafbb12311fe63292e71a4ba2cd9611558f71e975836b8735bf40c",
+  "candidateIndex73SHA256": "748687f7271345b5fc85fa241b64856a40a34a5bd4e3e2179d821c8295b7b990",
+  "oldPackages": 72,
+  "newPackages": 73,
+  "old72EachValueAndRawPackageTextExact": true,
+  "old70OriginalAndNew71E47And72RootEntriesExact": true,
+  "allMetadataValueAndRawTextExactVs72": true,
+  "bothOrdinary0RecordsValueAndRawTextExactVsRoot70": true,
+  "historicalE566ValidationObjectValueExact": true,
+  "metadataChangesVs72": [],
+  "metadataChangesVsRoot70": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "currentProductionHead": "ade412414d9232206f39e20f0182f0086605433c",
+  "currentAdeOrdinary0Complete": false,
+  "rootIndexSHA256Before": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootIndexSHA256After": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "earlier72PackagesNotReverifiedOrRepacked": true,
+  "activeFinalCandidate": "bootstrap-complete-games-20261015-index.73.candidate.json",
+  "requiredNewArchivesForParent": [
+    {
+      "file": "general-coastal-fleet-078026-20261016-evidence.tar.gz",
+      "bytes": 12557763,
+      "sha256": "3619606b2c6493d51aaa66e554fe33d4dd3e445a6d643498d9de6f79247cd046",
+      "indexedPayloadFiles": 277,
+      "archiveRegularFiles": 278,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "e47fd04573c8af5363571ea8409843c060ae60fb independent native3file rendezvous fix over unmerged078026 macro context; its native files separately integrated into ade over exacte566 AI",
+      "classification": "Two focused full3AI changed-code windows223200..224400..225600, not ordinary0/natural win. Paid160cutter actually born223546; touch224379/canTransfer224380;39390 receiver parent224435 stillboard, normal naval publicmove50739 at224445 cancels remainder,0.16727px short of reviseddeckPoint, not exact native goal completion. Independent radius+1 whole-body proof at224445/460/225600 supports onlyreceiver31227.2430commands/0hits/0permanent deaths, no income/attack/win; gold383.33→377.33 is6paid dock repairs, receiver1.916→19.916HP remains injured. Observer stop request failed through copied runInput; original fixed driver actually ended authorized225600, not224445.1470source/frozen184 fixed; author33tests+tsc0,2inherited coast failures/red logs retained. Native3files integrated separately asade; original078026 macro, a90c/ab0 medical and incomplete passenger34800 recovery not integrated/solved by this package."
+    },
+    {
+      "file": "root-native-rendezvous-ade41241-20261016-evidence.tar.gz",
+      "bytes": 12754401,
+      "sha256": "98f2bd2169c612ece8aee6f5a72c81d20787330b691edaf971d4409ac8e8aade",
+      "indexedPayloadFiles": 212,
+      "archiveRegularFiles": 213,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "ade412414d9232206f39e20f0182f0086605433c root native3file-only rendezvous integration over exacte566 AI; actual changed-code223200..225600 from prior078026 saved state",
+      "classification": "Independent root52tests/8files+tsc0; no078026macro/a90c-ab0medical imported. Actual2400tick normal3AI complete restore/world/id/3mem,1464source/184manifest prepost exact;2430commands/0hits/231events/160p0plans.160saved full-state checkpoints/final and all2430commands equal e47 two segments, not everytick/allcases. Root90tick224370..224460 coldrestore/6prethink/final/91commands/0hits/7events exact. Paidcutter birth223546; passenger parent224435 then normal naval publichelm cancels remainingboard224445, independent wholebody receiver support, not exactnative arrival completion.0new permanentloss but no income/attack/win;383.33→377.33 is6paidrepairs, receiver remains injured. Sealed inner1464source+INDEX exactadeGitblobs and full497frozenarchive/184manifest verified. Native saved-world drawWorld rerender with module-resolution failure/correction retained, not historical animation. No ade completeordinary0; historicale56643714/56loss and0f44441 scores unchanged; original uncommitted gap remains."
+    },
+    {
+      "file": "bootstrap-mercenary-return-ab0-complete-negative-evidence-20261016.tar.gz",
+      "bytes": 17557242,
+      "sha256": "7d98d3f4c185f13bd90bb2b97b02f36c3f6da1cb6582fe490eb291fd1b95ddee",
+      "indexedPayloadFiles": 401,
+      "archiveRegularFiles": 402,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "ab0ffd200725968a9c4887d2d7883cfeec1eaa8f unmerged a90c stop plus narrow mercenary-return-road candidate over historicale566; actual changed-code13764 input, not ordinary0",
+      "classification": "Local13764..14101 full3AI return succeeds:14100 original180leash releases2255 at174.365gap/full105HP and backline issuesmove;14101 is completeafterstep continuation boundary. Same-source14101..41057 then naturallyp1WIN/p0zero units/buildings/62permanentlosses versus originale566 ordinary0p0WIN43714/56loss.2255 dies17203,3239ticks later than original13964, not terminal preservation or full-game benefit. Whole ledger54inherited corpses+145newconfirmed=199 IDs/native all-owner counters exact;157terminal rows include12hp0 provisional→cleanup updates, not157newdeaths or everytick replay. Original36tick13764..13800 baseline closes35commands/3hits; first candidate13770 actualgoal north→south, not an isolated full-match ablation of a90stop.1465source and497frozenarchive/184manifest independently verified.101distinct contracts94old+7new; first100/101 overlay-context red retained,7rerun includes6overlap, not107tests. Seven OLDworld three-source pureplans equal only at sampled14400..18000, not newtrajectory/alltimes proof. Later unclosedhorse4294 raw/native investigation excluded. Not integrated into ade; both historical ordinary0score records and currentade noordinary0 remain unchanged."
+    }
+  ],
+  "scriptUsage": "python3 /workspace/.playtest/root-next-evidence-index73-20261016/verify-and-prepare73.py",
+  "supportModule": "/workspace/.playtest/root-next-evidence-index72-20261016/stream_support.py",
+  "originalUncommittedRecoveryGapRetained": true,
+  "files": {
+    "bootstrap-complete-games-20261015-index.73.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/bootstrap-complete-games-20261015-index.73.candidate.json",
+      "bytes": 53833,
+      "sha256": "748687f7271345b5fc85fa241b64856a40a34a5bd4e3e2179d821c8295b7b990"
+    },
+    "canonical-external-index-72.original.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/canonical-external-index-72.original.json",
+      "bytes": 52060,
+      "sha256": "69831e28d7fafbb12311fe63292e71a4ba2cd9611558f71e975836b8735bf40c"
+    },
+    "new-entry-73.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/new-entry-73.verified.json",
+      "bytes": 1728,
+      "sha256": "7607921040518075b55808524edcb7f888770cb48b91456e6bc738d57a09375c"
+    },
+    "ab0-complete-negative-case-summary.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/ab0-complete-negative-case-summary.json",
+      "bytes": 5392,
+      "sha256": "7bab0697655502c99552782d2eeee227188dc84acdba80318656d74bb4ae278b"
+    },
+    "new-archive-and-inner-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/new-archive-and-inner-stream-verification.json",
+      "bytes": 76183,
+      "sha256": "4d715c446dc1b4a4515ed98b678c687765841d68b6d42e79bc915feb7272958c"
+    },
+    "README-append73.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/README-append73.candidate.zh.md",
+      "bytes": 2016,
+      "sha256": "d065ad70d84ec884f05e0baf220532d001a5ebd32bb69458a3cb071cde88c871"
+    },
+    "verify-and-prepare73.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index73-20261016/verify-and-prepare73.py",
+      "bytes": 20422,
+      "sha256": "8435f44392833a0fe0b6f1a19f88464de052b75b573f78d06f5b2ca6b9019150"
+    }
+  },
+  "supportModuleSHA256": "705b527f3304a42d22846fbaa60c346380f2562afa8cefa9396b973fb1ac3875"
+}

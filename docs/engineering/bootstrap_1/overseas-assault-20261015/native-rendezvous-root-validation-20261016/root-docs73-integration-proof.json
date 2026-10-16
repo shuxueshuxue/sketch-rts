@@ -1,0 +1,45 @@
+{
+  "atUTC": "2026-10-16T04:09:37.347116+00:00",
+  "headBefore": "ade412414d9232206f39e20f0182f0086605433c",
+  "kind": "Root docs-only index73 integration verification, not tests/native/score",
+  "old70PackagesRawTextAndValuesPreserved": true,
+  "bothHistoricalOrdinary0RecordsValuePreserved": true,
+  "independentDelivery73Retained": "index73-independent/FINAL-DELIVERY73.json",
+  "metadataChanges": [
+    "productionHead",
+    "packages",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "newArchivesExact": [
+    {
+      "file": "general-coastal-fleet-078026-20261016-evidence.tar.gz",
+      "bytes": 12557763,
+      "sha256": "3619606b2c6493d51aaa66e554fe33d4dd3e445a6d643498d9de6f79247cd046"
+    },
+    {
+      "file": "root-native-rendezvous-ade41241-20261016-evidence.tar.gz",
+      "bytes": 12754401,
+      "sha256": "98f2bd2169c612ece8aee6f5a72c81d20787330b691edaf971d4409ac8e8aade"
+    },
+    {
+      "file": "bootstrap-mercenary-return-ab0-complete-negative-evidence-20261016.tar.gz",
+      "bytes": 17557242,
+      "sha256": "7d98d3f4c185f13bd90bb2b97b02f36c3f6da1cb6582fe490eb291fd1b95ddee"
+    }
+  ],
+  "indexSHA256": "748687f7271345b5fc85fa241b64856a40a34a5bd4e3e2179d821c8295b7b990",
+  "sourceChanges": [],
+  "originalUncommittedGapUnrecovered": true,
+  "stagedPrecommitVerification": {
+    "files": 35,
+    "allStagedBytesEqualWorking": true,
+    "threeArchivesHashAndBytesEqualIndex": true,
+    "onlyDocs": true
+  },
+  "preservedRawLogWhitespace": {
+    "path": "root-tests.log",
+    "sha256": "73113d4470f0d6b4f99aab49fd7e9917e05196ceff1785d0a10d7e993704e284",
+    "gitDiffCheck": "Original raw test log retains its terminal blank line. Docs narrative whitespace fixed; this raw log is intentionally not altered."
+  }
+}

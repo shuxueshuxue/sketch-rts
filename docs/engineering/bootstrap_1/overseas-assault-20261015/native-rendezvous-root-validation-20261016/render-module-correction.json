@@ -1,0 +1,9 @@
+{
+  "firstAttempt": "render-root-native-first-attempt.ts",
+  "sha256": "0d4d467202d712e4c307dcef71a1dfba3847bcdb5f35c3ab7f2aa96581f08ec9",
+  "error": "External directory cannot resolve bare @napi-rs/canvas; module load failed before renderer or any Game import/step.",
+  "correction": "Explicit existing package local path, no install/no source or native input changes.",
+  "firstLog": "render-root-native.log",
+  "retryLog": "render-root-native-module-retry.log",
+  "currentScript": "render-root-native.ts"
+}

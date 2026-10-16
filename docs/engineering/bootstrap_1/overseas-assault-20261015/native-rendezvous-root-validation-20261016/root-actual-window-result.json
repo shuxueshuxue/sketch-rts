@@ -1,0 +1,82 @@
+{
+  "classification": "Root ade41241 native-fix-only integration over exacte566 AI, changed-code223200→225600 full3AI from actual078026 continuation world/id/all3mem. Separate e566 pure first-plan proof. No078026 macro AI imported; notordinary0/holdout/acceptance, no manual command/body/owner/health/gold changes. Diagnostic endpoint is not natural outcome.",
+  "source": "/workspace/sketch-rts-bootstrap-resume",
+  "head": "ade412414d9232206f39e20f0182f0086605433c",
+  "start": 223200,
+  "end": 225600,
+  "winner": null,
+  "naturalComplete": false,
+  "counts": {
+    "commands": 2430,
+    "hits": 0,
+    "events": 231,
+    "thinks": 160
+  },
+  "sourcePre": {
+    "files": 1464,
+    "changed": [],
+    "head": "ade412414d9232206f39e20f0182f0086605433c",
+    "status": ""
+  },
+  "sourcePost": {
+    "files": 1464,
+    "changed": [],
+    "head": "ade412414d9232206f39e20f0182f0086605433c",
+    "status": ""
+  },
+  "frozenPre": {
+    "files": 184,
+    "changed": [],
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "rulesVersion": 2
+  },
+  "frozenPost": {
+    "files": 184,
+    "changed": [],
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "rulesVersion": 2
+  },
+  "restored": {
+    "world": true,
+    "nextId": true,
+    "all3mem": true
+  },
+  "elapsedMs": 92642.789,
+  "cpuMs": 110662.594,
+  "nativeStepCosts": {
+    "scope": "Uninstrumented fixedproduction native step wall/cpu, measured after beforeStep observer and before onStep observer/planner; excludes AI planning and observer/capture overhead. No per-helper counts inferred.",
+    "steps": 2400,
+    "totalWallMs": 15195.26672700002,
+    "totalCpuMs": 19102.551000000032,
+    "p50WallMs": 5.33685400000104,
+    "p95WallMs": 12.197968000000401,
+    "maxWallMs": 428.7455560000001
+  },
+  "crew": {
+    "id": "unit-p0-summoner-39390",
+    "hp": 95,
+    "deck": {
+      "shipId": "unit-p0-warship-31227",
+      "x": -32.13878428723046,
+      "y": 20.63566583574243
+    },
+    "order": {
+      "type": "idle"
+    }
+  },
+  "yardQueue": [],
+  "cutters": [
+    {
+      "id": "unit-p0-cutter-140825",
+      "hp": 110
+    }
+  ],
+  "gold": 377.33,
+  "firstPlanSameOldE566": {
+    "entries": true,
+    "p0Memory": true
+  },
+  "finalArchiveSHA256": "3f62483393e83a4dd4a7e910b713bf87bef4bea37d70a7e72bfd8702848dfcd4",
+  "finalArchivePath": "/workspace/.playtest/root-native-rendezvous-integration-20261016/native-223200-225600/final.json.gz",
+  "originalUncommittedGapUnrecovered": true
+}

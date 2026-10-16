@@ -1,0 +1,18 @@
+{
+  "head": "ade412414d9232206f39e20f0182f0086605433c",
+  "archive": "/workspace/.playtest/root-native-rendezvous-integration-20261016/root-source-ade41241.tar.gz",
+  "bytes": 4476512,
+  "sha256": "cf872441040c5a0deda917e9fde15601c2dc9e00802bd43e9f2a38b1ac90e94c",
+  "payloads": 1464,
+  "regularIncludingINDEX": 1465,
+  "allHashByteCoverageVerified": true,
+  "frozenArchive": {
+    "bytes": 1190331,
+    "sha256": "a43493bbbdb0e8b7e9810d64da6014e40b333d28f15f408249b5e74fe475f90a",
+    "source": "/workspace/.playtest/bootstrap-combined-e566-archer-v8v8-ordinary0-20261016/game-frozen-source.tar.gz",
+    "rootCopyExact": true,
+    "historicalFileCount": 497,
+    "manifestFileCount": 184
+  },
+  "noAIChangesFromE566": true
+}

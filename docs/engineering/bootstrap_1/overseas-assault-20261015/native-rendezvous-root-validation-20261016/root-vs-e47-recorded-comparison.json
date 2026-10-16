@@ -1,0 +1,1140 @@
+{
+  "classification": "Comparison of independently executed rootade native-only/e566AI and e47native+macroAI at the same actual223200 input. Only saved checkpoints and publiccommand rows; not everytick equivalence or proof macrodelta universally inert.",
+  "rootSource": "ade412414d9232206f39e20f0182f0086605433c",
+  "referenceSource": "e47fd04573c8af5363571ea8409843c060ae60fb",
+  "savedCheckpointCount": 160,
+  "referenceAvailable": 160,
+  "allWorldId3memAtAvailableCheckpoints": true,
+  "finalWorld": true,
+  "finalNextId": true,
+  "finalAll3Memories": true,
+  "publicCommands": {
+    "root": 2430,
+    "reference": 2430,
+    "allExact": true
+  },
+  "rootHits": 0,
+  "referenceHits": 0,
+  "checkpoints": [
+    {
+      "tick": 223200,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223215,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223230,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223245,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223260,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223275,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223290,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223305,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223320,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223335,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223350,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223365,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223380,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223395,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223410,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223425,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223440,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223455,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223470,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223485,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223500,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223515,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223530,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223545,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223560,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223575,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223590,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223605,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223620,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223635,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223650,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223665,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223680,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223695,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223710,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223725,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223740,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223755,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223770,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223785,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223800,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223815,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223830,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223845,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223860,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223875,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223890,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223905,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223920,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223935,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223950,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223965,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223980,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 223995,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224010,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224025,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224040,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224055,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224070,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224085,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224100,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224115,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224130,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224145,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224160,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224175,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224190,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224205,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224220,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224235,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224250,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224265,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224280,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224295,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224310,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224325,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224340,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224355,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224370,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224385,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224400,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224415,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224430,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224445,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224460,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224475,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224490,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224505,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224520,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224535,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224550,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224565,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224580,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224595,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224610,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224625,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224640,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224655,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224670,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224685,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224700,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224715,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224730,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224745,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224760,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224775,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224790,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224805,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224820,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224835,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224850,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224865,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224880,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224895,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224910,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224925,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224940,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224955,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224970,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 224985,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225000,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225015,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225030,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225045,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225060,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225075,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225090,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225105,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225120,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225135,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225150,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225165,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225180,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225195,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225210,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225225,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225240,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225255,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225270,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225285,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225300,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225315,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225330,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225345,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225360,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225375,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225390,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225405,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225420,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225435,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225450,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225465,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225480,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225495,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225510,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225525,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225540,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225555,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225570,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    {
+      "tick": 225585,
+      "available": true,
+      "world": true,
+      "nextId": true,
+      "all3mem": true
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/boarding-control.test.ts (13 tests) 2883ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 1936ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 553ms
+ ✓ src/ai/policy/naval-services.test.ts (13 tests) 2529ms
+   ✓ physical naval service tasks > v5 sends a repair worker across decks and the shared simulation repairs the hull 621ms
+   ✓ physical naval service tasks > v7 sends a repair worker across decks and the shared simulation repairs the hull 565ms
+   ✓ physical naval service tasks > v8 sends a repair worker across decks and the shared simulation repairs the hull 381ms
+ ✓ src/shared/crew-rendezvous-reachable.test.ts (7 tests) 1158ms
+   ✓ replans the actual empty blocked appointment into a real safe departure for the partner 525ms
+   ✓ keeps the registered building frame while checking a hypothetical reciprocal departure 322ms
+ ✓ src/shared/crew-rendezvous.test.ts (7 tests) 2597ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated player deck 988ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated enemy deck 496ms
+   ✓ right-click crew rendezvous > resumes a mid-rendezvous save deterministically 705ms
+ ✓ src/ai/policy/transfer-lanes.test.ts (2 tests) 2166ms
+   ✓ AI crowded shore transfers > clears a real blocked crossing using movement and completes boarding 2152ms
+ ✓ src/ai/bootstrap_1/service-deck-reroute.test.ts (2 tests) 8837ms
+   ✓ preserves the real queued service across the yielding body transiently filling the cutter and completes native repair with JSON restoration 8666ms
+ ✓ src/shared/crew-rendezvous-origin.test.ts (6 tests) 149ms
+ ✓ src/shared/sailing-solids.test.ts (2 tests) 295ms
+
+ Test Files  8 passed (8)
+      Tests  52 passed (52)
+   Start at  03:34:53
+   Duration  26.96s (transform 2.63s, setup 0ms, collect 4.74s, tests 20.61s, environment 1ms, prepare 415ms)
+

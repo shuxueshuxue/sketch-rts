@@ -1,0 +1,81 @@
+{
+  "createdAtUtc": "2026-10-16T03:50:55.937505+00:00",
+  "baseSourceHeadObserved": "ade412414d9232206f39e20f0182f0086605433c",
+  "rootHeadObservedAfter": "ade412414d9232206f39e20f0182f0086605433c",
+  "oldIndexSHA256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "candidateIndexSHA256": "9e826b5d17ab6372aefc549457798961fda068ee33449aaa7642de3eed1d1ee2",
+  "oldPackages": 70,
+  "newPackages": 71,
+  "old70EachValueAndRawPackageTextExact": true,
+  "old0fProductionOrdinary0ValueAndRawTextExact": true,
+  "e566CurrentCombinedOrdinary0ValueAndRawTextExact": true,
+  "strategyBaselineValueAndRawTextExact": true,
+  "intentionalExistingMetadataChanges": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "addedMetadataKeys": [],
+  "historicalE566ValidationObjectValueExact": true,
+  "currentAdeOrdinary0Complete": false,
+  "productionHead": "ade412414d9232206f39e20f0182f0086605433c",
+  "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "rootCanonicalIndexSHA256Before": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootCanonicalIndexSHA256After": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "onlyNewPackageStreamVerified": true,
+  "earlier70PackagesNotReverifiedOrRepacked": true,
+  "rootEvidenceArchiveStillPendingSeparateSeal": true,
+  "activeCandidate": "bootstrap-complete-games-20261015-index.71.candidate.json",
+  "archive": {
+    "file": "general-coastal-fleet-078026-20261016-evidence.tar.gz",
+    "bytes": 12557763,
+    "sha256": "3619606b2c6493d51aaa66e554fe33d4dd3e445a6d643498d9de6f79247cd046",
+    "payloads": 277,
+    "regularFilesIncludingIndex": 278
+  },
+  "scriptUsage": "python3 /workspace/.playtest/root-next-evidence-index71-20261016/verify-and-prepare71.py",
+  "originalUncommittedRecoveryGapRetained": true,
+  "files": {
+    "bootstrap-complete-games-20261015-index.71.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/bootstrap-complete-games-20261015-index.71.candidate.json",
+      "bytes": 49063,
+      "sha256": "9e826b5d17ab6372aefc549457798961fda068ee33449aaa7642de3eed1d1ee2"
+    },
+    "canonical-index-70.original.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/canonical-index-70.original.json",
+      "bytes": 41993,
+      "sha256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16"
+    },
+    "new-entry-71.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/new-entry-71.verified.json",
+      "bytes": 1440,
+      "sha256": "4f1da2e20e864023c11158af813a48516dfcd2f359cc663d97141e2e6382a21a"
+    },
+    "productionValidation.ade.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/productionValidation.ade.candidate.json",
+      "bytes": 7086,
+      "sha256": "354de9a1bcaac49d05ed6c62b15ae368ad9b8771586da540ce11e1b0aa2cae13"
+    },
+    "root-native-evidence-attribution.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/root-native-evidence-attribution.json",
+      "bytes": 11508,
+      "sha256": "77909c336b7711cfb350f99681228b738b7695769dcf40deb3a4feecaea2e659"
+    },
+    "new-archive-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/new-archive-stream-verification.json",
+      "bytes": 47521,
+      "sha256": "c08211a6bb6e4d6257df05ffbd169856c6197f4ce1328c10ec8423fea9c63afe"
+    },
+    "README-append71.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/README-append71.candidate.zh.md",
+      "bytes": 2452,
+      "sha256": "4f0f3ff09e8c54f9d3d09d85a994e85d7dab403306c7e876f92e9e8ee9bf9f97"
+    },
+    "verify-and-prepare71.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index71-20261016/verify-and-prepare71.py",
+      "bytes": 25138,
+      "sha256": "f9df9240e293dd70fdf538e2194ea6497d90dceb7cb20a5101d442255907b1b4"
+    }
+  }
+}

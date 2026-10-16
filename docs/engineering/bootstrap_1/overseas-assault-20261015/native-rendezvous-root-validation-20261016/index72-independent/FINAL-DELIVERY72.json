@@ -1,0 +1,79 @@
+{
+  "createdAtUtc": "2026-10-16T03:54:49.146706+00:00",
+  "rootHeadObservedBefore": "ade412414d9232206f39e20f0182f0086605433c",
+  "rootHeadObservedAfter": "ade412414d9232206f39e20f0182f0086605433c",
+  "baseExternalIndexSHA256": "9e826b5d17ab6372aefc549457798961fda068ee33449aaa7642de3eed1d1ee2",
+  "candidateIndexSHA256": "69831e28d7fafbb12311fe63292e71a4ba2cd9611558f71e975836b8735bf40c",
+  "oldPackages": 71,
+  "newPackages": 72,
+  "old71EachValueAndRawPackageTextExact": true,
+  "old70OriginalEntriesAndNew71E47EntryExact": true,
+  "bothOrdinary0RecordsValueAndRawTextExact": true,
+  "historicalE566ValidationObjectValueExact": true,
+  "currentAdeOrdinary0Complete": false,
+  "metadataChangedVs71": [
+    "productionValidation"
+  ],
+  "metadataChangedVsRoot70": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "rootIndexSHA256Before": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootIndexSHA256After": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "onlyNewRootPackageAndNestedArchivesVerified": true,
+  "earlier71PackagesNotReverifiedOrRepacked": true,
+  "activeCandidate": "bootstrap-complete-games-20261015-index.72.candidate.json",
+  "archive": {
+    "file": "root-native-rendezvous-ade41241-20261016-evidence.tar.gz",
+    "bytes": 12754401,
+    "sha256": "98f2bd2169c612ece8aee6f5a72c81d20787330b691edaf971d4409ac8e8aade",
+    "payloads": 212,
+    "regularIncludingINDEX": 213
+  },
+  "scriptUsage": "python3 /workspace/.playtest/root-next-evidence-index72-20261016/verify-and-prepare72.py",
+  "originalUncommittedRecoveryGapRetained": true,
+  "files": {
+    "bootstrap-complete-games-20261015-index.72.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/bootstrap-complete-games-20261015-index.72.candidate.json",
+      "bytes": 52060,
+      "sha256": "69831e28d7fafbb12311fe63292e71a4ba2cd9611558f71e975836b8735bf40c"
+    },
+    "canonical-external-index-71.original.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/canonical-external-index-71.original.json",
+      "bytes": 49063,
+      "sha256": "9e826b5d17ab6372aefc549457798961fda068ee33449aaa7642de3eed1d1ee2"
+    },
+    "new-entry-72.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/new-entry-72.verified.json",
+      "bytes": 1517,
+      "sha256": "539dd3fd1ec60dffb6d8e43d09ca435b29c0c8715cf14e7ce46e56d0fb20f648"
+    },
+    "productionValidation.ade.sealed.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/productionValidation.ade.sealed.candidate.json",
+      "bytes": 8461,
+      "sha256": "80fc392bbf4eae5dfa22ccaa3b1c5563c9ffb3e6fe90999a1447005d1f7e5136"
+    },
+    "new-archive-and-inner-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/new-archive-and-inner-stream-verification.json",
+      "bytes": 37675,
+      "sha256": "ae497e55b200bd7f2dc309ca32a14550a21da0f03bbbc36473228b700861ddda"
+    },
+    "README-append72.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/README-append72.candidate.zh.md",
+      "bytes": 1554,
+      "sha256": "8038082dcf1e76a20990fb160b1766b934527c162ef9b2d145f65ee464b99b9f"
+    },
+    "verify-and-prepare72.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/verify-and-prepare72.py",
+      "bytes": 14054,
+      "sha256": "7bdefeba2cbf8fe24540da5133f53689aed0e2a226f54e82d1098633106c7ed0"
+    },
+    "stream_support.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index72-20261016/stream_support.py",
+      "bytes": 4962,
+      "sha256": "705b527f3304a42d22846fbaa60c346380f2562afa8cefa9396b973fb1ac3875"
+    }
+  }
+}

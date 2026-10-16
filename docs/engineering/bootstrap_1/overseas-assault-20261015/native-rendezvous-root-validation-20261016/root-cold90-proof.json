@@ -1,0 +1,88 @@
+{
+  "classification": "Same immutable rootade41241 native-only over e566 AI strict coldJSON90tick224370→224460 rerun covering contact/transfer/publichelm cancellation. Three normal AIs, no manual commands/changed component or setup; all available sixprethink frames and exact native event/command streams, not new completegame.",
+  "sourcePre": {
+    "head": "ade412414d9232206f39e20f0182f0086605433c",
+    "changed": [],
+    "files": 1464,
+    "status": ""
+  },
+  "sourcePost": {
+    "head": "ade412414d9232206f39e20f0182f0086605433c",
+    "changed": [],
+    "files": 1464,
+    "status": ""
+  },
+  "frozenPre": {
+    "files": 184,
+    "rulesVersion": 2,
+    "changed": []
+  },
+  "frozenPost": {
+    "files": 184,
+    "rulesVersion": 2,
+    "changed": []
+  },
+  "inputSHA256": "9b00ed6c6170f25b3d661dbb88b5c3cde0d6b14a66b2f54b36e5e26e6dfe3498",
+  "start": 224370,
+  "end": 224460,
+  "counts": {
+    "commands": 91,
+    "hits": 0,
+    "events": 7
+  },
+  "proof": {
+    "restore": {
+      "snapshot": true,
+      "nextId": true,
+      "all3mem": true
+    },
+    "thinks": [
+      {
+        "tick": 224370,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      },
+      {
+        "tick": 224385,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      },
+      {
+        "tick": 224400,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      },
+      {
+        "tick": 224415,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      },
+      {
+        "tick": 224430,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      },
+      {
+        "tick": 224445,
+        "snapshot": true,
+        "nextId": true,
+        "all3mem": true
+      }
+    ],
+    "commands": true,
+    "hits": true,
+    "eventsWithOriginalCommandIndices": true,
+    "final": {
+      "snapshot": true,
+      "nextId": true,
+      "all3mem": true
+    }
+  },
+  "elapsedMs": 2430.101,
+  "cpuMs": 3663.644
+}

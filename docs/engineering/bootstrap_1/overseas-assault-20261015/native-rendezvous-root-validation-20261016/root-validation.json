@@ -1,0 +1,24 @@
+{
+  "atUTC": "2026-10-16T03:35:49.836380+00:00",
+  "beforeCommitRootHead": "fd8ba1e4ea7bd296343044c6c5faa33922818366",
+  "selectedSourceCount": 1464,
+  "sourcePrePostExact": true,
+  "candidateRuntimeThreeFilesEqualE47": true,
+  "AIAndFrozenE566GitBytesUnchanged": true,
+  "tests": {
+    "files": 8,
+    "passed": 52,
+    "exitCode": 0,
+    "log": "root-tests.log"
+  },
+  "tsc": {
+    "exitCode": 0,
+    "heapMiB": 1024,
+    "log": "root-tsc.log"
+  },
+  "sourceOldCoastFailuresInherited": [
+    "Two headland coast HP assertions fail exact078026 and are preserved unchanged by author; not part of this root52-test run."
+  ],
+  "scope": "Root independent SDK regressions only. Real native223200..225600 belongs e47 macro078026 context, not root ordinary0; postcommit focused root-native replay still pending. No078026 macro AI files imported.",
+  "originalUncommittedGapUnrecovered": true
+}

@@ -1,0 +1,37 @@
+{
+  "atUTC": "2026-10-16T04:02:59.316655+00:00",
+  "rootHead": "ade412414d9232206f39e20f0182f0086605433c",
+  "currentRuntimeSource": "ade412414d9232206f39e20f0182f0086605433c",
+  "oldIndexSHA256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "newIndexSHA256": "748687f7271345b5fc85fa241b64856a40a34a5bd4e3e2179d821c8295b7b990",
+  "archives": [
+    {
+      "file": "general-coastal-fleet-078026-20261016-evidence.tar.gz",
+      "bytes": 12557763,
+      "sha256": "3619606b2c6493d51aaa66e554fe33d4dd3e445a6d643498d9de6f79247cd046",
+      "rootCopyEqualsOriginal": true
+    },
+    {
+      "file": "root-native-rendezvous-ade41241-20261016-evidence.tar.gz",
+      "bytes": 12754401,
+      "sha256": "98f2bd2169c612ece8aee6f5a72c81d20787330b691edaf971d4409ac8e8aade",
+      "rootCopyEqualsOriginal": true
+    },
+    {
+      "file": "bootstrap-mercenary-return-ab0-complete-negative-evidence-20261016.tar.gz",
+      "bytes": 17557242,
+      "sha256": "7d98d3f4c185f13bd90bb2b97b02f36c3f6da1cb6582fe490eb291fd1b95ddee",
+      "rootCopyEqualsOriginal": true
+    }
+  ],
+  "old70PackageValuesAndRawTextExactIndependentlyVerified": true,
+  "oldOrdinary0RecordValuesAndRawTextUnchangedIndependentlyVerified": true,
+  "onlyThreeMetadataMembersChanged": [
+    "productionHead",
+    "productionDelta",
+    "productionValidation"
+  ],
+  "adeCurrentOrdinary0Complete": false,
+  "medicalAndMacroNotImported": true,
+  "originalUncommittedGapUnrecovered": true
+}

@@ -1,0 +1,35 @@
+{
+  "classification": "Native client drawWorld render of actual rootade41241 native-fix-only changed-code223200→225600 normal3AI focused window; transfer released and final snapshots; no Game/step/input edits. Visual observations are post-recording renders, not live screenshots.",
+  "meta": [
+    {
+      "label": "root-actual-224460-transfer-released",
+      "tick": 224460,
+      "view": {
+        "x": 1780,
+        "y": 4800,
+        "width": 1400,
+        "height": 1000,
+        "zoom": 2
+      },
+      "input": "/workspace/.playtest/root-native-rendezvous-integration-20261016/native-223200-225600/frames/224460-before-p0.json.gz",
+      "inputSHA256": "caef1b9f8eef312000098050b9d75bac811be3700f46cb35c5564f7fae8cc713",
+      "pngSHA256": "ff37d0e52d02d258e873de4c97c49e549376e2b89aacbfd7a5a1a7df277e6af0",
+      "unchangedInput": true
+    },
+    {
+      "label": "root-actual-225600-final",
+      "tick": 225600,
+      "view": {
+        "x": 1780,
+        "y": 4800,
+        "width": 1400,
+        "height": 1000,
+        "zoom": 2
+      },
+      "input": "/workspace/.playtest/root-native-rendezvous-integration-20261016/native-223200-225600/frames/225600-final.json.gz",
+      "inputSHA256": "e6726b39c2c041106c72c1d72392ec70db0145f98361fe8801ec63ac7878241b",
+      "pngSHA256": "bcece50b5896100182e9ff752b2aa092784db4bcd488cdce2c64db87a12f9c84",
+      "unchangedInput": true
+    }
+  ]
+}

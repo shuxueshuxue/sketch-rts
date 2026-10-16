@@ -1,0 +1,29 @@
+{
+  "atUTC": "2026-10-16T03:49:48.692017+00:00",
+  "source": "ade412414d9232206f39e20f0182f0086605433c",
+  "rootRuntimeOnlyThreeFilesChangedFromE566": true,
+  "root52Tests8FilesAndTypecheckExit0": true,
+  "counts": {
+    "commands": 2430,
+    "hits": 0,
+    "events": 231,
+    "thinks": 160
+  },
+  "rawEventTypes": {
+    "native-unit-terminal": 75,
+    "unit-removal": 75,
+    "unit-birth-observed": 79,
+    "observed-parent-change": 2
+  },
+  "observedPermanentTerminals": 0,
+  "nativeUnitsLostUnchanged": true,
+  "rootPersonallyViewedActualSaved224460And225600NativeDrawWorldImages": true,
+  "sourceCapsule": "root-source-ade41241.tar.gz",
+  "nativeWindow": "native-223200-225600/report.json",
+  "exactSourceClosure90": "closure-224370-224460/proof.json",
+  "referenceSaved160Comparison": "root-vs-e47-recorded-comparison.json",
+  "noCurrentSourceOrdinary0Complete": true,
+  "macro078026AndMedicalA90cAb0NotIntegrated": true,
+  "originalUncommittedGapUnrecovered": true,
+  "scope": "Known developed original0f ordinary game advanced through078026 until223200, then rootnativeade changed-code2400tick window. Full source/frozen/restore and available160checkpoints +2430commands exacte47; not everytick wholetrajectory replay, newseed, win, economic or attack proof."
+}
