@@ -1,0 +1,38 @@
+{
+  "head": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+  "name": "aimed-two-actual",
+  "command": [
+    "node",
+    "--max-old-space-size=512",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--pool=forks",
+    "--maxWorkers=1",
+    "--minWorkers=1",
+    "--no-file-parallelism",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/workspace/.playtest/root-medical-safe-prefix-integration-20261016/aimed-two-actual.json",
+    "src/ai/policy/script-runner-aimed-cast.test.ts",
+    "--testNamePattern",
+    "actual374"
+  ],
+  "heapMiB": 512,
+  "startedAtUTC": "2026-10-16T13:13:35.545469+00:00",
+  "endedAtUTC": "2026-10-16T13:13:39.754385+00:00",
+  "elapsedSeconds": 4.208924820006359,
+  "exit": 0,
+  "before": {
+    "max": 17179869184,
+    "current": 14555258880,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "after": {
+    "max": 17179869184,
+    "current": 14555598848,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "all1507SelectedSourcePrePostExact": true,
+  "childrenPeakRSSKiB": 427904,
+  "logSHA256": "3c6b990c1d7c9cf6587787777f989b70feef8815188f64451d0ff24006f5c0aa"
+}

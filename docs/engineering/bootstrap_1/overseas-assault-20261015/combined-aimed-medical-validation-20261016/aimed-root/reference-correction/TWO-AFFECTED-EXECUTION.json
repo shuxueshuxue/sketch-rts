@@ -1,0 +1,33 @@
+{
+  "atUTC": "2026-10-16T12:54:53.245801+00:00",
+  "head": "c423ac73853bb39ea31e1780dc194c65783a5819",
+  "before": {
+    "max": 17179869184,
+    "current": 15897518080,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "heapMiB": 512,
+  "scope": "Only2 affected actual full-P0 ownership cases;23other cases intentionally skipped,46prior passes not re-run.",
+  "exit": 0,
+  "elapsedSeconds": 6.4757124969910365,
+  "after": {
+    "max": 17179869184,
+    "current": 15903289344,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "command": [
+    "node",
+    "--max-old-space-size=512",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--pool=forks",
+    "--maxWorkers=1",
+    "--minWorkers=1",
+    "--no-file-parallelism",
+    "src/ai/policy/script-runner-aimed-cast.test.ts",
+    "--testNamePattern",
+    "actual374"
+  ],
+  "all1504SelectedSourcePrePostExact": true,
+  "logSHA256": "69f94e5a13a2b7130c9338012fe4d9fe4edf0e39b83f171a3481ae3649f65b95"
+}

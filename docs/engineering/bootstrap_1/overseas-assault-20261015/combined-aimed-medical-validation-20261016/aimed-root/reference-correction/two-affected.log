@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-root-aimed-c423-fixed-control
+
+ ✓ src/ai/policy/script-runner-aimed-cast.test.ts (25 tests | 23 skipped) 578ms
+   ✓ native sustained cast order ownership > respects the actual37410 full-P0 cast or existing engagement owner through its public frame 373ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 23 skipped (25)
+   Start at  12:54:54
+   Duration  5.67s (transform 3.53s, setup 0ms, collect 4.63s, tests 578ms, environment 0ms, prepare 124ms)
+

@@ -1,0 +1,35 @@
+{
+  "name": "combined-48",
+  "head": "c64d70c91a1ba8027a5b64c1af651537f41563ed",
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--pool=forks",
+    "--maxWorkers=1",
+    "--minWorkers=1",
+    "--no-file-parallelism",
+    "src/ai/policy/script-runner-aimed-cast.test.ts",
+    "src/ai/bootstrap_1/ground-evacuation.test.ts",
+    "src/ai/policy/naval-dock-return.test.ts",
+    "src/ai/bootstrap_1/landed-combat.test.ts"
+  ],
+  "heapMiB": 768,
+  "startedAtUTC": "2026-10-16T12:40:35.559775+00:00",
+  "endedAtUTC": "2026-10-16T12:40:48.290227+00:00",
+  "elapsedSeconds": 12.783420457009925,
+  "exit": 1,
+  "before": {
+    "max": 17179869184,
+    "current": 14852378624,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "after": {
+    "max": 17179869184,
+    "current": 14854725632,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "all1502SelectedSourceGitBoundPrePostExact": true,
+  "childrenPeakRSSKiB": 389304,
+  "logSHA256": "6e671fd1c3f10499c5c97f6876818992f72805322a190298c6e1ae5cbbe55c4b"
+}

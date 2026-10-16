@@ -1,0 +1,15 @@
+{
+  "atUTC": "2026-10-16T13:06:23.903525+00:00",
+  "path": "/tmp/bootstrap-landed-ground-1b-complete-negative-20261016-evidence.tar.gz",
+  "bytes": 85947709,
+  "sha256": "e42d9b5dd61a2044601131415c4e84f8f9c572f1fcc3d88c438ef3abaaeaef2f",
+  "regularFiles": 1347,
+  "payloadFiles": 1346,
+  "payloadBytes": 96922309,
+  "indexPath": "landed-native-ground-v4-20261016/INDEX.json",
+  "indexSHA256": "2162f700ded1d27575944315737d7cca075aede51fa6bb35f6a07b3c05f3ea3a",
+  "strictAllPayloadHashesSizesCoverageAndGzipCRCVerified": true,
+  "archiveUnchangedDuringAudit": true,
+  "originalRawSourcesRetained": true,
+  "originalUncommittedRecoveryGapRetained": true
+}

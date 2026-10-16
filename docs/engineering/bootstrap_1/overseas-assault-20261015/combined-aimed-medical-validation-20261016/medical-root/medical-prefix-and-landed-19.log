@@ -1,0 +1,17 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-root-medical-04669148-fixed-control
+
+ ✓ src/ai/bootstrap_1/medical-safe-prefix.test.ts (7 tests) 167ms
+ ✓ src/ai/bootstrap_1/landed-combat.test.ts (12 tests) 3588ms
+   ✓ v9_archer gives the landed army local focus orders through its naval owner 460ms
+   ✓ v9_knight gives the landed army local focus orders through its naval owner 387ms
+   ✓ v9_archer keeps landed tactical moves on an actual ground road 529ms
+   ✓ v9_summoner keeps landed tactical moves on an actual ground road 357ms
+   ✓ v9_knight keeps landed tactical moves on an actual ground road 317ms
+
+ Test Files  2 passed (2)
+      Tests  19 passed (19)
+   Start at  13:13:26
+   Duration  8.44s (transform 3.03s, setup 0ms, collect 4.26s, tests 3.76s, environment 0ms, prepare 103ms)
+
+JSON report written to /workspace/.playtest/root-medical-safe-prefix-integration-20261016/medical-prefix-and-landed-19.json

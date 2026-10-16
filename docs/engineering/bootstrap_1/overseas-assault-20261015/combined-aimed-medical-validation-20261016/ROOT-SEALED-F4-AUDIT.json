@@ -1,0 +1,15 @@
+{
+  "atUTC": "2026-10-16T13:50:21.918051+00:00",
+  "archive": "/workspace/.playtest/bootstrap-landed-spells-f4-focused-negative-20261016-evidence.tar.gz",
+  "bytes": 95977681,
+  "sha256": "7ba3c9075eb4b1e859adea646302b3b2273e754d3479620d925609ec9d7e37de",
+  "payloadFiles": 1572,
+  "regularFiles": 1573,
+  "payloadBytes": 107843780,
+  "indexPath": "INDEX.json",
+  "indexSHA256": "2cd7d35f38f6f3bc953dfd477d6118ca7673408ce7704697005e342d10d5b231",
+  "schema": "entries dictionary path\u2192bytes/sha256",
+  "allPayloadExact": true,
+  "gzipCRCReachedEOF": true,
+  "classification": "F4 changed-source217800\u2192349800 supported observation-stop negative, not naturaldefeat/ordinary0. All27 initiallanded died despite14native instantcasts; later real progress preserved."
+}

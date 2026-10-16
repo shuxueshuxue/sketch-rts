@@ -1,0 +1,70 @@
+{
+  "classification": "Oneoriginal046wholematch actualsuffix vsalreadysealed641clinical; no newGame/P0/step. Native9000step included,9000think/commands excluded; comparesfullobjects, one row in memory.",
+  "allStreamsExact": true,
+  "streams": {
+    "commands": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/commands.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-commands.jsonl.gz",
+      "leftCount": 385,
+      "rightCount": 385,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "plans": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/plans.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-plans.jsonl.gz",
+      "leftCount": 120,
+      "rightCount": 120,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "native-hits": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/native-hits.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-hits.jsonl.gz",
+      "leftCount": 34,
+      "rightCount": 34,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "native-deaths": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/native-deaths.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-deaths.jsonl.gz",
+      "leftCount": 5,
+      "rightCount": 5,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "health-transitions": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/health-transitions.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-health-transitions.jsonl.gz",
+      "leftCount": 37,
+      "rightCount": 37,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "healing-effects": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/healing-effects.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-healing-effects.jsonl.gz",
+      "leftCount": 4,
+      "rightCount": 4,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "native-events": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/native-events.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-events.jsonl.gz",
+      "leftCount": 18,
+      "rightCount": 18,
+      "differingRows": 0,
+      "firstDifference": null
+    },
+    "corpse-events": {
+      "left": "/tmp/bootstrap-medical-safe-prefix-8da-20261016/clinical8400-9000/corpse-events.jsonl",
+      "right": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-corpse-events.jsonl.gz",
+      "leftCount": 2,
+      "rightCount": 2,
+      "differingRows": 0,
+      "firstDifference": null
+    }
+  }
+}

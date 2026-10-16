@@ -1,0 +1,406 @@
+{
+  "classification": "Pure same-input parent8da P0 reference for the integrated ownership contract. Original1905 public trace is preserved separately. No Game, native step or command issue.",
+  "referenceSource": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "originalInputSHA256": "2288ecd9932ede811c450a65420324f368453f47a3f31d78999fe057c77a3939",
+  "tick": 37410,
+  "entries": [
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-9866"
+        ],
+        "x": 1170.2876691631566,
+        "y": 3668.188399268666,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-28998"
+        ],
+        "x": 1202.5416377757003,
+        "y": 3696,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "holdPosition",
+        "unitIds": [
+          "unit-p0-ballista-24596"
+        ]
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "abilities",
+      "command": {
+        "type": "cast",
+        "unitId": "unit-p0-ballista-27366",
+        "ability": "pinningBolt",
+        "targetId": "unit-p2-witch-6336"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-raider-11967"
+        ],
+        "targetId": "unit-p2-priest-1792"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-priest-32289"
+        ],
+        "targetId": "unit-p2-witch-6336"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-fieldMedic-34930"
+        ],
+        "x": 1530.4068164969908,
+        "y": 3498.474560520819,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6General",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-4468",
+          "unit-p0-ballista-27366"
+        ],
+        "x": 1421.7227027435117,
+        "y": 1885.8399884510848
+      }
+    }
+  ],
+  "all3PostMemories": {
+    "p0": {
+      "jobs": [],
+      "unitClaims": {},
+      "mounted": [],
+      "naval": {
+        "ferries": {},
+        "raid": {
+          "tick": 37260
+        }
+      },
+      "v6": {
+        "casualties": {
+          "count": 178,
+          "lastChangeTick": 37350
+        },
+        "doctrine": {
+          "profileId": "warlord",
+          "strategyId": "grove-cavalry-line",
+          "decidedTick": 0
+        },
+        "plays": {
+          "profile:warlord": 1,
+          "strategy:grove-cavalry-line": 1,
+          "general:clearExpansion": 1,
+          "expand": 7,
+          "phase:2": 1,
+          "creep:cleared": 1,
+          "tower:outpost": 4,
+          "tower:main": 1,
+          "tower:underFire": 4,
+          "general:attack:expansion": 15,
+          "phase:3": 1,
+          "general:creep": 1,
+          "tower:ahead": 1,
+          "general:retreat:incoming": 6,
+          "general:guard": 1,
+          "raid:openLine": 2,
+          "raid:abort:outweighed": 2,
+          "general:retreat:worn": 1,
+          "general:retreat": 3,
+          "general:attack:idleArmy": 1,
+          "phase:4": 1,
+          "general:attack:stronger": 1,
+          "general:pulse": 1
+        },
+        "phase": 3,
+        "goalAges": {
+          "engineering:ballista": {
+            "since": 28485,
+            "seen": 37410
+          },
+          "unit:priest": {
+            "since": 33420,
+            "seen": 37410
+          },
+          "unit:knight": {
+            "since": 34275,
+            "seen": 37410
+          },
+          "unit:raider": {
+            "since": 34590,
+            "seen": 37410
+          },
+          "hire:fieldMedic": {
+            "since": 35520,
+            "seen": 37410
+          },
+          "bases:5": {
+            "since": 37410,
+            "seen": 37410
+          },
+          "bases:3": {
+            "since": 37410,
+            "seen": 37410
+          },
+          "bases:4": {
+            "since": 37410,
+            "seen": 37410
+          }
+        },
+        "general": {
+          "mode": "hold",
+          "target": {
+            "x": 1421.7227027435117,
+            "y": 1885.8399884510848
+          },
+          "holdingSince": 37410
+        },
+        "retreatedAt": 34770,
+        "raidCooldownUntil": 20400
+      },
+      "strategicPlan": {
+        "focusTargetOwner": "p2",
+        "focusTargetId": "unit-p2-priest-1792",
+        "focusTargetSinceTick": 37395,
+        "focusTargetUpdatedTick": 37395
+      },
+      "mercenaryCourier": {
+        "unitId": "unit-p0-raider-33950",
+        "campId": "merc-gen-2"
+      }
+    },
+    "p1": {
+      "jobs": [],
+      "unitClaims": {},
+      "naval": {
+        "raid": {
+          "tick": 37260
+        }
+      },
+      "v6": {
+        "doctrine": {
+          "profileId": "trickster",
+          "strategyId": "ember-ravager-line",
+          "decidedTick": 0
+        },
+        "plays": {
+          "profile:trickster": 1,
+          "strategy:ember-ravager-line": 1,
+          "general:clearExpansion": 3,
+          "creep:cleared": 3,
+          "general:creep": 1,
+          "well": 1,
+          "general:attack:rising": 4,
+          "general:retreat:quick": 2,
+          "general:attack:expansion": 6,
+          "general:retreat:incoming": 4,
+          "expand": 3,
+          "creep:enemy": 1,
+          "phase:2": 1,
+          "tower:outpost": 1,
+          "phase:3": 1,
+          "general:attack:idleArmy": 1,
+          "tower:ahead": 4,
+          "general:quick:done": 2,
+          "general:retreat": 5,
+          "general:attack:stronger": 2,
+          "tower:underFire": 7,
+          "general:guard": 6
+        },
+        "phase": 2,
+        "goalAges": {
+          "engineering:catapult": {
+            "since": 30420,
+            "seen": 37215
+          },
+          "unit:cinderRunner": {
+            "since": 33675,
+            "seen": 37395
+          },
+          "unit:emberRavager": {
+            "since": 34485,
+            "seen": 37200
+          },
+          "farm:tier": {
+            "since": 34770,
+            "seen": 37395
+          },
+          "worker@building-p1-townhall": {
+            "since": 34920,
+            "seen": 37395
+          },
+          "bases:2": {
+            "since": 35655,
+            "seen": 37395
+          },
+          "bases:3": {
+            "since": 35655,
+            "seen": 37395
+          },
+          "unit:ashWarden": {
+            "since": 37140,
+            "seen": 37395
+          }
+        },
+        "casualties": {
+          "count": 178,
+          "lastChangeTick": 37350
+        },
+        "general": {
+          "mode": "defend",
+          "target": {
+            "x": 1038.389679297423,
+            "y": 3698.7483060068994
+          },
+          "leash": 450
+        },
+        "retreatedAt": 35070,
+        "creepRetry": {
+          "center": {
+            "x": 2498,
+            "y": 2461
+          },
+          "until": 8010
+        }
+      },
+      "strategicPlan": {
+        "focusTargetOwner": "p0",
+        "focusTargetId": "unit-p0-knight-3742",
+        "focusTargetSinceTick": 36915,
+        "focusTargetUpdatedTick": 37395
+      }
+    },
+    "p2": {
+      "jobs": [],
+      "unitClaims": {},
+      "naval": {
+        "raid": {
+          "tick": 37260
+        }
+      },
+      "v6": {
+        "doctrine": {
+          "profileId": "steady",
+          "strategyId": "grove-cavalry-line",
+          "decidedTick": 0
+        },
+        "plays": {
+          "profile:steady": 1,
+          "strategy:grove-cavalry-line": 1,
+          "general:clearExpansion": 3,
+          "creep:cleared": 4,
+          "expand": 1,
+          "phase:2": 1,
+          "general:creep": 2,
+          "general:attack:rising": 3,
+          "general:retreat:quick": 2,
+          "tower:outpost": 1,
+          "well": 1,
+          "tower:main": 1,
+          "general:attack:expansion": 10,
+          "general:retreat:worn": 1,
+          "phase:3": 1,
+          "tower:ahead": 2,
+          "general:retreat:incoming": 5,
+          "general:quick:done": 1,
+          "raid:openLine": 1,
+          "general:retreat": 4,
+          "general:attack:stronger": 2,
+          "general:guard": 5
+        },
+        "phase": 2,
+        "goalAges": {
+          "build:stables": {
+            "since": 32520,
+            "seen": 37395
+          },
+          "unit:lancer": {
+            "since": 32550,
+            "seen": 37395
+          },
+          "farm:tier": {
+            "since": 32955,
+            "seen": 37395
+          },
+          "worker@building-p2-townhall": {
+            "since": 33720,
+            "seen": 37395
+          },
+          "tower:underFire": {
+            "since": 35145,
+            "seen": 37395
+          },
+          "bases:2": {
+            "since": 35655,
+            "seen": 37395
+          },
+          "bases:3": {
+            "since": 35655,
+            "seen": 37395
+          }
+        },
+        "casualties": {
+          "count": 178,
+          "lastChangeTick": 37350
+        },
+        "general": {
+          "mode": "defend",
+          "target": {
+            "x": 1206.1694761047552,
+            "y": 3637.002616045868
+          },
+          "leash": 450
+        },
+        "retreatedAt": 24255,
+        "raidCooldownUntil": 16920
+      },
+      "strategicPlan": {
+        "focusTargetOwner": "p0",
+        "focusTargetId": "unit-p0-knight-3742",
+        "focusTargetSinceTick": 36960,
+        "focusTargetUpdatedTick": 37395
+      }
+    }
+  }
+}

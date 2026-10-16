@@ -1,0 +1,13 @@
+{
+  "atUTC": "2026-10-16T12:56:25.795901+00:00",
+  "head": "c423ac73853bb39ea31e1780dc194c65783a5819",
+  "before": {
+    "max": 17179869184,
+    "current": 15149801472,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "heapMiB": 1024,
+  "name": "single combined tsc",
+  "state": "guard-not-spawned",
+  "noNodeGameOrCompiler": true
+}

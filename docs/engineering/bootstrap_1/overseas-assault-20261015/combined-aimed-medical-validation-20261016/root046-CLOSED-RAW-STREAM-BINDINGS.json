@@ -1,0 +1,82 @@
+{
+  "commands": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-commands.jsonl.gz",
+    "compressedBytes": 1097295,
+    "sha256": "9b3566925c0c4c9c020b03a6b2323b6d98dfbadde5be07d5728918df517b89c4",
+    "mtimeNs": 1792157559571520300,
+    "decodedBytes": 16913052,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "plans": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-plans.jsonl.gz",
+    "compressedBytes": 2209771,
+    "sha256": "86edcf98d7473b26eec141f900c977b918ce498bd8f9b20496ba334f5be0ece6",
+    "mtimeNs": 1792157559571520300,
+    "decodedBytes": 42722808,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "native-hits": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-hits.jsonl.gz",
+    "compressedBytes": 436919,
+    "sha256": "b9053eb26af7ec17a562c4672a817c91fde461872254232f3c7da2554c1ffe5c",
+    "mtimeNs": 1792157559571520300,
+    "decodedBytes": 5022130,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "native-deaths": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-deaths.jsonl.gz",
+    "compressedBytes": 190651,
+    "sha256": "49fd3300c56b3ee3512d55851ffcc577ca022a1473375c23b5eef39669311fa6",
+    "mtimeNs": 1792157557967603805,
+    "decodedBytes": 2183559,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "health-transitions": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-health-transitions.jsonl.gz",
+    "compressedBytes": 115036,
+    "sha256": "30ec18c6d38202d7b3919476d6b725d75af15e39e577578db943e70813d2cd58",
+    "mtimeNs": 1792157559071546331,
+    "decodedBytes": 1417264,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "healing-effects": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-healing-effects.jsonl.gz",
+    "compressedBytes": 33998,
+    "sha256": "bd28f5c480b6ea0d1ee77bd1c2700f1b9b387f0ab1a333ae8aad2b6c641a98eb",
+    "mtimeNs": 1792157559071546331,
+    "decodedBytes": 130184,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "native-events": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-native-events.jsonl.gz",
+    "compressedBytes": 280328,
+    "sha256": "a48a9dd0f525e010a375fe0cddd255c127c78a2c40196b6953bfb183dea04e4e",
+    "mtimeNs": 1792157559571520300,
+    "decodedBytes": 3745312,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  },
+  "corpse-events": {
+    "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-corpse-events.jsonl.gz",
+    "compressedBytes": 45584,
+    "sha256": "5c5cc800bca6e12aff8c9166ae62902b95666c5c5ca2e7bcc76f1efca0f9dde6",
+    "mtimeNs": 1792157557967603805,
+    "decodedBytes": 232779,
+    "completeGzipCRCVerified": true,
+    "closedPostflight": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148-postflight.json",
+    "closedExit": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/process-exit-1.json"
+  }
+}

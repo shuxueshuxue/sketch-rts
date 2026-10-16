@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-root-medical-04669148-fixed-control
+
+ ✓ src/ai/policy/script-runner-aimed-cast.test.ts (25 tests | 23 skipped) 269ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 23 skipped (25)
+   Start at  13:13:36
+   Duration  3.42s (transform 2.23s, setup 0ms, collect 2.85s, tests 269ms, environment 0ms, prepare 90ms)
+
+JSON report written to /workspace/.playtest/root-medical-safe-prefix-integration-20261016/aimed-two-actual.json

@@ -1,0 +1,19 @@
+{
+  "atUTC": "2026-10-16T12:45:47.517167+00:00",
+  "memoryBefore": {
+    "max": 17179869184,
+    "current": 14882971648,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "heapMiB": 512,
+  "driverSHA256": "ab5f77e627204268d0e86161b8712bdec1b0a9a6cd60dffee7ef519fb6cc3624",
+  "exit": 0,
+  "elapsedSeconds": 8.48551548999967,
+  "memoryAfter": {
+    "max": 17179869184,
+    "current": 14895710208,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "all1502CurrentAnd1497ParentSourcePrePostExact": true,
+  "noGameStepOrIssuedOrders": true
+}

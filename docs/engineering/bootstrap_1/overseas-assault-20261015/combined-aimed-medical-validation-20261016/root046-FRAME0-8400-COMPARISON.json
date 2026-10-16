@@ -1,0 +1,518 @@
+{
+  "classification": "15completeordinary0 saved600-afterstep frames, eachfullworld/id/all3mem/setup compared; not counts or partialactorchecks, not claim everyunsavednative-tick state.",
+  "oldHead": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "newHead": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+  "all15Exact": true,
+  "cases": [
+    {
+      "tick": 0,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/0.json.gz",
+        "bytes": 6644,
+        "sha256": "e52c5b0d5b4f6f2c5ef5580555901fcc2a86e773dd76f6a8a00aaba8167225d2",
+        "mtimeNs": 1792150691590710950
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/0.json.gz",
+        "bytes": 6644,
+        "sha256": "e52c5b0d5b4f6f2c5ef5580555901fcc2a86e773dd76f6a8a00aaba8167225d2",
+        "mtimeNs": 1792157258567282597
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "e1c2806f645ad8bc5779d758b5b8ffabd7a71b3c9d62d4f620ba90a41a99ec1d",
+        "nextId": "40510175845988f13f6162ed8526f0b09f73384467fa855e1e79b44a56562a58",
+        "memories": "9b523e408d530d9513c1a9557c8b3384ebfbb2bacca0a326e2ec83e8e22f929f",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "e1c2806f645ad8bc5779d758b5b8ffabd7a71b3c9d62d4f620ba90a41a99ec1d",
+        "nextId": "40510175845988f13f6162ed8526f0b09f73384467fa855e1e79b44a56562a58",
+        "memories": "9b523e408d530d9513c1a9557c8b3384ebfbb2bacca0a326e2ec83e8e22f929f",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 600,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/600.json.gz",
+        "bytes": 7922,
+        "sha256": "c99c0468f4bb9b3a70a5d8fcb89a56e009ed44ee402eb5cc2500b76126cd61d0",
+        "mtimeNs": 1792150692254676770
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/600.json.gz",
+        "bytes": 7922,
+        "sha256": "c99c0468f4bb9b3a70a5d8fcb89a56e009ed44ee402eb5cc2500b76126cd61d0",
+        "mtimeNs": 1792157260679173967
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "a1644654d4f987faf69d73d817f639f4c8493b3cf6e4bd33ab59a3a82132b92a",
+        "nextId": "285b71922aaa01d870483d3b4f59e4a61c2057e1476854a810f387a1d2317806",
+        "memories": "4d6dcabb5a1f4e9f59e155abb68b87b08f5d309085db8160c0df4b79c1901354",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "a1644654d4f987faf69d73d817f639f4c8493b3cf6e4bd33ab59a3a82132b92a",
+        "nextId": "285b71922aaa01d870483d3b4f59e4a61c2057e1476854a810f387a1d2317806",
+        "memories": "4d6dcabb5a1f4e9f59e155abb68b87b08f5d309085db8160c0df4b79c1901354",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 1200,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/1200.json.gz",
+        "bytes": 8398,
+        "sha256": "9cf8b219571d2db699df9f42eed923ab8d820e3fe5c24f443f0814d3574d6f4b",
+        "mtimeNs": 1792150692682654738
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/1200.json.gz",
+        "bytes": 8398,
+        "sha256": "9cf8b219571d2db699df9f42eed923ab8d820e3fe5c24f443f0814d3574d6f4b",
+        "mtimeNs": 1792157261083153166
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "3031f5d71e330c27fa8ae4bb0e379f63f4019a58bdf4b16de745e3912805db03",
+        "nextId": "0f0b82fae280ae9fec1905f029b6ee9a9c85bb6cc5151da6dafe38a7902a4a53",
+        "memories": "56ff15a9f378af8d861cb2aab599af109a40db97778413944bc1c133a0001faa",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "3031f5d71e330c27fa8ae4bb0e379f63f4019a58bdf4b16de745e3912805db03",
+        "nextId": "0f0b82fae280ae9fec1905f029b6ee9a9c85bb6cc5151da6dafe38a7902a4a53",
+        "memories": "56ff15a9f378af8d861cb2aab599af109a40db97778413944bc1c133a0001faa",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 1800,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/1800.json.gz",
+        "bytes": 8789,
+        "sha256": "375bf9e20577c4ec93e171fea77273dac8ce5541885b70902cf1e5a7aeb406b7",
+        "mtimeNs": 1792150693278624059
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/1800.json.gz",
+        "bytes": 8789,
+        "sha256": "375bf9e20577c4ec93e171fea77273dac8ce5541885b70902cf1e5a7aeb406b7",
+        "mtimeNs": 1792157261655123716
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "b0a5eba3d007300dd461740a3a9d417b8ad2f708147de6bb58c2f546482ba248",
+        "nextId": "af6b495dd2d7c1174d63ec26b36a86cf4bebe478260becafd815b81cdce71b0f",
+        "memories": "99716332ba3a738396957ad4d06647f99bce72ac210f65ca319bb2d53d2b6950",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "b0a5eba3d007300dd461740a3a9d417b8ad2f708147de6bb58c2f546482ba248",
+        "nextId": "af6b495dd2d7c1174d63ec26b36a86cf4bebe478260becafd815b81cdce71b0f",
+        "memories": "99716332ba3a738396957ad4d06647f99bce72ac210f65ca319bb2d53d2b6950",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 2400,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/2400.json.gz",
+        "bytes": 9099,
+        "sha256": "39164d1a57fa6de2a9431b939ae55d3b2fe5fb23c709a26f5d19812785a2c9af",
+        "mtimeNs": 1792150693862593997
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/2400.json.gz",
+        "bytes": 9099,
+        "sha256": "39164d1a57fa6de2a9431b939ae55d3b2fe5fb23c709a26f5d19812785a2c9af",
+        "mtimeNs": 1792157262211095089
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "2605b66e532b9821db0b3819dcd7e80cd73d1a53f345cfae1efa49dbc4ffd793",
+        "nextId": "941b74661161da4ada37e53ac991b085d6700e9b16fb8dd999d4f8348fa958e8",
+        "memories": "20a96786ed123bd5369b9153bbf150b5d9b90a8d158a7c41b08fc6933ccf674d",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "2605b66e532b9821db0b3819dcd7e80cd73d1a53f345cfae1efa49dbc4ffd793",
+        "nextId": "941b74661161da4ada37e53ac991b085d6700e9b16fb8dd999d4f8348fa958e8",
+        "memories": "20a96786ed123bd5369b9153bbf150b5d9b90a8d158a7c41b08fc6933ccf674d",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 3000,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/3000.json.gz",
+        "bytes": 9916,
+        "sha256": "bdfc29b74c6e1da61eed5ff11d7eb9056c0360770cd624b43588e1fb1b1d1fa8",
+        "mtimeNs": 1792150694486561872
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/3000.json.gz",
+        "bytes": 9916,
+        "sha256": "bdfc29b74c6e1da61eed5ff11d7eb9056c0360770cd624b43588e1fb1b1d1fa8",
+        "mtimeNs": 1792157262987055188
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "80cfdffdf42df0cdea63412f643ab22937af03bf3e57431cdd7e1f14725a957d",
+        "nextId": "560229669058290cfa539ba7fb4bbe33e3773745e91dab75a02306f0e19b32ef",
+        "memories": "fc673fac8d21ef77f78e74225bd34d4a1a1e4c55b5629a50eac93bf689c25095",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "80cfdffdf42df0cdea63412f643ab22937af03bf3e57431cdd7e1f14725a957d",
+        "nextId": "560229669058290cfa539ba7fb4bbe33e3773745e91dab75a02306f0e19b32ef",
+        "memories": "fc673fac8d21ef77f78e74225bd34d4a1a1e4c55b5629a50eac93bf689c25095",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 3600,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/3600.json.gz",
+        "bytes": 9619,
+        "sha256": "c608e2531d854c3d1896c7a7d1615ff1e01dd98da5f2538038982091da466215",
+        "mtimeNs": 1792150695058532422
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/3600.json.gz",
+        "bytes": 9619,
+        "sha256": "c608e2531d854c3d1896c7a7d1615ff1e01dd98da5f2538038982091da466215",
+        "mtimeNs": 1792157263563025592
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "dcd19dda687ac128f415773bd792595f9de88b6fec4bf67262f231fe0977c3fa",
+        "nextId": "9d551151d715267077b3a4a41ac5652b5887a82bd8e5ebdd085386a093cd1a89",
+        "memories": "97ba5e30de31a629916637426b8c1d2b6f49ea13a4679721dfe373f6d34d4da8",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "dcd19dda687ac128f415773bd792595f9de88b6fec4bf67262f231fe0977c3fa",
+        "nextId": "9d551151d715267077b3a4a41ac5652b5887a82bd8e5ebdd085386a093cd1a89",
+        "memories": "97ba5e30de31a629916637426b8c1d2b6f49ea13a4679721dfe373f6d34d4da8",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 4200,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/4200.json.gz",
+        "bytes": 10035,
+        "sha256": "7649e2458a310325ae5da84024151f1d79b12c6809098f04b4c5fa5dbab964a5",
+        "mtimeNs": 1792150695630502972
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/4200.json.gz",
+        "bytes": 10035,
+        "sha256": "7649e2458a310325ae5da84024151f1d79b12c6809098f04b4c5fa5dbab964a5",
+        "mtimeNs": 1792157264182993737
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "4a5127fc670a4e19d0698cc55e8ddcdb91fa34a0635d08ad0d47d148e37f7309",
+        "nextId": "eed5fe88eedf687582e394a4afc70a7b8c6afbf20072c1a1d4a935ef5ef94640",
+        "memories": "089268d499a4ea98f261bb3f99cf40174ebed5c693fdfcb07a0966f27a616e5b",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "4a5127fc670a4e19d0698cc55e8ddcdb91fa34a0635d08ad0d47d148e37f7309",
+        "nextId": "eed5fe88eedf687582e394a4afc70a7b8c6afbf20072c1a1d4a935ef5ef94640",
+        "memories": "089268d499a4ea98f261bb3f99cf40174ebed5c693fdfcb07a0966f27a616e5b",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 4800,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/4800.json.gz",
+        "bytes": 10142,
+        "sha256": "f69d1d2702ead42a16516818dcef8299d23cd0f1774a791c5b8dd87713ef45bc",
+        "mtimeNs": 1792150696214472905
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/4800.json.gz",
+        "bytes": 10142,
+        "sha256": "f69d1d2702ead42a16516818dcef8299d23cd0f1774a791c5b8dd87713ef45bc",
+        "mtimeNs": 1792157265018950782
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "dd7b42e2292d5b20dcef9d4c4c0df0f0f619704bd37940a5ef824ab1f3c8a6bb",
+        "nextId": "6fef307f9c8a3fb0ad69aea55b3d9c74c652a858c61b235e70ce2e2d490eb34c",
+        "memories": "b5ccd909dcd5e4825d6ca756443980e22fc26a88ce8ac9944f57f79efe0dc548",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "dd7b42e2292d5b20dcef9d4c4c0df0f0f619704bd37940a5ef824ab1f3c8a6bb",
+        "nextId": "6fef307f9c8a3fb0ad69aea55b3d9c74c652a858c61b235e70ce2e2d490eb34c",
+        "memories": "b5ccd909dcd5e4825d6ca756443980e22fc26a88ce8ac9944f57f79efe0dc548",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 5400,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/5400.json.gz",
+        "bytes": 10257,
+        "sha256": "46c87ca630f0eb668cb7b9435c0fd71dd951b31b0862cd5d28d410a31000b69d",
+        "mtimeNs": 1792150696854439954
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/5400.json.gz",
+        "bytes": 10257,
+        "sha256": "46c87ca630f0eb668cb7b9435c0fd71dd951b31b0862cd5d28d410a31000b69d",
+        "mtimeNs": 1792157266238888099
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "c50987bb9535d5ea6d3b699d2273d5d108dd396f6355fa076fae722003cab730",
+        "nextId": "8ba36ede1aa545ad0134565edcd06b59293e6ecc8e86eccffab5f6ee4ef90f23",
+        "memories": "eb15fcd59f5eb509b8f01bb79892eba7c8a0d1fe0ce808a151364e9043dc99ab",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "c50987bb9535d5ea6d3b699d2273d5d108dd396f6355fa076fae722003cab730",
+        "nextId": "8ba36ede1aa545ad0134565edcd06b59293e6ecc8e86eccffab5f6ee4ef90f23",
+        "memories": "eb15fcd59f5eb509b8f01bb79892eba7c8a0d1fe0ce808a151364e9043dc99ab",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 6000,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/6000.json.gz",
+        "bytes": 10992,
+        "sha256": "d9c1d18fbb7883f0f610a0e8fb9635e19d49d97627975b119db89c33b7f3afc2",
+        "mtimeNs": 1792150697662398353
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/6000.json.gz",
+        "bytes": 10992,
+        "sha256": "d9c1d18fbb7883f0f610a0e8fb9635e19d49d97627975b119db89c33b7f3afc2",
+        "mtimeNs": 1792157267282834456
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "38f0af22190907bfe8e3a8cf979c32aabd85bcf82b6b731b4fd420c5cab63c44",
+        "nextId": "a3d0c75739a3c6a80dcb6f9d71f9da29b49b62995801bc52957e06acb87db33d",
+        "memories": "5149d5082a008dc4b626c53298a95e06f3309c7809f86f18aecc86949097bc15",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "38f0af22190907bfe8e3a8cf979c32aabd85bcf82b6b731b4fd420c5cab63c44",
+        "nextId": "a3d0c75739a3c6a80dcb6f9d71f9da29b49b62995801bc52957e06acb87db33d",
+        "memories": "5149d5082a008dc4b626c53298a95e06f3309c7809f86f18aecc86949097bc15",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 6600,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/6600.json.gz",
+        "bytes": 11184,
+        "sha256": "4245b90cc021c79d439d5279f5f96aa84bc947522ca0e6eac2e0524f9dcd4134",
+        "mtimeNs": 1792150698370361901
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/6600.json.gz",
+        "bytes": 11184,
+        "sha256": "4245b90cc021c79d439d5279f5f96aa84bc947522ca0e6eac2e0524f9dcd4134",
+        "mtimeNs": 1792157268418775740
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "e610b040bbb74181f6ec491beecabbf235a8e7978897b41929c344eb0b3a3ca6",
+        "nextId": "c8f5600f3eb7d801a067e02c477719d37f560491c4dca56eacc11ca755eb1ac6",
+        "memories": "8e814cc8a897941aedd1f7b9d55e45f1525d52dadf10b659c9034a3b3a7effe7",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "e610b040bbb74181f6ec491beecabbf235a8e7978897b41929c344eb0b3a3ca6",
+        "nextId": "c8f5600f3eb7d801a067e02c477719d37f560491c4dca56eacc11ca755eb1ac6",
+        "memories": "8e814cc8a897941aedd1f7b9d55e45f1525d52dadf10b659c9034a3b3a7effe7",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 7200,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/7200.json.gz",
+        "bytes": 12344,
+        "sha256": "d8b795524f12bfb21c5931144204ac0d7ce8dba3b3cbf8ea4553461ca50d7bc3",
+        "mtimeNs": 1792150702258161726
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/7200.json.gz",
+        "bytes": 12344,
+        "sha256": "d8b795524f12bfb21c5931144204ac0d7ce8dba3b3cbf8ea4553461ca50d7bc3",
+        "mtimeNs": 1792157274322470833
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "d4ddaa946e597ed6f39d029bf08a36b8606d573fd23408d434ff9082fb728918",
+        "nextId": "15b9e0db83ca5103d0d81f272584932103478a4850cb788ee4fff20b7ab5c5ba",
+        "memories": "305c33944e9f57aad21db1a734fcc50b05693565e81db4f695d03c037a0421d7",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "d4ddaa946e597ed6f39d029bf08a36b8606d573fd23408d434ff9082fb728918",
+        "nextId": "15b9e0db83ca5103d0d81f272584932103478a4850cb788ee4fff20b7ab5c5ba",
+        "memories": "305c33944e9f57aad21db1a734fcc50b05693565e81db4f695d03c037a0421d7",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 7800,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/7800.json.gz",
+        "bytes": 12417,
+        "sha256": "677e1145756b82bd3a889c2daa26e8ac18d7b6b0f2696a0684f055c8c3fb0bd9",
+        "mtimeNs": 1792150706469945020
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/7800.json.gz",
+        "bytes": 12417,
+        "sha256": "677e1145756b82bd3a889c2daa26e8ac18d7b6b0f2696a0684f055c8c3fb0bd9",
+        "mtimeNs": 1792157282150066455
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "a72413b9a42600edb1e3fa3fe3b1b16098f1641ae71caab745574a43f803c46e",
+        "nextId": "3bbcf69de876e98ac944c5276eaeb44308c00a4e89260ad0067c7c9aeb4532b8",
+        "memories": "1c989000ce2a236a3779d4f978aaaf2f4f24c9e62efe6920616215097044af21",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "a72413b9a42600edb1e3fa3fe3b1b16098f1641ae71caab745574a43f803c46e",
+        "nextId": "3bbcf69de876e98ac944c5276eaeb44308c00a4e89260ad0067c7c9aeb4532b8",
+        "memories": "1c989000ce2a236a3779d4f978aaaf2f4f24c9e62efe6920616215097044af21",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    },
+    {
+      "tick": 8400,
+      "old": {
+        "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5.frames/8400.json.gz",
+        "bytes": 13319,
+        "sha256": "a79e9fd7b4c319d19dd02a4489ce90d401d4f8f81175175227446209736365a0",
+        "mtimeNs": 1792150708821824010
+      },
+      "new": {
+        "path": "/workspace/.playtest/bootstrap-root-046-known-archer0-20261016/known-archer0-04669148.frames/8400.json.gz",
+        "bytes": 13319,
+        "sha256": "a79e9fd7b4c319d19dd02a4489ce90d401d4f8f81175175227446209736365a0",
+        "mtimeNs": 1792157287813772899
+      },
+      "wholeWorldIdAll3MemAndSetup": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true
+      },
+      "oldFieldHashes": {
+        "snapshot": "e67aa860e33413ce3bb889790ec6c90a1cd5e06359d69a212821ac2082bb8902",
+        "nextId": "17560583c120645c7bc8576e082eb97433c54d73c5a7172e0fd4cebaa8921087",
+        "memories": "7953b4d9a38bdbfa1164ce1e9016d837639fccf7a5fa495344540c054147d613",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "newFieldHashes": {
+        "snapshot": "e67aa860e33413ce3bb889790ec6c90a1cd5e06359d69a212821ac2082bb8902",
+        "nextId": "17560583c120645c7bc8576e082eb97433c54d73c5a7172e0fd4cebaa8921087",
+        "memories": "7953b4d9a38bdbfa1164ce1e9016d837639fccf7a5fa495344540c054147d613",
+        "setup": "a7bea5e17c5c5c221ba557018850ceb33b5b52970339ce5016b8afb6f88937df"
+      },
+      "firstDifference": null
+    }
+  ]
+}

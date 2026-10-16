@@ -1,0 +1,15 @@
+{
+  "atUTC": "2026-10-16T13:06:23.208843+00:00",
+  "path": "/tmp/bootstrap-aimed-cast-owner-1905-20261016-evidence.tar.gz",
+  "bytes": 17362384,
+  "sha256": "289f199451e6f69e40e95bcb03df8713921670e80008dcd750034f8f487f81a9",
+  "regularFiles": 305,
+  "payloadFiles": 304,
+  "payloadBytes": 26254587,
+  "indexPath": "INDEX.json",
+  "indexSHA256": "0f0e4fb3735351228d807ece345ba28ab9293c61b6c7e7b51bd0c522aa9800df",
+  "strictAllPayloadHashesSizesCoverageAndGzipCRCVerified": true,
+  "archiveUnchangedDuringAudit": true,
+  "originalRawSourcesRetained": true,
+  "originalUncommittedRecoveryGapRetained": true
+}

@@ -1,0 +1,42 @@
+{
+  "currentHead": "c64d70c91a1ba8027a5b64c1af651537f41563ed",
+  "oldHead": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "cases": [
+    {
+      "tick": 37410,
+      "inputSHA256": "2288ecd9932ede811c450a65420324f368453f47a3f31d78999fe057c77a3939",
+      "parentEntries": 8,
+      "currentEntries": 8,
+      "nonGunEntriesStrictlyEqual": true,
+      "originalWorldAndAllInputMemoriesUnchanged": true
+    },
+    {
+      "tick": 37455,
+      "inputSHA256": "c292c63b108e121321d2ffdcbdb97b9d3a85287183bbe1e94efa1fd07c5ea2c7",
+      "parentEntries": 11,
+      "currentEntries": 10,
+      "nonGunEntriesStrictlyEqual": true,
+      "originalWorldAndAllInputMemoriesUnchanged": true
+    }
+  ],
+  "medical38160": {
+    "originalInputSHA256": "3c73bc0fc0a43a7ccd944fdf507300f4f08c51f8670380dbb5c4840da8b748cf",
+    "doctorCommands": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-fieldMedic-34930"
+          ],
+          "x": 1415.7982813811952,
+          "y": 3689.928424365074,
+          "avoidCombat": true
+        }
+      }
+    ]
+  },
+  "noCreateGameRestoreStepIssueOrOpponentPlanning": true
+}

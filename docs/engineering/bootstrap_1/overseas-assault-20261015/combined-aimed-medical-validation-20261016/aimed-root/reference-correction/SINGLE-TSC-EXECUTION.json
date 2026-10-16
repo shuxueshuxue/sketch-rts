@@ -1,0 +1,27 @@
+{
+  "atUTC": "2026-10-16T12:59:15.582228+00:00",
+  "head": "c423ac73853bb39ea31e1780dc194c65783a5819",
+  "before": {
+    "max": 17179869184,
+    "current": 14344953856,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "heapMiB": 1024,
+  "name": "single combined tsc",
+  "exit": 0,
+  "elapsedSeconds": 29.76076181299868,
+  "after": {
+    "max": 17179869184,
+    "current": 14352056320,
+    "events": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "command": [
+    "node",
+    "--max-old-space-size=1024",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "childrenPeakRSSKiB": 1206616,
+  "all1504SelectedSourcePrePostExact": true,
+  "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

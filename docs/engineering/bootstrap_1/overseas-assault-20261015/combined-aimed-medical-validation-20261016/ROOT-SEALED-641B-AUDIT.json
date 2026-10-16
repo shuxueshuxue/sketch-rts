@@ -1,0 +1,15 @@
+{
+  "atUTC": "2026-10-16T13:31:45.641868+00:00",
+  "path": "/tmp/bootstrap-medical-safe-prefix-641b-20261016-evidence.tar.gz",
+  "bytes": 12249672,
+  "sha256": "164696c0871fc7abeaa42ec4199e9e4a7d29c07bad23e301885857fc0741c89b",
+  "regularFiles": 323,
+  "payloadFiles": 322,
+  "payloadBytes": 21547257,
+  "indexPath": "INDEX.json",
+  "indexSHA256": "7a014e7cba0f680ceb30456840a0093ed2fffd14218904f568ec61df142b39d2",
+  "strictAllPayloadHashesSizesCoverageAndGzipCRCVerified": true,
+  "archiveUnchangedDuringAudit": true,
+  "originalRawSourcesRetained": true,
+  "originalUncommittedRecoveryGapRetained": true
+}

@@ -1,0 +1,318 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-root-aimed-c64d-fixed-control
+
+ ❯ src/ai/policy/script-runner-aimed-cast.test.ts (25 tests | 2 failed) 385ms
+   × native sustained cast order ownership > respects the actual37410 full-P0 cast or existing engagement owner through its public frame 219ms
+     → expected [ { playerId: 'p0', …(3) }, …(6) ] to deeply equal [ { playerId: 'p0', …(3) }, …(5) ]
+   × native sustained cast order ownership > respects the actual37455 full-P0 cast or existing engagement owner through its public frame 130ms
+     → expected [ { playerId: 'p0', …(3) }, …(8) ] to deeply equal [ { playerId: 'p0', …(3) }, …(9) ]
+ ✓ src/ai/bootstrap_1/landed-combat.test.ts (12 tests) 3088ms
+   ✓ v9_archer gives the landed army local focus orders through its naval owner 484ms
+   ✓ v9_summoner gives the landed army local focus orders through its naval owner 369ms
+   ✓ v9_archer keeps landed tactical moves on an actual ground road 428ms
+ ✓ src/ai/policy/naval-dock-return.test.ts (5 tests) 80ms
+ ✓ src/ai/bootstrap_1/ground-evacuation.test.ts (6 tests) 3004ms
+   ✓ v9_archer does not create a ground evacuation pickup for healthy embarked priests 600ms
+   ✓ v9_summoner does not create a ground evacuation pickup for healthy embarked priests 414ms
+   ✓ v9_knight does not create a ground evacuation pickup for healthy embarked priests 683ms
+   ✓ v9_archer does not dispatch another empty ferry to already embarked priests 343ms
+   ✓ v9_summoner does not dispatch another empty ferry to already embarked priests 530ms
+   ✓ v9_knight does not dispatch another empty ferry to already embarked priests 432ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/policy/script-runner-aimed-cast.test.ts > native sustained cast order ownership > respects the actual37410 full-P0 cast or existing engagement owner through its public frame
+AssertionError: expected [ { playerId: 'p0', …(3) }, …(6) ] to deeply equal [ { playerId: 'p0', …(3) }, …(5) ]
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "command": Object {
+        "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-knight-9866",
+        ],
+        "x": 1170.2876691631566,
+        "y": 3668.188399268666,
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-knight-28998",
+        ],
+        "x": 1202.5416377757003,
+        "y": 3696,
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "type": "holdPosition",
+        "unitIds": Array [
+          "unit-p0-ballista-24596",
+        ],
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "type": "move",
++       "targetId": "unit-p2-priest-1792",
++       "type": "attack",
++       "unitIds": Array [
++         "unit-p0-raider-11967",
++       ],
++     },
++     "playerId": "p0",
++     "scriptId": "battlefield",
++     "source": "external-agent",
++   },
++   Object {
++     "command": Object {
++       "targetId": "unit-p2-witch-6336",
++       "type": "attack",
+        "unitIds": Array [
+          "unit-p0-priest-32289",
+        ],
+-       "x": 1140.247442879107,
+-       "y": 3679.9972222852693,
+      },
+      "playerId": "p0",
+-     "scriptId": "medicalRecovery",
++     "scriptId": "battlefield",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
++       "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-fieldMedic-34930",
+        ],
+-       "x": 1140.247442879107,
+-       "y": 3679.9972222852693,
++       "x": 1530.4068164969908,
++       "y": 3498.474560520819,
+      },
+      "playerId": "p0",
+-     "scriptId": "medicalRecovery",
++     "scriptId": "v6Backline",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "targetId": "unit-p2-priest-1792",
+-       "type": "attack",
++       "type": "move",
+        "unitIds": Array [
+-         "unit-p0-raider-11967",
++         "unit-p0-knight-4468",
+        ],
++       "x": 1421.7227027435117,
++       "y": 1885.8399884510848,
+      },
+      "playerId": "p0",
+-     "scriptId": "battlefield",
++     "scriptId": "v6General",
+      "source": "external-agent",
+    },
+  ]
+
+ ❯ src/ai/policy/script-runner-aimed-cast.test.ts:207:33
+    205|       return [entry];
+    206|     });
+    207|     expect(withoutGun(entries)).toEqual(withoutGun(original));
+       |                                 ^
+    208|     const trace: unknown[] = [];
+    209|     issueCommandFrame(game, entries, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/ai/policy/script-runner-aimed-cast.test.ts > native sustained cast order ownership > respects the actual37455 full-P0 cast or existing engagement owner through its public frame
+AssertionError: expected [ { playerId: 'p0', …(3) }, …(8) ] to deeply equal [ { playerId: 'p0', …(3) }, …(9) ]
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "command": Object {
+        "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-knight-9866",
+        ],
+        "x": 1058.7012213012645,
+        "y": 3754.497073289137,
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-raider-11967",
+        ],
+        "x": 1174.4510198334704,
+        "y": 3661.441570278269,
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "avoidCombat": true,
+        "type": "move",
+        "unitIds": Array [
+          "unit-p0-knight-28998",
+        ],
+        "x": 1190.9051926265586,
+        "y": 3679.8268281868886,
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "type": "holdPosition",
+        "unitIds": Array [
+          "unit-p0-ballista-24596",
+        ],
+      },
+      "playerId": "p0",
+      "scriptId": "mobileCare",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "type": "move",
+-       "unitIds": Array [
+-         "unit-p0-priest-32289",
+-       ],
+-       "x": 1126.5080021622618,
+-       "y": 3679.2252799302214,
+-     },
+-     "playerId": "p0",
+-     "scriptId": "medicalRecovery",
+-     "source": "external-agent",
+-   },
+-   Object {
+-     "command": Object {
+-       "type": "move",
++       "targetId": "unit-p1-emberRavager-26400",
++       "type": "attack",
+        "unitIds": Array [
+-         "unit-p0-fieldMedic-34930",
++         "unit-p0-lancer-1075",
+        ],
+-       "x": 1126.5080021622618,
+-       "y": 3679.2252799302214,
+      },
+      "playerId": "p0",
+-     "scriptId": "medicalRecovery",
++     "scriptId": "battlefield",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+        "targetId": "unit-p1-emberRavager-26400",
+        "type": "attack",
+        "unitIds": Array [
+-         "unit-p0-lancer-1075",
++         "unit-p0-raider-25755",
+        ],
+      },
+      "playerId": "p0",
+      "scriptId": "battlefield",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "targetId": "unit-p1-emberRavager-26400",
+-       "type": "attack",
++       "avoidCombat": true,
++       "type": "move",
+        "unitIds": Array [
+-         "unit-p0-raider-25755",
++         "unit-p0-priest-32289",
+        ],
++       "x": 1467.8819907207899,
++       "y": 3674.528005690923,
+      },
+      "playerId": "p0",
+-     "scriptId": "battlefield",
++     "scriptId": "v6Backline",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "type": "attackMove",
++       "avoidCombat": true,
++       "type": "move",
+        "unitIds": Array [
+-         "unit-p0-horseArcher-3224",
++         "unit-p0-fieldMedic-34930",
+        ],
+-       "x": 1176.2271745841751,
+-       "y": 3470.667028439614,
++       "x": 1465.0421157858043,
++       "y": 3606.0775178051117,
+      },
+      "playerId": "p0",
+-     "scriptId": "v6General",
++     "scriptId": "v6Backline",
+      "source": "external-agent",
+    },
+    Object {
+      "command": Object {
+-       "targetId": "unit-p2-priest-1792",
+-       "type": "attack",
++       "type": "move",
+        "unitIds": Array [
++         "unit-p0-horseArcher-3224",
++         "unit-p0-knight-3742",
+          "unit-p0-knight-4468",
+        ],
++       "x": 1421.7227027435117,
++       "y": 1885.8399884510848,
+      },
+      "playerId": "p0",
+-     "scriptId": "focusFire",
++     "scriptId": "v6General",
+      "source": "external-agent",
+    },
+  ]
+
+ ❯ src/ai/policy/script-runner-aimed-cast.test.ts:207:33
+    205|       return [entry];
+    206|     });
+    207|     expect(withoutGun(entries)).toEqual(withoutGun(original));
+       |                                 ^
+    208|     const trace: unknown[] = [];
+    209|     issueCommandFrame(game, entries, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  2 failed | 46 passed (48)
+   Start at  12:40:36
+   Duration  12.17s (transform 3.02s, setup 0ms, collect 4.79s, tests 6.56s, environment 1ms, prepare 207ms)
+
