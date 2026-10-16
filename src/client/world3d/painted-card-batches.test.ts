@@ -559,3 +559,23 @@ it.each([1,2,6])('allocates exactly %i unique finest layers below budget, protec
  expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['early',...Array.from({length:count},(_,i)=>`warm:${i}`)]);
  expect(cards.stats().pixels).toBeLessThan(12*1024*1024);cards.dispose();
 });
+
+it('paints one waiting card a frame once the raster budget is spent and draws each card as it arrives',()=>{
+ const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0}),painter=vi.fn(paint),ids=()=>cards.objects().flatMap(mesh=>mesh.userData.ids);
+ const frame=()=>{cards.begin();for(const id of ['a','b','c'])cards.add(`pose:${id}`,2,painter,matrix,id,17);cards.finish(renderer);};
+ frame();expect(painter).toHaveBeenCalledTimes(1);expect(ids()).toEqual(['a']);
+ frame();expect(painter).toHaveBeenCalledTimes(2);expect(ids()).toEqual(['a','b']);
+ frame();expect(painter).toHaveBeenCalledTimes(3);expect(ids()).toEqual(['a','b','c']);
+ frame();expect(painter).toHaveBeenCalledTimes(3);expect(cards.stats().rasterizations).toBe(3);cards.dispose();
+});
+
+it('draws an instance whose new card is still waiting with the card it drew last frame',()=>{
+ const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0});
+ const frame=(poses:Record<string,string>)=>{cards.begin();for(const [id,pose] of Object.entries(poses))cards.add(pose,2,paint,matrix,id,17);cards.finish(renderer);};
+ const drawn=(id:string)=>{const {mesh,index}=binding(cards,id);return(mesh.userData.cards[index] as {key:string}).key.split(':')[0];};
+ frame({a:'a1'});frame({a:'a1',b:'b1'});expect([drawn('a'),drawn('b')]).toEqual(['a1','b1']);
+ // Both poses change; one raster fits the frame, so b keeps its last pose for a frame.
+ frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b1']);
+ frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b2']);
+ expect(cards.stats().rasterizations).toBe(4);cards.dispose();
+});

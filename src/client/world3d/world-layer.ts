@@ -41,6 +41,9 @@ import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
+// A frame's painting of new troop and remains cards: a few at most on a fast core. A match opening on its armies, or a
+// battle bringing many new poses at once, fills in over the next frames instead of holding one (see PaintedCardBatches).
+const CARD_RASTER_BUDGET_MS=6;
 class ActorPositions extends Map<string,ActorPosition>{
   constructor(private locate:(id:string)=>ActorPosition|undefined){super();}
   override get(id:string){return super.get(id)??this.locate(id);}
@@ -126,8 +129,8 @@ export class World3DLayer {
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined){
     const maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
-    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks});
-    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks});
+    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks,rasterBudgetMs:CARD_RASTER_BUDGET_MS});
+    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs:CARD_RASTER_BUDGET_MS});
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';

@@ -16,7 +16,9 @@ type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceS
 type Page={texture:THREE.DataArrayTexture;readonly mipBytes:number;uploaded:boolean;cards:(Card|undefined)[];used:number};
 type Instance={card:Card|undefined;matrix:THREE.Matrix4;id:string;foot:number;opacity:number;order:number};
 type DrawChunk={banks:THREE.DataArrayTexture[];pages:Page[];entries:Card[];ids:string[];feet:number[];orders:number[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh:THREE.InstancedMesh;capacity:number;used:number;refreshMaterials:(()=>void)[]};
-export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number};
+/** rasterBudgetMs: once a frame has painted a card and spent this long painting, the cards it still lacks wait for later
+ * frames (see finish). */
+export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number;rasterBudgetMs?:number};
 
 /** Renderer-owned card cache and batches. Animation/color/facing vary per
  * instance, not per draw call. No canvas, GPU texture or material per soldier. */
@@ -30,6 +32,10 @@ export class PaintedCardBatches {
   // uploads fill the same sequence, irrespective of raster completion order.
   private instances:Instance[]=[];
   private bindings=new Map<Card,Instance[]>();
+  // The card each instance id drew this frame and last frame: a card still waiting for its raster stands in with the last.
+  private shown=new Map<string,Card>();
+  private shownBefore=new Map<string,Card>();
+  private drawRows:Instance[]=[];
   private chunks:DrawChunk[]=[];
   private drawGroup=new THREE.Group();
   private maxTextureBanks:number;
@@ -65,6 +71,7 @@ export class PaintedCardBatches {
   }
   begin(){
     this.frame++;this.instanceOrder=0;this.pending.length=0;this.bindings.clear();
+    [this.shownBefore,this.shown]=[this.shown,this.shownBefore];this.shown.clear();
     for(const row of this.instances)if(row){row.card=undefined;row.id='';}
     // A failed upload must not expose last frame's lower-quality draw bindings.
     for(const chunk of this.chunks)this.hideChunk(chunk);
@@ -116,7 +123,7 @@ export class PaintedCardBatches {
     let row=this.instances[order];
     if(!row){row={card,matrix,id,foot,opacity:0,order};this.instances[order]=row;}
     else{row.card=card;row.matrix=matrix;row.id=id;row.foot=foot;row.order=order;}
-    row.opacity=Math.max(0,Math.min(1,opacity));
+    row.opacity=Math.max(0,Math.min(1,opacity));this.shown.set(id,card);
     let bindings=this.bindings.get(card);if(!bindings){bindings=[];this.bindings.set(card,bindings);}bindings.push(row);
   }
   /** Publish a successful promotion or compaction without changing submission
@@ -271,7 +278,24 @@ export class PaintedCardBatches {
       const card=this.cards.get(key);if(card&&card.baseMip<=request.baseMip)continue;
       pendingLayers.set(request.size,(pendingLayers.get(request.size)??0)+1);
     }
-    try{for(const request of this.pending)this.raster(request,renderer,finest.get(request.key)!.baseMip,pendingLayers);}finally{this.pending.length=0;}
+    // A raster takes milliseconds (a hundred at once when a match opens on its armies), so a frame paints cards until it
+    // has painted one and spent its budget. A card left to paint waits for a later frame; meanwhile its instance draws
+    // the coarser resident mip it has, or the card it drew last frame (its previous pose), or nothing yet.
+    const deadline=performance.now()+(this.policy.rasterBudgetMs??Infinity);let painted=0;
+    try{
+      for(const request of this.pending){
+        const baseMip=finest.get(request.key)!.baseMip,card=this.cards.get(request.key);
+        if(!card||card.baseMip>baseMip){
+          if(painted&&performance.now()>=deadline){
+            const before=this.shownBefore.get(request.id),stand=card??(before&&this.cards.get(before.key));
+            if(stand)this.instance(stand,request.matrix,request.id,request.foot,request.opacity,request.order);
+            continue;
+          }
+          painted++;
+        }
+        this.raster(request,renderer,baseMip,pendingLayers);
+      }
+    }finally{this.pending.length=0;}
     this.compact(renderer);
     for(const page of [...this.pages]){
       if(!page.cards.some(card=>card?.used===this.frame)&&(!page.cards.some(Boolean)||this.frame-page.used>120||this.allocatedPixels>PIXEL_BUDGET))this.remove(page);
@@ -319,11 +343,14 @@ export class PaintedCardBatches {
   /** Greedily retain the literal submission sequence. A ninth distinct page
    * starts a new draw; pages may recur in later draws without extra textures. */
   private draw(){
+    // Instances in submission order, less those whose card is still waiting for its raster.
+    const rows=this.drawRows;rows.length=0;
+    for(let order=0;order<this.instanceOrder;order++){const row=this.instances[order];if(row?.card)rows.push(row);}
     let start=0,index=0;
-    while(start<this.instanceOrder){
+    while(start<rows.length){
       const pageBanks=new Map<Page,number>();let end=start;
-      while(end<this.instanceOrder){
-        const card=this.instances[end]!.card!;
+      while(end<rows.length){
+        const card=rows[end]!.card!;
         if(!pageBanks.has(card.page)){
           if(pageBanks.size===this.maxTextureBanks)break;
           pageBanks.set(card.page,pageBanks.size);
@@ -339,9 +366,9 @@ export class PaintedCardBatches {
       if(end-start>chunk.capacity)this.resizeChunk(chunk,end-start,index);
       const {mesh,geometry}=chunk,layers=geometry.getAttribute('cardLayer'),rects=geometry.getAttribute('cardRect'),banks=geometry.getAttribute('cardBank');let radius=0;
       chunk.entries.length=chunk.ids.length=chunk.feet.length=chunk.orders.length=0;chunk.used=this.frame;mesh.count=end-start;mesh.visible=true;
-      for(let order=start;order<end;order++){
-        const row=this.instances[order]!,card=row.card!,i=order-start;
-        chunk.entries.push(card);chunk.ids.push(row.id);chunk.feet.push(row.foot);chunk.orders.push(order);
+      for(let at=start;at<end;at++){
+        const row=rows[at]!,card=row.card!,i=at-start;
+        chunk.entries.push(card);chunk.ids.push(row.id);chunk.feet.push(row.foot);chunk.orders.push(row.order);
         // Preserve PlaneGeometry(...).translate(...) float32 vertices, keeping
         // mip interpolation and cutout edges on their original authored grid.
         const half=card.tileSize/2,low=Math.fround(Math.fround(-half/TILT)+row.foot/TILT),high=Math.fround(Math.fround(half/TILT)+row.foot/TILT);
