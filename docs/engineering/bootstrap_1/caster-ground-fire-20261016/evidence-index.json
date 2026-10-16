@@ -50,6 +50,48 @@
       "bytes": 6192,
       "sha256": "27a4fce7b6e3a7b61443c21d81986f006db19cdbcbed2d5dc902988a40498665",
       "derivedCompactSummary": true
+    },
+    "win-consequential.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/C4-CONSEQUENTIAL-COMPLETE-CHANGED-CODE-WIN-159600-288119.json",
+      "bytes": 9345,
+      "sha256": "1d48d7e60e52daf863a01da86503968a630853a7780f58880641ac974a9f426d",
+      "copiedExactBytes": true
+    },
+    "win-actual-native-process-exit.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/native-process-exit-1.json",
+      "bytes": 5737,
+      "sha256": "6a1e2741c9b3d9e426842ab8a8779192e93c3f9fd1a02c8ddb03f4f7ece5f596",
+      "copiedExactBytes": true
+    },
+    "win-first-render-exit.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/EXIT.json",
+      "bytes": 1966,
+      "sha256": "97f209394a225639f0c3dd4025c2d55ae3acf5de5d67f647202268198155be0b",
+      "copiedExactBytes": true
+    },
+    "win-final768-render-exit.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/EXIT.json",
+      "bytes": 2016,
+      "sha256": "bdfd3eac175d88b0e6ea53764db108f2ed71e28eae1e870fdde74f1e31902462",
+      "copiedExactBytes": true
+    },
+    "win-personal-partial-visual-observation.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/ROOT-PERSONAL-PARTIAL-VISUAL-OBSERVATION.json",
+      "bytes": 1817,
+      "sha256": "f345c2bc03fd567dbd128d799f04ddf603f6141a5e0b1c6e47abac0e398c5df1",
+      "copiedExactBytes": true
+    },
+    "win-personal-final768-visual-observation.json": {
+      "originalPath": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 1197,
+      "sha256": "cdba3da50e5490192fd96c34ddfe741d0a3b57abeb889695650d0abb9aeeaa88",
+      "copiedExactBytes": true
+    },
+    "incoming-dedup-local-validation.json": {
+      "originalPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/ROOT-ACTUAL-LOCAL-VALIDATION.json",
+      "bytes": 4266,
+      "sha256": "b0535a83d5394772797ba6359c748d0b87bf3117854a80b6c9db6dca90fb5549",
+      "copiedExactBytes": true
     }
   },
   "fullLocalRawOutput": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4",
@@ -58,13 +100,104 @@
   "fullLocalVisuals": "/tmp/root-c4-tower-battle-native-visuals-20261016",
   "currentBranchOutcome": {
     "startTick": 159600,
+    "pauseTick": 265800,
+    "sameSourceResumeTick": 265800,
+    "endTick": 288119,
+    "winner": "p0",
+    "naturalComplete": true,
+    "engineeringObservationStop": false,
+    "priorEngineeringObservationPausePreserved": true,
+    "resourcePaused": false,
+    "nativePID": 555868,
+    "actualExitCode": 0,
+    "sevenOriginalHostsSurviveFullHP": true,
+    "newP0PermanentFatalTerminalRemoval": [
+      0,
+      0,
+      0
+    ],
+    "newP0TemporaryCombatDeaths": 512,
+    "newP0LifetimeExpiryEligibleRemovals": 388,
+    "p1UnitsAlreadyZeroAtResume": true,
+    "p1AndP2FinalUnitsAndBuildingsZero": true,
+    "classification": "Complete changed-code saved-game branch, not a fresh ordinary0/unseen case or full bootstrap acceptance."
+  },
+  "allBootstrapGoalsComplete": false,
+  "originalBrokenContainerUncommittedGapStillUnrecovered": true,
+  "scope": "Small durable evidence index only; full raw games/checkpoints/streams/images retained locally, not claimed fully copied into this commit. Actual91 tests/full tsc belong to exact afda source, inherited by byte-equivalent1565 integration; not rerun under root merge HEAD. C4 unchanged-afda continuation naturally won288119 with prior265800 pause retained. C6 virtual-cap1567 natural win263342 is recorded separately; this commit saves byte-identical1567 source and makes no new-commit rerun claim. The same1567 trueordinary0 official Broken Sea archer case naturally lost37485; C5 is an independent unmerged finite2400 focus, not island income or match success. Full raw portable archive and original container recovery gaps remain.",
+  "winDocumentationPreparedAtUTC": "2026-10-16T23:01:14.129979+00:00",
+  "observationPause265800": {
+    "startTick": 159600,
     "endTick": 265800,
     "winner": null,
     "naturalComplete": false,
     "engineeringObservationStop": true,
     "sameSourceFullHealthResumeStillPending": true
   },
-  "allBootstrapGoalsComplete": false,
-  "originalBrokenContainerUncommittedGapStillUnrecovered": true,
-  "scope": "Small durable evidence index only; full raw games/checkpoints/streams/images retained locally, not claimed fully copied into this commit. Actual91 tests/full tsc belong to exact afda source, inherited by byte-equivalent1565 integration; not rerun under root merge HEAD."
+  "fullLocalWinClosure": {
+    "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/CLOSED-WIN-FULL-159600-288119.json",
+    "sha256": "a5e62074bf13391f9de7b20babac30358c65e99c5d60e937866cfdd79efb4e3c",
+    "bytes": 66539
+  },
+  "fullLocalSameSourceResumeOutput": "/tmp/bootstrap-c4-full-health-resume265800-20261016",
+  "fullLocalSameSourceResumeFinal": {
+    "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-final.json.gz",
+    "sha256": "258d3d5706a3ee604ca29852ee61a18ce03810f1b79a22809d283f6eeecf1c59",
+    "bytes": 86900
+  },
+  "fullLocalAtomicWinFrame": {
+    "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800.frames/288119.json.gz",
+    "sha256": "822cd5619fea75b6e0fe1160256aa4d77e61c29a5975ab1f5af3c0a569d1a502",
+    "bytes": 86833
+  },
+  "fullLocalWinVisuals": {
+    "partialBatch": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared",
+    "partialBatchActualExitCode": 1,
+    "firstTwoImagesIndividuallyValidAndPersonallyViewed": true,
+    "separateFinal768": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared",
+    "separateFinal768ActualExitCode": 0,
+    "separateFinalImagePersonallyViewed": true,
+    "PNGBytesNotCopied": true
+  },
+  "incomingDedupCandidate": {
+    "sourceFiles": 1567,
+    "localActualContractsPassed": 14,
+    "localSkipped": 0,
+    "localTodo": 0,
+    "localNativeComponentsUsed": true,
+    "full1024MiBTypecheckPassed": true,
+    "fullNaturalGameAndHealthAndVisualClosureSeparateFromThisC4Evidence": true,
+    "originalAfdaNaturalWinCounterexampleRetained": true,
+    "fullNativeEvidenceClosed": true,
+    "relatedEvidenceIndex": "../incoming-threat-overlap-20261016/evidence-index.json",
+    "naturalWinner": "p0",
+    "naturalEndTick": 263342,
+    "afdaOutcomeStillSeparate": true,
+    "unadoptedAtLocalValidationCapture": true,
+    "thisCommitSavesByteIdenticalRuntime1567": true,
+    "noRerunUnderNewCommitClaimed": true
+  },
+  "portableRawArchive": {
+    "createdOrCopiedByThisPatch": false,
+    "sha256": null,
+    "gap": "Full raw/checkpoint/PNG logical paths remain local; source capsules and small JSON receipts are not a portable raw-game archive."
+  },
+  "relatedC6CompleteEvidence": {
+    "relativeIndex": "../incoming-threat-overlap-20261016/evidence-index.json",
+    "compactSHA256": "98bd8a6419bcc40117aaeb2dd04f0b9287f4b619b21859bfcf85d1ce61df5941",
+    "nativePID": 559007,
+    "winner": "p0",
+    "endTick": 263342,
+    "sourceProofKind": "uncommitted-virtual-tree",
+    "sourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815"
+  },
+  "relatedOfficialOrdinary0Evidence": {
+    "relativeIndex": "../official-brokenSea-archer-20261016/evidence-index.json",
+    "winner": "p1",
+    "endTick": 37485,
+    "ordinary0": true,
+    "unseen": false,
+    "accepted": false
+  },
+  "priorIndexScopeBeforeSourceSaveAndOfficialLoss": "Small durable evidence index only; full raw games/checkpoints/streams/images retained locally, not claimed fully copied into this commit. Actual91 tests/full tsc belong to exact afda source, inherited by byte-equivalent1565 integration; not rerun under root merge HEAD. Addendum: unchanged afda resumed at265800 to natural P0win288119; all seven original hosts fullHP, new permanent losses0, temporary deaths/expiry classes retained. Old265800 pause remains historical. C6 local14/typecheck evidence is separate and unadopted; its complete-game closure is not claimed by this C4 documentation. C6 complete natural-game result is now closed separately in the related evidence index; it does not change C4 source attribution or convert these saved branches into ordinary0/unseen acceptance."
 }

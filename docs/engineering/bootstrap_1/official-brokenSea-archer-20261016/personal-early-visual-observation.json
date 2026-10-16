@@ -1,0 +1,38 @@
+{
+  "classification": "Root personal observation of native full saved battle views from trueordinary0 officialBrokenSea C6. No Game or gameplay intervention. Exact action/kill/repair attribution comes from closed native streams, not these two pictures.",
+  "atUTC": "2026-10-16T23:25:28.184681+00:00",
+  "actualRendererPID": 561905,
+  "actualRendererExit": 0,
+  "gameSource": "uncommitted C6 virtual1567 cap6590c662/baseaccc6bd7",
+  "rendererSource": "afda48c6 client123 SHA equal to C6",
+  "images": [
+    {
+      "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-8400-official-ordinary0-preloss-harbor.png",
+      "bytes": 877135,
+      "sha256": "5f215fae631ba1c95afbcb518a7f1c1a6de90f25cd496dafb1ee9398494137f5",
+      "rootPersonallyViewed": true
+    },
+    {
+      "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-9835-official-ordinary0-deck-casualties.png",
+      "bytes": 877586,
+      "sha256": "9c24b690279eb9cda116276d3bbcc0afafbaf94172def7433191ebdc70db0c67",
+      "rootPersonallyViewed": true
+    }
+  ],
+  "observations": [
+    "At8400 four friendly ships are spread between the harbor and open water; a single hostile warship approaches from the upper-right of the same view. Friendly crew and shore units are visible around the harbor.",
+    "At9835 the hostile ship is alongside a friendly transport while a second friendly ship with troops remains farther northwest. Two ship wrecks are visible in the water, consistent with the earlier cutter and warship death positions recorded in the saved state.",
+    "The9835 native frame still contains the transport, so the simultaneous three deck passenger losses must not be described as sinking/drowning. Their exact deaths and deck membership are established by native records.",
+    "One worker is visible on the hostile ship. The saved native hits and health records, rather than the image alone, establish its automatic repair support.",
+    "The views establish positions and visible spacing only. They do not prove a safe water road, successful boarding, the loading stop11565, or that a proposed escape would survive."
+  ],
+  "fullGameResultSeparatelyClosed": {
+    "tick": 37485,
+    "winner": "p1",
+    "ordinary0": true,
+    "officialFixedMap": true,
+    "unseen": false
+  },
+  "notBootstrapAcceptance": true,
+  "originalUncommittedContainerGapUnrecovered": true
+}

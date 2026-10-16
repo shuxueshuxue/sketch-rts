@@ -1,0 +1,32 @@
+{
+  "atUTC": "2026-10-16T22:38:15.239929+00:00",
+  "rootPersonallyViewed": true,
+  "actualRendererPID": 556595,
+  "overallRendererActualExit": 1,
+  "failureReason": "Third fullmap PNG would exceed predeclared total4.5MB budget; old bounds and receipt retained. Firsttwo PNGs independently complete and verified; finaloverview not produced here.",
+  "partialGeneratedImages": [
+    {
+      "file": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/native-283800-c4-last-tower-line.png",
+      "sha256": "777e3008ccec39d313ef6ad95b3dc55ceedfab6eba59069b4eef3bb43ce283d2",
+      "bytes": 2027865,
+      "tick": 283800,
+      "fullSavedWorldObjectUnchanged": true
+    },
+    {
+      "file": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/native-287400-c4-after-both-towers.png",
+      "sha256": "21c7a6c9a16d28cc88ad8966627c45e0209ea948c8b32b58521cac7dcf113ce5",
+      "bytes": 2017259,
+      "tick": 287400,
+      "fullSavedWorldObjectUnchanged": true
+    }
+  ],
+  "personalObservations": [
+    "283800: six selected summoners stand north of remaining enemy tower line. Spirits have advanced toward the low-health tower and enemy six-caster group. The remote witch is outside this camera; cannot count all seven from this image.",
+    "287400: both defensive towers in this zone are gone; the six selected summoners have advanced into the base behind spirits, with two enemy halls and ancillary buildings still visible.",
+    "Images show native saved formation/terrain and advancement; fatal attribution and final enemy elimination use closed native streams/full288119 state, not these static images."
+  ],
+  "source123ExactBeforeAfter": true,
+  "originalGzipInputsUnchanged": true,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "noGameDuringRender": true
+}

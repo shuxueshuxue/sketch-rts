@@ -1,0 +1,42 @@
+{
+  "atUTC": "2026-10-16T22:36:03.494104+00:00",
+  "handoffNote": "Root sole static renderer Node after afda full-health Game555868 actualexit0 naturalwin288119, C5 focus556371 actualexit1 before Game at hard2GiB rejection; all Node closed. Native saved battle and final objects only, no Game/AI.",
+  "launcherPID": 556582,
+  "classification": "Separate native client static renderer; no Game/AI/issue/step/restore.",
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "source123ExactBefore": true,
+  "freshBefore": 2297102336,
+  "requiredFresh": 2147483648,
+  "outputRoot": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared",
+  "outputFreeBefore": 1940283392,
+  "requiredOutputFree": 71871008,
+  "regularReserveRoot": "/workspace",
+  "regularFreeBefore": 68145152,
+  "requiredRegularFree": 67108864,
+  "heapMiB": 256,
+  "driverSHA256": "1ca52276c441aa7273f8d0d8d1c7ad7b45b67df6b9d886b1cf22a4c499ae31d1",
+  "sealSHA256": "a1b231f8d1ad8d86bc1d16e80be5ec103369610e6ad7de0a279b45ce8bb8b1fe",
+  "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "parentEnvironment": {
+    "TSX_DISABLE_CACHE": "1"
+  },
+  "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+  "tsxEnvScope": "Parent option inherited, no performance causal assertion.",
+  "args": [
+    "node",
+    "--max-old-space-size=256",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/render-native-three.mts"
+  ],
+  "startedAtUTC": "2026-10-16T22:36:03.494367+00:00",
+  "actualNodePID": 556595,
+  "actualExit": 1,
+  "endedAtUTC": "2026-10-16T22:36:19.705347+00:00",
+  "elapsedSeconds": 16.21093186098733,
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "logSHA256": "f65f44ae613cb7d719e7c49a4a6f2a8aa8c92b8765642e3338809980177ad230",
+  "source123ExactAfter": true,
+  "inputGzipUnchangedAfter": true,
+  "validationExit": 1
+}

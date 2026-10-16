@@ -31,10 +31,14 @@ export function groundRespondingPower(snapshot: GameSnapshot, intel: V6Intel, ta
   return strengthOf([...new Set([...firing, ...responders, ...counterraiders])]);
 }
 
+/** The unit portion of facing threat, shared with incoming reinforcement accounting. */
+export function groundUnitFacesFront(snapshot: GameSnapshot, enemy: Unit, front: Unit[]) {
+  return front.some(unit => groundThreatWithin(snapshot, enemy, unit, LOCAL_RANGE));
+}
+
 /** A remote member cannot move the center away from the soldiers actually exposed to fire. */
 export function groundFrontThreat(snapshot: GameSnapshot, intel: V6Intel, front: Unit[]) {
-  const army = intel.enemies.flatMap(enemy => enemy.army).filter(enemy =>
-    front.some(unit => groundThreatWithin(snapshot, enemy, unit, LOCAL_RANGE)));
+  const army = intel.enemies.flatMap(enemy => enemy.army).filter(enemy => groundUnitFacesFront(snapshot, enemy, front));
   const towers = intel.enemies.flatMap(enemy => enemy.buildings).filter(tower => tower.complete && tower.attackDamage > 0
     && front.some(unit => strikeGap(tower, unit) <= tower.attackRange + unit.speed * THINK_TICKS / SIM_TICKS_PER_SECOND));
   return strengthOf(army) + towers.length * TOWER_STRENGTH;

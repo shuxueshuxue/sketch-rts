@@ -143,6 +143,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     frontThreat: (world, _front, center) => world.enemies.reduce((total, enemy) => total
       + strengthOf(enemy.army.filter(unit => distance(unit, center) <= LOCAL_RANGE)), 0)
       + enemyTowersNear(world, center, 520) * TOWER_STRENGTH,
+    unitFacing: (unit, _front, center) => distance(unit, center) <= LOCAL_RANGE,
     respondingPower,
     selectAttack: (choices, eligible) => {
       const first = choices[0];
@@ -175,6 +176,7 @@ type ArmyPlan = {
   chooseMine: typeof nextExpansionMine;
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
   frontThreat: (intel: V6Intel, front: Unit[], center: Point) => number;
+  unitFacing: (unit: Unit, front: Unit[], center: Point) => boolean;
   respondingPower: typeof respondingPower;
   selectAttack: (choices: AttackChoice[], eligible: (choice: AttackChoice) => boolean) => AttackChoice | undefined;
   withinHomeReach: (intel: V6Intel, point: Point) => boolean;
@@ -245,7 +247,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
   // With a single working mine, secure the requested replacement before continuing a distant assault.
   if (!miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat, plan.unitFacing);
     if (continued) return continued;
   }
 
@@ -278,7 +280,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
     }
   }
   if (miningFirst) {
-    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat);
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression, gatherAssault, plan.frontThreat, plan.unitFacing);
     if (continued) return continued;
   }
   const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
@@ -336,7 +338,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   return order(snapshot, owner, memory, "hold", front, rally, options);
 }
 
-function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean, frontThreat: ArmyPlan['frontThreat']): GameCommand[] | undefined {
+function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number, gatherAssault: boolean, frontThreat: ArmyPlan['frontThreat'], unitFacing: ArmyPlan['unitFacing']): GameCommand[] | undefined {
   const memory = v6Memory(options), current = memory.general;
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);
@@ -352,7 +354,9 @@ function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const facing = center ? frontThreat(intel, marching, center) : 0;
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
     const gaps = center ? enemyGaps(intel, center) : {};
-    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
+    const incoming = !center ? 0 : isV7Policy(options)
+      ? approachingPower(intel, center, current.enemyCenters ?? {}, unit => unitFacing(unit, marching, center))
+      : closingPower(intel, center, gaps, current.enemyGaps ?? {}, unit => unitFacing(unit, marching, center));
     const holds = strengthOf(group) * (1 + aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + aggression) < (facing + incoming) * RETREAT_LINE;
     if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, gatherAssault && isMain(intel, target)));
@@ -775,13 +779,13 @@ function enemyGaps(intel: V6Intel, center: Point): Record<string, number> {
 // of 2000 games against 1321 (351 of 500 on unseen seeds against 342).
 const APPROACH_SLACK = 15;
 
-function approachingPower(intel: V6Intel, center: Point, before: Record<string, Point>) {
+function approachingPower(intel: V6Intel, center: Point, before: Record<string, Point>, alreadyFacing: (unit: Unit) => boolean) {
   return intel.enemies.reduce((total, enemy) => {
     const was = before[enemy.owner];
     if (!enemy.center || !was) return total;
     const gap = distance(enemy.center, center);
     if (gap > INCOMING_RANGE || gap >= distance(was, center) - APPROACH_SLACK) return total;
-    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE));
+    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE && !alreadyFacing(unit)));
   }, 0);
 }
 
@@ -791,12 +795,12 @@ function rememberCenters(memory: V6PolicyMemory, intel: V6Intel, options: AiPoli
 }
 
 // The armies not yet in the fight that are within reach and nearer than at the last look: what arrives next.
-function closingPower(intel: V6Intel, center: Point, gaps: Record<string, number>, before: Record<string, number>) {
+function closingPower(intel: V6Intel, center: Point, gaps: Record<string, number>, before: Record<string, number>, alreadyFacing: (unit: Unit) => boolean) {
   return intel.enemies.reduce((total, enemy) => {
     const gap = gaps[enemy.owner];
     const was = before[enemy.owner];
     if (gap === undefined || was === undefined || gap > INCOMING_RANGE || gap >= was) return total;
-    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE));
+    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE && !alreadyFacing(unit)));
   }, 0);
 }
 

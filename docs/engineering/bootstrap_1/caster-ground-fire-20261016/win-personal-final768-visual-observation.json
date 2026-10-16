@@ -1,0 +1,19 @@
+{
+  "atUTC": "2026-10-16T22:41:10.313857+00:00",
+  "rootPersonallyViewed": true,
+  "rendererPID": 556923,
+  "actualExit": 0,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "savedTick": 288119,
+  "image": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/native-288119-c4-p0-win-full-map768.png",
+  "sha256": "98d583257850541a90159f6d661b3c4296d1b97c56f0ea977792c6aed4a7c5d7",
+  "bytes": 908724,
+  "observations": [
+    "Full native map shows surviving P0 developed bases in the north and its selected combat group at the cleared southeastern enemy base area. Southern enemy building sites are empty.",
+    "Three central sea islands still show neutral camps/resources; this victory does not prove colony expansion or mine income recovered.",
+    "Small full-map rendering does not prove every entity absent by eyesight. Final full snapshot independently confirms P1/P2 zero units and buildings and P0 naturalwinner.",
+    "Image is a static native drawWorld over the exact saved complete object, no Game/planner/issue/step or synthesized world."
+  ],
+  "wholeInputSavedObjectUnchanged": true,
+  "originalUncommittedRecoveryGapStillUnrecovered": true
+}

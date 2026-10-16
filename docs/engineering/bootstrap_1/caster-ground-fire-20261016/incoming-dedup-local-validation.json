@@ -1,0 +1,70 @@
+{
+  "classification": "Actual C6 local validation only. Old afda independently reproduced complete original P0 entries/three memories/world then semantic-red; candidate14 actual native-inclusive contracts and full1024MiB tsc passed. Not a full-game benefit, ordinary0, unseen or bootstrap completion.",
+  "atUTC": "2026-10-16T22:51:31.310435+00:00",
+  "baseHEAD": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "uncommittedUnadopted": true,
+  "sourceFiles": 1567,
+  "sourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+  "jobs": {
+    "old-red": {
+      "PID": 557919,
+      "actualNodeExit": 1,
+      "validationExit": 0,
+      "elapsedSeconds": 5.620571806997759,
+      "maxRSSKiB": 281152,
+      "noGame": true,
+      "sourceFrozenPrePostExact": true,
+      "OOMunchanged": true,
+      "receiptPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/old-red-exit-1.json",
+      "receiptSHA256": "afa715b1414017a4caffc5a4d0635c9f8172445cb6f4d3b1295f40c2460747c7"
+    },
+    "new-green": {
+      "PID": 558048,
+      "actualNodeExit": 0,
+      "validationExit": 0,
+      "elapsedSeconds": 5.879305784008466,
+      "maxRSSKiB": 264912,
+      "noGame": false,
+      "sourceFrozenPrePostExact": true,
+      "OOMunchanged": true,
+      "receiptPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/new-green-exit-1.json",
+      "receiptSHA256": "ae8d634f9953fb52659f151a7308b6f72857c4b528e0073d0d715d9778fd81e8"
+    },
+    "typecheck": {
+      "PID": 558169,
+      "actualNodeExit": 0,
+      "validationExit": 0,
+      "elapsedSeconds": 50.56513252700097,
+      "maxRSSKiB": 1139540,
+      "noGame": true,
+      "sourceFrozenPrePostExact": true,
+      "OOMunchanged": true,
+      "receiptPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/typecheck-exit-1.json",
+      "receiptSHA256": "64defdf8550b11f005a776d675087485c9de64df028830efc1567f0f01b175fd"
+    }
+  },
+  "uniqueActualPassedNames": [
+    "bootstrap approaching armies count a facing unit once preserves the complete actual221325 General output before the later retreat",
+    "bootstrap approaching armies count a facing unit once does not repeat the actual221340 incoming retreat for six already-facing enemies",
+    "bootstrap approaching armies count a facing unit once keeps the attack in the complete221340 world for v9_archer (controlled family counterfactual outside summoner)",
+    "bootstrap approaching armies count a facing unit once keeps the attack in the complete221340 world for v9_summoner (controlled family counterfactual outside summoner)",
+    "bootstrap approaching armies count a facing unit once keeps the attack in the complete221340 world for v9_knight (controlled family counterfactual outside summoner)",
+    "bootstrap approaching armies count a facing unit once uses the same real facing set as the front threat on the actual full world",
+    "incoming accounting boundaries and the explicit legacy model removes only repeated facing strength in the v6 incoming branch",
+    "incoming accounting boundaries and the explicit legacy model removes only repeated facing strength in the v7 incoming branch",
+    "incoming accounting boundaries and the explicit legacy model still retreats from a genuine nonoverlapping incoming army in v6",
+    "incoming accounting boundaries and the explicit legacy model still retreats from a genuine nonoverlapping incoming army in v7",
+    "incoming accounting boundaries and the explicit legacy model keeps the attack without an approaching or closing army",
+    "incoming accounting boundaries and the explicit legacy model keeps the existing strict15 approach and inclusive1500 range gates",
+    "incoming accounting boundaries and the explicit legacy model preserves ordered output and complete memory for the explicit legacy centroid model at range boundaries",
+    "incoming accounting boundaries and the explicit legacy model wires the unchanged public default General to that centroid model"
+  ],
+  "passed": 14,
+  "skipped": 0,
+  "todo": 0,
+  "familyCounterfactualOutsideSummoner": true,
+  "rulesVersion": 2,
+  "frozen497Manifest184Exact": true,
+  "originalAfdaNaturalWin288119ZeroPermanentLossCounterexampleRetained": true,
+  "originalUncommittedContainerGapUnrecovered": true
+}

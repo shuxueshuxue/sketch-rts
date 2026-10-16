@@ -1,0 +1,136 @@
+{
+  "classification": "C6 small durable natural-game evidence index. Full raw/checkpoints/PNG retained locally and not copied into this patch.",
+  "atUTC": "2026-10-16T23:12:52.954486+00:00",
+  "rootBranch": "codex/bootstrap-1-resume-20261015",
+  "baseHEAD": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "sourceProofKind": "uncommitted-virtual-tree",
+  "sourceSelectedFiles": 1567,
+  "sourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+  "sourceCapPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/candidate-source-cap.json",
+  "rulesVersion": 2,
+  "frozenFullFiles": 497,
+  "frozenManifestEntries": 184,
+  "sourceFrozenPrePostExact": true,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "frozenManifest184SHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "copiedEvidence": {
+    "consequential-v2.json": {
+      "originalPath": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/C6-CONSEQUENTIAL-NATURAL-WIN-221325-263342-v2.json",
+      "bytes": 7742,
+      "sha256": "98bd8a6419bcc40117aaeb2dd04f0b9287f4b619b21859bfcf85d1ce61df5941",
+      "copiedExactBytes": true
+    },
+    "first-divergence.json": {
+      "originalPath": "/tmp/bootstrap-c6-221325-readonly-review-20261016/ACTUAL-FIRST-P0-DIVERGENCE-221325-221340.json",
+      "bytes": 11493,
+      "sha256": "4ee7b3bf1877bba6fb5928810d248815757bdf38767afdbb18b1f49a1ac21634",
+      "copiedExactBytes": true
+    },
+    "local-validation.json": {
+      "originalPath": "/tmp/c4-incoming-overlap-validation-prepared-20261016/ROOT-ACTUAL-LOCAL-VALIDATION.json",
+      "bytes": 4266,
+      "sha256": "b0535a83d5394772797ba6359c748d0b87bf3117854a80b6c9db6dca90fb5549",
+      "copiedExactBytes": true
+    },
+    "personal-visual-observation.json": {
+      "originalPath": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 4224,
+      "sha256": "62e76b11fe87e0bacdbb732fc6833379fb63e98c87cb0b43274169a08db103b1",
+      "copiedExactBytes": true
+    },
+    "actual-native-process-exit.json": {
+      "originalPath": "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/native-process-exit-1.json",
+      "bytes": 5861,
+      "sha256": "33e7ae8379da3e57901902700d3eb03eef2516e03a624388703edd1fde754536",
+      "copiedExactBytes": true
+    },
+    "actual-render-exit.json": {
+      "originalPath": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/EXIT.json",
+      "bytes": 2082,
+      "sha256": "79394d19581c8099b06edd458895e462cd11254c0a920da692312e73e1bbb1f1",
+      "copiedExactBytes": true
+    }
+  },
+  "derivedEvidence": {
+    "comparison-and-accounting.json": {
+      "bytes": 3894,
+      "sha256": "45e8e71ab25d5bfcda3e26d576ee80bfaa98616a01d83c334e06a5735b4838c1",
+      "actualSourcePathsAndHashesIncluded": true
+    }
+  },
+  "fullLocalRawOutput": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016",
+  "fullLocalClosure": {
+    "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/C6-CLOSED-NATURAL-WIN-221325-263342-FULL.json",
+    "sha256": "9cbaac0c74dfd764f726c1420af2028aee04fb98bbcbeba6289359d065937f0a",
+    "bytes": 196564
+  },
+  "fullLocalC4ComparisonClosure": {
+    "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/CLOSED-WIN-FULL-159600-288119.json",
+    "bytes": 66539,
+    "sha256": "a5e62074bf13391f9de7b20babac30358c65e99c5d60e937866cfdd79efb4e3c"
+  },
+  "inputContext": {
+    "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221325-p0-before.json.gz",
+    "bytes": 157333,
+    "sha256": "0a8ddb92592cf1fc401a85503421a8fc79edf28229469b60e67b48116993fee1",
+    "originalAtomicCheckpoint": false
+  },
+  "inputNativeZeroFiveFieldsAndOriginalWorldAndPlannerHashesExact": true,
+  "firstDivergenceTick": 221340,
+  "first221325FullPlanMemoriesWorldPreserved": true,
+  "before221340WorldAndMemoriesPreserved": true,
+  "first600Scope": "Internal C6 after-context/returned-plan/all-three-memory consistency only; never complete600 equality to old afda.",
+  "nativePID": 559007,
+  "actualExitCode": 0,
+  "winner": "p0",
+  "naturalComplete": true,
+  "endTick": 263342,
+  "newP0PermanentLosses": 0,
+  "inheritedAndFinalP0PermanentObservations": [
+    83,
+    83
+  ],
+  "inheritedAndFinalP0PermanentRemovalConfirmations": [
+    83,
+    83
+  ],
+  "hostNativeHits": 0,
+  "hostHPDecreases": 0,
+  "healedHP": 144,
+  "finalAllSevenOriginalHostsFullHP": true,
+  "completeGameComparison": {
+    "commonInputTick": 221325,
+    "oldC4NaturalWinTick": 288119,
+    "newC6NaturalWinTick": 263342,
+    "oldRemainingTicks": 66794,
+    "newRemainingTicks": 42017,
+    "ticksEarlier": 24777,
+    "reductionFraction": 0.37094649219989817,
+    "comparisonLimit": "Simulation tick distance from the same input, not an equal-wall-time benchmark. C4 includes its documented pause265800 plus unchanged-code full-health continuation. Both are saved changed-code histories; neither is a new ordinary0/unseen trial."
+  },
+  "rawPortableArchiveCreated": false,
+  "PNGAndFullRawCopied": false,
+  "candidateSourceUncommittedAtEvidenceCapture": true,
+  "allBootstrapGoalsComplete": false,
+  "ordinary0OrUnseenClaimed": false,
+  "officialThreeFamilySingleAndSixPairAcceptanceComplete": false,
+  "originalBrokenContainerUncommittedGapStillUnrecovered": true,
+  "thisCommitSavesByteIdenticalRuntime1567": true,
+  "testAndMatchActualSourceRemainsHistoricalVirtualCap": true,
+  "noRerunUnderNewCommitClaimed": true,
+  "officialOrdinary0Result": {
+    "relativeIndex": "../official-brokenSea-archer-20261016/evidence-index.json",
+    "compactSHA256": "63dc0af13411bd61ac8f57190acfdfc5dfd5ff1514ae75165e84365a33df17c3",
+    "winner": "p1",
+    "endTick": 37485,
+    "ordinary0": true,
+    "unseen": false,
+    "accepted": false
+  },
+  "independentC5NotMerged": {
+    "relativeCompact": "../official-brokenSea-archer-20261016/c5-capital-focus2400-compact.json",
+    "sha256": "75763c2dd427e308fbd5f33577d4295863981fab22b440d96c0a484080a1f20c",
+    "finiteSteps": 2400,
+    "noNewHallOrIslandMineIncome": true
+  }
+}

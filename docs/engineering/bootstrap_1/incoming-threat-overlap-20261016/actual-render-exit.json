@@ -1,0 +1,42 @@
+{
+  "atUTC": "2026-10-16T23:07:10.881975+00:00",
+  "handoffNote": "Root actual exclusive renderer slot after native C6 PID559007 exit0 natural263342, all owned Node closed. Closed67 raw archive resume worker560043 actual exit0 at23:06:39.799, 231096320B actual payload release with full lossless roundtrip; prior negatives retained. Render exact C4/C6 actual244200 plus C6final263342 only; no Game or gameplay commands.",
+  "launcherPID": 560100,
+  "classification": "Separate native client static renderer; no Game/AI/issue/step/restore.",
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "source123ExactBefore": true,
+  "freshBefore": 2582360064,
+  "requiredFresh": 2147483648,
+  "outputRoot": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared",
+  "outputFreeBefore": 2240290816,
+  "requiredOutputFree": 71871008,
+  "regularReserveRoot": "/workspace",
+  "regularFreeBefore": 74825728,
+  "requiredRegularFree": 67108864,
+  "heapMiB": 256,
+  "driverSHA256": "9dcef667c4f78a6a0baa17c6f14b6db11b2f432d402e9c349d5e9b79827ffc4e",
+  "sealSHA256": "dfa824d523301f17f2252abc0dd61dd5cd4d53f70509ddd85822c0af37fc679b",
+  "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "parentEnvironment": {
+    "TSX_DISABLE_CACHE": "1"
+  },
+  "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+  "tsxEnvScope": "Parent option inherited, no performance causal assertion.",
+  "args": [
+    "node",
+    "--max-old-space-size=256",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/render-native-three.mts"
+  ],
+  "startedAtUTC": "2026-10-16T23:07:10.882103+00:00",
+  "actualNodePID": 560113,
+  "actualExit": 0,
+  "endedAtUTC": "2026-10-16T23:07:31.637560+00:00",
+  "elapsedSeconds": 20.755395757994847,
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "logSHA256": "d325d3376ae7d26d95b2e3d100479b8cf0fbe0c2fd1404b5e2c2dce9ddae5276",
+  "source123ExactAfter": true,
+  "inputGzipUnchangedAfter": true,
+  "validationExit": 0
+}

@@ -1,0 +1,119 @@
+{
+  "enteredAtUTC": "2026-10-16T22:56:15.372299+00:00",
+  "launcherPid": 558984,
+  "sourceHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "sourceManifestFiles": 1567,
+  "runtimeSourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+  "outputPrefix": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325",
+  "nodeSpawned": true,
+  "ordinary0": false,
+  "sameSourceResume": false,
+  "changedCodeContinuation": true,
+  "changedAiContinuation": true,
+  "contextRestore": true,
+  "inputIsAtomicCheckpoint": false,
+  "classification": "C6 changed-code before-P0 context221325 normal-all3 continuation; no result before actual native play.",
+  "guard": {
+    "atUTC": "2026-10-16T22:56:16.012492+00:00",
+    "sourceHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "sourceManifestFiles": 1567,
+    "driverSHA256": "050528cd809e1ec38bb87d33817442892c8f67f7ee24b4fda6d6d579eae36ee7",
+    "driverPreflightSHA256": "67abc859f216aa38d5493cd26a91219fa61da992d217d8a5e3b457aba6707a84",
+    "runtimeSourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+    "parentSlotTransferSHA256": "7c5742c5e2e9ae11381b70e701dc57900fb7fec0ba33e2e8311646cab5ada78e",
+    "resourcePolicySHA256": "7c8c140535996d5f175dc3175685267721b5f31d6e99b3e3abecef18a1795899",
+    "memoryCurrentBytes": 14815133696,
+    "memoryMaxBytes": 17179869184,
+    "rawHeadroomBeforeSpawn": 2364735488,
+    "requiredHeadroom": 2147483648,
+    "headroomAboveHardGateBytes": 217251840,
+    "advisoryImportReserveBytes": 134217728,
+    "recommendedBeforeSpawnHeadroomBytes": 2281701376,
+    "advisoryReserveAvailable": true,
+    "advisoryIsNotHardGate": true,
+    "heapMiB": 768,
+    "outputRoot": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016",
+    "outputFreeBytes": 2045452288,
+    "requiredOutputFreeBytes": 268435456,
+    "temporaryFreeBytes": 2045452288,
+    "requiredTemporaryFreeBytes": 134217728,
+    "regularWorkspaceFreeBytes": 67915776,
+    "regularWorkspaceReserveBytes": 67108864,
+    "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "competingProcesses": [],
+    "gameNotYetCreated": true,
+    "declaredSeedFactoryWillNotBeCalled": true,
+    "TSX_DISABLE_CACHE": "1",
+    "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+    "nativeDriverPersistsEveryInitialAndFinal2GiBPreGameNumericGate": true
+  },
+  "guardReference": {
+    "path": "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/native-launch-guard-1.json",
+    "sha256": "8dbc69aeb405df61e5863c6bb9e5119b5e46a3a370e7ab37f3d829c9ecb8cd16",
+    "bytes": 1671
+  },
+  "driverPreflightSHA256": "67abc859f216aa38d5493cd26a91219fa61da992d217d8a5e3b457aba6707a84",
+  "parentSlotReference": {
+    "path": "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/ROOT-ACTUAL-SLOT-TRANSFER.json",
+    "sha256": "7c5742c5e2e9ae11381b70e701dc57900fb7fec0ba33e2e8311646cab5ada78e",
+    "bytes": 1434
+  },
+  "actualValidationReference": {
+    "path": "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/NATIVE-LAUNCH-VALIDATION.json",
+    "sha256": "6413be10e6a47377f1aec4f42b7253419f5e9bb9944b8b2a6358e585e6f027cf",
+    "bytes": 976
+  },
+  "nodePid": 559007,
+  "args": [
+    "node",
+    "--expose-gc",
+    "--max-old-space-size=768",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/candidate-ground-screen-tail.mts",
+    "/workspace/sketch-rts-bootstrap-resume",
+    "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325"
+  ],
+  "nodeStdout": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/node-stdout.log",
+  "nodeStderr": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/node-stderr.log",
+  "stdoutStderrArePersistent": true,
+  "exitCode": 0,
+  "endedAtUTC": "2026-10-16T22:58:58.446792+00:00",
+  "elapsedSeconds": 163.07480568499886,
+  "nodeStdoutSHA256": "19ab9bae222d680eea5e6bfc5ad1b29abe0f7ec291cd40601ef65d92e0802735",
+  "nodeStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "nativeGuardReferences": {
+    "-pre-game-resource-guard-initial.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-pre-game-resource-guard-initial.json",
+      "sha256": "6564e1d1d5fd262cf5f705a20243d7c8dd020ea69136abf90e9033ad3ad75c6b",
+      "bytes": 1209
+    },
+    "-pre-game-resource-guard-final.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-pre-game-resource-guard-final.json",
+      "sha256": "0b2838f506397d38023c82cdc24e7ebf0dbb808e10239939314a1a3b19269081",
+      "bytes": 1207
+    },
+    "-restore.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-restore.json",
+      "sha256": "809c65fa692c1054985c808177f598418c325415c38808b5beed4679b7718150",
+      "bytes": 281
+    },
+    "-native-zero-proof.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-native-zero-proof.json",
+      "sha256": "35bbd948b3b236801fb24ade16514edd450722177b483a953fbd389e22276f96",
+      "bytes": 698
+    },
+    "-launch.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-launch.json",
+      "sha256": "99316c333229748bc58a59445d9e412cc7b287e269825904e659fc3c3395c53c",
+      "bytes": 682018
+    },
+    "-postflight.json": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-postflight.json",
+      "sha256": "5bdca989195367ed583e190a5796a1c7ec5d8a23e266fd25c28b2fee8632f66a",
+      "bytes": 645312
+    }
+  }
+}

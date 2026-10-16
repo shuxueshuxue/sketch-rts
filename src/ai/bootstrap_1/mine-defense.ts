@@ -17,7 +17,7 @@ import { strikeGap } from '../../shared/combat-geometry';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
-import { groundFrontThreat, groundRespondingPower, groundThreatWithin } from '../policy/ground-threat';
+import { groundFrontThreat, groundRespondingPower, groundThreatWithin, groundUnitFacesFront } from '../policy/ground-threat';
 import { mobileCare } from './mobile-care';
 import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
@@ -146,6 +146,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     frontThreat: (world, front) => groundFrontThreat(snapshot, world, front),
+    unitFacing: (unit, front) => groundUnitFacesFront(snapshot, unit, front),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
     selectAttack: (choices, eligible) => choices.find(eligible),
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]

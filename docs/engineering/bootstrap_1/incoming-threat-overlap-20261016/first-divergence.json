@@ -1,0 +1,335 @@
+{
+  "classification": "0Node immutable closed first600 contexts only. Actual C6 first P0 plan divergence; not a whole-game result or evidence that a returned command executed.",
+  "candidateSourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+  "originalSourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "inputPhase": "before-p0-planner context restore; not original atomic checkpoint",
+  "firstP0Query221325EntireWorldIdThreeMemoriesAndOrderedPlanPreserved": true,
+  "firstActualP0PlanDivergenceTick": 221340,
+  "observations": {
+    "221325": {
+      "beforeFieldsEqual": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true,
+        "factoryMatch": true,
+        "phase": true,
+        "commandCount": true,
+        "plannerSnapshot": true,
+        "plannerContext": true
+      },
+      "afterFieldsEqual": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true,
+        "factoryMatch": true,
+        "phase": true,
+        "commandCount": true,
+        "plannerSnapshot": true,
+        "plannerContext": true
+      },
+      "entireAfterCommonSchemaEqual": true,
+      "schemaDifference": {
+        "oldOnly": [],
+        "newOnly": [
+          "acceptedEntries",
+          "acceptedEntriesMeaning"
+        ]
+      },
+      "oldEntryCount": 7,
+      "newEntryCount": 7,
+      "commonOrderedEntryPrefix": 7,
+      "fullP0PlanEntriesEqual": true,
+      "newAcceptedEntriesEqualActualPlanReturn": true,
+      "oldGeneral": [],
+      "newGeneral": [],
+      "oldP0General": {
+        "mode": "attack",
+        "target": {
+          "x": 2192,
+          "y": 6736
+        },
+        "targetHallId": "building-p2-townHall-1159",
+        "group": [
+          "unit-p0-summoner-1992",
+          "unit-p0-summoner-3324",
+          "unit-p0-summoner-3812",
+          "unit-p0-summoner-4065",
+          "unit-p0-summoner-15312",
+          "unit-p0-witch-26415",
+          "unit-p0-summoner-60228",
+          "unit-p0-spirit-293871",
+          "unit-p0-spirit-293873",
+          "unit-p0-spirit-293875",
+          "unit-p0-spirit-293877",
+          "unit-p0-spirit-293879",
+          "unit-p0-spirit-293881",
+          "unit-p0-spirit-294650",
+          "unit-p0-spirit-294652",
+          "unit-p0-spirit-294654",
+          "unit-p0-spirit-294656",
+          "unit-p0-spirit-294658",
+          "unit-p0-spirit-294660"
+        ],
+        "groupStart": 9.837354287997387,
+        "enemyGaps": {
+          "p1": 1065.682648948372,
+          "p2": 2790.2841385998204
+        },
+        "enemyCenters": {
+          "p1": {
+            "x": 2449.612650470037,
+            "y": 6038.228817415186
+          },
+          "p2": {
+            "x": 5017.710013413997,
+            "y": 6462.836652668745
+          }
+        }
+      },
+      "newP0General": {
+        "mode": "attack",
+        "target": {
+          "x": 2192,
+          "y": 6736
+        },
+        "targetHallId": "building-p2-townHall-1159",
+        "group": [
+          "unit-p0-summoner-1992",
+          "unit-p0-summoner-3324",
+          "unit-p0-summoner-3812",
+          "unit-p0-summoner-4065",
+          "unit-p0-summoner-15312",
+          "unit-p0-witch-26415",
+          "unit-p0-summoner-60228",
+          "unit-p0-spirit-293871",
+          "unit-p0-spirit-293873",
+          "unit-p0-spirit-293875",
+          "unit-p0-spirit-293877",
+          "unit-p0-spirit-293879",
+          "unit-p0-spirit-293881",
+          "unit-p0-spirit-294650",
+          "unit-p0-spirit-294652",
+          "unit-p0-spirit-294654",
+          "unit-p0-spirit-294656",
+          "unit-p0-spirit-294658",
+          "unit-p0-spirit-294660"
+        ],
+        "groupStart": 9.837354287997387,
+        "enemyGaps": {
+          "p1": 1065.682648948372,
+          "p2": 2790.2841385998204
+        },
+        "enemyCenters": {
+          "p1": {
+            "x": 2449.612650470037,
+            "y": 6038.228817415186
+          },
+          "p2": {
+            "x": 5017.710013413997,
+            "y": 6462.836652668745
+          }
+        }
+      },
+      "oldRetreatedAt": 219645,
+      "newRetreatedAt": 219645,
+      "oldIncomingRetreatCount": 115,
+      "newIncomingRetreatCount": 115,
+      "p1AndP2CompletePostmemoriesEqual": true,
+      "allThreeMemoriesEqualExceptExplicitP0GeneralRetreatFields": true
+    },
+    "221340": {
+      "beforeFieldsEqual": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": true,
+        "setup": true,
+        "factoryMatch": true,
+        "phase": true,
+        "commandCount": true,
+        "plannerSnapshot": true,
+        "plannerContext": true
+      },
+      "afterFieldsEqual": {
+        "snapshot": true,
+        "nextId": true,
+        "memories": false,
+        "setup": true,
+        "factoryMatch": true,
+        "phase": true,
+        "commandCount": true,
+        "plannerSnapshot": true,
+        "plannerContext": true
+      },
+      "entireAfterCommonSchemaEqual": false,
+      "schemaDifference": {
+        "oldOnly": [],
+        "newOnly": [
+          "acceptedEntries",
+          "acceptedEntriesMeaning"
+        ]
+      },
+      "oldEntryCount": 8,
+      "newEntryCount": 7,
+      "commonOrderedEntryPrefix": 7,
+      "fullP0PlanEntriesEqual": false,
+      "newAcceptedEntriesEqualActualPlanReturn": true,
+      "oldGeneral": [
+        {
+          "playerId": "p0",
+          "source": "external-agent",
+          "scriptId": "v6General",
+          "command": {
+            "type": "attackMove",
+            "unitIds": [
+              "unit-p0-spirit-293871",
+              "unit-p0-spirit-293873",
+              "unit-p0-spirit-293875",
+              "unit-p0-spirit-293877",
+              "unit-p0-spirit-293879",
+              "unit-p0-spirit-293881",
+              "unit-p0-spirit-294650",
+              "unit-p0-spirit-294652",
+              "unit-p0-spirit-294654",
+              "unit-p0-spirit-294656",
+              "unit-p0-spirit-294658",
+              "unit-p0-spirit-294660"
+            ],
+            "x": 2229.796687308176,
+            "y": 1029.5350350914955
+          }
+        }
+      ],
+      "newGeneral": [],
+      "oldP0General": {
+        "mode": "hold",
+        "target": {
+          "x": 2229.796687308176,
+          "y": 1029.5350350914955
+        },
+        "holdingSince": 221340
+      },
+      "newP0General": {
+        "mode": "attack",
+        "target": {
+          "x": 2192,
+          "y": 6736
+        },
+        "targetHallId": "building-p2-townHall-1159",
+        "group": [
+          "unit-p0-summoner-1992",
+          "unit-p0-summoner-3324",
+          "unit-p0-summoner-3812",
+          "unit-p0-summoner-4065",
+          "unit-p0-summoner-15312",
+          "unit-p0-witch-26415",
+          "unit-p0-summoner-60228",
+          "unit-p0-spirit-293871",
+          "unit-p0-spirit-293873",
+          "unit-p0-spirit-293875",
+          "unit-p0-spirit-293877",
+          "unit-p0-spirit-293879",
+          "unit-p0-spirit-293881",
+          "unit-p0-spirit-294650",
+          "unit-p0-spirit-294652",
+          "unit-p0-spirit-294654",
+          "unit-p0-spirit-294656",
+          "unit-p0-spirit-294658",
+          "unit-p0-spirit-294660"
+        ],
+        "groupStart": 9.837354287997387,
+        "enemyGaps": {
+          "p1": 987.7735028153018,
+          "p2": 2763.1985856591687
+        },
+        "enemyCenters": {
+          "p1": {
+            "x": 2458.6269501461998,
+            "y": 6013.111627669941
+          },
+          "p2": {
+            "x": 5018.142211104105,
+            "y": 6462.7287991307385
+          }
+        }
+      },
+      "oldRetreatedAt": 221340,
+      "newRetreatedAt": 219645,
+      "oldIncomingRetreatCount": 116,
+      "newIncomingRetreatCount": 115,
+      "p1AndP2CompletePostmemoriesEqual": true,
+      "allThreeMemoriesEqualExceptExplicitP0GeneralRetreatFields": true
+    }
+  },
+  "first600ClosedWindow": {
+    "reference": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325-window600.json",
+      "sha256": "55dec19ad437732073a90afdbcd5022b491ff4707f439ae1a38e1815cf90ee98",
+      "bytes": 5945
+    },
+    "inputTick": 221325,
+    "endTick": 221925,
+    "p0BeforeFiles": 40,
+    "p0AfterFiles": 40,
+    "ownerInputCountsReportedByClosedWindow": {
+      "p0": 40,
+      "p1": 40,
+      "p2": 40
+    },
+    "independentFullRawOwnerStreamNotRead": true,
+    "noWindowStop": true
+  },
+  "fieldBoundaries": [
+    "World means complete snapshot object, compared as decoded JSON data, not selected unit fields. nextId/setup/factoryMatch and plannerSnapshot/plannerContext are compared separately.",
+    "Three memories means complete p0/p1/p2 dictionaries, not only General state. At221340 only P0 general, retreatedAt and general:retreat:incoming differ; all remaining memory fields are identical.",
+    "Old strict after-context has entries but lacks acceptedEntries and acceptedEntriesMeaning. C6 adds those capture metadata fields; they are not semantic plan divergence at221325.",
+    "At221340 C6 keeps the existing attack state and emits no new v6General entry. The old extra final entry is a retreat attackMove for12 spirits to(2229.796687308176,1029.5350350914955). The preceding7 v6Backline entries retain exact values and order.",
+    "No appended fullraw stream was opened. Actual public-command execution, later healing/lure attribution, casualties and match benefit remain for closed-run analysis."
+  ],
+  "evidence": [
+    {
+      "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221325-p0-before.json.gz",
+      "sha256": "0a8ddb92592cf1fc401a85503421a8fc79edf28229469b60e67b48116993fee1",
+      "bytes": 157333
+    },
+    {
+      "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221325-p0-after.json.gz",
+      "sha256": "8668b6887520eba8a969b559a6f8dd2fbc20ec611298852bb628c997da127a76",
+      "bytes": 157587
+    },
+    {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325.contexts/221325-p0-before.json.gz",
+      "sha256": "0a8ddb92592cf1fc401a85503421a8fc79edf28229469b60e67b48116993fee1",
+      "bytes": 157333
+    },
+    {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325.contexts/221325-p0-after.json.gz",
+      "sha256": "83bfdf99aafbac6b90723a6b37441d55f0f06ebbaa51d06e040aa4f901f913b7",
+      "bytes": 157791
+    },
+    {
+      "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221340-p0-before.json.gz",
+      "sha256": "9d23d4b565e8acf6e8525f0e1026b2bf84e435592ca7971d8770171cf7fe7b1e",
+      "bytes": 157611
+    },
+    {
+      "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221340-p0-after.json.gz",
+      "sha256": "c34a676dbad6f921eced13b6ea2863032cbcb04757946feaae5790320fd432b8",
+      "bytes": 157812
+    },
+    {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325.contexts/221340-p0-before.json.gz",
+      "sha256": "9d23d4b565e8acf6e8525f0e1026b2bf84e435592ca7971d8770171cf7fe7b1e",
+      "bytes": 157611
+    },
+    {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325.contexts/221340-p0-after.json.gz",
+      "sha256": "8555899194e8bc7ba9c1699ebb9f11f301fd3bf22d702cf2c77683aebd799a23",
+      "bytes": 158069
+    }
+  ],
+  "readOnlyPythonNoNode": true,
+  "noSourceDriverStopFilesChanged": true,
+  "originalUncommittedRecoveryGapRemains": true
+}

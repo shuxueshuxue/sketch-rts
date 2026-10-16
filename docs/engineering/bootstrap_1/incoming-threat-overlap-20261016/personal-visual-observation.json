@@ -1,0 +1,114 @@
+{
+  "classification": "Root personal visual observation after actual renderer completed. Native client fullmap768 views, no gameplay intervention. Images corroborate positions/visible structures; exact source/death/health claims rely on saved worlds and closed native logs.",
+  "atUTC": "2026-10-16T23:08:10.192523+00:00",
+  "actualRendererPID": 560113,
+  "actualRendererExit": 0,
+  "rendererSourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "renderer123ClientBytesSameAsC6": true,
+  "C6GameSource": "uncommitted virtual1567 cap6590c662 baseaccc6bd7",
+  "images": [
+    {
+      "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/native-244200-c4-full-map768.png",
+      "bytes": 913028,
+      "sha256": "0d6ce34c46441bfbc126e0f8d0c490761488d9e5382f19ca503a61bd55ece977",
+      "rootPersonallyViewed": true
+    },
+    {
+      "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/native-244200-c6-full-map768.png",
+      "bytes": 912158,
+      "sha256": "1bcc4f8277b9c253cb4802a365945d654ece4365c62be8743b3a03ec689e2708",
+      "rootPersonallyViewed": true
+    },
+    {
+      "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/native-263342-c6-p0-win-full-map768.png",
+      "bytes": 908721,
+      "sha256": "0b1e77730df497d15df2fd41599439b460b3d3a3e96b4d1d55d0961a317196f0",
+      "rootPersonallyViewed": true
+    }
+  ],
+  "observations": [
+    "At the same244200 tick, the C4 main caster cluster is near the northern shore/bridge; C6 has its main caster cluster at the southern enemy settlement. The saved positions below substantiate the fullmap reading.",
+    "The C6 same-tick southern settlements visibly contain fewer structures. Exact earlier destruction comes from native fatal/removal records, not an image absence assumption.",
+    "The263342 final view shows southern enemy settlement sites cleared and P0 combat units in the southeast. Final native world confirms both enemies units0/buildings0.",
+    "The three central island camps/resources remain visible and uncleared in all three frames. Military victory does not establish colony clearing or income.",
+    "The768 view does not identify every original host or establish individual command attribution; full saved states and native logs provide those details."
+  ],
+  "actual244200HostPositions": {
+    "C4": {
+      "unit-p0-summoner-1992": {
+        "x": 2581.7642516547085,
+        "y": 3013.3291263632495,
+        "hp": 63
+      },
+      "unit-p0-summoner-3324": {
+        "x": 2624.3327817323047,
+        "y": 3004.635297096855,
+        "hp": 79
+      },
+      "unit-p0-summoner-3812": {
+        "x": 2658.3838856316293,
+        "y": 2944.6085447875676,
+        "hp": 95
+      },
+      "unit-p0-summoner-4065": {
+        "x": 2563.5240154023513,
+        "y": 2950.889376008504,
+        "hp": 63
+      },
+      "unit-p0-summoner-15312": {
+        "x": 2633.517846135162,
+        "y": 2921.4206151740786,
+        "hp": 47
+      },
+      "unit-p0-witch-26415": {
+        "x": 2625.4647733187976,
+        "y": 2955.132127850523,
+        "hp": 123
+      },
+      "unit-p0-summoner-60228": {
+        "x": 2616.299927098789,
+        "y": 3036.97294205887,
+        "hp": 79
+      }
+    },
+    "C6": {
+      "unit-p0-summoner-1992": {
+        "x": 2407.8927728528806,
+        "y": 5980.229308520468,
+        "hp": 63
+      },
+      "unit-p0-summoner-3324": {
+        "x": 2408.3960593872644,
+        "y": 6015.70969370285,
+        "hp": 79
+      },
+      "unit-p0-summoner-3812": {
+        "x": 2358.377837037189,
+        "y": 6133.478427135018,
+        "hp": 95
+      },
+      "unit-p0-summoner-4065": {
+        "x": 2437.8265237629257,
+        "y": 5998.684777649227,
+        "hp": 63
+      },
+      "unit-p0-summoner-15312": {
+        "x": 2384.2990837650723,
+        "y": 5924.840562600792,
+        "hp": 47
+      },
+      "unit-p0-witch-26415": {
+        "x": 2357.518276744555,
+        "y": 5887.715930300299,
+        "hp": 123
+      },
+      "unit-p0-summoner-60228": {
+        "x": 2301.9257930544322,
+        "y": 6108.416469120278,
+        "hp": 79
+      }
+    }
+  },
+  "notOrdinary0OrUnseenOrFinalAcceptance": true,
+  "originalUncommittedContainerGapUnrecovered": true
+}

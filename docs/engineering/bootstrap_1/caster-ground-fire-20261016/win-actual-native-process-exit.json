@@ -1,0 +1,117 @@
+{
+  "enteredAtUTC": "2026-10-16T22:30:27.309622+00:00",
+  "launcherPid": 555855,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "sourceManifestFiles": 1565,
+  "runtimeSourceCapSHA256": "a3511a29f8992707e39bb8e036e701cb21024a4be9218b3c27252ebebae0ba6c",
+  "outputPrefix": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800",
+  "nodeSpawned": true,
+  "ordinary0": false,
+  "sameSourceResume": true,
+  "changedCodeContinuation": false,
+  "changedAiContinuation": false,
+  "classification": "C4 same-source afda full-health saved265800 normal-all3 continuation; no result before actual native play.",
+  "guard": {
+    "atUTC": "2026-10-16T22:30:27.508751+00:00",
+    "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+    "sourceManifestFiles": 1565,
+    "driverSHA256": "0bf6532095dfde92eef90ce37f3200a4dec47db57f2a63defbfca99879171c39",
+    "driverPreflightSHA256": "55b97c48d345469649350cac46dcaf2a4bafa0b289e0fc8342467844442ea0af",
+    "runtimeSourceCapSHA256": "a3511a29f8992707e39bb8e036e701cb21024a4be9218b3c27252ebebae0ba6c",
+    "parentSlotTransferSHA256": "ae19244433e8e80c4e392486152bb129d40c63387b652689356d23ad5307d18b",
+    "resourcePolicySHA256": "8a9e7d51035ec92579e66428e7cc0c3bfdabfc962bdeb52de42353b6aa1d9917",
+    "memoryCurrentBytes": 14868840448,
+    "memoryMaxBytes": 17179869184,
+    "rawHeadroomBeforeSpawn": 2311028736,
+    "requiredHeadroom": 2147483648,
+    "headroomAboveHardGateBytes": 163545088,
+    "advisoryImportReserveBytes": 134217728,
+    "recommendedBeforeSpawnHeadroomBytes": 2281701376,
+    "advisoryReserveAvailable": true,
+    "advisoryIsNotHardGate": true,
+    "heapMiB": 768,
+    "outputRoot": "/tmp/bootstrap-c4-full-health-resume265800-20261016",
+    "outputFreeBytes": 1962348544,
+    "requiredOutputFreeBytes": 268435456,
+    "temporaryFreeBytes": 1962348544,
+    "requiredTemporaryFreeBytes": 134217728,
+    "regularWorkspaceFreeBytes": 68337664,
+    "regularWorkspaceReserveBytes": 67108864,
+    "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "competingProcesses": [],
+    "gameNotYetCreated": true,
+    "declaredSeedFactoryWillNotBeCalled": true,
+    "TSX_DISABLE_CACHE": "1",
+    "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+    "nativeDriverPersistsEveryInitialAndFinal2GiBPreGameNumericGate": true
+  },
+  "guardReference": {
+    "path": "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/native-launch-guard-1.json",
+    "sha256": "a271a90c550da7d3e02a4d39ac53bde5bb589549a16c7ccaed148aa3a0387360",
+    "bytes": 1666
+  },
+  "driverPreflightSHA256": "55b97c48d345469649350cac46dcaf2a4bafa0b289e0fc8342467844442ea0af",
+  "parentSlotReference": {
+    "path": "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/PARENT-SLOT-TRANSFER.json",
+    "sha256": "ae19244433e8e80c4e392486152bb129d40c63387b652689356d23ad5307d18b",
+    "bytes": 1321
+  },
+  "actualValidationReference": {
+    "path": "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/NATIVE-LAUNCH-VALIDATION.json",
+    "sha256": "3409fe62b82c512745cfa37bf28daaf3e789c6f8e27bc772489f5a37a4cf40d2",
+    "bytes": 1810
+  },
+  "nodePid": 555868,
+  "args": [
+    "node",
+    "--expose-gc",
+    "--max-old-space-size=768",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/candidate-ground-screen-tail.mts",
+    "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+    "afda48c685f56548e2106cf5ed892d4622219fca",
+    "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800"
+  ],
+  "nodeStdout": "/tmp/bootstrap-c4-full-health-resume265800-20261016/node-stdout.log",
+  "nodeStderr": "/tmp/bootstrap-c4-full-health-resume265800-20261016/node-stderr.log",
+  "stdoutStderrArePersistent": true,
+  "exitCode": 0,
+  "endedAtUTC": "2026-10-16T22:31:36.416204+00:00",
+  "elapsedSeconds": 69.1067106089904,
+  "nodeStdoutSHA256": "cc6c81bb6005662b73f2de25f758723b8e30cea0d8f4ceb184421a923735507d",
+  "nodeStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "nativeGuardReferences": {
+    "-pre-game-resource-guard-initial.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-pre-game-resource-guard-initial.json",
+      "sha256": "3a6b349decaeb327f7f7c2636b78eaa70cb68482fe2438047380393fc6a42c4c",
+      "bytes": 1209
+    },
+    "-pre-game-resource-guard-final.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-pre-game-resource-guard-final.json",
+      "sha256": "0d7c7a9e105e4655df6f8c768bfed91fdf589b32328dac75bd9cc97e07a3fa8c",
+      "bytes": 1207
+    },
+    "-restore.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-restore.json",
+      "sha256": "b7164d4b1059afb219cb437eabbf1db88ed147e51e0dca16cff4694a443dfd80",
+      "bytes": 281
+    },
+    "-native-zero-proof.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-native-zero-proof.json",
+      "sha256": "334359c456cf749ddfb8fa1b1a0b5bac4f34010f70ff4dddaadb0198015ba7b3",
+      "bytes": 557
+    },
+    "-launch.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-launch.json",
+      "sha256": "bd7729974acd8081fb6486c5be1755e84fe8a79fd6ca64d82d31190cf1c026d3",
+      "bytes": 680583
+    },
+    "-postflight.json": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-postflight.json",
+      "sha256": "2a81f2a67f6b224ff0bb727a91a1064bc368fd4ed11d1a91adf9eb9e124afa51",
+      "bytes": 644283
+    }
+  }
+}

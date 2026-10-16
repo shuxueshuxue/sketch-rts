@@ -1,0 +1,210 @@
+{
+  "atUTC": "2026-10-16T23:17:16.032985+00:00",
+  "classification": "Actual positive local C5 capital-retention focus, not a new ordinary0/fullgame, island income, victory or bootstrap acceptance.",
+  "actual": {
+    "PID": 560218,
+    "NodeExit": 0,
+    "validationExit": 0,
+    "start": 22200,
+    "end": 24600,
+    "steps": 2400,
+    "commands": 5229,
+    "plans": 480,
+    "P0FullContextPairs": 160,
+    "criticalFrames": 15,
+    "winner": null,
+    "stop": "declared-finite-focus-end, before24600 next all-owner think",
+    "resourcePause": false,
+    "restoreFiveFieldsExact": true,
+    "source1561Frozen497Manifest184Rules2InputPrePostExact": true,
+    "OOMUnchanged": true,
+    "firstError": null,
+    "closingFailures": [],
+    "activeNodeAfterExit": []
+  },
+  "closure": {
+    "gzipMembers": 62,
+    "streams": 13,
+    "everyClosedMemberSHA_CRC_ISIZE_OffsetExact": true,
+    "partialRawTails": 0,
+    "normalOwnerSequence": "p0,p1,p2 each15ticks,160 each; all480 checked",
+    "P0FullPairs": "All160 actual context snapshots/entries/post3mem checked; world/id/setup/factory unchanged by planning, p1/p2 memories unchanged by P0.",
+    "complete600CPs": "22800,23400,24000,24600 gzip/plainSHA/CRC/bytes checked against actual sample receipts. Initial22200 strictzero is separately exact."
+  },
+  "capitalIntentResult": {
+    "retainedAcrossReturn": true,
+    "selectedGen5PlanAll160P0": true,
+    "actualCancel23325Unchanged": true,
+    "old23340PaidLancer110": "Old native23400CP retains paidGold110 training queue.",
+    "C5_23340": "Bank459.26, no production entry or native110 spend; valid gen5plan persists during return.",
+    "C5_lancerActual23415": {
+      "goldBefore": 510.74,
+      "nativeGoldSpentDelta": 110,
+      "goldAfter": 400.74,
+      "paidQueueId": "training-21251"
+    },
+    "minimumObservedP0WalletAfter23325": 400.74,
+    "limit": "Supports the intended reserve behavior in this window. Reserve helper values were not separately instrumented every frame, and holding400 is not island execution or income."
+  },
+  "actualProduction": {
+    "unchangedEarlyPaid": [
+      {
+        "tick": 22275,
+        "kind": "transport",
+        "paidGold": 240
+      },
+      {
+        "tick": 23265,
+        "kind": "ballista",
+        "paidGold": 300
+      }
+    ],
+    "laterPaid": [
+      {
+        "tick": 23415,
+        "kind": "lancer",
+        "paidGold": 110
+      },
+      {
+        "tick": 24240,
+        "kind": "carrier",
+        "paidGold": 420
+      },
+      {
+        "tick": 24464,
+        "kind": "defenseTower site",
+        "paidGold": 125,
+        "proof": "Native wallet/spent afterstep plus new building24129 and worker build->repair; not a repair cost. Original publicbuild request23595 was only an attempt until24464."
+      },
+      {
+        "tick": 24540,
+        "kind": "summoner",
+        "paidGold": 180,
+        "stillQueuedAt24600": true
+      }
+    ],
+    "p0TotalActualSpentDelta": 1375,
+    "oldTotalSpentDelta": 1220,
+    "oldExtraWorkers": "Original24360 train attempts yielded actual two worker births24500, final29workers. C5 has no extra worker births, final27workers.",
+    "carrierDelay": "Old paid23445/birth23805; C5 paid24240/birth24600. New carrier is just born at finalCP, so absence of mission before24600 think is not evidence it was forgotten.",
+    "comparisonLimit": "Changed-code trajectories diverge; later unit/combat/production differences are not isolated return-cancel-only effects."
+  },
+  "sameTickWallets": [
+    {
+      "tick": 22200,
+      "oldGold": 197.16,
+      "C5Gold": 197.16,
+      "oldSpent": 13436,
+      "C5Spent": 13436
+    },
+    {
+      "tick": 22800,
+      "oldGold": 360.87,
+      "C5Gold": 360.87,
+      "oldSpent": 13676,
+      "C5Spent": 13676
+    },
+    {
+      "tick": 23400,
+      "oldGold": 390.96,
+      "C5Gold": 502.16,
+      "oldSpent": 14086,
+      "C5Spent": 13976
+    },
+    {
+      "tick": 24000,
+      "oldGold": 348.59,
+      "C5Gold": 792.72,
+      "oldSpent": 14506,
+      "C5Spent": 14086
+    },
+    {
+      "tick": 24600,
+      "oldGold": 540.09,
+      "C5Gold": 441.38,
+      "oldSpent": 14656,
+      "C5Spent": 14811
+    }
+  ],
+  "colonyExecution": {
+    "newP0HallAttempt": false,
+    "newP0HallSite": false,
+    "newP0HallComplete": false,
+    "ownHalls": "Same six completed halls throughout; sole hall completion22507 belongs to p1 pending initial hall.",
+    "gen5Amount": "6000 at start/end/allP0; no extraction or gen5 mining income.",
+    "guards": "redDragon600/600 + two dragonWhelps170/170 remain; no actual neutral hit/kill in this window.",
+    "endTransport": "19318 full270HP, same hull position(2360,3170.491985795503); 2 workers actually boarded24148/24159, full70HP, zero guard soldiers aboard; mission stillloading.",
+    "endCarrier": "24451 full480HP, empty, born24600 before next normalthink.",
+    "existingMineConsumption": "Old inland5 mine pool depleted3730; C5 depleted3850, including120 extra depletion at existinggen8. These are mine-resource withdrawals, not credited-income totals or new island income.",
+    "limit": "Capital preservation did not repair native worker-rendezvous timeout, complete guard assembly/clearing, or cause departure/paidHall/new island income."
+  },
+  "casualties": {
+    "C5P0": "2 permanent (raider15395@22745,lancer15710@22911) +11 temporary deaths;24 temporary expiry removals separate. Native unitsLost delta13.",
+    "oldP0": "3 permanent (same two plusraider18104@23977) +19 temporary deaths;23 temporary expiry removals separate. Native unitsLost delta22.",
+    "C5P1": "5 permanent workers,18 temporary expiry removals; unitsLost delta5.",
+    "oldP1": "5 permanent+11 temporary deaths,16 expiry removals; unitsLost delta16.",
+    "P2": "8 permanent in both trajectories.",
+    "ships": "No hull death observed; original and candidate lift hulls full at finalCP.",
+    "notAnAcceptanceClaim": "Different later combat paths; no assertion of general survival improvement or winning ability."
+  },
+  "references": [
+    {
+      "path": "/tmp/coastal-colony-capital-22200-24600-v4-prewarm-actual-20261016/EXIT.json",
+      "bytes": 55936,
+      "sha256": "b0534872bbbe84729a306a6b006fef5ab9d10ecdbafb54d11e784533a9cbcbe7",
+      "mode": "0o600",
+      "mtimeNs": 1792192122172088298
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-22200-24600-v4-prewarm-actual-20261016/native-focus/report.json",
+      "bytes": 9766,
+      "sha256": "2960832bcfa6d49e22a96d0b8e8dd454d863a3f99a1c2cb5c0ca20cabca97d5b",
+      "mode": "0o600",
+      "mtimeNs": 1792192120424180344
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-22200-24600-v4-prewarm-actual-20261016/native-focus/closed-members.jsonl",
+      "bytes": 26875,
+      "sha256": "b23ea9c52024282d4c5981fbbe87f2d96a86f25892e14b09159d31aa6f5c5633",
+      "mode": "0o600",
+      "mtimeNs": 1792192120284187716
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-22200-24600-v4-prewarm-actual-20261016/native-focus/frames/24600.json.gz",
+      "bytes": 35926,
+      "sha256": "f751631b873dffeaa7782e4ccbfb154cf08fc88c00a94e4ac8753aafc4c903d9",
+      "mode": "0o600",
+      "mtimeNs": 1792192120284187716
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/READBACK-ATTEMPT-1.json",
+      "bytes": 219073,
+      "sha256": "6eb1bdbfcc4f8f8ba3ea009ac89f8d18190d83ad1a119d9d33651ae44cd61e7e",
+      "mode": "0o600",
+      "mtimeNs": 1792192164130690180
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/EXACT-CASH-PRODUCTION-CONTEXTS-AND-DEATHS.json",
+      "bytes": 83779,
+      "sha256": "af29e2f3a2188ad000a28ca898ae5d25615a452562b92fa7829910188ab02920",
+      "mode": "0o600",
+      "mtimeNs": 1792192233878408069
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/RAW-CONTEXT-CP-AND-COMPARISON-PROOF.json",
+      "bytes": 46631,
+      "sha256": "9e4683fc4914406ff3d1b4a53c270728c93af42e67e678c8920cacda81f7cd28",
+      "mode": "0o600",
+      "mtimeNs": 1792192414710648857
+    },
+    {
+      "path": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/ORIGINAL5B5-PRODUCTION-AND-DEATH-WITNESSES.json",
+      "bytes": 4721,
+      "sha256": "a1bf9a211d7e371330a8e33bd37d5a5ae5c5605d762d0909c5de77bbbf719424",
+      "mode": "0o600",
+      "mtimeNs": 1792192461736110897
+    }
+  ],
+  "nextUnfinished": "Actual escort/guard-clearing and worker-rendezvous execution remain. Complete games and all3-route/opponent/map/seed generalization are still required; no matrix rerun or source change done here.",
+  "originalBrokenContainerUncommittedGapRetained": true
+}

@@ -1,0 +1,124 @@
+{
+  "classification": "Small durable index for a fully closed trueordinary0 official-map loss, native personal early visuals and a separate finite C5 capital window. No new gameplay or production changes.",
+  "atUTC": "2026-10-16T23:28:56.816450+00:00",
+  "sourceBaseHEAD": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "sourceRuntime1567CapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+  "actualSourceProofKind": "uncommitted-virtual-tree",
+  "thisCommitSavesByteIdenticalRuntime1567": true,
+  "noRerunUnderNewCommitClaimed": true,
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "source1567Frozen497Manifest184Rules2Exact": true,
+  "copiedEvidence": {
+    "ordinary0-loss37485-compact.json": {
+      "originalPath": "/tmp/official-brokenSea-archer-fullclosed-loss37485-review-20261016/COMPACT-CLOSED-ORDINARY0-LOSS37485.json",
+      "sha256": "63dc0af13411bd61ac8f57190acfdfc5dfd5ff1514ae75165e84365a33df17c3",
+      "bytes": 8921,
+      "copiedExactBytes": true
+    },
+    "personal-early-visual-observation.json": {
+      "originalPath": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "sha256": "76abbb7416a862ab71facc5303acf6f84308d16be770e4dad568675e23a4d066",
+      "bytes": 2414,
+      "copiedExactBytes": true
+    },
+    "c5-capital-focus2400-compact.json": {
+      "originalPath": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/ACTUAL-POSITIVE-COMPACT.json",
+      "sha256": "75763c2dd427e308fbd5f33577d4295863981fab22b440d96c0a484080a1f20c",
+      "bytes": 8602,
+      "copiedExactBytes": true
+    }
+  },
+  "officialCase": {
+    "map": "Broken Sea",
+    "ordinary0": true,
+    "fullAuthoredMap": true,
+    "layoutOverride": false,
+    "seedSearch": false,
+    "unseen": false,
+    "player": "v9_archer Grove side0",
+    "normalFrozenOpponents": [
+      "v5 Ember",
+      "v8 Grove"
+    ],
+    "seed": "bootstrap_1-official-brokenSea-archer-v5-v8-20261016",
+    "nativePID": 560445,
+    "actualExitCode": 0,
+    "naturalComplete": true,
+    "winner": "p1",
+    "endTick": 37485,
+    "P0FinalUnits": 0,
+    "P0FinalBuildings": 0,
+    "P0PermanentDeaths": 31,
+    "P0TemporaryDeaths": 0,
+    "P0ExpiryRemovals": 0,
+    "all13OriginalRawStreamsCRCAndEOFExact": true,
+    "nineHullFatalLivePassengerCount": 0,
+    "nineLivingDeckPassengerDeathsBeforeHullFatal": true,
+    "fullLocalClosure": {
+      "path": "/tmp/official-brokenSea-archer-fullclosed-loss37485-review-20261016/FULL-CLOSED-ORDINARY0-LOSS37485-v2.json",
+      "bytes": 493471,
+      "sha256": "36247226f030f47ca2b3b2348a4b9b1c16b42168d6658f5b25340ca9ece2b8fa"
+    },
+    "actualNativeExitReceiptSHA256": "dbc386daacd020cadc57d96c72010b58113516066b9e1a7b1ed95baa448dd1af"
+  },
+  "earlyVisuals": {
+    "rendererPID": 561905,
+    "actualExitCode": 0,
+    "rootPersonallyViewedTicks": [
+      8400,
+      9835
+    ],
+    "PNGBytesCopied": false,
+    "images": [
+      {
+        "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-8400-official-ordinary0-preloss-harbor.png",
+        "bytes": 877135,
+        "sha256": "5f215fae631ba1c95afbcb518a7f1c1a6de90f25cd496dafb1ee9398494137f5",
+        "rootPersonallyViewed": true
+      },
+      {
+        "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-9835-official-ordinary0-deck-casualties.png",
+        "bytes": 877586,
+        "sha256": "9c24b690279eb9cda116276d3bbcc0afafbaf94172def7433191ebdc70db0c67",
+        "rootPersonallyViewed": true
+      }
+    ]
+  },
+  "independentC5": {
+    "candidateMergedIntoThisRuntime": false,
+    "actualNativePID": 560218,
+    "actualExitCode": 0,
+    "inputTick": 22200,
+    "endTick": 24600,
+    "steps": 2400,
+    "declaredFiniteWindow": true,
+    "winner": null,
+    "source1561Frozen497Manifest184Rules2Exact": true,
+    "retains400CapitalAcrossReturnInThisWindow": true,
+    "minimumObservedGoldAfter23325": 400.74,
+    "carrierPaidAndBirthDelayedTicks": 795,
+    "oldExtraWorkersNotBornHere": 2,
+    "newHallAttemptSiteComplete": [
+      false,
+      false,
+      false
+    ],
+    "newIslandMineIncome": false,
+    "fullLocalEvidenceReferencesInCompact": true
+  },
+  "loadingStopDraft": {
+    "externalOnly": true,
+    "includedInCommit": false,
+    "strictNativeCounterfactualRun": false,
+    "shipRescueClaimed": false
+  },
+  "fullC6WinEvidenceIndex": "../incoming-threat-overlap-20261016/evidence-index.json",
+  "sourceCapIsRawGameArchive": false,
+  "fullRawCheckpointsPNGIncluded": false,
+  "portableRawArchiveGapRetained": true,
+  "originalContainerUncommittedRecoveryGapUnrecovered": true,
+  "allBootstrapGoalsComplete": false,
+  "ordinary0ArcherAccepted": false,
+  "threeFamilyOfficialSingleSixPairUnseenAcceptanceComplete": false
+}

@@ -1,0 +1,108 @@
+{
+  "classification": "Small derived accounting from closed source summaries plus independently verified exact common221325 input memory. No Node, no raw replay, no production change.",
+  "commonInputTick": 221325,
+  "inputPhase": "real before-P0 planner context, not original atomic checkpoint",
+  "inputGeneralCounterProof": {
+    "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221325-p0-before.json.gz",
+    "bytes": 157333,
+    "sha256": "0a8ddb92592cf1fc401a85503421a8fc79edf28229469b60e67b48116993fee1",
+    "JSONPath": "memories.p0.v6.plays",
+    "general:retreat": 29,
+    "general:retreat:incoming": 115,
+    "independentReadOnlyVerifier": "/root/coastal_turn_review/exact_index_static_audit"
+  },
+  "C4": {
+    "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+    "endTick": 288119,
+    "remainingTicks": 66794,
+    "finalCounters": {
+      "general:retreat": 51,
+      "general:retreat:incoming": 132
+    },
+    "counterIncrements": {
+      "general:retreat": 22,
+      "general:retreat:incoming": 17
+    },
+    "summary": {
+      "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800.json",
+      "bytes": 78801,
+      "sha256": "412149fa4b41c66f21d8e62f44f72a092bbf6be673cf6aac6fcfbe44925e99e9"
+    }
+  },
+  "C6": {
+    "sourceCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+    "endTick": 263342,
+    "remainingTicks": 42017,
+    "finalCounters": {
+      "general:retreat": 44,
+      "general:retreat:incoming": 124
+    },
+    "counterIncrements": {
+      "general:retreat": 15,
+      "general:retreat:incoming": 9
+    },
+    "summary": {
+      "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016/natural-from-221325.json",
+      "bytes": 78661,
+      "sha256": "f95c8bdded0d46dc75832f643e264258a1c9e7784bbcc579fdac5a59c0ed201b"
+    },
+    "permanentDeathObservationsInheritedAndFinal": [
+      83,
+      83
+    ],
+    "permanentRemovalConfirmationsInheritedAndFinal": [
+      83,
+      83
+    ],
+    "branchIncrements": {
+      "fromTick": 221325,
+      "toTick": 263342,
+      "counts": {
+        "p2": {
+          "permanentDeathObservations": 7,
+          "permanentDeathRemovedConfirmations": 7
+        },
+        "p1": {
+          "permanentDeathObservations": 7,
+          "permanentDeathRemovedConfirmations": 7,
+          "lifetime-expiry-eligible-removal": 63,
+          "temporaryDeathObservations": 41,
+          "temporaryDeathRemovedConfirmations": 41
+        },
+        "neutral": {
+          "permanentDeathObservations": 0,
+          "permanentDeathRemovedConfirmations": 0
+        },
+        "p0": {
+          "permanentDeathObservations": 0,
+          "permanentDeathRemovedConfirmations": 0,
+          "lifetime-expiry-eligible-removal": 120,
+          "temporaryDeathObservations": 174,
+          "temporaryDeathRemovedConfirmations": 174
+        }
+      },
+      "nativeUnitsLost": {
+        "p0": 174,
+        "p1": 48,
+        "p2": 7,
+        "player": 0,
+        "enemy": 0,
+        "enemy2": 0,
+        "neutral": 0
+      },
+      "hitCount": 2828,
+      "commandCount": 29437,
+      "planCount": 8406
+    }
+  },
+  "sameInputTicksEarlier": 24777,
+  "comparisonLimits": [
+    "Counters are complete cumulative memory values at the common input and each different natural endpoint; not equal-tick retreat frequency or causal proof for every retreat.",
+    "Tick distance is simulated game progress, not an equal-wall-time benchmark.",
+    "C4 includes documented observation pause265800 followed by unchanged-code continuation.",
+    "New permanent loss0 means branch increment; inherited83 permanent observations/removals are retained.",
+    "C6 first600 context checks are internal consistency only; no full600 equality to old afda is claimed."
+  ],
+  "rawPortableArchiveNotCreated": true,
+  "originalContainerUncommittedGapUnrecovered": true
+}

@@ -1,0 +1,42 @@
+{
+  "atUTC": "2026-10-16T22:39:45.397610+00:00",
+  "handoffNote": "Root sole static renderer slot; Game555868 naturalP0win288119 exit0 and C5 rejected-beforeGame556371 exit1, previous renderer556595 exit1 partial2PNG budgetguard allclosed. Final-only768 native full saved world, own1.5MB budget, no Game/AI/source modifications.",
+  "launcherPID": 556910,
+  "classification": "Separate native client static renderer; no Game/AI/issue/step/restore.",
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "source123ExactBefore": true,
+  "freshBefore": 2280779776,
+  "requiredFresh": 2147483648,
+  "outputRoot": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared",
+  "outputFreeBefore": 1936121856,
+  "requiredOutputFree": 68871008,
+  "regularReserveRoot": "/workspace",
+  "regularFreeBefore": 67969024,
+  "requiredRegularFree": 67108864,
+  "heapMiB": 256,
+  "driverSHA256": "fc0f4c2240507aabf75d668ed23a918c18804ea69b2257cd9e55300677789ce8",
+  "sealSHA256": "7af17bddd1ef765d5c51736557dde6a8c4ad41a1a313f560f9d33d768bd41436",
+  "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "parentEnvironment": {
+    "TSX_DISABLE_CACHE": "1"
+  },
+  "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+  "tsxEnvScope": "Parent option inherited, no performance causal assertion.",
+  "args": [
+    "node",
+    "--max-old-space-size=256",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/render-native-three.mts"
+  ],
+  "startedAtUTC": "2026-10-16T22:39:45.397757+00:00",
+  "actualNodePID": 556923,
+  "actualExit": 0,
+  "endedAtUTC": "2026-10-16T22:39:52.845544+00:00",
+  "elapsedSeconds": 7.447716032998869,
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "logSHA256": "12738d1c04eb856e9fec6f03db7d62469705637998f4eddfddb95968f31efbcb",
+  "source123ExactAfter": true,
+  "inputGzipUnchangedAfter": true,
+  "validationExit": 0
+}
