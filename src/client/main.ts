@@ -51,6 +51,8 @@ import {
 import { deploymentModeFromEnv } from "./deployment/mode";
 import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
 import { createBrowserMatchThreads } from "./match-worker/browser";
+import { setTerrainChunkPainter } from "./terrain-art";
+import { createTerrainChunkPainter } from "./terrain-thread/browser";
 import { createSketchRtsDebugView, type SketchRtsDebugView } from "./debug-view";
 import { edgeScrollDelta } from "./edge-scroll";
 import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
@@ -129,6 +131,8 @@ declare global {
 }
 
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
+
+setTerrainChunkPainter(createTerrainChunkPainter());
 
 const app = requireElement<HTMLDivElement>("#app");
 
