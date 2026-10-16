@@ -7,6 +7,7 @@ import type { BootstrapAiVersion, GameCommand, GameSnapshot } from '../../shared
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { ABILITY_DEFS } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
+import { isInCabin } from '../../shared/ship-cabin';
 import { matchesUnitTarget } from '../../shared/unit-targeting';
 import { setBuildingBodies } from '../../shared/terrain';
 import { coastalWithdrawalCrewCommands } from './coastal-boarding';
@@ -84,7 +85,11 @@ it.each(['cooldown', 'stunned', 'enemy', 'mechanical', 'cabin', 'noHealAbility',
   if (change === 'stunned') caster.effects = [{ type: 'stun', remaining: 1 }];
   if (change === 'enemy') target.owner = 'p1';
   if (change === 'mechanical') target.kind = 'ballista';
-  if (change === 'cabin') caster.cabin = { shipId: 'counterfactual-cabin' };
+  if (change === 'cabin') {
+    caster.deck = { shipId: 'counterfactual-cabin', x: 0, y: 0 };
+    caster.cabin = { shipId: caster.deck.shipId };
+    expect(isInCabin(caster)).toBe(true);
+  }
   if (change === 'noHealAbility') caster.kind = 'footman';
   if (change === 'boarding') caster.order = { type: 'board', transportId: 'counterfactual-ferry' };
   const hold: GameCommand = { type: 'holdPosition', unitIds: [caster.id] };
